@@ -145,6 +145,18 @@ ground under one title runs from light to dark. Solid black leaves 7 or 8
 hard; the washes leave none. The script's first row, the page as it is,
 checks its model against the shots: the counts agree to within one poster.
 
+John then asked whether B stays in the running (30 October): he chose to
+keep it and make its title legible, and to see the ways not yet built. The
+Photo switch now has three more, each leaving the photograph at full
+strength. **Own colour**: no wash, the title solid in dark red or cream,
+whichever stands at 2:1 or better against more of that cut's pixels
+(`titles.py` picks it from `img/`; cream wins on 26 desktop cuts and 25
+phone cuts of 42). **Strips**: the Pale wash and its darker red, behind
+each line of the title only. **Above**: the title on the page above the
+photograph, which shows whole; spreads and middles start at the top there.
+Fonts are still untried. `titles-check.cjs` (2,438 checks) holds each to
+its rule, with a planted fault first.
+
 ### Votes
 
 John: "Add thumbs up and thumbs down selectors for each option. And have a

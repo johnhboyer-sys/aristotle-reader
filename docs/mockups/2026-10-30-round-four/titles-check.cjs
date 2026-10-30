@@ -454,6 +454,68 @@ const STUB = () => {
   }
   await pick({ tr: 'now' });
 
+  // ── Own colour, Strips, Above: the photograph at full strength ──────────
+  // Own colour: the title solid, dark red or cream as titles.py chose.
+  // Strips: the pale wash behind every line, nowhere else. Above: the title
+  // wholly above the photograph, the photograph whole, the box holding both.
+  const INK = { dark: 'rgb(139, 26, 16)', cream: 'rgb(244, 239, 230)' };
+  const STRIP = 'rgba(244, 244, 241, 0.6)';
+  const plain = () => ev(() => [...document.querySelectorAll('.it:not([hidden]) .po')].map((po) => {
+    const a = getComputedStyle(po, '::after');
+    const t = po.querySelector('.po-t');
+    const ts = getComputedStyle(t);
+    const r = (el) => el.getBoundingClientRect();
+    const fit = r(po.parentElement);
+    const lines = [...t.querySelectorAll(':scope > span')].map((l) => getComputedStyle(l).backgroundColor);
+    return {
+      wash: a.opacity, filter: getComputedStyle(po.querySelector('img')).filter, ink: po.dataset.ink,
+      title: `${ts.color}|${ts.opacity}`, tbg: ts.backgroundColor, lines,
+      tBottom: r(t).bottom, iTop: r(po.querySelector('img')).top, iBottom: r(po.querySelector('img')).bottom,
+      tTop: r(t).top, fTop: fit.top, fBottom: fit.bottom,
+    };
+  }));
+  const plainFaults = (ls, tr, tag) => ls.flatMap((l, i) => {
+    const f = [];
+    if (l.wash !== '0') f.push(`${tag} ${i}: a wash`);
+    if (l.filter !== 'none') f.push(`${tag} ${i}: photograph ${l.filter}`);
+    if (tr === 'own' && l.title !== `${INK[l.ink]}|1`) f.push(`${tag} ${i}: ${l.ink} title ${l.title}`);
+    if (tr === 'strip') {
+      if (l.title !== 'rgb(180, 36, 25)|0.92') f.push(`${tag} ${i}: title ${l.title}`);
+      if (!l.lines.length || l.lines.some((b) => b !== STRIP)) f.push(`${tag} ${i}: strips ${l.lines}`);
+      if (l.tbg !== 'rgba(0, 0, 0, 0)') f.push(`${tag} ${i}: a strip behind the whole title`);
+    } else if (l.lines.some((b) => b !== 'rgba(0, 0, 0, 0)')) f.push(`${tag} ${i}: strips without Strips`);
+    if (tr === 'above') {
+      if (l.tBottom > l.iTop + 0.5) f.push(`${tag} ${i}: title over the photograph`);
+      if (l.tTop < l.fTop - 0.5 || l.iBottom > l.fBottom + 0.5) f.push(`${tag} ${i}: poster outside its box`);
+    } else if (l.iTop > l.fTop + 0.5) f.push(`${tag} ${i}: photograph below the title`);
+    return f;
+  });
+  const PLANT = {
+    own: () => { document.querySelector('#block--Phys .fig.desk .po').dataset.ink = 'dark'; document.querySelector('#block--Phys .fig.desk .po-t').style.color = 'rgb(244, 239, 230)'; },
+    strip: () => { document.querySelector('#block--Phys .po-t > span').style.background = 'none'; },
+    above: () => { document.querySelector('#block--Phys .fig.desk .po-t').style.position = 'absolute'; },
+  };
+  for (const tr of Object.keys(PLANT)) {
+    await open();
+    await pick({ set: 'all', po: 'Phys', size: 'both', tr });
+    await ev(PLANT[tr]);
+    caught(plainFaults(await plain(), tr, 'plant').length > 0, `${tr} check`);
+  }
+  await open();
+  const inks = new Set();
+  for (const po of ['Phys', 'home', 'Cat']) {
+    for (const tr of Object.keys(PLANT)) {
+      await pick({ set: 'all', po, size: 'both', tr });
+      const ls = await plain();
+      ok(ls.length === 14, `${tr} ${po}: ${ls.length} posters`);
+      for (const f of plainFaults(ls, tr, `${tr} ${po}`)) ok(false, f);
+      checks += ls.length;
+      if (tr === 'own') ls.forEach((l) => inks.add(l.ink));
+    }
+  }
+  ok(inks.has('dark') && inks.has('cream'), `own colour: inks ${[...inks]}`);
+  await pick({ tr: 'now' });
+
   // ── Votes: thumbs on every poster and photograph, kept in the store ──────
   const stored = () => ev(() => Object.fromEntries(window.__store));
   const state = (key) => ev((k) => {

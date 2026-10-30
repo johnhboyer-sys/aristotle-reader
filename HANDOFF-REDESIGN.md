@@ -38,7 +38,16 @@ Three directions are left:
 
 C (diagrams) was dropped: "No diagrams. Too gimmicky."
 
-## Start here: is B still in the running?
+## Start here: B stays; which treatment?
+
+John's answer (30 October): keep B and make its title legible, trying the
+ways not yet built. The titles page now has Own colour, Strips and Above on
+its Photo switch beside Pale, Gray and Dark (round four's README). Next: his
+pick of treatment and setting, then fonts if he wants them. A subagent is
+searching the Getty for CC0 gelatin silver prints (John: free of the brown
+tones that swallow the red), into `gelatin-candidates.json` (not committed).
+
+## Before that: was B still in the running?
 
 The last session ended on John's doubt about B itself (30 October): "still
 not sure this is the direction to go in (i'm wondering whether this is too
@@ -177,12 +186,20 @@ The cloud sessions ran in a container; a local session needs:
   pictures, so git does not carry them. `prep.py --root build/dist` reads the
   Mac's own corpus build in place of the live site.
 - Node 22 (`nvm use 22`; the Mac's system node is 24). The Python scripts
-  need Pillow and numpy.
+  need Pillow and numpy. `images.py` needs `SSL_CERT_FILE=/etc/ssl/cert.pem`:
+  python.org's Python finds no certificates of its own.
 - Playwright: the `.cjs` checks call `require('playwright')` and
   `chromium.launch()` with no options, as the container allowed. On the Mac,
   plato-reader's CLAUDE.md ("Headless browser") gives what works there:
   playwright-core and the Chromium headless shell in
-  `~/Library/Caches/ms-playwright/`, passed as `executablePath`.
+  `~/Library/Caches/ms-playwright/`, passed as `executablePath`. Done on
+  30 October without touching the checks: `playwright-core@1.62.1` in a
+  scratch folder, beside a `node_modules/playwright/index.js` shim whose
+  `chromium.launch` adds the headless shell's `executablePath`
+  (`chromium_headless_shell-1228`), and `NODE_PATH` pointing at that
+  folder. On the Mac `titles-check.cjs` passes; `verify.cjs` fails 14
+  checks, all A's phone reader with Bekker numbers outside the page, which
+  passed in the container (a font difference, not yet looked into).
 - The artifacts: update each by its URL, reading it first. `ArtifactData` and
   `ArtifactComments` read the votes and the comments; without those tools,
   the titles page's own tally shows the votes and the comments are on the

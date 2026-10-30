@@ -13,6 +13,7 @@
   --red: #e2382e; --red-ink: #b42419; --po-op: .82;
   --up: #2c6a43; --up-bg: #e1ede4; --dn-bg: #f5e2df;
   --wash-pale: #f4f4f1; --wash-dark: #121211; --title-deep: #b42419; --title-bright: #ff5a4d;
+  --ink-dark: #8b1a10; --ink-cream: #f4efe6; --strip: rgb(244 244 241 / .6);
   --sans: "Sofia Sans", system-ui, sans-serif; --read: "Literata", Georgia, serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -126,6 +127,22 @@ button, select { font: inherit; color: inherit; }
 .tr-pale .po::after, .tr-gray .po::after { background: var(--wash-pale); opacity: .6; }
 .tr-gray .po img { filter: grayscale(1); }
 .tr-dark .po::after { background: var(--wash-dark); opacity: .7; }
+/* Three more that leave the photograph at full strength. Own colour: no
+   wash, the title solid, in whichever of dark red and cream stands out from
+   more of the photograph (titles.py). Strips: the Pale wash behind each line
+   of the title only. Above: the title on the page, the photograph whole
+   below it. */
+.tr-own .po[data-ink="dark"] .po-t { color: var(--ink-dark); opacity: 1; }
+.tr-own .po[data-ink="cream"] .po-t { color: var(--ink-cream); opacity: 1; }
+.tr-strip .po-t { color: var(--title-deep); opacity: .92; }
+.tr-strip .po-t > span { width: fit-content; }
+.tr-strip .po-t > span, .tr-strip .po-t .ln { background: var(--strip); box-shadow: -12px 0 0 var(--strip), 12px 0 0 var(--strip); -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.tr-above .fit { aspect-ratio: auto; }
+.tr-above .po { display: flex; flex-direction: column; height: auto; background: var(--bg); }
+.tr-above .po img { position: static; flex: none; height: 600px; }
+.tr-above .po.phone img { height: 488px; }
+.tr-above .po .po-t { order: -1; position: static; display: block; padding: 30px 72px 26px; color: var(--red-ink); opacity: 1; }
+.tr-above .po.phone .po-t { padding: 18px 18px 16px; }
 .po-t {
   position: absolute; left: 72px; right: 72px; top: 0; margin: 0; padding: 30px 0 0;
   font: 600 var(--fz)/.9 var(--sans); letter-spacing: -.012em; text-transform: uppercase;
@@ -229,9 +246,12 @@ button, select { font: inherit; color: inherit; }
   // What lies between the photograph and the title.
   const TREATS = [
     { id: 'now', name: 'As now', desc: 'The photograph at full strength; the title in red, 82% opaque.' },
-    { id: 'pale', name: 'Pale', desc: 'The photograph washed pale; the title in a darker red.' },
-    { id: 'gray', name: 'Gray', desc: 'The photograph in gray, washed pale; the title in a darker red.' },
-    { id: 'dark', name: 'Dark', desc: 'The photograph darkened; the title in a brighter red.' },
+    { id: 'pale', name: 'Pale', label: 'Pale photograph', desc: 'The photograph washed pale; the title in a darker red.' },
+    { id: 'gray', name: 'Gray', label: 'Gray photograph', desc: 'The photograph in gray, washed pale; the title in a darker red.' },
+    { id: 'dark', name: 'Dark', label: 'Dark photograph', desc: 'The photograph darkened; the title in a brighter red.' },
+    { id: 'own', name: 'Own colour', label: 'Own colour', desc: 'The photograph at full strength; the title solid, dark red on a light photograph, cream on a dark one.' },
+    { id: 'strip', name: 'Strips', label: 'Strips', desc: 'The pale wash behind each line of the title only; the rest of the photograph at full strength.' },
+    { id: 'above', name: 'Above', label: 'Title above', desc: 'The title on the page, above the photograph; the photograph whole.' },
   ];
   const KINDS = [['desktop', 'desk', 'Desktop', 1440, 1600, 667], ['phone', 'phone', 'Phone', 390, 720, 900]];
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -260,7 +280,7 @@ button, select { font: inherit; color: inherit; }
       <h3 class="it-h">${esc(s.name)}</h3>
       <p class="it-d">${esc(s.desc)}</p>
       <div class="pp">${KINDS.map(([kind, cut, label, , w, h]) => `<figure class="fig ${cut}">
-        <div class="fit"><div class="po ${cut}" style="--fz:${TL.now(p.title, kind, p.kind)}px"><img src="img/${cut}/${p.photo}.jpg" alt="${esc(p.alt)}" width="${w}" height="${h}" loading="lazy" decoding="async"><div class="po-t"></div></div></div>
+        <div class="fit"><div class="po ${cut}" data-ink="${p.ink[cut] || 'dark'}" style="--fz:${TL.now(p.title, kind, p.kind)}px"><img src="img/${cut}/${p.photo}.jpg" alt="${esc(p.alt)}" width="${w}" height="${h}" loading="lazy" decoding="async"><div class="po-t"></div></div></div>
         <figcaption><span>${label} · <span class="px"></span></span>${vote(`t:${s.id}--${p.id}:${cut}`, `${s.name}, ${p.name}, ${label.toLowerCase()}`)}</figcaption>
       </figure>`).join('')}</div>
     </article>`;
@@ -314,7 +334,7 @@ button, select { font: inherit; color: inherit; }
       const px = fig.querySelector('.px');
       t.className = 'po-t';
       if (s === 'now') {
-        t.textContent = p.title;
+        t.innerHTML = `<span class="ln">${esc(p.title)}</span>`;
         px.textContent = `${TL.now(p.title, kind, p.kind)} px`;
         continue;
       }
@@ -345,6 +365,12 @@ button, select { font: inherit; color: inherit; }
       const fw = f ? f.getBoundingClientRect().width : 0;
       if (fw) list.style.setProperty(cut === 'desk' ? '--kd' : '--kp', (fw / w).toFixed(5));
     }
+    // Above: the poster grows by its title, so each box takes its poster's
+    // scaled height.
+    for (const f of list.querySelectorAll('.it:not([hidden]) .fit')) {
+      const po = f.firstElementChild;
+      f.style.height = S.tr === 'above' && po.offsetWidth ? `${(po.offsetHeight * f.getBoundingClientRect().width) / po.offsetWidth}px` : '';
+    }
   }
   function apply() {
     for (const w of works) w.hidden = !(S.po === 'all' || w.dataset.po === S.po);
@@ -363,7 +389,7 @@ button, select { font: inherit; color: inherit; }
     $('po-sel').value = S.po;
     const one = SETS.find((s) => s.id === S.set);
     const tr = TREATS.find((t) => t.id === S.tr && t.id !== 'now');
-    const bits = [one && `<span><b>${esc(one.name)}</b>${esc(one.desc)}</span>`, tr && `<span><b>${esc(tr.name)} photograph</b>${esc(tr.desc)}</span>`].filter(Boolean);
+    const bits = [one && `<span><b>${esc(one.name)}</b>${esc(one.desc)}</span>`, tr && `<span><b>${esc(tr.label)}</b>${esc(tr.desc)}</span>`].filter(Boolean);
     $('note').hidden = !bits.length;
     $('note').innerHTML = bits.join('');
     scale();

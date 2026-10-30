@@ -7,9 +7,12 @@ photographs in img/desk and img/phone (images.py) as supporting files.
 
 Takes the work titles and their order from round one's data.json (which
 holds the site's TLG Greek; only the titles are read) and writes titles.html
-and titles-test.html, a copy with a doctype for titles-check.cjs.
+and titles-test.html, a copy with a doctype for titles-check.cjs. Needs
+Pillow and numpy, and images.py run first.
 """
 import json, os, re
+import numpy as np
+from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(HERE, '..', '2026-10-29-directions', 'data.json')
@@ -46,6 +49,26 @@ for p in posters:
     # chosen (photos.json's caption, which carries its own <i> markup).
     p['ph'] = {'title': ph['title'], 'maker': ph['maker'], 'date': ph['date'], 'cap': ph['cap']}
 posters[0]['ph']['cap'] = f"The home page’s first photograph, also the <i>{by[hero]['title']}</i>’s."
+
+
+def lum(a):
+    c = np.where(a <= 0.04045, a / 12.92, ((a + 0.055) / 1.055) ** 2.4)
+    return c[..., 0] * 0.2126 + c[..., 1] * 0.7152 + c[..., 2] * 0.0722
+
+
+# The Own colour treatment: each cut of each photograph takes, of dark red
+# (#8b1a10) and cream (#f4efe6), whichever stands at 2:1 or better against
+# more of its pixels (the pair titles-colour.py found best).
+INKS = {'dark': lum(np.array([0x8b, 0x1a, 0x10], dtype=np.float32) / 255), 'cream': lum(np.array([0xf4, 0xef, 0xe6], dtype=np.float32) / 255)}
+for p in posters:
+    p['ink'] = {}
+    for c in ('desk', 'phone'):
+        f = os.path.join(HERE, 'img', c, p['photo'] + '.jpg')
+        if not os.path.exists(f):
+            continue
+        g = lum(np.asarray(Image.open(f).convert('RGB'), dtype=np.float32) / 255)
+        share = {k: float((((np.maximum(g, v) + 0.05) / (np.minimum(g, v) + 0.05)) >= 2).mean()) for k, v in INKS.items()}
+        p['ink'][c] = max(share, key=share.get)
 
 data = {'posters': posters}
 page = read('titles-page.html').replace('/*__TL__*/', read('title-layout.js')).replace('/*__DATA__*/{}', json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/'))
