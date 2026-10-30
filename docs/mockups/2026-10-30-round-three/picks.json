@@ -1,0 +1,422 @@
+{
+ "APo": {
+  "object": "fc97ad36-d6b0-4cbb-ae43-c2a20c131733",
+  "image": "c4dfbf47-f231-4083-a418-04dc3b2ba9dd",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "APr": {
+  "object": "03ddbe5c-2cc2-49b7-950b-b7b0b9bfd8b9",
+  "image": "571de424-f28e-4382-a058-fa216fdc8b11",
+  "crop": [
+   0.01,
+   0.015,
+   0.99,
+   0.985
+  ]
+ },
+ "Aud": {
+  "object": "631a1d42-a311-49d0-8b9c-fc9a4b723783",
+  "image": "bebbc429-6289-4203-aa17-d6b08a5fe2dc",
+  "crop": [
+   0.08,
+   0.07,
+   0.94,
+   0.91
+  ]
+ },
+ "Cael": {
+  "object": "2b590f8f-ace1-43fa-afd0-6dd958948fdc",
+  "image": "099b4d66-d895-4e4a-8a93-7e907e432420",
+  "crop": [
+   0.16,
+   0.165,
+   0.875,
+   0.83
+  ]
+ },
+ "Cat": {
+  "object": "450f9a76-c68c-4cf6-a845-b0a795aee8f9",
+  "image": "326d3414-1ee2-4ee5-85fc-84d79f57a2d0",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "Col": {
+  "object": "c9d1bb29-5e4f-4428-aeee-a0c655a41a61",
+  "image": "a65ae048-e8d2-4cde-abe2-5c665d61581c",
+  "crop": [
+   0.035,
+   0.06,
+   0.455,
+   0.93
+  ]
+ },
+ "DA": {
+  "object": "2ad9a57b-b74d-486f-b5de-6af7da891783",
+  "image": "d16e1784-6db3-4d41-8966-27340f171c1d",
+  "crop": [
+   0.205,
+   0.13,
+   0.87,
+   0.44
+  ]
+ },
+ "DM": {
+  "object": "6f96d2dc-0bea-4743-97d8-f85990fd0b96",
+  "image": "4d97a183-6928-4cce-b27a-5490887e65da",
+  "crop": [
+   0.02,
+   0.02,
+   0.98,
+   0.8
+  ]
+ },
+ "DivSomn": {
+  "object": "48765b75-1335-48d7-9e14-4437327fa36d",
+  "image": "516f58f5-e75d-418b-87b5-768393c3a34c",
+  "crop": [
+   0.15,
+   0.205,
+   0.755,
+   0.765
+  ]
+ },
+ "EE": {
+  "object": "a8d4faf9-9b32-4681-becd-ae9566c0595d",
+  "image": "4921864d-315c-4f5a-a141-b8c58296dd87",
+  "crop": [
+   0.095,
+   0.29,
+   0.91,
+   0.735
+  ]
+ },
+ "EN": {
+  "object": "ce63c94d-1fa8-447c-abfd-a36f67454218",
+  "image": "71937dfa-1c7d-4304-ae84-e0b6a8c9612e",
+  "crop": [
+   0.01,
+   0.01,
+   0.99,
+   0.99
+  ]
+ },
+ "GA": {
+  "object": "c60b01ef-6bb8-4155-8ced-3a9f29cd1bac",
+  "image": "62ed11ea-3490-4c5a-ad7f-bc8b5f6be509",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "GC": {
+  "object": "7cfa7b68-49eb-44d1-b702-67f05ef58449",
+  "image": "2e20e835-b43d-41b5-a509-40d29e3e151c",
+  "crop": [
+   0.23,
+   0.17,
+   0.775,
+   0.835
+  ]
+ },
+ "HA": {
+  "object": "13c9f256-819b-4e1b-ab60-6ded7fb5176d",
+  "image": "e0f8061f-8cbd-48be-8e34-77901c98fae7",
+  "crop": [
+   0.075,
+   0.035,
+   0.935,
+   0.94
+  ]
+ },
+ "HOME": {
+  "object": "144cbede-c4dc-4c60-8b30-9106698a4084",
+  "image": "17127b57-f334-4a03-9ac0-4c8d6479d15b",
+  "crop": [
+   0.164,
+   0.205,
+   0.8,
+   0.775
+  ]
+ },
+ "IA": {
+  "object": "ceee7254-201f-4b95-b268-1c4619766e4b",
+  "image": "54fdba85-3cda-4159-ad39-fae84951cb18",
+  "crop": [
+   0.005,
+   0.02,
+   0.97,
+   0.95
+  ]
+ },
+ "Insomn": {
+  "object": "a17112f0-c5cb-4b0b-bf78-993ea874779c",
+  "image": "3ef0388e-543b-4f0b-92ab-67eb0acdc63d",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "Int": {
+  "object": "aa56da6b-2ff5-48cf-9060-0b370d70c997",
+  "image": "e972ced6-d4d9-497a-8726-2c3971d7cc3c",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "Isa": {
+  "object": "fb48c575-f72a-4102-9599-e1306fabb230",
+  "image": "61dc7551-5119-4c7f-b308-5778de3aca23",
+  "crop": [
+   0.02,
+   0.02,
+   0.985,
+   0.98
+  ]
+ },
+ "Juv": {
+  "object": "0aadb012-3913-42b0-951f-62cbadfcb18d",
+  "image": "932cbaec-c436-46f0-b9e5-12b3e3795d24",
+  "crop": [
+   0.195,
+   0.153,
+   0.862,
+   0.705
+  ]
+ },
+ "Lin": {
+  "object": "6f821309-5c12-459e-b46e-b58c3853b2f4",
+  "image": "9c4f5d65-6660-4bb5-aace-3d9cf64b125e",
+  "crop": [
+   0.215,
+   0.205,
+   0.705,
+   0.795
+  ]
+ },
+ "Long": {
+  "object": "685c3aa7-e2f8-4ec9-9dad-3ce0471f5d7b",
+  "image": "4dcac4a8-2914-45fa-98c2-995eeb40d992",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "MA": {
+  "object": "285828c0-7812-4268-b3d3-c272a7a3c7a9",
+  "image": "89e92977-f316-4ed3-b8ae-724d06ffd89d",
+  "crop": [
+   0.08,
+   0.05,
+   0.915,
+   0.895
+  ]
+ },
+ "MXG": {
+  "object": "7d25f3c9-a783-4c1f-a9b4-211c04c72882",
+  "image": "1dc57f6f-2ba3-4833-8762-85b9cf8e38ee",
+  "crop": [
+   0.015,
+   0.02,
+   0.985,
+   0.98
+  ]
+ },
+ "Mech": {
+  "object": "63c08c45-cc05-4a50-8846-5748b2e27564",
+  "image": "68387847-0491-4a62-a328-b19b12fbc6c5",
+  "crop": [
+   0.173,
+   0.138,
+   0.818,
+   0.752
+  ]
+ },
+ "Mem": {
+  "object": "13b7d920-4afb-4a5d-aa29-3f5984dc354f",
+  "image": "7048d849-ca58-45b2-90d6-9cddbcb7a8f2",
+  "crop": [
+   0.05,
+   0.045,
+   0.94,
+   0.95
+  ]
+ },
+ "Meta": {
+  "object": "d556b9eb-5027-4e50-8d82-745b4cd74ba4",
+  "image": "532c5d3c-bc82-4099-8be8-5969e2b8a3bc",
+  "crop": [
+   0.06,
+   0.19,
+   0.96,
+   0.81
+  ]
+ },
+ "Mete": {
+  "object": "8a0199ba-4fa1-40b6-9a8a-054bf887d0ba",
+  "image": "9e4450bd-4c22-4d0d-96f3-906130b72e62",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "Mirab": {
+  "object": "cd5c755d-8a43-4e6b-b6c2-73ea1b1f9ba9",
+  "image": "e2c51649-8f71-4290-8bec-38bfc0d80ad0",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "Oec": {
+  "object": "d92deeb8-13ae-40c7-8523-3a048a255644",
+  "image": "1003a42f-8bae-41e9-a491-7ae68d4ccea3",
+  "crop": [
+   0.025,
+   0.03,
+   0.975,
+   0.97
+  ]
+ },
+ "PA": {
+  "object": "34cb8c7e-86f3-4e73-80f6-640ff5df1da9",
+  "image": "142419c4-cd54-4331-91f2-734b922a4893",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "Phgn": {
+  "object": "ce674e09-b5b4-4454-adf9-62f81fde4d24",
+  "image": "34f25d18-c286-484d-bb31-9bae98930125",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "Phys": {
+  "object": "4831af38-7bca-4fab-95b7-d5f3f50ce336",
+  "image": "c6b1140a-be1c-4482-b476-82716c3cfa57",
+  "crop": [
+   0.115,
+   0.11,
+   0.483,
+   0.84
+  ]
+ },
+ "Poet": {
+  "object": "b79feece-3329-4d48-9f05-aaffd0091cfe",
+  "image": "13245769-2e1b-4692-aa00-f352b588f1fd",
+  "crop": [
+   0,
+   0,
+   1,
+   1
+  ]
+ },
+ "Pol": {
+  "object": "3e9ad6ab-b78c-4af4-ae89-69e172eea8d5",
+  "image": "64e6cf75-42c3-4d80-819f-8a680f821734",
+  "crop": [
+   0.233,
+   0.2,
+   0.767,
+   0.752
+  ]
+ },
+ "Rhet": {
+  "object": "3aaf2bd3-f83a-4eda-9454-c27c6426b6c2",
+  "image": "e275733c-5587-4c89-a0d3-36a0836fee2c",
+  "crop": [
+   0.262,
+   0.195,
+   0.712,
+   0.762
+  ]
+ },
+ "SE": {
+  "object": "d52f0b8a-2081-4aca-b802-40e8df68a34f",
+  "image": "cbe007ee-2ee4-4873-8107-cfba86f11a43",
+  "crop": [
+   0.08,
+   0.05,
+   0.92,
+   0.94
+  ]
+ },
+ "Sens": {
+  "object": "74bfb33d-145a-4c2f-998f-5efd6afe1491",
+  "image": "89844e1e-9b1f-49e6-a6d5-12a5ea202bee",
+  "crop": [
+   0.02,
+   0.02,
+   0.98,
+   0.965
+  ]
+ },
+ "Somn": {
+  "object": "3c2c575b-fe4f-495b-8dea-e73aa4cb0db5",
+  "image": "340d95be-e4ea-4297-b28c-b8dc4ebd4b67",
+  "crop": [
+   0.03,
+   0.03,
+   0.975,
+   0.97
+  ]
+ },
+ "Top": {
+  "object": "861a949d-362f-4bc6-9d18-9127ee832e3b",
+  "image": "34bf360d-b01f-41ff-97f9-9821f7ac3f19",
+  "crop": [
+   0.03,
+   0.24,
+   0.99,
+   0.76
+  ]
+ },
+ "VV": {
+  "object": "58f0e9bc-a65c-4ebb-901c-89864cbde241",
+  "image": "7faef64b-917d-4e28-8ffb-fb39c2237039",
+  "crop": [
+   0.1,
+   0.09,
+   0.49,
+   0.91
+  ]
+ },
+ "Vent": {
+  "object": "fdd30d2b-1d62-40aa-9ed9-f472a7ee876a",
+  "image": "acb62026-cbd2-47fc-a770-43b11bb22b70",
+  "crop": [
+   0.088,
+   0.112,
+   0.875,
+   0.893
+  ]
+ }
+}
