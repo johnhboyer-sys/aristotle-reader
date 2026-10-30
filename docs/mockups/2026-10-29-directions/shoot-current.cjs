@@ -1,7 +1,7 @@
 // Shots of the current site for the overview: home, the Ethics page, the
 // reader with a word open, and search. Needs Playwright; writes shots/*.png,
 // which shoot-current.py turns into the small JPEGs build.py inlines.
-//   node docs/mockups/2026-10-29-directions/shoot-current.js
+//   node docs/mockups/2026-10-29-directions/shoot-current.cjs
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');

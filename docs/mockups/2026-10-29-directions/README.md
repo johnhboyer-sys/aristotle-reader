@@ -24,10 +24,10 @@ keeps Grammata's entry as it comes.
 - `notes.js`: the notes shown beside each page.
 - `export-registry.mjs`, `prep.py`: build `data.json` from the registry and
   the site's data files.
-- `shoot-current.js`, `shoot-current.py`: shots of the current site for the
+- `shoot-current.cjs`, `shoot-current.py`: shots of the current site for the
   overview.
 - `build.py`: inline everything into `index.html`, the published page.
-- `wrap.py`, `verify.js`: a local test page and the functional check (every
+- `wrap.py`, `verify.cjs`: a local test page and the functional check (every
   direction, page, theme and width; reader interactions).
 
 ## Rebuild
@@ -36,7 +36,7 @@ keeps Grammata's entry as it comes.
 npm ci --prefix app
 node docs/mockups/2026-10-29-directions/export-registry.mjs
 python3 docs/mockups/2026-10-29-directions/prep.py
-node docs/mockups/2026-10-29-directions/shoot-current.js
+node docs/mockups/2026-10-29-directions/shoot-current.cjs
 python3 docs/mockups/2026-10-29-directions/shoot-current.py
 python3 docs/mockups/2026-10-29-directions/build.py
 ```

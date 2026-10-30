@@ -1,4 +1,4 @@
-"""Crop and shrink shots/*.png (shoot-current.js) to the JPEGs the overview
+"""Crop and shrink shots/*.png (shoot-current.cjs) to the JPEGs the overview
 shows. Needs Pillow."""
 import os
 from PIL import Image

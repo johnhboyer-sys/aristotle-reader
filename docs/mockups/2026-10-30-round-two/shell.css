@@ -1,0 +1,159 @@
+/* The mockup's own chrome: a quiet bar, the overview, the stage that holds one
+   design page at 1440 or 390, and the notes beside it. It follows the
+   viewer's theme; the designs inside the stage follow the Light/Dark control. */
+:root {
+  --m-bg: #f2f2ef;
+  --m-panel: #fbfbf9;
+  --m-fg: #1c1c1a;
+  --m-mid: #62625d;
+  --m-line: #d8d7d1;
+  --m-btn: #ffffff;
+  --m-on: #1c1c1a;
+  --m-on-fg: #fbfbf9;
+  --m-stage: #dddcd6;
+  --m-link: #1c1c1a;
+  --m-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --m-bg: #151514; --m-panel: #1b1b1a; --m-fg: #ebebe7; --m-mid: #a3a39d; --m-line: #30302d;
+    --m-btn: #20201f; --m-on: #ebebe7; --m-on-fg: #151514; --m-stage: #0c0c0b; --m-link: #ebebe7;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --m-bg: #151514; --m-panel: #1b1b1a; --m-fg: #ebebe7; --m-mid: #a3a39d; --m-line: #30302d;
+  --m-btn: #20201f; --m-on: #ebebe7; --m-on-fg: #151514; --m-stage: #0c0c0b; --m-link: #ebebe7;
+  color-scheme: dark;
+}
+html, body { background: var(--m-bg); color: var(--m-fg); }
+body { font-family: var(--m-ui); }
+body.on-overview { overflow-y: auto; }
+body:not(.on-overview) { overflow: hidden; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--m-bg); }
+
+/* ── The bar ── */
+.bar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--m-bg); border-bottom: 1px solid var(--m-line);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.bar-in { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding-block: 8px; }
+.bar-title { font-size: 13px; font-weight: 600; margin-right: 4px; white-space: nowrap; }
+.bar-title small { font-weight: 400; color: var(--m-mid); margin-left: 4px; }
+.bar-right { display: flex; flex-wrap: wrap; gap: 8px; margin-left: auto; }
+.seg { display: inline-flex; border: 1px solid var(--m-line); border-radius: 3px; overflow: hidden; background: var(--m-btn); }
+.seg button {
+  font: 500 12.5px/1 var(--m-ui); color: var(--m-fg); background: none; border: 0; padding: 7px 10px; cursor: pointer;
+  border-right: 1px solid var(--m-line);
+}
+.seg button:last-child { border-right: 0; }
+.seg button b { font-weight: 700; margin-right: 2px; }
+.seg button[aria-pressed="true"] { background: var(--m-on); color: var(--m-on-fg); }
+.seg button:focus-visible { outline: 2px solid var(--m-fg); outline-offset: -3px; }
+
+/* ── The overview ── */
+.ov { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 80px; }
+.ov-in { max-width: 1180px; margin: 0 auto; }
+.ov h1 { font: 600 30px/1.2 var(--m-ui); margin: 0 0 12px; text-wrap: balance; }
+.ov-lede { font-size: 16px; line-height: 1.55; max-width: 62em; color: var(--m-fg); margin: 0; }
+.ov-sec { margin-top: 40px; }
+.ov h2 { font: 600 17px/1.3 var(--m-ui); margin: 0 0 14px; padding-top: 12px; border-top: 1px solid var(--m-line); }
+.ov-shots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 22px; }
+.ov-shots figure { margin: 0; }
+.ov-shots img { display: block; width: 100%; height: 210px; object-fit: cover; object-position: top left; border: 1px solid var(--m-line); }
+.ov-shots figcaption { font-size: 12px; color: var(--m-mid); margin-top: 6px; }
+.ov-crit, .ov-list { margin: 0; padding-left: 20px; display: grid; gap: 9px; font-size: 14.5px; line-height: 1.55; max-width: 74em; }
+.ov-list { padding-left: 18px; }
+.ov-table-wrap { overflow-x: auto; }
+.ov-table { border-collapse: collapse; width: 100%; min-width: 860px; font-size: 14px; line-height: 1.45; }
+.ov-table th { text-align: left; font-weight: 600; font-size: 12.5px; color: var(--m-mid); padding: 8px 12px 8px 0; border-bottom: 1px solid var(--m-line); }
+.ov-table td { vertical-align: top; padding: 12px 12px 12px 0; border-bottom: 1px solid var(--m-line); }
+.ov-table td:first-child { white-space: nowrap; font-size: 15px; }
+.ov a { color: var(--m-link); }
+.ov-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 48px; }
+.ov-cols h2 + .ov-list + h2 { margin-top: 28px; }
+.ov-start { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.ov-start a { font-size: 14px; font-weight: 600; text-decoration: none; padding: 9px 12px; border: 1px solid var(--m-fg); border-radius: 3px; }
+.ov-start a:hover { background: var(--m-on); color: var(--m-on-fg); }
+@media (max-width: 860px) {
+  .ov-shots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ov-cols { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ── The stage: desktop and phone side by side, one scale ── */
+.stage-wrap {
+  position: relative; background: var(--m-stage);
+  padding-block: 12px 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  height: calc(100vh - var(--bar-h, 52px)); height: calc(100dvh - var(--bar-h, 52px)); overflow: hidden;
+}
+.stage { display: flex; align-items: flex-start; justify-content: center; gap: 36px; }
+.pane { margin: 0; flex: none; }
+.pane[hidden] { display: none; }
+.pane-box { position: relative; overflow: hidden; box-shadow: 0 0 0 1px var(--m-line); background: var(--m-panel); }
+.pane[data-pane="phone"] .pane-box { border-radius: 14px; box-shadow: 0 0 0 1px var(--m-line), 0 0 0 7px var(--m-panel), 0 0 0 8px var(--m-line); }
+.pane > figcaption { font-size: 12px; color: var(--m-mid); margin-top: 8px; text-align: center; }
+.pane[data-pane="phone"] > figcaption { margin-top: 15px; }
+.frame { position: absolute; left: 0; top: 0; transform-origin: 0 0; overflow: hidden; container-type: inline-size; container-name: mock; }
+.view { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; }
+.over { position: absolute; inset: 0; pointer-events: none; z-index: 50; }
+.over > * { pointer-events: auto; }
+.over .side-host, .over .panel-host { pointer-events: none; position: absolute; inset: 0; }
+.over .side-host > *, .over .panel-host > * { pointer-events: auto; }
+
+/* Notes: a drawer over the stage. */
+.notes {
+  position: absolute; right: 12px; top: 12px; bottom: 12px; z-index: 60; width: 340px; max-width: calc(100% - 24px);
+  overflow-y: auto; display: none; background: var(--m-panel); border: 1px solid var(--m-line);
+  box-shadow: 0 8px 30px rgba(0,0,0,.18); font-size: 13.5px; line-height: 1.5;
+}
+body.notes-open .notes { display: block; }
+.n-in { padding: 16px 18px 20px; position: relative; }
+.n-x { position: absolute; right: 8px; top: 6px; border: 0; background: none; color: var(--m-mid); font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 8px; }
+.n-k { margin: 0 24px 6px 0; font-size: 15px; font-weight: 600; }
+.notes h3 { font: 600 12.5px/1.3 var(--m-ui); margin: 16px 0 4px; color: var(--m-mid); }
+.notes p, .n-p p { margin: 0 0 6px; }
+.n-p ul { margin: 0; padding-left: 16px; }
+.n-p li { margin-bottom: 4px; }
+.n-idea { color: var(--m-fg); }
+.n-try { color: var(--m-mid); }
+
+/* ── Grammata's entry (stand-in): one neutral setting in every direction ── */
+.t8 {
+  --t8-ink: currentColor;
+  font-family: "Gentium Book Plus", Georgia, serif; font-size: 15px; line-height: 1.45; color: var(--t8-ink);
+  padding: 12px 0 2px; text-align: left;
+}
+.t8h { display: flex; align-items: baseline; gap: 8px; padding-bottom: 8px; border-bottom: 1px solid color-mix(in srgb, currentColor 22%, transparent); }
+.t8h b { font-size: 21px; font-weight: 700; }
+.t8h span { opacity: .7; }
+.t8-l { margin-left: auto; font: 600 10.5px/1 system-ui, sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #2f5bd3; text-decoration: none; }
+.t8s { list-style: none; margin: 0; padding: 0; }
+.t8s li { display: grid; grid-template-columns: 2.2em minmax(0, 1fr); column-gap: 6px; padding: 7px 0; border-bottom: 1px solid color-mix(in srgb, currentColor 12%, transparent); }
+.t8s li.l3, .t8s li.l4 { padding-left: 1.4em; }
+.t8n { font: 600 12px/1.6 system-ui, sans-serif; opacity: .65; }
+.t8g { font-weight: 700; }
+.t8a { grid-column: 2; font: 12px/1.4 system-ui, sans-serif; opacity: .62; margin-top: 2px; }
+.t8f { font: 13px/1.4 system-ui, sans-serif; opacity: .7; margin: 10px 0 0; }
+.t8-none { font: 14px/1.4 system-ui, sans-serif; opacity: .7; margin: 0; }
+
+/* Shared reading mechanics every direction relies on. */
+.frame, .frame *, .frame *::before, .frame *::after { box-sizing: border-box; }
+:where(.frame) .tok { cursor: pointer; border-radius: 0; }
+.frame [hidden] { display: none !important; }
+:where(.frame) button { font: inherit; color: inherit; }
+:where(.frame) a { color: inherit; }
+.frame .fn { all: unset; cursor: pointer; display: inline-block; font-size: .62em; line-height: 1; vertical-align: .62em; padding: 0 2px; text-indent: 0; }
+.frame :focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .frame * { transition: none !important; animation: none !important; } }
+
+/* The mockup's own bar on a narrow screen. */
+@media (max-width: 520px) {
+  .bar-title small { display: none; }
+  .seg { flex-wrap: wrap; }
+  .seg button { padding: 7px 7px; font-size: 12px; }
+  .bar-right { margin-left: 0; }
+}
+
+.ov-small { font-size: 14px; line-height: 1.55; color: var(--m-mid); max-width: 70em; margin: 10px 0 0; }
+.ov-cols h2 + .ov-list + h2, .ov-cols .ov-small + h2 { margin-top: 28px; }

@@ -17,7 +17,7 @@ def read(f):
 css = ''.join(read(f) for f in ['shell.css', 'dir-a.css', 'dir-b.css', 'dir-c.css', 'dir-d.css'])
 js = ''.join(read(f) + '\n' for f in ['core.js', 'dir-a.js', 'dir-b.js', 'dir-c.js', 'dir-d.js', 'notes.js']) + 'window.U.boot();\n'
 page = read('page.html')
-# The overview's shots of the current site (shoot-current.js); left as links
+# The overview's shots of the current site (shoot-current.cjs); left as links
 # if they have not been taken.
 for k in ['home', 'work', 'reader', 'search']:
     p = os.path.join(HERE, 'shots', f'{k}.jpg')
