@@ -52,7 +52,10 @@ caption (a Sonnet search, five spot-checked against the Getty records). None
 for Sens, Somn, Insomn, DivSomn, Aud, Col, VV, Pol, Rhet; no eclipse for
 the *Posterior Analytics*. Unchecked: several Bekker citations in the
 captions, and one Phgn candidate is a police mug shot of a named man.
-Not yet shown to John as pictures.
+On John's vote page: https://claude.ai/artifact/XizpnWAJ6xtsoVPtpcX7MJ (read
+his votes with `ArtifactData`, `list`, collection `votes`). Next: put the
+winners in `picks.json` and `photos.json`, with their captions' citations
+checked, and recut any he comments on.
 
 ## Before that: was B still in the running?
 

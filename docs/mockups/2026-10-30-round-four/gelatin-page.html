@@ -1,0 +1,272 @@
+<title>Aristotle Reader Gelatin Prints</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;1,7..72,400&family=Sofia+Sans:wght@400;500;600;650&display=swap" rel="stylesheet">
+<style>
+/* Layout: the titles page's look. A sticky bar picks a work; each work opens
+   with its present photograph, then its candidates: the desktop poster, the
+   phone poster, and the whole print, side by side at one height. */
+:root {
+  --bg: #f4f4f1; --paper: #fbfbf9; --ink: #141413; --mid: #5d5c57; --line: #d9d8d2; --soft: #e9e8e3;
+  --red: #e2382e; --red-ink: #b42419; --po-op: .82;
+  --up: #2c6a43; --up-bg: #e1ede4; --dn-bg: #f5e2df;
+  --sans: "Sofia Sans", system-ui, sans-serif; --read: "Literata", Georgia, serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121211; --paper: #171716; --ink: #ecebe6; --mid: #a7a59e; --line: #2d2c29; --soft: #24231f;
+    --red: #ff5a4d; --red-ink: #ff7b70; --po-op: .86;
+    --up: #86cfa1; --up-bg: #1b2a20; --dn-bg: #2f1c1a; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121211; --paper: #171716; --ink: #ecebe6; --mid: #a7a59e; --line: #2d2c29; --soft: #24231f;
+  --red: #ff5a4d; --red-ink: #ff7b70; --po-op: .86;
+  --up: #86cfa1; --up-bg: #1b2a20; --dn-bg: #2f1c1a; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.45 var(--sans); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+[hidden] { display: none !important; }
+a { color: var(--red-ink); }
+button, select { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
+.wrap { max-width: 1480px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+.head { padding-block: 34px 22px; }
+.head h1 { margin: 0; font: 650 34px/1 var(--sans); text-transform: uppercase; letter-spacing: -.005em; color: var(--red-ink); }
+.head p { margin: 12px 0 0; max-width: 42em; font: 400 17px/1.5 var(--read); color: var(--mid); }
+.head p.vmsg { font: 500 14px/1.4 var(--sans); color: var(--red-ink); }
+.vmsg:empty { display: none; }
+
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-block: 1px solid var(--line); }
+.bar-in { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 24px; padding-block: 8px; }
+.grp { display: flex; align-items: center; gap: 4px; flex: 0 1 26em; min-width: 0; }
+.grp select { flex: 1 1 auto; min-width: 0; height: 34px; padding: 0 8px; border: 1px solid var(--line); border-radius: 0; background: var(--paper); font: 500 15px/1 var(--sans); }
+.step { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border: 1px solid var(--line); background: none; color: var(--ink); cursor: pointer; }
+.step:hover { color: var(--red-ink); }
+.tally { font: 500 14px/1.3 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+.tally b { font-weight: 650; }
+.tally .u { color: var(--up); }
+.tally .d { color: var(--red-ink); }
+
+.list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px; padding-block: 26px 40px; }
+.work { display: grid; gap: 26px; min-width: 0; padding-top: 12px; border-top: 2px solid var(--ink); }
+.work > h2 { margin: 0; font: 650 24px/1.15 var(--sans); }
+.cand { display: grid; gap: 10px; min-width: 0; }
+.cand + .cand { padding-top: 22px; border-top: 1px solid var(--line); }
+.c-h { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 8px 18px; }
+.c-t { flex: 1 1 24em; min-width: 0; }
+.c-t h3 { margin: 0; font: 650 17px/1.25 var(--sans); }
+.c-t p { margin: 3px 0 0; max-width: 62em; font: 400 14.5px/1.45 var(--sans); color: var(--mid); }
+.c-t i { font-family: var(--read); font-style: italic; }
+.c-t .flag { color: var(--ink); }
+
+.vote { display: none; flex: none; gap: 4px; }
+.votes-on .vote { display: inline-flex; }
+.vb { display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 36px; padding: 0; border: 1px solid var(--line); background: var(--paper); color: var(--mid); cursor: pointer; }
+.vb:hover:not(:disabled) { color: var(--ink); border-color: var(--mid); }
+.vb.up[aria-pressed="true"] { color: var(--up); background: var(--up-bg); border-color: var(--up); }
+.vb.down[aria-pressed="true"] { color: var(--red-ink); background: var(--dn-bg); border-color: var(--red-ink); }
+.vb:disabled { cursor: default; }
+.vb:disabled:not([aria-pressed="true"]) { opacity: .45; }
+.vote svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Three pictures at one height: each one's share of the row is its width to
+   height ratio (--r). */
+.row { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.row figure { flex: var(--r) 1 0; min-width: 0; margin: 0; }
+.row figcaption { margin-top: 4px; font: 500 13px/1.3 var(--sans); color: var(--mid); }
+.whole img { display: block; width: 100%; height: auto; background: var(--soft); }
+.now .row { max-width: 62%; }
+
+/* A poster, as in round four's dir-b.css, every length a share of its box,
+   so that it scales with its box. */
+.po { position: relative; overflow: hidden; container-type: inline-size; background: var(--soft); }
+.po.desk { aspect-ratio: 1440 / 600; --w: 1440; --side: 72; --pad: 30; }
+.po.phone { aspect-ratio: 390 / 488; --w: 390; --side: 18; --pad: 18; }
+.po img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; }
+.po-t {
+  position: absolute; top: 0; margin: 0;
+  left: calc(var(--side) * 100cqw / var(--w)); right: calc(var(--side) * 100cqw / var(--w)); padding-top: calc(var(--pad) * 100cqw / var(--w));
+  font: 600 calc(var(--fz) * 100cqw / var(--w))/.9 var(--sans); letter-spacing: -.012em; text-transform: uppercase;
+  text-align: justify; text-align-last: left; hyphens: none; overflow-wrap: normal;
+  color: var(--red); opacity: var(--po-op);
+}
+
+.foot { padding-block: 8px 44px; font: 400 14px/1.5 var(--sans); color: var(--mid); }
+.foot p { margin: 0 0 6px; max-width: 62em; }
+
+@media (max-width: 760px) {
+  .head { padding-block: 24px 16px; }
+  .head h1 { font-size: 28px; }
+  .head p { font-size: 16px; }
+  .work > h2 { font-size: 21px; }
+  .list { gap: 44px; }
+  .row figure.dk { flex: 1 1 100%; }
+  .now .row { max-width: none; }
+}
+</style>
+
+<header class="head wrap">
+  <h1>Gelatin silver prints</h1>
+  <p>Getty photographs that might replace the brown prints on B’s posters. Vote on each one. The cuts are first tries, so judge the picture and leave a comment if a cut misses.</p>
+  <p class="vmsg" id="vmsg" role="status" aria-live="polite"></p>
+</header>
+
+<div class="bar">
+  <div class="wrap bar-in">
+    <div class="grp">
+      <button type="button" class="step" id="prev" aria-label="Previous work"><svg viewBox="0 0 10 16" width="9" height="14" aria-hidden="true"><path d="M8 2 2 8l6 6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+      <select id="sel" aria-label="Work"></select>
+      <button type="button" class="step" id="next" aria-label="Next work"><svg viewBox="0 0 10 16" width="9" height="14" aria-hidden="true"><path d="m2 2 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></button>
+    </div>
+    <div class="tally" id="tally" hidden></div>
+  </div>
+</div>
+
+<main class="wrap"><div class="list" id="list"></div></main>
+
+<footer class="foot wrap">
+  <p id="none"></p>
+  <p>Photographs: J. Paul Getty Museum, Open Content (CC0). The Bekker citations in the captions have not been checked.</p>
+</footer>
+
+<script>
+/*__TL__*/
+</script>
+<script>
+(function () {
+  'use strict';
+  const D = /*__DATA__*/{};
+  const TL = window.TL;
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const THUMB = {
+    up: '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>',
+    down: '<svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>',
+  };
+  const poster = (w, cut, ratio, src, alt, label, kind) => `<figure class="${cut === 'desk' ? 'dk' : 'ph'}" style="--r:${ratio}">
+      <div class="po ${cut}" style="--fz:${TL.now(w.title, kind, 'work')}"><img src="${src}" alt="${esc(alt)}" loading="lazy" decoding="async"><div class="po-t"><span>${esc(w.title)}</span></div></div>
+      <figcaption>${label}</figcaption></figure>`;
+  // A vote is one document in the store's `votes` collection: c:<work>:<n>.
+  const vote = (key, label) => `<span class="vote" data-key="${key}">${['up', 'down'].map((v) => `<button type="button" class="vb ${v}" data-v="${v}" aria-pressed="false" aria-label="${v === 'up' ? 'Thumbs up' : 'Thumbs down'}: ${esc(label)}" disabled>${THUMB[v]}</button>`).join('')}</span>`;
+  const cand = (w, c) => {
+    const name = `${w.id}-${c.n}`;
+    const alt = `${c.title}, ${c.maker}, ${c.date}`;
+    return `<article class="cand" id="${name}" data-key="c:${w.id}:${c.n}">
+      <div class="c-h">
+        <div class="c-t">
+          <h3>${esc(c.title)}</h3>
+          <p>${esc(c.maker)}, ${esc(c.date)}. <a href="${esc(c.url)}" target="_blank" rel="noopener">Getty record</a>. ${c.cap}</p>
+          ${c.flag ? `<p class="flag">${esc(c.flag)}</p>` : ''}
+        </div>
+        ${vote(`c:${w.id}:${c.n}`, `${c.title}, for ${w.title}`)}
+      </div>
+      <div class="row">
+        ${poster(w, 'desk', 2.4, `img/gel/desk/${name}.jpg`, alt, 'Desktop', 'desktop')}
+        ${poster(w, 'phone', 0.8, `img/gel/phone/${name}.jpg`, alt, 'Phone', 'phone')}
+        <figure class="whole" style="--r:${c.a}"><img src="img/gel/whole/${name}.jpg" alt="${esc(alt)}, the whole print" loading="lazy" decoding="async" style="aspect-ratio:${c.a}"><figcaption>Whole print</figcaption></figure>
+      </div>
+    </article>`;
+  };
+  $('list').innerHTML = D.works.map((w) => `<section class="work" id="w-${w.id}" data-w="${w.id}">
+      <h2>${esc(w.title)}</h2>
+      <div class="cand now">
+        <div class="c-t"><h3>Now</h3><p><i>${esc(w.now.title)}</i>, ${esc(w.now.maker)}, ${esc(w.now.date)}.</p></div>
+        <div class="row">${poster(w, 'desk', 2.4, `img/desk/${w.id}.jpg`, w.now.title, 'Desktop', 'desktop')}${poster(w, 'phone', 0.8, `img/phone/${w.id}.jpg`, w.now.title, 'Phone', 'phone')}</div>
+      </div>
+      ${w.cands.map((c) => cand(w, c)).join('')}
+    </section>`).join('');
+  const TOTAL = D.works.reduce((n, w) => n + w.cands.length, 0);
+  $('none').textContent = `Not here: ${D.already.join(', ')}, which already use gelatin silver prints; and ${D.none.join(', ')}, for which the search found none.`;
+
+  // The work shown, kept for this viewer only.
+  const ORDER = D.works.map((w) => w.id);
+  const KEY = 'aristotle-gelatin-prints';
+  let shown = 'all';
+  try { const v = localStorage.getItem(KEY); if (ORDER.includes(v)) shown = v; } catch (e) { /* no storage */ }
+  $('sel').innerHTML = `<option value="all">All ${D.works.length} works</option>` + D.works.map((w) => `<option value="${w.id}">${esc(w.title)} (${w.cands.length})</option>`).join('');
+  function show(id) {
+    shown = id;
+    for (const s of document.querySelectorAll('.work')) s.hidden = !(id === 'all' || s.dataset.w === id);
+    $('sel').value = id;
+    try { localStorage.setItem(KEY, id); } catch (e) { /* no storage */ }
+  }
+  const step = (d) => {
+    const i = ORDER.indexOf(shown);
+    show(i < 0 ? ORDER[d > 0 ? 0 : ORDER.length - 1] : ORDER[(i + d + ORDER.length) % ORDER.length]);
+    window.scrollTo(0, 0);
+  };
+  $('sel').addEventListener('change', (e) => { show(e.target.value); window.scrollTo(0, 0); });
+  $('prev').addEventListener('click', () => step(-1));
+  $('next').addEventListener('click', () => step(1));
+  show(shown);
+
+  // Votes live in the artifact's own store, which only the page's owner
+  // writes and everyone who can open the page reads. Without the store the
+  // thumbs stay hidden.
+  const VOTES = new Map();
+  let store = null;
+  let mayVote = false;
+  const busy = new Set();
+  const say = (t) => { $('vmsg').textContent = t; };
+  function paint() {
+    for (const el of document.querySelectorAll('.vote')) {
+      const v = VOTES.get(el.dataset.key) || '';
+      for (const b of el.children) {
+        b.setAttribute('aria-pressed', String(b.dataset.v === v));
+        b.disabled = !mayVote;
+      }
+    }
+    const vs = [...VOTES.values()];
+    $('tally').innerHTML = `<b>${vs.length}</b> of ${TOTAL} voted · <b class="u">${vs.filter((v) => v === 'up').length}</b> up · <b class="d">${vs.filter((v) => v === 'down').length}</b> down`;
+  }
+  async function cast(key, v) {
+    if (!store || !mayVote || busy.has(key)) return;
+    const was = VOTES.get(key) || '';
+    const next = was === v ? '' : v;
+    busy.add(key);
+    if (next) VOTES.set(key, next); else VOTES.delete(key);
+    paint();
+    say('');
+    try {
+      const ref = store.collection('votes').doc(key);
+      if (next) await ref.set({ vote: next, at: new Date().toISOString() });
+      else await ref.delete();
+    } catch (e) {
+      if (was) VOTES.set(key, was); else VOTES.delete(key);
+      paint();
+      say(e && e.code === 'quota_exceeded' ? 'The page’s store is full, so that vote was not saved.' : 'That vote was not saved. Try again.');
+    } finally {
+      busy.delete(key);
+    }
+  }
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('.vb');
+    if (b) cast(b.parentElement.dataset.key, b.dataset.v);
+  });
+  if (window.claude && typeof window.claude.use === 'function') {
+    Promise.all([window.claude.use('db'), window.claude.use('user')]).then(async ([db, user]) => {
+      if (!db) return;
+      store = db;
+      mayVote = user ? await user.isOwner() : false;
+      document.documentElement.classList.add('votes-on');
+      $('tally').hidden = false;
+      paint();
+      db.collection('votes').onSnapshot((snap) => {
+        VOTES.clear();
+        for (const d of snap.docs) {
+          const x = d.data();
+          if (x && (x.vote === 'up' || x.vote === 'down')) VOTES.set(d.id, x.vote);
+        }
+        paint();
+      }, () => {
+        mayVote = false;
+        paint();
+        say('Votes cannot be saved or shown on this view.');
+      });
+    }).catch(() => { /* no store: the thumbs stay hidden */ });
+  }
+})();
+</script>

@@ -157,6 +157,25 @@ photograph, which shows whole; spreads and middles start at the top there.
 Fonts are still untried. `titles-check.cjs` (2,438 checks) holds each to
 its rule, with a planted fault first.
 
+### Gelatin silver prints
+
+John: "perhaps gelatin silver prints would be better, as those are generally
+free of brown tones". `gelatin-candidates.json` lists 48 Getty CC0 candidates
+for 26 works (a search, five spot-checked against the Getty's records).
+`gelatin.py` builds `gelatin.html`, published as
+https://claude.ai/artifact/XizpnWAJ6xtsoVPtpcX7MJ: each work's present
+photograph, then each candidate as a desktop poster, a phone poster, and the
+whole print, under round four's red title, with one thumbs up and down per
+candidate. `gelatin-cuts.json` holds each cut's box and focus, set by eye from
+gridded sheets and checked on sheets of the results; a stereograph's box is
+its left half. Votes are in the artifact's store, collection `votes`,
+documents `c:<work>:<n>`, n being the candidate's place in its work's list.
+`gelatin-check.cjs` holds the page to its rules, with a planted fault first.
+The local server drops connections under load, so it gives a picture a second
+try. Six works are not on the page because they already use gelatin silver
+(APr, Phys, GC, GA, EN, Lin); nine have no candidate (Sens, Somn, Insomn,
+DivSomn, Pol, Rhet, Col, Aud, VV).
+
 ### Votes
 
 John: "Add thumbs up and thumbs down selectors for each option. And have a
@@ -225,5 +244,13 @@ node docs/mockups/2026-10-30-round-four/title-options.cjs
 python3 docs/mockups/2026-10-30-round-four/title-sheets.py
 ```
 
-`index.html`, `test.html`, `titles.html`, `titles-test.html`, `img/`,
+```bash
+SSL_CERT_FILE=/etc/ssl/cert.pem python3 docs/mockups/2026-10-30-round-four/gelatin.py
+```
+
+```bash
+node docs/mockups/2026-10-30-round-four/gelatin-check.cjs
+```
+
+`index.html`, `test.html`, `titles.html`, `titles-test.html`, `gelatin.html`, `gelatin-test.html`, `img/`,
 `img-src/`, `title-options/` and `title-legibility/` are gitignored.
