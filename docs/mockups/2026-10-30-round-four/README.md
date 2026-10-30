@@ -89,15 +89,16 @@ breaking between letters, three letters a side at least (block, bigger block,
 block spread). Two things use it:
 
 - `titles.py` builds `titles.html`: every setting on every poster (the home
-  page and the 41 works), desktop and phone, for John to browse and annotate.
-  Published as https://claude.ai/artifact/BVfg5CkJbG8zJmjXHEXPuq.
-  `titles-check.cjs` (2,206 checks, each kind with a planted fault first)
+  page and the 41 works), desktop and phone, grouped by work, for John to
+  browse, annotate and vote on. Published as
+  https://claude.ai/artifact/BVfg5CkJbG8zJmjXHEXPuq.
+  `titles-check.cjs` (2,224 checks, each kind with a planted fault first)
   holds it to: every setting on every poster with both photographs; each
   title inside its poster, each line ending where the rule measured it, a
   block's lines meeting both edges, broken words keeping three letters a
   side; every title set exactly as round four's mockup sets it (1,176
-  comparisons with `test.html`); the controls, a phone's width and both
-  themes.
+  comparisons with `test.html`); the controls, what they hide off the page;
+  the votes; a phone's width and both themes.
 - `title-options.cjs` sets the same rules on the mockup's own posters and
   saves pictures, which `title-sheets.py` lays out as the sheets sent in chat
   (in `title-options/`, gitignored).
@@ -107,6 +108,21 @@ photograph, top to bottom, in every setting but Now. John, on the titles page:
 "Center the text on the vertical access." A spread needs two lines. John has
 not picked a setting yet; the open item is in `HANDOFF-REDESIGN.md` at the
 repo root.
+
+### Votes
+
+John: "Add thumbs up and thumbs down selectors for each option. And have a
+thumbs up down on photo for each." Every desktop and phone poster in every
+setting has thumbs up and down under it, and each work's photograph has a pair
+beside a line naming it and saying why it was chosen; a tally per setting sits
+at the top. A second click on a thumb takes the vote back. The votes live in
+the artifact's own store (the `db` capability), collection `votes`, one
+document per poster or photograph: `t:<setting>--<work>:<desk|phone>` or
+`p:<work>`, with `vote` up or down. Only the page's owner writes there;
+everyone who can open the page reads. Read them with the `ArtifactData` tool
+(`list`, collection `votes`, the artifact's URL). Locally `titles-check.cjs`
+stands in for the store (`STUB`), and `titles-test.html` carries the publish
+skeleton's reset, whose `[hidden]` rule the page also sets itself.
 
 ## Rebuild
 

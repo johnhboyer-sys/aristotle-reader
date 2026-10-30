@@ -4,34 +4,51 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;1,7..72,400&family=Sofia+Sans:wght@400;500;600;650&display=swap" rel="stylesheet">
 <style>
-/* Layout: a sticky bar of three choices (setting, poster, size) over a list.
-   Each entry is one setting on one poster: the desktop poster and the phone
-   poster side by side at one height, each drawn at full size and scaled. */
+/* Layout: a sticky bar of three choices (setting, poster, size) over a list
+   of works. Each work opens with its photograph and a vote on it; under it,
+   one entry per setting: the desktop poster and the phone poster side by
+   side at one height, each drawn at full size and scaled, each with a vote. */
 :root {
   --bg: #f4f4f1; --paper: #fbfbf9; --ink: #141413; --mid: #5d5c57; --line: #d9d8d2; --soft: #e9e8e3;
   --red: #e2382e; --red-ink: #b42419; --po-op: .82;
+  --up: #2c6a43; --up-bg: #e1ede4; --dn-bg: #f5e2df;
   --sans: "Sofia Sans", system-ui, sans-serif; --read: "Literata", Georgia, serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --bg: #121211; --paper: #171716; --ink: #ecebe6; --mid: #a7a59e; --line: #2d2c29; --soft: #24231f;
-    --red: #ff5a4d; --red-ink: #ff7b70; --po-op: .86; color-scheme: dark;
+    --red: #ff5a4d; --red-ink: #ff7b70; --po-op: .86;
+    --up: #86cfa1; --up-bg: #1b2a20; --dn-bg: #2f1c1a; color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --bg: #121211; --paper: #171716; --ink: #ecebe6; --mid: #a7a59e; --line: #2d2c29; --soft: #24231f;
-  --red: #ff5a4d; --red-ink: #ff7b70; --po-op: .86; color-scheme: dark;
+  --red: #ff5a4d; --red-ink: #ff7b70; --po-op: .86;
+  --up: #86cfa1; --up-bg: #1b2a20; --dn-bg: #2f1c1a; color-scheme: dark;
 }
 body { background: var(--bg); color: var(--ink); font: 400 15px/1.45 var(--sans); }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+[hidden] { display: none !important; }
 a { color: var(--red-ink); }
 button, select { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .wrap { max-width: 1480px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
 .head { padding-block: 34px 22px; }
 .head h1 { margin: 0; font: 650 34px/1 var(--sans); text-transform: uppercase; letter-spacing: -.005em; color: var(--red-ink); }
-.head p { margin: 12px 0 0; max-width: 40em; font: 400 17px/1.5 var(--read); color: var(--mid); }
+.head .lede { margin: 12px 0 0; max-width: 40em; font: 400 17px/1.5 var(--read); color: var(--mid); }
+.tally { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; margin-top: 18px; font: 500 14px/1.3 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+.tl-l { font: 600 12.5px/1 var(--sans); text-transform: uppercase; letter-spacing: .06em; }
+.tl-items { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 20px; }
+.tl-i { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.tl-n { color: var(--ink); font-weight: 600; }
+.tl-up, .tl-dn { display: inline-flex; align-items: center; gap: 3px; }
+.tl-up { color: var(--up); }
+.tl-dn { color: var(--red-ink); }
+.tally svg { width: 13px; height: 13px; }
+.vmsg { margin: 10px 0 0; font: 500 14px/1.4 var(--sans); color: var(--red-ink); }
+.vmsg:empty { display: none; }
 
 .bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-block: 1px solid var(--line); }
 .bar-in { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 34px; padding-block: 8px; }
@@ -50,11 +67,26 @@ button, select { font: inherit; color: inherit; }
 
 .note { margin: 18px 0 0; font: 400 15px/1.45 var(--sans); color: var(--mid); }
 .note b { font-weight: 650; color: var(--ink); margin-right: 6px; }
-.list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 40px 22px; padding-block: 22px 40px; }
-.list.size-phone { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
-.it { display: grid; gap: 4px; min-width: 0; align-content: start; padding-top: 12px; border-top: 1px solid var(--line); }
-.it-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0; font: 650 17px/1.25 var(--sans); }
-.it-w { font: italic 400 16px/1.25 var(--read); color: var(--mid); }
+.list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px 22px; padding-block: 26px 40px; }
+/* One setting, phone posters: the works flow in columns, their headers
+   kept to one row height so the posters line up. */
+.list.size-phone.one-set { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: 40px 22px; }
+.list.size-phone.one-set > .pg { grid-row: span 2; grid-template-rows: subgrid; row-gap: 12px; }
+
+/* A work: its name, its photograph and the vote on it. */
+.pg { display: grid; gap: 18px; min-width: 0; align-content: start; }
+.pg-h { display: grid; gap: 6px; align-content: start; min-width: 0; padding-top: 12px; border-top: 2px solid var(--ink); }
+.pg-t { margin: 0; font: 650 24px/1.15 var(--sans); }
+.pg-ph { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 18px; }
+.pg-ph p { flex: 1 1 22em; min-width: 0; max-width: 62em; margin: 0; font: 400 14.5px/1.45 var(--sans); color: var(--mid); }
+.pg-ph i { font-family: var(--read); font-style: italic; }
+.pg-its { display: grid; grid-template-columns: minmax(0, 1fr); gap: 36px 22px; min-width: 0; align-content: start; }
+.list.size-phone:not(.one-set) .pg-its { grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
+
+/* A setting on that work. */
+.it { display: grid; gap: 4px; min-width: 0; align-content: start; padding-top: 10px; border-top: 1px solid var(--line); }
+.one-set .it { padding-top: 0; border-top: 0; }
+.it-h { margin: 0; font: 650 17px/1.25 var(--sans); }
 .it-d { margin: 0; font: 400 14.5px/1.4 var(--sans); color: var(--mid); }
 .one-set .it-d { display: none; }
 .pp { display: grid; grid-template-columns: minmax(0, 2.4fr) minmax(0, .7992fr); gap: 16px; align-items: start; margin-top: 8px; }
@@ -63,7 +95,18 @@ button, select { font: inherit; color: inherit; }
 .fig { margin: 0; min-width: 0; }
 .fig.desk { max-width: 1440px; }
 .size-phone .fig.phone { max-width: 390px; }
-.fig figcaption { margin-top: 6px; font: 500 13px/1.3 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+.fig figcaption { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; margin-top: 6px; font: 500 13px/1.3 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+
+/* Thumbs up and down: shown once the page's store answers. */
+.vote { display: none; flex: none; gap: 4px; }
+.votes-on .vote { display: inline-flex; }
+.vb { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 30px; padding: 0; border: 1px solid var(--line); background: var(--paper); color: var(--mid); cursor: pointer; }
+.vb:hover:not(:disabled) { color: var(--ink); border-color: var(--mid); }
+.vb.up[aria-pressed="true"] { color: var(--up); background: var(--up-bg); border-color: var(--up); }
+.vb.down[aria-pressed="true"] { color: var(--red-ink); background: var(--dn-bg); border-color: var(--red-ink); }
+.vb:disabled { cursor: default; }
+.vb:disabled:not([aria-pressed="true"]) { opacity: .45; }
+.vote svg, .tally svg { fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 
 /* A poster at full size (round four's dir-b.css), scaled to its box. */
 .fit { position: relative; overflow: hidden; width: 100%; max-width: 100%; aspect-ratio: 1440 / 600; background: var(--soft); }
@@ -90,7 +133,7 @@ button, select { font: inherit; color: inherit; }
 @media (max-width: 760px) {
   .head { padding-block: 24px 16px; }
   .head h1 { font-size: 28px; }
-  .head p { font-size: 16px; }
+  .head .lede { font-size: 16px; }
   .chips, .lab { display: none; }
   .grp select.alt { display: block; }
   .bar-in { gap: 8px; }
@@ -100,13 +143,19 @@ button, select { font: inherit; color: inherit; }
   #po-sel { flex: 1 1 auto; width: auto; }
   .pp { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .fig.phone { max-width: 390px; }
-  .list { gap: 32px; }
+  .list { gap: 44px; }
+  .pg-t { font-size: 21px; }
 }
 </style>
 
 <header class="head wrap">
   <h1>Poster titles</h1>
-  <p>B’s poster titles set seven ways, on the home page and every work, desktop and phone.</p>
+  <p class="lede">B’s poster titles set seven ways, on the home page and every work, desktop and phone.</p>
+  <div class="tally" id="tally" hidden>
+    <span class="tl-l">Your votes</span>
+    <span class="tl-items" id="tally-items"></span>
+  </div>
+  <p class="vmsg" id="vmsg" role="status" aria-live="polite"></p>
 </header>
 
 <div class="bar">
@@ -164,17 +213,39 @@ button, select { font: inherit; color: inherit; }
   const $ = (id) => document.getElementById(id);
   const list = $('list');
 
-  // Every setting on every poster, in one fixed order; the choices only
-  // show and hide entries.
-  list.innerHTML = D.posters.map((p) => SETS.map((s) => `<article class="it" id="${s.id}--${p.id}" data-set="${s.id}" data-po="${p.id}" hidden>
-      <h2 class="it-h"><span class="it-s">${esc(s.name)}</span> <i class="it-w">${esc(p.name)}</i></h2>
+  // Thumbs: Feather's thumbs-up and thumbs-down (MIT), in the text colour.
+  const THUMB = {
+    up: '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>',
+    down: '<svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>',
+  };
+  // A vote is one document in the store's `votes` collection, named for
+  // what it judges: t:<setting>--<work>:<desk|phone> for a poster's title,
+  // p:<work> for a work's photograph.
+  const vote = (key, label) => `<span class="vote" data-key="${key}">${['up', 'down'].map((v) => `<button type="button" class="vb ${v}" data-v="${v}" aria-pressed="false" aria-label="${v === 'up' ? 'Thumbs up' : 'Thumbs down'}: ${esc(label)}" disabled>${THUMB[v]}</button>`).join('')}</span>`;
+  const what = (key) => {
+    const m = /^t:(.+?)--(.+):(desk|phone)$/.exec(key);
+    return m ? { kind: 'title', set: m[1], po: m[2], size: m[3] } : { kind: 'photo', po: key.slice(2) };
+  };
+
+  // Every setting on every poster, in one fixed order, grouped by work; the
+  // choices only show and hide them.
+  const entry = (s, p) => `<article class="it" id="${s.id}--${p.id}" data-set="${s.id}" data-po="${p.id}" hidden>
+      <h3 class="it-h">${esc(s.name)}</h3>
       <p class="it-d">${esc(s.desc)}</p>
       <div class="pp">${KINDS.map(([kind, cut, label, , w, h]) => `<figure class="fig ${cut}">
         <div class="fit"><div class="po ${cut}" style="--fz:${TL.now(p.title, kind, p.kind)}px"><img src="img/${cut}/${p.photo}.jpg" alt="${esc(p.alt)}" width="${w}" height="${h}" loading="lazy" decoding="async"><div class="po-t"></div></div></div>
-        <figcaption>${label} · <span class="px"></span></figcaption>
+        <figcaption><span>${label} · <span class="px"></span></span>${vote(`t:${s.id}--${p.id}:${cut}`, `${s.name}, ${p.name}, ${label.toLowerCase()}`)}</figcaption>
       </figure>`).join('')}</div>
-    </article>`).join('')).join('');
-  const items = [...list.children];
+    </article>`;
+  list.innerHTML = D.posters.map((p) => `<section class="pg" id="po-${p.id}" data-po="${p.id}">
+      <header class="pg-h">
+        <h2 class="pg-t">${esc(p.name)}</h2>
+        <div class="pg-ph"><p>Photograph: <i>${esc(p.ph.title)}</i>, ${esc(p.ph.maker)}, ${esc(p.ph.date)}. ${p.ph.cap}</p>${vote(`p:${p.id}`, `the photograph for ${p.name}`)}</div>
+      </header>
+      <div class="pg-its">${SETS.map((s) => entry(s, p)).join('')}</div>
+    </section>`).join('');
+  const works = [...list.querySelectorAll('.pg')];
+  const items = [...list.querySelectorAll('.it')];
 
   // The controls.
   let g = '';
@@ -246,6 +317,7 @@ button, select { font: inherit; color: inherit; }
     }
   }
   function apply() {
+    for (const w of works) w.hidden = !(S.po === 'all' || w.dataset.po === S.po);
     for (const it of items) {
       const show = (S.set === 'all' || it.dataset.set === S.set) && (S.po === 'all' || it.dataset.po === S.po);
       it.hidden = !show;
@@ -268,10 +340,80 @@ button, select { font: inherit; color: inherit; }
     const i = ORDER.indexOf(S.po);
     go({ po: i < 0 ? ORDER[d > 0 ? 0 : ORDER.length - 1] : ORDER[(i + d + ORDER.length) % ORDER.length] });
   };
+
+  // Votes live in the artifact's own store, which only the page's owner
+  // writes and everyone who can open the page reads. Without the store
+  // (signed out, or the page opened outside claude.ai) the thumbs stay
+  // hidden.
+  const VOTES = new Map();
+  let store = null;
+  let mayVote = false;
+  const busy = new Set();
+  const say = (t) => { $('vmsg').textContent = t; };
+  function paint() {
+    for (const el of document.querySelectorAll('.vote')) {
+      const v = VOTES.get(el.dataset.key) || '';
+      for (const b of el.children) {
+        b.setAttribute('aria-pressed', String(b.dataset.v === v));
+        b.disabled = !mayVote;
+      }
+    }
+    const t = Object.fromEntries([...SETS.map((s) => s.id), 'photo'].map((k) => [k, { up: 0, down: 0 }]));
+    for (const [k, v] of VOTES) {
+      const w = what(k);
+      const c = t[w.kind === 'photo' ? 'photo' : w.set];
+      if (c) c[v]++;
+    }
+    $('tally-items').innerHTML = [...SETS.map((s) => [s.id, s.name]), ['photo', 'Photographs']].map(([k, n]) => `<span class="tl-i" data-k="${k}"><span class="tl-n">${esc(n)}</span><span class="tl-up">${THUMB.up}<span class="sr">up</span> <b class="n">${t[k].up}</b></span><span class="tl-dn">${THUMB.down}<span class="sr">down</span> <b class="n">${t[k].down}</b></span></span>`).join('');
+  }
+  async function cast(key, v) {
+    if (!store || !mayVote || busy.has(key)) return;
+    const was = VOTES.get(key) || '';
+    const next = was === v ? '' : v;
+    busy.add(key);
+    if (next) VOTES.set(key, next); else VOTES.delete(key);
+    paint();
+    say('');
+    try {
+      const ref = store.collection('votes').doc(key);
+      if (next) await ref.set({ ...what(key), vote: next, at: new Date().toISOString() });
+      else await ref.delete();
+    } catch (e) {
+      if (was) VOTES.set(key, was); else VOTES.delete(key);
+      paint();
+      say(e && e.code === 'quota_exceeded' ? 'The page’s store is full, so that vote was not saved.' : 'That vote was not saved. Try again.');
+    } finally {
+      busy.delete(key);
+    }
+  }
+  if (window.claude && typeof window.claude.use === 'function') {
+    Promise.all([window.claude.use('db'), window.claude.use('user')]).then(async ([db, user]) => {
+      if (!db) return;
+      store = db;
+      mayVote = user ? await user.isOwner() : false;
+      document.documentElement.classList.add('votes-on');
+      $('tally').hidden = false;
+      paint();
+      db.collection('votes').onSnapshot((snap) => {
+        VOTES.clear();
+        for (const d of snap.docs) {
+          const x = d.data();
+          if (x && (x.vote === 'up' || x.vote === 'down')) VOTES.set(d.id, x.vote);
+        }
+        paint();
+      }, () => {
+        mayVote = false;
+        paint();
+        say('Votes cannot be saved or shown on this view.');
+      });
+    }).catch(() => { /* no store: the thumbs stay hidden */ });
+  }
+
   document.addEventListener('click', (e) => {
     const b = e.target.closest('button');
     if (!b) return;
-    if (b.dataset.setB) go({ set: b.dataset.setB });
+    if (b.classList.contains('vb')) cast(b.parentElement.dataset.key, b.dataset.v);
+    else if (b.dataset.setB) go({ set: b.dataset.setB });
     else if (b.dataset.sizeB) go({ size: b.dataset.sizeB });
     else if (b.id === 'po-prev') step(-1);
     else if (b.id === 'po-next') step(1);

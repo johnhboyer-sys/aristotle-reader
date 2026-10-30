@@ -1,6 +1,7 @@
 // Functional check of titles.html, the page of title settings for B's
 // posters: every setting on every poster, desktop and phone; each title
 // inside its poster and set as round four's mockup sets it; the controls;
+// the thumbs on every poster and photograph, and the store they are kept in;
 // both themes; a phone's width. Each check must first catch a planted fault.
 // Needs Playwright and a local server serving this folder (python3 -m
 // http.server 8765; or set BASE), and titles.py and build.py run first.
@@ -23,9 +24,45 @@ const HOME = 'The complete works of Aristotle';
 const POSTERS = ['home', ...reg.works.map((w) => w.id)];
 const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
 
+// The page keeps its votes in the artifact's store, which only claude.ai
+// serves. This stands in for it: an in-memory `votes` collection with the
+// store's call shapes (onSnapshot on a collection, set and delete on a
+// document) and an owner. __drop names a write the store loses; __push
+// writes as another tab or device would; __owner = false is someone else.
+const STUB = () => {
+  const store = new Map();
+  const listeners = new Set();
+  window.__store = store;
+  window.__drop = null;
+  const snap = () => {
+    const docs = [...store.keys()].sort().map((id) => {
+      const body = Object.freeze({ ...store.get(id) });
+      return { id, exists: true, data: () => body, metadata: { fromCache: false, hasPendingWrites: false } };
+    });
+    return { docs, size: docs.length, empty: !docs.length, docChanges: () => [], metadata: { fromCache: false, hasPendingWrites: false } };
+  };
+  const fire = () => setTimeout(() => listeners.forEach((f) => f(snap())), 0);
+  window.__push = (id, body) => { if (body) store.set(id, body); else store.delete(id); fire(); };
+  const db = {
+    collection: (path) => ({
+      path,
+      onSnapshot: (next) => { listeners.add(next); fire(); return () => listeners.delete(next); },
+      doc: (id) => ({
+        id,
+        path: `${path}/${id}`,
+        set: async (body) => { if (window.__drop !== id) store.set(id, body); fire(); },
+        delete: async () => { store.delete(id); fire(); },
+      }),
+    }),
+  };
+  const user = { isOwner: async () => window.__owner !== false, canEdit: async () => window.__owner !== false, can: async () => null, id: async () => 'u_test' };
+  window.claude = { use: async (name) => (name === 'db' ? db : name === 'user' ? user : null) };
+};
+
 (async () => {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  await ctx.addInitScript(STUB);
   const page = await ctx.newPage();
   const errs = [];
   page.on('pageerror', (e) => errs.push(e.message));
@@ -51,7 +88,7 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
   // ── Every setting on every poster, each with both photographs ────────────
   const structure = () => ev(() => [...document.querySelectorAll('.it')].map((x) => ({
     id: x.id, set: x.dataset.set, po: x.dataset.po,
-    name: x.querySelector('.it-w').textContent,
+    name: x.closest('.pg').querySelector('.pg-t').textContent,
     desk: [...x.querySelectorAll('.fig.desk .po.desk img')].map((i) => i.getAttribute('src')),
     phone: [...x.querySelectorAll('.fig.phone .po.phone img')].map((i) => i.getAttribute('src')),
   })));
@@ -93,7 +130,7 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
     const w100 = (s) => cv.measureText(s).width;
     const out = [];
     for (const it of document.querySelectorAll('.it:not([hidden])')) {
-      const title = it.dataset.po === 'home' ? home : it.querySelector('.it-w').textContent;
+      const title = it.dataset.po === 'home' ? home : it.closest('.pg').querySelector('.pg-t').textContent;
       for (const [cut, kind] of [['desk', 'desktop'], ['phone', 'phone']]) {
         const B = window.TL.BOX[kind];
         const po = it.querySelector(`.po.${cut}`);
@@ -266,7 +303,18 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
   // ── The controls ─────────────────────────────────────────────────────────
   await ctx.clearCookies();
   await ev(() => localStorage.clear());
+  // What the choices hide is off the page, not only marked hidden.
+  const drawn = () => ev(() => ({
+    entries: [...document.querySelectorAll('.it')].filter((x) => x.getClientRects().length).length,
+    marked: document.querySelectorAll('.it:not([hidden])').length,
+    works: [...document.querySelectorAll('.pg')].filter((x) => x.getClientRects().length).length,
+  }));
   await open();
+  await ev(() => { const st = document.createElement('style'); st.textContent = '.pg[hidden], .it[hidden] { display: grid !important; }'; document.head.appendChild(st); });
+  caught((await drawn()).entries !== (await drawn()).marked, 'hidden-entries check');
+  await open();
+  const dr = await drawn();
+  ok(dr.entries === 7 && dr.marked === 7 && dr.works === 1, `first view draws ${JSON.stringify(dr)}`);
   const homeIds = OPTS.map((o) => `${o}--home`);
   ok((await shown()).join() === homeIds.join(), `first view ${await shown()}`);
   const pressed = () => ev(() => ({
@@ -285,6 +333,8 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
   await pick({ set: 'block', po: 'all' });
   let sh = await shown();
   ok(sh.length === 42 && sh.every((x) => x.startsWith('block--')), `block on every poster: ${sh.length}`);
+  const dr2 = await drawn();
+  ok(dr2.entries === 42 && dr2.works === 42, `block on every poster draws ${JSON.stringify(dr2)}`);
   pr = await pressed();
   ok(pr.set.join() === 'block' && pr.one && /^Block/.test(pr.note), `one setting ${JSON.stringify(pr)}`);
   await pick({ set: 'all', po: 'all' });
@@ -309,7 +359,14 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
   ok((await figs()).every((x) => x === 'desk:true' || x === 'phone:false'), 'desktop only');
   await pick({ size: 'phone' });
   ok((await figs()).every((x) => x === 'phone:true' || x === 'desk:false'), 'phone only');
-  ok(await ev(() => getComputedStyle(document.getElementById('list')).gridTemplateColumns.split(' ').length > 1), 'phone posters in columns on a wide screen');
+  ok(await ev(() => getComputedStyle(document.querySelector('.pg:not([hidden]) .pg-its')).gridTemplateColumns.split(' ').length > 1), 'phone posters in columns on a wide screen');
+  // One setting on every work: the works in columns, the posters of a row
+  // starting level however long each photograph's line runs.
+  await pick({ po: 'all', set: 'block' });
+  ok(await ev(() => getComputedStyle(document.getElementById('list')).gridTemplateColumns.split(' ').length > 1), 'one setting: the works in columns');
+  const tops = await ev(() => [...document.querySelectorAll('.it:not([hidden]) .fig.phone .fit')].slice(0, 4).map((f) => Math.round(f.getBoundingClientRect().top)));
+  ok(tops.length === 4 && new Set(tops).size === 1, `one setting: a row of posters starts at ${tops}`);
+  await pick({ po: 'EN', set: 'all' });
   await pick({ size: 'both' });
   ok((await figs()).every((x) => /:true$/.test(x)), 'desktop and phone');
   // The choices survive a reload (this viewer's browser only).
@@ -357,6 +414,92 @@ const titleOf = (po) => (po === 'home' ? HOME : byId[po].title);
   await page.setViewportSize({ width: 1600, height: 1000 });
 
   // ── Both themes: B's red, at B's opacity ─────────────────────────────────
+  // ── Votes: thumbs on every poster and photograph, kept in the store ──────
+  const stored = () => ev(() => Object.fromEntries(window.__store));
+  const state = (key) => ev((k) => {
+    const el = document.querySelector(`.vote[data-key="${k}"]`);
+    return el ? { pressed: [...el.children].filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.v).join(), on: [...el.children].every((b) => !b.disabled), shown: getComputedStyle(el).display !== 'none' } : null;
+  }, key);
+  const tallyDom = () => ev(() => Object.fromEntries([...document.querySelectorAll('#tally-items .tl-i')].map((x) => [x.dataset.k, [...x.querySelectorAll('b.n')].map((b) => +b.textContent)])));
+  const tallyFaults = async () => {
+    const want = Object.fromEntries([...OPTS, 'photo'].map((k) => [k, [0, 0]]));
+    for (const [k, d] of Object.entries(await stored())) want[k.startsWith('p:') ? 'photo' : /^t:(.+?)--/.exec(k)[1]][d.vote === 'up' ? 0 : 1]++;
+    const have = await tallyDom();
+    return Object.keys(want).filter((k) => String(want[k]) !== String(have[k])).map((k) => `tally ${k}: ${have[k]}, store ${want[k]}`);
+  };
+  const click = async (sel) => { await page.click(sel); await page.waitForTimeout(60); };
+  await open();
+  await pick({ set: 'all', po: 'home', size: 'both' });
+  const vs = await ev(() => ({ on: document.documentElement.classList.contains('votes-on'), tally: !document.getElementById('tally').hidden, n: document.querySelectorAll('.vote').length, labels: [...document.querySelectorAll('.vote .vb')].map((b) => b.getAttribute('aria-label')) }));
+  ok(vs.on && vs.tally, 'votes not shown with a store');
+  ok(vs.n === 294 * 2 + 42, `${vs.n} vote controls, not ${294 * 2 + 42}`);
+  ok(vs.labels.includes('Thumbs up: Bigger block, Nicomachean Ethics, desktop') && vs.labels.includes('Thumbs down: the photograph for Topics'), 'vote labels name the setting, work and size');
+  // Planted: a write the store loses; a tally that disagrees with the store.
+  await ev(() => { window.__drop = 't:now--home:desk'; });
+  await click('#now--home .fig.desk .vb.up');
+  caught((await stored())['t:now--home:desk']?.vote !== 'up' || (await state('t:now--home:desk')).pressed !== 'up', 'vote store check');
+  await ev(() => { window.__drop = null; document.querySelector('#tally-items .tl-i[data-k="now"] b.n').textContent = '7'; });
+  caught((await tallyFaults()).length > 0, 'tally check');
+  await open();
+  // Up; up again clears it; down then up leaves up; a photograph; a vote
+  // made in another tab or on another device.
+  await click('#now--home .fig.desk .vb.up');
+  let vst = await stored();
+  const nh = vst['t:now--home:desk'] || {};
+  ok(nh.vote === 'up' && nh.kind === 'title' && nh.set === 'now' && nh.po === 'home' && nh.size === 'desk' && typeof nh.at === 'string', `stored ${JSON.stringify(nh)}`);
+  ok((await state('t:now--home:desk')).pressed === 'up', 'up shown');
+  await click('#now--home .fig.desk .vb.up');
+  ok(!('t:now--home:desk' in (await stored())) && (await state('t:now--home:desk')).pressed === '', 'a second click clears the vote');
+  await click('#block-big--home .fig.phone .vb.down');
+  await click('#block-big--home .fig.phone .vb.up');
+  ok((await stored())['t:block-big--home:phone']?.vote === 'up' && (await state('t:block-big--home:phone')).pressed === 'up', 'down then up leaves up');
+  await click('#po-home .pg-h .vb.down');
+  vst = await stored();
+  ok(vst['p:home']?.vote === 'down' && vst['p:home'].kind === 'photo' && vst['p:home'].po === 'home' && (await state('p:home')).pressed === 'down', `photograph ${JSON.stringify(vst['p:home'])}`);
+  await ev(() => window.__push('t:justified--Cat:desk', { kind: 'title', set: 'justified', po: 'Cat', size: 'desk', vote: 'up', at: '2026-10-30T00:00:00Z' }));
+  await page.waitForTimeout(60);
+  ok((await state('t:justified--Cat:desk')).pressed === 'up', 'a vote from elsewhere shows');
+  const tf = await tallyFaults();
+  ok(!tf.length, tf.join('; '));
+  const td = await tallyDom();
+  ok(td.now.join() === '0,0' && td['block-big'].join() === '1,0' && td.justified.join() === '1,0' && td.photo.join() === '0,1', `tally ${JSON.stringify(td)}`);
+  // Someone else on the page sees the votes and cannot change them.
+  const other = await browser.newContext({ viewport: { width: 1200, height: 900 } });
+  await other.addInitScript(() => { window.__owner = false; });
+  await other.addInitScript(STUB);
+  const op = await other.newPage();
+  await op.goto(`${BASE}titles-test.html`, { waitUntil: 'networkidle' });
+  await op.waitForFunction(() => document.documentElement.dataset.titles === 'set', null, { timeout: 60000 });
+  await op.evaluate(() => window.__push('p:home', { kind: 'photo', po: 'home', vote: 'up', at: 'x' }));
+  await op.waitForTimeout(80);
+  const ro = () => op.evaluate(() => {
+    const el = document.querySelector('.vote[data-key="p:home"]');
+    return { shown: getComputedStyle(el).display !== 'none', off: [...el.children].every((b) => b.disabled), pressed: (el.querySelector('[aria-pressed="true"]') || { dataset: {} }).dataset.v || '' };
+  });
+  await op.evaluate(() => { for (const b of document.querySelectorAll('.vote[data-key="p:home"] .vb')) b.disabled = false; });
+  caught(!(await ro()).off, 'read-only check');
+  await op.evaluate(() => { for (const b of document.querySelectorAll('.vote[data-key="p:home"] .vb')) b.disabled = true; });
+  const r1 = await ro();
+  ok(r1.shown && r1.off && r1.pressed === 'up', `someone else: ${JSON.stringify(r1)}`);
+  await op.evaluate(() => { const b = document.querySelector('.vote[data-key="p:home"] .vb.down'); b.disabled = false; b.click(); b.disabled = true; });
+  await op.waitForTimeout(80);
+  ok((await op.evaluate(() => window.__store.get('p:home').vote)) === 'up', 'someone else cannot change a vote');
+  await other.close();
+  // Opened without the store (signed out, or outside claude.ai): no thumbs.
+  const bare = await browser.newContext({ viewport: { width: 1200, height: 900 } });
+  const bp = await bare.newPage();
+  const berrs = [];
+  bp.on('pageerror', (e) => berrs.push(e.message));
+  await bp.goto(`${BASE}titles-test.html`, { waitUntil: 'networkidle' });
+  await bp.waitForFunction(() => document.documentElement.dataset.titles === 'set', null, { timeout: 60000 });
+  const nb = () => bp.evaluate(() => ({ shown: [...document.querySelectorAll('.vote')].filter((v) => getComputedStyle(v).display !== 'none').length, tally: !document.getElementById('tally').hidden }));
+  await bp.evaluate(() => document.documentElement.classList.add('votes-on'));
+  caught((await nb()).shown > 0, 'no-store check');
+  await bp.evaluate(() => document.documentElement.classList.remove('votes-on'));
+  const b1 = await nb();
+  ok(b1.shown === 0 && !b1.tally && !berrs.length, `without a store: ${JSON.stringify(b1)} ${berrs.join('; ')}`);
+  await bare.close();
+
   const LIGHT = ['rgb(226, 56, 46)', '0.82', 'rgb(244, 244, 241)'];
   const DARK = ['rgb(255, 90, 77)', '0.86', 'rgb(18, 18, 17)'];
   const colours = () => ev(() => ({ bg: getComputedStyle(document.body).backgroundColor, t: [...document.querySelectorAll('.it:not([hidden]) .po-t')].map((t) => `${getComputedStyle(t).color}|${getComputedStyle(t).opacity}`) }));

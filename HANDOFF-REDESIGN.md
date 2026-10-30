@@ -73,8 +73,10 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
    justified, stacked, stacked and spread; broken words: block, bigger block,
    block spread). John asked for them all on one page to browse and annotate:
    the poster titles page above, built by `titles.py` and checked by
-   `titles-check.cjs`. His notes arrive as comments on it. Claude recommended
-   the bigger block. When John picks, move the rule into `dir-b.js` (its
+   `titles-check.cjs`. His notes arrive as comments on it, and since 30
+   October as thumbs up or down on each poster and photograph, kept in the
+   page's store: read them with `ArtifactData` (`list`, collection `votes`;
+   round four's README, "Votes"). Claude recommended the bigger block. When John picks, move the rule into `dir-b.js` (its
    `poster()` sizes titles from the `CAPW` table today; `TL.set` measures
    with a canvas, so it needs the font loaded before the first fit) and test
    it in `verify.cjs`. The thread on round four stays open until then.
@@ -155,7 +157,7 @@ python3 docs/mockups/2026-10-30-round-four/title-sheets.py
   `title-options/`, and the built titles page (`titles.html`,
   `titles-test.html`).
 - Verify functionally: `verify.cjs` (1,346 checks in round four) and
-  `titles-check.cjs` (2,206) plant a fault for each new check and stop if the
+  `titles-check.cjs` (2,224) plant a fault for each new check and stop if the
   check misses it.
 - The test scripts are `.cjs` because the repo's `package.json` sets
   `"type": "module"`. `build.py` also writes `test.html` with a doctype and a
@@ -164,7 +166,10 @@ python3 docs/mockups/2026-10-30-round-four/title-sheets.py
   `files` and `root` set to the round's folder. To update round four in place
   from another session, pass its URL and read it first. The titles page is
   published the same way: `titles.html`, with `img/desk/*.jpg` and
-  `img/phone/*.jpg` as `files`.
+  `img/phone/*.jpg` as `files`. It declares the `db` capability (rule:
+  `votes` read by viewers, written by the owner) and `user`; a republish
+  leaves `capabilities` out so the stored declaration and John's votes
+  stay.
 - `titles-check.cjs` compares the titles page with the mockup's `test.html`,
   so run `build.py` before it.
 - Pictures: Getty Open Content (CC0) and the Boston Public Library's Aldine

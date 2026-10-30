@@ -42,12 +42,19 @@ for label, ids in groups:
 for p in posters:
     ph = photos[p['photo']]
     p['alt'] = f"{ph['title']}, {ph['maker']}, {ph['date']}"
+    # The photograph's line above each work: what it is and why it was
+    # chosen (photos.json's caption, which carries its own <i> markup).
+    p['ph'] = {'title': ph['title'], 'maker': ph['maker'], 'date': ph['date'], 'cap': ph['cap']}
+posters[0]['ph']['cap'] = f"The home page’s first photograph, also the <i>{by[hero]['title']}</i>’s."
 
 data = {'posters': posters}
 page = read('titles-page.html').replace('/*__TL__*/', read('title-layout.js')).replace('/*__DATA__*/{}', json.dumps(data, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/'))
 open(os.path.join(HERE, 'titles.html'), 'w', encoding='utf-8').write(page)
-# The published page is wrapped with a doctype and charset at publish time;
-# the local copy needs them too.
-open(os.path.join(HERE, 'titles-test.html'), 'w', encoding='utf-8').write('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">\n' + page + '\n</html>\n')
+# The published page is wrapped at publish time with a doctype, a charset,
+# a viewport and a small reset; the local copy gets the same.
+SKELETON = ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">'
+            '<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}'
+            'body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style></head><body>\n')
+open(os.path.join(HERE, 'titles-test.html'), 'w', encoding='utf-8').write(SKELETON + page + '\n</body></html>\n')
 missing = [f'img/{c}/{p["photo"]}.jpg' for p in posters for c in ('desk', 'phone') if not os.path.exists(os.path.join(HERE, 'img', c, p['photo'] + '.jpg'))]
 print('titles.html', round(os.path.getsize(os.path.join(HERE, 'titles.html')) / 1024), 'KB,', len(posters), 'posters', f'({len(missing)} pictures missing: run images.py)' if missing else '')
