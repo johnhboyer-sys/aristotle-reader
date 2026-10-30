@@ -83,12 +83,28 @@ fill the picture. Not like the letters are so big they cover every inch, but
 rather we bump up the pt a bit and space out the words and play with
 kearning. Generate a few options in chat." Then: "Let a word break and wrap."
 
-`title-options.cjs` rewrites the poster titles by seven rules and saves a
-picture of each poster: now; whole words (justified, stacked, stacked and
-spread); words breaking between letters, three letters each side at least
-(block, bigger block, block spread). `title-sheets.py` lays them out side by
-side in `title-options/` (gitignored). John has not picked one yet; the open
-item is in `HANDOFF-REDESIGN.md` at the repo root.
+`title-layout.js` holds seven settings for a poster title: now (round
+four's); whole words (justified, stacked, stacked and spread); and words
+breaking between letters, three letters a side at least (block, bigger block,
+block spread). Two things use it:
+
+- `titles.py` builds `titles.html`: every setting on every poster (the home
+  page and the 41 works), desktop and phone, for John to browse and annotate.
+  Published as https://claude.ai/artifact/BVfg5CkJbG8zJmjXHEXPuq.
+  `titles-check.cjs` (2,206 checks, each kind with a planted fault first)
+  holds it to: every setting on every poster with both photographs; each
+  title inside its poster, each line ending where the rule measured it, a
+  block's lines meeting both edges, broken words keeping three letters a
+  side; every title set exactly as round four's mockup sets it (1,176
+  comparisons with `test.html`); the controls, a phone's width and both
+  themes.
+- `title-options.cjs` sets the same rules on the mockup's own posters and
+  saves pictures, which `title-sheets.py` lays out as the sheets sent in chat
+  (in `title-options/`, gitignored).
+
+A spread needs two lines: a title on one line (*Politics*, *Physics*) stays at
+the top. John has not picked a setting yet; the open item is in
+`HANDOFF-REDESIGN.md` at the repo root.
 
 ## Rebuild
 
@@ -111,6 +127,14 @@ node docs/mockups/2026-10-30-round-four/verify.cjs
 ```
 
 ```bash
+python3 docs/mockups/2026-10-30-round-four/titles.py
+```
+
+```bash
+node docs/mockups/2026-10-30-round-four/titles-check.cjs
+```
+
+```bash
 node docs/mockups/2026-10-30-round-four/title-options.cjs
 ```
 
@@ -118,5 +142,5 @@ node docs/mockups/2026-10-30-round-four/title-options.cjs
 python3 docs/mockups/2026-10-30-round-four/title-sheets.py
 ```
 
-`index.html`, `test.html`, `img/`, `img-src/` and `title-options/` are
-gitignored.
+`index.html`, `test.html`, `titles.html`, `titles-test.html`, `img/`,
+`img-src/` and `title-options/` are gitignored.

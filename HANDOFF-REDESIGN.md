@@ -14,8 +14,12 @@ folder per round under `docs/mockups/`.
 | 2 | `2026-10-30-round-two` | https://claude.ai/artifact/FpxinJwQa35j2SdAgAy7HN |
 | 3 | `2026-10-30-round-three` | https://claude.ai/artifact/8svNwSXYLPBHZSfaKiSjuJ |
 | 4 | `2026-10-30-round-four` | https://claude.ai/artifact/PNuw2yLEayHuLAn7FjivTn |
+| Poster titles | `2026-10-30-round-four/titles.html` | https://claude.ai/artifact/BVfg5CkJbG8zJmjXHEXPuq |
 
 Each round's README lists John's notes on the round before and what changed.
+The poster titles page is not a round: it shows seven settings for B's poster
+titles on every poster, for John's notes (round four's README, "Title
+options").
 John leaves his notes as comments on the artifacts. Each new round has been a
 new artifact, so the earlier one keeps its notes.
 
@@ -62,13 +66,15 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
 1. **B's poster title.** John: "It should fill the picture. Not like the
    letters are so big they cover every inch, but rather we bump up the pt a
    bit and space out the words and play with kearning." And: "Let a word break
-   and wrap." Seven settings are in `title-options.cjs` (whole words:
+   and wrap." Seven settings are in `title-layout.js` (now; whole words:
    justified, stacked, stacked and spread; broken words: block, bigger block,
-   block spread); `title-sheets.py` lays them out. Claude recommended the
-   bigger block. When John picks, move the rule into `dir-b.js` (its
-   `poster()` sizes titles from the `CAPW` table today; the options measure
-   with a canvas, so they need fonts loaded before the first fit) and test it
-   in `verify.cjs`. The thread on round four stays open until then.
+   block spread). John asked for them all on one page to browse and annotate:
+   the poster titles page above, built by `titles.py` and checked by
+   `titles-check.cjs`. His notes arrive as comments on it. Claude recommended
+   the bigger block. When John picks, move the rule into `dir-b.js` (its
+   `poster()` sizes titles from the `CAPW` table today; `TL.set` measures
+   with a canvas, so it needs the font loaded before the first fit) and test
+   it in `verify.cjs`. The thread on round four stays open until then.
 2. **A's word blocks.** On the phone's home page: "This works on desktop. Not
    on mobile. Hmm. Note that. Don't change yet." On work pages: "Not loving
    this on works pages. I dunno." The second thread on round three is open.
@@ -118,6 +124,14 @@ node docs/mockups/2026-10-30-round-four/verify.cjs
 ```
 
 ```bash
+python3 docs/mockups/2026-10-30-round-four/titles.py
+```
+
+```bash
+node docs/mockups/2026-10-30-round-four/titles-check.cjs
+```
+
+```bash
 node docs/mockups/2026-10-30-round-four/title-options.cjs
 ```
 
@@ -128,16 +142,22 @@ python3 docs/mockups/2026-10-30-round-four/title-sheets.py
 ## Rules and gotchas
 
 - `data.json`, `index.html` and `test.html` hold the site's TLG Greek: they are
-  gitignored and never committed. So are `img/`, `img-src/` and
-  `title-options/`.
-- Verify functionally: `verify.cjs` (1,346 checks in round four) plants a
-  fault for each new check and stops if the check misses it.
+  gitignored and never committed. So are `img/`, `img-src/`,
+  `title-options/`, and the built titles page (`titles.html`,
+  `titles-test.html`).
+- Verify functionally: `verify.cjs` (1,346 checks in round four) and
+  `titles-check.cjs` (2,206) plant a fault for each new check and stop if the
+  check misses it.
 - The test scripts are `.cjs` because the repo's `package.json` sets
   `"type": "module"`. `build.py` also writes `test.html` with a doctype and a
   charset, which Playwright needs; the published page has neither.
 - To publish, give the Artifact tool `index.html` with the pictures as
   `files` and `root` set to the round's folder. To update round four in place
-  from another session, pass its URL and read it first.
+  from another session, pass its URL and read it first. The titles page is
+  published the same way: `titles.html`, with `img/desk/*.jpg` and
+  `img/phone/*.jpg` as `files`.
+- `titles-check.cjs` compares the titles page with the mockup's `test.html`,
+  so run `build.py` before it.
 - Pictures: Getty Open Content (CC0) and the Boston Public Library's Aldine
   volumes at the Internet Archive (Public Domain Mark). Getty's IIIF server
   refuses `!w,h` sizes larger than a small original (400); `images.py` then
