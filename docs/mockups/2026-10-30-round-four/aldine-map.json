@@ -1,0 +1,372 @@
+{
+ "Isa": {
+  "item": "opera01aris",
+  "leaf": 10,
+  "detail": [
+   0.0433,
+   0.0447,
+   0.7833,
+   0.4047
+  ]
+ },
+ "Cat": {
+  "item": "opera01aris",
+  "leaf": 30,
+  "detail": [
+   0.0433,
+   0.0344,
+   0.7833,
+   0.3944
+  ]
+ },
+ "Int": {
+  "item": "opera01aris",
+  "leaf": 65,
+  "detail": [
+   0.2367,
+   0.0488,
+   0.99,
+   0.4088
+  ]
+ },
+ "APr": {
+  "item": "opera01aris",
+  "leaf": 85,
+  "detail": [
+   0.25,
+   0.0529,
+   0.99,
+   0.4129
+  ]
+ },
+ "APo": {
+  "item": "opera01aris",
+  "leaf": 202,
+  "detail": [
+   0,
+   0.0508,
+   0.7333,
+   0.4108
+  ]
+ },
+ "Top": {
+  "item": "opera01aris",
+  "leaf": 274,
+  "detail": [
+   0,
+   0.0529,
+   0.7533,
+   0.4129
+  ]
+ },
+ "SE": {
+  "item": "opera01aris",
+  "leaf": 422,
+  "detail": [
+   0,
+   0.268,
+   0.78,
+   0.628
+  ]
+ },
+ "Phys": {
+  "item": "opera02aris",
+  "leaf": 70,
+  "detail": [
+   0,
+   0.0673,
+   0.74,
+   0.4273
+  ]
+ },
+ "Cael": {
+  "item": "opera02aris",
+  "leaf": 246,
+  "detail": [
+   0.02,
+   0.06,
+   0.8,
+   0.42
+  ]
+ },
+ "GC": {
+  "item": "opera02aris",
+  "leaf": 343,
+  "detail": [
+   0.27,
+   0.07,
+   0.99,
+   0.4
+  ]
+ },
+ "Mete": {
+  "item": "opera02aris",
+  "leaf": 393,
+  "detail": [
+   0.25,
+   0.07,
+   0.97,
+   0.4
+  ]
+ },
+ "DM": {
+  "item": "opera02aris",
+  "leaf": 498,
+  "detail": [
+   0.02,
+   0.06,
+   0.96,
+   0.36
+  ]
+ },
+ "HA": {
+  "item": "opera03aris",
+  "leaf": 8,
+  "detail": [
+   0.0067,
+   0.0738,
+   0.7733,
+   0.4338
+  ]
+ },
+ "PA": {
+  "item": "opera03aris",
+  "leaf": 312,
+  "detail": [
+   0,
+   0.047,
+   0.7733,
+   0.407
+  ]
+ },
+ "IA": {
+  "item": "opera03aris",
+  "leaf": 430,
+  "detail": [
+   0,
+   0.0408,
+   0.77,
+   0.4008
+  ]
+ },
+ "DA": {
+  "item": "opera03aris",
+  "leaf": 449,
+  "detail": [
+   0.2467,
+   0.0408,
+   1,
+   0.4008
+  ]
+ },
+ "Sens": {
+  "item": "opera03aris",
+  "leaf": 514,
+  "detail": [
+   0,
+   0.0491,
+   0.7667,
+   0.4091
+  ]
+ },
+ "Mem": {
+  "item": "opera03aris",
+  "leaf": 540,
+  "detail": [
+   0,
+   0.047,
+   0.7567,
+   0.407
+  ]
+ },
+ "Somn": {
+  "item": "opera03aris",
+  "leaf": 548,
+  "detail": [
+   0,
+   0.047,
+   0.76,
+   0.407
+  ]
+ },
+ "Insomn": {
+  "item": "opera03aris",
+  "leaf": 558,
+  "detail": [
+   0,
+   0.4277,
+   0.76,
+   0.7877
+  ]
+ },
+ "DivSomn": {
+  "item": "opera03aris",
+  "leaf": 567,
+  "detail": [
+   0.2233,
+   0.0614,
+   1,
+   0.4214
+  ]
+ },
+ "MA": {
+  "item": "opera03aris",
+  "leaf": 571,
+  "detail": [
+   0.21,
+   0.0614,
+   1,
+   0.4214
+  ]
+ },
+ "GA": {
+  "item": "opera03aris",
+  "leaf": 584,
+  "detail": [
+   0,
+   0.0491,
+   0.7667,
+   0.4091
+  ]
+ },
+ "Long": {
+  "item": "opera03aris",
+  "leaf": 745,
+  "detail": [
+   0.2267,
+   0.0388,
+   1,
+   0.3988
+  ]
+ },
+ "Juv": {
+  "item": "opera03aris",
+  "leaf": 751,
+  "detail": [
+   0.2133,
+   0.0491,
+   1,
+   0.4091
+  ]
+ },
+ "Col": {
+  "item": "opera03aris",
+  "leaf": 791,
+  "detail": [
+   0.2467,
+   0.0573,
+   1,
+   0.4173
+  ]
+ },
+ "Phgn": {
+  "item": "opera03aris",
+  "leaf": 809,
+  "detail": [
+   0.2233,
+   0.0511,
+   1,
+   0.4111
+  ]
+ },
+ "Mirab": {
+  "item": "opera03aris",
+  "leaf": 831,
+  "detail": [
+   0.2233,
+   0.0552,
+   1,
+   0.4152
+  ]
+ },
+ "MXG": {
+  "item": "opera03aris",
+  "leaf": 860,
+  "detail": [
+   0,
+   0.045,
+   0.7633,
+   0.405
+  ]
+ },
+ "Lin": {
+  "item": "opera03aris",
+  "leaf": 875,
+  "detail": [
+   0.2133,
+   0.0594,
+   1,
+   0.4194
+  ]
+ },
+ "Mech": {
+  "item": "opera05aris",
+  "leaf": 322,
+  "detail": [
+   0.01,
+   0.07,
+   0.86,
+   0.4
+  ]
+ },
+ "Meta": {
+  "item": "opera05aris",
+  "leaf": 346,
+  "detail": [
+   0.0,
+   0.07,
+   0.97,
+   0.4
+  ]
+ },
+ "EN": {
+  "item": "opera06aris",
+  "leaf": 8,
+  "detail": [
+   0.03,
+   0.068,
+   0.7467,
+   0.428
+  ]
+ },
+ "Pol": {
+  "item": "opera06aris",
+  "leaf": 194,
+  "detail": [
+   0.0,
+   0.06,
+   0.88,
+   0.4
+  ]
+ },
+ "Oec": {
+  "item": "opera06aris",
+  "leaf": 426,
+  "detail": [
+   0.03,
+   0.07,
+   0.95,
+   0.4
+  ]
+ },
+ "EE": {
+  "item": "opera06aris",
+  "leaf": 522,
+  "detail": [
+   0.02,
+   0.06,
+   0.8,
+   0.38
+  ]
+ },
+ "TITLE": {
+  "item": "opera01aris",
+  "leaf": 6,
+  "detail": [
+   0.06,
+   0.05,
+   0.8,
+   0.62
+  ]
+ }
+}

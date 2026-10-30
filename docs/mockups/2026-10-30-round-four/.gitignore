@@ -1,0 +1,6 @@
+# The site's TLG Greek is inlined into the built pages; the pictures are
+# fetched by images.py. Neither is committed.
+index.html
+test.html
+img/
+img-src/
