@@ -211,7 +211,7 @@ The cloud sessions ran in a container; a local session needs:
   scratch folder, beside a `node_modules/playwright/index.js` shim whose
   `chromium.launch` adds the headless shell's `executablePath`
   (`chromium_headless_shell-1228`), and `NODE_PATH` pointing at that
-  folder. On the Mac `titles-check.cjs` passes; `verify.cjs` fails 14
+  folder. On the Mac `titles-check.cjs` passes; `verify.cjs` fails 28
   checks, all A's phone reader with Bekker numbers outside the page, which
   passed in the container (a font difference, not yet looked into).
 - The artifacts: update each by its URL, reading it first. `ArtifactData` and
