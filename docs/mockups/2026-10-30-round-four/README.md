@@ -76,6 +76,20 @@ first:
 - D: no sticky picture; a banner on the phone; every Greek element in Gentium
   Book Plus, and the font loaded.
 
+## Title options (after round four)
+
+John on round four's posters: "I think title could to be bigger. It should
+fill the picture. Not like the letters are so big they cover every inch, but
+rather we bump up the pt a bit and space out the words and play with
+kearning. Generate a few options in chat." Then: "Let a word break and wrap."
+
+`title-options.cjs` rewrites the poster titles by seven rules and saves a
+picture of each poster: now; whole words (justified, stacked, stacked and
+spread); words breaking between letters, three letters each side at least
+(block, bigger block, block spread). `title-sheets.py` lays them out side by
+side in `title-options/` (gitignored). John has not picked one yet; the open
+item is in `HANDOFF-REDESIGN.md` at the repo root.
+
 ## Rebuild
 
 As round two (`../2026-10-30-round-two/README.md`), from this folder:
@@ -96,4 +110,13 @@ cd docs/mockups/2026-10-30-round-four && python3 -m http.server 8765
 node docs/mockups/2026-10-30-round-four/verify.cjs
 ```
 
-`index.html`, `test.html`, `img/` and `img-src/` are gitignored.
+```bash
+node docs/mockups/2026-10-30-round-four/title-options.cjs
+```
+
+```bash
+python3 docs/mockups/2026-10-30-round-four/title-sheets.py
+```
+
+`index.html`, `test.html`, `img/`, `img-src/` and `title-options/` are
+gitignored.
