@@ -18,8 +18,8 @@ folder per round under `docs/mockups/`.
 
 Each round's README lists John's notes on the round before and what changed.
 The poster titles page is not a round: it shows seven settings for B's poster
-titles on every poster, for John's notes (round four's README, "Title
-options").
+titles on every poster, with thumbs up and down and a Photo switch, for John's
+notes (round four's README, "Title options" to "Votes").
 John leaves his notes as comments on the artifacts. Each new round has been a
 new artifact, so the earlier one keeps its notes.
 
@@ -37,6 +37,46 @@ Three directions are left:
   Gentium Book Plus. John likes D's logo.
 
 C (diagrams) was dropped: "No diagrams. Too gimmicky."
+
+## Start here: is B still in the running?
+
+The last session ended on John's doubt about B itself (30 October): "still
+not sure this is the direction to go in (i'm wondering whether this is too
+stylized and too 21st c aesthetic for aristotle...). Maybe if we vary text
+color and opacity, we can make it more legible. and maybe different fonts?
+idk."
+
+Ask John before building more of B: keep B and make its title legible, make B
+plainer, or go back to A or D. What is known:
+
+- **The trouble.** The red (#e2382e at 82%) is as light as the prints' middle
+  tones, so where they meet, the letters all but vanish. The median letter
+  stands out from the photograph by 1.7 to 2:1 (WCAG asks 3:1 even for large
+  text), and 30 to 39 of the 42 posters are hard to read: over a quarter of
+  the letters' area below 2:1 (`titles-legibility.py`).
+- **Colour and opacity (John's idea), measured** by `titles-colour.py` from
+  the same pictures. The red at full strength still leaves 25 to 33 hard, so
+  opacity alone does little. A colour picked per photograph does more: dark
+  red (#8b1a10) on a light print and cream (#f4efe6) on a dark one leaves 4 to
+  9 hard, but 18 to 32 of the 42 still have more than 5% of the letters' area
+  below 2:1, because the ground under one title runs from light to dark. Even
+  solid black leaves 7 or 8 hard.
+- **Washes**, on the titles page now (Photo: Pale, Gray, Dark). Each leaves no
+  poster with more than 5% of its letters below 2:1 (medians 3.3 to 4:1), but
+  each dims the photographs a good deal. Claude's pick of the three: Gray.
+  John's reply: "Hmm".
+- **Offered, not built.** Wash only a strip behind each line of the title, and
+  leave the rest of the photograph at full strength. Or set the title on
+  plain ground above the photograph, so nothing covers it. Claude's view: the
+  second may answer the "too 21st c" worry better than any wash, since it
+  shows each photograph whole, with the title on the page, not on the print.
+- **Fonts: not tried.** Sofia Sans is fixed in three places: `title-layout.js`
+  (the `CAPW` cap widths that Now uses), `dir-b.js` (the same table) and
+  `titles-page.html` (the Google Fonts link, and the canvas that measures the
+  other six settings once the font is in). A new face needs its own widths,
+  or a canvas measure for Now as well; then rerun `titles-check.cjs`, and
+  `titles-legibility.cjs` (its masks come from the title alone, so they
+  follow any face).
 
 ## Decided by John
 
@@ -66,25 +106,32 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
 
 ## Open
 
-1. **B's poster title.** John: "It should fill the picture. Not like the
-   letters are so big they cover every inch, but rather we bump up the pt a
-   bit and space out the words and play with kearning." And: "Let a word break
-   and wrap." Seven settings are in `title-layout.js` (now; whole words:
-   justified, stacked, stacked and spread; broken words: block, bigger block,
-   block spread). John asked for them all on one page to browse and annotate:
-   the poster titles page above, built by `titles.py` and checked by
-   `titles-check.cjs`. His notes arrive as comments on it, and since 30
-   October as thumbs up or down on each poster and photograph, kept in the
-   page's store: read them with `ArtifactData` (`list`, collection `votes`;
-   round four's README, "Votes"). Claude recommended the bigger block.
-   Readability: John found that many photographs, good picks or bad, fight
-   the title. Measured, the red at 82% over full-strength prints stands out
-   by about 1.7:1; the page's Photo switch (Pale, Gray, Dark washes) brings
-   every poster to about 3.3 to 4:1 (README, "Legibility and photo
-   treatments"). Which treatment, if any, is John's call. When John picks, move the rule into `dir-b.js` (its
+1. **B's poster title, if B stays.** John: "It should fill the picture. Not
+   like the letters are so big they cover every inch, but rather we bump up
+   the pt a bit and space out the words and play with kearning." And: "Let a
+   word break and wrap." Seven settings are in `title-layout.js` (now; whole
+   words: justified, stacked, stacked and spread; broken words: block, bigger
+   block, block spread), all on the poster titles page, built by `titles.py`
+   and checked by `titles-check.cjs`. Claude recommended the bigger block.
+   John's notes lean to Now, Bigger block and Block spread, and against
+   Stacked and Justified on the home page; on the spreads he is mixed ("Good"
+   on the *Prior Analytics*' desktop poster; on *De Interpretatione* "Too
+   much space between words" and "Can't read bottom word against pic"). His
+   votes on titles (30 October): Bigger block and Block spread up on the
+   *Generation and Corruption*'s desktop poster, Block spread up on its phone
+   poster. Read the current set from the page's store (`ArtifactData`,
+   `list`, collection `votes`; round four's README, "Votes"). Offered and
+   waiting on his word: give Justified's under-filled lines the most spacing
+   its rule allows; cap a spread's gap at one line's height. When John picks a
+   setting and a way to make it legible, move the rule into `dir-b.js` (its
    `poster()` sizes titles from the `CAPW` table today; `TL.set` measures
    with a canvas, so it needs the font loaded before the first fit) and test
-   it in `verify.cjs`. The thread on round four stays open until then.
+   it in `verify.cjs`. Then answer and resolve the titles page's threads: the
+   15 sent to Claude are answered and stay open until then, as does the
+   title thread on round four. Three were not sent to Claude (the
+   *Posterior Analytics* eclipse, *De Interpretatione*'s bottom word, "This
+   one is decent for mobile" on the home page) and only John can resolve
+   them.
 2. **A's word blocks.** On the phone's home page: "This works on desktop. Not
    on mobile. Hmm. Note that. Don't change yet." On work pages: "Not loving
    this on works pages. I dunno." The second thread on round three is open.
@@ -101,13 +148,45 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
    fencers"); the *Categories* horse is "okay"; the *Posterior Analytics*
    might take an eclipse instead of Le Gray's troops ("I get the 2.19
    allusion though"), the book's stock example of a demonstration (II.2,
-   II.8). Not yet searched for. Votes on the titles page (30 October): down
-   for the *De Anima* (Asaishi, *Study of Light*), *On Length and Shortness
-   of Life* (Watkins, *Grizzly Giant*), *Movement of Animals* (Conrad's
-   bagpiper with marionettes) and *Metaphysics* (Rutherfurd's full moon); up
-   for nine others. Read the current set from the page's store.
+   II.8), not yet searched for; Mumler's spirit photograph for the
+   *Sophistical Refutations*: "Don't get picture". Votes on photographs (30
+   October): down for the *De Anima* (Asaishi, *Study of Light*), *On Length
+   and Shortness of Life* (Watkins, *Grizzly Giant*), *Movement of Animals*
+   (Conrad's bagpiper with marionettes) and *Metaphysics* (Rutherfurd's full
+   moon); up for nine (GA, IA, Isa, Lin, Mech, Poet, Pol, Rhet, Somn).
 5. Round three's "Good layout…" thread (lexicon, Key passages) was not sent
    to Claude, so it can only be resolved on the page.
+
+## On John's Mac
+
+The cloud sessions ran in a container; a local session needs:
+
+- The branch:
+
+  ```bash
+  git fetch origin claude/determined-ramanujan-omeckq
+  ```
+
+  ```bash
+  git switch claude/determined-ramanujan-omeckq
+  ```
+
+  If the main checkout is busy, use a worktree and run `npm ci --prefix app`
+  in it.
+- The gitignored files rebuilt (below): they hold TLG Greek or downloaded
+  pictures, so git does not carry them. `prep.py --root build/dist` reads the
+  Mac's own corpus build in place of the live site.
+- Node 22 (`nvm use 22`; the Mac's system node is 24). The Python scripts
+  need Pillow and numpy.
+- Playwright: the `.cjs` checks call `require('playwright')` and
+  `chromium.launch()` with no options, as the container allowed. On the Mac,
+  plato-reader's CLAUDE.md ("Headless browser") gives what works there:
+  playwright-core and the Chromium headless shell in
+  `~/Library/Caches/ms-playwright/`, passed as `executablePath`.
+- The artifacts: update each by its URL, reading it first. `ArtifactData` and
+  `ArtifactComments` read the votes and the comments; without those tools,
+  the titles page's own tally shows the votes and the comments are on the
+  pages.
 
 ## Rebuild a round (round four shown)
 
@@ -157,6 +236,10 @@ node docs/mockups/2026-10-30-round-four/titles-legibility.cjs
 
 ```bash
 python3 docs/mockups/2026-10-30-round-four/titles-legibility.py
+```
+
+```bash
+python3 docs/mockups/2026-10-30-round-four/titles-colour.py
 ```
 
 ```bash

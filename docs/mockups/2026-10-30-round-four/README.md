@@ -132,6 +132,19 @@ more than 5% of its letters' area below 2:1 (a model of the washes, checked
 against the screenshots, put the cliff at 55% and 65%); the medians rise to
 3.3 to 4:1.
 
+John then asked whether the title's colour and opacity could do this
+instead. `titles-colour.py` answers from the same pictures, with no new
+shots: a solid letter shows its own colour, so only the photograph behind it
+counts. Opacity alone does little: the red at full strength leaves 25 to 33
+of the 42 posters hard to read (over a quarter of the letters' area below
+2:1), against 30 to 39 at 82%, since the red is as light as the prints'
+middle tones. A colour picked per photograph does more: dark red (#8b1a10)
+on a light print and cream (#f4efe6) on a dark one leaves 4 to 9 hard, but
+18 to 32 still have more than 5% of the letters' area below 2:1, because the
+ground under one title runs from light to dark. Solid black leaves 7 or 8
+hard; the washes leave none. The script's first row, the page as it is,
+checks its model against the shots: the counts agree to within one poster.
+
 ### Votes
 
 John: "Add thumbs up and thumbs down selectors for each option. And have a
@@ -186,6 +199,10 @@ node docs/mockups/2026-10-30-round-four/titles-legibility.cjs
 
 ```bash
 python3 docs/mockups/2026-10-30-round-four/titles-legibility.py
+```
+
+```bash
+python3 docs/mockups/2026-10-30-round-four/titles-colour.py
 ```
 
 ```bash
