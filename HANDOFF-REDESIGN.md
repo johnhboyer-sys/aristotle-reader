@@ -88,7 +88,13 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
    search sizes instead.
 4. **B's photographs.** Some pairings are loose (Edinburgh Ale for the
    *Eudemian Ethics*). Duchenne's frowning man (*Physiognomics*) is too small
-   for a sharp desktop poster.
+   for a sharp desktop poster. John's notes so far, on the titles page: the
+   *Topics* keeps Muybridge's *Fencing* ("Good photo choice"), its desktop
+   cut now two frames of the top row ("zoom in more so it's clear it's
+   fencers"); the *Categories* horse is "okay"; the *Posterior Analytics*
+   might take an eclipse instead of Le Gray's troops ("I get the 2.19
+   allusion though"), the book's stock example of a demonstration (II.2,
+   II.8). Not yet searched for.
 5. Round three's "Good layout…" thread (lexicon, Key passages) was not sent
    to Claude, so it can only be resolved on the page.
 
