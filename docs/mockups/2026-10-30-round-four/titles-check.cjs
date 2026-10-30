@@ -75,11 +75,12 @@ const STUB = () => {
   const ev = (fn, arg) => page.evaluate(fn, arg);
   const shown = () => ev(() => [...document.querySelectorAll('.it:not([hidden])')].map((x) => x.id));
   // The controls a viewer uses: chips on a wide screen, selects on a phone.
-  const pick = async ({ set, po, size }) => {
+  const pick = async ({ set, po, size, tr }) => {
     const wide = await ev(() => getComputedStyle(document.getElementById('set-chips')).display !== 'none');
     if (po) await page.selectOption('#po-sel', po);
     if (set) await (wide ? page.click(`[data-set-b="${set}"]`) : page.selectOption('#set-sel', set));
     if (size) await (wide ? page.click(`[data-size-b="${size}"]`) : page.selectOption('#size-sel', size));
+    if (tr) await (wide ? page.click(`[data-tr-b="${tr}"]`) : page.selectOption('#tr-sel', tr));
     await page.waitForTimeout(80);
   };
   await open();
@@ -320,12 +321,13 @@ const STUB = () => {
   const pressed = () => ev(() => ({
     set: [...document.querySelectorAll('[data-set-b][aria-pressed=true]')].map((b) => b.dataset.setB),
     size: [...document.querySelectorAll('[data-size-b][aria-pressed=true]')].map((b) => b.dataset.sizeB),
+    tr: [...document.querySelectorAll('[data-tr-b][aria-pressed=true]')].map((b) => b.dataset.trB),
     po: document.getElementById('po-sel').value,
     note: document.getElementById('note').hidden ? '' : document.getElementById('note').textContent,
     one: document.getElementById('list').classList.contains('one-set'),
   }));
   let pr = await pressed();
-  ok(pr.set.join() === 'all' && pr.size.join() === 'both' && pr.po === 'home' && !pr.note && !pr.one, `first view controls ${JSON.stringify(pr)}`);
+  ok(pr.set.join() === 'all' && pr.size.join() === 'both' && pr.tr.join() === 'now' && pr.po === 'home' && !pr.note && !pr.one, `first view controls ${JSON.stringify(pr)}`);
   // Planted: an entry shown that the choices exclude.
   await ev(() => { document.getElementById('now--Cat').hidden = false; });
   caught((await shown()).join() !== homeIds.join(), 'shown-entries check');
@@ -370,10 +372,11 @@ const STUB = () => {
   await pick({ size: 'both' });
   ok((await figs()).every((x) => /:true$/.test(x)), 'desktop and phone');
   // The choices survive a reload (this viewer's browser only).
-  await pick({ set: 'stacked', po: 'Pol', size: 'phone' });
+  await pick({ set: 'stacked', po: 'Pol', size: 'phone', tr: 'gray' });
   await open();
   pr = await pressed();
-  ok(pr.set.join() === 'stacked' && pr.po === 'Pol' && pr.size.join() === 'phone' && (await shown()).join() === 'stacked--Pol', `remembered ${JSON.stringify(pr)}`);
+  ok(pr.set.join() === 'stacked' && pr.po === 'Pol' && pr.size.join() === 'phone' && pr.tr.join() === 'gray' && (await shown()).join() === 'stacked--Pol', `remembered ${JSON.stringify(pr)}`);
+  await pick({ tr: 'now' });
 
   // ── Widths: every poster fills its box; no sideways scroll ───────────────
   const fit = () => ev(() => ({
@@ -406,7 +409,7 @@ const STUB = () => {
   const narrow = await ev(() => {
     const vis = (id) => getComputedStyle(document.getElementById(id)).display !== 'none';
     const top = (id) => Math.round(document.getElementById(id).getBoundingClientRect().top);
-    return { chips: vis('set-chips') || vis('size-chips'), sels: vis('set-sel') && vis('size-sel'), row: top('set-sel') === top('size-sel'), below: top('po-sel') > top('set-sel') };
+    return { chips: vis('set-chips') || vis('size-chips') || vis('tr-chips'), sels: vis('set-sel') && vis('size-sel') && vis('tr-sel'), row: top('set-sel') === top('size-sel'), below: top('po-sel') > top('set-sel') && top('tr-sel') === top('po-sel') };
   });
   ok(!narrow.chips && narrow.sels && narrow.row && narrow.below, `phone controls ${JSON.stringify(narrow)}`);
   await pick({ set: 'justified', po: 'Juv' });
@@ -414,6 +417,43 @@ const STUB = () => {
   await page.setViewportSize({ width: 1600, height: 1000 });
 
   // ── Both themes: B's red, at B's opacity ─────────────────────────────────
+  // ── Photo treatments: what lies between the photograph and the title ────
+  const TREAT = {
+    now: { wash: ['rgba(0, 0, 0, 0)', '0'], filter: 'none', title: 'rgb(226, 56, 46)|0.82' },
+    pale: { wash: ['rgb(244, 244, 241)', '0.6'], filter: 'none', title: 'rgb(180, 36, 25)|0.92' },
+    gray: { wash: ['rgb(244, 244, 241)', '0.6'], filter: 'grayscale(1)', title: 'rgb(180, 36, 25)|0.92' },
+    dark: { wash: ['rgb(18, 18, 17)', '0.7'], filter: 'none', title: 'rgb(255, 90, 77)|0.92' },
+  };
+  const looks = () => ev(() => [...document.querySelectorAll('.it:not([hidden]) .po')].map((po) => {
+    const a = getComputedStyle(po, '::after');
+    const t = getComputedStyle(po.querySelector('.po-t'));
+    return { wash: [a.backgroundColor, a.opacity], filter: getComputedStyle(po.querySelector('img')).filter, title: `${t.color}|${t.opacity}`, onTop: +t.zIndex > 0 };
+  }));
+  const treatFaults = (ls, want, tag) => ls.flatMap((l, i) => {
+    const f = [];
+    if (want.wash[1] !== '0' && (l.wash[0] !== want.wash[0] || l.wash[1] !== want.wash[1])) f.push(`${tag} ${i}: wash ${l.wash}`);
+    if (want.wash[1] === '0' && l.wash[1] !== '0') f.push(`${tag} ${i}: a wash ${l.wash}`);
+    if (l.filter !== want.filter) f.push(`${tag} ${i}: photograph ${l.filter}`);
+    if (l.title !== want.title) f.push(`${tag} ${i}: title ${l.title}`);
+    if (!l.onTop) f.push(`${tag} ${i}: title under the wash`);
+    return f;
+  });
+  await open();
+  await pick({ set: 'all', po: 'Phys', size: 'both', tr: 'pale' });
+  await ev(() => { document.querySelector('#block--Phys .po-t').style.color = 'rgb(0, 0, 255)'; });
+  caught(treatFaults(await looks(), TREAT.pale, 'plant').length > 0, 'treatment check');
+  await open();
+  for (const tr of Object.keys(TREAT)) {
+    await pick({ set: 'all', po: 'Phys', size: 'both', tr });
+    const ls = await looks();
+    ok(ls.length === 14, `${tr}: ${ls.length} posters`);
+    for (const f of treatFaults(ls, TREAT[tr], tr)) ok(false, f);
+    checks += ls.length;
+    const note = await ev(() => (document.getElementById('note').hidden ? '' : document.getElementById('note').textContent));
+    ok(tr === 'now' ? note === '' : note.includes('photograph'), `${tr}: note ${note}`);
+  }
+  await pick({ tr: 'now' });
+
   // ── Votes: thumbs on every poster and photograph, kept in the store ──────
   const stored = () => ev(() => Object.fromEntries(window.__store));
   const state = (key) => ev((k) => {
@@ -518,6 +558,26 @@ const STUB = () => {
     await ev((a) => { if (a) document.documentElement.dataset.theme = a; else delete document.documentElement.dataset.theme; }, attr);
     themeOk(await colours(), want, `${scheme}${attr ? ` / ${attr} chosen` : ''}`);
   }
+
+  // ── A late font: the titles are set again when it arrives ───────────────
+  // The page waits 4 seconds for Sofia Sans, sets the titles with a
+  // stand-in, then sets them all again once the font is in. Held back here
+  // for 7 seconds, the font arrives after the stand-in pass (the planted
+  // case: titles measured in the wrong face) and before the final one.
+  const homeSets = (pg) => pg.evaluate(() => Object.fromEntries([...document.querySelectorAll('.it[data-po="home"]')].flatMap((it) => ['desk', 'phone'].map((c) => [`${it.id} ${c}`, it.querySelector(`.po.${c} .po-t`).innerHTML]))));
+  await open();
+  const want = await homeSets(page);
+  const slow = await browser.newContext({ viewport: { width: 1600, height: 1000 } });
+  await slow.route(/fonts\.gstatic\.com/, async (route) => { await new Promise((r) => setTimeout(r, 7000)); await route.continue(); });
+  const sp = await slow.newPage();
+  await sp.goto(`${BASE}titles-test.html`, { waitUntil: 'domcontentloaded' });
+  await sp.waitForTimeout(5500);
+  const stand = await homeSets(sp);
+  caught(Object.keys(want).some((k) => !k.startsWith('now--') && stand[k] !== want[k]), 'late-font check');
+  await sp.waitForFunction(() => document.documentElement.dataset.titles === 'set', null, { timeout: 60000 });
+  const late = await homeSets(sp);
+  for (const k of Object.keys(want)) ok(late[k] === want[k], `late font: ${k} not set again`);
+  await slow.close();
 
   ok(!errs.length, `console: ${errs.join('; ')}`);
   await browser.close();

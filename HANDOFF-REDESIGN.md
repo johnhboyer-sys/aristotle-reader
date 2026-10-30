@@ -76,7 +76,12 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
    `titles-check.cjs`. His notes arrive as comments on it, and since 30
    October as thumbs up or down on each poster and photograph, kept in the
    page's store: read them with `ArtifactData` (`list`, collection `votes`;
-   round four's README, "Votes"). Claude recommended the bigger block. When John picks, move the rule into `dir-b.js` (its
+   round four's README, "Votes"). Claude recommended the bigger block.
+   Readability: John found that many photographs, good picks or bad, fight
+   the title. Measured, the red at 82% over full-strength prints stands out
+   by about 1.7:1; the page's Photo switch (Pale, Gray, Dark washes) brings
+   every poster to about 3.3 to 4:1 (README, "Legibility and photo
+   treatments"). Which treatment, if any, is John's call. When John picks, move the rule into `dir-b.js` (its
    `poster()` sizes titles from the `CAPW` table today; `TL.set` measures
    with a canvas, so it needs the font loaded before the first fit) and test
    it in `verify.cjs`. The thread on round four stays open until then.
@@ -96,7 +101,11 @@ C (diagrams) was dropped: "No diagrams. Too gimmicky."
    fencers"); the *Categories* horse is "okay"; the *Posterior Analytics*
    might take an eclipse instead of Le Gray's troops ("I get the 2.19
    allusion though"), the book's stock example of a demonstration (II.2,
-   II.8). Not yet searched for.
+   II.8). Not yet searched for. Votes on the titles page (30 October): down
+   for the *De Anima* (Asaishi, *Study of Light*), *On Length and Shortness
+   of Life* (Watkins, *Grizzly Giant*), *Movement of Animals* (Conrad's
+   bagpiper with marionettes) and *Metaphysics* (Rutherfurd's full moon); up
+   for nine others. Read the current set from the page's store.
 5. Round three's "Good layout…" thread (lexicon, Key passages) was not sent
    to Claude, so it can only be resolved on the page.
 
@@ -143,6 +152,14 @@ node docs/mockups/2026-10-30-round-four/titles-check.cjs
 ```
 
 ```bash
+node docs/mockups/2026-10-30-round-four/titles-legibility.cjs
+```
+
+```bash
+python3 docs/mockups/2026-10-30-round-four/titles-legibility.py
+```
+
+```bash
 node docs/mockups/2026-10-30-round-four/title-options.cjs
 ```
 
@@ -154,10 +171,10 @@ python3 docs/mockups/2026-10-30-round-four/title-sheets.py
 
 - `data.json`, `index.html` and `test.html` hold the site's TLG Greek: they are
   gitignored and never committed. So are `img/`, `img-src/`,
-  `title-options/`, and the built titles page (`titles.html`,
-  `titles-test.html`).
+  `title-options/`, `title-legibility/`, and the built titles page
+  (`titles.html`, `titles-test.html`).
 - Verify functionally: `verify.cjs` (1,346 checks in round four) and
-  `titles-check.cjs` (2,224) plant a fault for each new check and stop if the
+  `titles-check.cjs` (2,302) plant a fault for each new check and stop if the
   check misses it.
 - The test scripts are `.cjs` because the repo's `package.json` sets
   `"type": "module"`. `build.py` also writes `test.html` with a doctype and a

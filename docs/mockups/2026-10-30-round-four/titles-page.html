@@ -12,6 +12,7 @@
   --bg: #f4f4f1; --paper: #fbfbf9; --ink: #141413; --mid: #5d5c57; --line: #d9d8d2; --soft: #e9e8e3;
   --red: #e2382e; --red-ink: #b42419; --po-op: .82;
   --up: #2c6a43; --up-bg: #e1ede4; --dn-bg: #f5e2df;
+  --wash-pale: #f4f4f1; --wash-dark: #121211; --title-deep: #b42419; --title-bright: #ff5a4d;
   --sans: "Sofia Sans", system-ui, sans-serif; --read: "Literata", Georgia, serif;
 }
 @media (prefers-color-scheme: dark) {
@@ -67,6 +68,7 @@ button, select { font: inherit; color: inherit; }
 
 .note { margin: 18px 0 0; font: 400 15px/1.45 var(--sans); color: var(--mid); }
 .note b { font-weight: 650; color: var(--ink); margin-right: 6px; }
+.note span { display: block; }
 .list { display: grid; grid-template-columns: minmax(0, 1fr); gap: 56px 22px; padding-block: 26px 40px; }
 /* One setting, phone posters: the works flow in columns, their headers
    kept to one row height so the posters line up. */
@@ -115,13 +117,24 @@ button, select { font: inherit; color: inherit; }
 .po.desk { width: 1440px; height: 600px; transform: scale(var(--kd, .5)); }
 .po.phone { width: 390px; height: 488px; transform: scale(var(--kp, .7)); }
 .po img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; max-width: none; }
+/* Photo treatments: a wash laid between the photograph and the title, so
+   the red always lands on ground clearly lighter or darker than itself.
+   Each is the lightest that keeps every poster readable: no more than 5% of
+   any title's letters below 2:1 against the photograph behind them
+   (titles-legibility.py). */
+.po::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+.tr-pale .po::after, .tr-gray .po::after { background: var(--wash-pale); opacity: .6; }
+.tr-gray .po img { filter: grayscale(1); }
+.tr-dark .po::after { background: var(--wash-dark); opacity: .7; }
 .po-t {
   position: absolute; left: 72px; right: 72px; top: 0; margin: 0; padding: 30px 0 0;
   font: 600 var(--fz)/.9 var(--sans); letter-spacing: -.012em; text-transform: uppercase;
   text-align: justify; text-align-last: left; hyphens: none; overflow-wrap: normal;
-  color: var(--red); opacity: var(--po-op);
+  color: var(--red); opacity: var(--po-op); z-index: 1;
 }
 .po.phone .po-t { left: 18px; right: 18px; padding-top: 18px; }
+.tr-pale .po-t, .tr-gray .po-t { color: var(--title-deep); opacity: .92; }
+.tr-dark .po-t { color: var(--title-bright); opacity: .92; }
 .po-t.set { text-align: left; letter-spacing: 0; }
 .po-t.spread, .po-t.middle { bottom: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 26px; }
 .po-t.middle { justify-content: center; }
@@ -139,7 +152,9 @@ button, select { font: inherit; color: inherit; }
   .bar-in { gap: 8px; }
   #g-set, #g-size { flex: 1 1 40%; }
   #g-set select, #g-size select { width: 100%; }
-  #g-po { order: 3; flex: 1 1 100%; flex-wrap: nowrap; }
+  #g-tr { order: 3; flex: none; }
+  #tr-sel { width: 7.5em; }
+  #g-po { order: 4; flex: 1 1 12em; flex-wrap: nowrap; }
   #po-sel { flex: 1 1 auto; width: auto; }
   .pp { grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .fig.phone { max-width: 390px; }
@@ -176,6 +191,11 @@ button, select { font: inherit; color: inherit; }
       <div class="chips" role="group" aria-labelledby="lab-size" id="size-chips"></div>
       <select class="alt" id="size-sel" aria-label="Size"></select>
     </div>
+    <div class="grp" id="g-tr">
+      <span class="lab" id="lab-tr">Photo</span>
+      <div class="chips" role="group" aria-labelledby="lab-tr" id="tr-chips"></div>
+      <select class="alt" id="tr-sel" aria-label="Photo"></select>
+    </div>
   </div>
 </div>
 
@@ -206,6 +226,13 @@ button, select { font: inherit; color: inherit; }
     { id: 'block-spread', name: 'Block spread', group: 'Words break', desc: 'Bigger block, the lines spread from top to bottom.' },
   ];
   const SIZES = [['both', 'Desktop and phone'], ['desk', 'Desktop'], ['phone', 'Phone']];
+  // What lies between the photograph and the title.
+  const TREATS = [
+    { id: 'now', name: 'As now', desc: 'The photograph at full strength; the title in red, 82% opaque.' },
+    { id: 'pale', name: 'Pale', desc: 'The photograph washed pale; the title in a darker red.' },
+    { id: 'gray', name: 'Gray', desc: 'The photograph in gray, washed pale; the title in a darker red.' },
+    { id: 'dark', name: 'Dark', desc: 'The photograph darkened; the title in a brighter red.' },
+  ];
   const KINDS = [['desktop', 'desk', 'Desktop', 1440, 1600, 667], ['phone', 'phone', 'Phone', 390, 720, 900]];
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const PO = Object.fromEntries(D.posters.map((p) => [p.id, p]));
@@ -256,6 +283,8 @@ button, select { font: inherit; color: inherit; }
   $('set-sel').innerHTML = [{ id: 'all', name: 'All settings' }, ...SETS].map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
   $('size-chips').innerHTML = SIZES.map(([k, l]) => `<button type="button" data-size-b="${k}" aria-pressed="false">${l}</button>`).join('');
   $('size-sel').innerHTML = SIZES.map(([k, l]) => `<option value="${k}">${l}</option>`).join('');
+  $('tr-chips').innerHTML = TREATS.map((t) => `<button type="button" data-tr-b="${t.id}" aria-pressed="false">${esc(t.name)}</button>`).join('');
+  $('tr-sel').innerHTML = TREATS.map((t) => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
   const groups = [];
   for (const p of D.posters) {
     if (!groups.length || groups[groups.length - 1].label !== p.group) groups.push({ label: p.group, posters: [] });
@@ -283,6 +312,7 @@ button, select { font: inherit; color: inherit; }
       const fig = it.querySelector(`.fig.${cut}`);
       const t = fig.querySelector('.po-t');
       const px = fig.querySelector('.px');
+      t.className = 'po-t';
       if (s === 'now') {
         t.textContent = p.title;
         px.textContent = `${TL.now(p.title, kind, p.kind)} px`;
@@ -303,10 +333,10 @@ button, select { font: inherit; color: inherit; }
 
   // The choices, kept for this viewer only.
   const KEY = 'aristotle-poster-titles';
-  let S = { set: 'all', po: 'home', size: 'both' };
+  let S = { set: 'all', po: 'home', size: 'both', tr: 'now' };
   try {
     const v = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (v && (v.set === 'all' || SETS.some((s) => s.id === v.set)) && (v.po === 'all' || PO[v.po]) && SIZES.some(([k]) => k === v.size)) S = v;
+    if (v && (v.set === 'all' || SETS.some((s) => s.id === v.set)) && (v.po === 'all' || PO[v.po]) && SIZES.some(([k]) => k === v.size)) S = { ...S, ...v, tr: TREATS.some((t) => t.id === v.tr) ? v.tr : 'now' };
   } catch (e) { /* no storage: start fresh */ }
 
   function scale() {
@@ -323,15 +353,19 @@ button, select { font: inherit; color: inherit; }
       it.hidden = !show;
       if (show) fill(it);
     }
-    list.className = `list size-${S.size}${S.set === 'all' ? '' : ' one-set'}`;
+    list.className = `list size-${S.size} tr-${S.tr}${S.set === 'all' ? '' : ' one-set'}`;
     for (const b of document.querySelectorAll('[data-set-b]')) b.setAttribute('aria-pressed', String(b.dataset.setB === S.set));
     for (const b of document.querySelectorAll('[data-size-b]')) b.setAttribute('aria-pressed', String(b.dataset.sizeB === S.size));
+    for (const b of document.querySelectorAll('[data-tr-b]')) b.setAttribute('aria-pressed', String(b.dataset.trB === S.tr));
+    $('tr-sel').value = S.tr;
     $('set-sel').value = S.set;
     $('size-sel').value = S.size;
     $('po-sel').value = S.po;
     const one = SETS.find((s) => s.id === S.set);
-    $('note').hidden = !one;
-    $('note').innerHTML = one ? `<b>${esc(one.name)}</b>${esc(one.desc)}` : '';
+    const tr = TREATS.find((t) => t.id === S.tr && t.id !== 'now');
+    const bits = [one && `<span><b>${esc(one.name)}</b>${esc(one.desc)}</span>`, tr && `<span><b>${esc(tr.name)} photograph</b>${esc(tr.desc)}</span>`].filter(Boolean);
+    $('note').hidden = !bits.length;
+    $('note').innerHTML = bits.join('');
     scale();
     try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { /* no storage */ }
   }
@@ -415,11 +449,13 @@ button, select { font: inherit; color: inherit; }
     if (b.classList.contains('vb')) cast(b.parentElement.dataset.key, b.dataset.v);
     else if (b.dataset.setB) go({ set: b.dataset.setB });
     else if (b.dataset.sizeB) go({ size: b.dataset.sizeB });
+    else if (b.dataset.trB) go({ tr: b.dataset.trB });
     else if (b.id === 'po-prev') step(-1);
     else if (b.id === 'po-next') step(1);
   });
   $('set-sel').addEventListener('change', (e) => go({ set: e.target.value }));
   $('size-sel').addEventListener('change', (e) => go({ size: e.target.value }));
+  $('tr-sel').addEventListener('change', (e) => go({ tr: e.target.value }));
   $('po-sel').addEventListener('change', (e) => go({ po: e.target.value }));
   document.addEventListener('keydown', (e) => {
     if (e.altKey || e.ctrlKey || e.metaKey || e.target.closest('select, input, textarea')) return;
@@ -429,20 +465,31 @@ button, select { font: inherit; color: inherit; }
   new ResizeObserver(scale).observe(list);
   apply();
 
-  // Set the shown titles first, then the rest, a few at a time.
+  // Set the shown titles first, then the rest, a few at a time. A font
+  // that has not come in after 4 seconds gets a stand-in for the moment,
+  // and every title is set again when it arrives.
   const SAMPLE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ,.’ ';
-  Promise.race([document.fonts.load('600 100px "Sofia Sans"', SAMPLE), new Promise((r) => setTimeout(r, 4000))]).then(() => {
+  let pass = 0;
+  function setAll(final) {
+    const run = ++pass;
     fonts = true;
     cv.font = '600 100px "Sofia Sans"';
     W100.clear();
+    for (const it of items) delete it.dataset.done;
     apply();
     const rest = items.filter((it) => !it.dataset.done);
     const next = () => {
+      if (run !== pass) return;
       rest.splice(0, 12).forEach(fill);
       if (rest.length) setTimeout(next, 0);
-      else document.documentElement.dataset.titles = 'set';
+      else if (final) document.documentElement.dataset.titles = 'set';
     };
     next();
+  }
+  const early = setTimeout(() => setAll(false), 4000);
+  document.fonts.load('600 100px "Sofia Sans"', SAMPLE).catch(() => []).then(() => {
+    clearTimeout(early);
+    setAll(true);
   });
 })();
 </script>

@@ -92,13 +92,14 @@ block spread). Two things use it:
   page and the 41 works), desktop and phone, grouped by work, for John to
   browse, annotate and vote on. Published as
   https://claude.ai/artifact/BVfg5CkJbG8zJmjXHEXPuq.
-  `titles-check.cjs` (2,224 checks, each kind with a planted fault first)
+  `titles-check.cjs` (2,302 checks, each kind with a planted fault first)
   holds it to: every setting on every poster with both photographs; each
   title inside its poster, each line ending where the rule measured it, a
   block's lines meeting both edges, broken words keeping three letters a
   side; every title set exactly as round four's mockup sets it (1,176
   comparisons with `test.html`); the controls, what they hide off the page;
-  the votes; a phone's width and both themes.
+  the photo treatments; the votes; a late font; a phone's width and both
+  themes.
 - `title-options.cjs` sets the same rules on the mockup's own posters and
   saves pictures, which `title-sheets.py` lays out as the sheets sent in chat
   (in `title-options/`, gitignored).
@@ -108,6 +109,28 @@ photograph, top to bottom, in every setting but Now. John, on the titles page:
 "Center the text on the vertical access." A spread needs two lines. John has
 not picked a setting yet; the open item is in `HANDOFF-REDESIGN.md` at the
 repo root.
+
+### Legibility and photo treatments
+
+John: "A lot of these, whether good or bad picks, don't work well with the
+title style in terms of readability…" The red sits in the same middle range
+of tone as most of these albumen prints, so where they meet the letters all
+but vanish, and the see-through letters let the photograph's detail in.
+`titles-legibility.cjs` shoots every poster in Now and Bigger block, desktop
+and phone, under each treatment, three ways (as shown, without its title, and
+its title alone on plain ground); `titles-legibility.py` takes, for each
+pixel inside the letters, the WCAG contrast between the poster as shown and
+the photograph behind. As round four sets them, the median letter stands out
+by 1.7 to 2:1 (WCAG asks 3:1 even for large text), and 35 to 41 of the 42
+posters have more than 5% of their letters' area below 2:1.
+
+The page's Photo switch lays a wash between photograph and title: Pale (60%
+toward the page's light ground, the title in B's darker red), Gray (the
+same, the photograph in gray) and Dark (70% toward the dark ground, the title
+in the brighter red). Each strength is the lightest under which no poster has
+more than 5% of its letters' area below 2:1 (a model of the washes, checked
+against the screenshots, put the cliff at 55% and 65%); the medians rise to
+3.3 to 4:1.
 
 ### Votes
 
@@ -123,6 +146,11 @@ everyone who can open the page reads. Read them with the `ArtifactData` tool
 (`list`, collection `votes`, the artifact's URL). Locally `titles-check.cjs`
 stands in for the store (`STUB`), and `titles-test.html` carries the publish
 skeleton's reset, whose `[hidden]` rule the page also sets itself.
+
+The page waits 4 seconds for Sofia Sans, sets the titles with a stand-in
+face, and sets them all again when the font arrives (a late font once left
+titles measured in the wrong face); `titles-check.cjs` holds the font back
+7 seconds to test it.
 
 ## Rebuild
 
@@ -153,6 +181,14 @@ node docs/mockups/2026-10-30-round-four/titles-check.cjs
 ```
 
 ```bash
+node docs/mockups/2026-10-30-round-four/titles-legibility.cjs
+```
+
+```bash
+python3 docs/mockups/2026-10-30-round-four/titles-legibility.py
+```
+
+```bash
 node docs/mockups/2026-10-30-round-four/title-options.cjs
 ```
 
@@ -161,4 +197,4 @@ python3 docs/mockups/2026-10-30-round-four/title-sheets.py
 ```
 
 `index.html`, `test.html`, `titles.html`, `titles-test.html`, `img/`,
-`img-src/` and `title-options/` are gitignored.
+`img-src/`, `title-options/` and `title-legibility/` are gitignored.
