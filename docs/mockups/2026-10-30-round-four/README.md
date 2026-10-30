@@ -18,8 +18,7 @@ https://claude.ai/artifact/8svNwSXYLPBHZSfaKiSjuJ (`../2026-10-30-round-three`).
   a desktop (2.4 to 1) and tall for a phone (4 to 5). `picks.json` holds both
   crops as fractions of the Getty image; `images.py` has the Getty's IIIF
   server cut each region from the full-size original, so the photographs that
-  were soft in round three are sharp. Only one original, Duchenne's frowning
-  man for the *Physiognomics*, is too small for a sharp desktop poster. On the
+  were soft in round three are sharp. On the
   site one `<picture>` would hold both cuts; a work can take a second
   photograph for either shape instead of a cut.
 - **Reader on a phone, all directions**: "The alternating Greek then English
@@ -175,6 +174,19 @@ The local server drops connections under load, so it gives a picture a second
 try. Six works are not on the page because they already use gelatin silver
 (APr, Phys, GC, GA, EN, Lin); nine have no candidate (Sens, Somn, Insomn,
 DivSomn, Pol, Rhet, Col, Aud, VV).
+
+John's votes (30 October): ten of these went into `picks.json` and
+`photos.json`, with their citations checked against the site's Greek and
+their captions rewritten to fit: DA Bruguière, Long the redwood (his pick of
+two), Meta the comet, EE Fleckenstein, Phgn Dmitriev, MXG Stieglitz, Mirab
+Gleason, Vent Fleckenstein, Oec Hine, Mech Hine's power house. The others keep
+their photographs while he double-checks them; he said Topics' is fine.
+Measured under the red title as it stands (a model on the title's shape, as
+`titles-colour.py` models it; the full `titles-legibility.cjs` ran out of disk
+on the Mac): six got easier to read, Meta most (median 1.5 to 2.9:1), and four
+got harder (EE, Phgn, Mirab, Vent). Over all 41 works, 37 desktop and 33 phone
+posters still have more than 5% of their letters below 2:1. Gelatin silver
+alone does not make the title legible; a treatment is still needed.
 
 ### Votes
 

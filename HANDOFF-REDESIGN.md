@@ -52,10 +52,14 @@ caption (a Sonnet search, five spot-checked against the Getty records). None
 for Sens, Somn, Insomn, DivSomn, Aud, Col, VV, Pol, Rhet; no eclipse for
 the *Posterior Analytics*. Unchecked: several Bekker citations in the
 captions, and one Phgn candidate is a police mug shot of a named man.
-On John's vote page: https://claude.ai/artifact/XizpnWAJ6xtsoVPtpcX7MJ (read
-his votes with `ArtifactData`, `list`, collection `votes`). Next: put the
-winners in `picks.json` and `photos.json`, with their captions' citations
-checked, and recut any he comments on.
+John voted (https://claude.ai/artifact/XizpnWAJ6xtsoVPtpcX7MJ, `ArtifactData`,
+`list`, collection `votes`); the ten winners are in `picks.json` and
+`photos.json`, listed in round four's README with what they did to legibility.
+Open: John is double-checking the rest. Every candidate down, whether the
+present photograph stays or a new search is wanted: MA, Cat, Int, Juv, Poet,
+IA (Top's present one stays, he said). No up-vote: SE, APo, Cael, Mete, Mem,
+HA, PA, DM, Isa. Two clashes he has not ruled on: Mirab's geyser and GC's;
+Bruguière on both DA and APr.
 
 ## Before that: was B still in the running?
 
