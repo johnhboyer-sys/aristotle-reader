@@ -1,0 +1,6 @@
+# The site's data (TLG Greek included) and everything built from it.
+data/
+data.json
+index.html
+test.html
+shots/

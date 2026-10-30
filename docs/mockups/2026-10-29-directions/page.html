@@ -1,0 +1,125 @@
+<title>Aristotle Reader Redesign</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&family=Geologica:wght@300;400;500&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=GFS+Didot&family=Piazzolla:ital,opsz,wght@0,8..30,400;0,8..30,500;0,8..30,600;1,8..30,400&family=Fira+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fira+Sans+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/*__CSS__*/
+</style>
+
+<header id="bar" class="bar">
+  <div class="bar-in">
+    <span class="bar-title">The Aristotle Reader <small>four directions · 29 October 2026</small></span>
+    <div class="seg" role="group" aria-label="Page">
+      <button type="button" data-page="overview">Overview</button>
+      <button type="button" data-page="home">Home</button>
+      <button type="button" data-page="work">Work</button>
+      <button type="button" data-page="reader">Reader</button>
+      <button type="button" data-page="search">Search</button>
+      <button type="button" data-page="lexicon">Lexicon</button>
+    </div>
+    <div class="seg" role="group" aria-label="Direction">
+      <button type="button" data-dir="a"><b>A</b> Bekker</button>
+      <button type="button" data-dir="b"><b>B</b> Organon</button>
+      <button type="button" data-dir="c"><b>C</b> Axis</button>
+      <button type="button" data-dir="d"><b>D</b> Measure</button>
+    </div>
+    <div class="bar-right">
+      <div class="seg" role="group" aria-label="Theme">
+        <button type="button" data-theme-pick="light">Light</button>
+        <button type="button" data-theme-pick="dark">Dark</button>
+      </div>
+      <div class="seg" role="group" aria-label="Width">
+        <button type="button" data-width="desktop">1440</button>
+        <button type="button" data-width="phone">Phone</button>
+      </div>
+      <div class="seg"><button type="button" data-notes="1">Notes</button></div>
+    </div>
+  </div>
+</header>
+
+<main id="overview" class="ov">
+  <div class="ov-in">
+    <h1>The Aristotle Reader: four directions</h1>
+    <p class="ov-lede">Four new looks for the whole site. Each one is drawn on the opening of the <i>Nicomachean Ethics</i> with the site’s own Greek, its four translations and its real parses, and the main controls work: click a Greek word, change the translation, compare two, open the contents, jump to a Bekker number. Keys: 1 to 4 pick a direction, the arrows step through the pages, t switches to dark, p shows a phone.</p>
+
+    <section class="ov-sec">
+      <h2>The site now</h2>
+      <div class="ov-shots">
+        <figure><img src="shots/home.jpg" alt="The current home page: a centred title, three link boxes, a support box, then the works as a grid of boxes"><figcaption>Home</figcaption></figure>
+        <figure><img src="shots/work.jpg" alt="The current Nicomachean Ethics page: title, three buttons, boxed rows of translations and books"><figcaption>Work page</figcaption></figure>
+        <figure><img src="shots/reader.jpg" alt="The current reader with the word sidebar open on πᾶσα: three rows of controls above the text"><figcaption>Reader and word sidebar</figcaption></figure>
+        <figure><img src="shots/search.jpg" alt="The current search page: a boxed form with every option shown"><figcaption>Search</figcaption></figure>
+      </div>
+      <ol class="ov-crit">
+        <li><b>It looks like every other humanities site.</b> Parchment ground, brown buttons, rounded boxes, a centred title with a small capitals label over it. Nothing in it says Aristotle, or says that this is the best Greek–English Aristotle on the web.</li>
+        <li><b>The home page is all boxes of one weight.</b> Three link boxes, a support box, then forty-one work boxes in a grid. Nothing leads, and the boxes take the room that titles need.</li>
+        <li><b>Bekker’s numbers hold the whole corpus together, and the site hides them.</b> Every passage of Aristotle has one address from 1a1 to 1462b19, but the home and work pages never show where a work sits, and “Go to Bekker line” is a small button.</li>
+        <li><b>The reader puts three rows of controls over the text.</b> Contents, the work menu, Support, Search, Lexicon, Settings, Help and the theme; then Go to, ten book buttons and thirteen chapter boxes; then the translation menu, the view switch and Print. Then a tip box over the text.</li>
+        <li><b>Translations are hard to choose and harder to compare.</b> The picker is a browser drop-down of full citations, and comparing two translations is a radio button inside Settings.</li>
+        <li><b>The word sidebar is a stack of boxes.</b> Three πᾶς boxes repeat “all, fem nom/voc sg” because LSJ has three entries for the word.</li>
+        <li><b>Search shows every option at once.</b> Two fields, six rows of radio buttons, a works filter, a combine switch and a paragraph of help, all before the first result.</li>
+      </ol>
+    </section>
+
+    <section class="ov-sec">
+      <h2>The four directions</h2>
+      <div class="ov-table-wrap">
+        <table class="ov-table">
+          <thead><tr><th>Direction</th><th>The idea</th><th>Home page</th><th>Reader</th><th>Type</th><th>Colour</th></tr></thead>
+          <tbody>
+            <tr><td><a href="#a-home" data-open="a-home"><b>A</b> Bekker</a></td><td>The Plato redesign’s sibling. Where Plato is built on an inscription, this is built on Bekker’s numbers: one line from 1a1 to 1462b19.</td><td>The corpus as that line, every work placed on it; a Go to field; the works by division.</td><td>One row of spaced capitals; the work’s books as a strip under it; the line you are on, live.</td><td>Gentium Book Plus, Geologica (as Plato)</td><td>Malachite on limestone</td></tr>
+            <tr><td><a href="#b-home" data-open="b-home"><b>B</b> Organon</a></td><td>The reader as an instrument for close reading: outline, text and word inspector side by side, a status line, the keyboard throughout.</td><td>A command field and the corpus as an index you can sort and filter.</td><td>Three panes; the inspector stays docked, so nothing moves when you click a word; ← → step word to word.</td><td>Literata, IBM Plex Sans and Mono</td><td>Graphite and paper, one blue</td></tr>
+            <tr><td><a href="#c-home" data-open="c-home"><b>C</b> Axis</a></td><td>A parallel text, made into the site’s structure: one centre line runs down every page, Greek on its left, English on its right.</td><td>Every work as a facing pair, Greek title against English title.</td><td>Each text keeps its own Bekker numbers on its side of the line; translations as tabs over the English.</td><td>GFS Didot for titles, Piazzolla for reading</td><td>Ink on white, an ochre line</td></tr>
+            <tr><td><a href="#d-home" data-open="d-home"><b>D</b> Measure</a></td><td>Swiss: the corpus as measured data. Lengths, counts and spans set as type and bars.</td><td>Every work as a bar of its length in Bekker pages, by division.</td><td>A strict grid; the Bekker page set large in the margin; the word sidebar as a table of features.</td><td>Fira Sans at three widths, the Greek included</td><td>Black, white, signal yellow</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="ov-sec ov-cols">
+      <div>
+        <h2>The same in all four</h2>
+        <ul class="ov-list">
+          <li>The Greek and the English each keep their own Bekker numbers: the Greek its exact line numbers, the English its own ticks, upright when fixed, italic when estimated.</li>
+          <li>The English is set as large as the Greek, in the same ink.</li>
+          <li>Click a Greek word and its parse opens in a sidebar on the right; on a phone it comes up from the bottom. The parses are the site’s real ones for every word in Book I.</li>
+          <li>The LSJ entry stays Grammata’s. The site cannot restyle that module, so all four show it in one neutral setting (here a stand-in, since an artifact cannot load it).</li>
+          <li>Every work is on the home page, and every work has its own page.</li>
+          <li>Search in Greek and English, the lexicon, phrases, Bekker jumps, footnotes, compare, Greek / Both / English, text size and width, light and dark.</li>
+          <li>No rounded cards, gradients or drop shadows, apart from menus that float over the text. Titles, descriptions, citations and data come from the site; the few new lines of interface copy are drafts.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>What the mockup leaves out</h2>
+        <ul class="ov-list">
+          <li>Only Book I of the <i>Ethics</i> opens in the reader. The other works’ pages open from every home page, built from the registry.</li>
+          <li>Search shows one query, ἀρετή in any form, with its real counts across the corpus; lines from Book I carry their Greek and English.</li>
+          <li>The lexicon shows ἀρετή.</li>
+          <li>Phrases, the search guide, the glossary, the desktop app, Support and Texts &amp; Licences would follow whichever direction you choose.</li>
+          <li>Links to Phrases, Support and the other readers are placeholders here.</li>
+          <li>Print cannot run inside an artifact; the control is there, the dialog is not.</li>
+        </ul>
+        <h2>Start</h2>
+        <p class="ov-start"><a href="#a-home" data-open="a-home">A · Bekker</a> <a href="#b-home" data-open="b-home">B · Organon</a> <a href="#c-home" data-open="c-home">C · Axis</a> <a href="#d-home" data-open="d-home">D · Measure</a></p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div id="stage-wrap" class="stage-wrap" hidden>
+  <div id="stage-box" class="stage-box">
+    <div id="frame" class="frame">
+      <div id="view" class="view"></div>
+      <div id="over" class="over"></div>
+    </div>
+  </div>
+  <aside id="notes" class="notes" aria-label="Notes on this direction"></aside>
+</div>
+
+<script>
+window.DATA = /*__DATA__*/{};
+</script>
+<script>
+/*__JS__*/
+</script>
