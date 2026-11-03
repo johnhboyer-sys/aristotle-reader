@@ -1,0 +1,282 @@
+[
+ {
+  "kind": "detector",
+  "dir": "apo-mure",
+  "work": "APo",
+  "book": 1,
+  "chapter": 11,
+  "cat": "doubled-word",
+  "found": "not not",
+  "suggest": "not",
+  "why": "correct: 'not not-animal' is the negation of the indefinite term 'not-animal' (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "apo-mure",
+  "work": "APo",
+  "book": 1,
+  "chapter": 11,
+  "cat": "doubled-word",
+  "found": "not not",
+  "suggest": "not",
+  "why": "correct: 'not not-animal' (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "apo-mure",
+  "work": "APo",
+  "book": 1,
+  "chapter": 32,
+  "cat": "run-together",
+  "found": "coexist",
+  "suggest": "co-exist",
+  "why": "print has 'coexist' unhyphenated (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "apr-jenkinson",
+  "work": "APr",
+  "book": 1,
+  "chapter": 46,
+  "cat": "doubled-word",
+  "found": "not not",
+  "suggest": "not",
+  "why": "correct: 'it is not not-good' is the denial of 'it is not-good' (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "apr-jenkinson",
+  "work": "APr",
+  "book": 1,
+  "chapter": 46,
+  "cat": "doubled-word",
+  "found": "not not",
+  "suggest": "not",
+  "why": "correct: 'it is not not-white' (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "int-edghill",
+  "work": "Int",
+  "book": 1,
+  "chapter": 10,
+  "cat": "doubled-word",
+  "found": "not not",
+  "suggest": "not",
+  "why": "correct: 'Man is not not-just' is a cell of Aristotle's table (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "int-edghill",
+  "work": "Int",
+  "book": 1,
+  "chapter": 10,
+  "cat": "doubled-word",
+  "found": "not not",
+  "suggest": "not",
+  "why": "correct: 'Not-man is not not-just' (table cell, both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "int-edghill",
+  "work": "Int",
+  "book": 1,
+  "chapter": 10,
+  "cat": "doubled-word",
+  "found": "not not",
+  "suggest": "not",
+  "why": "correct: 'white is not not-man' (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "int-edghill",
+  "work": "Int",
+  "book": 1,
+  "chapter": 13,
+  "cat": "doubled-word",
+  "found": "it it",
+  "suggest": "it",
+  "why": "not an error: the site flattens the print's two-column table row by row, so the left cell's 'It is not necessary that' and the right cell's 'It is necessary that it' are followed by the next row's 'it should not be.'; the words match the print"
+ },
+ {
+  "kind": "detector",
+  "dir": "sr-pickard",
+  "work": "SE",
+  "book": 1,
+  "chapter": 5,
+  "cat": "doubled-word",
+  "found": "be be",
+  "suggest": "be",
+  "why": "correct: 'if coming-to-be be contrary to perishing' (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "sr-pickard",
+  "work": "SE",
+  "book": 1,
+  "chapter": 13,
+  "cat": "doubled-word",
+  "found": "nose nose",
+  "suggest": "nose",
+  "why": "correct: \"a 'concave-nose nose'\" is the example's point (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "sr-pickard",
+  "work": "SE",
+  "book": 1,
+  "chapter": 14,
+  "cat": "run-together",
+  "found": "menis",
+  "suggest": "men is",
+  "why": "transliteration of the print's μῆνις (house convention)"
+ },
+ {
+  "kind": "detector",
+  "dir": "sr-pickard",
+  "work": "SE",
+  "book": 1,
+  "chapter": 24,
+  "cat": "letter-swap",
+  "found": "flaws",
+  "suggest": "flows",
+  "why": "correct: 'a number of flaws' (both scans)"
+ },
+ {
+  "kind": "scan",
+  "dir": "apr-jenkinson",
+  "work": "APr",
+  "book": 1,
+  "column": "50b",
+  "site": "Whatever problems are proved in more than one figure, if they have been established",
+  "scan": "it they have been established",
+  "why": "the print itself misprints 'it' (page image n170 of worksofaristotle0001unse_w4d6); the site's 'if' is the right reading and is kept",
+  "line": "50b5"
+ },
+ {
+  "kind": "scan",
+  "dir": "apo-mure",
+  "work": "APo",
+  "book": 1,
+  "column": "88a",
+  "site": "nevertheless, if middles are taken to prove these premisses",
+  "scan": "nevertheless, it middles are taken",
+  "why": "both scans read 'it', the same if/it confusion as the APr misprint; the site's 'if' makes the sense and is kept",
+  "line": "88a24"
+ },
+ {
+  "kind": "scan",
+  "dir": "top-pickard",
+  "work": "Top",
+  "book": 7,
+  "column": "152a",
+  "site": "in a superlative degree, if the other of these alleged identical things",
+  "scan": "it the other",
+  "why": "same if/it confusion; site's 'if' kept",
+  "line": "152a6"
+ },
+ {
+  "kind": "scan",
+  "dir": "top-pickard",
+  "work": "Top",
+  "book": 8,
+  "column": "161a",
+  "site": "He, however, who would rightly convert any one",
+  "scan": "tightly convert",
+  "why": "page image n544 reads 'rightly'; scan OCR noise",
+  "line": "161a33"
+ },
+ {
+  "kind": "scan",
+  "dir": "apr-jenkinson",
+  "work": "APr",
+  "book": 2,
+  "column": "57a",
+  "site": "the premiss AC is wholly true, and the premiss BC is partly false",
+  "scan": "the premiss AC is partly false / A&C",
+  "why": "OCR of the italic B (the same page reads 'GC' for 'BC' two lines earlier); the argument needs BC",
+  "line": "57a28"
+ },
+ {
+  "kind": "scan",
+  "dir": "apr-jenkinson",
+  "work": "APr",
+  "book": 1,
+  "column": "40a",
+  "site": "and C may belong to some B, it follows that A may (not does) belong to some B",
+  "scan": "C may belong to some A",
+  "why": "italic B read as A; the conversion of 'B may belong to all C' needs B",
+  "line": "40a14"
+ },
+ {
+  "kind": "scan",
+  "dir": "apr-jenkinson",
+  "work": "APr",
+  "book": 2,
+  "column": "61b",
+  "site": "it is not proved that A belongs not to all B ... for A belongs to some B ... does not belong to some B",
+  "scan": "(b4y9 only) ... all A ... some A ... some A",
+  "why": "italic B read as A on the one scan that has this leaf; the argument needs B",
+  "line": "61b40"
+ },
+ {
+  "kind": "scan",
+  "dir": "apr-jenkinson",
+  "work": "APr",
+  "book": 1,
+  "column": "28a-62b",
+  "site": "single italic term letters (N, M, R, E, D, B, AB ...)",
+  "scan": "V, JZ, J7, X, Z, J, AZ, or dropped",
+  "why": "about 330 places where the OCR drops or garbles italic capitals; set aside by rule, letter-for-letter changes checked against the argument"
+ },
+ {
+  "kind": "scan",
+  "dir": "apo-mure",
+  "work": "APo",
+  "book": 1,
+  "column": "79b, 82b",
+  "site": "therefore no B is A / Therefore some A is not C",
+  "scan": "no B is A / .*. some A",
+  "why": "the print uses the sign ∴; the site writes it as a word"
+ },
+ {
+  "kind": "scan",
+  "dir": "int-edghill",
+  "work": "Int",
+  "book": 1,
+  "column": "19b-20a, 22a",
+  "site": "the tables in chapters 10 and 13",
+  "scan": "cells read column by column",
+  "why": "the site gives the print's two-column tables row by row; all words present (the one real slip, 'thatit', is corrected)"
+ },
+ {
+  "kind": "scan",
+  "dir": "top-pickard",
+  "work": "Top",
+  "book": 1,
+  "column": "101a, 113b",
+  "site": "'(b)' labels and many other italic '(b)'s in APo/Top",
+  "scan": "(4) / (6) / dropped",
+  "why": "OCR misreads italic (b); page image n370 shows '(b)'. Only the site's '(h)' for '(b)' was an error"
+ },
+ {
+  "kind": "scan",
+  "dir": "sr-pickard",
+  "work": "SE",
+  "book": 1,
+  "column": "165b-176a",
+  "site": "aetos, menis, pelex, oulomenen, tode, outos, aute, touto, touton, esti, xulon, schoinion, askos, kline, to einai, ou katalueis",
+  "scan": "Greek",
+  "why": "faithful transliterations (house convention); only 'Kopiskos'/'Kopiskon' and 'eros and eros' are garbled and corrected"
+ },
+ {
+  "kind": "scan",
+  "dir": "all",
+  "work": "",
+  "book": 0,
+  "column": "",
+  "site": "punctuation-only differences (a missing ')' in APr 'the conclusion (as we proved was not necessary', a missing '(' in Top 'Thus e.g.)', 'i.e' without its last period, quote marks)",
+  "scan": "",
+  "why": "punctuation only, sense unchanged; not reported per the brief"
+ }
+]

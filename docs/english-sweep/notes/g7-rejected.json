@@ -1,0 +1,492 @@
+[
+ {
+  "kind": "detector",
+  "dir": "ee-solomon",
+  "work": "EE",
+  "book": 1,
+  "chapter": 8,
+  "found": "another another",
+  "cat": "doubled-word",
+  "why": "in print: 'one science studies one kind ... and another another' (both vol. IX scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ee-solomon",
+  "work": "EE",
+  "book": 2,
+  "chapter": 6,
+  "found": "man man",
+  "cat": "doubled-word",
+  "why": "in print: 'as man man, animals in general animals, and plants plants' (Greek idiom, both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ee-solomon",
+  "work": "EE",
+  "book": 2,
+  "chapter": 6,
+  "found": "plants plants",
+  "cat": "doubled-word",
+  "why": "in print, same sentence as 'man man' (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ee-solomon",
+  "work": "EE",
+  "book": 4,
+  "chapter": 1,
+  "found": "wolf wolf",
+  "cat": "doubled-word",
+  "why": "in print: proverb 'thief knows thief, and wolf wolf' (both scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "en-peters",
+  "work": "EN",
+  "book": 7,
+  "chapter": 2,
+  "found": "hale",
+  "cat": "letter-swap",
+  "why": "real word: 'hale him about like a slave' (drag); print reads 'hale' in all three Peters scans"
+ },
+ {
+  "kind": "detector",
+  "dir": "en-peters",
+  "work": "EN",
+  "book": 7,
+  "chapter": 6,
+  "found": "errand",
+  "cat": "run-together",
+  "why": "real word: 'mistakes his errand'; print reads 'errand'"
+ },
+ {
+  "kind": "detector",
+  "dir": "en-peters",
+  "work": "EN",
+  "book": 9,
+  "chapter": 1,
+  "found": "maybe",
+  "cat": "run-together",
+  "why": "print reads 'although, maybe, there is nothing lovable about him' (revised-edition scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 1,
+  "chapter": 4,
+  "found": "being being",
+  "cat": "doubled-word",
+  "why": "in print: 'the full and solid being being, the empty non-being' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 3,
+  "chapter": 4,
+  "found": "water water",
+  "cat": "doubled-word",
+  "why": "in print: Empedocles quoted, 'by water water' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 3,
+  "chapter": 4,
+  "found": "are are",
+  "cat": "doubled-word",
+  "why": "in print: 'all things that are are one' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 5,
+  "chapter": 1,
+  "found": "changes changes",
+  "cat": "doubled-word",
+  "why": "in print: 'that which changes changes' (Ross's idiom)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 7,
+  "chapter": 3,
+  "found": "good good",
+  "cat": "doubled-word",
+  "why": "in print: 'make what is without qualification good good for each' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 7,
+  "chapter": 5,
+  "found": "nose nose",
+  "cat": "doubled-word",
+  "why": "in print: 'concave-nose nose' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 7,
+  "chapter": 5,
+  "found": "nose nose",
+  "cat": "doubled-word",
+  "why": "in print: 'concave-nose nose' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 7,
+  "chapter": 5,
+  "found": "nose nose",
+  "cat": "doubled-word",
+  "why": "in print: 'in snub-nose nose yet another \"nose\"' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 9,
+  "chapter": 7,
+  "found": "it it",
+  "cat": "doubled-word",
+  "why": "in print: 'if the agent has willed it it comes to pass' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 10,
+  "chapter": 3,
+  "found": "differs differs",
+  "cat": "doubled-word",
+  "why": "in print: 'everything that differs differs either in genus or in species'"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 11,
+  "chapter": 2,
+  "found": "are are",
+  "cat": "doubled-word",
+  "why": "in print: 'all things that are are substances' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 11,
+  "chapter": 2,
+  "found": "are are",
+  "cat": "doubled-word",
+  "why": "in print: 'all things that are are substance is false' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 11,
+  "chapter": 6,
+  "found": "everything everything",
+  "cat": "doubled-word",
+  "why": "in print: 'in everything everything is present' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 11,
+  "chapter": 11,
+  "found": "changes changes",
+  "cat": "doubled-word",
+  "why": "in print: 'That which changes changes either from positive into positive' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 13,
+  "chapter": 10,
+  "found": "elements elements",
+  "cat": "doubled-word",
+  "why": "in print: 'their elements elements of substances' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 14,
+  "chapter": 2,
+  "found": "are are",
+  "cat": "doubled-word",
+  "why": "in print: 'the things that are are generated' (Ross's idiom)"
+ },
+ {
+  "kind": "detector",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 14,
+  "chapter": 2,
+  "found": "are are",
+  "cat": "doubled-word",
+  "why": "in print: 'how and why the things that are are many' (both 1928 scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ross",
+  "work": "EN",
+  "book": 1,
+  "chapter": 6,
+  "found": "good good",
+  "cat": "doubled-word",
+  "why": "in print: 'the Idea of good good in itself' (both vol. IX scans)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ross",
+  "work": "EN",
+  "book": 3,
+  "chapter": 6,
+  "found": "awe",
+  "cat": "letter-swap",
+  "why": "real word: 'awe-inspiring' (print the same)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ross",
+  "work": "EN",
+  "book": 6,
+  "chapter": 2,
+  "found": "makes makes",
+  "cat": "doubled-word",
+  "why": "in print: 'every one who makes makes for an end'"
+ },
+ {
+  "kind": "detector",
+  "dir": "ross",
+  "work": "EN",
+  "book": 10,
+  "chapter": 3,
+  "found": "odds",
+  "cat": "letter-swap",
+  "why": "real idiom: 'that makes no odds' (print the same)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 3,
+  "chapter": 1,
+  "found": "foil",
+  "cat": "letter-swap",
+  "why": "sense: a 'foil' (blunted fencing weapon) renders the Greek 'a spear with a button on it'; no scan of Ostwald"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 4,
+  "chapter": 5,
+  "found": "forgiving",
+  "cat": "run-together",
+  "why": "real word: 'a gentle person is forgiving rather than vindictive'"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 6,
+  "chapter": 5,
+  "found": "worthwhile",
+  "cat": "run-together",
+  "why": "real word ('worthwhile end'); no scan of Ostwald to check spacing, nothing wrong in sense"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 9,
+  "chapter": 6,
+  "found": "be gotten",
+  "cat": "split-word",
+  "why": "real phrase: 'when material advantages are to be gotten' (US usage)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 10,
+  "chapter": 9,
+  "found": "ideai",
+  "cat": "letter-swap",
+  "why": "Ostwald's note transliterates Greek ideai (Plato's 'Ideas'); not 'ideal'"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 10,
+  "chapter": 9,
+  "found": "οὐκ",
+  "cat": "greek-in-english",
+  "why": "Ostwald's textual note prints Greek; Greek words belong there"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 10,
+  "chapter": 9,
+  "found": "τις",
+  "cat": "greek-in-english",
+  "why": "Ostwald's textual note prints Greek; Greek words belong there"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 10,
+  "chapter": 9,
+  "found": "διὰ",
+  "cat": "greek-in-english",
+  "why": "Ostwald's textual note prints Greek; Greek words belong there"
+ },
+ {
+  "kind": "detector",
+  "dir": "ostwald",
+  "work": "EN",
+  "book": 10,
+  "chapter": 9,
+  "found": "δὲ",
+  "cat": "greek-in-english",
+  "why": "Ostwald's textual note prints Greek; Greek words belong there"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 5,
+  "found": "As that which contains holds the things contained",
+  "why": "both 1928 scans print 'contains hold' (a slip in the print); the site's 'holds' is the grammatical reading, left alone"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 4,
+  "found": "Again if when the assertion is true",
+  "why": "both 1928 scans read 'it' here, as at 1016b ('a body if divisible') and 1047b ('If what we have described'); most likely OCR of 'if' in this face, and the site's 'if' is what the sense needs; not reported"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 10,
+  "found": "for if one is fewer, it is not therefore few",
+  "why": "both scans show a gap where the print has a numeral or 'one'; nothing wrong with the site"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 13,
+  "found": "for there can be no way besides those mentioned",
+  "why": "the scans' 'to'/'TO' there is the margin line number 10, not a word"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 9,
+  "found": "(See diagram.)",
+  "why": "the archive's own note where the print has a figure (1051a); house convention"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "meta-ross",
+  "work": "Meta",
+  "book": 14,
+  "found": "GP / X, Ps and Z",
+  "why": "transliterations of the printed Greek letters ΓΡ and Ξ, Ψ (house convention)"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ross",
+  "work": "EN",
+  "book": 6,
+  "found": "is one part of the faculty which grasps a rational principle",
+  "why": "both vol. IX scans print 'a rational principles' (a misprint); the site's singular is right, left alone"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ross",
+  "work": "EN",
+  "book": 5,
+  "found": "(See diagram.)",
+  "why": "archive note for the printed figure at 1132b (house convention)"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ross",
+  "work": "EN",
+  "book": 2,
+  "found": "(ethike), ethos, kleis, nomisma, nomos, sophrosune",
+  "why": "Greek given in transliteration (house convention); only garbled transliterations were reported (dikaion/dicha group, epieikes, epieikesteron, sozousa ten phronesin)"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ee-solomon",
+  "work": "EE",
+  "book": 2,
+  "found": "the continent will do a just act, and more so than incontinence",
+  "why": "the print sets this phrase between daggers (corrupt text); the site drops the daggers, which is the treatment of critical signs throughout"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ee-solomon",
+  "work": "EE",
+  "book": 2,
+  "found": "table of virtues and vices in II. 3",
+  "why": "the print's table is set in columns; the site linearizes it row by row, so the scans differ in word order there; nothing dropped"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "en-peters",
+  "work": "EN",
+  "book": 5,
+  "found": "he sometimes takes less",
+  "why": "all the revised-edition printings read 'take' (a misprint); the site's 'takes' left alone"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "en-peters",
+  "work": "EN",
+  "book": 2,
+  "found": "so that the farther things are removed / we need not farther inquire / the just man further needs",
+  "why": "farther/further differ between printings (the 11th ed. reads 'farther' where the 14th reads 'further'); edition variants, not errors"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "en-peters",
+  "work": "EN",
+  "book": 1,
+  "found": "moneymaking, wellborn, collarbone, everyone, forever, loath, warship, sightseeing, shamefaced, lawbreaker, overconfident, firstfruits, understatement, overstatement, worthwhile",
+  "why": "Standard Ebooks house style (closed-up compounds, modern spellings) applied throughout the Peters text; not transcription errors"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "en-peters",
+  "work": "EN",
+  "book": 3,
+  "found": "kinds of handicraft. / What then is it? / Like any other unit? / a more and a less.",
+  "why": "present in print: the scans' OCR lost these words or the margin side-notes broke the alignment"
+ }
+]

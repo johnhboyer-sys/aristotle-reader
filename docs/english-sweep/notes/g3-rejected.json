@@ -1,0 +1,263 @@
+[
+ {
+  "dir": "cael-stocks",
+  "work": "Cael",
+  "book": 1,
+  "chapter": 10,
+  "cat": "letter-swap",
+  "found": "detects",
+  "suggest": "defects",
+  "verdict": "fine",
+  "why": "print reads 'observation detects' (all three scans)"
+ },
+ {
+  "dir": "cael-stocks",
+  "work": "Cael",
+  "book": 2,
+  "chapter": 4,
+  "cat": "letter-swap",
+  "found": "BEC",
+  "suggest": "Bee",
+  "verdict": "fine",
+  "why": "BEC is a figure label; print has 'the surface of the water BEC'"
+ },
+ {
+  "dir": "dm-forster",
+  "work": "DM",
+  "book": 1,
+  "chapter": 6,
+  "cat": "letter-swap",
+  "found": "Alder",
+  "suggest": "Older",
+  "verdict": "fine",
+  "why": "print 'Alder and poplar-tree and cypress' (Homer, Od. v. 64)"
+ },
+ {
+  "dir": "dm-forster",
+  "work": "DM",
+  "book": 1,
+  "chapter": 6,
+  "cat": "letter-swap",
+  "found": "goad",
+  "suggest": "good",
+  "verdict": "fine",
+  "why": "print 'at the blow of God's goad' (Heraclitus fr. 11)"
+ },
+ {
+  "dir": "dm-forster",
+  "work": "DM",
+  "book": 1,
+  "chapter": 7,
+  "cat": "doubled-word",
+  "found": "be be",
+  "suggest": "be",
+  "verdict": "fine",
+  "why": "print 'in whom may he that is to be be happy' (1914 and 1931)"
+ },
+ {
+  "dir": "gc-joachim",
+  "work": "GC",
+  "book": 1,
+  "chapter": 2,
+  "cat": "run-together",
+  "found": "somethings",
+  "suggest": "some things",
+  "verdict": "fine",
+  "why": "print 'a contact of two somethings'"
+ },
+ {
+  "dir": "mete-webster",
+  "work": "Mete",
+  "book": 4,
+  "chapter": 3,
+  "cat": "letter-swap",
+  "found": "frying",
+  "suggest": "trying",
+  "verdict": "fine",
+  "why": "print 'cooked in a frying-pan'"
+ },
+ {
+  "dir": "mete-webster",
+  "work": "Mete",
+  "book": 4,
+  "chapter": 12,
+  "cat": "doubled-word",
+  "found": "viscera viscera",
+  "suggest": "viscera",
+  "verdict": "fine",
+  "why": "print 'flesh is not flesh nor viscera viscera'"
+ },
+ {
+  "dir": "phys-hardie",
+  "work": "Phys",
+  "book": 2,
+  "chapter": 5,
+  "cat": "run-together",
+  "found": "housebuilding",
+  "suggest": "house building",
+  "verdict": "fine",
+  "why": "print 'the housebuilding faculty' (solid, mid-line)"
+ },
+ {
+  "dir": "phys-hardie",
+  "work": "Phys",
+  "book": 2,
+  "chapter": 8,
+  "cat": "letter-swap",
+  "found": "dose",
+  "suggest": "close",
+  "verdict": "fine",
+  "why": "print 'pours out the wrong dose'"
+ },
+ {
+  "dir": "phys-hardie",
+  "work": "Phys",
+  "book": 3,
+  "chapter": 1,
+  "cat": "doubled-word",
+  "found": "changes changes",
+  "suggest": "changes",
+  "verdict": "fine",
+  "why": "print 'that what changes changes'"
+ },
+ {
+  "dir": "phys-hardie",
+  "work": "Phys",
+  "book": 3,
+  "chapter": 8,
+  "cat": "doubled-word",
+  "found": "touches touches",
+  "suggest": "touches",
+  "verdict": "fine",
+  "why": "print 'everything that touches touches something'"
+ },
+ {
+  "dir": "phys-hardie",
+  "work": "Phys",
+  "book": 5,
+  "chapter": 5,
+  "cat": "doubled-word",
+  "found": "contrary contrary",
+  "suggest": "contrary",
+  "verdict": "fine (doubled word)",
+  "why": "print has 'the opposite contrary contrary motions'; but 'motion' in the same sentence is 'motions' in print -> corrected in results/g3.json"
+ },
+ {
+  "dir": "phys-hardie",
+  "work": "Phys",
+  "book": 6,
+  "chapter": 5,
+  "cat": "doubled-word",
+  "found": "changes changes",
+  "suggest": "changes",
+  "verdict": "fine",
+  "why": "print 'everything that changes changes from something to something'"
+ },
+ {
+  "dir": "phys-hardie",
+  "work": "Phys",
+  "book": 6,
+  "chapter": 6,
+  "cat": "doubled-word",
+  "found": "changes changes",
+  "suggest": "changes",
+  "verdict": "fine (doubled word)",
+  "why": "print 'everything that changes changes in time': the doubling is right, but 'in' was dropped -> corrected in results/g3.json"
+ },
+ {
+  "dir": "gc-joachim",
+  "found": "Empedocles / Democritus / Leucippus / Socrates / Lynceus",
+  "verdict": "house convention",
+  "why": "print spells Empedokles, Demokritos, Leukippos, Sokrates, Lynkeus throughout; the archive Latinizes consistently (Empedocles 21x, no k-forms)"
+ },
+ {
+  "dir": "mete-webster",
+  "found": "Heracles (pillars of)",
+  "verdict": "spelling variant",
+  "why": "print 'Herakles' here but 'Heracles' 14x elsewhere; site normalizes"
+ },
+ {
+  "dir": "mete-webster",
+  "found": "Thrascias",
+  "verdict": "spelling variant",
+  "why": "print 'Thraskias' once, 'Thrascias' 7x; site normalizes"
+ },
+ {
+  "dir": "phys-hardie, mete-webster",
+  "found": "letter labels D, G, O, L, P, Rh, Ch, X, I",
+  "verdict": "house convention",
+  "why": "Greek letters of the figures transliterated (Δ, Γ, Θ, Λ, Π, Ρ, Χ, Ξ ...); only case slips (Ab, Dz, Lm, Ag, Mk, ...) and dropped/garbled labels were reported"
+ },
+ {
+  "dir": "mete-webster",
+  "found": "R, G, V, Y for the rainbow colours (III.4, 375b)",
+  "verdict": "editorial",
+  "why": "print labels them Γ, Δ, Ε, Ζ; the archive relabels them R(ed), G(reen), V(iolet), Y(ellow) consistently; not an OCR slip"
+ },
+ {
+  "dir": "mete-webster",
+  "found": "'(See diagram.)'",
+  "verdict": "house convention",
+  "why": "inserted by the archive where the print has a figure"
+ },
+ {
+  "dir": "mete-webster",
+  "found": "labels YX, YXM, YM (III.5, 376b)",
+  "verdict": "uncertain",
+  "why": "scan OCR reads them as Greek ΥΧ / ΧΥΩ / ΥΩ (OCR 'YY', '#YQ', 'YQ'); not resolved without the page image, so not reported"
+ },
+ {
+  "dir": "gc-joachim",
+  "found": "'either' (I.2 316a; I.6 322b)",
+  "verdict": "print misprint",
+  "why": "both scan copies read 'ether' at these two places; the site's 'either' is the sense and is kept"
+ },
+ {
+  "dir": "phys-hardie",
+  "found": "'such that there is something intermediate' (VI.3 234a)",
+  "verdict": "print misprint",
+  "why": "print reads 'such that that there is'; site's reading kept"
+ },
+ {
+  "dir": "phys-hardie",
+  "found": "'The before and after in motion is identical' (IV.11 219a)",
+  "verdict": "uncertain",
+  "why": "both scans read 'in motion identical' without 'is'; probably an OCR drop of an italic word; site kept"
+ },
+ {
+  "dir": "all four ICA texts",
+  "found": "dash dropped (space where print has an em dash)",
+  "verdict": "punctuation only",
+  "why": "e.g. GC 'any change whether change of place', 'away assuming', Cael 'effort the more so', Phys 'motion which is indeed made plain'; about 40 instances, sense unchanged, not reported"
+ },
+ {
+  "dir": "gc-joachim, mete-webster, phys-hardie",
+  "found": "possible stray hyphens read as dashes",
+  "verdict": "punctuation only",
+  "why": "print has no dash at GC 'in this sense-a body', Mete 'differ to touch-by these', Phys 'in place-or in the void', 'subject of change-that is to say', 'at the outset-why is it'; not reported (stray hyphens that glue words into pseudo-compounds, e.g. 'the-west', 'it-to-be', 'its-own', were reported)"
+ },
+ {
+  "dir": "gc-joachim",
+  "found": "stray apostrophes left by footnote marks",
+  "verdict": "artifact",
+  "why": "about 40 places such as \"explain later' which\", \"established elsewhere,' that\", \"a former work' that\", \"grapple' with\"; not reported one by one (removed only where they sat inside a corrected snippet)"
+ },
+ {
+  "dir": "phys-hardie, gc-joachim",
+  "found": "lines of 70 dashes at book ends",
+  "verdict": "archive file furniture",
+  "why": "Phys texts lines 103, 194, 302, 510, 563, 643, 680, 754 and GC 118, 192 (texts/*.txt) show '------...' paragraphs from the archive's .txt layout; better stripped by the parser than by find/replace"
+ },
+ {
+  "dir": "phys-hardie",
+  "found": "'leading-note', 'broad-breasted', 'ship-haulers', 'dark-haired'",
+  "verdict": "fine",
+  "why": "print divides these at a line end; the hyphenated site form is consistent"
+ },
+ {
+  "dir": "dm-forster",
+  "found": "whole text",
+  "verdict": "fine",
+  "why": "no differences beyond scan noise against the 1914 fascicle and two copies of vol. III (1931)"
+ }
+]

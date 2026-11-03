@@ -1,0 +1,260 @@
+[
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 1,
+  "chapter": 1,
+  "cat": "doubled-word",
+  "found": "flesh flesh",
+  "suggest": "flesh",
+  "why": "print has 'flesh flesh, and bone bone' (one man's flesh resembles another's flesh)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 1,
+  "chapter": 1,
+  "cat": "doubled-word",
+  "found": "bone bone",
+  "suggest": "bone",
+  "why": "print has 'flesh flesh, and bone bone'"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 1,
+  "chapter": 5,
+  "cat": "run-together",
+  "found": "horsefly",
+  "suggest": "horse-fly",
+  "why": "print has 'horsefly' (solid) here"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 2,
+  "chapter": 15,
+  "cat": "run-together",
+  "found": "freshwater",
+  "suggest": "fresh water",
+  "why": "print has 'freshwater tortoise' (solid) here"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 4,
+  "chapter": 1,
+  "cat": "letter-swap",
+  "found": "craw",
+  "suggest": "crow",
+  "why": "real word; print 'a crop or craw'"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 4,
+  "chapter": 7,
+  "cat": "run-together",
+  "found": "horsefly",
+  "suggest": "horse-fly",
+  "why": "print has 'horsefly' (solid) here"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 4,
+  "chapter": 9,
+  "cat": "letter-swap",
+  "found": "spat",
+  "suggest": "spot",
+  "why": "real word; print 'be spat outwards'"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 5,
+  "chapter": 17,
+  "cat": "run-together",
+  "found": "middleways",
+  "suggest": "middle-ways",
+  "why": "print has 'middleways' (solid)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 5,
+  "chapter": 32,
+  "cat": "letter-swap",
+  "found": "ses",
+  "suggest": "sea",
+  "why": "print has 'the ses or clothes-moth' (Gk. ses, moth, transliterated)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 7,
+  "chapter": 7,
+  "cat": "run-together",
+  "found": "eggshell",
+  "suggest": "egg-shell",
+  "why": "print has 'eggshell' (solid)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 8,
+  "chapter": 3,
+  "cat": "run-together",
+  "found": "waterside",
+  "suggest": "water-side",
+  "why": "print has 'waterside' (solid)"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 8,
+  "chapter": 9,
+  "cat": "run-together",
+  "found": "mareis",
+  "suggest": "mare is",
+  "why": "print has 'mareis' (plural of 'maris', a liquid measure: 'five mareis of wine-six cotylae going to the maris')"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 9,
+  "chapter": 24,
+  "cat": "letter-swap",
+  "found": "daws",
+  "suggest": "claws",
+  "why": "real word; print 'Of daws there are three species'"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 9,
+  "chapter": 40,
+  "cat": "letter-swap",
+  "found": "salve",
+  "suggest": "solve",
+  "why": "real word; print 'good as a salve for sore eyes'"
+ },
+ {
+  "kind": "detector",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 9,
+  "chapter": 41,
+  "cat": "letter-swap",
+  "found": "felling",
+  "suggest": "telling",
+  "why": "real word; print 'when oaks have been in course of felling'"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 6,
+  "chapter": 3,
+  "found": "envelops the yolk (and, by the way, the yolk is now liquid",
+  "print": "envelops the yoke (and, by the way, the yolk",
+  "why": "print misprint 'yoke' (page image n259, 561b7); the site's 'yolk' is the right word, so not changed back"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 7,
+  "chapter": 4,
+  "found": "but in the eighth month it opens",
+  "print": "but in the eight month it opens",
+  "why": "print misprint 'eight month' (page image n320, 583b31); the site's 'eighth' is right, so not changed back"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 9,
+  "chapter": 14,
+  "found": "it is not easy to cut the nest through",
+  "print": "it is not easy to cut the rest through",
+  "why": "print reads 'rest' (page image n421, 616a26) but the Greek says the nests are not easily cut; 'rest' looks like a misprint for 'nest'. Left as the site has it; flag if the print is to be followed literally"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 0,
+  "chapter": 0,
+  "found": "(See diagram.) / (see diagram)",
+  "why": "8 places: the archive's note where the print has a figure; same convention in other translations. Only the missing space in '(See diagram.)It' (4.2) is reported"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 3,
+  "chapter": 1,
+  "found": "marked MM; ... the penis D; the bladder E; and the testicles XX",
+  "why": "diagram letters, Greek capitals in the print rendered in Latin letters by the archive; OCR of the print unreadable here, not checked letter by letter"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 3,
+  "chapter": 4,
+  "found": "into a A shape",
+  "why": "print has the Greek letter lambda; the archive renders it 'A' (house convention for Greek)"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 5,
+  "chapter": 12,
+  "found": "eggs in spring-time and in autumn",
+  "why": "print 'springtime' (solid) here; the site's hyphen is trivial and the print uses both forms, so not reported"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 8,
+  "chapter": 19,
+  "found": "fishes are particularly weak-sighted",
+  "why": "both OCRs read 'weaksighted', but the print hyphenates 'weak-sighted' elsewhere; possibly an OCR miss, not reported"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 0,
+  "chapter": 0,
+  "found": "dropped dashes: 'animals, such' (4.1), 'rivers and, by the way' (8.20), 'above-mentioned, but' (9.50)",
+  "why": "punctuation only, sense unchanged; not reported (the one in 5.19, 'first even at this stage-it', is reported because the parenthesis is left half-marked)"
+ },
+ {
+  "kind": "scandiff",
+  "dir": "ha-thompson",
+  "work": "HA",
+  "book": 0,
+  "chapter": 0,
+  "found": "OCR merges in the scans ('asa', 'Inthe', 'ofa', 'andthe', 'across' for 'a cross')",
+  "why": "the scans' OCR, not the site; the seven split-word corrections that rest on a solid word in the scans were checked on the page images"
+ }
+]
