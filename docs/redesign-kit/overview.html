@@ -1,0 +1,202 @@
+<style>
+/* ── Round six overview: one band per direction, then the comparison ── */
+.ov-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.ov-q { font-weight: 600; }
+.ov-upd { font-size: 14.5px; line-height: 1.5; margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid var(--m-fg); background: var(--m-panel); max-width: 62em; }
+.ov-sub { font-size: 13.5px; color: var(--m-mid); margin: -6px 0 0; }
+.ov-dirs { display: grid; gap: 40px; margin-top: 22px; }
+.ov-dir { margin: 0; display: grid; gap: 14px; }
+.ov-dh { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 2px 16px; align-items: baseline; padding-top: 16px; border-top: 1px solid var(--m-line); }
+.ov-dk { grid-row: 1 / span 3; margin: 0; font: 700 46px/.86 var(--m-ui); letter-spacing: -.02em; }
+.ov-dn { margin: 0; font: 600 21px/1.25 var(--m-ui); }
+.ov-dn a { text-decoration: none; }
+.ov-dn a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ov-di { margin: 2px 0 0; font-size: 15px; line-height: 1.55; max-width: 64em; }
+.ov-dl { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 4px 0 0; font-size: 13.5px; line-height: 1.5; }
+.ov-dl span { color: var(--m-mid); }
+.ov-ds { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, .3125fr); gap: 12px; align-items: start; }
+.ov-ds figure { margin: 0; min-width: 0; }
+.ov-ds a { display: block; }
+.ov-ds img { display: block; width: 100%; height: auto; border: 1px solid var(--m-line); }
+.ov-ds a:hover img, .ov-ds a:focus-visible img { border-color: var(--m-fg); }
+.ov-ds figcaption { font-size: 12.5px; line-height: 1.4; color: var(--m-mid); margin-top: 6px; }
+.ov-table caption { caption-side: top; text-align: left; font-size: 13.5px; color: var(--m-mid); padding-bottom: 8px; }
+.ov-table thead th { font-size: 14px; color: var(--m-fg); vertical-align: bottom; width: 22%; }
+.ov-table thead th:first-child { width: 12%; }
+.ov-table thead th a { text-decoration: none; }
+.ov-table thead th b { font-size: 18px; margin-right: 4px; }
+.ov-table tbody th { vertical-align: top; padding-top: 13px; font-size: 13px; }
+.ov-table td { font-size: 14px; }
+.ov-gaps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; font-size: 14.5px; line-height: 1.55; }
+.ov-gaps b { display: inline-block; min-width: 1.4em; }
+.ov-cols .ov-list + h2, .ov-cols .ov-gaps + h2, .ov-cols .ov-small + h2 { margin-top: 28px; }
+.ov-small + .ov-small { margin-top: 8px; }
+@media (max-width: 700px) {
+  .ov-dh { grid-template-columns: 38px minmax(0, 1fr); gap: 2px 12px; }
+  .ov-dk { font-size: 34px; }
+  .ov-ds { grid-template-columns: minmax(0, 1fr) minmax(0, .3125fr); gap: 8px; }
+  .ov-ds figure:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .ov-ds figure:nth-child(3) { grid-column: 2; grid-row: 1; }
+}
+</style>
+<main id="overview" class="ov">
+  <div class="ov-in">
+    <h1>The Aristotle Reader: round seven</h1>
+    <p class="ov-lede">The directions your notes kept in the running, side by side on the same six pages: B in Oswald, your pick of its heavier title faces, D as round four left it, H with a second set of plates and a new title face, and P, which puts Aristotle in the Plato Reader’s design. E, F and G are out; <a href="https://claude.ai/artifact/MkNU79qNssQ7Pco5TKomvj" target="_blank" rel="noopener">round six ↗</a> still shows them. The dashed switches in the bar show a direction’s other versions: B’s title faces, its photographs as printed and its logic works without blackboards, H’s 1500s plates and title faces, P in red. Keys: 1–4 pick a direction, v flips the first switch, f steps through B’s or H’s title faces, ← → step through the pages, t switches to dark, p switches between both widths, desktop and phone, n opens the designer’s notes.</p>
+
+    <section class="ov-sec">
+      <h2>After your notes</h2>
+      <ul class="ov-list">
+        <li><span class="ov-q">“E is too basic… F doesn’t work… G’s home, work, and the big quote on reader page are out.”</span> E, F and G are not in this round.</li>
+        <li><span class="ov-q">“Either B or D or H.”</span> B and D come back as rounds five and four left them, so all four sit on the same pages. One fix to both: Porphyry’s <i>Isagoge</i> now stands on their home pages, as the rule asks for every work.</li>
+        <li><span class="ov-q">“We might need to pick different plates… maybe not plates that are so renaissance.”</span> H now opens on a second set of plates, from prints of about 1700–1870: encyclopedia and natural-history plates, star books and books of ancient objects, drawn to explain things. The 1500s set is one click away on the switch.</li>
+        <li><span class="ov-q">“If we doing plates, every work needs one.”</span> The new set has a plate for every one of the 41 works and the home page, down to <a href="#h-work:MA" data-open="h-work:MA"><i>Movement of Animals</i></a>, with Atlas holding up the heavens, and <a href="#h-work:Lin" data-open="h-work:Lin"><i>On Indivisible Lines</i></a>, with a Roman folding foot-rule from Pompeii for its “unit of measurement”. The 1500s set still lacks 17.</li>
+        <li><span class="ov-q">“Different font.”</span> H’s titles are now set in Noto Serif Display, a Didone, narrowed and heavy: the kind of type most of the later plates’ books were printed in, and kin to the Didot numerals already on the page. Narrowed, it still fills the column, as Archivo did. The one face now sets every title, heading and large numeral, and the logo; Archivo stays for labels and buttons. A new switch offers five others to compare: <a href="#h-home~bodoni" data-open="h-home~bodoni">Bodoni Moda</a>, <a href="#h-home~garamond" data-open="h-home~garamond">EB Garamond</a>, <a href="#h-home~instrument" data-open="h-home~instrument">Instrument Serif</a>, <a href="#h-home~piazzolla" data-open="h-home~piazzolla">Piazzolla</a>, the reading face set heavy, and <a href="#h-home~r7" data-open="h-home~r7">Archivo</a> as before; press f to step through them. This also mended a fault in the round-seven titles: their box cut off the tails of g, p and y, as in <i>Categories</i>. Every title now keeps its whole letters, in every face, at both widths.</li>
+        <li><span class="ov-q">“Reader and Aristotle should be same size.”</span> In H’s logo, “Aristotle” and “Reader” now look the same size at both widths.</li>
+        <li><span class="ov-q">“Bigger, thicker font. Let’s try a few different fonts.”</span> B’s titles now come in five heavier, narrower faces, with round five’s on the switch to compare: <a href="#b-work:Cat~xc" data-open="b-work:Cat~xc">Sofia Sans Extra Condensed</a>, <a href="#b-work:Cat~anton" data-open="b-work:Cat~anton">Anton</a>, <a href="#b-work:Cat~oswald" data-open="b-work:Cat~oswald">Oswald</a>, <a href="#b-work:Cat~bebas" data-open="b-work:Cat~bebas">Bebas Neue</a> and <a href="#b-work:Cat~shoulders" data-open="b-work:Cat~shoulders">Big Shoulders</a>. Narrower letters let each title grow: on a phone, <i>Categories</i> goes from 63 pixels to between 89 and 136. Each face follows round five’s rule, breaking a long word once at a syllable only where whole it would be under half its largest size. So <i>Categories</i> stays whole in the two narrowest and breaks CATE / GORIES in the other three.</li>
+        <li><span class="ov-q">“For B, I’m thinking Oswald for font.”</span> B now opens in Oswald: the titles over the photographs on <a href="#b-home" data-open="b-home">the home page</a> and <a href="#b-work:Top" data-open="b-work:Top">every work page</a>, the division names and the reader’s BOOK I. The switch keeps the other faces to compare.</li>
+        <li><span class="ov-q">“For B, let’s find some photographs of logic being done on a chalkboard?”</span> Three logic works now open on a blackboard. The <a href="#b-work:APr" data-open="b-work:APr"><i>Prior Analytics</i></a>: Hippocrates’ lunes, labelled ΜΗΝΙΣΚΟΙ, the word Aristotle uses when the <i>Analytics</i> brings them in as an example (II.25). <a href="#b-work:Int" data-open="b-work:Int"><i>De Interpretatione</i></a>: Greek past tenses, which it calls “not verbs, but tenses of a verb”. Both boards are from the Stedelijk Gymnasium in Utrecht, about a century ago. The <a href="#b-work:Top" data-open="b-work:Top"><i>Topics</i></a>: an American classroom of about 1900, its board setting a lesson by induction, measuring circles to find how many diameters go into the circumference. A new switch, Logic works, brings back the photographs they replace, Le Gray’s fleet among them. The <i>Categories</i>, <i>Posterior Analytics</i>, <i>Sophistical Refutations</i> and <i>Isagoge</i> keep theirs: the boards I found don’t fit them as well as the horse, the rallying troops, the spirit photograph and the oak.</li>
+        <li><span class="ov-q">“Not loving the HERO text here…”</span> B’s reader no longer opens on its first words in giant red capitals. Book I now opens on a plain head: the work’s name, then BOOK I in red Oswald, then the Greek title and the editions. <a href="#b-reader" data-open="b-reader">See it</a>.</li>
+        <li><span class="ov-q">“Smaller.”</span> The count on the search page is smaller: from 150 to 88 pixels in B and from 168 to 96 in H; on a phone, from 96 to 60 and from 112 to 64. Your note sat on a spot the two pages share, so both changed.</li>
+        <li><span class="ov-q">“I like this feature. Put it on all the mock ups.”</span> Every search page now lists the works with hits down the left, as H’s did: each work with its count, the open one marked, and the list stays in view as the hits scroll. On a phone it is a row to swipe. See <a href="#b-search" data-open="b-search">B</a>, <a href="#d-search" data-open="d-search">D</a> and <a href="#p-search" data-open="p-search">P</a>.</li>
+        <li><span class="ov-q">“Show the text/body paragraphs.”</span> On a phone, D now shows the whole opening of each work in the Aldine edition: the woodcut headpiece, the title and the first lines of Greek, not the headpiece alone. <a href="#d-home" data-open="d-home">See the home page</a>.</li>
+        <li><span class="ov-q">“Having ‘B’ red makes no sense.”</span> D’s book list is plain black now; a book turns red only when it is open or under the pointer.</li>
+        <li><span class="ov-q">“Where’s search?” and “The box around ‘Book I’ looks bad. The arrow should be enough.”</span> The reader’s top bar now has search on a phone, and its Book and translation menus have no box, only the arrow. B and H had the same box and hid search the same way, so they have the same fix. <a href="#d-reader" data-open="d-reader">See D’s reader</a>.</li>
+        <li><span class="ov-q">“Make sure all the things in headers are aligned and look good. No uneven stuff.”</span> In every top bar of the four directions, the words now sit on one baseline, whatever their size or face, and each icon centres on the capitals beside it. The menus and controls are spaced evenly: the same room either side of the Book menu, the view switch spaced like the rest, the theme icon as far from the menu as the links are from each other. On a phone, D’s logo now fits on one line, and P’s book and chapter menus get the same room as its icons.</li>
+        <li><span class="ov-q">“Maybe something else so we don’t have uneven rows?”</span> P’s masthead ran twelve letters, then eight and eight. It now reads ΑΡΙΣΤΟΤΕΛΗΣ / ΣΤΑΓΕΙΡΙΤΗΣ / ΤΑ ΣΩΙΖΟΜΕΝΑ, “Aristotle the Stagirite: the surviving works”: three rows of exactly eleven letters, whole words only, so the grid is a full rectangle as Plato’s is. The iota is written beside its vowel, as on the work pages’ blocks, and the article is grey, as in Plato’s. <a href="#p-home" data-open="p-home">See it</a>.</li>
+        <li><span class="ov-q">“Or we just clone Plato’s current look with the opening text and a different palate.”</span> That is P. Each work page opens on its first forty-eight letters, twelve to a row, the last rows fading, as Plato’s pages open on theirs. Two colours of Aristotle’s own: green, which no sibling site uses, and a red kept clear of Homer’s wine and Greek Drama’s clay.</li>
+        <li><span class="ov-q">“I like how the current Plato site breathes.”</span> P keeps Plato’s spacing, measured on the live site at both widths: the same bar, margins, gaps, line heights and column widths. Where your rules add things Plato’s pages lack, such as the chapter lists, they get the same room.</li>
+      </ul>
+    </section>
+
+    <section class="ov-sec">
+      <h2>The four directions</h2>
+      <p class="ov-sub">First screens at 1440 by 900, and each on a phone in dark mode. Click a picture to open that page.</p>
+      <div class="ov-dirs">
+
+        <article class="ov-dir">
+          <header class="ov-dh">
+            <p class="ov-dk" aria-hidden="true">B</p>
+            <h3 class="ov-dn"><a href="#b-home" data-open="b-home"><span class="ov-vh">B · </span>Poster</a></h3>
+            <p class="ov-di">Round five, with heavier titles, now in Oswald. The home page and each work page open on one photograph in black and white, with the title over it in red capitals; the reader opens on a plain head. One switch picks the title face, Oswald or four other heavy faces or round five’s; the other shows the photographs as the Getty holds them.</p>
+            <p class="ov-dl"><span>Open</span> <a href="#b-home" data-open="b-home">Home</a> <a href="#b-work:Top" data-open="b-work:Top"><i>Topics</i></a> <a href="#b-work:EN" data-open="b-work:EN"><i>Ethics</i></a> <a href="#b-work:Cat~anton" data-open="b-work:Cat~anton"><i>Categories</i> in Anton</a> <a href="#b-work:Cat~r5" data-open="b-work:Cat~r5"><i>Categories</i> as in round five</a> <a href="#b-work:Top~printed" data-open="b-work:Top~printed"><i>Topics</i>, as printed</a> <a href="#b-reader" data-open="b-reader">Reader</a> <a href="#b-lexicon" data-open="b-lexicon">Lexicon</a></p>
+          </header>
+          <div class="ov-ds">
+            <figure><a href="#b-home" data-open="b-home"><img src="ov/b-home.jpg" alt="B’s home page: a black-and-white photograph with THE COMPLETE WORKS OF ARISTOTLE over it in large red capitals" width="1000" height="625" loading="lazy"></a><figcaption>Home</figcaption></figure>
+            <figure><a href="#b-work:Top" data-open="b-work:Top"><img src="ov/b-work.jpg" alt="B’s page for the Topics: a teacher at his desk about 1900, a blackboard of chalked arithmetic behind him, TOPICS over it in red capitals" width="1000" height="625" loading="lazy"></a><figcaption>A work: the <i>Topics</i>, on a blackboard</figcaption></figure>
+            <figure><a href="#b-home" data-open="b-home"><img src="ov/b-phone.jpg" alt="B’s home page on a phone in dark mode" width="340" height="680" loading="lazy"></a><figcaption>Phone, dark</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="ov-dir">
+          <header class="ov-dh">
+            <p class="ov-dk" aria-hidden="true">D</p>
+            <h3 class="ov-dn"><a href="#d-home" data-open="d-home"><span class="ov-vh">D · </span>Aldine</a></h3>
+            <p class="ov-di">Round four, unchanged. Each work beside its first printing, in Aldus Manutius’s Greek Aristotle, Venice 1495–98. EB Garamond, with the Greek in Gentium Book Plus and “Reader” in red italic.</p>
+            <p class="ov-dl"><span>Open</span> <a href="#d-home" data-open="d-home">Home</a> <a href="#d-work:EN" data-open="d-work:EN"><i>Ethics</i></a> <a href="#d-work:Cat" data-open="d-work:Cat"><i>Categories</i></a> <a href="#d-reader" data-open="d-reader">Reader</a> <a href="#d-lexicon" data-open="d-lexicon">Lexicon</a></p>
+          </header>
+          <div class="ov-ds">
+            <figure><a href="#d-home" data-open="d-home"><img src="ov/d-home.jpg" alt="D’s home page: the title in EB Garamond beside the first page of the Categories in the Aldine edition" width="1000" height="625" loading="lazy"></a><figcaption>Home</figcaption></figure>
+            <figure><a href="#d-work:EN" data-open="d-work:EN"><img src="ov/d-work.jpg" alt="D’s page for the Nicomachean Ethics: the title and the books, beside the Aldine page where the Ethics begins" width="1000" height="625" loading="lazy"></a><figcaption>A work: the <i>Ethics</i></figcaption></figure>
+            <figure><a href="#d-work:EN" data-open="d-work:EN"><img src="ov/d-phone.jpg" alt="D’s page for the Ethics on a phone in dark mode, the Aldine headpiece above the title" width="340" height="680" loading="lazy"></a><figcaption>Phone, dark</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="ov-dir">
+          <header class="ov-dh">
+            <p class="ov-dk" aria-hidden="true">H</p>
+            <h3 class="ov-dn"><a href="#h-home" data-open="h-home"><span class="ov-vh">H · </span>Plates</a></h3>
+            <p class="ov-di">Each work gets one plate, printed in one blue ink, with the line of Aristotle it shows; type never sits on a picture. The new set, now the default, comes from prints of about 1700–1870: encyclopedia and natural-history plates, star books, books of ancient objects and a few etchings. They were drawn to explain things, so they read at once. One switch brings back the 1500s set; the other tries the titles in five other faces.</p>
+            <p class="ov-dl"><span>Open</span> <a href="#h-home" data-open="h-home">Home</a> <a href="#h-work:Cat" data-open="h-work:Cat"><i>Categories</i></a> <a href="#h-work:Int" data-open="h-work:Int"><i>De Interpretatione</i></a> <a href="#h-work:APo" data-open="h-work:APo"><i>Posterior Analytics</i></a> <a href="#h-work:GC" data-open="h-work:GC"><i>On Generation and Corruption</i></a> <a href="#h-work:PA" data-open="h-work:PA"><i>Parts of Animals</i></a> <a href="#h-work:Int~early" data-open="h-work:Int~early">the 1500s set</a> <a href="#h-reader" data-open="h-reader">Reader</a></p>
+          </header>
+          <div class="ov-ds">
+            <figure><a href="#h-home" data-open="h-home"><img src="ov/h-home.jpg" alt="H’s home page with the later plates: an engraved head of Aristotle after an ancient bust, in blue ink, beside the title" width="1000" height="625" loading="lazy"></a><figcaption>Home</figcaption></figure>
+            <figure><a href="#h-work:Int" data-open="h-work:Int"><img src="ov/h-work.jpg" alt="H’s page for De Interpretatione: an etching of two warships in battle, in blue ink, beside the title" width="1000" height="625" loading="lazy"></a><figcaption>A work: <i>De Interpretatione</i>, “a sea-fight must either take place to-morrow or not”</figcaption></figure>
+            <figure><a href="#h-work:EN" data-open="h-work:EN"><img src="ov/h-phone.jpg" alt="H’s page for the Nicomachean Ethics on a phone in dark mode: a wood engraving of a swallow printed light on dark above the title" width="340" height="680" loading="lazy"></a><figcaption>Phone, dark</figcaption></figure>
+          </div>
+        </article>
+
+        <article class="ov-dir">
+          <header class="ov-dh">
+            <p class="ov-dk" aria-hidden="true">P</p>
+            <h3 class="ov-dn"><a href="#p-home" data-open="p-home"><span class="ov-vh">P · </span>Plato’s look</a></h3>
+            <p class="ov-di">The Plato Reader’s design, measured on the live site and matched: Gentium Book Plus, Geologica capitals, the same bar, margins and gaps. Each work page opens on its first words as a block of capitals, with its Bekker line under it. Green by default; the switch shows red. No pictures.</p>
+            <p class="ov-dl"><span>Open</span> <a href="#p-home" data-open="p-home">Home</a> <a href="#p-work:EN" data-open="p-work:EN"><i>Ethics</i></a> <a href="#p-work:Meta~red" data-open="p-work:Meta~red"><i>Metaphysics</i>, red</a> <a href="#p-work:Cat" data-open="p-work:Cat"><i>Categories</i></a> <a href="#p-reader" data-open="p-reader">Reader</a> <a href="#p-search" data-open="p-search">Search</a> <a href="#p-lexicon" data-open="p-lexicon">Lexicon</a></p>
+          </header>
+          <div class="ov-ds">
+            <figure><a href="#p-home" data-open="p-home"><img src="ov/p-home.jpg" alt="P’s home page in green: ΑΡΙΣΤΟΤΕΛΗΣ ΣΤΑΓΕΙΡΙΤΗΣ ΤΑ ΣΩΙΖΟΜΕΝΑ in spaced capitals, three even rows, beside the title and search, the works below by division" width="1000" height="625" loading="lazy"></a><figcaption>Home, green</figcaption></figure>
+            <figure><a href="#p-work:Meta~red" data-open="p-work:Meta~red"><img src="ov/p-work.jpg" alt="P’s page for the Metaphysics in red: its first words, ΠΑΝΤΕΣ ΑΝΘΡΩΠΟΙ ΤΟΥ ΕΙΔΕΝΑΙ, as a block of capitals beside the Greek title" width="1000" height="625" loading="lazy"></a><figcaption>A work: the <i>Metaphysics</i>, red</figcaption></figure>
+            <figure><a href="#p-work:EN" data-open="p-work:EN"><img src="ov/p-phone.jpg" alt="P’s page for the Ethics on a phone in dark mode: its first words in capitals above the title" width="340" height="680" loading="lazy"></a><figcaption>Phone, dark</figcaption></figure>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <section class="ov-sec">
+      <h2>Side by side</h2>
+      <div class="ov-table-wrap">
+        <table class="ov-table">
+          <thead>
+            <tr><th scope="col"></th><th scope="col"><a href="#b-home" data-open="b-home"><b>B</b> Poster</a></th><th scope="col"><a href="#d-home" data-open="d-home"><b>D</b> Aldine</a></th><th scope="col"><a href="#h-home" data-open="h-home"><b>H</b> Plates</a></th><th scope="col"><a href="#p-home" data-open="p-home"><b>P</b> Plato’s look</a></th></tr>
+          </thead>
+          <tbody>
+            <tr><th scope="row">Pictures</th><td>One photograph per work, in black and white, the title over it.</td><td>The page where each work begins in the first printing.</td><td>One print for every work, in one blue ink, beside the title.</td><td>None. The first words of each work stand in their place.</td></tr>
+            <tr><th scope="row">Type</th><td>Oswald capitals for titles, five others to try; Literata for reading.</td><td>EB Garamond; the Greek in Gentium Book Plus.</td><td>A heavy, narrowed Didone for titles, five others to try; Piazzolla for reading; GFS Didot for large Greek.</td><td>Gentium Book Plus for Greek and English; Geologica for capitals.</td></tr>
+            <tr><th scope="row">Colour</th><td>Black, white and one red.</td><td>Warm white paper, black ink, one deep red.</td><td>Black on cool white, one ultramarine ink.</td><td>Green or red, on a grey with a touch of the same.</td></tr>
+            <tr><th scope="row">Reader</th><td>Book I opens on a plain head, BOOK I in red Oswald.</td><td>A calm book page; red marks chapters and the open word.</td><td>The ink marks chapter numbers, column starts and the open word.</td><td>Plato’s reader: a bar of small capitals over two columns.</td></tr>
+            <tr><th scope="row">The risk</th><td>Red over photographs can be hard to read.</td><td>The pages of 1495 are Renaissance too.</td><td>Some pictures need their caption.</td><td>It reads as the Plato site in another colour.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="ov-sec ov-cols">
+      <div>
+        <h2>Where P departs from Plato’s site</h2>
+        <ul class="ov-list">
+          <li>On a phone the reader keeps Greek and English side by side; Plato’s shows one.</li>
+          <li>A work page lists every chapter, under books that fold and start closed; Plato’s shows a grid of books.</li>
+          <li>The Greek runs as prose, as Plato’s does, with Bekker’s line numbers in its margin; the English keeps its own.</li>
+          <li>A Greek word opens a sidebar on the right, or a sheet from the bottom on a phone.</li>
+          <li>Translations appear once, and the menu marks Works on a work page too.</li>
+          <li>On a phone the home page’s divisions stay open, and the lexicon lists nearby words where Plato’s repeats the works.</li>
+          <li>Search lists every work with hits down the left, as the other three do; Plato’s shows eight and a “more” button.</li>
+          <li>The masthead reads ΑΡΙΣΤΟΤΕΛΗΣ ΣΤΑΓΕΙΡΙΤΗΣ ΤΑ ΣΩΙΖΟΜΕΝΑ, “Aristotle the Stagirite: the surviving works”: three rows of eleven letters, so the grid is as even as Plato’s three rows of eight.</li>
+        </ul>
+        <h2>What all four keep</h2>
+        <ul class="ov-list">
+          <li>Every work on the home page, and a page for each, listing every chapter under books that start closed.</li>
+          <li>Greek and English side by side in the reader, on a phone too, each with its own Bekker numbers; Greek, Both or English; two translations at once; notes; text size; contents; a jump to any Bekker line.</li>
+          <li>Click a Greek word and its parse opens beside the text, with the LSJ entry.</li>
+          <li>Search lists every work with hits beside the results, and the list stays in view as they scroll.</li>
+          <li>No pictures in the reader, search or lexicon. Light and dark, each designed.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Yours to decide</h2>
+        <ul class="ov-list">
+          <li>Which direction goes on: B, D, H or P.</li>
+          <li>For B: Oswald, or another face from the switch.</li>
+          <li>For H: the later plates or the 1500s, and the title face.</li>
+          <li>For P: green or red.</li>
+        </ul>
+        <h2>What the mockup leaves out</h2>
+        <ul class="ov-list">
+          <li>Only Book I of the <i>Ethics</i> opens in the reader.</li>
+          <li>Search shows one query, ἀρετή in any form; the lexicon shows ἀρετή.</li>
+          <li>Phrases, Support and the links to the other readers are placeholders.</li>
+          <li>Interface copy and captions are drafts.</li>
+        </ul>
+        <h2>Pictures and rights</h2>
+        <p class="ov-small"><b>B.</b> J. Paul Getty Museum, Open Content (CC0), each credited on its work page. Two blackboards from Het Utrechts Archief, which marks them public domain (Public Domain Mark); its photographer is unknown.</p>
+        <p class="ov-small"><b>D.</b> The Aldine Aristotle, Venice 1495–98, from the Boston Public Library’s copy at the Internet Archive (public domain).</p>
+        <p class="ov-small"><b>H.</b> The 1500s set: The Met (14), the Rijksmuseum (1), Internet Archive scans (4), Wikimedia Commons (4), the Zentralbibliothek Zürich (1) and the Library of Congress (1). The later set: the Wellcome Collection (18), The Met (10), Internet Archive scans (11), the Rijksmuseum (1), the Cleveland Museum of Art (1) and the Library of Congress (1). All public domain or CC0, each credited under its plate.</p>
+        <p class="ov-small"><b>P.</b> No pictures. The first words come from the repository’s Greek sources and, for the <i>Categories</i>, <i>De Interpretatione</i> and the <i>Isagoge</i>, from the live site’s own text.</p>
+        <p class="ov-small">Earlier pages, with your notes on them: <a href="https://claude.ai/artifact/MkNU79qNssQ7Pco5TKomvj" target="_blank" rel="noopener">round six ↗</a>, <a href="https://claude.ai/artifact/4JKoRv15wqC1mSFfFcmMmz" target="_blank" rel="noopener">round five ↗</a>, <a href="https://claude.ai/artifact/PNuw2yLEayHuLAn7FjivTn" target="_blank" rel="noopener">round four ↗</a>, <a href="https://claude.ai/artifact/BVfg5CkJbG8zJmjXHEXPuq" target="_blank" rel="noopener">poster titles ↗</a>, <a href="https://claude.ai/artifact/XizpnWAJ6xtsoVPtpcX7MJ" target="_blank" rel="noopener">gelatin silver prints ↗</a>, <a href="https://claude.ai/artifact/8svNwSXYLPBHZSfaKiSjuJ" target="_blank" rel="noopener">round three ↗</a>, <a href="https://claude.ai/artifact/FpxinJwQa35j2SdAgAy7HN" target="_blank" rel="noopener">round two ↗</a>, <a href="https://claude.ai/artifact/7nbtgk2xUiX1TKk3Ex8y3S" target="_blank" rel="noopener">round one ↗</a>.</p>
+        <h2>Start</h2>
+        <p class="ov-start"><a href="#b-home" data-open="b-home">B · Poster</a> <a href="#d-home" data-open="d-home">D · Aldine</a> <a href="#h-home" data-open="h-home">H · Plates</a> <a href="#p-home" data-open="p-home">P · Plato’s look</a></p>
+      </div>
+    </section>
+  </div>
+</main>
