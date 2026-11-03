@@ -249,9 +249,12 @@ def _load_paragraphs(cfg: dict, prose: dict[tuple[int, int], str]) -> dict[tuple
     path = SOURCES_DIR / cfg["dir"] / "paragraphs.yaml" if cfg.get("dir") else None
     if not path or not path.exists():
         return {}
+    entries = yaml.safe_load(path.read_text(encoding="utf-8")) or []
+    if not entries:
+        raise ValueError(f"{cfg['dir']}/paragraphs.yaml: no entries")
     out: dict[tuple[int, int], list[dict]] = {}
     bad = []
-    for e in yaml.safe_load(path.read_text(encoding="utf-8")) or []:
+    for e in entries:
         key = (e["book"], e["chapter"])
         pattern = r"\s+".join(re.escape(w) for w in e["at"].split())
         if not re.compile(pattern).match(prose.get(key, ""), e["offset"]):

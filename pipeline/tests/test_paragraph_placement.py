@@ -8,11 +8,16 @@ quietly dropping it would render as a flat wall of text with every gate green.
 
 from __future__ import annotations
 
+import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
 
 from aristotle_pipeline import stage1_archive
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+import place_paragraphs  # noqa: E402
 
 PROSE = ("<p>Part 1</p>\n<p>Alpha one is the first sentence here. Alpha two is short. "
          "Beta one opens the second column. Beta two. Beta three. Beta four ends it.</p>\n"
@@ -27,15 +32,15 @@ def _spine():
     return {"segments": [col("1a"), col("1b")]}
 
 
-def _build(tmp_path, monkeypatch, paragraphs=None):
+def _build(tmp_path, monkeypatch, paragraphs=None, chapters=None):
     (tmp_path / "tst").mkdir()
     (tmp_path / "tst" / "book-01.html").write_text(PROSE, encoding="utf-8")
     if paragraphs is not None:
         (tmp_path / "tst" / "paragraphs.yaml").write_text(paragraphs, encoding="utf-8")
     monkeypatch.setattr(stage1_archive, "SOURCES_DIR", tmp_path)
     cfg = {"id": "tst", "name": "Test", "dir": "tst", "books": 1, "chapter_marker": "part"}
-    chapters = [{"book": 1, "chapter": "1", "column": "1a", "line": 1},
-                {"book": 1, "chapter": "2", "column": "1b", "line": 6}]
+    chapters = chapters or [{"book": 1, "chapter": "1", "column": "1a", "line": 1},
+                            {"book": 1, "chapter": "2", "column": "1b", "line": 6}]
     eng = stage1_archive.build_english(SimpleNamespace(work_id="TST"), _spine(), chapters, cfg)
     return {c["column"]: c for c in eng["chunks"]}
 
@@ -69,3 +74,39 @@ def test_words_not_at_offset_stop_the_build(tmp_path, monkeypatch):
 def test_entry_for_a_chapter_with_no_chunk_stops_the_build(tmp_path, monkeypatch):
     with pytest.raises(ValueError, match="paragraphs.yaml"):
         _build(tmp_path, monkeypatch, '- {book: 1, chapter: 9, offset: 4, at: "Beta"}\n')
+
+
+def test_empty_file_stops_the_build(tmp_path, monkeypatch):
+    with pytest.raises(ValueError, match="no entries"):
+        _build(tmp_path, monkeypatch, "# header only\n")
+
+
+def test_entry_with_prose_but_no_piece_stops_the_build(tmp_path, monkeypatch):
+    with pytest.raises(ValueError, match="landed in no chunk"):
+        _build(tmp_path, monkeypatch, f'- {{book: 1, chapter: 2, offset: {GAMMA_TWO}, at: "Gamma two is"}}\n',
+               chapters=[{"book": 1, "chapter": "1", "column": "1a", "line": 1}])
+
+
+def _offsets(result):
+    return [e["offset"] for e in result["entries"]]
+
+
+def test_exact_match_respects_word_boundaries():
+    prose = {(1, 1): "Start here. Nowhere is the point made clear. Then now here is the point made clear."}
+    r = place_paragraphs.place(prose, ["Now here is the point made clear"])
+    # Not "Nowhere", nor the lower-case occurrence reached through it by accident.
+    assert _offsets(r) == [prose[(1, 1)].index("now here")]
+
+
+def test_rejected_hit_does_not_lose_earlier_paragraphs():
+    prose = {(1, 1): "First. Early real paragraph starts here. Later we discuss spurious opening words again."}
+    r = place_paragraphs.place(prose, ["spurious opening words", "Early real paragraph starts here"],
+                               sentence_only=True)
+    assert _offsets(r) == [prose[(1, 1)].index("Early")]
+
+
+def test_exact_hit_past_the_window_is_not_taken():
+    far = " ".join(f"w{i}." for i in range(place_paragraphs.WINDOW_WORDS + 50))
+    prose = {(1, 1): f"Opening here. {far} Wanted paragraph opens right at this place."}
+    r = place_paragraphs.place(prose, ["Wanted paragraph opens right at this place"])
+    assert not r["entries"] and r["unmatched"]

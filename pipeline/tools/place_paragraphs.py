@@ -165,12 +165,14 @@ class Corpus:
         if len(ws) < 3:
             return None, "too short"
         target = "".join(ws)
-        start = sum(len(w) for w in self.words[:cursor])
-        at = self.joined.find(target, start)
-        while at >= 0 and at not in self.char_to_word:
+        at = self.joined.find(target, sum(len(w) for w in self.words[:cursor]))
+        while at >= 0:
+            i = self.char_to_word.get(at)
+            if i is not None and self.words[i:i + len(ws)] == ws:
+                if i - cursor <= WINDOW_WORDS:
+                    return i, "exact"
+                break  # too far on to trust, and taking it would strand the rest
             at = self.joined.find(target, at + 1)
-        if at >= 0:
-            return self.char_to_word[at], "exact"
         scored = []
         for i in range(cursor, min(cursor + WINDOW_WORDS, len(self.words))):
             if self.sentence_start[i]:
@@ -197,9 +199,12 @@ def place(prose: dict[tuple[int, int], str], openings: list[str],
         if i is None:
             unmatched.append((op[:60], how))
             continue
-        cursor = i + 1
         key, off = corpus.where[i]
         text = prose[key]
+        if sentence_only and not corpus.sentence_start[i]:
+            not_sentence.append((key, off, text[max(0, off - 40):off + 30]))
+            continue  # a rejected hit must not move the cursor past real openings
+        cursor = i + 1
         if off == 0:
             chapter_open += 1
             continue
@@ -208,8 +213,6 @@ def place(prose: dict[tuple[int, int], str], openings: list[str],
             continue
         if not corpus.sentence_start[i]:
             not_sentence.append((key, off, text[max(0, off - 40):off + 30]))
-            if sentence_only:
-                continue
         if how != "exact":
             fuzzy.append((how, op[:50], text[off:off + 50]))
         entries.append({"book": key[0], "chapter": key[1], "offset": off,
@@ -249,6 +252,8 @@ def main() -> None:
     for how, op, ours in r["fuzzy"]:
         print(f"  {how}: {op!r} -> {ours!r}")
     if a.write:
+        if not r["entries"]:
+            raise SystemExit("nothing placed: not writing an empty paragraphs.yaml")
         out = SOURCES_DIR / cfg["dir"] / "paragraphs.yaml"
         head = (f"# Paragraph openings in OUR text, placed by tools/place_paragraphs.py.\n"
                 f"# Positions from: {a.source}\n"
