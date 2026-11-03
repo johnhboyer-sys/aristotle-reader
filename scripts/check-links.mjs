@@ -4,7 +4,9 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const BASE = '/aristotle-reader';
+// The site base: app/astro.config.mjs `base` without its trailing slash. The
+// site is served at the root of aristotle.johnhboyer.com, so it is empty.
+export const BASE = '';
 const MAX_ID_CACHE = 6000;
 const MAX_REPORTS = 200;
 
@@ -82,7 +84,7 @@ function virtualDirectory(dist, source) {
 // Crawl a built site and return the tallies plus every broken reference.
 // Pure with respect to the process: no argv, no exit — main() owns those, so
 // the gate's decisions can be tested against a fixture dist.
-export async function checkDist(dist) {
+export async function checkDist(dist, { base = BASE } = {}) {
   let pages = 0;
   let links = 0;
   let anchors = 0;
@@ -113,8 +115,8 @@ export async function checkDist(dist) {
     if (!pathname) return source;
     if (pathname.startsWith('/')) {
       let rooted = decodePath(pathname);
-      if (rooted === BASE || rooted === `${BASE}/`) rooted = '/';
-      else if (rooted.startsWith(`${BASE}/`)) rooted = rooted.slice(BASE.length);
+      if (base && (rooted === base || rooted === `${base}/`)) rooted = '/';
+      else if (base && rooted.startsWith(`${base}/`)) rooted = rooted.slice(base.length);
       relative = rooted.replace(/^\/+/, '');
     } else {
       relative = path.join(virtualDirectory(dist, source), decodePath(pathname));
@@ -131,16 +133,19 @@ export async function checkDist(dist) {
 
   async function checkTarget(source, raw, href, { nearestLineOk = false, requireBase = false } = {}) {
     const parts = splitReference(href);
-    // The site is served under BASE on GitHub Pages, so a root-relative href
-    // in emitted HTML that lacks the prefix (`/search`, `/EN/book/1`) is a
-    // 404 on live even though it resolves happily against dist/ as root.
+    // A site served under a base path (it was /aristotle-reader on
+    // johnhboyer-sys.github.io until 2026-10) needs the prefix on every
+    // root-relative href in emitted HTML: `/search` resolves happily against
+    // dist/ as root but is a 404 on live. At the root (base '') there is no
+    // prefix to require, and a link still carrying an old one fails below as
+    // a missing target.
     // LSJ shard HTML is exempt: the pipeline cannot know the base, so shards
     // carry base-less paths and every renderer prefixes them at render time
     // (docs/spec-lsj-citations.md, decision 5).
-    if (requireBase && parts.pathname.startsWith('/')) {
+    if (requireBase && base && parts.pathname.startsWith('/')) {
       const rooted = decodePath(parts.pathname);
-      if (rooted !== BASE && !rooted.startsWith(`${BASE}/`)) {
-        report(source, raw, `root-relative link lacks the site base ${BASE}`);
+      if (rooted !== base && !rooted.startsWith(`${base}/`)) {
+        report(source, raw, `root-relative link lacks the site base ${base}`);
         return;
       }
     }
@@ -194,8 +199,8 @@ export async function checkDist(dist) {
     }
     if (isExternal(href) || (kind !== 'a' && /^data:/i.test(href))) return;
     links++;
-    // Emitted HTML always needs the site base; only the LSJ shard pass below,
-    // which calls checkTarget directly, is exempt.
+    // Emitted HTML needs the site base when there is one; only the LSJ shard
+    // pass below, which calls checkTarget directly, is exempt.
     await checkTarget(source, raw, href, { nearestLineOk, requireBase: true });
   }
 

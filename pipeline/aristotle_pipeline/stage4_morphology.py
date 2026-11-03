@@ -26,6 +26,11 @@ from .config import BUILD_DIR, Manifest
 # "form," prefix and carry a blank gloss.
 _GROUP = re.compile(r"\{(\d+) \d+ ([^\t}]*)\t([^\t}]*)\t([^}]*)\}")
 
+# greek-analyses.txt carries LSJ's <foreign lang="greek"> markup inside some
+# glosses ("make <foreign lang="greek">οἰκεῖος</foreign>"); the word card
+# showed it as literal text. Drop the tags, keep the Greek.
+_FOREIGN_TAG = re.compile(r"</?foreign\b[^>]*>")
+
 
 def parse_analysis_line(value: str) -> list[dict]:
     out = []
@@ -38,7 +43,7 @@ def parse_analysis_line(value: str) -> list[dict]:
                 "lemma_id": int(lemma_id),
                 "form": form,
                 "lemma": lemma,
-                "gloss": gloss,
+                "gloss": _FOREIGN_TAG.sub("", gloss),
                 "parse": parse,
             }
         )

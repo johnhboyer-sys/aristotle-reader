@@ -35,6 +35,7 @@ english:
     dir: "ga-platt"
     books: 5
     chapter_marker: number
+    anchors: "ga-platt/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
 
 mid_column_book_starts:
   - { book: 2, column: "731b" }

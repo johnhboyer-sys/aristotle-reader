@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import Reader from '../components/Reader.svelte';
 import Search from '../components/Search.svelte';
 import type { BookData } from '../lib/data';
+import { getWork, searchableTranslations } from '../lib/works';
 
 const { fixtureBook } = vi.hoisted(() => ({
   fixtureBook: {
@@ -42,7 +43,7 @@ vi.mock('../lib/search', async (importOriginal) => {
       results: [
         {
           work: 'EN',
-          meta: { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', english_head: 'Virtue (test) and κόσμος' },
+          meta: { id: 'seg1', book: 1, column: '1094a' },
           grkMatch: true,
           engMatch: true,
           grkPositions: [0],
@@ -50,6 +51,10 @@ vi.mock('../lib/search', async (importOriginal) => {
       ],
       failedWorks: [],
     })),
+    searchCombo: vi.fn(async () => ({ results: [], failedWorks: [] })),
+    searchPhraseVariants: vi.fn(),
+    // No work's chapter edges load in a test: pages fall back to whole books.
+    loadOffsets: vi.fn(async () => { throw new Error('no offsets.json'); }),
   };
 });
 
@@ -91,6 +96,335 @@ describe('Search.svelte', () => {
     // The form is still mounted (no crash / unhandled render error): the Greek
     // searchbox persists after the search runs.
     expect(screen.getByLabelText('Greek')).toBeInTheDocument();
+  });
+
+  it('counts every English word, shows hits by work, and says so in a live region', async () => {
+    const { search } = await import('../lib/search');
+    const primary = searchableTranslations(getWork('EN')!)[0].id;
+    const meta = { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', english_head: 'Virtue (test)' };
+    vi.mocked(search).mockResolvedValueOnce({
+      results: [
+        // One Greek word and two English ones: three hits.
+        { work: 'EN', meta, grkMatch: true, engMatch: true, grkPositions: [0], engHits: [{ translation: primary, positions: [0, 1] }] },
+        { work: 'Meta', meta, grkMatch: true, engMatch: false, grkPositions: [0, 1] },
+      ],
+      failedWorks: [],
+    });
+    render(Search);
+    const status = screen.getByRole('status');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+
+    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'λόγος' } });
+    await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue test' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+
+    await vi.waitFor(() => expect(status).toHaveTextContent('5 instances'));
+    const works = screen.getByRole('group', { name: 'Show hits from' });
+    const en = within(works).getByRole('button', { name: /^EN/ });
+    expect(en).toHaveTextContent('EN3');
+    expect(within(works).getByRole('button', { name: /^Met\./ })).toHaveTextContent('Met.2');
+    await vi.waitFor(() => expect(screen.getByText('3 instances')).toBeInTheDocument());
+
+    await fireEvent.click(en);
+    await vi.waitFor(() => expect(status).toHaveTextContent('3 instances'));
+    expect(en).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+describe('Search.svelte in the address bar', () => {
+  const at = (url: string) => window.history.replaceState(null, '', url);
+  // Greek and English each have an "Any form" / "Only as I typed it" pair, so
+  // a radio is named by its group as well.
+  const checked = (name: string, group?: string) => (screen.getByLabelText(name,
+    group ? { selector: `input[name="${group}"]` } : undefined) as HTMLInputElement).checked;
+
+  it('restores every control from the URL and runs that search', async () => {
+    const { search } = await import('../lib/search');
+    at('/search?g=logos&gm=phrase&m=form&acc=1&e=virtue&em=any&op=or&w=EN,Pol');
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    expect(search).toHaveBeenCalledWith('logos', 'virtue', 'phrase', 'any', 'or', ['EN', 'Pol'], 'form', true);
+    expect(screen.getByLabelText('Greek')).toHaveValue('logos');
+    expect(screen.getByLabelText('English')).toHaveValue('virtue');
+    expect(checked('Only as I typed it', 'matchmode')).toBe(true);
+    expect(checked('Any form of this word', 'engforms')).toBe(true);
+    expect(checked('Match accents exactly')).toBe(true);
+    expect(checked('Either query')).toBe(true);
+  });
+
+  it('runs the command palette hand-off with every default', async () => {
+    const { search } = await import('../lib/search');
+    at(`/search?g=${encodeURIComponent('λόγος')}`);
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    expect(search).toHaveBeenCalledWith('λόγος', '', 'all', 'all', 'and', expect.any(Array), 'lemma', true);
+  });
+
+  it('restores English "only as I typed it", and writes it as ef=0', async () => {
+    const { search } = await import('../lib/search');
+    at('/search?e=virtue&ef=0');
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    expect(search).toHaveBeenCalledWith('', 'virtue', 'all', 'all', 'and', expect.any(Array), 'lemma', false);
+    expect(checked('Only as I typed it', 'engforms')).toBe(true);
+
+    // Back to any form: the default, so ef leaves the URL.
+    await fireEvent.click(screen.getByLabelText('Any form of this word', { selector: 'input[name="engforms"]' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(window.location.search).toBe('?e=virtue');
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(search).mock.calls[1][7]).toBe(true);
+
+    // And the back button restores ef=0.
+    at('/search?e=virtue&ef=0');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(3));
+    expect(vi.mocked(search).mock.calls[2][7]).toBe(false);
+    expect(checked('Only as I typed it', 'engforms')).toBe(true);
+  });
+
+  it('pushes each search, and a repeat of it adds no entry', async () => {
+    at('/search');
+    const push = vi.spyOn(window.history, 'pushState');
+    render(Search);
+    await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'practical wisdom' } });
+    await fireEvent.click(screen.getByLabelText('Any word', { selector: 'input[name="engmode"]' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(window.location.search).toBe('?e=practical%20wisdom&em=any');
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(push).toHaveBeenCalledTimes(1);
+    push.mockRestore();
+  });
+
+  it('replaces a ?q= arrival when the same search runs again, so Back leaves the page', async () => {
+    const { search } = await import('../lib/search');
+    at('/search?q=happiness');
+    const push = vi.spyOn(window.history, 'pushState');
+    const replace = vi.spyOn(window.history, 'replaceState');
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    expect(search).toHaveBeenCalledWith('', 'happiness', 'all', 'all', 'and', expect.any(Array), 'lemma', true);
+    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled());
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(window.location.search).toBe('?e=happiness');
+    expect(push).not.toHaveBeenCalled();
+    expect(replace).toHaveBeenCalled();
+    push.mockRestore();
+    replace.mockRestore();
+  });
+
+  it('follows the back button, and clears the page on a URL with no search', async () => {
+    const { search } = await import('../lib/search');
+    at('/search?g=logos');
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+
+    at('/search?e=soul&w=-Cat');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(2));
+    expect(vi.mocked(search).mock.calls[1].slice(0, 2)).toEqual(['', 'soul']);
+    expect(vi.mocked(search).mock.calls[1][5]).not.toContain('Cat');
+    expect(screen.getByLabelText('Greek')).toHaveValue('');
+
+    at('/search');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(screen.getByLabelText('English')).toHaveValue(''));
+    expect(search).toHaveBeenCalledTimes(2);
+  });
+
+  it('restores a proximity search', async () => {
+    const { searchCombo } = await import('../lib/search');
+    at(`/search?c=l:logos&c=fa:${encodeURIComponent('ἀρετή')}&cu=line`);
+    render(Search);
+    await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(1));
+    expect(searchCombo).toHaveBeenCalledWith(
+      [
+        { kind: 'lemma', terms: ['logos'], relation: 'near' },
+        { kind: 'form', terms: ['ἀρετή'], relation: 'after' },
+      ],
+      { window: 5, unit: 'line', ordered: false, crossChapter: true },
+      expect.any(Array),
+    );
+  });
+
+  it('drops widened results that arrive after the back button cleared the page', async () => {
+    const { search, searchPhraseVariants } = await import('../lib/search');
+    let finish!: (v: Awaited<ReturnType<typeof searchPhraseVariants>>) => void;
+    vi.mocked(searchPhraseVariants).mockReturnValue(new Promise(r => { finish = r; }));
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
+
+    at('/search');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(screen.getByLabelText('Greek')).toHaveValue(''));
+    finish({
+      results: [{
+        work: 'EN',
+        meta: { id: 'seg1', book: 1, column: '1094a' },
+        grkMatch: true, engMatch: false, grkPositions: [0],
+      }],
+      readings: [['logos', 'areth']], productive: [['logos', 'areth']], cappedFrom: 0, failedWorks: [],
+    } as Awaited<ReturnType<typeof searchPhraseVariants>>);
+    await new Promise(r => setTimeout(r, 20));
+    expect(screen.queryByText(/instances?/)).toBeNull();
+    expect(screen.queryByText(/Showing every place/)).toBeNull();
+  });
+
+  // A promise and the function that settles it, for holding one load open.
+  function held<T>() {
+    let settle!: (v: T) => void;
+    let fail!: (e: Error) => void;
+    const promise = new Promise<T>((r, j) => { settle = r; fail = j; });
+    return { promise, settle, fail };
+  }
+  // A work whose chapter edges do not load is paged by whole books.
+  const noOffsets = new Error('no offsets.json');
+  const workNames = () => [...document.querySelectorAll('.work-name')].map(n => n.textContent);
+
+  it("drops an older search's page that finishes loading after a newer search", async () => {
+    const { search, loadOffsets } = await import('../lib/search');
+    const { fetchBook } = await import('../lib/data');
+    const hit = (work: string) => ({
+      results: [{ work, meta: { id: 'seg1', book: 1, column: '1094a' }, grkMatch: true, engMatch: false, grkPositions: [0] }],
+      failedWorks: [],
+    });
+    vi.mocked(search).mockResolvedValueOnce(hit('EN')).mockResolvedValueOnce(hit('Meta'));
+    const bookA = held<typeof fixtureBook>();
+    vi.mocked(fetchBook).mockReturnValueOnce(bookA.promise);
+    const offsetsB = held<Awaited<ReturnType<typeof loadOffsets>>>();
+    vi.mocked(loadOffsets).mockRejectedValueOnce(noOffsets).mockReturnValueOnce(offsetsB.promise);
+    // Only history can start a search while one is loading: the button waits.
+    at(`/search?g=${encodeURIComponent('λόγος')}`);
+    render(Search);
+    await vi.waitFor(() => expect(fetchBook).toHaveBeenCalledTimes(1));
+    at(`/search?g=${encodeURIComponent('ἀρετή')}`);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(loadOffsets).toHaveBeenCalledTimes(2));
+
+    bookA.settle(fixtureBook);
+    await new Promise(r => setTimeout(r, 20));
+    expect(workNames()).not.toContain(getWork('EN')!.title);
+    offsetsB.fail(noOffsets);
+    await vi.waitFor(() => expect(workNames()).toEqual([getWork('Meta')!.title]));
+  });
+
+  it('frees the inflection lookup when a new search retires it', async () => {
+    const { search, searchPhraseVariants } = await import('../lib/search');
+    vi.mocked(searchPhraseVariants).mockReturnValue(new Promise(() => {}));
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
+    await screen.findByRole('button', { name: 'Looking…' });
+
+    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'λόγος τέχνη' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(2));
+    const find = await screen.findByRole('button', { name: 'Find this phrase in any inflection' });
+    expect(find).toBeEnabled();
+  });
+
+  it("keeps a retired inflection lookup's note off a newer search", async () => {
+    const { search, searchPhraseVariants, loadOffsets } = await import('../lib/search');
+    vi.mocked(searchPhraseVariants).mockResolvedValue({
+      results: [{ work: 'EN', meta: { id: 'seg1', book: 1, column: '1094a' }, grkMatch: true, engMatch: false, grkPositions: [0] }],
+      readings: [['logos', 'areth']], productive: [['logos', 'areth']], cappedFrom: 0, failedWorks: [],
+    } as Awaited<ReturnType<typeof searchPhraseVariants>>);
+    const offsetsV = held<Awaited<ReturnType<typeof loadOffsets>>>();
+    vi.mocked(loadOffsets).mockRejectedValueOnce(noOffsets).mockReturnValueOnce(offsetsV.promise);
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
+    await vi.waitFor(() => expect(loadOffsets).toHaveBeenCalledTimes(2));
+
+    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'λόγος τέχνη' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await vi.waitFor(() => expect(loadOffsets).toHaveBeenCalledTimes(3));
+    offsetsV.fail(noOffsets);
+    await new Promise(r => setTimeout(r, 20));
+    expect(screen.queryByText(/Showing every place/)).toBeNull();
+  });
+
+  it('writes the translator filter with replaceState, and restores it', async () => {
+    const { search } = await import('../lib/search');
+    const twoTranslations = {
+      results: [{
+        work: 'EN',
+        meta: { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', english_head: 'Virtue' },
+        grkMatch: false, engMatch: true, grkPositions: [],
+        engHits: [{ translation: 'rackham', positions: [0] }, { translation: 'ostwald', positions: [2] }],
+      }],
+      failedWorks: [],
+    };
+    vi.mocked(search).mockResolvedValue(twoTranslations);
+    at('/search?e=virtue');
+    const push = vi.spyOn(window.history, 'pushState');
+    const { unmount } = render(Search);
+    const chip = await screen.findByRole('button', { name: /^Ostwald/ });
+    await fireEvent.click(chip);
+    expect(window.location.search).toBe('?e=virtue&t=ostwald');
+    expect(push).not.toHaveBeenCalled();
+    push.mockRestore();
+    unmount();
+
+    const second = render(Search);
+    expect(await screen.findByRole('button', { name: /^Ostwald/ })).toHaveAttribute('aria-pressed', 'true');
+
+    // A translation this search did not find is dropped from the URL.
+    second.unmount();
+    at('/search?e=virtue&t=nobody');
+    render(Search);
+    await screen.findByRole('button', { name: /^Ostwald/ });
+    expect(window.location.search).toBe('?e=virtue');
+  });
+
+  it('writes the works filter with replaceState, and restores it', async () => {
+    const { search } = await import('../lib/search');
+    const meta = { id: 'seg1', book: 1, column: '1094a' };
+    vi.mocked(search).mockResolvedValue({
+      results: [
+        { work: 'EN', meta, grkMatch: true, engMatch: false, grkPositions: [0] },
+        { work: 'Meta', meta, grkMatch: true, engMatch: false, grkPositions: [0, 1] },
+      ],
+      failedWorks: [],
+    });
+    const status = () => screen.getByRole('status');
+    at('/search?g=logos');
+    const push = vi.spyOn(window.history, 'pushState');
+    const { unmount } = render(Search);
+    const works = await screen.findByRole('group', { name: 'Show hits from' });
+    await fireEvent.click(within(works).getByRole('button', { name: /^Met\./ }));
+    expect(window.location.search).toBe('?g=logos&wf=Meta');
+    expect(push).not.toHaveBeenCalled();
+    await fireEvent.click(within(works).getByRole('button', { name: /^Met\./ }));
+    expect(window.location.search).toBe('?g=logos');
+    push.mockRestore();
+    unmount();
+
+    at('/search?g=logos&wf=Meta');
+    const second = render(Search);
+    const restored = await screen.findByRole('group', { name: 'Show hits from' });
+    await vi.waitFor(() => expect(within(restored).getByRole('button', { name: /^Met\./ }))
+      .toHaveAttribute('aria-pressed', 'true'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+
+    // And the back button restores it, or clears it.
+    at('/search?g=logos');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
+    expect(within(screen.getByRole('group', { name: 'Show hits from' })).getByRole('button', { name: /^Met\./ }))
+      .toHaveAttribute('aria-pressed', 'false');
+
+    // A work this search did not find is dropped from the URL.
+    second.unmount();
+    at('/search?g=logos&wf=Pol');
+    render(Search);
+    await screen.findByRole('group', { name: 'Show hits from' });
+    await vi.waitFor(() => expect(window.location.search).toBe('?g=logos'));
   });
 });
 
@@ -220,6 +554,255 @@ describe('Reader.svelte', () => {
     await screen.findByText(/again/);
     expect(container.querySelectorAll('em')).toHaveLength(0);
     expect(container.querySelectorAll('.fn-marker')).toHaveLength(2);
+  });
+
+  // The test above passed while a star label was broken: the emphasis pass
+  // matched from the * in data-fn="*" to the * in aria-label, inside the
+  // button's tag, so data-fn read "<em>" and the popup looked up that label.
+  it('keeps a star or dagger label intact in the marker\'s attributes', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'one[^*] two[^†] three.',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/three/);
+    const markers = [...container.querySelectorAll('.fn-marker')];
+    expect(markers.map(b => b.getAttribute('data-fn'))).toEqual(['*', '†']);
+    expect(markers.map(b => b.getAttribute('aria-label'))).toEqual(['Footnote *', 'Footnote †']);
+    expect(markers.map(b => b.textContent)).toEqual(['*', '†']);
+  });
+
+  // The lead before a footnote used to take any run of non-space characters,
+  // brackets included, so a word with two notes swallowed the first marker
+  // into the lead and printed it as text.
+  it('gives each of a word\'s glued footnotes its own marker', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'a[^A]b[^B] c and one[^1][^2] two.',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/two\./);
+    expect(container.textContent).not.toContain('[^');
+    expect([...container.querySelectorAll('.fn-marker')].map(b => b.getAttribute('data-fn')))
+      .toEqual(['A', 'B', '1', '2']);
+    // Each marker stays glued to the word before it, and two markers in a row
+    // share one wrapper, so neither can wrap away from its word.
+    const anchors = [...container.querySelectorAll('.fn-anchor')];
+    expect(anchors.map(a => a.textContent)).toEqual(['aA', 'bB', 'one12']);
+    expect(anchors[2].querySelectorAll('.fn-marker')).toHaveLength(2);
+  });
+
+  // The prose is escaped before the marker pass, so "&" arrives as "&amp;".
+  // The lead stopped at "&" and could start again after it, so the wrapper
+  // split the entity and "&amp;" printed as text.
+  it('never splits an entity in the text glued to a footnote', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'Smith &[^1] and A&B[^2] Co.',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Co\./);
+    expect(container.textContent).not.toContain('amp;');
+    expect([...container.querySelectorAll('.fn-anchor')].map(a => a.textContent)).toEqual(['&1', 'A&B2']);
+  });
+
+  // A bracket that opens no footnote marker belongs to the word, even one that
+  // begins "[^" ("[^a-z]", Codex review); the marker after it still renders.
+  it('keeps a bracket that opens no marker with the word it is in', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'A [sic][^1] and [^a-z][^2] and [^]x[^3] end.',
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/end\./);
+    expect([...container.querySelectorAll('.fn-marker')].map(b => b.getAttribute('data-fn'))).toEqual(['1', '2', '3']);
+    expect([...container.querySelectorAll('.fn-anchor')].map(a => a.textContent)).toEqual(['[sic]1', '[^a-z]2', '[^]x3']);
+  });
+
+  // Codex review: a lead that could cross entities, tried from every start,
+  // took ~1.9 s on 8,000 escaped ampersands. The lead now starts only at a
+  // word boundary, so the pass is linear.
+  it('renders a long run of entities without a quadratic footnote pass', async () => {
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: `${'&'.repeat(8000)} tail[^1] end.`,
+      bekker: [{ n: 1, offset: 0, real: true }],
+    }];
+
+    const started = performance.now();
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+    await screen.findByText(/end\./);
+    expect(performance.now() - started).toBeLessThan(500);
+    expect(container.querySelector('.fn-anchor')?.textContent).toBe('tail1');
+  });
+
+  // A Bekker tick or paragraph break whose offset lands inside a marker used
+  // to cut the marker in two: neither half matched the sidenote strip, so
+  // "[[s" and "1]]" printed as prose.
+  it('never cuts a sidenote marker at a tick or paragraph offset inside it', async () => {
+    window.history.replaceState(null, '', '/Isa/book/1');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].english = {
+      text: 'Alpha[[s1]]beta gamma[[s2]]delta.',
+      notes: [],
+      // 'Alpha[[s'.length lands inside [[s1]]; 'Alpha[[s1]]beta gamma[[s'.length inside [[s2]].
+      markers: [{ kind: 'paragraph', n: '', offset: 'Alpha[[s1]]beta gamma[[s'.length }],
+      bekker: [{ n: 1, offset: 0, real: true }, { n: 2, offset: 'Alpha[[s'.length, real: true }],
+    };
+
+    const { container } = render(Reader, { props: { work: 'Isa', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Alpha/);
+    const prose = container.querySelector('.english-col')!.textContent!;
+    expect(prose).not.toMatch(/\[\[|\]\]/);
+    expect(prose).toContain('beta gamma');
+    expect(container.querySelectorAll('.english-col .para-br')).toHaveLength(1);
+  });
+
+  it('never cuts a footnote marker at a tick offset inside it', async () => {
+    // In a footnote-bearing column the half-marker also lost its button and
+    // the word it annotates.
+    window.history.replaceState(null, '', '/EN/book/1?trans=ostwald');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].third = [{
+      chapter: '1',
+      cont: false,
+      text: 'virtue[^1] gamma.',
+      bekker: [{ n: 1, offset: 0, real: true }, { n: 2, offset: 'virtue[^'.length, real: true }],
+    }];
+
+    const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/gamma/);
+    expect(container.textContent).not.toContain('[^');
+    expect(container.querySelector('.fn-anchor')?.textContent).toBe('virtue1');
+  });
+
+  it('never cuts a marker at a chapter start inside it', async () => {
+    // A chapter's engOffset slices the English too; a cut inside [[s1]] also
+    // lost the sidenote from both blocks' rails.
+    window.history.replaceState(null, '', '/Isa/book/1');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].greek = [
+      { n: 1, text: 'λόγος', tokens: [{ t: 'λόγος', o: 0, k: 'logos' }] },
+      { n: 2, text: 'ἀρετή', tokens: [{ t: 'ἀρετή', o: 0, k: 'areth' }] },
+    ];
+    book.segments[0].english = {
+      text: 'Alpha[[s1]]beta gamma.',
+      notes: [],
+      markers: [],
+      bekker: [{ n: 1, offset: 0, real: true }],
+    };
+    book.segments[0].chapterStarts = [
+      { chapter: '1', beforeLine: 1, wordIndex: 0, engOffset: 0, bekker: '1094a' },
+      { chapter: '2', beforeLine: 2, wordIndex: 0, engOffset: 'Alpha[[s'.length, bekker: '1094a' },
+    ];
+
+    const { container } = render(Reader, { props: { work: 'Isa', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Alpha/);
+    // Each chapter is its own row, with its own English column.
+    const cols = [...container.querySelectorAll('.english-col')].map(c => c.textContent!);
+    expect(cols).toHaveLength(2);
+    expect(cols.join('|')).not.toMatch(/\[\[|\]\]/);
+    expect(cols[0]).toContain('Alpha');
+    expect(cols[1]).toContain('beta gamma');
+  });
+
+  it('keeps chapter starts in order when they fall inside glued markers', async () => {
+    // Codex review: a start inside [[s1]] once jumped past the [[s2]] glued to
+    // it while the next start, at the head of [[s2]], stayed put. The starts
+    // crossed, and [[s2]] fell in two chapters' slices.
+    const { fetchSidenotes } = await import('../lib/data');
+    vi.mocked(fetchSidenotes).mockResolvedValueOnce({ '1': 'Note one', '2': 'Note two' });
+    window.history.replaceState(null, '', '/Isa/book/1');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].greek = [1, 2, 3].map(n => ({ n, text: 'λόγος', tokens: [{ t: 'λόγος', o: 0, k: 'logos' }] }));
+    book.segments[0].english = {
+      text: 'a[[s1]][[s2]]b gamma.',
+      notes: [],
+      markers: [],
+      bekker: [{ n: 1, offset: 0, real: true }],
+    };
+    book.segments[0].chapterStarts = [
+      { chapter: '1', beforeLine: 1, wordIndex: 0, engOffset: 0, bekker: '1094a' },
+      { chapter: '2', beforeLine: 2, wordIndex: 0, engOffset: 'a[['.length, bekker: '1094a' },
+      { chapter: '3', beforeLine: 3, wordIndex: 0, engOffset: 'a[[s1]]'.length, bekker: '1094a' },
+    ];
+
+    const { container } = render(Reader, { props: { work: 'Isa', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/gamma/);
+    await vi.waitFor(() => expect(container.querySelector('.sidenote')).not.toBeNull());
+    expect([...container.querySelectorAll('.sidenote')].map(s => s.textContent)).toEqual(['Note one', 'Note two']);
+  });
+
+  it('keeps a tick that snaps to the very end of the text', async () => {
+    // Codex review: a tick inside a marker that ends the text snapped to
+    // text.length, and the last slice's `off < b` dropped it.
+    window.history.replaceState(null, '', '/Isa/book/1');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].english = {
+      text: 'Alpha[[s1]]',
+      notes: [],
+      markers: [],
+      bekker: [{ n: 1, offset: 0, real: true }, { n: 2, offset: 'Alpha[[s'.length, real: true }],
+    };
+
+    const { container } = render(Reader, { props: { work: 'Isa', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Alpha/);
+    expect([...container.querySelectorAll('.english-col .bk-num')].map(b => b.textContent)).toEqual(['1', '2']);
+  });
+
+  it('prints an end-of-text tick once when a chapter starts at the end', async () => {
+    // The chapter starting at text.length owns the empty slice [len, len);
+    // only the slice with text in it keeps the tick.
+    window.history.replaceState(null, '', '/Isa/book/1');
+    const book: BookData = structuredClone(fixtureBook);
+    book.segments[0].greek = [1, 2].map(n => ({ n, text: 'λόγος', tokens: [{ t: 'λόγος', o: 0, k: 'logos' }] }));
+    book.segments[0].english = {
+      text: 'Alpha[[s1]]',
+      notes: [],
+      markers: [],
+      bekker: [{ n: 1, offset: 0, real: true }, { n: 2, offset: 'Alpha[[s'.length, real: true }],
+    };
+    book.segments[0].chapterStarts = [
+      { chapter: '1', beforeLine: 1, wordIndex: 0, engOffset: 0, bekker: '1094a' },
+      { chapter: '2', beforeLine: 2, wordIndex: 0, engOffset: 'Alpha[[s1]]'.length, bekker: '1094a' },
+    ];
+
+    const { container } = render(Reader, { props: { work: 'Isa', bookNum: 1, bookData: book } });
+
+    await screen.findByText(/Alpha/);
+    expect([...container.querySelectorAll('.english-col .bk-num')].map(b => b.textContent)).toEqual(['1', '2']);
   });
 
   it('snaps ?loc= to the nearest Greek line when the cited line is not a line start', async () => {

@@ -2,7 +2,7 @@
 
 A static web application for reading and searching Aristotle's complete works with the Greek and English side by side, morphological analysis on every word, multiple translation comparison, and full-text search across both languages.
 
-Live at **[johnhboyer-sys.github.io/aristotle-reader/](https://johnhboyer-sys.github.io/aristotle-reader/)**
+Live at **[aristotle.johnhboyer.com](https://aristotle.johnhboyer.com/)**
 
 ---
 
@@ -201,12 +201,6 @@ See [`/attribution`](app/src/pages/attribution.astro) in the running app, or the
 
 ---
 
-## MIT Licence
+## Licence
 
-Copyright © 2026 John Boyer
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+The code is under the MIT licence; the full text is in [LICENSE](LICENSE). Data from other sources keeps its own licence (see the table above).

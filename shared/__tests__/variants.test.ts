@@ -4,7 +4,7 @@ import { searchPhraseVariants, VARIANT_READING_CAP } from '../lib/search';
 // One segment. The phrase "to ti hn einai" stands at 0-3; the same formula with
 // a different article, "tw ti hn einai", stands at 10-13. Only the second is
 // reachable by widening, because its surface string differs.
-const meta = [{ id: '1:980a', book: 1, column: '980a', greek_head: '', english_head: '' }];
+const meta = [{ id: '1:980a', book: 1, column: '980a' }];
 
 // hn is genuinely ambiguous: Morpheus reads it as both eimi and hmi, and BOTH
 // readings land on the same tokens. That is the case the union has to survive.

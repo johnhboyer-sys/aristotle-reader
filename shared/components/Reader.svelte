@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { fetchBook, parseBekker, anchorCite, citeOfId, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation } from '../lib/data';
-  import { greekFold } from '../lib/search';
+  import { hitTokens, fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation, anchorCite, citeOfId } from '../lib/data';
+  import { englishQueryUnits, greekFold } from '../lib/search';
+  import { markEnglishHtml, overlayPieces } from '../lib/english-hit';
   import { measureGreekTrack as measureTrack } from '../lib/greek-track';
-  import { highlightPrefixMatches } from '../lib/text';
   import { sanitizeHtml } from '../lib/html';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
@@ -84,16 +84,9 @@
   ]);
   const secondaries = translations.filter(t => t.slot !== 'english');
   const canCompare = translations.length >= 2;
-  // Overlay pieces for a translation in a segment, selected by its slot.
-  const piecesFor = (seg: Segment, t: TranslationRef | undefined | null): OverlayPiece[] => {
-    if (!t) return [];
-    // `seg.ross` is the pre-rename emitted field name; stage7_emit still writes
-    // it, so read the new name first and fall back until the corpus is rebuilt.
-    if (t.slot === 'secondary') return seg.secondary ?? seg.ross ?? [];
-    if (t.slot === 'third') return seg.third ?? [];
-    if (t.slot === 'overlay') return seg.overlays?.[t.id] ?? [];
-    return [];
-  };
+  // Overlay pieces for a translation in a segment, selected by its slot (shared
+  // with search, which places a hit in the same slices).
+  const piecesFor = overlayPieces;
   const transById = (id: string | null | undefined): TranslationRef | null =>
     id ? (translations.find(t => t.id === id) ?? null) : null;
 
@@ -142,7 +135,23 @@
 
   // Search jump-in: highlight query terms + scroll to a line (?hlg=&hle=&loc=).
   let hlGrkFolds: string[] = [];
-  let hlEngTerms: string[] = [];
+  let hlEngUnits: string[][] = [];
+  let hlEngPhrase = false;
+  let hlEngForms = false;   // ?hlf=any: the search matched any form of each word
+  // A search hit's exact Greek tokens (?hlt=<column>:<pos>,…), whatever kind
+  // of search found them — a lemma, a grammatical form, words near each other.
+  // Without it (an older link) the typed words are matched as before.
+  let hitCol = '';
+  let hitPos: number[] = [];
+  $: hitSet = hitCol ? hitTokens(segments, hitCol, hitPos) : null;
+  // The English query to mark. Passed into every template call that marks
+  // words, not read from scope inside them: the page is rendered on the
+  // server before onMount reads the query, and a legacy-mode template re-runs
+  // a call only when something named in it changes. Read from scope, the
+  // marks appeared only when some other change (a new translation) happened
+  // to re-render the column — never for a hit in the default translation.
+  type EngMarks = { units: string[][]; phrase: boolean; forms: boolean };
+  $: engMarks = { units: hlEngUnits, phrase: hlEngPhrase, forms: hlEngForms } as EngMarks;
   let targetId: string | null = null;
 
   // Which translation fills the English column: a translation id from the
@@ -538,20 +547,20 @@
     }
   });
 
-  function isHit(surface: string): boolean {
-    if (!hlGrkFolds.length) return false;
-    const f = greekFold(surface);
-    return f.length > 0 && hlGrkFolds.some(q => f.startsWith(q));
+  function isHit(tok: Token, hits: Set<Token> | null, folds: string[]): boolean {
+    if (hits) return hits.has(tok);
+    if (!folds.length) return false;
+    const f = greekFold(tok.t);
+    return f.length > 0 && folds.some(q => f.startsWith(q));
   }
   function esc(s: string): string {
     return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
-  function highlightEng(text: string): string {
+  function highlightEng(text: string, marks: EngMarks): string {
     // Sidenote [[sN]] and figure [[figN]] markers are rendered elsewhere (the
     // right rail / an inline figure), so strip them from the prose flow.
     text = text.replace(/\s*\[\[(?:s|fig)\d+\]\]\s*/g, ' ');
-    if (!hlEngTerms.length) return esc(text);
-    return highlightPrefixMatches(text, hlEngTerms);
+    return markEnglishHtml(text, marks.units, marks.phrase, marks.forms);
   }
   // §Phase-3 B5: the printed number is stored as `display`; identity is the
   // (scope, number) pair encoded in the label — continuous scope's label IS
@@ -574,7 +583,7 @@
   // to resolve against (§B4.3/4.4) — needed once more than one translation on
   // the page can carry footnotes. A delegated click handler on the column
   // reads both data attributes and opens the footnote popup.
-  function renderThird(text: string, transId: string): string {
+  function renderThird(text: string, transId: string, marks: EngMarks): string {
     // The marker <button> is an atomic inline box, and engines may take a
     // line-break opportunity at its edge even with no space — WKWebView
     // orphans the superscript onto the next line ("pair, | ¹ one thing").
@@ -583,11 +592,24 @@
     // never swallow a fragment of highlightEng's own markup; if a tag abuts
     // the marker the wrapper just holds the marker alone (no worse than
     // before).
-    return highlightEng(text).replace(
-      /([^\s<>&]*)\[\^([\w.*†]+)\]/g,
-      (_m, lead: string, label: string) => {
-        const display = fnDisplay(label);
-        return `<span class="fn-anchor">${lead}<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button></span>`;
+    // The lead never takes a "[" that opens a marker, so a word with two notes
+    // ("a[^A]b[^B]") cannot swallow the first marker into the second's lead;
+    // any other bracket belongs to the word, so "[sic][^1]" glues "[sic]"
+    // (and "[^a-z][^1]" glues "[^a-z]": only a whole marker stops the lead).
+    // Markers in a row ("one[^1][^2]") share one wrapper, so the second is
+    // glued to the first. The prose is escaped by now, so the lead takes an
+    // entity ("&amp;") whole. It starts only at a word boundary (text start,
+    // whitespace, a tag's end, or just after a marker): it can never begin
+    // halfway through an entity, and one scan covers each run of text, where
+    // retrying from every start was quadratic on a long run.
+    return highlightEng(text, marks).replace(
+      /(?<=^|[\s>]|\[\^[\w.*†]+\])((?:[^\s<>&[]|&#?\w+;|\[(?!\^[\w.*†]+\]))*)((?:\[\^[\w.*†]+\])+)/g,
+      (_m, lead: string, run: string) => {
+        const buttons = [...run.matchAll(/\[\^([\w.*†]+)\]/g)].map(([, label]) => {
+          const display = fnDisplay(label);
+          return `<button type="button" class="fn-marker" data-fn="${label}" data-fn-trans="${transId}" aria-label="Footnote ${display}">${display}</button>`;
+        });
+        return `<span class="fn-anchor">${lead}${buttons.join('')}</span>`;
       },
     ).replace(
       // Ostwald italicizes a transliterated Greek word or a title (*ethos,*
@@ -599,9 +621,11 @@
       // emphasis. The capture stops at tag brackets and entities, so it can
       // neither span a marker's markup nor unbalance highlightEng's own; a span
       // split across a Bekker gutter boundary (each flow part renders on its
-      // own) just stays literal rather than emitting an unclosed tag.
-      /\*(?!\s)([^*<>&]+?)\*/g,
-      '<em>$1</em>',
+      // own) just stays literal rather than emitting an unclosed tag. A whole
+      // tag is matched first and passed through, so the stars INSIDE a
+      // marker's tag (data-fn="*" … aria-label="Footnote *") never pair up.
+      /(<[^>]*>)|\*(?!\s)([^*<>&]+?)\*/g,
+      (_m, tag: string | undefined, inner: string) => tag ?? `<em>${inner}</em>`,
     );
   }
 
@@ -651,6 +675,23 @@
     return { n: line.n, text, tokens: line.tokens.slice(fromW, toW), cont: fromW > 0 };
   }
 
+  // A cut (Bekker tick, paragraph break, chapter start) must never land inside
+  // a footnote [^label] or sidenote/figure [[sN]] marker: each half would miss
+  // the patterns that render or strip it and print as prose. A cut inside a
+  // run of glued markers ("[^1][^2]", taken as one unit, so cuts never cross)
+  // moves to the run's END, because a marker annotates the word BEFORE it:
+  // moving to the start would part a footnote from its word and from
+  // renderThird's nowrap wrapper.
+  const MARKER_RUN = /(?:\[\^[0-9A-Za-z_.*†]+\]|\[\[(?:s|fig)[0-9]+\]\])+/g;
+  function snapPastMarker(text: string, off: number): number {
+    for (const m of text.matchAll(MARKER_RUN)) {
+      if (m.index >= off) break;
+      const end = m.index + m[0].length;
+      if (off < end) return end;
+    }
+    return off;
+  }
+
   // Flowing prose with Bekker numbers floated into the margin at their EXACT
   // offsets (no row break, no in-text number, no sentence-boundary snapping).
   // Used for precisely-placed translations like the gloss-aligned Ross.
@@ -669,7 +710,7 @@
       }
     };
     for (const t of ts) {
-      const off = Math.max(0, Math.min(t.off, text.length));
+      const off = snapPastMarker(text, Math.max(0, Math.min(t.off, text.length)));
       if (off > cur) { addText(text.slice(cur, off)); cur = off; }
       if (t.para) {
         parts.push({ text: null, n: null, real: false, para: true });
@@ -751,13 +792,20 @@
     // number renders where it actually falls instead of jumping to the next
     // sentence start (which the older snapped-row gutter did). The secondary
     // Ross slot uses the same flow model.
+    // Ticks and paragraph breaks snap against the whole text before they are
+    // assigned to a slice, so one inside a marker that ends a slice goes with
+    // the next slice, as its marker-free offset would. A tick snapped to the
+    // very end of the text has no next slice, so the last slice with text in
+    // it keeps it (not the empty one of a chapter that starts at the end).
     const flowFor = (a: number, b: number): FlowPart[] => {
       const slice = text.slice(a, b);
       const ticks = allTicks
-        .filter(t => t.offset >= a && t.offset < b)
-        .map(t => ({ n: t.n, real: t.real, off: t.offset - a }))
+        .map(t => ({ n: t.n, real: t.real, off: snapPastMarker(text, t.offset) }))
+        .filter(t => t.off >= a && (t.off < b || (b === text.length && a < b)))
+        .map(t => ({ ...t, off: t.off - a }))
         .sort((x, y) => x.off - y.off);
       const paras = allParas
+        .map(off => snapPastMarker(text, off))
         .filter(off => off > a && off < b)
         .map(off => off - a);
       return flowParts(slice, ticks, paras);
@@ -802,9 +850,10 @@
       const i = greek.findIndex(l => l.n >= beforeLine);
       return i === -1 ? greek.length : i;
     };
-    // Each chapter boundary is a cut at (line index, word index within the line).
+    // Each chapter boundary is a cut at (line index, word index within the line),
+    // and in the English at an offset kept clear of any marker.
     const bounds = starts.map(s => ({
-      chapter: s.chapter, bekker: s.bekker, engOffset: s.engOffset,
+      chapter: s.chapter, bekker: s.bekker, engOffset: snapPastMarker(text, s.engOffset),
       idx: lineIdx(s.beforeLine), word: s.wordIndex || 0,
     }));
 
@@ -827,11 +876,11 @@
     const blocks: Block[] = [];
     const first = bounds[0];
     // Lines/English before the first chapter start continue the previous chapter.
-    if (first.idx > 0 || first.word > 0 || starts[0].engOffset > 0) {
+    if (first.idx > 0 || first.word > 0 || first.engOffset > 0) {
       blocks.push({
         chapter: null, bekker: '',
         lines: linesFor(0, 0, first.idx, first.word),
-        flow: flowFor(0, starts[0].engOffset), sidenotes: sidesIn(0, starts[0].engOffset), figs: figsIn(0, starts[0].engOffset), ...overlaysFor(null),
+        flow: flowFor(0, first.engOffset), sidenotes: sidesIn(0, first.engOffset), figs: figsIn(0, first.engOffset), ...overlaysFor(null),
       });
     }
     for (let i = 0; i < bounds.length; i++) {
@@ -955,7 +1004,15 @@
     const params = new URLSearchParams(window.location.search);
     hlGrkFolds = (params.get('hlg') ?? '').trim().split(/\s+/).filter(Boolean)
       .map(t => greekFold(t.replace(/\*/g, ''))).filter(Boolean);
-    hlEngTerms = (params.get('hle') ?? '').trim().split(/\s+/).filter(Boolean);
+    hlEngUnits = englishQueryUnits(params.get('hle') ?? '');
+    hlEngPhrase = params.get('hlm') === 'phrase';
+    hlEngForms = params.get('hlf') === 'any';
+    const hlt = params.get('hlt');
+    if (hlt) {
+      const at = hlt.lastIndexOf(':');
+      hitCol = hlt.slice(0, at);
+      hitPos = hlt.slice(at + 1).split(',').map(Number).filter(Number.isInteger);
+    }
     const loc = params.get('loc');
     let locCol = '';
     let locLine = NaN;
@@ -969,7 +1026,7 @@
     }
     // Restore saved view, but a jump-in (loc/highlight) forces bilingual so the
     // target Greek line is on screen.
-    if (loc || hlGrkFolds.length) {
+    if (loc || hlGrkFolds.length || hitCol) {
       view = 'both';
     } else {
       const saved = (() => { try { return localStorage.getItem('reader-view'); } catch { return null; } })();
@@ -1248,7 +1305,7 @@
   {#snippet greekToks(parts: LinePart[])}{#each parts as part}{#if part.tok}<!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions --><span
         class="tok"
         class:active={popup?.token === part.tok}
-        class:hit={isHit(part.tok.t)}
+        class:hit={isHit(part.tok, hitSet, hlGrkFolds)}
         on:click={(e) => handleTokenClick(e, part.tok)}
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
@@ -1279,7 +1336,7 @@
            .overlay-prose would leak into captured offsets — as a sibling they
            never see it, keeping the render-only/no-offset-shift guarantee
            structural. -->
-      {#if chTitle}<div class="overlay-chapter-title">{#if fnTransIds.has(transId)}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(chTitle, transId)}{:else}{chTitle}{/if}</div>{/if}
+      {#if chTitle}<div class="overlay-chapter-title">{#if fnTransIds.has(transId)}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(chTitle, transId, engMarks)}{:else}{chTitle}{/if}</div>{/if}
       {#if fnTransIds.has(transId)}
         <div
           class="overlay-prose"
@@ -1299,7 +1356,7 @@
             {:else if part.text !== null}
               <span class="bk-seg"
                 >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
-                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId)}</span>
+                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId, engMarks)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}
@@ -1322,7 +1379,7 @@
             {:else if part.text !== null}
               <span class="bk-seg"
                 >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
-                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text)}</span>
+                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text, engMarks)}</span>
             {:else if part.para}
               <br class="para-br" />
             {:else}

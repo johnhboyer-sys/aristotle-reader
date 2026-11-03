@@ -26,6 +26,8 @@ english:
     dir: "lin-joachim"
     books: 1
     chapter_marker: part
+    anchors: "lin-joachim/anchors.yaml"   # Joachim's margin numbers, read from the scan
+    anchor_cuts: true                     # its {column}1 entries place the column breaks
 
 books:
   - { n: 1, start: "968a1", end: "972b33" }

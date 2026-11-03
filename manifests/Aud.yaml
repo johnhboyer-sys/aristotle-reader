@@ -26,6 +26,7 @@ english:
     dir: "aud-loveday-forster"
     books: 1
     chapter_marker: part
+    anchors: "aud-loveday-forster/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
 
 books:
   - { n: 1, start: "800a1", end: "804b39" }

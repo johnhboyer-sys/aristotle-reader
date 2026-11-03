@@ -1,5 +1,7 @@
-"""Build alignment-results/<vid>/index.html (dark-mode per-book summary) AND the
-combined gloss map the pipeline reads (alignment-results/<vid>/<work>_<vid>_gloss_map.json).
+"""Build alignment-results/<vid>/review/<work>/index.html (dark-mode per-book
+summary) AND the combined gloss map the pipeline reads
+(alignment-results/<vid>/<work>_<vid>_gloss_map.json), from the work's own
+per-book maps (maps/<work>/, written by persist_book).
 Usage: uv run python tools/make_index.py [work=EN] [vid=ross]"""
 import json
 import sys
@@ -9,11 +11,22 @@ from pathlib import Path
 WORK = sys.argv[1] if len(sys.argv) > 1 else "EN"
 VID = sys.argv[2] if len(sys.argv) > 2 else "ross"
 RES = Path(__file__).resolve().parents[2] / "alignment-results" / VID
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from aristotle_pipeline.config import Manifest  # noqa: E402
+
+_m = Manifest.for_work(WORK).data
+TITLE = _m["work"]["title"]
+_slots = [s for s in (_m.get("english") or {}).values() if isinstance(s, dict)]
+TRANSLATOR = next((s["name"] for s in _slots if s.get("id") == VID and s.get("name")), VID)
 rows = []
 tot = Counter()
 tot_chapters = 0
 combined: dict = {}
-for f in sorted((RES / "maps").glob("book-*.json")):
+books = sorted((RES / "maps" / WORK).glob("book-*.json"))
+if not books:
+    sys.exit(f"no per-book maps in {RES / 'maps' / WORK}: run persist_book first")
+cmap = RES / f"{WORK}_{VID}_gloss_map.json"
+for f in books:
     b = int(f.stem.split("-")[1])
     m = json.loads(f.read_text())
     combined.update(m)
@@ -28,6 +41,11 @@ for f in sorted((RES / "maps").glob("book-*.json")):
     tot.update(c)
     tot_chapters += len(m)
 
+if cmap.exists():   # never cut the shipped map down to the chapters persisted so far
+    lost = sorted(set(json.loads(cmap.read_text())) - set(combined))
+    if lost:
+        sys.exit(f"{cmap.name} has chapters {lost[:8]} that maps/{WORK}/ lacks: persist those books first")
+
 T_real = sum(tot.values())
 T_solid = tot["reliable"] + tot["confirmed"] + tot["certain"]
 css = """body{font:15px/1.6 Georgia,serif;max-width:820px;margin:2rem auto;padding:0 1rem;
@@ -38,24 +56,25 @@ th{color:#e6e9ef;border-bottom:2px solid #444b57}td:first-child,th:first-child{t
 tr = []
 for b, ch, real, conf, unc, solid in rows:
     pct = 100 * solid / real if real else 0
-    tr.append(f"<tr><td><a href='review/book-{b:02d}.html'>Book {b}</a></td><td>{ch}</td>"
+    tr.append(f"<tr><td><a href='book-{b:02d}.html'>Book {b}</a></td><td>{ch}</td>"
               f"<td>{real}</td><td>{conf}</td><td>{unc}</td><td>{pct:.1f}%</td></tr>")
 totpct = 100 * T_solid / T_real if T_real else 0
-tr.append(f"<tr class='tot'><td>All 10 books</td><td>{tot_chapters}</td><td>{T_real}</td>"
+tr.append(f"<tr class='tot'><td>All {len(rows)} books</td><td>{tot_chapters}</td><td>{T_real}</td>"
           f"<td>{tot['confirmed']}</td><td>{tot['uncertain']}</td><td>{totpct:.1f}%</td></tr>")
-html = f"""<!doctype html><meta charset=utf-8><title>Ross NE — Bekker alignment</title><style>{css}</style>
-<h1>Ross, Nicomachean Ethics — Bekker alignment results</h1>
-<p class=sub>Real Bekker ticks placed on the unmarked Ross translation by the gloss aligner
+html = f"""<!doctype html><meta charset=utf-8><title>{TITLE} — Bekker alignment</title><style>{css}</style>
+<h1>{TRANSLATOR}, {TITLE} — Bekker alignment results</h1>
+<p class=sub>Real Bekker ticks placed on the unmarked translation by the gloss aligner
 (standard-terminology glosses → word-overlap match → direct-reading verifier on the uncertain
-ones). Each book's page shows every tick: the 3-line Greek-window gloss beside the Ross text it
+ones). Each book's page shows every tick: the 3-line Greek-window gloss beside the text it
 landed on. <b>Confirmed</b> = re-placed by the verifier; <b>uncertain</b> = shown as estimate.</p>
 <table><tr><th>Book</th><th>Chapters</th><th>Real ticks</th><th>Verifier-confirmed</th>
 <th>Uncertain</th><th>High-confidence</th></tr>{''.join(tr)}</table>
 <p class=sub>Open any book to spot-check placement. Solid ticks are cited with confidence;
 the few uncertain ones are flagged as estimates.</p>"""
-(RES / "index.html").write_text(html, encoding="utf-8")
+index = RES / "review" / WORK / "index.html"
+index.parent.mkdir(parents=True, exist_ok=True)
+index.write_text(html, encoding="utf-8")
 # Combined map the pipeline (stage1_ross._load_align_map) reads at build time.
-cmap = RES / f"{WORK}_{VID}_gloss_map.json"
 cmap.write_text(json.dumps(combined, ensure_ascii=False, indent=1), encoding="utf-8")
-print(f"index -> {RES/'index.html'}  ({tot_chapters} chapters, {T_real} ticks, {totpct:.1f}% high-confidence)")
+print(f"index -> {index}  ({tot_chapters} chapters, {T_real} ticks, {totpct:.1f}% high-confidence)")
 print(f"combined map -> {cmap}")

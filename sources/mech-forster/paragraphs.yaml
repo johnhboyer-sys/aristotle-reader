@@ -1,0 +1,35 @@
+# Paragraph openings in OUR text, placed by tools/place_paragraphs.py.
+# Positions from: E. S. Forster (Oxford Works vol. VI, 1913), scan archive.org worksofaristotle06arisuoft, first-line indents
+# offset = characters into the chapter's prose; at = our own opening words.
+- {book: 1, chapter: 1, offset: 1172, at: "Among questions of a mechanical"}
+- {book: 1, chapter: 1, offset: 1548, at: "The original cause of all"}
+- {book: 1, chapter: 1, offset: 2665, at: "Another peculiarity of the circle"}
+- {book: 1, chapter: 1, offset: 3132, at: "Therefore, as has already been"}
+- {book: 1, chapter: 1, offset: 3752, at: "Because a circle moves in"}
+- {book: 1, chapter: 2, offset: 634, at: "The reason of this is"}
+- {book: 1, chapter: 2, offset: 923, at: "Let the proportion of the"}
+- {book: 1, chapter: 2, offset: 1478, at: "And the converse is also"}
+- {book: 1, chapter: 2, offset: 2691, at: "Let ABΓ be a circle,"}
+- {book: 1, chapter: 2, offset: 3959, at: "Let BΓΔE be a circle,"}
+- {book: 1, chapter: 2, offset: 4461, at: "Now let AΘH be drawn,"}
+- {book: 1, chapter: 2, offset: 5216, at: "Now the radius AB has"}
+- {book: 1, chapter: 2, offset: 6080, at: "So that the reason why"}
+- {book: 1, chapter: 3, offset: 1360, at: "But if the support be"}
+- {book: 1, chapter: 4, offset: 1372, at: "Let AB be a lever,"}
+- {book: 1, chapter: 8, offset: 2834, at: "Now if it is the"}
+- {book: 1, chapter: 21, offset: 626, at: "Let A be one extremity"}
+- {book: 1, chapter: 23, offset: 523, at: "For let A move along"}
+- {book: 1, chapter: 23, offset: 817, at: "For let A be moved"}
+- {book: 1, chapter: 23, offset: 2451, at: "The reason is that, when"}
+- {book: 1, chapter: 24, offset: 1087, at: "Let ΔZΓ be the greater"}
+- {book: 1, chapter: 24, offset: 1920, at: "In like manner if I"}
+- {book: 1, chapter: 24, offset: 3121, at: "As to the reason, this"}
+- {book: 1, chapter: 24, offset: 3262, at: "Suppose that there is a"}
+- {book: 1, chapter: 24, offset: 3762, at: "Let there be two circles,"}
+- {book: 1, chapter: 24, offset: 4666, at: "So too, if the large"}
+- {book: 1, chapter: 24, offset: 5530, at: "Now when one moves a"}
+- {book: 1, chapter: 24, offset: 5968, at: "Whenever, therefore, the large circle"}
+- {book: 1, chapter: 24, offset: 6167, at: "If any one raises the"}
+- {book: 1, chapter: 24, offset: 6575, at: "In conclusion, when it is"}
+- {book: 1, chapter: 25, offset: 343, at: "The ropes are not stretched"}
+- {book: 1, chapter: 30, offset: 1237, at: "This will be the case"}

@@ -3,6 +3,8 @@
 // dist, no network: importing the script does not run its main().
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 
 import {
   KNOWN_BENIGN,
@@ -22,6 +24,9 @@ import {
   parseRsyncItemized,
   scanForLeaks,
   scanGatedSlots,
+  scanSearchShards,
+  scanTranslationIndexes,
+  shardName,
   auditDistScale,
   verificationTargets,
   verifyLive,
@@ -80,6 +85,25 @@ test('categorize files each path under the category DEPLOY-STATUS.md reads them 
   assert.equal(categorize('sw.js'), '(root files)');
   assert.equal(categorize('game/game.js'), 'game/');
   assert.equal(categorize('lemma/syzeo/'), 'lemma/');
+});
+
+// macOS ships openrsync, whose itemize flags are 7 characters, not GNU's 9. Read
+// with the GNU-only pattern, every add and change went uncounted: a dry run
+// reported "add 0, change 0" for a deploy that replaced 15 bundles.
+const OPENRSYNC_DRY_RUN = [
+  '*deleting gone.txt',
+  '>f+++++++ added.txt',
+  '>f..t.... touched.txt',
+  'cd+++++++ newdir/',
+  '>f+++++++ newdir/f.txt',
+  '>f.s..... sub/changed.txt',
+].join('\n');
+
+test('parseRsyncItemized reads openrsync\'s 7-character flags too', () => {
+  const r = parseRsyncItemized(OPENRSYNC_DRY_RUN);
+  assert.deepEqual(r.added, ['added.txt', 'newdir/f.txt']);
+  assert.deepEqual(r.modified, ['touched.txt', 'sub/changed.txt']);
+  assert.deepEqual(r.deleted, ['gone.txt']);
 });
 
 test('groupByCategory reports counts per category, never a bare total', () => {
@@ -321,7 +345,7 @@ test('verificationTargets lists the live-verified pattern with /bonitz/ as 404',
   assert.equal(byPath['/_astro/global.a.css'], 200);
   assert.equal(byPath['/_astro/Reader.old.js'], 404);
   assert.equal(byPath['/bonitz/'], 404);
-  assert.ok(targets.every((t) => t.url.startsWith('https://johnhboyer-sys.github.io/aristotle-reader/')));
+  assert.ok(targets.every((t) => t.url.startsWith('https://aristotle.johnhboyer.com/')));
 });
 
 test('verifyLive polls until every target answers as expected', async () => {
@@ -402,6 +426,78 @@ test('scanGatedSlots catches a leak with no translator name anywhere in it', () 
   assert.equal(r.ok, false);
 });
 
+// A search index holds a translation's words with their positions, which is
+// the prose in another order: gated exactly as the slot it indexes.
+test('scanGatedSlots fails on a search index for a slot the baseline does not list', () => {
+  const book = { path: 'data/Cat/book-01.json', text: JSON.stringify({ segments: [{ ross: 'x' }] }) };
+  const r = scanGatedSlots(
+    [book, { path: 'data/Cat/search/english-third.json', text: '{"every":[[0,0]]}' }],
+    { gated: new Set(['Cat']), baseline: { Cat: ['ross'] } },
+  );
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /Cat.*english-third\.json/);
+});
+
+test('scanGatedSlots passes the search indexes of the slots a gated work serves', () => {
+  const r = scanGatedSlots(
+    [
+      { path: 'data/Cat/book-01.json', text: JSON.stringify({ segments: [{ ross: 'x', overlays: { owen: [] } }] }) },
+      { path: 'data/Cat/search/english-secondary.json', text: '{}' },
+      { path: 'data/Cat/search/english-overlay-owen.json', text: '{}' },
+      { path: 'data/Cat/search/english.json', text: '{}' },
+    ],
+    { gated: new Set(['Cat']), baseline: { Cat: ['overlays', 'ross'] } },
+  );
+  assert.equal(r.ok, true, r.problems.join('; '));
+  assert.deepEqual(r.indexes, { Cat: ['overlay-owen', 'secondary'] });
+});
+
+// The corpus search shards (stage 9) carry every work's English index under
+// "<work>/<slot>", so a gated translation's words reach live through a shard
+// as surely as through its own english-<slot>.json.
+const catBook = { path: 'data/Cat/book-01.json', text: JSON.stringify({ segments: [{ ross: 'x', overlays: { owen: [] } }] }) };
+
+test('scanGatedSlots fails on a shard carrying a slot the baseline does not list', () => {
+  const r = scanGatedSlots(
+    [catBook, { path: 'data/search-shards/english/ev.json', text: JSON.stringify({ every: { 'Cat/third': [[0, 0]], 'EN/third': [[1, 1]] } }) }],
+    { gated: new Set(['Cat']), baseline: { Cat: ['overlays', 'ross'] } },
+  );
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /search-shards.*Cat\/third/);
+  assert.doesNotMatch(r.problems.join('\n'), /EN/);
+});
+
+test('scanGatedSlots fails on a shard listing that names a slot the baseline does not list', () => {
+  const index = { streams: { english: { shards: [], sources: { 'Cat/english': 'h', 'Cat/third': 'h' } } } };
+  const r = scanGatedSlots(
+    [catBook, { path: 'data/search-shards/index.json', text: JSON.stringify(index) }],
+    { gated: new Set(['Cat']), baseline: { Cat: ['overlays', 'ross'] } },
+  );
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /Cat\/third/);
+});
+
+test('scanGatedSlots passes shards that carry only the slots a gated work serves', () => {
+  const shard = { the: { 'Cat/english': [[0, 0]], 'Cat/secondary': [[0, 1]], 'Cat/overlay-owen': [[0, 2]] } };
+  const r = scanGatedSlots(
+    [catBook, { path: 'data/search-shards/english/th.json', text: JSON.stringify(shard) }],
+    { gated: new Set(['Cat']), baseline: { Cat: ['overlays', 'ross'] } },
+  );
+  assert.equal(r.ok, true, r.problems.join('; '));
+  assert.deepEqual(r.shardSources, { Cat: ['english', 'overlay-owen', 'secondary'] });
+});
+
+test('scanGatedSlots fails on a search index it cannot map to a slot', () => {
+  const r = scanGatedSlots(
+    [
+      { path: 'data/Cat/book-01.json', text: JSON.stringify({ segments: [{ ross: 'x' }] }) },
+      { path: 'data/Cat/search/english-ackrill.json', text: '{}' },
+    ],
+    { gated: new Set(['Cat']), baseline: { Cat: ['ross'] } },
+  );
+  assert.equal(r.ok, false);
+});
+
 test('scanGatedSlots ignores works that are not gated', () => {
   // EN is not gated and legitimately serves `third`; Cat is here so the check
   // is actually running (an empty scan is its own failure, below).
@@ -451,4 +547,149 @@ test('auditDistScale is a no-op against an empty live branch (first deploy)', ()
 
 test('auditDistScale can be overridden deliberately', () => {
   assert.equal(auditDistScale(1, 6609, 0).ok, true);
+});
+
+// ── Every served translation has its search index ───────────────────────────
+test('scanTranslationIndexes passes when each translation beyond the primary is indexed', () => {
+  const r = scanTranslationIndexes([
+    { path: 'data/EN/book-01.json', text: JSON.stringify({ segments: [{ ross: [{ text: 'x' }], third: [{ text: 'y' }], overlays: { peters: [{ text: 'z' }] } }] }) },
+    { path: 'data/EN/search/english-secondary.json', text: '{}' },
+    { path: 'data/EN/search/english-third.json', text: '{}' },
+    { path: 'data/EN/search/english-overlay-peters.json', text: '{}' },
+    { path: 'data/Phys/book-01.json', text: JSON.stringify({ segments: [{ english: { text: 'x' } }] }) },
+  ]);
+  assert.equal(r.ok, true, r.problems.join('; '));
+  assert.equal(r.indexed, 3);
+});
+
+test('scanTranslationIndexes refuses a translation served without its index', () => {
+  const r = scanTranslationIndexes([
+    { path: 'data/EN/book-01.json', text: JSON.stringify({ segments: [{ ross: [{ text: 'x' }], overlays: { peters: [{ text: 'z' }] } }] }) },
+    { path: 'data/EN/search/english-secondary.json', text: '{}' },
+  ]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /EN.*english-overlay-peters\.json/);
+});
+
+test('scanTranslationIndexes refuses to pass when it saw no book at all', () => {
+  const r = scanTranslationIndexes([{ path: 'data/EN/search/english.json', text: '{}' }]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems[0], /not running/);
+});
+
+// ── The corpus search shards were built from the indexes being served ───────
+// index.json records, per source, a hash of the per-work index the shard
+// postings were copied from. A work rebuilt without re-running stage 9 leaves
+// shards whose seg_idx numbers name the wrong passages.
+const h = (text) => createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 16);
+const EN_LEMMA = '{"logos": [[0, 1]]}';
+const EN_ENGLISH = '{"virtue": [[0, 0]]}';
+const EN_THIRD = '{"mean": [[0, 2]]}';
+function shardListing(overrides = {}) {
+  return {
+    path: 'data/search-shards/index.json',
+    text: JSON.stringify({ streams: {
+      lemma: { shards: ['lo'], sources: { EN: h(EN_LEMMA) } },
+      form: { shards: ['lo'], sources: { EN: h(EN_LEMMA) } },
+      english: { shards: ['vi', 'me'], sources: { 'EN/english': h(EN_ENGLISH), 'EN/third': h(EN_THIRD), ...overrides } },
+    } }),
+  };
+}
+const enIndexes = [
+  { path: 'data/EN/search/greek_lemma.json', text: EN_LEMMA },
+  { path: 'data/EN/search/greek_form.json', text: EN_LEMMA },
+  { path: 'data/EN/search/english.json', text: EN_ENGLISH },
+  { path: 'data/EN/search/english-third.json', text: EN_THIRD },
+  { path: 'data/EN/search/meta.json', text: '[]' },
+];
+const shard = (path, doc) => ({ path: `data/search-shards/${path}`, text: JSON.stringify(doc) });
+const enShards = [
+  shard('lemma/lo.json', { logos: { EN: [[0, 1]] } }),
+  shard('form/lo.json', { logos: { EN: [[0, 1]] } }),
+  shard('english/vi.json', { virtue: { 'EN/english': [[0, 0]] } }),
+  shard('english/me.json', { mean: { 'EN/third': [[0, 2]] } }),
+];
+const without = (name) => enShards.filter((f) => !f.path.endsWith(name));
+
+test('scanSearchShards passes shards built from exactly the indexes served', () => {
+  const r = scanSearchShards([shardListing(), ...enShards, ...enIndexes]);
+  assert.equal(r.ok, true, r.problems.join('; '));
+  assert.equal(r.sources, 4);
+  assert.equal(r.postings, 4);
+});
+
+// The listing's hashes say which index the shards were built from; the shard
+// files are what the reader actually reads, so they are compared too.
+test('scanSearchShards refuses a listed shard that is not served', () => {
+  const r = scanSearchShards([shardListing(), ...without('english/me.json'), ...enIndexes]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /english\/me\.json.*missing/);
+});
+
+test('scanSearchShards refuses shard postings that differ from the index, hashes notwithstanding', () => {
+  const r = scanSearchShards([shardListing(), ...without('english/vi.json'),
+    shard('english/vi.json', { virtue: { 'EN/english': [[0, 9]] } }), ...enIndexes]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /EN\/english.*1 word.*virtue/);
+});
+
+test('scanSearchShards refuses a word filed under the wrong shard', () => {
+  const misfiled = shard('english/me.json', { mean: { 'EN/third': [[0, 2]] }, virtue: { 'EN/english': [[0, 0]] } });
+  const r = scanSearchShards([shardListing(), ...enShards.slice(0, 2), misfiled, ...enIndexes]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /'virtue'.*belongs in vi/);
+});
+
+test('scanSearchShards refuses to pass when the shards hold no postings', () => {
+  const r = scanSearchShards([shardListing(), ...enIndexes]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /no postings/);
+});
+
+test('scanSearchShards refuses shard postings for a source neither served nor listed', () => {
+  const ghost = shard('english/vi.json', { virtue: { 'EN/english': [[0, 0]], 'Ghost/english': [[9, 9]] } });
+  const r = scanSearchShards([shardListing(), ...without('english/vi.json'), ghost, ...enIndexes]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /Ghost\/english/);
+});
+
+test('scanSearchShards ignores a shard file the listing does not name, readable or not', () => {
+  const r = scanSearchShards([shardListing(), ...enShards, { path: 'data/search-shards/english/zz.json', text: 'broken' }, ...enIndexes]);
+  assert.equal(r.ok, true, r.problems.join('; '));
+});
+
+test('shardName files a word where stage 9 does', () => {
+  const fixture = JSON.parse(readFileSync(new URL('../../pipeline/tests/fixtures/search_shards.json', import.meta.url), 'utf8'));
+  for (const { word, shard: name } of fixture.cases) assert.equal(shardName(word), name, word);
+});
+
+test('scanSearchShards refuses shards older than an index served beside them', () => {
+  const rebuilt = enIndexes.map((f) => (f.path.endsWith('english-third.json') ? { ...f, text: '{"mean": [[3, 2]]}' } : f));
+  const r = scanSearchShards([shardListing(), ...enShards, ...rebuilt]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /older.*EN\/third/);
+});
+
+test('scanSearchShards refuses an index the shards do not hold', () => {
+  const r = scanSearchShards([shardListing(), ...enShards, ...enIndexes, { path: 'data/EN/search/english-secondary.json', text: '{}' }]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /does not hold.*EN\/secondary/);
+});
+
+test('scanSearchShards refuses shards holding an index nothing serves', () => {
+  const r = scanSearchShards([shardListing({ 'EN/overlay-peters': 'abc' }), ...enShards, ...enIndexes]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /EN\/overlay-peters.*no work serves/);
+});
+
+test('scanSearchShards refuses a corpus without shards', () => {
+  const r = scanSearchShards(enIndexes);
+  assert.equal(r.ok, false);
+  assert.match(r.problems.join('\n'), /no data\/search-shards\/index\.json/);
+});
+
+test('scanSearchShards refuses to pass when it saw no index at all', () => {
+  const r = scanSearchShards([shardListing()]);
+  assert.equal(r.ok, false);
+  assert.match(r.problems[0], /not running/);
 });

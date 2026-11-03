@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 from .config import BUILD_DIR, Manifest
@@ -239,7 +240,36 @@ def _stage8():
               f"{s['occurrences']:,} occurrences, {s['shards']} shards  ({by_n})")
 
 
-_CORPUS_STAGES = {"stage8": _stage8}
+# The corpus search shards: every work's indexes merged and split by a word's
+# first two letters, so a search fetches the shards its words fall in and not
+# every work's index. Reads what stage7 (and `translations`) left in build/dist.
+def _stage9():
+    from . import stage9_search_shards
+
+    out_root = stage9_search_shards.run()
+    summary = json.loads((out_root / "summary.json").read_text(encoding="utf-8"))
+    print(f"stage9: {out_root}  works={summary['works']}")
+    for stream, s in summary["streams"].items():
+        print(f"  {stream}: {s['words']:,} words from {s['sources']} sources, "
+              f"{s['postings']:,} postings, {s['shards']} shards")
+
+
+# Re-index the translations beyond the primary across an existing build/dist,
+# without rebuilding the works. stage7 does this for each work it emits; this
+# brings a corpus emitted before those indexes existed up to date.
+def _translations():
+    from .stage6_search import emit_translation_indexes
+
+    dist = BUILD_DIR / "dist"
+    for work_dir in sorted(p.parent.parent for p in dist.glob("*/search/meta.json")):
+        summary = emit_translation_indexes(work_dir)
+        slots = " ".join(
+            f"{slot}={s['words']:,}w/{s['segments']}seg" for slot, s in summary.items()
+        )
+        print(f"translations: {work_dir.name} {slots or '(primary only)'}")
+
+
+_CORPUS_STAGES = {"stage8": _stage8, "stage9": _stage9, "translations": _translations}
 
 _STAGES = {
     "stage1": _stage1,
@@ -265,6 +295,8 @@ def main(argv=None):
         help="use manifests/<work>-public.yaml when present",
     )
     args = parser.parse_args(argv)
+    if os.environ.get("ALIGN_SLOT"):
+        sys.exit("ALIGN_SLOT is set: it steers the aligner tools, not stage1; unset it")
     if args.stage in _CORPUS_STAGES:
         _CORPUS_STAGES[args.stage]()
         return

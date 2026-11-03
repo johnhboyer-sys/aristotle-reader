@@ -98,7 +98,8 @@ def _snap_word(text: str, off: int) -> int:
 
 
 # ---- per-chapter alignment ------------------------------------------------
-def align_chapter(ch: ChapterRef, backend: str, overrides: dict | None = None) -> list[Anchor]:
+def align_chapter(ch: ChapterRef, backend: str, overrides: dict | None = None,
+                  ruled: dict | None = None) -> list[Anchor]:
     refs = ch.ref_incipits()
     sents = split_sentences(ch.ross_text)
     S = similarity.cos_matrix(refs, [s for _, s in sents], backend)
@@ -115,13 +116,15 @@ def align_chapter(ch: ChapterRef, backend: str, overrides: dict | None = None) -
     _flag_proper_names(ch, anchors, refs)
     # Apply verifier overrides (offsets re-placed by direct reading) before
     # de-dup + interpolation so single lines re-interpolate around the fix.
-    if overrides:
-        for a in anchors:
-            if a.citation in overrides:
-                a.offset = max(0, min(overrides[a.citation], len(ch.ross_text)))
+    # John's rulings (`ruled`, from align/rulings.py) go last and win. Neither
+    # ever moves a chapter-start tick: the Greek fixes those.
+    for source, flag in ((overrides, "verified"), (ruled, "ruled")):
+        for a in anchors if source else ():
+            if a.tier != "chapter" and a.citation in source:
+                a.offset = max(0, min(source[a.citation], len(ch.ross_text)))
                 a.confidence = "confirmed"
                 a.flags = [f for f in a.flags if not f.startswith("low_margin")]
-                a.flags.append("verified")
+                a.flags.append(flag)
     # de-dup offsets keeping the most confident; keep monotonic non-decreasing
     anchors = _dedup_monotonic(anchors)
     anchors += interpolate(ch, anchors)
@@ -129,6 +132,18 @@ def align_chapter(ch: ChapterRef, backend: str, overrides: dict | None = None) -
 
 
 def _dedup_monotonic(anchors: list[Anchor]) -> list[Anchor]:
+    # A ruling never moves: a machine placement before it that lies after it is
+    # pulled back to it. Rulings out of order with each other are an error.
+    ruled = [i for i, a in enumerate(anchors) if "ruled" in a.flags]
+    for x, y in zip(ruled, ruled[1:]):
+        if anchors[y].offset < anchors[x].offset:
+            raise ValueError(f"rulings out of order: {anchors[y].citation} at {anchors[y].offset} "
+                             f"before {anchors[x].citation} at {anchors[x].offset}")
+    for i in ruled:
+        for a in anchors[:i]:
+            if "ruled" not in a.flags and a.offset > anchors[i].offset:
+                a.offset = anchors[i].offset
+                a.flags.append("clamped_by_ruling")
     out: list[Anchor] = []
     last = -1
     for a in anchors:
@@ -207,18 +222,20 @@ def align(work_id="EN", version_id=None, target_prose=None, backend="lexical",
         chapters = load_chapters(target_prose)
         if books:
             chapters = [c for c in chapters if c.book in books]
-    overrides_all = {}
+    overrides_all, ruled_all = {}, {}
     if provider == "gloss":
+        from . import rulings
         ovr_path = BUILD_DIR / "align" / f"{work_id}_{version_id}_gloss_overrides.json"
         if ovr_path.exists():
             overrides_all = json.loads(ovr_path.read_text(encoding="utf-8"))
+        ruled_all = rulings.offsets(rulings.load(work_id, version_id), target_prose)
 
     out: dict[str, dict] = {}
     review: list[dict] = []
     for ch in chapters:
-        anchors = align_chapter(ch, backend, overrides_all.get(f"{ch.book}:{ch.chapter}"))
-        check_roundtrip(ch, anchors)
         key = f"{ch.book}:{ch.chapter}"
+        anchors = align_chapter(ch, backend, overrides_all.get(key), ruled_all.get(key))
+        check_roundtrip(ch, anchors)
         out[key] = {"ross_len": len(ch.ross_text),
                     "anchors": [asdict(a) for a in anchors]}
         for a in anchors:

@@ -42,6 +42,7 @@ english:
     dir: "pa-ogle"
     books: 4
     chapter_marker: number
+    anchors: "pa-ogle/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
 
 mid_column_book_starts:
   - { book: 2, column: "646a" }

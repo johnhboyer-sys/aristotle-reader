@@ -17,6 +17,15 @@ from .aligner import align_chapter, monotonic_align, split_sentences
 from .reference import default_target, load_chapters, load_gloss_chapters
 
 
+def gold_sentence_start(text: str, starts: list[int], off: int) -> int:
+    """Start of the sentence a gold tick belongs to. A Perseus milestone often
+    sits on the whitespace before a sentence; skip it first, or the tick snaps
+    into the previous sentence and a correct placement scores as a miss."""
+    while off < len(text) and text[off].isspace():
+        off += 1
+    return max((s for s in starts if s <= off), default=starts[0])
+
+
 def run_eval(work_id="EN", backend="lexical", books=None):
     _vid, target = default_target(work_id)
     chapters = load_chapters(target)
@@ -39,7 +48,7 @@ def run_eval(work_id="EN", backend="lexical", books=None):
             # Gold = start of the sentence that *contains* the true tick. At
             # sentence granularity that is the best achievable target; scoring
             # against the raw mid-sentence tick would penalise correct snapping.
-            gold = max((s for s in starts if s <= ra.off), default=starts[0])
+            gold = gold_sentence_start(ch.ref_text, starts, ra.off)
             err = abs(pred - gold)
             err_by_tier.setdefault(ra.tier, []).append(err)
 
@@ -112,7 +121,7 @@ def run_gloss_eval(work_id="EN", backend="lexical", books=None):
         if mc is None:
             continue
         starts = [s for s, _ in split_sentences(mc.ref_text)] or [0]
-        gold = {a.citation: max((s for s in starts if s <= a.off), default=starts[0])
+        gold = {a.citation: gold_sentence_start(mc.ref_text, starts, a.off)
                 for a in mc.ref_anchors if a.tier != "chapter"}
         for a in align_chapter(ch, backend):
             if a.tier in ("chapter", "line"):

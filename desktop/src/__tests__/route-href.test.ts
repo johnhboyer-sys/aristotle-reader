@@ -46,11 +46,11 @@ describe('parseRouteHref', () => {
   it('rewrites /advanced to the live site, keeping the hash', () => {
     expect(parseRouteHref('/advanced#phrases')).toEqual({
       kind: 'external',
-      url: 'https://johnhboyer-sys.github.io/aristotle-reader/advanced#phrases',
+      url: 'https://aristotle.johnhboyer.com/advanced#phrases',
     });
     expect(parseRouteHref('/advanced')).toEqual({
       kind: 'external',
-      url: 'https://johnhboyer-sys.github.io/aristotle-reader/advanced',
+      url: 'https://aristotle.johnhboyer.com/advanced',
     });
   });
 

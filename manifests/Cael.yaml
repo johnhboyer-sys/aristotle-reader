@@ -28,6 +28,7 @@ english:
     dir: "cael-stocks"
     books: 4
     chapter_marker: part
+    anchors: "cael-stocks/anchors.yaml"
 
 mid_column_book_starts:
   - { book: 2, column: "283b" }

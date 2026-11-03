@@ -19,8 +19,9 @@ anchors are structural/interpolated and not counted.
 > `*_review.json` files hold the aligner's own `confidence`/`score`/`flags`, not
 > reviewer marks, and cover only the flagged subset (EN/Ross: 138 rows, not 1293).
 >
-> The one alignment work with a committed human correction is **Poet / Fyfe**
-> (`63d41aa2`, 8 word-exact pins). Human passes claimed below for SE and HA Book 1
+> The alignment works with committed human corrections are **Poet / Fyfe** (`63d41aa2`,
+> 8 word-exact pins) and **Phys / Hardie** (`1f063da134`, 2 anchor texts, 184a20/184a25);
+> since 2026-10-25 both are also rulings (`alignment-results/{fyfe,hardie}/rulings/`). Human passes claimed below for SE and HA Book 1
 > have no surviving artifact either way. Treat every other "reviewed" as machine-only.
 >
 > Outside alignment, the real hand-verification lives in `bonitz/` — the adjudicated
@@ -36,8 +37,52 @@ anchors are structural/interpolated and not counted.
 
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
+| De Caelo (`Cael`) | J. L. Stocks (Oxford, 1922) — primary | 40 | 654 | 654 confirmed | [index](../alignment-results/stocks/review/Cael/index.html) · Bk [1](../alignment-results/stocks/review/Cael/book-01.html) [2](../alignment-results/stocks/review/Cael/book-02.html) [3](../alignment-results/stocks/review/Cael/book-03.html) [4](../alignment-results/stocks/review/Cael/book-04.html) |
+| Topics (`Top`) | W. A. Pickard-Cambridge (Oxford, 1928) — primary | 83 | 992 | 989 confirmed · 2 reliable · 1 uncertain | [index](../alignment-results/pickard/review/Top/index.html) |
+| Parts of Animals (`PA`) | William Ogle (Oxford, 1882) — primary | 51 | 894 | 894 confirmed | [index](../alignment-results/ogle/review/PA/index.html) |
+| Generation of Animals (`GA`) | Arthur Platt (Oxford, 1910) — primary | 60 | 1162 | 1162 confirmed | [index](../alignment-results/platt/review/GA/index.html) |
+| Eudemian Ethics (`EE`) | J. Solomon (Oxford, 1915) — primary | 41 | 576 | 568 confirmed · 5 reliable · 3 uncertain | [index](../alignment-results/solomon/review/EE/index.html) |
+| Progression of Animals (`IA`) | A. S. L. Farquharson (Oxford, 1912) — primary | 19 | 139 | 139 confirmed | [index](../alignment-results/farquharson/review/IA/index.html) |
+| Movement of Animals (`MA`) | A. S. L. Farquharson (Oxford, 1912) — primary | 11 | 93 | 93 confirmed | [index](../alignment-results/farquharson/review/MA/index.html) |
+| On Length and Shortness of Life (`Long`) | G. R. T. Ross (Oxford, 1908) — primary | 6 | 38 | 38 confirmed | [index](../alignment-results/ross/review/Long/index.html) |
+| De Mirabilibus Auscultationibus (`Mirab`) | L. D. Dowdall (Oxford, 1909) — primary | 147 | 204 | 204 confirmed | [index](../alignment-results/dowdall/review/Mirab/index.html) |
+| De Mundo (`DM`) | E. S. Forster (Oxford, 1914) — primary | 7 | 163 | 163 confirmed | [index](../alignment-results/forster/review/DM/index.html) |
+| Mechanica (`Mech`) | E. S. Forster (Oxford, 1913) — primary | 35 | 176 | 176 confirmed | [index](../alignment-results/forster/review/Mech/index.html) |
+| Oeconomica (`Oec`) | E. S. Forster (Oxford, 1920) — primary | 8 | 166 | 164 confirmed · 2 uncertain | [index](../alignment-results/forster/review/Oec/index.html) |
+| Ventorum Situs (`Vent`) | E. S. Forster (Oxford, 1913) — primary | 1 | 11 | 11 confirmed | [index](../alignment-results/forster/review/Vent/index.html) |
+| De Audibilibus (`Aud`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 1 | 85 | 85 confirmed | [index](../alignment-results/loveday_forster/review/Aud/index.html) |
+| On Colours (`Col`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 6 | 121 | 121 confirmed | [index](../alignment-results/loveday_forster/review/Col/index.html) |
+| On Melissus, Xenophanes, and Gorgias (`MXG`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 6 | 100 | 100 confirmed | [index](../alignment-results/loveday_forster/review/MXG/index.html) |
+| Physiognomonics (`Phgn`) | T. Loveday and E. S. Forster (Oxford, 1913) — primary | 6 | 145 | 145 confirmed | [index](../alignment-results/loveday_forster/review/Phgn/index.html) |
+| De Virtutibus et Vitiis (`VV`) | J. Solomon (Oxford, 1915) — primary | 8 | 36 | 36 confirmed | [index](../alignment-results/solomon/review/VV/index.html) |
 | Categories (`Cat`) | E. M. Edghill (Oxford) — **partial spike** | ch 1–2 only | (not persisted) | n/a | [ch 1–2](../alignment-results/edghill/review/categories-ch1-2.html) |
 
+- **Cael / Stocks** — aligned 2026-10-25, the pilot of the batch runner
+  (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5 verify ×1, by Message Batches; models
+  chosen by the 2026-10-25 test, PR #168). Verified first by the recipe's first-word prompt
+  ($2.02), then again by John's line-bulk rule ($2.00), which beat it on both golds; the
+  bulk pass ships. It moved 309 of 654 ticks, median 19 chars, 20 by more than 60. No §5b
+  pass (measured no gain on NE gold). Wired via `sources/cael-stocks/anchors.yaml` (606
+  anchors, 1 unresolved `282b5`) + `anchors:` in `manifests/Cael.yaml`; stage2 PASS; 673 real
+  vs 2 interpolated gutter ticks. Not deployed; no human pass.
+- **Seventeen main translations, 2026-10-25** (Top, PA, GA, EE, IA, MA, Long, Mirab, DM,
+  Mech, Oec, Vent, Aud, Col, MXG, Phgn, VV) — the first batch run (`tools/batch_align.py`: haiku 5.5 gloss · opus 5.5
+  verify by the line-bulk rule, no §5b), $18.59 in all. EE and Top align their primaries
+  (Solomon, Pickard-Cambridge) with `ALIGN_SLOT=primary`; every other step as the recipe.
+  Wired via `sources/<dir>/anchors.yaml` + `anchors:` under `english.primary` (EE in both
+  `EE.yaml` and `EE-public.yaml`); stage2 PASS on each. Unresolved anchors: Top `106b35`; PA `687a5`, `687b5`, `696a5`; GA `720a35`, `727b5`; EE `1226b5`, `1249b5`; IA none; MA none; Long none; Mirab none; DM `392b35`; Mech none; Oec none; Vent none; Aud `803a5`, `803b5`.
+  Rendered gutter, real / interpolated (what the reader shows: chapter starts and placed
+  lines included, unresolved anchors dropped, so not the table's tick count): Top 1067 / 4; PA 940 / 4; GA 1205 / 2; EE 605 / 2; IA 159 / 0; MA 104 / 0; Long 44 / 0; Mirab 342 / 1; DM 167 / 1; Mech 208 / 0; Oec 168 / 0; Vent 12 / 0; Aud 83 / 2. Col, MXG, Phgn and VV first came out 14–35% stacked
+  (ticks collapsed at chapter starts): their English and Greek chapter divisions
+  disagreed. Loveday & Forster's OCR had each "Part N" at a page break, and VV's Greek
+  chapter list was unsourced and started six of eight chapters mid-sentence. Both were moved to
+  the true openings (Codex-checked against the Greek: 22 of 22 right) and the four re-run:
+  MXG, Phgn, VV 0% stacked; Col 7.4%, all but two in ch. 6, where the **OCR has lost the
+  passage rendering the chapter's opening** (Γίνεται δὲ καὶ τὰ τριχώματα…). Col needs a
+  re-read of the scan. Unresolved: Col `797b5`–`797b25` (the lost passage); Phgn `812a5`,
+  `813b5`. Rendered gutter, real / interpolated (what the reader shows: chapter starts and placed
+  lines included, unresolved anchors dropped, so not the table's tick count): Col 110 / 0; MXG 105 / 1; Phgn 147 / 2; VV 44 / 0.
+  Not deployed; no human pass.
 - **Cat / Edghill** — early spike, only Book/ch 1–2 rendered to a review page; no
   persisted map yet. Needs a full run (all chapters) before verification.
   *Note 2026-09-07:* the Categories work itself is live with Edghill as primary and a
@@ -50,18 +95,30 @@ anchors are structural/interpolated and not counted.
 
 ## ✅ Shipped live (machine-verified unless noted)
 
+
+> Meta, Juv and the five Beare works (rows after HA) were missing from this table until
+> 2026-10-25. Each is wired in its manifest and was aligned in June (`0f54bd5bbd`,
+> `222531ef3d`); their deploy state was not re-checked when the rows were added.
+
 | Work | Translation | Chapters | Real ticks | Confidence | Review |
 |------|-------------|---------:|-----------:|------------|--------|
-| Nicomachean Ethics (`EN`) | W. D. Ross (secondary) | 116 | 1293 | 1288 confirmed · 5 uncertain | [Bk 1–10](../alignment-results/ross/review/) |
-| Politics (`Pol`) | B. Jowett (public primary) | 102 | 1555 | 1538 confirmed · 13 uncertain · 4 reliable | [Bk 1–8](../alignment-results/jowett/review/) |
-| Prior Analytics (`APr`) | A. J. Jenkinson (public primary) | 73 | 791 | 790 confirmed · 1 reliable | [Bk 1](../alignment-results/jenkinson/review/book-01.html) · [Bk 2](../alignment-results/jenkinson/review/book-02.html) · [index](../alignment-results/jenkinson/index.html) |
-| Physics (`Phys`) | R. P. Hardie & R. K. Gaye (public primary) | 71 | 1200 | 1199 confirmed · 1 reliable | [index](../alignment-results/hardie/index.html) · Bk [1](../alignment-results/hardie/review/book-01.html) [2](../alignment-results/hardie/review/book-02.html) [3](../alignment-results/hardie/review/book-03.html) [4](../alignment-results/hardie/review/book-04.html) [5](../alignment-results/hardie/review/book-05.html) [6](../alignment-results/hardie/review/book-06.html) [7](../alignment-results/hardie/review/book-07.html) [8](../alignment-results/hardie/review/book-08.html) |
-| Poetics (`Poet`) | W. H. Fyfe (Loeb, 1932) — primary | 26 | 233 | 232 confirmed · 1 uncertain | [Bk 1](../alignment-results/fyfe/review/book-01.html) · [index](../alignment-results/fyfe/index.html) |
-| Meteorology (`Mete`) | E. W. Webster (Oxford, 1923) | 41 | 773 | 773 confirmed | [Bk 1](../alignment-results/webster/review/book-01.html) · [Bk 2](../alignment-results/webster/review/book-02.html) · [Bk 3](../alignment-results/webster/review/book-03.html) · [Bk 4](../alignment-results/webster/review/book-04.html) · [index](../alignment-results/webster/index.html) |
-| On Generation and Corruption (`GC`) | H. H. Joachim (Oxford, 1922) | 21 | 362 | 362 confirmed | [Bk 1](../alignment-results/joachim/review/book-01.html) · [Bk 2](../alignment-results/joachim/review/book-02.html) · [index](../alignment-results/joachim/index.html) |
-| Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/book-01.html) · [index](../alignment-results/pickard/index.html) |
-| De Anima (`DA`) | J. A. Smith (Oxford, 1931) | 30 | 460 | 454 confirmed · 6 reliable/uncertain | [Bk 1](../alignment-results/smith/review/book-01.html) · [Bk 2](../alignment-results/smith/review/book-02.html) · [Bk 3](../alignment-results/smith/review/book-03.html) · [index](../alignment-results/smith/index.html) |
-| History of Animals (`HA`) | D'Arcy W. Thompson (public primary) | 227 | 2067 | 2060 confirmed · 7 reliable | [index](../alignment-results/thompson/index.html) · Bk [1](../alignment-results/thompson/review/book-01.html) [2](../alignment-results/thompson/review/book-02.html) [3](../alignment-results/thompson/review/book-03.html) [4](../alignment-results/thompson/review/book-04.html) [5](../alignment-results/thompson/review/book-05.html) [6](../alignment-results/thompson/review/book-06.html) [7](../alignment-results/thompson/review/book-07.html) [8](../alignment-results/thompson/review/book-08.html) [9](../alignment-results/thompson/review/book-09.html) |
+| Nicomachean Ethics (`EN`) | W. D. Ross (secondary) | 116 | 1293 | 1288 confirmed · 5 uncertain | [Bk 1–10](../alignment-results/ross/review/EN/) |
+| Politics (`Pol`) | B. Jowett (public primary) | 102 | 1555 | 1538 confirmed · 13 uncertain · 4 reliable | [Bk 1–8](../alignment-results/jowett/review/Pol/) |
+| Prior Analytics (`APr`) | A. J. Jenkinson (public primary) | 73 | 791 | 790 confirmed · 1 reliable | [Bk 1](../alignment-results/jenkinson/review/APr/book-01.html) · [Bk 2](../alignment-results/jenkinson/review/APr/book-02.html) · [index](../alignment-results/jenkinson/review/APr/index.html) |
+| Physics (`Phys`) | R. P. Hardie & R. K. Gaye (public primary) | 71 | 1200 | 1199 confirmed · 1 reliable | [index](../alignment-results/hardie/review/Phys/index.html) · Bk [1](../alignment-results/hardie/review/Phys/book-01.html) [2](../alignment-results/hardie/review/Phys/book-02.html) [3](../alignment-results/hardie/review/Phys/book-03.html) [4](../alignment-results/hardie/review/Phys/book-04.html) [5](../alignment-results/hardie/review/Phys/book-05.html) [6](../alignment-results/hardie/review/Phys/book-06.html) [7](../alignment-results/hardie/review/Phys/book-07.html) [8](../alignment-results/hardie/review/Phys/book-08.html) |
+| Poetics (`Poet`) | W. H. Fyfe (Loeb, 1932) — primary | 26 | 233 | 232 confirmed · 1 uncertain | [Bk 1](../alignment-results/fyfe/review/Poet/book-01.html) · [index](../alignment-results/fyfe/review/Poet/index.html) |
+| Meteorology (`Mete`) | E. W. Webster (Oxford, 1923) | 41 | 773 | 773 confirmed | [Bk 1](../alignment-results/webster/review/Mete/book-01.html) · [Bk 2](../alignment-results/webster/review/Mete/book-02.html) · [Bk 3](../alignment-results/webster/review/Mete/book-03.html) · [Bk 4](../alignment-results/webster/review/Mete/book-04.html) · [index](../alignment-results/webster/review/Mete/index.html) |
+| On Generation and Corruption (`GC`) | H. H. Joachim (Oxford, 1922) | 21 | 362 | 362 confirmed | [Bk 1](../alignment-results/joachim/review/GC/book-01.html) · [Bk 2](../alignment-results/joachim/review/GC/book-02.html) · [index](../alignment-results/joachim/review/GC/index.html) |
+| Sophistical Refutations (`SE`) | W. A. Pickard-Cambridge (Oxford, 1928) | 34 | 316 | 316 confirmed | [Bk 1](../alignment-results/pickard/review/SE/book-01.html) · [index](../alignment-results/pickard/review/SE/index.html) |
+| De Anima (`DA`) | J. A. Smith (Oxford, 1931) | 30 | 460 | 454 confirmed · 6 reliable/uncertain | [Bk 1](../alignment-results/smith/review/DA/book-01.html) · [Bk 2](../alignment-results/smith/review/DA/book-02.html) · [Bk 3](../alignment-results/smith/review/DA/book-03.html) · [index](../alignment-results/smith/review/DA/index.html) |
+| History of Animals (`HA`) | D'Arcy W. Thompson (public primary) | 227 | 2067 | 2060 confirmed · 7 reliable | [index](../alignment-results/thompson/review/HA/index.html) · Bk [1](../alignment-results/thompson/review/HA/book-01.html) [2](../alignment-results/thompson/review/HA/book-02.html) [3](../alignment-results/thompson/review/HA/book-03.html) [4](../alignment-results/thompson/review/HA/book-04.html) [5](../alignment-results/thompson/review/HA/book-05.html) [6](../alignment-results/thompson/review/HA/book-06.html) [7](../alignment-results/thompson/review/HA/book-07.html) [8](../alignment-results/thompson/review/HA/book-08.html) [9](../alignment-results/thompson/review/HA/book-09.html) |
+| Metaphysics (`Meta`) | W. D. Ross (secondary; primary in the public build) | 142 | 1704 | 1704 confirmed | [index](../alignment-results/ross/review/Meta/index.html) — **the public build read none of the alignment until `anchors:` was added 2026-10-25 (not yet deployed)** |
+| On Youth, Old Age, Life and Death, and Respiration (`Juv`) | G. R. T. Ross (primary) | 27 | 182 | 182 confirmed | [index](../alignment-results/ross/review/Juv/index.html) |
+| Sense and Sensibilia (`Sens`) | J. I. Beare (primary) | 7 | 185 | 185 confirmed | [index](../alignment-results/beare/review/Sens/index.html) |
+| On Memory (`Mem`) | J. I. Beare (primary) | 2 | 58 | 58 confirmed | [index](../alignment-results/beare/review/Mem/index.html) |
+| On Sleep (`Somn`) | J. I. Beare (primary) | 3 | 68 | 67 confirmed · 1 uncertain | [index](../alignment-results/beare/review/Somn/index.html) |
+| On Dreams (`Insomn`) | J. I. Beare (primary) | 3 | 59 | 59 confirmed | [index](../alignment-results/beare/review/Insomn/index.html) |
+| On Divination in Sleep (`DivSomn`) | J. I. Beare (primary) | 2 | 29 | 29 confirmed | [index](../alignment-results/beare/review/DivSomn/index.html) |
 
 - **Mete / Webster** — aligned 2026-06-24 (sonnet gloss · opus verify ×1 · **two-tier
   targeted correction**). 773 real ticks, all confirmed; wired via
@@ -114,7 +171,7 @@ anchors are structural/interpolated and not counted.
   `english.primary` in `manifests/DA.yaml`. Wallace secondary stays Tier 0. Correction
   move-size vs verify-once: median 0 / mean 4.3 / max 69 chars, 0 moves >100. stage2 PASS,
   key_failures=0; reader gutter 486 real / 3 interp (99.4%). **Needs a human review pass**
-  (`smith/review/book-0{1,2,3}.html`) — still outstanding; it shipped without one.
+  (`smith/review/DA/book-0{1,2,3}.html`) — still outstanding; it shipped without one.
   **shipped (verified 2026-09-07):** deployed 2026-07-08 as PR #22 "De Anima / J. A. Smith
   Tier 2 gloss alignment", `/DA/book/1/` live-verified (`DEPLOY-STATUS.md`, 2026-07-08 entry).
   `manifests/DA.yaml` `english.primary.anchors: da-smith/anchors.yaml`;
@@ -198,13 +255,21 @@ anchors are structural/interpolated and not counted.
 
 ## How to verify a work
 
-1. Open each `review/book-NN.html` in a browser.
-2. For each tick decide **Spot on** / **Early** (matching content is *after* the ▸) /
-   **Late** (it's *before* the ▸); add notes as needed. Verdicts auto-save in the browser.
-3. Click **Export JSON** to save the verdicts; the Early/Late ones drive a re-gather +
-   re-verify pass on those chapters (`tools/verify_gather.py <book> 4000 <chapters>`).
-4. **Commit the export.** Step 2's verdicts live in browser storage only — if the export
-   isn't saved into the repo, the pass leaves no trace and the work has to be redone. This
-   is why the SE and HA Book 1 passes can't be confirmed today: nothing was committed, so
-   there is no way to tell which ticks a human actually looked at.
-5. When clean, do Phase B wiring (see each work's note above) + commit/deploy.
+1. Open `alignment-results/<vid>/review/<WORK>/index.html` and each book page in a browser
+   (phone works). Every column and five-line tick shows its Greek, gloss and the translation
+   with ◀ at the placement. Chapter-start ticks are not shown: the Greek fixes them.
+2. For each tick: **Spot on**, **Early** or **Late**, and for a tick that is off, **click the
+   word where it belongs**. Verdicts and clicks save in the browser as you go.
+3. **Export JSON** (one file per book: `review-<WORK>-<vid>-bookNN.json`).
+4. Import it: `[ALIGN_SLOT=primary] uv run python tools/apply_review.py <WORK> <export.json>...`.
+   That writes your rulings to `alignment-results/<vid>/rulings/<WORK>.json` — **commit it**:
+   browser storage is not a record (the SE and HA Book 1 passes left none). A clicked word pins
+   the tick there word-exact; Spot on pins it where it sits; Early/Late without a click is
+   recorded and listed as still needing a place. Nothing is written if a ruling is on a
+   chapter-start tick, is not in the shipped map, or reads out of order with another.
+5. Apply: pass 2 for the books it names, `persist_book`, `make_index`, `gloss_map_to_anchors`
+   (primaries), `all --work` (the importer prints the commands). Every later pass 2 re-applies
+   the rulings, and a machine tick that would sit past one gives way to it, so no re-run can
+   undo them. `gloss_map_to_anchors` refuses to overwrite an `anchors.yaml` holding hand edits.
+6. Known gap: a primary translation's reader cuts columns by estimate, so a ruling on a
+   column's first line does not reach it yet (the importer says so).

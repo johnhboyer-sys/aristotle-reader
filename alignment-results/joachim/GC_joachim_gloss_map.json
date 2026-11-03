@@ -706,7 +706,7 @@
   ]
  },
  "1:2": {
-  "ross_len": 13819,
+  "ross_len": 13818,
   "anchors": [
    {
     "citation": "315a26",
@@ -1288,7 +1288,7 @@
    },
    {
     "citation": "316a24",
-    "offset": 6290,
+    "offset": 6289,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1296,7 +1296,7 @@
    },
    {
     "citation": "316a25",
-    "offset": 6413,
+    "offset": 6412,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.448,
@@ -1306,7 +1306,7 @@
    },
    {
     "citation": "316a26",
-    "offset": 6524,
+    "offset": 6523,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1314,7 +1314,7 @@
    },
    {
     "citation": "316a27",
-    "offset": 6625,
+    "offset": 6624,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1322,7 +1322,7 @@
    },
    {
     "citation": "316a28",
-    "offset": 6714,
+    "offset": 6713,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1330,7 +1330,7 @@
    },
    {
     "citation": "316a29",
-    "offset": 6796,
+    "offset": 6795,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1338,7 +1338,7 @@
    },
    {
     "citation": "316a30",
-    "offset": 6914,
+    "offset": 6913,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.4154,
@@ -1348,7 +1348,7 @@
    },
    {
     "citation": "316a31",
-    "offset": 7021,
+    "offset": 7020,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1356,7 +1356,7 @@
    },
    {
     "citation": "316a32",
-    "offset": 7127,
+    "offset": 7126,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1364,7 +1364,7 @@
    },
    {
     "citation": "316a33",
-    "offset": 7228,
+    "offset": 7227,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1372,7 +1372,7 @@
    },
    {
     "citation": "316a34",
-    "offset": 7314,
+    "offset": 7313,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1380,7 +1380,7 @@
    },
    {
     "citation": "316b1",
-    "offset": 7410,
+    "offset": 7409,
     "tier": "column",
     "confidence": "confirmed",
     "score": 0.4043,
@@ -1390,7 +1390,7 @@
    },
    {
     "citation": "316b2",
-    "offset": 7498,
+    "offset": 7497,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1398,7 +1398,7 @@
    },
    {
     "citation": "316b3",
-    "offset": 7606,
+    "offset": 7605,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1406,7 +1406,7 @@
    },
    {
     "citation": "316b4",
-    "offset": 7718,
+    "offset": 7717,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1414,7 +1414,7 @@
    },
    {
     "citation": "316b5",
-    "offset": 7812,
+    "offset": 7811,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.3555,
@@ -1424,7 +1424,7 @@
    },
    {
     "citation": "316b6",
-    "offset": 7899,
+    "offset": 7898,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1432,7 +1432,7 @@
    },
    {
     "citation": "316b7",
-    "offset": 7991,
+    "offset": 7990,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1440,7 +1440,7 @@
    },
    {
     "citation": "316b8",
-    "offset": 8082,
+    "offset": 8081,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1448,7 +1448,7 @@
    },
    {
     "citation": "316b9",
-    "offset": 8176,
+    "offset": 8175,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1456,7 +1456,7 @@
    },
    {
     "citation": "316b10",
-    "offset": 8242,
+    "offset": 8241,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.5732,
@@ -1466,7 +1466,7 @@
    },
    {
     "citation": "316b11",
-    "offset": 8374,
+    "offset": 8373,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1474,7 +1474,7 @@
    },
    {
     "citation": "316b12",
-    "offset": 8476,
+    "offset": 8475,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1482,7 +1482,7 @@
    },
    {
     "citation": "316b13",
-    "offset": 8588,
+    "offset": 8587,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1490,7 +1490,7 @@
    },
    {
     "citation": "316b14",
-    "offset": 8686,
+    "offset": 8685,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1498,7 +1498,7 @@
    },
    {
     "citation": "316b15",
-    "offset": 8783,
+    "offset": 8782,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.5683,
@@ -1508,7 +1508,7 @@
    },
    {
     "citation": "316b16",
-    "offset": 8869,
+    "offset": 8868,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1516,7 +1516,7 @@
    },
    {
     "citation": "316b17",
-    "offset": 8959,
+    "offset": 8958,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1524,7 +1524,7 @@
    },
    {
     "citation": "316b18",
-    "offset": 9044,
+    "offset": 9043,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1532,7 +1532,7 @@
    },
    {
     "citation": "316b19",
-    "offset": 9123,
+    "offset": 9122,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1540,7 +1540,7 @@
    },
    {
     "citation": "316b20",
-    "offset": 9212,
+    "offset": 9211,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.3556,
@@ -1550,7 +1550,7 @@
    },
    {
     "citation": "316b21",
-    "offset": 9307,
+    "offset": 9306,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1558,7 +1558,7 @@
    },
    {
     "citation": "316b22",
-    "offset": 9401,
+    "offset": 9400,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1566,7 +1566,7 @@
    },
    {
     "citation": "316b23",
-    "offset": 9492,
+    "offset": 9491,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1574,7 +1574,7 @@
    },
    {
     "citation": "316b24",
-    "offset": 9600,
+    "offset": 9599,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1582,7 +1582,7 @@
    },
    {
     "citation": "316b25",
-    "offset": 9676,
+    "offset": 9675,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.3609,
@@ -1592,7 +1592,7 @@
    },
    {
     "citation": "316b26",
-    "offset": 9747,
+    "offset": 9746,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1600,7 +1600,7 @@
    },
    {
     "citation": "316b27",
-    "offset": 9828,
+    "offset": 9827,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1608,7 +1608,7 @@
    },
    {
     "citation": "316b28",
-    "offset": 9927,
+    "offset": 9926,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1616,7 +1616,7 @@
    },
    {
     "citation": "316b29",
-    "offset": 10024,
+    "offset": 10023,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1624,7 +1624,7 @@
    },
    {
     "citation": "316b30",
-    "offset": 10097,
+    "offset": 10096,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.4392,
@@ -1634,7 +1634,7 @@
    },
    {
     "citation": "316b31",
-    "offset": 10207,
+    "offset": 10206,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1642,7 +1642,7 @@
    },
    {
     "citation": "316b32",
-    "offset": 10292,
+    "offset": 10291,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1650,7 +1650,7 @@
    },
    {
     "citation": "316b33",
-    "offset": 10375,
+    "offset": 10374,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1658,7 +1658,7 @@
    },
    {
     "citation": "316b34",
-    "offset": 10475,
+    "offset": 10474,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1666,7 +1666,7 @@
    },
    {
     "citation": "317a1",
-    "offset": 10575,
+    "offset": 10574,
     "tier": "column",
     "confidence": "confirmed",
     "score": 0.2427,
@@ -1676,7 +1676,7 @@
    },
    {
     "citation": "317a2",
-    "offset": 10651,
+    "offset": 10650,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1684,7 +1684,7 @@
    },
    {
     "citation": "317a3",
-    "offset": 10729,
+    "offset": 10728,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1692,7 +1692,7 @@
    },
    {
     "citation": "317a4",
-    "offset": 10803,
+    "offset": 10802,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1700,7 +1700,7 @@
    },
    {
     "citation": "317a5",
-    "offset": 10904,
+    "offset": 10903,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.5196,
@@ -1710,7 +1710,7 @@
    },
    {
     "citation": "317a6",
-    "offset": 11030,
+    "offset": 11029,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1718,7 +1718,7 @@
    },
    {
     "citation": "317a7",
-    "offset": 11156,
+    "offset": 11155,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1726,7 +1726,7 @@
    },
    {
     "citation": "317a8",
-    "offset": 11339,
+    "offset": 11338,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1734,7 +1734,7 @@
    },
    {
     "citation": "317a9",
-    "offset": 11478,
+    "offset": 11477,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1742,7 +1742,7 @@
    },
    {
     "citation": "317a10",
-    "offset": 11647,
+    "offset": 11646,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.4285,
@@ -1752,7 +1752,7 @@
    },
    {
     "citation": "317a11",
-    "offset": 11740,
+    "offset": 11739,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1760,7 +1760,7 @@
    },
    {
     "citation": "317a12",
-    "offset": 11841,
+    "offset": 11840,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1768,7 +1768,7 @@
    },
    {
     "citation": "317a13",
-    "offset": 11937,
+    "offset": 11936,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1776,7 +1776,7 @@
    },
    {
     "citation": "317a14",
-    "offset": 12043,
+    "offset": 12042,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1784,7 +1784,7 @@
    },
    {
     "citation": "317a15",
-    "offset": 12137,
+    "offset": 12136,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.3463,
@@ -1794,7 +1794,7 @@
    },
    {
     "citation": "317a16",
-    "offset": 12230,
+    "offset": 12229,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1802,7 +1802,7 @@
    },
    {
     "citation": "317a17",
-    "offset": 12356,
+    "offset": 12355,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1810,7 +1810,7 @@
    },
    {
     "citation": "317a18",
-    "offset": 12461,
+    "offset": 12460,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1818,7 +1818,7 @@
    },
    {
     "citation": "317a19",
-    "offset": 12578,
+    "offset": 12577,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1826,7 +1826,7 @@
    },
    {
     "citation": "317a20",
-    "offset": 12683,
+    "offset": 12682,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.358,
@@ -1836,7 +1836,7 @@
    },
    {
     "citation": "317a21",
-    "offset": 12767,
+    "offset": 12766,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1844,7 +1844,7 @@
    },
    {
     "citation": "317a22",
-    "offset": 12843,
+    "offset": 12842,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1852,7 +1852,7 @@
    },
    {
     "citation": "317a23",
-    "offset": 12936,
+    "offset": 12935,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1860,7 +1860,7 @@
    },
    {
     "citation": "317a24",
-    "offset": 13017,
+    "offset": 13016,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1868,7 +1868,7 @@
    },
    {
     "citation": "317a25",
-    "offset": 13120,
+    "offset": 13119,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.4032,
@@ -1878,7 +1878,7 @@
    },
    {
     "citation": "317a26",
-    "offset": 13243,
+    "offset": 13242,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1886,7 +1886,7 @@
    },
    {
     "citation": "317a27",
-    "offset": 13351,
+    "offset": 13350,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1894,7 +1894,7 @@
    },
    {
     "citation": "317a28",
-    "offset": 13420,
+    "offset": 13419,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1902,7 +1902,7 @@
    },
    {
     "citation": "317a29",
-    "offset": 13526,
+    "offset": 13525,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -1910,7 +1910,7 @@
    },
    {
     "citation": "317a30",
-    "offset": 13628,
+    "offset": 13627,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.4103,

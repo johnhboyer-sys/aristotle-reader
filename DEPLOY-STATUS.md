@@ -1,6 +1,6 @@
 # Deploy Status
 
-Live site: https://johnhboyer-sys.github.io/aristotle-reader/ (custom domain aristotle.lyceum.institute pending — DNS/cert not yet live, do not link it).
+Live site: https://aristotle.johnhboyer.com/ (since 2026-10-21; DNS on Cloudflare, CNAME `aristotle` → `johnhboyer-sys.github.io`, proxy off). The old https://johnhboyer-sys.github.io/aristotle-reader/ redirects there, path and query kept, for as long as the custom domain stays set in Settings → Pages.
 Deploy recipe: build `app/dist` (`PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
 
 **The recipe is now `npm run deploy` (`scripts/deploy-gh-pages.mjs`); rehearse with `npm run deploy:dry`.**
@@ -12,6 +12,269 @@ Flags: `--dry-run --remote=<url> --dist=<path> --allow-data-deletions[=<prefix>,
 The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden); `PUBLIC_HIDE_PRIVATE` is a stale name that appears in older entries below and sets nothing. `app/src/pages/bonitz.astro` was removed on 2026-09-03, so the build no longer emits `app/dist/bonitz` or `_astro/bonitz.*.css`; entries below that say "bonitz.astro moved aside" describe the old ritual. `/bonitz/` stays a 404 on live and the post-deploy check still asserts it.
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
+
+## 2026-10-26 — DEPLOYED: Bekker alignment of 17 works, rulings (PRs #168–#175)
+
+`gh-pages 100ed975 → 17ab83bd`, source `origin/main` `c243c40b9b` (the #175 merge). John said
+"merge in that order" and then "deploy": #173, #174, #168, #169, #171, #172, #175, each updated from
+main and green before merging, the stacked ones retargeted to main by hand. #170 was closed: #169
+carried its one file unchanged. `npm run deploy:dry`, then `npm run deploy -- --verify`.
+
+**What shipped:** Bekker gutters for the 17 main translations that had none (Top, PA, GA, EE, IA,
+MA, Long, Mirab, DM, Mech, Oec, Vent, Aud, Col, MXG, Phgn, VV), by Message Batches (Haiku 5.5
+glosses, an Opus 5.5 check by John's line-bulk rule). The rest: De Caelo re-checked by that rule; Meta's public
+build now reads its anchors (all 14 books); VV's chapter list now follows Solomon's; the Col/MXG/Phgn
+"Part" markers moved to the paragraph that renders each Greek chapter's opening; the two live
+misplacements fixed (Phys 237b20 686 → 1645, now after 237b15 at 1173; APr 54b10 132 → 982).
+Committed rulings (`alignment-results/<vid>/rulings/`) carry Poet's eight pins and Phys's June
+fixes; Poet's data is unchanged.
+
+**Build:** full `build:public` from main (Node 22.23.1): 41 works, stage2 ok throughout, preflight
+ok, shared LSJ verified (63,261 keys), 6,586 pages. The first attempt died at its first step:
+Finder wrote a `.DS_Store` into `build/dist` while it was being removed (ENOTEMPTY); the re-run was
+clean.
+
+**Gates:** link integrity **0 broken** (6,589 / 565,831 / 434,070). Leak check at baseline (Rackham
+2, `EN/footnotes.json`, `EN/manifest.json`; positive control 1,621; EE now among the 29 gated book
+files, clean). Shard gate: 139 indexes, 3,838,861 postings. Dangling-reference gate: 5 removed, 0
+referenced.
+
+**Deploy diff:** 1,124 files — 4 A / 1,115 M / 4 D / 1 R. Data: the book files of the works above,
+`VV/chapters.json`, the `search/` files of Col, MXG, Phgn and VV, 202 search shards, 118 ngrams,
+285 lemma pages, 2 reports. The five `_astro` bundles that changed differ only in Svelte's scoped
+class names (`svelte-1k6ope4` → `svelte-zaamrj` and so on, the same in JS and CSS): Svelte hashes the
+component's path, and the 10-21 build ran in a cloud checkout. 0 deletions under `data/`.
+
+**Live-verified:** the script's URL set (old bundles 404 after about 2 minutes; `/bonitz/` 404).
+Fetched from live: Phys book 6 segment 13 reads lines 1, 5, 10, 15, 20, 23 at 0, 205, 654, 1173,
+1645, 1974. Meta book 1 (public) has 189 ticks, 150 of the old 178 moved off the proportional
+cut; Top book 1 has 144, 116 of 133 moved.
+
+## 2026-10-21 — DEPLOYED: custom domain aristotle.johnhboyer.com (PR #167)
+
+`gh-pages ca588f1f → 100ed975`, source `origin/main` `a3bb66591d` (the #167 merge). Run from a
+cloud session (John said go): an app-only build whose `data/` was copied from the live `gh-pages`
+tree, so the data matched live file for file; `npm run deploy:dry`, then `npm run deploy` without
+`--verify` (the session could not reach either host). It replaces the aristotle.lyceum.institute
+plan: Pages takes one custom domain.
+
+**What shipped:** the site at the root of the new domain. `base: '/'`, `site` and `robots.txt` on
+the new origin, `app/public/CNAME`, `LIVE_BASE` and the desktop app's live link moved;
+`check-links.mjs` `BASE` is `''` and its require-the-base rule applies only when there is a base (a
+leftover `/aristotle-reader/` link fails as a missing target). Before the deploy: the Cloudflare
+CNAME (DNS only, so GitHub can issue the certificate) and `johnhboyer.com` verified as a Pages domain
+on John's GitHub account (TXT `_github-pages-challenge-johnhboyer-sys`).
+
+**Gates:** link integrity **0 broken** (6,589 / 565,831 / 434,070). Leak check at baseline (Rackham
+2, `EN/footnotes.json`, `EN/manifest.json`; positive control 1,621). Shard gate: 139 indexes,
+3,838,862 postings. Dangling-reference gate: 15 removed bundles, 0 referenced.
+
+**Deploy diff:** 6,614 files — 9 A / 6,590 M / 8 D / 7 R. Every page (links lose the prefix), the
+bundles with `BASE_URL` baked in, `robots.txt`, the sitemaps, `sw.js`; added `CNAME`. 0 changes and
+0 deletions under `data/`.
+
+**Live-verified (by John, in a browser):** the reader at https://aristotle.johnhboyer.com/ over
+HTTPS, search returns hits, and the old deep link
+`johnhboyer-sys.github.io/aristotle-reader/EN/book/1/?loc=1094a:5` lands on the same page and line at
+the new address. Readers' saved settings (theme, last book and line, recent works, translation and
+font choices) live in localStorage, which belongs to an origin, so they start fresh once here.
+
+## 2026-10-19 (night) — DEPLOYED: review follow-ups (PRs #160–#166)
+
+`gh-pages d73941fb → ca588f1f`, source `origin/main` `4b63c9fab8` (the #166 merge).
+`npm run deploy:dry`, then `npm run deploy -- --verify` (John said go).
+
+**What shipped:** the seven follow-ups to the reviews of #159, each Codex-reviewed with its
+findings fixed. #160 `english_words` drops footnote and sidenote markers in one pass, as the
+browser does. #161 the search page reads the `?q=` its SearchAction advertises (Greek script to
+the Greek box, else English; an explicit `g`/`e` wins). #162 the Isagoge's 16 chapter starts on
+Busse heading lines snap to the next line, so it gets all 17 chapter bounds; preflight now checks
+every work's bounds against `chapters.json`. #163 the reader never cuts a footnote or sidenote
+marker in two, and glued footnotes each get a button. #164 a star footnote label stays out of the
+emphasis pass. #165 the text glued to a footnote takes an entity whole. #166 Mirabilia chapters no
+longer share a start; preflight refuses a shared start. #164–#166 were stacked on #162/#163 and
+retargeted to main after those merged (the repo does not delete merged branches, so GitHub does
+not retarget). Main after all seven: shared 641, pipeline 649, scripts 83, app 89.
+
+**Build:** full `build:public` from main (Node 22.23.1), about 4 minutes: 41 works, stage2 PASS
+throughout, stage 9 shards, preflight ok (with the new chapter-bounds gate), shared LSJ verified,
+6,586 pages. Isa `chapter_bounds` 17 (was 1); Mirab 178.
+
+**Gates:** link integrity **0 broken** (6,589 / 565,831 / 434,070). Leak check at baseline (Rackham
+2, `EN/footnotes.json`, `EN/manifest.json`; positive control 1,621; gated shards public slots only).
+Shard gate: 139 indexes, 3,838,862 postings. Dangling-reference gate: 6 removed, 0 referenced.
+
+**Deploy diff:** 1,059 files — 3 A / 1,050 M / 3 D / 3 R. Traced before pushing: every content
+change is the Isagoge's `offsets.json` or the Mirabilia — 520 `Mirab/english` shard postings and
+263 `data/lemmata` pages whose Mirabilia hits moved chapter (e.g. ablabes: ch. 155 846a6–21 → ch.
+154 846a9–16), plus Mirabilia ngrams. Every other work's four `search/` files changed bytes only
+(identical as JSON). 0 deletions under `data/`.
+
+**Live-verified:** the script's URL set (new `Reader.C2ANQaQ-.js` 200; old bundles and `/bonitz/`
+404). In a browser: `/search/?q=happiness` fills the English box and gives 484 hits; Greek
+`logos` in the Isagoge shows hits under chapters 2, 3, 6 and 7 instead of one block; English
+"water" in the Mirabilia gives 38 hits in 27 chapters, none repeated; no console errors.
+
+## 2026-10-19 (evening) — DEPLOYED: word forms, search shards, chapter pages, searches in the address (PR #159)
+
+`gh-pages 84ddf0b8 → d73941fb`, source `origin/main` `5197f6fb3f` (the #159 merge). John ran
+`npm run deploy -- --dist=/Users/johnboyer/Developer/aristotle-worktrees/search-integration/app/dist --verify`
+from the main checkout: the merge's tree is identical to `claude/search-integration` `3c69e66f59`
+(0-line diff), so that worktree's full build was main's build and no second rebuild was needed.
+
+**What shipped:** #159 joins four branches written in parallel sessions (#158 closed into it).
+English "any form of this word" (default on; "means" never expanded, John's ruling) and Latin
+ligature/accent folding in both stage 6 and the browser; corpus stage 9 search shards
+(`build/dist/search-shards/`, by a word's first two letters) with the per-work fallback, `meta.json`
+cut to `{id, book, column}`, the no-positions English fallback removed; results page with per-word
+English counts, a works chip row, chapter-aligned pages (`search-pages.ts`), an aria-live status;
+the whole search in the address (`search-url.ts`, incl. `ef` and `wf`). Explainer:
+https://claude.ai/artifact/SSEFY1J3RjSyusGg2mZ2NH
+
+**Reviews:** Codex GPT-6.1-Sol on each branch, on #158 as it stood (constructor/inherited key,
+theses→these, stomach→stomachs: fixed), and on the joined diff (three late-result races: fixed, each
+with a test that failed first). Reviews in `~/.claude/reviews/review-158.md` and
+`review-search-integration-1.md`.
+
+**Build:** full `build:public` on the integration branch (Node 22.23.1): 41 works, stage2 PASS
+throughout, stage 9 (lemma 302 / form 378 / English 366 shards; English from 57 sources), preflight
+ok (now compares every shard posting with its per-work index), shared LSJ verified, 6,586 pages.
+Stage 8 took far longer than usual: the disk was nearly full (4.8 GB free) and shared with other
+sessions' builds. Tests: shared 624, pipeline 630, desktop 464 (21 skipped), app 89, scripts 83.
+
+**Gates:** link integrity **0 broken** (6,589 pages / 565,831 links / 434,070 anchors). Leak check at
+baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`);
+positive control "Aristotle" 1,621; gated shards carry only the public slots (Cat, Int: english,
+overlay-owen, secondary; Pol: english, secondary). New shard gate: 139 per-work indexes, 3,838,862
+postings compared. Translation-index gate: 117 book files, 16 translations beyond the primary.
+Dangling-reference gate: 8 removed bundles, 0 referenced; 8/8 added referenced.
+
+**Deploy diff:** 1,519 files — 1,053 A / 458 M / 5 D / 3 R. Added: 1,048 under
+`data/search-shards/` and 5 `_astro` bundles. Changed: every work's `search/` files (the fold and the
+cut `meta.json`), 119 `data/ngrams`, 5 `data/reports`, pages naming the new bundles. 0 deletions under
+`data/`, nothing to restore.
+
+**Live-verified:** the script's URL set as expected after about 2 minutes (new `Reader.BTnRD2JO.js`
+200; old bundles and `/bonitz/` 404). In a browser on live: `/search/?e=happiness&wf=EN` gives 349
+hits, Rackham 97 / Ostwald 92 / Peters 84 / Ross 76, fetched from `search-shards/index.json` and
+`english/ha.json` with no per-work English index; "coming-to-be" 894; "men" in the NE as typed
+(`ef=0`) 1,019; the reader link from a result (`hle=happiness&hlf=any`) marks 46 words in Book I;
+no console errors. Counts now go by matched word, so they run higher than this morning's (104 for
+"happiness" in the NE).
+
+## 2026-10-19 — DEPLOYED: English search across every translation (PRs #156, #157)
+
+`gh-pages 3c5e21be → 84ddf0b8`, source `origin/main` `ee2489c9be` (the #157 merge; #156 is
+`d1588fe894`). `npm run deploy:dry`, then `npm run deploy -- --verify` (John asked for the deploy).
+
+**What shipped:** #156 — an English query asks every translation a work carries, not only the
+primary (16 more translations in 11 works), and says whose words each hit is in. #157 — hyphenated
+words are found ("coming-to-be" is three words to the index), `*ness` works in English, the reader
+marks exactly the words search found, and English marks appear in the default translation without
+switching. Data: `data/<Work>/search/english-<slot>.json` (secondary, third, overlay-<id>), written
+by stage 7.
+
+**Build:** full `build:public` in the main checkout (Node 22.23.1), not the 2-second `translations`
+re-index: #156 also changed `english_words()` (inline footnote and sidenote markers are no longer
+words), which the primary `english.json` and stage 8's English n-grams share, so the quick path
+would have left those stale. 41 works, stage2 PASS throughout, preflight ok (it now checks every
+translation index against the book text), shared LSJ verified (14,047 entries / 63,261 keys),
+6,586 pages.
+
+**Gates:** link integrity **0 broken** (6,589 pages / 565,831 links / 434,070 anchors — unchanged).
+Leak check at baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`,
+`EN/manifest.json`); positive control "Aristotle" 1,623. Gated-slot check now covers the indexes:
+Cat and Int (overlay-owen, secondary), Pol (secondary) all public. Search-index gate: 117 book files,
+16 translations beyond the primary, each with its index. Dangling-reference gate: 11 removed
+bundles, 0 referenced; 11/11 added bundles referenced.
+
+**Deploy diff:** 306 files — 20 A / 275 M / 4 D / 7 R. Added: the 16 indexes (8.1 MB: APo 2, APr,
+Cat 2, DA, EN 3, Int 2, Poet, Pol, Rhet, SE, Top) and 4 `_astro` bundles. Changed data: 112
+`data/ngrams` files and `data/Isa/search/english.json` — the new word splitter; no other work's
+primary index changed. 0 deletions under `data/`, nothing to restore; the 11 retired `_astro`
+bundles are the 4 D + 7 R. The rest is pages carrying the new bundle names.
+
+**Live-verified:** the script's URL set as expected after about 2½ minutes (new `Reader.BJ8nmCKa.js`
+200; old bundles and `/bonitz/` 404). In a browser on live: "happiness" restricted to the NE gives
+104 hits with Rackham 29 / Ostwald 26 / Peters 25 / Ross 24 side by side; "coming-to-be" across all
+works gives 100 hits; the APo result link (`?hle=coming-to-be&trans=mure&loc=85b:28`) opens the
+reader with 9 `<mark>`s, three runs of coming/to/be; `/EN/book/1?hle=happiness` with no `trans=`
+marks 52 words, all "happiness", in the default translation.
+
+## 2026-10-06 — DEPLOYED: word cards read common words correctly (PR #155)
+
+`gh-pages 821abd67 → 3c5e21be`, source `origin/main` `5c4dbabaa8` (the #155 merge).
+`npm run deploy -- --verify --allow-data-deletions=data/lemmata` (John asked for the deploy).
+
+**What shipped:** #155 — a reviewed table of 430 Morpheus overrides
+(`pipeline/aristotle_pipeline/morphology_overrides.json`) applied in stage 7: οὐ "not" (was "u"),
+μή "not" ("will"), ἄν "modal particle" ("he came"), the article "the" ("the following"), δῆλον
+"clear" ("Delos"), λέγω "say" (λέγος "lewd" first), οἶδα "know" ("behold!"), ἔχει "have" 3rd sg;
+LSJ's `<foreign>` tags stripped from every gloss (1,189 before). Rule (John): an override fixes a
+wrong word or a junk gloss only. Reviewed by Grok (mechanism + 70 sampled entries).
+
+**Build:** full `build:public` in the main checkout (Node 22.23.1): 41 works, stage2 PASS
+throughout, preflight ok, shared LSJ verified, 6,586 pages (6,609 last time: see deletions).
+
+**Gates:** link integrity **0 broken** (6,589 pages / 565,831 links / 434,070 anchors). Leak check
+at baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`).
+Dangling-reference gate: 5 removed bundles, 0 referenced; 5/5 added bundles referenced.
+
+**Deploy diff:** 604 files — 14 A / 529 M / 60 D / 1 R. **Deletions, all intended:** 28 lemma
+pages and their `data/lemmata/*.json` for readings the overrides moved off the front, which no
+token now resolves to (legos, era, boa, eidoi, hyphe, anoos, elegos, apis, the invented -όω verbs
+androo/gynaikoo/podoo/asteroo/hymenoo/apeiroo, the blank stubs oinon/piston/zoion/phys, …) —
+hence `--allow-data-deletions=data/lemmata`; 4 rehashed `_astro` bundles. Added: 5 lemma pages
+for the words now shown first (apeiros-2, konia, o, protos, zoon).
+
+**Live-verified:** the script's URL set as expected (old bundles and `/bonitz/` 404). From the live
+`data/Meta/analyses.json`: `ou)` → "not", `mh/` → "not", `a)/n` → a)/n1 "modal particle",
+`e)/xei` → e)/xw "have, hold"; 0 `<foreign>` tags. `/lemma/legos/` and `/lemma/era/` 404;
+`/lemma/protos/` and `/lemma/zoon/` 200. Not checked in a browser.
+
+## 2026-09-30 — DEPLOYED: Lyceum corrections (PR #124); Lin and Mech English cleaned, Lin's real Bekker breaks (PR #125)
+
+`gh-pages e3c745f3 → 821abd67`, source `origin/main` `a667a32202` (the #125 merge; #124 is
+`e891918020`). Plain `npm run deploy -- --verify` — no `--allow-data-deletions`.
+
+**What shipped:** #124 — 62 print-checked corrections to the English of Cael, DA, GC, Lin, Meta,
+Mete, Phys, SE, PA and Sens (`sources/english-corrections.json`), and 37 edition labels. #125 —
+De Lineis Insecabilibus: Joachim's commentary out of his translation (25 spans, ~4,500 of 9,400
+words), the lost page 969a26–b3 restored, his 80 margin numbers as real Bekker ticks, and column
+breaks at the real columns (`anchor_cuts`, Lin only). Mechanica: Joachim's 1908 imprint and Lin
+preface off the end, a dozen run-in footnotes out, seven dropped lines restored, Part 4's opening
+made whole, ~150 junk spots and ~50 figure letters fixed from the Greek. Reviewed by Grok 4.6
+(text) and GPT-6-Sol (the anchor-cut code); dispositions in the PR and commit messages.
+
+**Build:** full `build:public` in the vibrant-wiles worktree (Node 22.23.1) from a tree identical
+to `a667a32202`: 41 works, stage2 PASS throughout, preflight ok, shared LSJ 63,261 keys resolve,
+6,609 pages. The first run died in the Astro step on a full disk (ENOSPC) after the corpus stages
+had finished; the app build and link gate were rerun once space was freed. **A full rebuild plus
+the deploy clone needs ~3 GB free.**
+
+**Gates:** link integrity **0 broken** (6,612 pages / 578,726 links / 446,166 anchors). Leak check
+at baseline: Ackrill 0, Tredennick 0, Irwin 0, Rackham 2 (`EN/footnotes.json`, `EN/manifest.json`),
+positive control 1,623. Bundle gate: 6,642 files scanned; 9 removed bundles, 0 referenced; controls
+9/9 added bundles referenced, 6,609 pages naming a bundle.
+
+**Deploy diff:** 501 files — 5 A / 487 M / 5 D / 4 R. `_astro` 9 (the `works` registry and the
+bundles importing it), one page per book of every work (the `Reader` hash), `data/ngrams` 130 (the
+English phrase index), and per-work data. 0 data deletions; nothing to restore. Four
+`search/*.json` files per work show as modified by file mode only (755 → 644, content identical):
+a worktree build writes them 644.
+
+**CI note:** `claude-review` failed on both PRs in 2 s with no model usage — the action did not run
+(auth or quota), not a finding. The six real checks passed; it is not a required check.
+
+**Live-verified:** the script's URL set as expected (new `Reader.BcucvPPJ.js` 200; the 9 old
+bundles and `/bonitz/` 404). From the live data: `Lin/book-01.json` has no Apelt/MSS, carries
+"counting is movement combined with pausing" (969b2–3), 80 real ticks, and 968b opens "in a finite
+time. And since"; `Mech/book-01.json` has no Frowde/Hayduck/Capelle and ends "all objects must
+necessarily collect there."; `Cael/book-02.json` reads "rest upon water but not upon air".
+`/Lin/book/1/` and `/Mech/book/1/` 200. Not checked in a browser.
+
+**Left for later:** Joachim's notes as real footnotes (needs a fresh read of all ~166 from the
+scan; the source held a third of them). PR #123 (desktop) is still open, awaiting John's QA.
 
 ## 2026-09-16 — DEPLOYED: no quotations request for works without them (PR #120), under the fixed bundle gate (PR #121)
 

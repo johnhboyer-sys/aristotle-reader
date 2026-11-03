@@ -12,6 +12,7 @@
 //
 // The pure functions are exported so scripts/__tests__/deploy-gh-pages.test.mjs
 // can exercise them without a clone, a dist or a network.
+import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -21,7 +22,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const MANIFESTS = path.join(ROOT, 'manifests');
 
-export const LIVE_BASE = 'https://johnhboyer-sys.github.io/aristotle-reader';
+export const LIVE_BASE = 'https://aristotle.johnhboyer.com';
 export const BRANCH = 'gh-pages';
 
 // Deletions under data/. An app-only build does not emit everything the live
@@ -124,12 +125,13 @@ export function parseRsyncItemized(text) {
       result.deleted.push(deleting[1].replace(/\/$/, ''));
       continue;
     }
-    const item = /^([<>ch.*])([fdLDS])(\S{9})\s(.+)$/.exec(line);
+    // GNU rsync prints 9 flag characters; macOS's openrsync prints 7.
+    const item = /^([<>ch.*])([fdLDS])(\S{9}|\S{7})\s(.+)$/.exec(line);
     if (!item) continue;
     const [, update, type, flags, itemPath] = item;
     if (type === 'd') continue; // directories carry no content of their own
     if (update === '.') { result.other.push(itemPath); continue; } // attributes only
-    if (flags === '+++++++++') result.added.push(itemPath);
+    if (/^\++$/.test(flags)) result.added.push(itemPath);
     else result.modified.push(itemPath);
   }
   return result;
@@ -213,6 +215,15 @@ export const GATED_SLOT_BASELINE = {
   Pol: ['ross'],
 };
 const TRANSLATION_SLOTS = ['ross', 'secondary', 'third', 'overlays'];
+// A translation's English search index (search/english-<slot>.json) is that
+// translation in another shape — each word with its position is enough to set
+// the prose out again — so it is gated as the book slot it indexes.
+function indexedSlots(name) {
+  if (name === 'secondary') return ['ross', 'secondary'];
+  if (name === 'third') return ['third'];
+  if (/^overlay-[a-z0-9_]+$/.test(name)) return ['overlays'];
+  return null;
+}
 
 // The structural half of the leak check. scanForLeaks matches the translators'
 // SURNAMES, so gated prose that never names its translator passes it clean —
@@ -223,8 +234,35 @@ const TRANSLATION_SLOTS = ['ross', 'secondary', 'third', 'overlays'];
 export function scanGatedSlots(files, { gated, baseline = GATED_SLOT_BASELINE } = {}) {
   const problems = [];
   const seen = new Map();          // work -> Set of slots found
+  const indexes = new Map();       // work -> Set of english-<slot> index names
+  const shardSources = new Map();  // work -> Set of slots the search shards carry
   let gatedFilesScanned = 0;
+  // The corpus search shards (stage 9) hold every work's English index as
+  // "<work>/<slot>" — "english" for the primary — so they carry a gated
+  // translation's words as surely as its english-<slot>.json. Both the
+  // shards' listing and their postings are read: the listing is what the
+  // reader trusts, the postings are what is actually served.
+  const addShardSource = (source) => {
+    const at = source.indexOf('/');
+    const work = source.slice(0, at);
+    if (at > 0 && gated.has(work)) (shardSources.get(work) ?? shardSources.set(work, new Set()).get(work)).add(source.slice(at + 1));
+  };
   for (const { path: filePath, text } of files) {
+    if (filePath === 'data/search-shards/index.json' || /^data\/search-shards\/english\/[^/]+\.json$/.test(filePath)) {
+      let doc;
+      try { doc = JSON.parse(text); } catch { problems.push(`${filePath}: not JSON — cannot check which translations it carries`); continue; }
+      if (filePath.endsWith('/index.json')) {
+        for (const source of Object.keys(doc?.streams?.english?.sources ?? {})) addShardSource(source);
+      } else {
+        for (const bySource of Object.values(doc ?? {})) for (const source of Object.keys(bySource ?? {})) addShardSource(source);
+      }
+      continue;
+    }
+    const ix = /^data\/([^/]+)\/search\/english-([^/]+)\.json$/.exec(filePath);
+    if (ix) {
+      if (gated.has(ix[1])) (indexes.get(ix[1]) ?? indexes.set(ix[1], new Set()).get(ix[1])).add(ix[2]);
+      continue;
+    }
     const m = /^data\/([^/]+)\/book-\d+\.json$/.exec(filePath);
     if (!m || !gated.has(m[1])) continue;
     gatedFilesScanned++;
@@ -246,12 +284,179 @@ export function scanGatedSlots(files, { gated, baseline = GATED_SLOT_BASELINE } 
       }
     }
   }
+  for (const [work, names] of indexes) {
+    const allowed = new Set(baseline[work] ?? []);
+    for (const name of [...names].sort()) {
+      const slots = indexedSlots(name);
+      if (!slots) {
+        problems.push(`${work} serves search/english-${name}.json, an index of no translation slot this check knows — read it before deploying.`);
+      } else if (!slots.some((slot) => allowed.has(slot))) {
+        problems.push(`${work} serves search/english-${name}.json, the search index of a "${slots[0]}" translation GATED_SLOT_BASELINE does not list — an index carries the translation's words in order, so it leaks the prose as surely as the slot.`);
+      }
+    }
+  }
+  for (const [work, names] of shardSources) {
+    const allowed = new Set(baseline[work] ?? []);
+    for (const name of [...names].sort()) {
+      if (name === 'english') continue;   // the primary, which the public manifest chooses
+      const slots = indexedSlots(name);
+      if (!slots || !slots.some((slot) => allowed.has(slot))) {
+        problems.push(`search-shards carry ${work}/${name}, the search index of a translation GATED_SLOT_BASELINE does not list for ${work} — rebuild the shards (stage9) from the public corpus before deploying.`);
+      }
+    }
+  }
   // A check that examined nothing must not report clean — the lesson the
   // "Aristotle" control was added for on 2026-09-01.
   if (gatedFilesScanned === 0) {
     problems.unshift(`no gated work was scanned: none of ${[...gated].join(', ') || '(none known)'} had a data/<Work>/book-*.json in the clone — this check is not running.`);
   }
-  return { ok: problems.length === 0, gatedFilesScanned, seen: Object.fromEntries([...seen].map(([w, s]) => [w, [...s].sort()])), problems };
+  return {
+    ok: problems.length === 0,
+    gatedFilesScanned,
+    seen: Object.fromEntries([...seen].map(([w, s]) => [w, [...s].sort()])),
+    indexes: Object.fromEntries([...indexes].map(([w, s]) => [w, [...s].sort()])),
+    shardSources: Object.fromEntries([...shardSources].map(([w, s]) => [w, [...s].sort()])),
+    problems,
+  };
+}
+
+// Every translation a work serves must be searchable: search asks each one
+// for an English query and, finding no index, tells every reader the results
+// are incomplete. An app built against a corpus emitted before the per-
+// translation indexes (stage7, or `python -m aristotle_pipeline translations`)
+// is refused here rather than shipped with that notice on every search.
+export function scanTranslationIndexes(files) {
+  const served = new Map();        // work -> Set of index names its books need
+  const present = new Map();       // work -> Set of index names on disk
+  let booksScanned = 0;
+  const add = (map, work, name) => (map.get(work) ?? map.set(work, new Set()).get(work)).add(name);
+  for (const { path: filePath, text } of files) {
+    const ix = /^data\/([^/]+)\/search\/english-([^/]+)\.json$/.exec(filePath);
+    if (ix) { add(present, ix[1], ix[2]); continue; }
+    const m = /^data\/([^/]+)\/book-\d+\.json$/.exec(filePath);
+    if (!m) continue;
+    booksScanned++;
+    let doc;
+    try { doc = JSON.parse(text); } catch { continue; }   // the slot scan reports unreadable books
+    for (const segment of doc?.segments ?? []) {
+      if (!segment || typeof segment !== 'object') continue;
+      if (segment.secondary?.length || segment.ross?.length) add(served, m[1], 'secondary');
+      if (segment.third?.length) add(served, m[1], 'third');
+      for (const [id, pieces] of Object.entries(segment.overlays ?? {})) {
+        if (pieces?.length) add(served, m[1], `overlay-${id}`);
+      }
+    }
+  }
+  const problems = [];
+  for (const [work, names] of served) {
+    for (const name of [...names].sort()) {
+      if (!present.get(work)?.has(name)) {
+        problems.push(`${work} serves a translation with no search/english-${name}.json — run \`uv run python -m aristotle_pipeline translations\` in pipeline/ (or rebuild), then build the app again.`);
+      }
+    }
+  }
+  if (booksScanned === 0) problems.unshift('no data/<Work>/book-*.json was scanned — this check is not running.');
+  return {
+    ok: problems.length === 0,
+    booksScanned,
+    indexed: [...served.values()].reduce((n, s) => n + s.size, 0),
+    problems,
+  };
+}
+
+// The corpus search shards (stage 9) are every work's lexical indexes merged,
+// and the reader searches them in place of the per-work files. A work rebuilt
+// without re-running stage 9 leaves shards whose seg_idx numbers name the
+// wrong passages. Two checks: index.json's hash of each per-work index it was
+// built from is recomputed from the index being served, and every posting in
+// every listed shard is compared with that index, since the shard files, not
+// the listing, are what the reader reads. A shard file the listing does not
+// name is never read (a deploy restores one a rebuild dropped), so it is not
+// checked.
+const SHARDED_INDEX = /^data\/([^/]+)\/search\/(greek_lemma|greek_form|english(?:-[^/]+)?)\.json$/;
+const SHARD_FILE = /^data\/search-shards\/(lemma|form|english)\/([^/]+)\.json$/;
+
+/** The shard a word is filed under. Mirror of stage9's shard_name() and
+ * shardName() in shared/lib/search.ts; a shared fixture pins all three. */
+export function shardName(word) {
+  let out = '';
+  for (let i = 0; i < 2; i++) {
+    const c = word[i] ?? '';
+    out += c >= 'a' && c <= 'z' ? c : '_';
+  }
+  return out;
+}
+
+export function scanSearchShards(files) {
+  const problems = [];
+  const served = new Map();   // "<stream>\0<source>" -> { hash, words: Map word -> postings JSON }
+  const sharded = new Map();  // "<stream>\0<source>" -> Map word -> postings JSON
+  const shardFiles = new Map(); // "<stream>/<name>" -> shard text, parsed only if listed
+  let listing = null;
+  let postings = 0;
+  const compact = (p) => JSON.stringify(p);
+  for (const { path: filePath, text } of files) {
+    if (filePath === 'data/search-shards/index.json') {
+      try { listing = JSON.parse(text).streams ?? {}; } catch { problems.push(`${filePath}: not JSON`); }
+      continue;
+    }
+    const s = SHARD_FILE.exec(filePath);
+    if (s) {
+      shardFiles.set(`${s[1]}/${s[2]}`, text);
+      continue;
+    }
+    const m = SHARDED_INDEX.exec(filePath);
+    if (!m) continue;
+    const [, work, name] = m;
+    const stream = name === 'greek_lemma' ? 'lemma' : name === 'greek_form' ? 'form' : 'english';
+    const source = stream !== 'english' ? work : `${work}/${name === 'english' ? 'english' : name.slice('english-'.length)}`;
+    let words = new Map();
+    try { words = new Map(Object.entries(JSON.parse(text)).map(([w, p]) => [w, compact(p)])); } catch { problems.push(`${filePath}: not JSON`); }
+    served.set(`${stream}\0${source}`, { hash: createHash('sha256').update(text, 'utf8').digest('hex').slice(0, 16), words });
+  }
+  if (!served.size) problems.push('no data/<Work>/search/*.json index was scanned — this check is not running.');
+  if (!listing) {
+    problems.push('no data/search-shards/index.json — run `uv run python -m aristotle_pipeline stage9` in pipeline/ (or rebuild); without the shards every search fetches every work\'s index.');
+    return { ok: false, sources: served.size, postings, problems };
+  }
+  for (const [stream, entry] of Object.entries(listing)) {
+    for (const name of entry?.shards ?? []) {
+      const text = shardFiles.get(`${stream}/${name}`);
+      if (text === undefined) { problems.push(`search-shards/${stream}/${name}.json is listed but missing — the reader fails every search that needs it.`); continue; }
+      let doc;
+      try { doc = JSON.parse(text); } catch { problems.push(`search-shards/${stream}/${name}.json: not JSON`); continue; }
+      for (const [word, bySource] of Object.entries(doc)) {
+        if (shardName(word) !== name) problems.push(`search-shards/${stream}/${name}.json files '${word}', which belongs in ${shardName(word)} — the reader will never find it.`);
+        for (const [source, p] of Object.entries(bySource ?? {})) {
+          const key = `${stream}\0${source}`;
+          (sharded.get(key) ?? sharded.set(key, new Map()).get(key)).set(word, compact(p));
+          postings += Array.isArray(p) ? p.length : 0;
+        }
+      }
+    }
+  }
+  if (!postings) problems.push('the listed search shards hold no postings — this check examined nothing.');
+  for (const key of sharded.keys()) {
+    if (!served.has(key)) {
+      const [stream, source] = key.split('\0');
+      problems.push(`search-shards carry ${stream} postings for ${source}, which no work serves an index for — rebuild the shards (stage9).`);
+    }
+  }
+  for (const [key, { hash, words }] of served) {
+    const [stream, source] = key.split('\0');
+    const sources = listing[stream]?.sources ?? {};
+    if (!Object.hasOwn(sources, source)) { problems.push(`search-shards does not hold the ${stream} index of ${source} — rebuild the shards (stage9).`); continue; }
+    if (sources[source] !== hash) problems.push(`search-shards hold an older ${stream} index of ${source} than the one served — rebuild the shards (stage9).`);
+    const have = sharded.get(key) ?? new Map();
+    const wrong = [...new Set([...words.keys(), ...have.keys()])].filter((w) => words.get(w) !== have.get(w)).sort();
+    if (wrong.length) problems.push(`search-shards disagree with the ${stream} index of ${source} in ${wrong.length} word(s), first '${wrong[0]}' — rebuild the shards (stage9).`);
+  }
+  for (const [stream, entry] of Object.entries(listing)) {
+    for (const source of Object.keys(entry?.sources ?? {})) {
+      if (!served.has(`${stream}\0${source}`)) problems.push(`search-shards hold a ${stream} index of ${source}, which no work serves — rebuild the shards (stage9).`);
+    }
+  }
+  return { ok: problems.length === 0, sources: served.size, postings, problems };
 }
 
 // A dist holding one empty index.html passed every default gate, and the rsync
@@ -667,10 +872,34 @@ async function main() {
     );
     console.log(`  gated works (a -public.yaml exists): ${[...gatedWorks].join(', ') || '(none)'}`);
     console.log(`  gated book files scanned: ${slots.gatedFilesScanned}`);
-    for (const [work, found] of Object.entries(slots.seen)) console.log(`    ${work}: ${found.join(', ')}`);
+    for (const [work, found] of Object.entries(slots.seen)) {
+      const idx = slots.indexes[work] ?? [];
+      const shards = slots.shardSources[work] ?? [];
+      console.log(`    ${work}: ${found.join(', ')}${idx.length ? ` · search indexes: ${idx.join(', ')}` : ''}${shards.length ? ` · search shards: ${shards.join(', ')}` : ''}`);
+    }
     if (!slots.ok) {
       for (const problem of slots.problems) console.log(`  !! ${problem}`);
       fail('gated translation slots did not pass.');
+    }
+
+    heading('Search indexes: every served translation can be searched');
+    const indexes = scanTranslationIndexes(
+      readAll(walk(dataDir, (name) => name.toLowerCase().endsWith('.json'), clone)),
+    );
+    console.log(`  book files scanned: ${indexes.booksScanned}; translations beyond the primary: ${indexes.indexed}`);
+    if (!indexes.ok) {
+      for (const problem of indexes.problems) console.log(`  !! ${problem}`);
+      fail('a served translation has no search index.');
+    }
+
+    heading('Search shards: built from the indexes being served');
+    const shards = scanSearchShards(
+      readAll(walk(dataDir, (name) => name.toLowerCase().endsWith('.json'), clone)),
+    );
+    console.log(`  per-work indexes checked against the shards: ${shards.sources}; shard postings compared: ${shards.postings}`);
+    if (!shards.ok) {
+      for (const problem of shards.problems) console.log(`  !! ${problem}`);
+      fail('the search shards do not match the indexes being served.');
     }
 
     // 6. Stage and read the deploy diff by category ------------------------

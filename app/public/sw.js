@@ -20,7 +20,7 @@
 // VERSION") avoids wiping a sibling app's offline data.
 const CACHE_PREFIX = 'aristotle-reader-';
 const VERSION = CACHE_PREFIX + 'v1';
-const SCOPE_PATH = new URL(self.registration.scope).pathname; // e.g. /aristotle-reader/
+const SCOPE_PATH = new URL(self.registration.scope).pathname; // '/' at the custom domain
 const OFFLINE_URL = SCOPE_PATH + 'offline.html';
 
 self.addEventListener('install', (event) => {
@@ -39,11 +39,15 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-async function networkFirst(request, { offlineFallback = false } = {}) {
+async function networkFirst(event, { offlineFallback = false } = {}) {
+  const { request } = event;
   const cache = await caches.open(VERSION);
   try {
     const fresh = await fetch(request);
-    if (fresh.ok) cache.put(request, fresh.clone());
+    // The write is handed to waitUntil, not awaited: the reader gets the
+    // response at network speed, while the event stays alive until the copy
+    // has actually landed in the cache.
+    if (fresh.ok) event.waitUntil(cache.put(request, fresh.clone()));
     return fresh;
   } catch (err) {
     const cached = await cache.match(request);
@@ -53,12 +57,13 @@ async function networkFirst(request, { offlineFallback = false } = {}) {
   }
 }
 
-async function cacheFirst(request) {
+async function cacheFirst(event) {
+  const { request } = event;
   const cache = await caches.open(VERSION);
   const cached = await cache.match(request);
   if (cached) return cached;
   const fresh = await fetch(request);
-  if (fresh.ok || fresh.type === 'opaque') cache.put(request, fresh.clone());
+  if (fresh.ok || fresh.type === 'opaque') event.waitUntil(cache.put(request, fresh.clone()));
   return fresh;
 }
 
@@ -68,23 +73,23 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request, { offlineFallback: true }));
+    event.respondWith(networkFirst(event, { offlineFallback: true }));
     return;
   }
 
   if (url.origin === location.origin) {
     if (url.pathname.includes('/_astro/')) {
-      event.respondWith(cacheFirst(request));
+      event.respondWith(cacheFirst(event));
     } else if (url.pathname.startsWith(SCOPE_PATH)) {
       // Corpus data, favicons, manifest — always fresh online (a new deploy's
       // HTML must never read an old deploy's JSON), cached copy offline.
-      event.respondWith(networkFirst(request));
+      event.respondWith(networkFirst(event));
     }
     return;
   }
 
   // Web fonts (fonts.googleapis.com stylesheets, fonts.gstatic.com binaries).
   if (url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
-    event.respondWith(cacheFirst(request));
+    event.respondWith(cacheFirst(event));
   }
 });

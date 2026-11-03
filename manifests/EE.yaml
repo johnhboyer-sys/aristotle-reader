@@ -47,6 +47,7 @@ english:
     dir: ee-solomon
     books: 5
     chapter_marker: number
+    anchors: "ee-solomon/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
     # Phase 2: real per-line Bekker gutter from the gloss aligner.
     # anchors: ee-solomon/anchors.yaml
   secondary:

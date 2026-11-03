@@ -4,7 +4,7 @@ For each chapter, place the verifier's verbatim phrases in Bekker order, each at
 or after the previous placement (falling back to the occurrence nearest Method
 A's guess, then to shorter prefixes). Records offsets as overrides so a second
 `align --provider gloss` pass re-places every tick and re-interpolates.
-Usage: uv run python build/verify_to_offsets.py <book>
+Usage: WORK=<slug> uv run python tools/verify_to_offsets.py <book>
 """
 import json
 import re
@@ -20,7 +20,9 @@ from aristotle_pipeline.align.reference import default_target
 import os
 
 BOOK = int(sys.argv[1])
-WORK = os.environ.get("WORK", "EN")
+WORK = os.environ.get("WORK")
+if not WORK:   # no default: a forgotten WORK= used to act on EN
+    sys.exit("WORK is unset: run with WORK=<work slug>")
 vid, ross = default_target(WORK)
 OUT = REPO / "build/align/verify_out" / WORK
 META = json.loads((REPO / "build/align" / f"verify_meta_{WORK}.json").read_text())
@@ -82,10 +84,22 @@ for key, m in META.items():
     if b == BOOK:
         by_chap[(b, cp)].append((cit, m["a_offset"]))
 
+# This book's overrides come from its current answers alone: an older run's
+# placements, for a chapter whose answer is missing or that this gather no
+# longer covers, must not reach pass 2 as "confirmed". Other books are kept.
+for key in [k for k in overrides if int(k.split(":")[0]) == BOOK]:
+    del overrides[key]
+
 placed = missing = 0
+unanswered = []
 for (b, cp), ticks in by_chap.items():
     text = ross.get((b, cp), "")
-    phrases = load_phrases(OUT / f"{b}-{cp}.json")
+    path = OUT / f"{b}-{cp}.json"
+    if not path.exists():
+        unanswered.append(f"{b}:{cp}")
+        missing += len(ticks)
+        continue
+    phrases = load_phrases(path)
     cursor = 0
     for cit, a_off in sorted(ticks, key=lambda t: cit_key(t[0])):
         phrase = (phrases.get(cit) or "").strip()
@@ -107,3 +121,5 @@ for (b, cp), ticks in by_chap.items():
 
 OVR_PATH.write_text(json.dumps(overrides, indent=1), encoding="utf-8")
 print(f"book {BOOK}: {placed} overrides written, {missing} unplaced")
+if unanswered:
+    sys.exit(f"book {BOOK}: no verify answer for chapters {unanswered}; their ticks stay at pass 1")

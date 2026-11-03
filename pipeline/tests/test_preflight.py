@@ -116,3 +116,152 @@ def test_preflight_rejects_data_emitted_from_a_different_manifest(tmp_path):
     assert result.returncode != 0
     assert "emitted from a different manifest" in result.stdout
     assert "Hugh Tredennick (Loeb, 1933)" in result.stdout
+
+
+_NO_FILE = object()
+
+
+def _bounds_case(tmp_path, chapter_bounds, chapters=_NO_FILE, declares_chapters=False,
+                 offsets_doc=_NO_FILE):
+    """The valid fixture with a search/offsets.json carrying `chapter_bounds`
+    (None: no offsets.json at all), checked by the chapter-bounds gate alone.
+    `chapters` replaces chapters.json, `offsets_doc` the whole offsets.json,
+    and `declares_chapters` gives the manifest a chapters block."""
+    import json
+    import shutil
+
+    from aristotle_pipeline import preflight
+
+    case = tmp_path / "case"
+    shutil.copytree(FIXTURES / "valid", case)
+    offsets = case / "data" / "VAL" / "search" / "offsets.json"
+    if offsets_doc is not _NO_FILE:
+        offsets.write_text(json.dumps(offsets_doc), encoding="utf-8")
+    elif chapter_bounds is None:
+        offsets.unlink()
+    else:
+        offsets.write_text(json.dumps({"chapter_bounds": chapter_bounds}), encoding="utf-8")
+    if chapters is not _NO_FILE:
+        (case / "data" / "VAL" / "chapters.json").write_text(json.dumps(chapters), encoding="utf-8")
+    data = {"chapters": {"source": "explicit"}} if declares_chapters else {}
+    manifests = [preflight.WorkManifest(work_id="VAL", path=Path("VAL.yaml"), data=data)]
+    problems = []
+    examined = preflight._validate_chapter_bounds(case / "data", manifests, problems)
+    return examined, problems
+
+
+def test_chapter_bounds_agreeing_with_chapters_json_pass(tmp_path):
+    examined, problems = _bounds_case(
+        tmp_path, [{"book": 1, "chapter": "1", "start": 0, "accuracy": "exact"}])
+    assert (examined, problems) == (1, [])
+
+
+def test_chapter_bounds_missing_a_chapter_are_reported(tmp_path):
+    """The search pager lays results out by chapter_bounds: a work whose
+    offsets.json lost chapters (the Isagoge kept 1 of 17) pages as one unit."""
+    examined, problems = _bounds_case(tmp_path, [])
+    assert examined == 1
+    assert problems == [("VAL", "search/offsets.json",
+                         "chapter_bounds has 0 chapter(s) but chapters.json has 1; "
+                         "first missing: book 1 chapter '1'")]
+
+
+def test_chapter_bounds_without_offsets_json_are_reported(tmp_path):
+    examined, problems = _bounds_case(tmp_path, None)
+    assert examined == 0
+    assert ("VAL", "search/offsets.json", "missing: no chapter_bounds to check") in problems
+
+
+def test_chapter_bounds_gate_says_when_it_examined_no_work(tmp_path):
+    from aristotle_pipeline import preflight
+
+    problems = []
+    assert preflight._validate_chapter_bounds(tmp_path, [], problems) == 0
+    assert problems == [("-", "search/offsets.json",
+                         "examined no work: no chapter_bounds were compared, "
+                         "so this check is not running")]
+
+
+def test_chapter_bounds_gate_reports_a_malformed_chapters_json(tmp_path):
+    """chapters.json = null used to be skipped here and by _validate_chapters
+    alike, so the work went unchecked without a word."""
+    examined, problems = _bounds_case(
+        tmp_path, [{"book": 1, "chapter": "1", "start": 0, "accuracy": "exact"}], chapters=None)
+    assert ("VAL", "chapters.json",
+            "malformed: expected an object of book -> list of chapter refs") in problems
+
+
+def test_chapter_bounds_gate_refuses_empty_chapter_data_the_manifest_declares(tmp_path):
+    """chapters.json = {} and offsets.json = {} agree at zero, but the manifest
+    declares chapters, so zero is a lost chapter list, not a match."""
+    examined, problems = _bounds_case(
+        tmp_path, None, chapters={}, declares_chapters=True, offsets_doc={})
+    assert ("VAL", "chapters.json",
+            "lists no chapters though the manifest declares them") in problems
+    assert ("VAL", "search/offsets.json", "has no chapter_bounds list") in problems
+
+
+def _starts_case(tmp_path, chapter_bounds):
+    """The valid fixture's offsets.json with `chapter_bounds`, checked by the
+    shared-start gate alone."""
+    import json
+    import shutil
+
+    from aristotle_pipeline import preflight
+
+    case = tmp_path / "case"
+    shutil.copytree(FIXTURES / "valid", case)
+    offsets = case / "data" / "VAL" / "search" / "offsets.json"
+    offsets.write_text(json.dumps({"chapter_bounds": chapter_bounds}), encoding="utf-8")
+    manifests = [preflight.WorkManifest(work_id="VAL", path=Path("VAL.yaml"), data={})]
+    problems = []
+    examined = preflight._validate_shared_chapter_starts(case / "data", manifests, problems)
+    return examined, problems
+
+
+def test_chapter_bounds_at_distinct_starts_pass(tmp_path):
+    examined, problems = _starts_case(tmp_path, [
+        {"book": 1, "chapter": "1", "start": 0, "accuracy": "exact"},
+        {"book": 1, "chapter": "2", "start": 9, "accuracy": "line-snapped"},
+    ])
+    assert (examined, problems) == (1, [])
+
+
+def test_chapter_bounds_sharing_a_start_are_reported(tmp_path):
+    """The pager gives every chapter but the last at a shared start no tokens:
+    De Mirabilibus once had 123/124, 148/149 and 153/154/155 so."""
+    examined, problems = _starts_case(tmp_path, [
+        {"book": 1, "chapter": "122", "start": 0, "accuracy": "exact"},
+        {"book": 1, "chapter": "153", "start": 8484, "accuracy": "exact"},
+        {"book": 1, "chapter": "154", "start": 8484, "accuracy": "line-snapped"},
+        {"book": 1, "chapter": "155", "start": 8484, "accuracy": "line-snapped"},
+    ])
+    assert examined == 1
+    assert problems == [("VAL", "search/offsets.json",
+                         "chapters '153', '154', '155' share start 8484: "
+                         "all but the last page with no text")]
+
+
+def test_chapter_starts_gate_says_when_it_examined_no_work(tmp_path):
+    from aristotle_pipeline import preflight
+
+    problems = []
+    assert preflight._validate_shared_chapter_starts(tmp_path, [], problems) == 0
+    assert problems == [("-", "search/offsets.json",
+                         "examined no work: no chapter starts were compared, "
+                         "so this check is not running")]
+
+
+def test_chapter_bounds_with_no_integer_start_are_reported(tmp_path):
+    """`0` and `"0"` are one position to the pager but two keys to a dict, and
+    a bound with no start at all shares nothing; neither may pass unread."""
+    examined, problems = _starts_case(tmp_path, [
+        {"book": 1, "chapter": "1", "start": 0, "accuracy": "exact"},
+        {"book": 1, "chapter": "2", "start": "0", "accuracy": "exact"},
+        {"book": 1, "chapter": "3", "accuracy": "exact"},
+    ])
+    assert examined == 1
+    assert problems == [
+        ("VAL", "search/offsets.json", "chapter '2' has start '0', not a non-negative integer"),
+        ("VAL", "search/offsets.json", "chapter '3' has start None, not a non-negative integer"),
+    ]

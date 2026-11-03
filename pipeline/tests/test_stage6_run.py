@@ -2,14 +2,13 @@
 
 shared/lib/search.ts consumes these files by POSITION, not by name: a posting
 is (seg_idx, token_pos), its global offset is seg_base_offset[seg_idx] + pos,
-and offsetRef() walks line_runs to name the Bekker line. meta.json's
-english_head is what the English phrase check reads first. Each test here
+and offsetRef() walks line_runs to name the Bekker line. meta.json names
+each seg_idx's passage, and nothing more. Each test here
 builds the smallest corpus that exercises one seam and reads the emitted
 files back the way the reader would.
 """
 
 import json
-import re
 import sys
 import unicodedata
 from pathlib import Path
@@ -49,7 +48,7 @@ _SPINE = {
     ],
 }
 
-_LONG_ENGLISH = ("The point and every division " * 30).strip()  # > 500 chars
+_LONG_ENGLISH = ("The point and every division " * 30).strip()
 
 
 def _english(chapters):
@@ -208,6 +207,46 @@ def test_chapter_bound_without_a_word_anchor_snaps_to_the_line_and_says_so(
         "book": 1, "chapter": "2", "start": 7, "accuracy": "line-snapped"}
 
 
+def test_chapter_bound_on_a_line_with_no_greek_snaps_to_the_next_line(
+        tmp_path, monkeypatch):
+    """Busse prints each Isagoge section heading on a line of its own, and the
+    TLG text has no Greek on it, so the manifest's chapter start (1a17, 8a7,
+    ...) names a line the spine lacks. stage6 used to drop such a chapter
+    without a word: the Isagoge kept 1 bound of its 17. The section's text
+    begins on the next line, so the bound snaps there and says so."""
+    chapters = [
+        {"book": 1, "chapter": "1", "column": "244b", "line": "4",
+         "wordIndex": 0, "bookstart": True},
+        {"book": 1, "chapter": "2", "column": "245a", "line": "19",
+         "wordIndex": 0, "bookstart": False},
+    ]
+    offsets = _build(tmp_path, monkeypatch, chapters)["offsets"]
+    by_chapter = {c["chapter"]: c for c in offsets["chapter_bounds"]}
+    assert by_chapter["2"] == {
+        "book": 1, "chapter": "2", "start": 9, "accuracy": "line-snapped"}
+
+
+
+def test_chapter_bound_snapped_onto_another_chapters_start_is_refused(
+        tmp_path, monkeypatch):
+    """A start on a missing line (245a.19) snaps to the next line, 245a.20,
+    where chapter 3 also begins: both would share one token, and the pager
+    would give chapter 2 no text with neither check noticing. Stage 6 refuses
+    rather than emit a chapter with no range."""
+    import pytest
+
+    chapters = [
+        {"book": 1, "chapter": "1", "column": "244b", "line": "4",
+         "wordIndex": 0, "bookstart": True},
+        {"book": 1, "chapter": "2", "column": "245a", "line": "19",
+         "wordIndex": 0, "bookstart": False},
+        {"book": 1, "chapter": "3", "column": "245a", "line": "20",
+         "wordIndex": 0, "bookstart": False},
+    ]
+    with pytest.raises(ValueError, match="chapter '2'.*chapter '3'|chapter '3'.*chapter '2'"):
+        _build(tmp_path, monkeypatch, chapters)
+
+
 # -- English index and heads -------------------------------------------------
 
 def test_english_index_keeps_a_curly_possessive_as_one_word(tmp_path, monkeypatch):
@@ -229,7 +268,7 @@ def test_english_index_keeps_a_curly_possessive_as_one_word(tmp_path, monkeypatc
 
 
 def test_english_words_matches_the_readers_fold():
-    """Mirror of englishFold()/engPhraseMatches() in shared/lib/search.ts:
+    """Mirror of englishFold()/englishWords() in shared/lib/search.ts:
     lowercase, U+2019 and U+02BC become ', anything outside [a-z'] splits."""
     from aristotle_pipeline.stage6_search import english_words
 
@@ -237,18 +276,17 @@ def test_english_words_matches_the_readers_fold():
         "aristotle's", "good", "isn't", "well"]
 
 
-def test_english_head_is_cut_at_the_readers_limit(tmp_path, monkeypatch):
-    """search.ts falls back to the book text only when the head is AT the cut
-    (head.length >= ENGLISH_HEAD_LIMIT). A shorter cut here would hide every
-    phrase past it; a longer one is merely wasted bytes. Pin both sides."""
+def test_meta_names_each_passage_and_carries_no_text(tmp_path, monkeypatch):
+    """The reader reads id, book and column from meta.json and nothing else.
+    The Greek and English heads it once carried were 0.7 MB of a search's
+    download (gzipped), and the English phrase check that read them went
+    with the last index built without word positions."""
     meta = _build(tmp_path, monkeypatch)["meta"]
-    head = meta[1]["english_head"]
-    assert len(head) == 500 and _LONG_ENGLISH.startswith(head)
-    assert meta[0]["english_head"] == "Aristotle’s first ‘change’ isn’t the last."
-    assert meta[2]["english_head"] == ""
-    search_ts = (ROOT / "shared" / "lib" / "search.ts").read_text(encoding="utf-8")
-    m = re.search(r"export const ENGLISH_HEAD_LIMIT = (\d+);", search_ts)
-    assert m and int(m.group(1)) == 500
+    assert meta == [
+        {"id": "1:244b", "book": 1, "column": "244b"},
+        {"id": "1:245a", "book": 1, "column": "245a"},
+        {"id": "2:245b", "book": 2, "column": "245b"},
+    ]
 
 
 # -- Greek index keys --------------------------------------------------------

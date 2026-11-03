@@ -6,9 +6,9 @@ import { searchCombo, COMBO_WINDOW_DEFAULT, COMBO_WINDOW_MAX, type ComboOptions 
 //   book 2 = offsets 20-39  (chapter 1 = 20-29, chapter 2 = 30-39)
 //   lines of 5 tokens throughout; 2 segments of 20 tokens each.
 const meta = [
-  { id: '1:1000a', book: 1, column: '1000a', greek_head: '', english_head: '' },
-  { id: '2:1001a', book: 2, column: '1001a', greek_head: '', english_head: '' },
-  { id: '2:1001b', book: 2, column: '1001b', greek_head: '', english_head: '' },
+  { id: '1:1000a', book: 1, column: '1000a' },
+  { id: '2:1001a', book: 2, column: '1001a' },
+  { id: '2:1001b', book: 2, column: '1001b' },
 ];
 const offsets = {
   token_count: 40,

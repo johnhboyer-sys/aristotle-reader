@@ -68,3 +68,46 @@ def test_chapter_range_ends_on_the_last_real_line_before_the_next_chapter():
     assert ranges[(4, "10")] == "689a12–13"
     assert ranges[(4, "11")] == "689a15–16"
     assert ranges[(4, "12")] == "689b1–2"
+
+
+# ── overrides are keyed by the Morpheus table key, not the corpus token key ──
+
+import pytest
+
+from aristotle_pipeline import stage7_emit
+from aristotle_pipeline.parse_filter import MORPHOLOGY_OVERRIDES
+
+
+def _emit_with_table_key(tmp_path, monkeypatch, token_key, table_key, readings):
+    build = tmp_path / "build"
+    (build / "stage4").mkdir(parents=True)
+    (build / "stage5").mkdir()
+    (build / "stage4" / "analyses.json").write_text(json.dumps({table_key: readings}))
+    (build / "stage4" / "key_map.json").write_text(json.dumps({token_key: table_key}))
+    (build / "stage5" / "lemma_map.json").write_text(
+        json.dumps({r["lemma"]: [r["lemma"]] for r in readings}))
+    (build / "stage5" / "short_defs.json").write_text("{}")
+    monkeypatch.setattr(stage7_emit, "BUILD_DIR", build)
+    out = tmp_path / "out"
+    out.mkdir()
+    stage7_emit.emit_analyses(out)
+    return json.loads((out / "analyses.json").read_text())[token_key]
+
+
+@pytest.mark.parametrize(
+    ("token_key", "table_key"),
+    [("pro+i/ento", "proi(/ento"),  # diaeresis token, filed under the breathing
+     ("swkra/ths", "*swkra/ths")],  # proper name, filed only under the starred key
+)
+def test_an_override_fires_by_the_table_key_its_token_resolved_to(
+        tmp_path, monkeypatch, token_key, table_key):
+    readings = [
+        {"lemma": "wrong", "gloss": "junk", "parse": "p1"},
+        {"lemma": "right", "gloss": "fine", "parse": "p2"},
+    ]
+    monkeypatch.setitem(MORPHOLOGY_OVERRIDES, table_key, {
+        "surface": table_key, "lemma": "right", "gloss": "fixed", "justification": "test"})
+
+    out = _emit_with_table_key(tmp_path, monkeypatch, token_key, table_key, readings)
+
+    assert [(p["lemma"], p["gloss"]) for p in out] == [("right", "fixed"), ("wrong", "junk")]

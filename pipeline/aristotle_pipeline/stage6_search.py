@@ -17,15 +17,10 @@ Emits these files under build/stage6/:
                  Lowercased English words as english_words() splits them,
                  with the word's position in its segment, so a phrase is an
                  adjacency test over postings exactly as it is for Greek.
-                 (Until 2026-09-07 the postings were bare seg_idxs and the
-                 reader verified a phrase against english_head, which holds
-                 only the first 500 characters; the reader still reads that
-                 shape from an older build.)
 
-  meta.json    — [{id, book, column, greek_head, english_head}]
-                 Ordered list of segment metadata, indexed by seg_idx.
-                 greek_head: first two lines of text (for result preview).
-                 english_head: first 500 chars of English chunk.
+  meta.json    — [{id, book, column}]
+                 Ordered list of segment metadata, indexed by seg_idx: the
+                 search names a hit's passage from it.
 
   offsets.json — the word-offset primitive: one running token number per work,
                  in document order, plus the structural coordinates beside it.
@@ -38,6 +33,14 @@ Emits these files under build/stage6/:
                  remap_word_index below.
 
 All of these are copied to build/dist/{work}/search/ by stage7.
+
+  english-<slot>.json — one more English index per translation beyond the
+                 primary, same shape as english.json: english-secondary.json,
+                 english-third.json, english-overlay-<id>.json. Built by
+                 emit_translation_indexes() from the emitted book JSON, so it
+                 indexes exactly the text the reader shows — a translation the
+                 public manifest drops is in neither. A segment's word_pos runs
+                 through its slices in order, as the reader lays them out.
 """
 
 from __future__ import annotations
@@ -45,6 +48,7 @@ from __future__ import annotations
 import json
 import re
 import struct
+import unicodedata
 from collections import defaultdict
 from pathlib import Path
 
@@ -55,10 +59,33 @@ _FOLD = re.compile(r"[^a-z']")  # keep only base letters and apostrophe
 _EN_WORD = re.compile(r"[a-z']+")
 # The archive translations print possessives and contractions with U+2019
 # (Aristotle’s, isn’t); U+02BC is the modifier-letter apostrophe. The reader
-# folds a typed straight apostrophe to itself (englishFold) and, in its phrase
-# check, folds the text's curly one to straight (engPhraseMatches) — so the
-# index must key "aristotle's" as one word or neither path can find it.
+# folds a typed straight apostrophe to itself (englishFold) and the text's
+# curly one to straight (englishWords) — so the index must key "aristotle's"
+# as one word or neither path can find it.
 _EN_APOSTROPHE = re.compile("[\u2019\u02bc]")
+# Apparatus a translation's prose carries inline, which the reader renders as
+# controls and not as words: a footnote marker [^1.9] is glued to the word
+# before it and is simply dropped; a sidenote or figure marker [[s3]] / [[fig1]]
+# stands between words and leaves a space. Indexed as text, [[s3]] was the word
+# "s" and broke every phrase that ran across it. Mirrored by EN_FOOTNOTE /
+# EN_SIDENOTE in shared/lib/search.ts.
+_EN_FOOTNOTE = re.compile(r"\[\^[0-9A-Za-z_.*\u2020]+\]")
+_EN_SIDENOTE = re.compile(r"\[\[(?:s|fig)[0-9]+\]\]")
+# One pass, so a marker counts only as written: "[[s[^1]12]]" loses its
+# footnote and keeps "[[s12]]" as text, never a sidenote, as the reader shows
+# it: the footnote becomes a button and the rest stays prose. englishWords
+# scans the same.
+_EN_MARKER = re.compile(f"(?P<fn>{_EN_FOOTNOTE.pattern})|{_EN_SIDENOTE.pattern}")
+# Older translations print Latin letters the fold would otherwise split on:
+# "Lacedæmonians" was indexed as "laced" + "monians", "versâ" as "vers". The
+# ligatures become two letters and accents drop off, so the word is the one a
+# reader types. Mirrored by latinFold in shared/lib/search.ts.
+_EN_COMBINING = re.compile("[\u0300-\u036f]")
+
+
+def _latin_fold(text: str) -> str:
+    text = _EN_COMBINING.sub("", unicodedata.normalize("NFD", text))
+    return text.replace("\u00e6", "ae").replace("\u0153", "oe")
 
 
 def fold_lemma(beta_key: str) -> str:
@@ -71,8 +98,12 @@ def english_words(text: str) -> list[str]:
     apostrophes made straight, split on anything outside [a-z']. An apostrophe
     at a word's edge is a quotation mark (‘change’ closes with the same U+2019
     that Aristotle’s elides with) and is not part of the word. Shared with
-    stage8 so english.json and english-segments.json count the same words."""
-    words = _EN_WORD.findall(_EN_APOSTROPHE.sub("'", text).lower())
+    stage8 so english.json and english-segments.json count the same words.
+    Inline footnote, sidenote and figure markers are not words (see
+    _EN_FOOTNOTE). Ligatures and accented letters fold to plain ones (see
+    _latin_fold)."""
+    text = _EN_MARKER.sub(lambda m: "" if m.group("fn") else " ", text)
+    words = _EN_WORD.findall(_latin_fold(_EN_APOSTROPHE.sub("'", text).lower()))
     return [w for w in (raw.strip("'") for raw in words) if w]
 
 
@@ -179,6 +210,92 @@ def remap_word_index(line_text: str, tokens: list[dict], word_index: int) -> int
     return normed[word_index][0]
 
 
+# -- Indexes for the translations beyond the primary --------------------------
+#
+# The primary translation is one chunk per segment and is indexed in run()
+# from stage1. Every other translation is chapter-anchored: a segment holds a
+# list of slices, one per chapter block, and the book JSON is the one place
+# all of them meet. Each gets an index of its own rather than a share of
+# english.json, so a query asking for every word to be present asks it of one
+# translator's prose, not of two translations pooled.
+
+_OVERLAY_ID = re.compile(r"[a-z0-9_]+")
+
+
+def segment_translations(seg: dict) -> dict[str, list[str]]:
+    """The non-primary translation slices of one emitted segment, by slot.
+
+    The slot is the index file's name: 'secondary' (emitted as `ross` until the
+    corpus is rebuilt under the new name, so both are read), 'third', and
+    'overlay-<id>' for the fourth translation onward.
+    """
+    out: dict[str, list[str]] = {}
+    secondary = seg.get("secondary") or seg.get("ross")
+    if secondary:
+        out["secondary"] = [p.get("text") or "" for p in secondary]
+    if seg.get("third"):
+        out["third"] = [p.get("text") or "" for p in seg["third"]]
+    for tid, pieces in (seg.get("overlays") or {}).items():
+        if not _OVERLAY_ID.fullmatch(tid):
+            raise ValueError(f"overlay id {tid!r} cannot name an index file")
+        if pieces:
+            out[f"overlay-{tid}"] = [p.get("text") or "" for p in pieces]
+    return out
+
+
+def translation_index_name(slot: str) -> str:
+    return f"english-{slot}.json"
+
+
+def emit_translation_indexes(work_dir: Path) -> dict[str, dict[str, int]]:
+    """Write search/english-<slot>.json for every non-primary translation.
+
+    Reads the work's emitted book-NN.json and search/meta.json, which must
+    already be in place; seg_idx is a segment's position in meta.json, exactly
+    as in english.json. Any english-*.json left from an earlier build is removed
+    first, so an index can never outlive its translation. Returns, per slot, the
+    number of distinct words and of segments indexed.
+    """
+    search_dir = work_dir / "search"
+    meta = json.loads((search_dir / "meta.json").read_text(encoding="utf-8"))
+    seg_idx = {m["id"]: i for i, m in enumerate(meta)}
+
+    posts: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    segments: dict[str, set[int]] = defaultdict(set)
+    books = sorted(work_dir.glob("book-*.json"))
+    for book_path in books:
+        doc = json.loads(book_path.read_text(encoding="utf-8"))
+        for seg in doc["segments"]:
+            slots = segment_translations(seg)
+            if not slots:
+                continue
+            si = seg_idx.get(seg["id"])
+            if si is None:
+                raise ValueError(
+                    f"{book_path.name}: segment {seg['id']} is not in search/meta.json"
+                )
+            for slot, texts in slots.items():
+                pos = 0
+                for text in texts:
+                    for word in english_words(text):
+                        posts[slot][word].append([si, pos])
+                        pos += 1
+                if pos:
+                    segments[slot].add(si)
+
+    for stale in search_dir.glob("english-*.json"):
+        stale.unlink()
+    summary: dict[str, dict[str, int]] = {}
+    for slot in sorted(posts):
+        # In document order, as english.json is.
+        index = {word: sorted(plist) for word, plist in posts[slot].items()}
+        (search_dir / translation_index_name(slot)).write_text(
+            json.dumps(index, ensure_ascii=False), encoding="utf-8"
+        )
+        summary[slot] = {"words": len(posts[slot]), "segments": len(segments[slot])}
+    return summary
+
+
 def run(manifest: Manifest) -> Path:
     tokens_doc = json.loads(
         (BUILD_DIR / "stage3" / "tokens.json").read_text(encoding="utf-8")
@@ -258,25 +375,7 @@ def run(manifest: Manifest) -> Path:
     english_idx = dict(eng_posts)
 
     # -- Segment metadata -----------------------------------------------------
-    meta = []
-    for seg in segments:
-        # Greek head: join first two lines of surface text
-        lines = seg["lines"]
-        greek_head = " ".join(
-            " ".join(t["t"] for t in l["tokens"])
-            for l in lines[:2]
-        )
-        eng = eng_by_id.get(seg["id"])
-        english_head = eng["text"][:500] if eng else ""
-        meta.append(
-            {
-                "id": seg["id"],
-                "book": seg["book"],
-                "column": seg["column"],
-                "greek_head": greek_head,
-                "english_head": english_head,
-            }
-        )
+    meta = [{"id": seg["id"], "book": seg["book"], "column": seg["column"]} for seg in segments]
 
     # -- Offset primitive ------------------------------------------------------
     # One running word number per work, assigned in the same document order the
@@ -320,6 +419,7 @@ def run(manifest: Manifest) -> Path:
     # counts words within whichever of those lines it fell on.
     spine_lines_by_id = {s["id"]: s["lines"] for s in spine["segments"]}
     chapter_bounds: list[dict] = []
+    snapped_forward: list[dict] = []
     for ch in english.get("chapters", []):
         si = seg_idx.get(f"{ch['book']}:{ch['column']}")
         if si is None:
@@ -328,12 +428,18 @@ def run(manifest: Manifest) -> Path:
         spine_seg = spine_lines_by_id.get(segments[si]["id"], [])
         base = seg_base_offset[si]
         candidates: list[tuple[int, dict, str]] = []
+        next_line_base = None
         for j, l in enumerate(segments[si]["lines"]):
             if l["n"] == want:
                 text = spine_seg[j]["text"] if j < len(spine_seg) else ""
                 candidates.append((base, l, text))
+            elif l["n"] > want and next_line_base is None:
+                next_line_base = base
             base += len(l["tokens"])
-        if not candidates:
+        # A start on a line with no Greek (Busse's Isagoge prints each section
+        # heading on a line of its own) snaps to the next line in the column,
+        # where the section's text begins.
+        if not candidates and next_line_base is None:
             continue
         # Only the grc-TEI path matches chapter starts against the Greek text
         # (stage1_chapters sets wordAnchor there); the explicit and extra paths
@@ -343,7 +449,8 @@ def run(manifest: Manifest) -> Path:
         # its line by number alone: if exactly one same-numbered line can hold
         # the count it is exact there; if more than one can, the count cannot
         # be attributed and the bound snaps rather than guess a half.
-        start, idx = candidates[0][0], None
+        start = candidates[0][0] if candidates else next_line_base
+        idx = None
         if ch.get("wordAnchor"):
             aligned = [
                 (line_base, i)
@@ -361,7 +468,18 @@ def run(manifest: Manifest) -> Path:
                 "accuracy": "exact" if idx is not None else "line-snapped",
             }
         )
+        if not candidates:
+            snapped_forward.append(chapter_bounds[-1])
     chapter_bounds.sort(key=lambda c: c["start"])
+    # A bound snapped forward must not land on another chapter's start: the
+    # two would share one token and the pager would give one of them no text.
+    for snapped in snapped_forward:
+        clash = [c for c in chapter_bounds if c is not snapped and c["start"] == snapped["start"]]
+        if clash:
+            raise ValueError(
+                f"chapter {snapped['chapter']!r} starts on a line with no Greek and snaps "
+                f"to offset {snapped['start']}, where chapter {clash[0]['chapter']!r} begins"
+            )
 
     offsets = {
         # Doubles as a build fingerprint: every artifact indexed by global

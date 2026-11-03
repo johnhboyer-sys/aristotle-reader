@@ -18,7 +18,7 @@ work:
   author: "Aristotle"
   tlg_author: "0086"
   tlg_work: "025"
-  greek_edition: "Ross, Aristotle's Metaphysics (OCT, 1924)"
+  greek_edition: "Ross, Aristotle's Metaphysics (Oxford, 1953)"
   english_source: "tlg0086.tlg025.perseus-eng2.xml"
   english_translation: "Hugh Tredennick (Loeb, 1933)"
 
@@ -40,7 +40,7 @@ chapters:
 english:
   secondary:
     id: ross
-    name: "W. D. Ross (Oxford, 1924)"
+    name: "W. D. Ross (Oxford, 1928)"
     dir: meta-ross
     books: 14
     marker: part

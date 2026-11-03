@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import {
     search,
     searchCombo,
     searchPhraseVariants,
     greekFold,
+    englishQueryUnits,
     COMBO_WINDOW_DEFAULT,
     COMBO_WINDOW_MAX,
     type SearchMode,
@@ -17,8 +18,13 @@
     type SlotRelation,
     type ComboOptions,
     type WindowUnit,
+    type EngHit,
+    type Offsets,
     pool,
+    loadOffsets,
   } from '../lib/search';
+  import { englishPlace, positionsByChapter } from '../lib/english-hit';
+  import { engHitCount, hitCount, paginate } from '../lib/search-pages';
   import {
     fetchBook,
     fetchChapters,
@@ -30,8 +36,8 @@
     type ChapterRef,
     type LemmaCandidate,
   } from '../lib/data';
-  import { escapeRe, highlightPrefixMatches, searchTermPrefix } from '../lib/text';
-  import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS } from '../lib/works';
+  import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS, searchableTranslations, type TranslationRef } from '../lib/works';
+  import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlSearch } from '../lib/search-url';
 
   const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -46,6 +52,21 @@
     // Grammatical hits only: the reading is stated as one-of-N when the parse
     // does not settle it. Absent when the parse is unambiguous.
     oneOf?: string;
+    // English only: one row per translation the query matched in this passage
+    // (one column, one chapter), in the work's own order, so where two
+    // translators render the same lines their words sit together. An English
+    // instance's html/jumpUrl are its first row's.
+    rows?: TransRow[];
+  }
+  interface TransRow {
+    translation: string;   // TranslationRef id
+    // The translator's short name, shown only where the work carries more
+    // than one translation — elsewhere there is no choice to name.
+    label: string;
+    title: string;         // full citation
+    html: string;
+    jumpUrl: string;
+    hits: number;          // the words it matched here, each a hit
   }
   // All instances within one chapter, merged into a single (collapsible) card.
   interface ChapterGroup {
@@ -65,6 +86,8 @@
   let engMode: SearchMode = 'all';
   let langOp: LangOp = 'and';
   let matchMode: MatchMode = 'lemma';
+  // English "any form": a word also finds its plurals and possessives.
+  let engForms = true;
   // Which works to search. Default: all. Selected in the collapsible panel below.
   let selectedWorks = new Set<string>(WORKS.map(w => w.id));
   let worksOpen = false;  // is the works "Refine" panel expanded?
@@ -102,30 +125,39 @@
   $: lemmaDeadEnd = searched && !error && totalInstances === 0 && !variantsShown
     && matchMode === 'lemma' && canWiden && !engQuery.trim();
 
+  // Stepping through history can start a search while another is running;
+  // only the latest may write results.
+  let searchRun = 0;
+
   async function findVariants() {
+    // Counted with the searches: the back button must be able to retire it.
+    const run = ++searchRun;
     variantBusy = true;
     error = '';
     try {
       const works = WORKS.map(w => w.id).filter(id => selectedWorks.has(id));
       const query = searchCtx.grkQuery || grkQuery;
       const outcome = await searchPhraseVariants(query, works);
+      if (run !== searchRun) return;
       if (!outcome.results.length && !outcome.readings.length) {
         variantNote = 'No dictionary form is recorded for one of these words, so there is nothing to widen.';
         return;
       }
       failedWorks = outcome.failedWorks;
-      totalInstances = outcome.results.reduce((n, r) => n + instCount(r), 0);
-      pages = paginate(outcome.results);
+      unsearched = [];
+      allResults = outcome.results;
+      transFilter = null;
+      workFilter = null;
       // The widened results are other inflections by definition, so the typed
       // accent pattern must not be held against them — kept, buildGroups would
       // drop τῷ and τοῦ from a search typed as τὸ, the very forms this finds.
       // Built whole, as runSearch builds it, so the ctx describes the search
       // that produced these results rather than patching the previous one.
-      searchCtx = { grkQuery: query, engQuery: '', engTerms: [], grkAccentTerms: [] };
+      searchCtx = { ...emptyCtx(), grkQuery: query };
       searched = true;
       variantsShown = true;
-      if (pages.length) await renderPage(0);
-      else { groups = []; pageIdx = 0; }
+      await showResults(outcome.results);
+      if (run !== searchRun) return;
       // Say what was actually searched. Two readings of one word routinely land
       // on the same tokens — one passage under two parses — so the places are
       // unioned, not added up, and the count below is places, not readings.
@@ -136,9 +168,9 @@
         + (outcome.cappedFrom ? `, of ${outcome.cappedFrom} possible — the rest were not tried` : '')
         + ').';
     } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
+      if (run === searchRun) error = err instanceof Error ? err.message : String(err);
     } finally {
-      variantBusy = false;
+      if (run === searchRun) variantBusy = false;
     }
   }
   let showHelp = false;
@@ -146,12 +178,16 @@
   let helpTrigger: HTMLElement | null = null;
 
   // Pagination. search() returns the complete hit list (index-only); we render
-  // it a page at a time, snapping page breaks to whole books so a chapter never
-  // splits across pages — and so only the current page's books/chapters are
-  // fetched. That keeps the request burst tiny regardless of how broad the
+  // it a page at a time, breaking pages only between chapters (lib/search-pages)
+  // so a chapter never splits across pages — and so only the current page's
+  // books are fetched. That keeps the request burst small however broad the
   // query is, instead of loading every result's book at once.
-  const PAGE_TARGET = 40;                 // ~instances per page (whole books)
+  const PAGE_TARGET = 40;                 // ~instances per page (whole chapters)
   let pages: SearchResult[][] = [];       // each page's slice of the result set
+  // Which page shows a hit: a passage that holds the end of one chapter and
+  // the start of the next sits in both pages' slices.
+  let pageOf: (r: SearchResult, chapter: string) => number = () => 0;
+  let shownResults: SearchResult[] = [];  // every page's results, once each
   let pageIdx = 0;
   let pageLoading = false;                // fetching the current page's books
   let pageError = '';                     // partial-load notice for this page
@@ -162,8 +198,138 @@
   // and jump-links after the search completes, so they must use the query that
   // produced the results — not whatever is currently typed in the boxes (a user
   // can edit the inputs without re-submitting, then page/retry/export).
-  interface SearchCtx { grkQuery: string; engQuery: string; engTerms: string[]; grkAccentTerms: string[]; }
-  let searchCtx: SearchCtx = { grkQuery: '', engQuery: '', engTerms: [], grkAccentTerms: [] };
+  interface SearchCtx {
+    grkQuery: string; engQuery: string; engTerms: string[]; grkAccentTerms: string[];
+    engPhrase: boolean;   // the English terms are a phrase: mark the run, not each word
+    engForms: boolean;    // the English terms matched any form of each word
+    langOp: LangOp;       // how the two queries were joined, for the translation filter
+  }
+  const emptyCtx = (): SearchCtx => ({
+    grkQuery: '', engQuery: '', engTerms: [], grkAccentTerms: [], engPhrase: false, engForms: false, langOp: 'and',
+  });
+  let searchCtx: SearchCtx = emptyCtx();
+
+  // ── Translations ───────────────────────────────────────────────────────────
+  // An English query is asked of every translation a work carries, and each
+  // hit says whose prose it is in. The full result set is kept so the reader
+  // can narrow it to one translator and back without searching again.
+  let allResults: SearchResult[] = [];
+  let transFilter: string | null = null;   // a TranslationRef id, or every translation
+  let transListOpen = false;
+  // Translations the English query could not be asked of (their index did
+  // not load), as "Ross (Nicomachean Ethics)".
+  let unsearched: string[] = [];
+  const TRANS_CHIPS = 8;                    // shown before "more"
+
+  function translationsOf(work: string): TranslationRef[] {
+    const w = getWork(work);
+    return w ? searchableTranslations(w) : [];
+  }
+  function translationRef(work: string, id: string): TranslationRef | undefined {
+    return translationsOf(work).find(t => t.id === id);
+  }
+
+  // Hits per translator, most first — the breakdown is itself an answer
+  // (which translators use this word, and how often). Counted within the work
+  // chosen below, if any, so the counts add up to the English hits shown.
+  $: transCounts = (() => {
+    const by = new Map<string, { id: string; short: string; n: number }>();
+    for (const r of narrowWork(allResults, workFilter)) {
+      for (const h of r.engHits ?? []) {
+        const entry = by.get(h.translation)
+          ?? by.set(h.translation, { id: h.translation, short: translationRef(r.work, h.translation)?.short ?? h.translation, n: 0 }).get(h.translation)!;
+        entry.n += engHitCount(h);
+      }
+    }
+    return [...by.values()].sort((a, b) => b.n - a.n || a.short.localeCompare(b.short));
+  })();
+  // A filter is offered only where some work answered in two translations or
+  // more; across single-translation works it would only restate the work list.
+  // A filter in force stays on offer, so it can be lifted.
+  $: transChoice = transFilter !== null || (() => {
+    const shown = narrowWork(allResults, workFilter);
+    return new Set(shown.flatMap(r => (r.engHits ?? []).map(h => `${r.work}:${h.translation}`))).size
+      > new Set(shown.filter(r => r.engHits?.length).map(r => r.work)).size;
+  })();
+
+  // ── Works ──────────────────────────────────────────────────────────────────
+  // Where the hits fall, most first, and a way to narrow to one work. Pages run
+  // in corpus order, so without this a broad search's first page says nothing
+  // of the works further on. Counted under the translation filter, so the
+  // counts add up to the total shown.
+  let workFilter: string | null = null;    // a work id, or every work
+  let workListOpen = false;
+  const WORK_CHIPS = 8;                    // shown before "more"
+  function narrowWork(results: SearchResult[], id: string | null): SearchResult[] {
+    return id ? results.filter(r => r.work === id) : results;
+  }
+  $: workCounts = (() => {
+    const by = new Map<string, number>();
+    for (const r of narrow(allResults, transFilter, searchCtx)) {
+      const n = hitCount(r);
+      if (n) by.set(r.work, (by.get(r.work) ?? 0) + n);
+    }
+    return [...by.entries()]
+      .map(([id, n]) => ({ id, n, abbr: getWork(id)?.abbr ?? id, title: getWork(id)?.title ?? id }))
+      .sort((a, b) => b.n - a.n || (WORK_ORDER.get(a.id) ?? 0) - (WORK_ORDER.get(b.id) ?? 0));
+  })();
+  $: workChoice = workFilter !== null || workCounts.length > 1;
+
+  $: countText = totalInstances === 0
+    ? 'No passages found.'
+    : `${totalInstances} instance${totalInstances === 1 ? '' : 's'}`
+      + (searchCtx.grkAccentTerms.length ? ' before accent filtering' : '')
+      + (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '');
+
+  function setWorkFilter(id: string | null) {
+    workFilter = workFilter === id ? null : id;
+    // A filter, not a new search, as the translator chip is.
+    if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter }, 'replace');
+    showResults(allResults);
+  }
+
+  // One translation's hits, or all of them. A passage that matched only in
+  // the translations set aside drops out — unless its Greek matched and the
+  // two queries were joined by "either", when the Greek hit still stands.
+  function narrow(results: SearchResult[], id: string | null, ctx: SearchCtx): SearchResult[] {
+    if (!id) return results;
+    return results.flatMap(r => {
+      if (!r.engHits) return [r];
+      const engHits = r.engHits.filter(h => h.translation === id);
+      if (engHits.length) return [{ ...r, engHits, engMatch: true }];
+      return r.grkMatch && ctx.langOp === 'or' ? [{ ...r, engHits: [], engMatch: false }] : [];
+    });
+  }
+
+  let layoutRun = 0;
+  async function showResults(results: SearchResult[]) {
+    const run = ++layoutRun;
+    const shown = narrowWork(narrow(results, transFilter, searchCtx), workFilter);
+    totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
+    shownResults = shown;
+    // Chapter edges come from each work's offsets; a work whose offsets do
+    // not load is paged by whole books, as before.
+    const offsets = new Map<string, Offsets | null>();
+    await pool([...new Set(shown.map(r => r.work))], 8, async w => {
+      offsets.set(w, await loadOffsets(w).catch(() => null));
+    });
+    // A newer search or filter laid out its own pages while these loaded.
+    if (run !== layoutRun) return;
+    const laid = paginate(shown, offsets, PAGE_TARGET);
+    pages = laid.pages;
+    pageOf = laid.pageOf;
+    if (pages.length) await renderPage(0);
+    // A retired page leaves pageLoading to the layout that retired it.
+    else { groups = []; pageIdx = 0; pageLoading = false; }
+  }
+
+  function setTransFilter(id: string | null) {
+    transFilter = transFilter === id ? null : id;
+    // A filter, not a new search: it replaces the history entry rather than
+    // adding one.
+    if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter }, 'replace');
+    showResults(allResults);
+  }
 
   // ── Accent-sensitive Greek matching ────────────────────────────────────────
   // The indexes are accent-folded (λόγος and λογός share a key), which is the
@@ -650,7 +816,7 @@
     const chs = chapters
       .map((c, i) => ({ ...c, ci: colIdx.get(c.column) ?? 0, ln: parseInt(c.line), order: i }))
       .sort((a, b) => a.ci - b.ci || a.ln - b.ln);
-    return (column: string, line: number): { chapter: string; bekker: string; order: number } => {
+    const at = (column: string, line: number): { chapter: string; bekker: string; order: number } => {
       // Defensive: never return undefined (callers deref .chapter). If the
       // chapter list is empty, group the hit under a placeholder rather than
       // throwing and collapsing the whole page.
@@ -663,6 +829,9 @@
       }
       return found;
     };
+    // A chapter the text names outright (an overlay slice carries its own).
+    const named = (chapter: string) => chs.find(c => c.chapter === chapter);
+    return { at, named };
   }
 
   // Bekker line of the token at index `pos` — see lineAtPosition in lib/data.
@@ -670,38 +839,23 @@
   // a hit on GA 775a11a was printed and linked as "775a11", a line that column
   // does not have.
 
-  // Approximate Bekker line of the earliest English match (for chapter
-  // grouping). Approximate in WHICH line it picks — but the line it picks is
-  // named in full, suffix included, or the jump URL cites a line that is not
-  // in the column.
-  function englishLine(seg: Segment, terms: string[]): { n: number; sub?: string } {
-    const text = seg.english?.text ?? '';
-    let earliest = -1;
-    for (const t of terms) {
-      const clean = searchTermPrefix(t);
-      if (!clean) continue;
-      const m = new RegExp(`(^|[^\\p{L}\\p{M}\\p{N}_])${escapeRe(clean)}`, 'iu').exec(text);
-      if (m && (earliest < 0 || m.index < earliest)) earliest = m.index;
-    }
-    const lines = seg.greek;
-    if (earliest < 0 || !lines.length) return { n: lines[0]?.n ?? 1, sub: lines[0]?.sub };
-    const idx = Math.min(lines.length - 1, Math.floor(earliest / Math.max(1, text.length) * lines.length));
-    return { n: lines[idx].n, sub: lines[idx].sub };
-  }
-
-  // Instances a result contributes (mirrors how `buildGroups` adds them): one
-  // per Greek match position, plus one for an English match. Lets us count the
-  // total and lay out pages from the index alone, before any book is fetched.
-  function instCount(r: SearchResult): number {
-    return (r.grkMatch ? r.grkPositions.length : 0) + (r.engMatch ? 1 : 0);
-  }
+  // What an instance counts for: a Greek one is one word; an English one, each
+  // word its translations matched (see hitCount in lib/search-pages, which
+  // counts the total and lays out pages from the index alone).
+  const hitsIn = (inst: Instance) => inst.rows?.reduce((n, row) => n + row.hits, 0) ?? 1;
+  const groupHits = (g: ChapterGroup) => g.instances.reduce((n, inst) => n + hitsIn(inst), 0);
 
   // Build the chapter groups for a slice of results: load the books + chapters
   // they touch (bounded concurrency), then assemble and sort. A failed book or
   // chapter fetch is evicted (see data.ts) and its work:book key collected in
   // `failed` — NOT swallowed as a successful empty result — so the caller can
   // show an incomplete-results notice and offer a retry.
-  async function buildGroups(results: SearchResult[], ctx: SearchCtx): Promise<{ groups: ChapterGroup[]; failed: string[] }> {
+  // `onPage` says whether a hit, by its chapter, belongs on the page being built.
+  async function buildGroups(
+    results: SearchResult[],
+    ctx: SearchCtx,
+    onPage: (r: SearchResult, chapter: string) => boolean = () => true,
+  ): Promise<{ groups: ChapterGroup[]; failed: string[] }> {
     const wbPairs = [...new Set(results.map(r => `${r.work}:${r.meta.book}`))];
     const workSet = [...new Set(results.map(r => r.work))];
     const failed: string[] = [];
@@ -741,9 +895,19 @@
     const qs = new URLSearchParams();
     if (ctx.grkQuery) qs.set('hlg', ctx.grkQuery);
     if (ctx.engQuery) qs.set('hle', ctx.engQuery);
+    if (ctx.engQuery && ctx.engPhrase) qs.set('hlm', 'phrase');
+    if (ctx.engQuery && ctx.engForms) qs.set('hlf', 'any');
     const base = qs.toString();
-    const jumpFor = (work: string, book: number, column: string, line: number, sub?: string) =>
-      `${BASE_URL}${workPath(work, book)}?${base}${base ? '&' : ''}loc=${column}:${lineRef(line, sub)}`;
+    // A translation hit opens the reader in that translation, where the
+    // highlighted words are; a Greek one leaves the reader's choice alone.
+    // A Greek hit also names its exact tokens (hlt), so the reader marks the
+    // words the search found — every form a lemma search reached, the words
+    // of a grammatical or proximity search — not whatever begins like the
+    // typed text.
+    const jumpFor = (work: string, book: number, column: string, line: number, sub?: string, trans?: string, hits?: number[]) =>
+      `${BASE_URL}${workPath(work, book)}?${base}${base ? '&' : ''}`
+      + `${trans ? `trans=${encodeURIComponent(trans)}&` : ''}`
+      + `${hits?.length ? `hlt=${column}:${hits.join(',')}&` : ''}loc=${column}:${lineRef(line, sub)}`;
 
     for (const r of results) {
       const seg = segMap.get(`${r.work}:${r.meta.id}`);
@@ -756,12 +920,15 @@
         if (ctx.grkAccentTerms.length) {
           for (const line of seg.greek) for (const tok of line.tokens) toks.push(tok.t);
         }
+        const kept = r.grkPositions.filter(pos => !ctx.grkAccentTerms.length
+          || accentTokenMatch(toks[pos] ?? '', ctx.grkAccentTerms));
+        const keep = new Set(kept);
         for (let i = 0; i < r.grkPositions.length; i++) {
           const pos = r.grkPositions[i];
-          if (ctx.grkAccentTerms.length
-            && !accentTokenMatch(toks[pos] ?? '', ctx.grkAccentTerms)) continue;
+          if (!keep.has(pos)) continue;
           const { n: line, sub } = lineAtPosition(seg, pos);
-          const ch = lookup(seg.column, line);
+          const ch = lookup.at(seg.column, line);
+          if (!onPage(r, ch.chapter)) continue;
           // r.grammar runs parallel to grkPositions on a grammatical search.
           // Where the parse doesn't settle the reading, say so on the hit
           // rather than letting the match imply a certainty it doesn't have.
@@ -771,13 +938,49 @@
                 .map(([cat, vals]) => `${cat} ${vals.join(' or ')}`)
                 .join(' · ')
             : undefined;
-          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${lineRef(line, sub)}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, sub), oneOf });
+          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${lineRef(line, sub)}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, sub, undefined, kept), oneOf });
         }
       }
       if (r.engMatch) {
-        const { n: line, sub } = englishLine(seg, ctx.engTerms);
-        const ch = lookup(seg.column, line);
-        add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: englishKwic(seg, ctx.engTerms), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, sub) });
+        const ts = translationsOf(r.work);
+        const several = ts.length > 1;
+        // A work the registry does not list still has its one translation.
+        const hits: EngHit[] = r.engHits ?? [{ translation: ts[0]?.id ?? 'english', positions: [] }];
+        // Rows sharing a chapter share an instance; a column that holds the
+        // end of one chapter and the start of the next can place two
+        // translations' hits on either side of the break.
+        const byChapter = new Map<string, { ch: { chapter: string; bekker: string; order: number }; line: number; rows: TransRow[] }>();
+        for (const hit of hits) {
+          const t = ts.find(x => x.id === hit.translation)
+            ?? { id: hit.translation, slot: 'english' as const, short: hit.translation, name: hit.translation };
+          // One translation's words in a column can fall in two chapters;
+          // each chapter shows and counts its own.
+          for (const positions of positionsByChapter(seg, t, hit.positions)) {
+            const place = englishPlace(seg, t, positions, ctx.engTerms, ctx.engPhrase, ctx.engForms);
+            if (!place) continue;
+            const ch = (place.chapter !== null ? lookup.named(place.chapter) : undefined)
+              ?? lookup.at(seg.column, place.chapter !== null ? place.line : seg.greek[0]?.n ?? place.line);
+            if (!onPage(r, ch.chapter)) continue;
+            const slot = byChapter.get(ch.chapter)
+              ?? byChapter.set(ch.chapter, { ch, line: place.line, rows: [] }).get(ch.chapter)!;
+            const hits = engHitCount({ ...hit, positions });
+            // Two runs that land in one chapter stay one row, its first snippet.
+            const same = slot.rows.find(row => row.translation === t.id);
+            if (same) { same.hits += hits; continue; }
+            slot.line = Math.min(slot.line, place.line);
+            slot.rows.push({
+              translation: t.id,
+              label: several ? t.short : '',
+              title: t.name,
+              html: place.html,
+              jumpUrl: jumpFor(r.work, r.meta.book, seg.column, place.line, place.sub, several ? t.id : undefined),
+              hits,
+            });
+          }
+        }
+        for (const { ch, line, rows } of byChapter.values()) {
+          add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: rows[0].html, jumpUrl: rows[0].jumpUrl, rows });
+        }
       }
     }
 
@@ -787,37 +990,21 @@
     return { groups: out, failed: [...new Set(failed)] };
   }
 
-  // Split the full result set into pages of whole books (~PAGE_TARGET instances
-  // each). Ordered by home-page work order then book; a stable sort keeps each
-  // book's hits in document order. Whole books per page ⇒ no chapter splits and
-  // only a handful of books fetched per page.
-  function paginate(results: SearchResult[]): SearchResult[][] {
-    const sorted = [...results].sort((a, b) =>
-      ((WORK_ORDER.get(a.work) ?? 0) - (WORK_ORDER.get(b.work) ?? 0)) || (a.meta.book - b.meta.book));
-    const blocks: { results: SearchResult[]; count: number }[] = [];
-    let key = '';
-    for (const r of sorted) {
-      const k = `${r.work}:${r.meta.book}`;
-      if (k !== key) { blocks.push({ results: [], count: 0 }); key = k; }
-      const blk = blocks[blocks.length - 1];
-      blk.results.push(r); blk.count += instCount(r);
-    }
-    const out: SearchResult[][] = [];
-    let page: SearchResult[] = []; let count = 0;
-    for (const blk of blocks) {
-      if (page.length && count + blk.count > PAGE_TARGET) { out.push(page); page = []; count = 0; }
-      page.push(...blk.results); count += blk.count;
-    }
-    if (page.length) out.push(page);
-    return out;
-  }
-
   async function renderPage(i: number) {
     pageIdx = i;
     pageLoading = true;
     pageError = '';
+    // A newer search (the back button can start one mid-load) replaces
+    // `pages`; this page's books must not then overwrite its results.
+    // A newer search or filter starts a new layout before its pages exist, so
+    // the layout is checked as well as the pages.
+    const set = pages;
+    const layout = layoutRun;
+    const stale = () => set !== pages || layout !== layoutRun;
     try {
-      const { groups: g, failed } = await buildGroups(pages[i] ?? [], searchCtx);
+      const owner = pageOf;
+      const { groups: g, failed } = await buildGroups(set[i] ?? [], searchCtx, (r, chapter) => owner(r, chapter) === i);
+      if (stale()) return;
       groups = g;
       // Single-hit chapters open by default; merged (multi-hit) start collapsed.
       expanded = new Set(groups.filter(x => x.instances.length === 1).map(x => x.key));
@@ -825,10 +1012,11 @@
         pageError = `${failed.length} passage source${failed.length === 1 ? '' : 's'} on this page didn’t load — some hits may be missing.`;
       }
     } catch (err) {
+      if (stale()) return;
       pageError = String(err);
       groups = [];
     } finally {
-      pageLoading = false;
+      if (!stale()) pageLoading = false;
     }
   }
 
@@ -840,26 +1028,119 @@
     }
   }
 
-  // The command palette (and any external link) can hand off a query via
-  // ?g= (Greek) / ?e= (English): prefill and run it on mount.
+  // ── The search in the address bar ──────────────────────────────────────────
+  // Every search is written to the URL (see lib/search-url), so it can be
+  // shared, bookmarked, reloaded, and stepped back through. The widened
+  // "any inflection" results are not: they are a step taken from a search,
+  // and the URL keeps the search they were taken from.
+  const WORK_IDS = WORKS.map(w => w.id);
+  let lastSearch: UrlSearch | null = null;   // the submitted search, as written
+
+  function currentSearch(): UrlSearch {
+    return {
+      grk: grkQuery, eng: engQuery, grkMode, engMode, matchMode, accent: accentSensitive, langOp, engForms,
+      works: WORK_IDS.filter(id => selectedWorks.has(id)),
+      trans: null,
+      workFilter: null,
+      lemmas: [...soloLemma.picked],
+      combo: comboActive ? {
+        slots: comboEditors.filter(ed => comboSlot(ed, comboOrdered)).map(ed => ({
+          kind: ed.kind, relation: ed.relation, text: ed.text, picked: [...ed.picked], grammar: { ...ed.grammar },
+        })),
+        window: comboWindow, unit: comboUnit, ordered: comboOrdered, crossChapter: comboCrossChapter,
+      } : null,
+    };
+  }
+
+  function writeUrl(s: UrlSearch, how: 'push' | 'replace') {
+    const qs = encodeSearchUrl(s, WORK_IDS);
+    const search = qs ? `?${qs}` : '';
+    // Searching again for the same thing adds no history entry. The address
+    // may spell it differently (a ?q= arrival, say): rewrite that in place.
+    if (how === 'push' && search === window.location.search) return;
+    if (how === 'push' && encodeSearchUrl(decodeSearchUrl(window.location.search, WORK_IDS), WORK_IDS) === qs) how = 'replace';
+    const url = `${window.location.pathname}${search}${window.location.hash}`;
+    if (how === 'push') window.history.pushState(null, '', url);
+    else window.history.replaceState(null, '', url);
+  }
+
+  // Sets every control from a URL, defaults included, so stepping back to a
+  // plain search clears what a later one set.
+  function applySearch(s: UrlSearch) {
+    grkQuery = s.grk;
+    engQuery = s.eng;
+    grkMode = s.grkMode;
+    engMode = s.engMode;
+    matchMode = s.matchMode;
+    accentSensitive = s.accent;
+    langOp = s.langOp;
+    engForms = s.engForms;
+    selectedWorks = new Set(s.works);
+    soloLemma = { ...newComboEditor('lemma'), picked: [...s.lemmas] };
+    const combo = s.combo;
+    comboEditors = combo
+      ? combo.slots.map(slot => ({ ...newComboEditor(slot.kind), relation: slot.relation, text: slot.text, picked: [...slot.picked], grammar: { ...slot.grammar } }))
+      : [newComboEditor('lemma'), newComboEditor('form')];
+    comboWindow = combo?.window ?? COMBO_WINDOW_DEFAULT;
+    comboUnit = combo?.unit ?? 'words';
+    comboOrdered = combo?.ordered ?? false;
+    comboCrossChapter = combo?.crossChapter ?? true;
+  }
+
+  // Runs whatever search the address bar holds; with none, clears the page.
+  async function searchFromUrl() {
+    const s = decodeSearchUrl(window.location.search, WORK_IDS);
+    applySearch(s);
+    // The reactive comboActive / soloLemmaActive that doSearch reads must
+    // catch up with the controls just set.
+    await tick();
+    if (hasSearch(s)) {
+      await doSearch(undefined, { history: 'none', trans: s.trans, work: s.workFilter });
+      return;
+    }
+    searchRun++;
+    lastSearch = null;
+    searched = false;
+    loading = false;
+    error = '';
+    allResults = [];
+    pages = [];
+    groups = [];
+    totalInstances = 0;
+    transFilter = null;
+    workFilter = null;
+    variantNote = '';
+    variantsShown = false;
+    variantBusy = false;
+  }
+
+  // The command palette hands off ?g= (Greek) / ?e= (English); those, and
+  // any search this page wrote, are run on load.
+  const onPopState = () => { searchFromUrl(); };
   onMount(() => {
-    const params = new URLSearchParams(window.location.search);
-    const g = params.get('g');
-    const en = params.get('e');
-    if (g) grkQuery = g;
-    if (en) engQuery = en;
-    if (g || en) doSearch();
+    window.addEventListener('popstate', onPopState);
+    const s = decodeSearchUrl(window.location.search, WORK_IDS);
+    if (hasSearch(s)) searchFromUrl();
+  });
+  onDestroy(() => {
+    if (typeof window !== 'undefined') window.removeEventListener('popstate', onPopState);
   });
 
-  async function doSearch(e?: Event) {
+  async function doSearch(e?: Event, opts: { history?: 'push' | 'none'; trans?: string | null; work?: string | null } = {}) {
     e?.preventDefault();
     if (!grkQuery.trim() && !engQuery.trim() && !comboActive && !soloLemmaActive) return;
+    const run = ++searchRun;
+    lastSearch = currentSearch();
+    if ((opts.history ?? 'push') === 'push') writeUrl(lastSearch, 'push');
     loading = true;
     error = '';
     failedWorks = [];
+    unsearched = [];
     approximateChapters = [];
     variantNote = '';
     variantsShown = false;
+    // It retires any inflection lookup still running, so frees its button.
+    variantBusy = false;
     pageError = '';
     csvNote = '';
     searched = false;
@@ -872,14 +1153,18 @@
         // post-filter to apply.
         grkQuery: comboActive ? '' : soloLemmaActive ? soloLemma.picked.join(' ') : grkQuery.trim(),
         engQuery: comboActive ? '' : engQuery.trim(),
-        engTerms: comboActive ? [] : engQuery.trim().split(/\s+/).filter(Boolean),
+        // The words as the index splits them: "coming-to-be" is three.
+        engTerms: comboActive ? [] : englishQueryUnits(engQuery).flat(),
         // A picked lemma is a fold key, not the reader's spelling, so there is
         // no typed accent pattern to post-filter against.
         grkAccentTerms: !comboActive && !soloLemmaActive && accentSensitive
           ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
           : [],
+        engPhrase: engMode === 'phrase',
+        engForms,
+        langOp,
       };
-      const { results, failedWorks: failed, approximateChapters: approximate } = comboActive
+      const { results, failedWorks: failed, approximateChapters: approximate, unsearchedTranslations } = comboActive
         ? await searchCombo(comboSearchSlots, comboOptions, works)
         // Picked headwords are OR-ed: choosing two spellings of one word, or two
         // homonyms, asks for either, never for both in the same passage.
@@ -888,19 +1173,31 @@
         // every headword that spelling can belong to — ἤν back to εἰμί and ὅς —
         // which is exactly what the picker exists to rule out.
         : soloLemmaActive
-          ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, langOp, works, 'headword')
-          : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode);
+          ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, langOp, works, 'headword', engForms)
+          : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode, engForms);
+      if (run !== searchRun) return;
       failedWorks = failed;
       approximateChapters = approximate ?? [];
-      totalInstances = results.reduce((n, r) => n + instCount(r), 0);
-      pages = paginate(results);
+      unsearched = (unsearchedTranslations ?? []).map(({ work, translation }) =>
+        `${translationRef(work, translation)?.short ?? translation} (${getWork(work)?.title ?? work})`);
+      allResults = results;
+      // A translation named in the URL holds only if this search found it.
+      const trans = opts.trans ?? null;
+      transFilter = trans && results.some(r => r.engHits?.some(h => h.translation === trans)) ? trans : null;
+      lastSearch.trans = transFilter;
+      // So does a work, if it holds a hit.
+      const work = opts.work ?? null;
+      workFilter = work && results.some(r => r.work === work) ? work : null;
+      lastSearch.workFilter = workFilter;
+      if ((trans && !transFilter) || (work && !workFilter)) writeUrl(lastSearch, 'replace');
+      transListOpen = false;
+      workListOpen = false;
       searched = true;
-      if (pages.length) await renderPage(0);
-      else { groups = []; pageIdx = 0; }
+      await showResults(results);
     } catch (err) {
-      error = err instanceof Error ? err.message : String(err);
+      if (run === searchRun) error = err instanceof Error ? err.message : String(err);
     } finally {
-      loading = false;
+      if (run === searchRun) loading = false;
     }
   }
 
@@ -927,43 +1224,6 @@
     if (start > 0) html = '… ' + html;
     if (end < toks.length) html = html + ' …';
     return html;
-  }
-
-  // English keyword-in-context: a character window around the first matched
-  // word in the full chunk text, with all query terms highlighted.
-  const ENG_WINDOW = 140;
-  function englishKwic(seg: Segment, terms: string[]): string {
-    const text = seg.english?.text ?? '';
-    if (!text) return '';
-    let earliest = -1;
-    for (const t of terms) {
-      const clean = searchTermPrefix(t);
-      if (!clean) continue;
-      const m = new RegExp(`(^|[^\\p{L}\\p{M}\\p{N}_])${escapeRe(clean)}`, 'iu').exec(text);
-      if (m && (earliest < 0 || m.index < earliest)) earliest = m.index;
-    }
-    if (earliest < 0) {
-      const head = text.slice(0, 300);
-      return esc(head) + (text.length > head.length ? ' …' : '');
-    }
-    let start = Math.max(0, earliest - ENG_WINDOW);
-    let end = Math.min(text.length, earliest + ENG_WINDOW);
-    if (start > 0) {
-      const sp = text.indexOf(' ', start);
-      if (sp >= 0 && sp < earliest) start = sp + 1;
-    }
-    if (end < text.length) {
-      const sp = text.lastIndexOf(' ', end);
-      if (sp > earliest) end = sp;
-    }
-    let html = highlightEnglish(text.slice(start, end), terms);
-    if (start > 0) html = '… ' + html;
-    if (end < text.length) html = html + ' …';
-    return html;
-  }
-
-  function highlightEnglish(text: string, terms: string[]): string {
-    return highlightPrefixMatches(text, terms);
   }
 
   function esc(s: string): string {
@@ -1001,17 +1261,28 @@
       // the whole set (loads any not-yet-fetched books on demand, bounded +
       // retried). If some book truly can't load, the CSV omits those rows and
       // we say so rather than silently shipping a short file.
-      const { groups: allGroups, failed } = await buildGroups(pages.flat(), searchCtx);
+      const { groups: allGroups, failed } = await buildGroups(shownResults, searchCtx);
       const origin = typeof location !== 'undefined' ? location.origin : '';
-      const rows: string[][] = [['Work', 'Book', 'Chapter', 'Bekker', 'Language', 'Snippet', 'URL']];
+      const rows: string[][] = [['Work', 'Book', 'Chapter', 'Bekker', 'Language', 'Translation', 'Snippet', 'URL']];
       for (const g of allGroups) {
         const w = getWork(g.work);
         const workTitle = w?.title ?? g.work;
         const book = w?.bookLabels[g.book - 1] ?? String(g.book);
         for (const inst of g.instances) {
+          if (inst.rows) {
+            // One row per translation: each is its own hit, in its own words.
+            for (const row of inst.rows) {
+              const t = translationRef(g.work, row.translation);
+              rows.push([
+                workTitle, String(book), g.chapter, inst.ref, 'English',
+                t?.short ?? row.translation, stripHtml(row.html), origin + row.jumpUrl,
+              ]);
+            }
+            continue;
+          }
           rows.push([
             workTitle, String(book), g.chapter, inst.ref,
-            inst.lang === 'grk' ? 'Greek' : 'English',
+            inst.lang === 'grk' ? 'Greek' : 'English', '',
             stripHtml(inst.html),
             origin + inst.jumpUrl,
           ]);
@@ -1380,6 +1651,11 @@
           <label><input type="radio" name="engmode" value={opt.v} bind:group={engMode} /> {opt.l}</label>
         {/each}
       </fieldset>
+      <fieldset class="mode-group" title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
+        <legend>Match</legend>
+        <label><input type="radio" name="engforms" value={true} bind:group={engForms} /> Any form of this word</label>
+        <label><input type="radio" name="engforms" value={false} bind:group={engForms} /> Only as I typed it</label>
+      </fieldset>
     </div>
 
     <div class="works-panel" role="group" aria-label="Works to search">
@@ -1462,8 +1738,8 @@
       Type Greek in Greek letters or <button type="button" class="link-btn" on:click={openHelp}>Beta Code</button>
       (<code>texnh</code> = τέχνη). <code>*</code> matches any run of characters; <code>?</code> matches exactly one.
       <a class="guide-link" href={`${BASE_URL}/advanced#wildcards`} target="_blank" rel="noreferrer">What is this?</a>
-      Use either inside or at the end of a word, in Greek or English. At the start,
-      <code>*</code> is read as the Beta Code capital marker and ignored — there is no suffix wildcard.
+      Use either inside or at the end of a word. In English a <code>*</code> may also start a
+      word (<code>*ness</code>); in Greek it marks a Beta Code capital there, so Greek has no suffix wildcard.
     </p>
   </form>
 
@@ -1523,6 +1799,11 @@
     </div>
   {/if}
 
+  <!-- Always in the page, so a screen reader hears it change: a live region
+       added with its text already in it is usually not announced, and the
+       visible count is rebuilt with every search. -->
+  <p class="sr-only" role="status" aria-live="polite">{loading ? 'Searching…' : searched && !error ? countText : ''}</p>
+
   {#if error}
     <p class="search-error">{error}</p>
   {:else if searched}
@@ -1530,6 +1811,12 @@
       <p class="search-incomplete" role="alert">
         ⚠ Incomplete results — couldn't load {failedWorks.length === 1 ? 'the index for' : 'indexes for'}
         {failedWorks.map((w) => getWork(w)?.title ?? w).join(', ')}. Counts below may be short.
+        <button type="button" class="retry-btn" on:click={doSearch}>Retry</button>
+      </p>
+    {/if}
+    {#if unsearched.length}
+      <p class="search-incomplete" role="alert">
+        ⚠ English not searched in {unsearched.join(', ')} — {unsearched.length === 1 ? 'its index' : 'their indexes'} didn't load.
         <button type="button" class="retry-btn" on:click={doSearch}>Retry</button>
       </p>
     {/if}
@@ -1541,13 +1828,7 @@
       </p>
     {/if}
     <div class="result-bar">
-      <p class="result-count">
-        {totalInstances === 0
-          ? 'No passages found.'
-          : `${totalInstances} instance${totalInstances === 1 ? '' : 's'}` +
-            (searchCtx.grkAccentTerms.length ? ' before accent filtering' : '') +
-            (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '')}
-      </p>
+      <p class="result-count">{countText}</p>
       {#if canWiden && !variantsShown}
         <button type="button" class="export-btn" on:click={findVariants} disabled={variantBusy}
           title="τὸ τί ἦν εἶναι also stands as τῷ τί ἦν εἶναι — same formula, different endings">
@@ -1561,6 +1842,46 @@
         </button>
       {/if}
     </div>
+    {#if workChoice}
+      <div class="trans-filter" role="group" aria-label="Show hits from">
+        <span class="trans-filter-label">Works</span>
+        <button type="button" class="auth-btn" class:on={workFilter === null} aria-pressed={workFilter === null}
+          on:click={() => setWorkFilter(null)}>All</button>
+        {#each workCounts as wc, i}
+          {#if i < WORK_CHIPS || workListOpen || wc.id === workFilter}
+            <button type="button" class="auth-btn" class:on={workFilter === wc.id} aria-pressed={workFilter === wc.id}
+              title={`Show only hits in the ${wc.title}${workFilter === wc.id ? ' (click again for all)' : ''}`}
+              on:click={() => setWorkFilter(wc.id)}>{wc.abbr}<span class="auth-count">{wc.n}</span></button>
+          {/if}
+        {/each}
+        {#if workCounts.length > WORK_CHIPS}
+          <button type="button" class="scope-btn" aria-expanded={workListOpen}
+            on:click={() => (workListOpen = !workListOpen)}>
+            {workListOpen ? 'fewer' : `+${workCounts.length - WORK_CHIPS} more`}
+          </button>
+        {/if}
+      </div>
+    {/if}
+    {#if transChoice}
+      <div class="trans-filter" role="group" aria-label="Show English hits from">
+        <span class="trans-filter-label">Translations</span>
+        <button type="button" class="auth-btn" class:on={transFilter === null} aria-pressed={transFilter === null}
+          on:click={() => setTransFilter(null)}>All</button>
+        {#each transCounts as tc, i}
+          {#if i < TRANS_CHIPS || transListOpen || tc.id === transFilter}
+            <button type="button" class="auth-btn" class:on={transFilter === tc.id} aria-pressed={transFilter === tc.id}
+              title={`Show only hits in ${tc.short}’s translation${transFilter === tc.id ? ' (click again for all)' : ''}`}
+              on:click={() => setTransFilter(tc.id)}>{tc.short}<span class="auth-count">{tc.n}</span></button>
+          {/if}
+        {/each}
+        {#if transCounts.length > TRANS_CHIPS}
+          <button type="button" class="scope-btn" aria-expanded={transListOpen}
+            on:click={() => (transListOpen = !transListOpen)}>
+            {transListOpen ? 'fewer' : `+${transCounts.length - TRANS_CHIPS} more`}
+          </button>
+        {/if}
+      </div>
+    {/if}
     {#if lemmaDeadEnd}
       <p class="search-approximate">
         These words occur, but not together in one passage. Searching for the
@@ -1604,7 +1925,7 @@
               <span class="caret">{expanded.has(g.key) ? '▾' : '▸'}</span>
               <span class="group-label">Chapter {g.chapter}</span>
               <span class="group-bekker">{g.bekker}</span>
-              <span class="group-count">{g.instances.length} {g.instances.length === 1 ? 'instance' : 'instances'}</span>
+              <span class="group-count">{groupHits(g)} {groupHits(g) === 1 ? 'instance' : 'instances'}</span>
             </button>
 
             {#if expanded.has(g.key)}
@@ -1612,10 +1933,27 @@
                 {#each g.instances as inst}
                   <li class="instance">
                     <a class="inst-ref" href={inst.jumpUrl} target="_blank" rel="noopener" title="Open in reader (new tab)">{inst.ref}</a>
-                    <span class="inst-snippet" class:greek={inst.lang === 'grk'} lang={inst.lang === 'grk' ? 'grc' : 'en'}>
-                      <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-                      {@html inst.html}
-                    </span>
+                    {#if inst.rows}
+                      <!-- One passage in each translation that has the words. -->
+                      <div class="inst-rows">
+                        {#each inst.rows as row}
+                          <div class="inst-row">
+                            {#if row.label}
+                              <a class="inst-trans" href={row.jumpUrl} target="_blank" rel="noopener" title={`Open in ${row.title} (new tab)`}>{row.label}</a>
+                            {/if}
+                            <span class="inst-snippet" lang="en">
+                              <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                              {@html row.html}
+                            </span>
+                          </div>
+                        {/each}
+                      </div>
+                    {:else}
+                      <span class="inst-snippet" class:greek={inst.lang === 'grk'} lang={inst.lang === 'grk' ? 'grc' : 'en'}>
+                        <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                        {@html inst.html}
+                      </span>
+                    {/if}
                     {#if inst.oneOf}
                       <span class="inst-oneof" title="The morphological analysis allows more than one reading of this form">{inst.oneOf}</span>
                     {/if}
@@ -2576,6 +2914,45 @@
     font-family: var(--font-greek);
     font-size: 0.95rem;
     color: var(--text);
+  }
+  /* The same passage in each translation that matched, stacked. */
+  .inst-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+  .inst-row { min-width: 0; }
+  .inst-trans {
+    display: inline-block;
+    margin-right: 0.45rem;
+    font-family: var(--font-ui);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: var(--text-mid);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0 0.45rem;
+    white-space: nowrap;
+    vertical-align: 0.08em;
+  }
+  .inst-trans:hover { color: var(--accent); border-color: var(--accent-light); }
+
+  .trans-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0 0 0.75rem;
+  }
+  .trans-filter-label {
+    font-family: var(--font-ui);
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--text-mid);
+    margin-right: 0.15rem;
   }
 
   :global(mark) {

@@ -32,6 +32,9 @@ def validate(data_dir: Path, manifests_dir: Path) -> list[Problem]:
     for manifest in manifests:
         _validate_manifest_schema(manifest, problems)
         _validate_work_data(data_dir, manifest, problems)
+    _validate_search_shards(data_dir, manifests, problems)
+    _validate_chapter_bounds(data_dir, manifests, problems)
+    _validate_shared_chapter_starts(data_dir, manifests, problems)
     return problems
 
 
@@ -218,7 +221,288 @@ def _validate_work_data(data_dir: Path, manifest: WorkManifest, problems: list[P
     _validate_columns(manifest, loaded.get("columns.json"), segments, problems)
     _validate_analyses(manifest, data_dir, loaded.get("analyses.json"), token_keys, problems)
     _validate_footnotes(manifest, work_dir, loaded, problems)
+    _validate_translation_indexes(manifest, work_dir, loaded, problems)
     _validate_public_gating(manifest, loaded, problems)
+
+
+def _validate_translation_indexes(manifest: WorkManifest, work_dir: Path, loaded: dict[str, Any],
+                                  problems: list[Problem]) -> None:
+    """Every translation the books carry can be searched, and nothing else can.
+
+    The words each segment should contribute are counted here from the book
+    text and compared with the postings read back from search/english-*.json:
+    a missing index (a corpus emitted before these indexes, or an interrupted
+    stage7), a stale one, or one whose seg_idx no longer lines up with
+    meta.json is reported. An index for a translation the books do not carry is
+    reported too, since in a public build that would be a private translation's
+    vocabulary.
+    """
+    from .stage6_search import english_words, segment_translations, translation_index_name
+
+    expected: dict[str, dict[str, int]] = {}   # slot -> segment id -> word count
+    for file_name in sorted(loaded):
+        doc = loaded[file_name]
+        if not file_name.startswith("book-") or not isinstance(doc, dict):
+            continue
+        for segment in doc.get("segments", []) or []:
+            if not isinstance(segment, dict):
+                continue
+            try:
+                slots = segment_translations(segment)
+            except (ValueError, AttributeError, TypeError) as exc:
+                problems.append((manifest.work_id, file_name, f"segment {segment.get('id')}: {exc}"))
+                continue
+            for slot, texts in slots.items():
+                counts = expected.setdefault(slot, {})
+                n = sum(len(english_words(t)) for t in texts)
+                if n:
+                    counts[str(segment.get("id"))] = n
+
+    search_dir = work_dir / "search"
+    present = {p.name for p in search_dir.glob("english-*.json")} if search_dir.is_dir() else set()
+    wanted = {translation_index_name(slot): slot for slot in expected}
+    for name in sorted(present - set(wanted)):
+        problems.append((manifest.work_id, f"search/{name}",
+                         "search index for a translation the books do not carry"))
+    if not expected:
+        return
+
+    try:
+        meta = json.loads((search_dir / "meta.json").read_text(encoding="utf-8"))
+        ids = [str(m["id"]) for m in meta]
+    except Exception as exc:
+        problems.append((manifest.work_id, "search/meta.json", f"cannot read segment order: {exc}"))
+        return
+
+    for name, slot in sorted(wanted.items()):
+        counts = expected[slot]
+        if not counts:
+            problems.append((manifest.work_id, name,
+                             f"the {slot} translation is in the books but has no words to index"))
+            continue
+        if name not in present:
+            problems.append((manifest.work_id, f"search/{name}",
+                             f"missing: the {slot} translation cannot be searched "
+                             "(run `python -m aristotle_pipeline translations`)"))
+            continue
+        try:
+            index = json.loads((search_dir / name).read_text(encoding="utf-8"))
+            got: dict[str, set[int]] = {}
+            for postings in index.values():
+                for si, pos in postings:
+                    got.setdefault(ids[si], set()).add(pos)
+        except Exception as exc:
+            problems.append((manifest.work_id, f"search/{name}", f"unreadable index: {exc}"))
+            continue
+        wrong = sorted(
+            seg for seg in set(counts) | set(got)
+            if got.get(seg, set()) != set(range(counts.get(seg, 0)))
+        )
+        if wrong:
+            problems.append((manifest.work_id, f"search/{name}",
+                             f"stale: {len(wrong)} segment(s) disagree with the book text, "
+                             f"first {wrong[0]}"))
+
+
+def _compact(postings: Any) -> str:
+    return json.dumps(postings, separators=(",", ":"))
+
+
+def _validate_search_shards(data_dir: Path, manifests: list[WorkManifest],
+                            problems: list[Problem]) -> int:
+    """The corpus search shards hold exactly what the per-work indexes hold.
+
+    The reader matches on a shard's postings as it would on the work's own
+    index, so a shard built before a work was re-emitted names the wrong
+    passages, and one built before a public build dropped a private
+    translation still carries that translation's words in order. Every
+    posting in every shard is compared with the per-work file it was copied
+    from, and the hash index.json records for that file — the one the deploy
+    check recomputes — is checked too. Returns the number of postings read;
+    none at all is itself a problem, since a gate that read nothing has not
+    checked anything.
+    """
+    from .stage9_search_shards import SHARD_DIR, STREAMS, index_sources, shard_name, source_hash
+
+    expected: dict[str, dict[str, dict[str, str]]] = {s: {} for s in STREAMS}
+    hashes: dict[str, dict[str, str]] = {s: {} for s in STREAMS}
+    for manifest in manifests:
+        work_dir = data_dir / manifest.work_id
+        if not work_dir.is_dir():
+            continue  # _validate_work_data reports it
+        for stream, source, path in index_sources(work_dir):
+            if not path.exists():
+                problems.append((manifest.work_id, f"search/{path.name}", "per-work search index is missing"))
+                continue
+            try:
+                raw = path.read_bytes()
+                index = json.loads(raw)
+            except Exception as exc:
+                problems.append((manifest.work_id, f"search/{path.name}", f"unreadable index: {exc}"))
+                continue
+            hashes[stream][source] = source_hash(raw)
+            expected[stream][source] = {word: _compact(p) for word, p in index.items()}
+
+    root = data_dir / SHARD_DIR
+    try:
+        listing = json.loads((root / "index.json").read_text(encoding="utf-8"))["streams"]
+    except FileNotFoundError:
+        problems.append(("-", f"{SHARD_DIR}/index.json",
+                         "missing: the corpus search shards are not built "
+                         "(run `python -m aristotle_pipeline stage9`)"))
+        return 0
+    except Exception as exc:
+        problems.append(("-", f"{SHARD_DIR}/index.json", f"unreadable: {exc}"))
+        return 0
+
+    examined = 0
+    for stream in STREAMS:
+        entry = listing.get(stream) or {}
+        listed = set(entry.get("shards") or [])
+        listed_sources = entry.get("sources") or {}
+        stream_dir = root / stream
+        on_disk = {p.stem for p in stream_dir.glob("*.json")} if stream_dir.is_dir() else set()
+        for name in sorted(listed - on_disk):
+            problems.append(("-", f"{SHARD_DIR}/{stream}/{name}.json", "listed in index.json but missing"))
+        for name in sorted(on_disk - listed):
+            problems.append(("-", f"{SHARD_DIR}/{stream}/{name}.json",
+                             "not listed in index.json, so the reader never reads it"))
+
+        got: dict[str, dict[str, str]] = {}
+        for name in sorted(on_disk):
+            try:
+                shard = json.loads((stream_dir / f"{name}.json").read_text(encoding="utf-8"))
+            except Exception as exc:
+                problems.append(("-", f"{SHARD_DIR}/{stream}/{name}.json", f"unreadable: {exc}"))
+                continue
+            for word, by_source in shard.items():
+                if shard_name(word) != name:
+                    problems.append(("-", f"{SHARD_DIR}/{stream}/{name}.json",
+                                     f"{word!r} is filed in {name} but belongs in {shard_name(word)}"))
+                for source, plist in by_source.items():
+                    got.setdefault(source, {})[word] = _compact(plist)
+                    examined += len(plist)
+
+        for source in sorted(set(got) | set(expected[stream]) | set(listed_sources)):
+            work = source.split("/")[0]
+            where = f"{SHARD_DIR}/{stream}"
+            if source not in expected[stream]:
+                problems.append((work, where,
+                                 f"postings for {source}, which has no per-work index: a translation "
+                                 "the work does not serve, or a work no manifest lists"))
+                continue
+            if source not in listed_sources:
+                problems.append((work, where, f"{source} is not in the shards (run stage9)"))
+                continue
+            if listed_sources[source] != hashes[stream][source]:
+                problems.append((work, f"{where}/index.json",
+                                 f"{source}: recorded hash does not match its per-work index, "
+                                 "so the deploy check will refuse it"))
+            want = expected[stream][source]
+            have = got.get(source, {})
+            wrong = sorted(w for w in set(want) | set(have) if want.get(w) != have.get(w))
+            if wrong:
+                problems.append((work, where,
+                                 f"stale: {source} differs from its per-work index in "
+                                 f"{len(wrong)} word(s), first {wrong[0]!r}"))
+
+    if examined == 0:
+        problems.append(("-", SHARD_DIR,
+                         "examined no postings: the shards are empty, so this check is not running"))
+    return examined
+
+
+def _validate_chapter_bounds(data_dir: Path, manifests: list[WorkManifest],
+                             problems: list[Problem]) -> int:
+    """Every chapter in chapters.json has a bound in search/offsets.json.
+
+    The search pager breaks result pages only between chapters, using
+    chapter_bounds, so a chapter stage6 could not place merges into its
+    neighbour without a word (the Isagoge once kept 1 bound of its 17).
+    Returns the number of works compared; none is itself a problem.
+    """
+    examined = 0
+    for manifest in manifests:
+        work_dir = data_dir / manifest.work_id
+        try:
+            chapters = json.loads((work_dir / "chapters.json").read_text(encoding="utf-8"))
+        except Exception:
+            continue  # _validate_work_data reports a missing or unparseable chapters.json
+        try:
+            want = [(int(book), str(ref["chapter"])) for book, refs in chapters.items() for ref in refs]
+        except Exception:
+            problems.append((manifest.work_id, "chapters.json",
+                             "malformed: expected an object of book -> list of chapter refs"))
+            continue
+        if not want and manifest.data.get("chapters"):
+            problems.append((manifest.work_id, "chapters.json",
+                             "lists no chapters though the manifest declares them"))
+        try:
+            offsets = json.loads((work_dir / "search" / "offsets.json").read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            problems.append((manifest.work_id, "search/offsets.json", "missing: no chapter_bounds to check"))
+            continue
+        except Exception as exc:
+            problems.append((manifest.work_id, "search/offsets.json", f"unreadable: {exc}"))
+            continue
+        bounds = offsets.get("chapter_bounds") if isinstance(offsets, dict) else None
+        if not isinstance(bounds, list):
+            problems.append((manifest.work_id, "search/offsets.json", "has no chapter_bounds list"))
+            continue
+        examined += 1
+        have = {(b.get("book"), str(b.get("chapter"))) for b in bounds}
+        missing = [key for key in want if key not in have]
+        if len(have) != len(want) or missing:
+            first = f"; first missing: book {missing[0][0]} chapter {missing[0][1]!r}" if missing else ""
+            problems.append((manifest.work_id, "search/offsets.json",
+                             f"chapter_bounds has {len(have)} chapter(s) but chapters.json has "
+                             f"{len(want)}{first}"))
+    if examined == 0:
+        problems.append(("-", "search/offsets.json",
+                         "examined no work: no chapter_bounds were compared, so this check is not running"))
+    return examined
+
+
+def _validate_shared_chapter_starts(data_dir: Path, manifests: list[WorkManifest],
+                                    problems: list[Problem]) -> int:
+    """No two chapter_bounds in a work share one start.
+
+    The pager ends a chapter where the next begins, so every chapter but the
+    last at a shared start pages with no text (De Mirabilibus once had three
+    such runs, from chapter openings the TEI misspells). Returns the number of
+    works examined; a missing or malformed offsets.json is
+    _validate_chapter_bounds' to report.
+    """
+    examined = 0
+    for manifest in manifests:
+        path = data_dir / manifest.work_id / "search" / "offsets.json"
+        try:
+            bounds = json.loads(path.read_text(encoding="utf-8"))["chapter_bounds"]
+        except Exception:
+            continue
+        if not isinstance(bounds, list):
+            continue
+        examined += 1
+        by_start: dict[int, list[str]] = {}
+        for b in bounds:
+            start = b.get("start") if isinstance(b, dict) else None
+            chapter = str(b.get("chapter")) if isinstance(b, dict) else repr(b)
+            # `0` and `"0"` are one position to the pager but two keys here.
+            if not isinstance(start, int) or isinstance(start, bool) or start < 0:
+                problems.append((manifest.work_id, "search/offsets.json",
+                                 f"chapter {chapter!r} has start {start!r}, "
+                                 "not a non-negative integer"))
+                continue
+            by_start.setdefault(start, []).append(chapter)
+        for start, chapters in by_start.items():
+            if len(chapters) > 1:
+                problems.append((manifest.work_id, "search/offsets.json",
+                                 f"chapters {', '.join(repr(c) for c in chapters)} share start "
+                                 f"{start}: all but the last page with no text"))
+    if examined == 0:
+        problems.append(("-", "search/offsets.json",
+                         "examined no work: no chapter starts were compared, so this check is not running"))
+    return examined
 
 
 _FN_REF = re.compile(r"\[\^([\w.*†]+)\]")

@@ -1,7 +1,7 @@
 """Gather Method-A 'uncertain' ticks for the PRODUCTION target (the actual
 unmarked translation, e.g. Ross) so a verifier sub-agent can re-place them.
 
-Usage: uv run python build/verify_gather.py <book>
+Usage: WORK=<slug> [VERIFY_ALL=1] uv run python tools/verify_gather.py <book>
 Writes build/align/verify_tasks/EN/<book>-<chapter>.json (only chapters with
 uncertain ticks) and merges into build/align/verify_meta.json
 (key "book:chapter|citation" -> {a_offset, excerpt_lo}).
@@ -32,7 +32,9 @@ ALL = bool(os.environ.get("VERIFY_ALL"))
 # clamp moves 0 non-corrected real ticks, so confirmations don't shift. Reads the
 # existing verify_out, so run this BEFORE the correction judge overwrites it.
 V_FILTER = set(f.strip() for f in os.environ.get("VERIFY_FILTER", "").split(",") if f.strip())
-WORK = os.environ.get("WORK", "EN")
+WORK = os.environ.get("WORK")
+if not WORK:   # no default: a forgotten WORK= used to act on EN
+    sys.exit("WORK is unset: run with WORK=<work slug>")
 TASK_DIR = REPO / "build/align/verify_tasks" / WORK
 TASK_DIR.mkdir(parents=True, exist_ok=True)
 OUT_DIR = REPO / "build/align/verify_out" / WORK
@@ -55,6 +57,13 @@ def prev_verdicts(b: int, cp: int) -> dict:
     return {}
 
 _vid, ross = default_target(WORK)
+# Pass-2 placements: the §5b correction judge must see where the previous pass
+# PUT each tick, not the pass-1 guess it already judged. Without this the
+# correction pass was a second, independent judgment of pass 1.
+OVR_PATH = REPO / "build/align" / f"{WORK}_{_vid}_gloss_overrides.json"
+OVERRIDES = json.loads(OVR_PATH.read_text()) if V_FILTER and OVR_PATH.exists() else {}
+if V_FILTER and not OVERRIDES:
+    sys.exit(f"VERIFY_FILTER set but no {OVR_PATH.name}: fold the first pass before correcting")
 chapters = {(c.book, int(c.chapter)): c for c in load_gloss_chapters(ross, WORK, [BOOK])}
 
 # Greek line text + window citations per chapter (for the verifier's context).
@@ -65,6 +74,22 @@ for ch in chapter_lines([BOOK]):
     wins[(ch.book, ch.chapter)] = {w.tick: [l.citation for l in w.lines] for w in tick_windows(ch)}
 
 meta = json.loads(META.read_text()) if META.exists() else {}
+
+
+def in_scope(cp: int) -> bool:
+    return not CHAP_FILTER or str(cp) in CHAP_FILTER
+
+
+# This run's scope replaces what earlier gathers left in it: a stale task file
+# would be submitted again, and a stale metadata entry would make the fold demand
+# an answer for a tick nobody was asked about. (A VERIFY_FILTER correction gather
+# keeps the other ticks' metadata: their answers still fold.)
+for f in TASK_DIR.glob(f"{BOOK}-*.json"):
+    if in_scope(int(f.stem.split("-")[1])):
+        f.unlink()
+if not V_FILTER:
+    meta = {k: v for k, v in meta.items() if not (
+        int(k.split(":")[0]) == BOOK and in_scope(int(k.split("|")[0].split(":")[1])))}
 n_tasks = n_unc = 0
 for (b, cp), cr in sorted(chapters.items()):
     if CHAP_FILTER and str(cp) not in CHAP_FILTER:
@@ -75,7 +100,7 @@ for (b, cp), cr in sorted(chapters.items()):
     text = cr.ross_text
     vd = prev_verdicts(b, cp) if V_FILTER else {}   # hoisted: one read per chapter
     ticks = []
-    for a in align_chapter(cr, "lexical"):
+    for a in align_chapter(cr, "lexical", OVERRIDES.get(f"{b}:{cp}")):
         if a.tier not in ("column", "five_line"):
             continue
         if not ALL and a.confidence != "uncertain":
