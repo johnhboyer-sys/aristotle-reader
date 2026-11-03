@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { citationTargets, hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
+import { citationTarget, citationTargets, hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
 import type { BekkerRef, LemmaRef } from '../lib/data';
 
 describe('parseCitation', () => {
@@ -22,6 +22,27 @@ describe('parseCitation', () => {
     expect(parseCitation('ethics')).toBeNull();
     expect(parseCitation('12c4')).toBeNull();
     expect(parseCitation('')).toBeNull();
+  });
+  it('parses a lettered line and keeps a bare column', () => {
+    expect(parseCitation('775a11a')).toEqual({ column: '775a', line: 11, sub: 'a' });
+    expect(parseCitation('1103a')).toEqual({ column: '1103a', line: null });
+  });
+});
+
+describe('citationTarget', () => {
+  it('puts the letter in the loc a jump lands on', () => {
+    expect(citationTarget(parseCitation('775a11a')!)).toEqual({
+      label: 'Go to 775a11a',
+      loc: '775a:11a',
+    });
+    expect(citationTarget(parseCitation('1103a14')!)).toEqual({
+      label: 'Go to 1103a14',
+      loc: '1103a:14',
+    });
+    expect(citationTarget(parseCitation('1103a')!)).toEqual({
+      label: 'Go to 1103a',
+      hash: '1103a',
+    });
   });
 });
 
