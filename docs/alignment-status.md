@@ -39,7 +39,7 @@ anchors are structural/interpolated and not counted.
 |------|-------------|---------:|-----------:|------------|--------|
 | De Caelo (`Cael`) | J. L. Stocks (Oxford, 1922) — primary | 40 | 654 | 654 confirmed | [index](../alignment-results/stocks/review/Cael/index.html) · Bk [1](../alignment-results/stocks/review/Cael/book-01.html) [2](../alignment-results/stocks/review/Cael/book-02.html) [3](../alignment-results/stocks/review/Cael/book-03.html) [4](../alignment-results/stocks/review/Cael/book-04.html) |
 | Topics (`Top`) | W. A. Pickard-Cambridge (Oxford, 1928) — primary | 83 | 992 | 989 confirmed · 2 reliable · 1 uncertain | [index](../alignment-results/pickard/review/Top/index.html) |
-| Parts of Animals (`PA`) | William Ogle (Oxford, 1882) — primary | 51 | 894 | 894 confirmed | [index](../alignment-results/ogle/review/PA/index.html) |
+| Parts of Animals (`PA`) | William Ogle (Oxford, 1912) — primary | 51 | 894 | 894 confirmed | [index](../alignment-results/ogle/review/PA/index.html) |
 | Generation of Animals (`GA`) | Arthur Platt (Oxford, 1910) — primary | 60 | 1162 | 1162 confirmed | [index](../alignment-results/platt/review/GA/index.html) |
 | Eudemian Ethics (`EE`) | J. Solomon (Oxford, 1915) — primary | 41 | 576 | 568 confirmed · 5 reliable · 3 uncertain | [index](../alignment-results/solomon/review/EE/index.html) |
 | Progression of Animals (`IA`) | A. S. L. Farquharson (Oxford, 1912) — primary | 19 | 139 | 139 confirmed | [index](../alignment-results/farquharson/review/IA/index.html) |

@@ -8,7 +8,7 @@ Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to Git
 - `ocr_translations/CLAUDE.md` is a self-contained OCR recipe, not project instructions.
 - **Handoffs are per track — never one shared `HANDOFF.md`.** Each carries the state of that track: what is done, what was decided and why, what failed. Read the one for the track you are working at the start of a session; rewrite it (don't append) when handing off. A new track starts a new `HANDOFF-<TRACK>.md` at the root.
 - There is deliberately no bare `HANDOFF.md`. On 2026-08-25 a Lyceum session wrote its handoff over the LSJ one through that filename, and the LSJ handoff survived only in git history. Do not recreate it.
-- Live handoffs, one per track: `HANDOFF-LSJ.md` (LSJ presentation) · `docs/print-design-handoff.md` (print/PDF layout). The names are inconsistent for historical reasons — read the one for your track, and never start a second file for a track that already has one.
+- Live handoffs, one per track: `HANDOFF-LSJ.md` (LSJ presentation) · `docs/print-design-handoff.md` (print/PDF layout) · `HANDOFF-ENGLISH.md` (English text corrections; tools and checker notes in `docs/english-sweep/`). The names are inconsistent for historical reasons — read the one for your track, and never start a second file for a track that already has one.
 - A track whose work has moved to another repo keeps its handoff there, not here.
 
 ## Build and deploy invariants

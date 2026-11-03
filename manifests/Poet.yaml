@@ -33,14 +33,15 @@ english:
     books: 1
     chapter_marker: part
     anchors: "poet-fyfe/anchors.yaml"
-  # Second translation: S. H. Butcher (Macmillan, 1895), public domain. Sourced
+  # Second translation: S. H. Butcher (Macmillan, 4th ed. 1907: the revised text
+  # of 1902, not the 1895 first edition), public domain. Sourced
   # from the MIT Internet Classics Archive (poetics.mb.txt), one book of 26
   # "Part <Roman>" chapters. Tier 0: no anchors file — chapters are pinned to the
   # Greek spine via the grc TEI (chapters.source: grc_tei), so chapter-level
   # Bekker is exact; the within-chapter line gutter is interpolated (estimates).
   secondary:
     id: butcher
-    name: "S. H. Butcher (Macmillan, 1895)"
+    name: "S. H. Butcher (Macmillan, 4th ed. 1907)"
     model: archive
     dir: "poet-butcher"
     books: 1

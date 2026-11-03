@@ -2,14 +2,18 @@
 
 The corrections themselves are edits to `sources/<dir>/book-NN.html`; the list in
 `sources/english-corrections.json` records each one (work, book, column, the
-text before and after, and the scan it was checked against). They came from the
-Lyceum reader, which mounts this repo's build and had been correcting the same
-misprints downstream (John's ruling of 2026-09-29: a fix made there is made
-here too).
+text before and after, and the scan it was checked against). The first 62 came
+from the Lyceum reader, which mounts this repo's build and had been correcting
+the same misprints downstream (John's ruling of 2026-09-29: a fix made there is
+made here too). The rest, the entries that name a `dir`, came from the 2026-11
+sweep of every public English translation against scans of the printed books.
 
 A re-fetch of a source from the MIT archive or a scan would silently undo them.
-This test parses each work's public primary English the way stage 1 does and
-fails if any `find` is back or any `replace` is missing.
+This test parses each entry's translation the way stage 1 does (the work's public
+primary English, or the slot whose `dir` the entry names) and fails if any
+`find` is back or any `replace` is missing. Where the find is part of the
+replace (an append: text restored where the archive serves a page cut off), the
+find is meant to stay, so only the replace is checked.
 """
 
 from __future__ import annotations
@@ -38,26 +42,83 @@ def _primary(work: str) -> dict:
 
 
 @functools.cache
-def _prose(work: str) -> dict:
-    return stage1_archive._load_prose(_primary(work))
+def _slots() -> dict[str, dict]:
+    """{dir: slot config} over every manifest's English slots (primary,
+    secondary, third, overlays); a -public manifest's slot wins."""
+    out: dict[str, dict] = {}
+    paths = sorted((ROOT / "manifests").glob("*.yaml"), key=lambda p: "-public" not in p.name)
+    for path in paths:
+        eng = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("english") or {}
+        for cfg in eng.values():
+            for c in cfg if isinstance(cfg, list) else [cfg]:
+                if isinstance(c, dict) and c.get("dir"):
+                    out.setdefault(c["dir"], c)
+    return out
 
 
-def _book_text(work: str, book: int) -> str:
-    chapters = sorted((k, v) for k, v in _prose(work).items() if k[0] == book)
+def _dir(c: dict) -> str:
+    return c.get("dir") or _primary(c["work"])["dir"]
+
+
+@functools.cache
+def _prose(d: str) -> dict:
+    cfg = _slots()[d]
+    return stage1_archive._load_prose(dict(cfg, books=cfg.get("books", 1)))
+
+
+@functools.cache
+def _book_text(d: str, book: int) -> str:
+    chapters = sorted((k, v) for k, v in _prose(d).items() if k[0] == book)
     return re.sub(r"\s+", " ", " ".join(v for _, v in chapters))
+
+
+def _problems(c: dict, text: str) -> list[str]:
+    if not text:
+        return [f"{_dir(c)} book {c['book']} parsed to nothing"]
+    out = []
+    if c["find"] not in c["replace"] and c["find"] in text:
+        out.append(f"uncorrected text is back: {c['find']!r}")
+    if c["replace"] not in text:
+        out.append(f"corrected text is missing: {c['replace']!r}")
+    return out
 
 
 def test_the_list_is_read():
     # An empty or misread list would pass every parametrized case below.
-    assert len(CORRECTIONS) == 62
-    assert {c["work"] for c in CORRECTIONS} == {
+    assert len(CORRECTIONS) == 3070
+    old = [c for c in CORRECTIONS if not c.get("dir")]
+    assert len(old) == 62
+    assert {c["work"] for c in old} == {
         "Cael", "DA", "GC", "Lin", "Meta", "Mete", "Phys", "SE", "PA", "Sens"}
+    swept = {c["dir"] for c in CORRECTIONS if c.get("dir")}
+    assert len(swept) == 52 and "ostwald" not in swept
+    assert swept <= set(_slots())
+    assert all(c["find"] != c["replace"] for c in CORRECTIONS)
+
+
+def test_the_check_fails_when_a_correction_is_undone():
+    # Ross, EN 1137b: the dropped 'not' that reversed the sense.
+    c = next(c for c in CORRECTIONS if c.get("dir") == "ross" and c["replace"] == "the error is not in the law")
+    text = _book_text("ross", c["book"])
+    assert _problems(c, text) == []
+    assert len(_problems(c, text.replace(c["replace"], c["find"]))) == 2
+
+
+def test_the_check_fails_when_a_restored_page_is_cut_again():
+    # Politics V: the archive's page stops at 'let it b'; the entry appends the rest.
+    c = next(c for c in CORRECTIONS if c.get("dir") == "pol-jowett" and c["book"] == 5
+             and c["find"] in c["replace"])
+    text = _book_text("pol-jowett", 5)
+    assert _problems(c, text) == []
+    cut = text[: text.index(c["replace"]) + len(c["find"])]
+    assert _problems(c, cut) == [f"corrected text is missing: {c['replace']!r}"]
+
+
+def test_the_check_fails_on_an_empty_parse():
+    assert _problems(CORRECTIONS[0], "")
 
 
 @pytest.mark.parametrize(
-    "c", CORRECTIONS, ids=[f"{c['work']}-{c['column']}-{i}" for i, c in enumerate(CORRECTIONS)])
+    "c", CORRECTIONS, ids=[f"{_dir(c)}-{c['column']}-{i}" for i, c in enumerate(CORRECTIONS)])
 def test_correction_is_in_the_source(c):
-    text = _book_text(c["work"], c["book"])
-    assert text, f"{c['work']} book {c['book']} parsed to nothing"
-    assert c["find"] not in text, f"uncorrected text is back: {c['find']!r}"
-    assert c["replace"] in text, f"corrected text is missing: {c['replace']!r}"
+    assert _problems(c, _book_text(_dir(c), c["book"])) == []

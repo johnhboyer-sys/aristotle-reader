@@ -3561,7 +3561,7 @@
   ]
  },
  "12:10": {
-  "ross_len": 5866,
+  "ross_len": 5868,
   "anchors": [
    {
     "citation": "1075a11",
@@ -3934,7 +3934,7 @@
    },
    {
     "citation": "1075b16",
-    "offset": 3573,
+    "offset": 3574,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -3942,7 +3942,7 @@
    },
    {
     "citation": "1075b17",
-    "offset": 3657,
+    "offset": 3658,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -3950,7 +3950,7 @@
    },
    {
     "citation": "1075b18",
-    "offset": 3741,
+    "offset": 3742,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -3958,7 +3958,7 @@
    },
    {
     "citation": "1075b19",
-    "offset": 3816,
+    "offset": 3817,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -3966,7 +3966,7 @@
    },
    {
     "citation": "1075b20",
-    "offset": 3899,
+    "offset": 3900,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.404,
@@ -3976,7 +3976,7 @@
    },
    {
     "citation": "1075b21",
-    "offset": 3999,
+    "offset": 4000,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -3984,7 +3984,7 @@
    },
    {
     "citation": "1075b22",
-    "offset": 4087,
+    "offset": 4088,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -3992,7 +3992,7 @@
    },
    {
     "citation": "1075b23",
-    "offset": 4172,
+    "offset": 4173,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4000,7 +4000,7 @@
    },
    {
     "citation": "1075b24",
-    "offset": 4269,
+    "offset": 4270,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4008,7 +4008,7 @@
    },
    {
     "citation": "1075b25",
-    "offset": 4365,
+    "offset": 4366,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.5378,
@@ -4018,7 +4018,7 @@
    },
    {
     "citation": "1075b26",
-    "offset": 4457,
+    "offset": 4458,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4026,7 +4026,7 @@
    },
    {
     "citation": "1075b27",
-    "offset": 4549,
+    "offset": 4550,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4034,7 +4034,7 @@
    },
    {
     "citation": "1075b28",
-    "offset": 4658,
+    "offset": 4659,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4042,7 +4042,7 @@
    },
    {
     "citation": "1075b29",
-    "offset": 4770,
+    "offset": 4771,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4050,7 +4050,7 @@
    },
    {
     "citation": "1075b30",
-    "offset": 4853,
+    "offset": 4854,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.3675,
@@ -4060,7 +4060,7 @@
    },
    {
     "citation": "1075b31",
-    "offset": 4938,
+    "offset": 4939,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4068,7 +4068,7 @@
    },
    {
     "citation": "1075b32",
-    "offset": 5004,
+    "offset": 5005,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4076,7 +4076,7 @@
    },
    {
     "citation": "1075b33",
-    "offset": 5084,
+    "offset": 5085,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4084,7 +4084,7 @@
    },
    {
     "citation": "1075b34",
-    "offset": 5153,
+    "offset": 5154,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4092,7 +4092,7 @@
    },
    {
     "citation": "1075b35",
-    "offset": 5252,
+    "offset": 5253,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": 0.671,
@@ -4102,7 +4102,7 @@
    },
    {
     "citation": "1075b36",
-    "offset": 5328,
+    "offset": 5329,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4110,7 +4110,7 @@
    },
    {
     "citation": "1075b37",
-    "offset": 5403,
+    "offset": 5404,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4118,7 +4118,7 @@
    },
    {
     "citation": "1075b38",
-    "offset": 5481,
+    "offset": 5482,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -4126,7 +4126,7 @@
    },
    {
     "citation": "1076a1",
-    "offset": 5543,
+    "offset": 5544,
     "tier": "column",
     "confidence": "confirmed",
     "score": 0.4955,
