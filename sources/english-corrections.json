@@ -33430,24 +33430,24 @@
    "book": 1,
    "column": "166a",
    "find": "as knowing; also and, Ambiguity therefore, and equivocation,",
-   "replace": "as knowing; also ἆρ' ὃ ὁρᾷ τις, τοῦτο ὁρᾷ—but he sees a pillar, so that the pillar sees: and, ἆρα ὃ σὺ φῂς εἶναι, τοῦτο σὺ φῂς εἶναι; φῂς δὲ λίθον εἶναι, σὺ ἄρα φῂς λίθος εἶναι: and, ἆρ' ἔστι σιγῶντα λέγειν; for σιγῶντα λέγειν is two-fold, signifying both that he who speaks, is silent, and those things which are spoken. There are, however, three modes of the equivocal and ambiguous, one when the sentence or word properly signifies many things, as an eagle and a dog; another when we are accustomed thus to speak; and a third, when the conjoined signifies many things, but separated (is taken) simply, as ἐπίσταται γράμματα, for each ἐπίσταται, and γράμματα, signifies if it should so happen, one thing, but both (conjointly) many things, either that letters themselves have science, or that some one else knows letters. Ambiguity therefore, and equivocation,",
+   "replace": "as knowing; also ἆρ' ὅ ὁρᾷ τις, τοῦτο ὁρᾷ—but he sees a pillar, so that the pillar sees: and, ἆρα ὁ σὺ φῂς εἶναι, τοῦτο σὺ φῂς εἶναι; φῂς δὲ λίθον εἶναι, σὺ ἄρα φῂς λίθος εἶναι: and, ἆρ' ἔστι σιγῶντα λέγειν; for σιγῶντα λέγειν is two-fold, signifying both that he who speaks, is silent, and those things which are spoken. There are, however, three modes of the equivocal and ambiguous, one when the sentence or word properly signifies many things, as an eagle and a dog; another when we are accustomed thus to speak; and a third, when the conjoined signifies many things, but separated (is taken) simply, as ἐπίσταται γράμματα, for each ἐπίσταται, and γράμματα, signifies if it should so happen, one thing, but both (conjointly) many things, either that letters themselves have science, or that some one else knows letters. Ambiguity therefore, and equivocation,",
    "source": "bub_gb_cm4TmBSZEn8C (O. F. Owen, Organon vol. II, Bohn 1853), SE 4 (166a9-21), leaves n200-n201 (print pp. 545-546)",
    "dir": "se-owen",
    "kind": "missing passage",
    "confidence": "print-checked",
-   "note": "dropped passage (~120 words, Greek and English) missing from the source HTML; Greek transcribed from the page image, check accents"
+   "note": "dropped passage (~120 words, Greek and English) missing from the source HTML; Greek transcribed from the page image, check accents Accents checked against the page image 2026-11-03: ὅ as printed. Accents checked against the page image 2026-11-03: ὁ as printed."
   },
   {
    "work": "SE",
    "book": 1,
    "column": "166a",
    "find": "same thing; as and this, But from accent,",
-   "replace": "same thing; as \"Ἐγὼ σ' ἔθηκα δοῦλον ὄντ' ἐλεύθερον,\" and this, \"πεντήκοντ' ἀνδρῶν ἑκατὸν λίπε δῖος Ἀχιλλεύς.\" But from accent,",
+   "replace": "same thing; as \"Ἐγὼ σ' ἔθηκα δοῦλον ὄντ' ἐλεύθερον,\" and this, \"πεντηκοντ' ἀνδρῶν ἑκατὸν λίπε δῖος Ἀχιλλεύς.\" But from accent,",
    "source": "bub_gb_cm4TmBSZEn8C (O. F. Owen, Organon vol. II, Bohn 1853), SE 4 (166a36-38), leaf n202 (print p. 547)",
    "dir": "se-owen",
    "kind": "dropped words",
    "confidence": "print-checked",
-   "note": "dropped words: two indented Greek verse lines missing from the source HTML; Greek transcribed from the page image, check accents"
+   "note": "dropped words: two indented Greek verse lines missing from the source HTML; Greek transcribed from the page image, check accents Accents checked against the page image 2026-11-03: πεντηκοντ' as printed."
   },
   {
    "work": "SE",
@@ -36556,6 +36556,42 @@
    "kind": "punctuation",
    "confidence": "scan-agrees",
    "note": "footnote mark left in the text; stray characters"
+  },
+  {
+   "work": "Cat",
+   "book": 1,
+   "column": "15b",
+   "dir": "cat-owen",
+   "find": "those usually mentioned have nearly all been enumerated. Notes Summa decem",
+   "replace": "those usually mentioned have nearly all been enumerated.",
+   "source": "organonorlogicalt01aris (O. F. Owen, Organon vol. I, Bohn 1853), Cat. 4 and 10 footnotes (djvu.txt l. 515-518, 2306-2308, 2421-2425)",
+   "kind": "stray or doubled text",
+   "confidence": "scan-agrees",
+   "note": "Owen's footnotes (the 'Summa decem' verses to Cat. 4, two Shakespeare quotations to Cat. 10) were appended to the last chapter as a 'Notes' block; the site leaves footnotes out, so the block is removed. The same fix removed the leftover wiki page-number markup that had run chapters 13-15 into chapter 12."
+  },
+  {
+   "work": "Cat",
+   "book": 1,
+   "column": "6b",
+   "dir": "cat-owen",
+   "find": "namely, to \"knowledge. Things therefore relatively",
+   "replace": "namely, to \"knowledge.\" Things therefore relatively",
+   "source": "organonorlogicalt01aris (O. F. Owen, Organon vol. I, Bohn 1853)",
+   "kind": "punctuation",
+   "confidence": "scan-agrees",
+   "note": "closing quote eaten by the leftover wiki markup; restored when the markup was removed"
+  },
+  {
+   "work": "Int",
+   "book": 1,
+   "column": "22a",
+   "dir": "int-owen",
+   "find": "may be seen from the following description: Therefore the impossible",
+   "replace": "may be seen from the following description: 1. It is possible to be. It may happen to be. It is not impossible to be. It is not necessary to be. 3. It is not possible to be. It may not happen to be. It is impossible to be. It is necessary not to be. 2. It is possible not to be. It may happen not to be. It is not impossible not to be. It is not necessary not to be. 4. It is not possible not to be. It may happen not to be. It is impossible not to be. It is necessary to be. Therefore the impossible",
+   "source": "organonorlogicalt01aris (O. F. Owen, Organon vol. I, Bohn 1853), Int. 13, print pp. 72-73 (leaves n83-n84)",
+   "kind": "missing passage",
+   "confidence": "print-checked",
+   "note": "the printed table of modal sequences was missing; set as four paragraphs in the print's reading order (1, 3, then 2, 4), as the site gives Edghill's and Taylor's tables. Group 4's 'It may happen not to be' is as printed."
   }
  ]
 }

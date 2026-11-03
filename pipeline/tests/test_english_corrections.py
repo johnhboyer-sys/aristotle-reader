@@ -85,7 +85,7 @@ def _problems(c: dict, text: str) -> list[str]:
 
 def test_the_list_is_read():
     # An empty or misread list would pass every parametrized case below.
-    assert len(CORRECTIONS) == 3067
+    assert len(CORRECTIONS) == 3070
     old = [c for c in CORRECTIONS if not c.get("dir")]
     assert len(old) == 62
     assert {c["work"] for c in old} == {
