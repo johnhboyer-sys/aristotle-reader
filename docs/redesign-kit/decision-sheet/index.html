@@ -1,0 +1,368 @@
+<title>Round Seven Decisions</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Noto+Sans:wght@400;600&family=Public+Sans:wght@400..700&display=swap" rel="stylesheet">
+<style>
+/* One column of numbered questions. Each question lays its options out as
+   picture tiles; a pick is a tile pressed in ink. Neutral grey and ink, so no
+   direction's own colour leads. */
+:root {
+  --bg: #f3f3f1; --surface: #ffffff; --ink: #18191b; --mid: #5b5e65; --faint: #81848b;
+  --line: #d6d7da; --pick: #18191b; --on-pick: #ffffff; --wash: #e8e8e5; --warn: #9a3412;
+  --display: "Newsreader", "Noto Serif", Georgia, serif;
+  --ui: "Public Sans", "Noto Sans", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131416; --surface: #1b1c1f; --ink: #ecece8; --mid: #a4a7ae; --faint: #82858c;
+    --line: #34363b; --pick: #ecece8; --on-pick: #131416; --wash: #232428; --warn: #fb923c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #131416; --surface: #1b1c1f; --ink: #ecece8; --mid: #a4a7ae; --faint: #82858c;
+  --line: #34363b; --pick: #ecece8; --on-pick: #131416; --wash: #232428; --warn: #fb923c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 16px/1.5 var(--ui); margin: 0; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: inherit; text-underline-offset: 3px; }
+a:hover { text-decoration-thickness: 2px; }
+button, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+
+/* Head */
+.head { padding-block: 48px 28px; }
+.kicker { margin: 0 0 10px; font: 600 13px/1.3 var(--ui); letter-spacing: .08em; text-transform: uppercase; color: var(--mid); }
+h1 { margin: 0; font: 600 clamp(34px, 5vw, 52px)/1.05 var(--display); letter-spacing: -.01em; text-wrap: balance; }
+.lede { margin: 16px 0 0; max-width: 40em; font-size: 18px; line-height: 1.55; color: var(--ink); text-wrap: pretty; }
+.lede + .lede { margin-top: 8px; color: var(--mid); font-size: 16px; }
+
+/* The bar: progress, saving, copy */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-block: 1px solid var(--line); }
+.bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; padding-block: 10px; }
+.prog { display: flex; align-items: center; gap: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.meter { width: 140px; height: 6px; background: var(--wash); border-radius: 3px; overflow: hidden; }
+.meter i { display: block; height: 100%; width: 0; background: var(--ink); transition: width .25s ease; }
+.status { color: var(--mid); font-size: 14px; }
+.status.bad { color: var(--warn); }
+.bar .sp { flex: 1; }
+.copy { border: 1.5px solid var(--ink); background: none; padding: 7px 14px; border-radius: 4px; font-weight: 600; font-size: 14px; cursor: pointer; }
+.copy:hover { background: var(--ink); color: var(--bg); }
+.copied { width: 100%; min-height: 6em; margin: 8px 0 0; font: 13px/1.5 ui-monospace, Menlo, monospace; background: var(--surface); border: 1px solid var(--line); padding: 10px; }
+
+/* A question */
+.q { padding-block: 40px 44px; border-bottom: 1px solid var(--line); scroll-margin-top: 70px; }
+.q-h { display: grid; grid-template-columns: 2.4em minmax(0, 1fr); align-items: baseline; gap: 0 4px; }
+.q-n { font: 500 22px/1 var(--display); color: var(--faint); font-variant-numeric: tabular-nums; }
+.q h2 { margin: 0; font: 600 clamp(24px, 3vw, 30px)/1.15 var(--display); text-wrap: balance; }
+.q-ctx { grid-column: 2; margin: 8px 0 0; max-width: 46em; color: var(--mid); text-wrap: pretty; }
+.q-ctx a { color: var(--ink); white-space: nowrap; }
+.opts { display: grid; gap: 16px; margin: 22px 0 0; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); }
+.opt { display: flex; flex-direction: column; gap: 8px; text-align: left; padding: 10px 10px 12px; background: var(--surface); border: 1.5px solid var(--line); border-radius: 6px; cursor: pointer; transition: border-color .15s ease; position: relative; }
+.opt:hover { border-color: var(--mid); }
+.opt[aria-pressed="true"] { border-color: var(--pick); box-shadow: 0 0 0 2px var(--pick); }
+.opt-imgs { display: grid; gap: 6px; }
+.opt-imgs img { display: block; width: 100%; height: auto; max-width: 100%; border: 1px solid var(--line); background: var(--wash); }
+.opt-t { font-weight: 650; font-size: 16px; line-height: 1.3; }
+.opt-d { color: var(--mid); font-size: 14.5px; line-height: 1.45; }
+.opt-noimg { min-height: 70px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line); color: var(--faint); font-size: 14px; border-radius: 3px; padding: 8px; text-align: center; }
+.mark { position: absolute; top: 18px; left: 18px; background: var(--pick); color: var(--on-pick); font: 650 12.5px/1 var(--ui); letter-spacing: .04em; text-transform: uppercase; padding: 6px 8px; border-radius: 3px; display: none; }
+.opt[aria-pressed="true"] .mark { display: block; }
+.who { font-size: 13.5px; color: var(--mid); min-height: 1.2em; }
+.who b { color: var(--ink); font-weight: 600; }
+.minor { display: flex; flex-wrap: wrap; gap: 10px; margin: 14px 0 0; }
+.opt-minor { flex-direction: row; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding: 9px 14px; }
+.opt-minor[aria-pressed="true"] { background: var(--pick); color: var(--on-pick); }
+.opt-minor[aria-pressed="true"] .opt-d, .opt-minor[aria-pressed="true"] .who { color: var(--on-pick); }
+.note { grid-column: 1 / -1; margin: 18px 0 0; display: grid; gap: 6px; max-width: 46em; }
+.note label { font-size: 14px; color: var(--mid); }
+.note textarea { width: 100%; min-height: 2.8em; resize: vertical; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); line-height: 1.45; }
+.greek { font-family: "Noto Sans", var(--ui); letter-spacing: .04em; }
+
+.foot { padding-block: 32px 64px; color: var(--mid); font-size: 14.5px; max-width: 46em; }
+.foot p { margin: 0 0 10px; }
+
+@media (max-width: 900px) {
+  .opts { grid-template-columns: repeat(min(var(--cols, 2), 2), minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .head { padding-block: 28px 20px; }
+  .lede { font-size: 16.5px; }
+  .opts { grid-template-columns: minmax(0, 1fr); }
+  .opts.small { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .q { padding-block: 28px 32px; }
+  .q-h { grid-template-columns: 2em minmax(0, 1fr); }
+  .meter { width: 90px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<header class="head wrap">
+  <p class="kicker">Aristotle Reader · redesign</p>
+  <h1>Round seven: your decisions</h1>
+  <p class="lede">Eleven choices are left. Each shows the real screens from <a href="https://claude.ai/artifact/RtrrFk4cPQDh7mrjUyqcZh" target="_blank" rel="noopener">round seven</a>. Click your pick; it saves as you go, and the next session reads it from this page. Click a pick again to clear it.</p>
+  <p class="lede">You can share this page with readers you trust. Their picks show under each option, with their names.</p>
+</header>
+
+<div class="bar"><div class="wrap">
+  <div class="prog"><span id="count">0 of 11 answered</span><span class="meter" aria-hidden="true"><i id="meter"></i></span></div>
+  <span class="status" id="status" role="status">Connecting…</span>
+  <span class="sp"></span>
+  <button type="button" class="copy" id="copy">Copy my picks</button>
+</div></div>
+
+<main class="wrap" id="list"></main>
+
+<footer class="foot wrap">
+  <p>Screens from round seven, version 11, taken 3 November 2026. Two options were set up only for these pictures and are not in round seven: P's two-row masthead (question 9) and D's whole pictures on a phone (question 10). The search counts marked "before" show the sizes from version 9.</p>
+  <p>Your picks are saved to this page's own store, one record per person. Anyone who can open the page can see them.</p>
+  <textarea class="copied" id="copied" aria-label="Your picks as text" hidden readonly></textarea>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+  const ROUND = 'https://claude.ai/artifact/RtrrFk4cPQDh7mrjUyqcZh';
+  const SIZES = {"dir-b-home":[720,450],"dir-b-work":[720,450],"dir-d-home":[720,450],"dir-d-work":[720,450],"dir-h-home":[720,450],"dir-h-work":[720,450],"dir-p-home":[720,450],"dir-p-work":[720,450],"bface-oswald":[720,300],"bface-xc":[720,300],"bface-anton":[720,300],"bface-bebas":[720,300],"bface-shoulders":[720,300],"bface-r5":[720,300],"blogic-chalk":[720,300],"blogic-getty":[720,300],"bint-chalk":[720,300],"bint-getty":[720,300],"hplates-later":[720,370],"hplates-early":[720,370],"hface-didone":[420,532],"hface-bodoni":[420,532],"hface-garamond":[420,532],"hface-instrument":[420,532],"hface-piazzolla":[420,532],"hface-r7":[420,532],"hport-later":[420,380],"hport-early":[420,380],"pcol-green":[720,410],"pcol-red":[720,410],"pmast-3":[560,228],"pmast-2":[560,174],"dpic-crop":[390,824],"dpic-whole":[390,963],"count-b-now":[720,61],"count-b-before":[720,85],"count-h-now":[720,77],"count-h-before":[720,105],"hplates-later-mete":[720,358],"hplates-early-mete":[720,358]};
+  const img = (n, alt) => ({ n, alt });
+  const QS = [
+    { id: 'direction', q: 'Which direction goes on?', cols: 4,
+      ctx: 'The one to carry into the real site. Each option shows its home page, then the Ethics page.',
+      link: ['#overview', 'Open the round'],
+      opts: [
+        { id: 'b', t: 'B · Poster', d: 'A black-and-white photograph per work, the title over it in red capitals.', img: [img('dir-b-home', 'B home page: a photograph of the sea with THE COMPLETE WORKS OF ARISTOTLE over it in red'), img('dir-b-work', 'B Ethics page: NICOMACHEAN ETHICS in red over a photograph')] },
+        { id: 'd', t: 'D · Aldine', d: 'Each work beside its first printing, Venice 1495–98.', img: [img('dir-d-home', 'D home page: a page of the Aldine Greek Aristotle beside the title'), img('dir-d-work', 'D Ethics page: the Aldine first page of the Ethics beside the facts')] },
+        { id: 'h', t: 'H · Plates', d: 'An old print for each work, in one blue ink.', img: [img('dir-h-home', 'H home page: an engraved head of Aristotle in blue beside the title'), img('dir-h-work', 'H Ethics page: a swallow in blue beside the title')] },
+        { id: 'p', t: 'P · Plato’s look', d: 'The Plato Reader’s design, with Aristotle’s first words as a block of capitals.', img: [img('dir-p-home', 'P home page: the Greek masthead in green capitals'), img('dir-p-work', 'P Ethics page: the first words in Greek capitals above the title')] },
+        { id: 'none', t: 'None yet', d: 'Say in the note what you would need to see.', minor: true },
+      ] },
+    { id: 'bface', q: 'B: which title font?', cols: 3,
+      ctx: 'You leaned to Oswald on 2 November. The same poster in each font.',
+      opts: [
+        { id: 'oswald', t: 'Oswald', d: 'Now the default.', img: [img('bface-oswald', 'CATEGORIES in Oswald over the horse')] },
+        { id: 'xc', t: 'Sofia Sans Extra Condensed', d: 'The narrowest; the most letters per line.', img: [img('bface-xc', 'CATEGORIES in Sofia Sans Extra Condensed')] },
+        { id: 'anton', t: 'Anton', d: 'Heavy and tall.', img: [img('bface-anton', 'CATEGORIES in Anton')] },
+        { id: 'bebas', t: 'Bebas Neue', d: 'Capitals only, even strokes.', img: [img('bface-bebas', 'CATEGORIES in Bebas Neue')] },
+        { id: 'shoulders', t: 'Big Shoulders', d: 'Heaviest, with squared curves.', img: [img('bface-shoulders', 'CATEGORIES in Big Shoulders')] },
+        { id: 'r5', t: 'Sofia Sans, as in round five', d: 'Lighter and wider; titles come out smaller.', img: [img('bface-r5', 'CATEGORIES in Sofia Sans SemiBold')] },
+      ] },
+    { id: 'blogic', q: 'B: keep the blackboards on the logic works?', cols: 3,
+      ctx: 'Three logic works open on a blackboard: the Prior Analytics (shown), De Interpretatione and the Topics. The Categories, Posterior Analytics, Sophistical Refutations and Isagoge keep their photographs.',
+      link: ['#b-home', 'Open B'],
+      opts: [
+        { id: 'keep', t: 'Keep the three', d: 'Blackboards where a board fits the text; photographs elsewhere.', img: [img('blogic-chalk', 'PRIOR ANALYTICS over a teacher at a blackboard of Hippocrates’ lunes')] },
+        { id: 'back', t: 'Go back to the earlier photographs', d: 'The Getty set for all seven.', img: [img('blogic-getty', 'PRIOR ANALYTICS over a cut-paper abstraction')] },
+        { id: 'more', t: 'Keep them, and find boards for the other four', d: 'All seven logic works on blackboards, if fitting ones turn up.', img: [] },
+      ] },
+    { id: 'bint', q: 'B: De Interpretatione, the Greek verbs or the fleet?', cols: 2,
+      ctx: 'The blackboard of Greek past tenses replaced Le Gray’s fleet, which you said you liked.',
+      opts: [
+        { id: 'chalk', t: 'The Greek verbs', d: '“He was healthy”, “he will be healthy”: tenses of a verb (3, 16b16).', img: [img('bint-chalk', 'DE INTERPRETATIONE over a teacher before a board of Greek verbs')] },
+        { id: 'fleet', t: 'Le Gray’s fleet', d: 'The sea-battle that may or may not happen tomorrow (9, 19a30).', img: [img('bint-getty', 'DE INTERPRETATIONE over Le Gray’s photograph of the French fleet')] },
+      ] },
+    { id: 'hplates', q: 'H: which set of plates?', cols: 2,
+      ctx: 'Same layout, two sets. The later set covers all 41 works; the 1500s set has 24, and the rest get their Greek title as the plate. Shown: De Interpretatione and the Meteorology.',
+      link: ['#h-home', 'Open H'],
+      opts: [
+        { id: 'later', t: 'Prints of 1700–1900', d: 'Encyclopedia plates, natural histories, star books.', img: [img('hplates-later', 'H De Interpretatione page with a later print of a sea-fight'), img('hplates-later-mete', 'H Meteorology page with an 1860 wood engraving of a comet')] },
+        { id: 'early', t: 'Prints mostly of the 1500s', d: 'Woodcuts and engravings near the first printed Aristotles.', img: [img('hplates-early', 'H De Interpretatione page with a 17th-century etching of a naval battle'), img('hplates-early-mete', 'H Meteorology page with a 1577 woodcut of a comet over Prague')] },
+      ] },
+    { id: 'hface', q: 'H: which title font?', cols: 3,
+      ctx: 'The same home page in each font. Noto Serif Display has been the default since 1 November.',
+      opts: [
+        { id: 'didone', t: 'Noto Serif Display', d: 'Now the default; a heavy Didone, narrowed.', img: [img('hface-didone', 'Aristotle Reader in Noto Serif Display')] },
+        { id: 'bodoni', t: 'Bodoni Moda', d: 'A heavier, wider Didone.', img: [img('hface-bodoni', 'Aristotle Reader in Bodoni Moda')] },
+        { id: 'garamond', t: 'EB Garamond', d: 'An old-style face, bold.', img: [img('hface-garamond', 'Aristotle Reader in EB Garamond')] },
+        { id: 'instrument', t: 'Instrument Serif', d: 'Light and condensed; the largest titles.', img: [img('hface-instrument', 'Aristotle Reader in Instrument Serif')] },
+        { id: 'piazzolla', t: 'Piazzolla, heavy', d: 'The reading face, set heavy.', img: [img('hface-piazzolla', 'Aristotle Reader in Piazzolla')] },
+        { id: 'r7', t: 'Archivo, as before', d: 'A heavy grotesque, narrowed.', img: [img('hface-r7', 'Aristotle Reader in Archivo')] },
+      ] },
+    { id: 'hport', q: 'H: which portrait on the home page?', cols: 3,
+      ctx: 'The later set uses Samuele Jesi’s engraving of the early 1800s, after an ancient bust; the 1500s set uses René Boyvin’s of 1566.',
+      opts: [
+        { id: 'jesi', t: 'Jesi’s engraving', d: 'Now in the later set.', img: [img('hport-later', 'Engraved head of Aristotle after an ancient bust, in blue')] },
+        { id: 'boyvin', t: 'Boyvin’s portrait, 1566', d: 'Bearded, in a soft cap; now in the 1500s set.', img: [img('hport-early', 'Engraved profile of Aristotle with a long beard and a cap, in blue')] },
+        { id: 'bust', t: 'Find a bearded bust of 1700–1900', d: 'A new print to match the later set.', img: [] },
+      ] },
+    { id: 'pcol', q: 'P: green or red?', cols: 2,
+      ctx: 'Two colours of Aristotle’s own: green, which no sibling site uses, and a red kept clear of Homer’s wine and Greek Drama’s clay.',
+      link: ['#p-home', 'Open P'],
+      opts: [
+        { id: 'green', t: 'Green', d: 'Now the default.', img: [img('pcol-green', 'P Metaphysics page in green')] },
+        { id: 'red', t: 'Red', d: 'With a stone grey ground.', img: [img('pcol-red', 'P Metaphysics page in red')] },
+      ] },
+    { id: 'pmast', q: 'P: how should the masthead read?', cols: 2,
+      ctx: 'Both keep every row to eleven letters, so the grid stays a full rectangle, as Plato’s does.',
+      opts: [
+        { id: '3', t: 'Three rows, with “the Stagirite”', d: 'ΑΡΙΣΤΟΤΕΛΗΣ / ΣΤΑΓΕΙΡΙΤΗΣ / ΤΑ ΣΩΙΖΟΜΕΝΑ. Now in round seven.', greek: true, img: [img('pmast-3', 'Three rows of eleven Greek capitals')] },
+        { id: '2', t: 'Two rows', d: 'ΑΡΙΣΤΟΤΕΛΗΣ / ΤΑ ΣΩΙΖΟΜΕΝΑ: Aristotle, the surviving works.', greek: true, img: [img('pmast-2', 'Two rows of eleven Greek capitals')] },
+      ] },
+    { id: 'dpic', q: 'D: on a phone, should the division pictures show the whole page?', cols: 2, small: true,
+      ctx: 'On the phone home page, each division has a small picture of an Aldine page. Now it shows the top of the page.',
+      link: ['#d-home', 'Open D'],
+      opts: [
+        { id: 'crop', t: 'The top of the page', d: 'As now: the headpiece and title.', img: [img('dpic-crop', 'D phone home: the Logic division with a cropped Aldine page')] },
+        { id: 'whole', t: 'The whole page', d: 'Taller; you see the text below the headpiece too.', img: [img('dpic-whole', 'D phone home: the Logic division with the whole Aldine page')] },
+      ] },
+    { id: 'count', q: 'Search: how big should the count be?', cols: 4,
+      ctx: 'Your note “Smaller” sat where B’s and H’s search pages match, so both shrank. Top: B. Bottom: H.',
+      opts: [
+        { id: 'both', t: 'Smaller in both', d: 'As now.', img: [img('count-b-now', 'B search count, small'), img('count-h-now', 'H search count, small')] },
+        { id: 'b', t: 'Smaller in B only', d: 'H back to large.', img: [img('count-b-now', 'B search count, small'), img('count-h-before', 'H search count, large')] },
+        { id: 'h', t: 'Smaller in H only', d: 'B back to large.', img: [img('count-b-before', 'B search count, large'), img('count-h-now', 'H search count, small')] },
+        { id: 'neither', t: 'Large in both', d: 'As in version 9.', img: [img('count-b-before', 'B search count, large'), img('count-h-before', 'H search count, large')] },
+      ] },
+  ];
+  const N = QS.length;
+
+  // ── State ──
+  const S = { answers: {}, notes: {}, others: {}, uid: null, names: {}, db: null, user: null, loaded: false, dirty: false };
+  try { const saved = JSON.parse(localStorage.getItem('r7-picks') || 'null'); if (saved) { S.answers = saved.answers || {}; S.notes = saved.notes || {}; } } catch (e) { /* storage off */ }
+  const keepLocal = () => { try { localStorage.setItem('r7-picks', JSON.stringify({ answers: S.answers, notes: S.notes })); } catch (e) { /* storage off */ } };
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  // ── Render once ──
+  const list = $('#list');
+  list.innerHTML = QS.map((q, i) => `
+    <section class="q" id="q-${q.id}" aria-labelledby="h-${q.id}">
+      <div class="q-h">
+        <span class="q-n" aria-hidden="true">${i + 1}</span>
+        <h2 id="h-${q.id}">${esc(q.q)}</h2>
+        <p class="q-ctx">${esc(q.ctx)}${q.link ? ` <a href="${ROUND}${q.link[0]}" target="_blank" rel="noopener">${esc(q.link[1])} ↗</a>` : ''}</p>
+      </div>
+      <div class="opts${q.small ? ' small' : ''}" style="--cols:${q.cols}" role="group" aria-labelledby="h-${q.id}">
+        ${q.opts.filter((o) => !o.minor).map((o) => `<button type="button" class="opt" aria-pressed="false" data-q="${q.id}" data-o="${o.id}">
+          <span class="mark">Your pick</span>
+          ${o.img && o.img.length ? `<span class="opt-imgs">${o.img.map((m) => { const sz = SIZES[m.n] || [720, 400]; return `<img src="img/${m.n}.jpg" alt="${esc(m.alt)}" width="${sz[0]}" height="${sz[1]}" loading="lazy" decoding="async">`; }).join('')}</span>` : (o.img ? '<span class="opt-noimg">Not built yet</span>' : '')}
+          <span class="opt-t">${esc(o.t)}</span>
+          <span class="opt-d${o.greek ? ' greek-d' : ''}">${esc(o.d)}</span>
+          <span class="who" data-who></span>
+        </button>`).join('')}
+      </div>
+      ${q.opts.some((o) => o.minor) ? `<div class="minor">${q.opts.filter((o) => o.minor).map((o) => `<button type="button" class="opt opt-minor" aria-pressed="false" data-q="${q.id}" data-o="${o.id}"><span class="opt-t">${esc(o.t)}</span><span class="opt-d">${esc(o.d)}</span><span class="who" data-who></span></button>`).join('')}</div>` : ''}
+      <div class="note"><label for="note-${q.id}">Anything to add?</label><textarea id="note-${q.id}" data-note="${q.id}" rows="2" placeholder="Optional"></textarea></div>
+    </section>`).join('') + `
+    <section class="q" id="q-other" aria-labelledby="h-other">
+      <div class="q-h"><span class="q-n" aria-hidden="true">·</span><h2 id="h-other">Anything else for the next round?</h2></div>
+      <div class="note"><label for="note-other">Notes</label><textarea id="note-other" data-note="other" rows="3" placeholder="Optional"></textarea></div>
+    </section>`;
+
+  // ── Show state ──
+  function paint() {
+    let done = 0;
+    for (const q of QS) {
+      const mine = S.answers[q.id];
+      if (mine) done++;
+      for (const b of list.querySelectorAll(`.opt[data-q="${q.id}"]`)) {
+        const o = b.dataset.o;
+        b.setAttribute('aria-pressed', String(mine === o));
+        const who = Object.entries(S.others).filter(([u, d]) => u !== S.uid && d && d.answers && d.answers[q.id] === o).map(([u]) => S.names[u] || 'Someone');
+        b.querySelector('[data-who]').innerHTML = who.length ? `Also picked by <b>${who.map(esc).join(', ')}</b>` : '';
+      }
+    }
+    for (const t of list.querySelectorAll('[data-note]')) {
+      if (document.activeElement !== t) t.value = S.notes[t.dataset.note] || '';
+    }
+    $('#count').textContent = `${done} of ${N} answered`;
+    $('#meter').style.width = `${Math.round((done / N) * 100)}%`;
+  }
+
+  // ── Saving ──
+  const status = (text, bad) => { const el = $('#status'); el.textContent = text; el.classList.toggle('bad', !!bad); };
+  let writing = false;
+  let again = false;
+  async function save() {
+    keepLocal();
+    if (!S.db || !S.uid) return;
+    if (writing) { again = true; return; }
+    writing = true;
+    status('Saving…');
+    try {
+      await S.db.doc('picks/' + S.uid).set({ answers: S.answers, notes: S.notes, updatedAt: Date.now() });
+      status('Saved');
+    } catch (e) {
+      const code = e && e.code;
+      if (code === 'invalid_argument') status('This page can’t save your picks: you may only view it. Use “Copy my picks”.', true);
+      else status('Not saved: the store did not answer. Your picks are kept in this browser; try again later.', true);
+    } finally {
+      writing = false;
+      if (again) { again = false; save(); }
+    }
+  }
+
+  list.addEventListener('click', (e) => {
+    const b = e.target.closest('.opt');
+    if (!b) return;
+    const q = b.dataset.q;
+    const o = b.dataset.o;
+    if (S.answers[q] === o) delete S.answers[q]; else S.answers[q] = o;
+    S.dirty = true;
+    paint();
+    save();
+  });
+  let noteTimer = null;
+  list.addEventListener('input', (e) => {
+    const t = e.target.closest('[data-note]');
+    if (!t) return;
+    const v = t.value.trim();
+    if (v) S.notes[t.dataset.note] = t.value; else delete S.notes[t.dataset.note];
+    S.dirty = true;
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(save, 900);
+  });
+
+  // ── Copy as text ──
+  $('#copy').addEventListener('click', () => {
+    const lines = ['Round seven decisions'];
+    QS.forEach((q, i) => {
+      const o = q.opts.find((x) => x.id === S.answers[q.id]);
+      lines.push(`${i + 1}. ${q.q} ${o ? o.t : '(no pick)'}${S.notes[q.id] ? ` Note: ${S.notes[q.id].trim()}` : ''}`);
+    });
+    if (S.notes.other) lines.push(`Also: ${S.notes.other.trim()}`);
+    const text = lines.join('\n');
+    const box = $('#copied');
+    box.value = text;
+    const done = () => status('Copied. Paste it into the chat.');
+    const fallback = () => { box.hidden = false; box.focus(); box.select(); status('Select-all and copy the text at the foot of the page.'); };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (err) { fallback(); }
+  });
+
+  paint();
+
+  // ── The store ──
+  (async () => {
+    const use = window.claude && window.claude.use;
+    if (!use) { status('Picks are kept in this browser only. Open the page on claude.ai to save them.'); return; }
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) { status('Sign in on claude.ai to save picks. For now they are kept in this browser.'); return; }
+    const uid = await user.id();
+    if (!uid) { status('Sign in on claude.ai to save picks. For now they are kept in this browser.'); return; }
+    S.db = db; S.user = user; S.uid = uid;
+    const slow = setTimeout(() => status('The store is slow to answer. Your picks are kept in this browser meanwhile.'), 10000);
+    db.collection('picks').onSnapshot(async (snap) => {
+      clearTimeout(slow);
+      const others = {};
+      for (const d of snap.docs) others[d.id] = d.data();
+      S.others = others;
+      const mine = others[uid];
+      if (!S.loaded) {
+        S.loaded = true;
+        if (mine && !S.dirty) { S.answers = { ...(mine.answers || {}) }; S.notes = { ...(mine.notes || {}) }; keepLocal(); }
+        else if (S.dirty || Object.keys(S.answers).length || Object.keys(S.notes).length) save();
+        status(mine ? 'Your picks are loaded. They save as you click.' : 'Picks save as you click.');
+      }
+      const ids = Object.keys(others).filter((u) => u !== uid);
+      if (ids.length) {
+        try { const ps = await user.profiles(ids); for (const id of ids) S.names[id] = (ps && ps[id] && ps[id].name) || 'Someone'; } catch (e) { /* names stay unknown */ }
+      }
+      paint();
+    }, () => { clearTimeout(slow); status('The store stopped answering. Your picks are kept in this browser.', true); });
+  })();
+})();
+</script>

@@ -28,7 +28,7 @@
     APr: {
       title: '[D.J.E. Schrek, teacher of mathematics, by the blackboard in his classroom, Stedelijk Gymnasium, Utrecht]', maker: 'Unknown photographer', date: 'between 1912 and 1951', medium: 'Photograph',
       holder: 'Het Utrechts Archief', rights: 'Public Domain Mark', url: 'https://hetutrechtsarchief.nl/beeld/7174FC2443A85281835A16AC9F4AE17D',
-      cap: 'Hippocrates’ lunes, μηνίσκοι. The <i>Prior Analytics</i> uses them to show a problem brought near to proof: “the circle is made equal to a rectilinear figure by the help of lunules” (II.25, 69a30).',
+      cap: 'Hippocrates’ lunes, μηνίσκοι. The <i>Prior Analytics</i> uses them to show a problem brought near to knowledge: “the circle is made equal to a rectilinear figure by the help of lunules” (II.25, 69a32).',
     },
     Int: {
       title: '[H. Bouwman, teacher of Dutch, at his desk before the class, Stedelijk Gymnasium, Utrecht]', maker: 'Unknown photographer', date: 'between 1921 and 1935', medium: 'Photograph',
@@ -38,7 +38,7 @@
     Top: {
       title: '[Portrait of a male mathematics teacher with moustache seated at his classroom desk]', maker: 'Unknown maker, American', date: 'about 1900', medium: 'Gelatin silver print',
       holder: 'J. Paul Getty Museum', ref: '84.XD.879.104', rights: 'CC0', url: 'https://www.getty.edu/art/collection/object/d839395b-8962-4342-a085-e99ee7837884',
-      cap: '“Find out by measuring how many times the diameter of a circle is contained in the circumference”: induction, which the <i>Topics</i> calls “a passage from individuals to universals” (I.12, 105a13).',
+      cap: 'On the board, “Find out by measuring how many times the diameter of a circle is contained in the circumference”: induction, which the <i>Topics</i> calls “a passage from individuals to universals” (I.12, 105a13).',
     },
   };
   const chalk = (id, getty) => !getty && U.variant('b', 'logic') === 'chalk' && !!CHALK[id];

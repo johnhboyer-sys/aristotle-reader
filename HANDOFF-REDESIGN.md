@@ -1,6 +1,7 @@
 # HANDOFF: site redesign (mockup rounds)
 
-Updated 2026-11-03. This track is the redesign John reviews as clickable
+Updated 2026-11-03 (second pass, after the caption check and the decision
+sheet). This track is the redesign John reviews as clickable
 mockups ("rounds"), published as private claude.ai artifacts. It has never
 touched the site's code: nothing in `app/`, `pipeline/` or `shared/` changed.
 The work lives in the artifacts and in a mockup kit (see "The kit" below).
@@ -9,7 +10,8 @@ The work lives in the artifacts and in a mockup kit (see "The kit" below).
 
 | What | Link |
 |---|---|
-| **Round seven (current), version 11** | https://claude.ai/artifact/RtrrFk4cPQDh7mrjUyqcZh |
+| **Round seven (current), version 13** | https://claude.ai/artifact/RtrrFk4cPQDh7mrjUyqcZh |
+| **Decision sheet for round seven** | https://claude.ai/artifact/UGg8nKUSiSHw7x32hE8WGD |
 | Poster title faces (B's faces, with Yes/No picks) | https://claude.ai/artifact/3Q1LLCvfpNvuB3eCgRVhwu |
 | Round six (E, F, G, H early) | https://claude.ai/artifact/MkNU79qNssQ7Pco5TKomvj |
 | Round five (B alone) | https://claude.ai/artifact/4JKoRv15wqC1mSFfFcmMmz |
@@ -100,6 +102,39 @@ All four: every work on the home page; Greek and English side by side in the
 reader on a phone too; top-bar items on one baseline, icons centred on the
 capitals (0 px baseline spread in all bars); works list on every search page.
 
+## Captions checked against the site's translations (3 November)
+
+Every caption in B and H that quotes Aristotle (111) was checked against the
+English the site shows, by work, book and Bekker line: 92 were right, 17 needed
+fixing and 2 needed a closer look. 35 captions changed in all (version 12):
+misquotations, wrong lines, and B photograph titles matched to the site's Latin
+work titles. The English sweep (`HANDOFF-ENGLISH.md`) then corrected the site's
+text itself; three captions were re-checked against the corrected text and
+changed again (version 13), e.g. later Physiognomonics "as in the cat … as in
+asses and cattle", later Juv "blow-hole". Caption text lives in `dirs/b/script.js`
+(`CHALK`), `dirs/h/script.js` (`PL`, `PL_LATER`) and, for B's photographs, in
+`shell.html` (`DATA.photos`; that data line escapes `/` as `\/`). The check's
+scripts are in `tools/capcheck/`.
+
+The mockups' data still carries four edition labels the site has since
+corrected (Jowett 1885, Butcher 1895, Peters 1881, Taylor London 1812; now
+rev. Ross 1921, 4th ed. 1907, rev. ed. 1893, "1812, modernized"). Fix them in
+`shell.html` at the next republish.
+
+## Decision sheet
+
+One page with every open choice as a question John answers by clicking, with
+pictures: direction, B's face, blackboards and De Interpretatione picture, H's
+plates, face and portrait, P's colour and masthead, D's phone pictures, the
+search count, plus a note per question. It keeps his answers in the artifact's
+database: each viewer's doc is `picks/<their id>`, holding
+`{answers: {qid: option}, notes: {qid: text}, updatedAt}`; question ids are
+direction, bface, blogic, bint, hplates, hface, hport, pcol, pmast, dpic, count,
+and notes also take `other`. Anyone with access can read; each writes only
+their own doc (probe-tested, probe deleted). On 3 Nov no answers were in yet.
+Read them with ArtifactData (`list`, collection `picks`). The page's code is
+`decision-sheet/index.html` (its 40 images are in the artifact only).
+
 ## John's notes, 1–2 November, and what was done
 
 All replied to in their threads.
@@ -120,6 +155,7 @@ Claude, so it is still open there; H's logo already does it.
 
 ## Open for John
 
+All of these are on the decision sheet; his answers there settle them.
 - Which direction goes on: B, D, H or P.
 - B: keep the blackboards? Which ones? For De Interpretatione, the Greek past
   tenses or Le Gray's fleet?
@@ -144,6 +180,10 @@ and both are in the round-seven artifact: `shell.html`, whose data line is
 every image. Never commit either: the repo is public, and the images already
 live in the artifacts.
 
+Also: `decision-sheet/index.html` (the decision sheet) and
+`tools/capcheck/` (`extract.cjs` pulls every caption from a built page;
+`rendered.cjs` reads them as shown).
+
 Layout: `shell.html` (the mockup's own chrome, `window.DATA` as one 1.5 MB
 line, `window.U` helpers, routing, panes); `dirs/<k>/` per direction
 (`style.css`, `script.js`, `notes.js`, `img/`, `concept.md`); `overview.html`
@@ -161,7 +201,8 @@ To restore a working kit, in the scratchpad, never in the repo:
    `paths` (up to 256 per call).
 4. Prove it: `python3 build.py --out out/re --dirs b,d,h,p --publish`, then
    `cmp out/re/index.html <the published page>`. On 3 Nov the committed code
-   plus the restored shell matched version 11 byte for byte.
+   plus the restored shell matched version 11 byte for byte; after the caption
+fixes, the committed code plus the shell rebuilt version 13 byte for byte.
 
 Build and check:
 
@@ -233,9 +274,11 @@ Publishing (same URL every time):
 
 ## Next steps
 
-1. Read the round-seven comments (`ArtifactComments`, action `read`) and the
-   faces `votes`; answer anything new in its thread.
+1. Read John's answers on the decision sheet (ArtifactData, collection
+   `picks`), the round-seven comments (`ArtifactComments`, action `read`) and
+   the faces `votes`; answer anything new in its thread.
 2. Restore the kit in the scratchpad (above) before changing anything; the
    byte comparison proves the restore.
-3. Act on John's picks. If B goes on, extend the blackboards to the other
+3. Act on John's picks, and fix the four old edition labels in `shell.html`
+   when republishing. If B goes on, extend the blackboards to the other
    logic works only if he wants that; the search notes above say where to look.
