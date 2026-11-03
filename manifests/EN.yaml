@@ -50,14 +50,15 @@ english:
     name: "Martin Ostwald (Bobbs-Merrill, 1962)"
     dir: ostwald
     file: ostwald-ethics.md
-  # Fourth translation: F. H. Peters (1881), public domain (Standard Ebooks).
+  # Fourth translation: F. H. Peters, his revised text (Kegan Paul, 5th ed. 1893
+  # and later printings, not the 1881 first edition), public domain (Standard Ebooks).
   # Chapter counts per book (13/9/12/9/11/13/14/14/12/9) match the canonical
   # grc-TEI division exactly, so this is a clean Tier 0 overlay: no anchors
   # file, chapters pinned to the Greek spine via the grc TEI override below,
   # within-chapter line gutter interpolated (estimates).
   overlays:
     - id: peters
-      name: "F. H. Peters (Kegan Paul, 1881)"
+      name: "F. H. Peters (Kegan Paul, rev. ed. 1893)"
       model: archive
       dir: "en-peters"
       books: 10

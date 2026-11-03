@@ -36,7 +36,7 @@ def run(script, *exports, work="Long", slot=None):
 def test_an_export_becomes_rulings(tmp_path):
     script, rulings = setup(tmp_path)
     text = default_target("Long")[1][(1, 1)]
-    clicked = text[393 + 30: 393 + 110]          # John clicked a word 30 chars on
+    clicked = text[397 + 30: 397 + 110]          # John clicked a word 30 chars on
     export = tmp_path / "review-Long-ross-book01.json"
     export.write_text(json.dumps({"464b25": {"verdict": "late", "phrase": clicked},
                                   "464b30": {"verdict": "ok"},
@@ -44,8 +44,8 @@ def test_an_export_becomes_rulings(tmp_path):
     r = run(script, export)
     assert r.returncode == 0, r.stderr
     got = json.loads(rulings.read_text())["1:1"]
-    assert got["464b25"]["phrase"] == clicked and got["464b25"]["near"] == 423
-    assert got["464b30"]["verdict"] == "ok" and text[726:].startswith(got["464b30"]["phrase"])
+    assert got["464b25"]["phrase"] == clicked and got["464b25"]["near"] == 427
+    assert got["464b30"]["verdict"] == "ok" and text[730:].startswith(got["464b30"]["phrase"])
     assert got["465a5"] == {"verdict": "early", "export": export.name}
     assert "465a5" in r.stdout                   # named as still needing a place
     seed = json.loads((tmp_path / "build/align/Long_ross_gloss_overrides.json").read_text())

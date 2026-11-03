@@ -133,7 +133,7 @@ export const WORKS: Work[] = [
     // keyed to Bekker via Ackrill's per-paragraph stamps.
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
-      { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'secondary' },
+      { id: 'taylor', name: 'Thomas Taylor (1812, modernized)', short: 'Taylor', slot: 'secondary' },
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
@@ -158,7 +158,7 @@ export const WORKS: Work[] = [
     // from the 1812 Organon scan (CLAA's ch14 page was a broken duplicate).
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
-      { id: 'taylor', name: 'Thomas Taylor (London, 1812)', short: 'Taylor', slot: 'secondary' },
+      { id: 'taylor', name: 'Thomas Taylor (1812, modernized)', short: 'Taylor', slot: 'secondary' },
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
@@ -627,9 +627,9 @@ export const WORKS: Work[] = [
       // it ships in the public build. Bekker-keyed from its inline apparatus and
       // carries Ostwald's 505 footnotes (shown as popups in the reader).
       { id: 'ostwald', name: 'Martin Ostwald (Bobbs-Merrill, 1962)', short: 'Ostwald', slot: 'third' },
-      // Fourth translation: F. H. Peters (1881), public domain. Tier 0 overlay:
+      // Fourth translation: F. H. Peters, revised text (1893 on), public domain. Tier 0 overlay:
       // chapter divisions match the Greek spine exactly (13/9/12/9/11/13/14/14/12/9).
-      { id: 'peters', name: 'F. H. Peters (Kegan Paul, 1881)', short: 'Peters', slot: 'overlay' },
+      { id: 'peters', name: 'F. H. Peters (Kegan Paul, rev. ed. 1893)', short: 'Peters', slot: 'overlay' },
     ],
     // The modern, Bekker-keyed Ostwald is the default English on first load.
     defaultTranslation: 'ostwald',
@@ -688,7 +688,7 @@ export const WORKS: Work[] = [
     // deployed (see publish-plan). Ellis is a Tier 0 secondary: chapter
     // divisions match the Greek spine exactly (13/12/18/16/12/8/17/7).
     translations: [
-      { id: 'jowett', name: 'Benjamin Jowett (Oxford, 1885)', short: 'Jowett', slot: 'english' },
+      { id: 'jowett', name: 'Benjamin Jowett, rev. W. D. Ross (Oxford, 1921)', short: 'Jowett', slot: 'english' },
       { id: 'ellis', name: 'William Ellis (1776; rev. 1912)', short: 'Ellis', slot: 'secondary' },
     ],
     blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
@@ -941,12 +941,12 @@ export const WORKS: Work[] = [
       short: 'Kassel (OCT, 1966)',
       full: 'R. Kassel, ed. Aristotelis de arte poetica liber. Oxford: Clarendon Press, 1965; repr. 1968 [of 1966 corr. edn.].',
     },
-    // Fyfe (Loeb, 1932) primary + Butcher (Macmillan, 1895) overlay — both PD.
+    // Fyfe (Loeb, 1932) primary + Butcher (Macmillan, 1907) overlay — both PD.
     // Butcher is a Tier 0 secondary: chapters pinned to the Greek spine, gutter
     // interpolated (no anchors.yaml).
     translations: [
       { id: 'fyfe', name: 'W. H. Fyfe (Loeb, 1932)', short: 'Fyfe', slot: 'english' },
-      { id: 'butcher', name: 'S. H. Butcher (Macmillan, 1895)', short: 'Butcher', slot: 'secondary' },
+      { id: 'butcher', name: 'S. H. Butcher (Macmillan, 4th ed. 1907)', short: 'Butcher', slot: 'secondary' },
     ],
     blurb: 'Aristotle on poetry and tragedy — the founding work of literary theory.',
   },

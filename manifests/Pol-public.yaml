@@ -18,7 +18,7 @@ work:
   tlg_author: "0086"
   tlg_work: "035"
   greek_edition: "Ross, Aristotelis Politica (OCT, 1957)"
-  english_translation: "Benjamin Jowett (Oxford, 1885)"
+  english_translation: "Benjamin Jowett, rev. W. D. Ross (Oxford, 1921)"
 
 bekker_range:
   first_column: "1252a"
@@ -35,7 +35,7 @@ chapters:
 english:
   primary:
     id: jowett
-    name: "Benjamin Jowett (Oxford, 1885)"
+    name: "Benjamin Jowett, rev. W. D. Ross (Oxford, 1921)"
     model: archive
     dir: pol-jowett
     books: 8
@@ -69,14 +69,11 @@ books:
   - { n: 7, start: "1323a14", end: "1337a7" }
   - { n: 8, start: "1337a11", end: "1342b34" }
 
-# Jowett omits the close of Book 5 (the critique of Plato, 1315b10ff = Ross's
-# section 12), so columns 1316a/1316b carry Greek with no Jowett English.
-alignment_allow_unmatched:
-  - "5:1316a"
-  - "5:1316b"
-
-# Socrates omitted: its only Greek-without-English columns are 1316a/1316b, the
-# Plato critique Jowett doesn't translate (see above).
+# Socrates is not listed. Until 2026-11 the archive's Book V page was cut off
+# before V.12 (it stops at 'let it b'), so 1316a/1316b had Greek with no English
+# and were allowed unmatched. Jowett does translate V.12; the page now carries
+# it, transcribed from the 1921 print. Add the name once a stage 2 run confirms
+# its check passes.
 proper_names:
   - ["σολων", "Solon"]
   - ["λυκουργ", "Lycurgus"]

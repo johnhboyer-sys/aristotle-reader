@@ -43,7 +43,7 @@ chapters:
 english:
   secondary:
     id: jowett
-    name: "Benjamin Jowett (Oxford, 1885)"
+    name: "Benjamin Jowett, rev. W. D. Ross (Oxford, 1921)"
     dir: pol-jowett
     books: 8
     marker: part_roman
