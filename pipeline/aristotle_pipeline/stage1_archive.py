@@ -241,6 +241,28 @@ def _column_starts(rel: str, prose: dict[tuple[int, int], str]) -> tuple[dict, l
     return amap, breaks
 
 
+def _load_paragraphs(cfg: dict, prose: dict[tuple[int, int], str]) -> dict[tuple[int, int], list[dict]]:
+    """Paragraph openings {(book, chapter): [entry, ...]} from the optional
+    sources/<dir>/paragraphs.yaml (see tools/place_paragraphs.py). Each entry's
+    `at` must be our text at its `offset`: a source edit that moves the prose
+    must stop the build, not scatter the breaks."""
+    path = SOURCES_DIR / cfg["dir"] / "paragraphs.yaml" if cfg.get("dir") else None
+    if not path or not path.exists():
+        return {}
+    out: dict[tuple[int, int], list[dict]] = {}
+    bad = []
+    for e in yaml.safe_load(path.read_text(encoding="utf-8")) or []:
+        key = (e["book"], e["chapter"])
+        pattern = r"\s+".join(re.escape(w) for w in e["at"].split())
+        if not re.compile(pattern).match(prose.get(key, ""), e["offset"]):
+            bad.append(f"{key}@{e['offset']}")
+            continue
+        out.setdefault(key, []).append(e)
+    if bad:
+        raise ValueError(f"{cfg['dir']}/paragraphs.yaml: words not at offset: {bad[:8]}")
+    return out
+
+
 def build_english(manifest: Manifest, spine: dict, chapters: list[dict],
                   cfg: dict) -> dict:
     """Primary English chunks (EnglishChunk shape) from an archive translation."""
@@ -249,6 +271,9 @@ def build_english(manifest: Manifest, spine: dict, chapters: list[dict],
     # line-1 entries rather than from the proportional estimate.
     amap, breaks = _column_starts(cfg["anchors"], prose) if cfg.get("anchor_cuts") else (None, [])
     pieces = build_chunks(spine, chapters, prose, amap)
+    paragraphs = _load_paragraphs(cfg, prose)
+    placed = 0
+    read_to: dict[tuple[int, int], int] = {}  # how far each chapter's pieces have got
 
     chunks: list[dict] = []
     for seg in spine["segments"]:
@@ -259,11 +284,32 @@ def build_english(manifest: Manifest, spine: dict, chapters: list[dict],
                 text += " "
             if not p["cont"]:  # a chapter that begins in this column → heading anchor
                 markers.append({"kind": "section", "n": p["chapter"], "offset": len(text)})
+            # Pieces are slices of the chapter's prose in order, so a chapter
+            # offset rebases through where this piece starts in that prose. One
+            # that falls on a column cut opens the column's row: count it, no marker.
+            key = (seg["book"], int(p["chapter"]))
+            body = p["text"].lstrip()
+            start = prose[key].index(body, read_to.get(key, 0)) if key in prose else 0
+            read_to[key] = start + len(body)
+            base = len(text) + len(p["text"]) - len(body)
+            for e in paragraphs.get(key, []):
+                if start <= e["offset"] < start + len(body):
+                    placed += 1
+                    if base + e["offset"] - start > 0:
+                        markers.append({"kind": "paragraph", "n": "",
+                                        "offset": base + e["offset"] - start})
             text += p["text"]
         chunks.append({
             "id": seg["id"], "book": seg["book"], "column": seg["column"],
             "text": text, "notes": [], "markers": markers,
         })
+
+    wanted = sum(len(v) for v in paragraphs.values())
+    if placed != wanted:
+        raise ValueError(f"{cfg['dir']}/paragraphs.yaml: {wanted - placed} of {wanted} "
+                         "entries landed in no chunk")
+    if wanted:
+        print(f"  {cfg['dir']}/paragraphs.yaml: {placed} paragraph breaks")
 
     # build_chunks keeps a proportional cut wherever an anchored one would not
     # advance (out of text order, or its column is not in that chapter), so
