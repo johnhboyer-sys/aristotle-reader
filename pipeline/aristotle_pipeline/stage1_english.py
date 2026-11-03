@@ -177,7 +177,10 @@ def add_bekker_gutter(english: dict, spine: dict, dense: bool = False) -> None:
         text, tlen = c["text"], len(c["text"])
         first_line, last = greek[0]["n"], greek[-1]["n"]
         reals = {int(n): off for n, off in line_ms.get(c["id"], [])}
-        reals.setdefault(first_line, 0)  # the column starts at its first Bekker line
+        # The column starts at its first Bekker line, unless an anchor found a
+        # later line there: the cut fell after the first lines' words.
+        if not any(off == 0 and n > first_line for n, off in reals.items()):
+            reals.setdefault(first_line, 0)
         pts = sorted(set(list(reals.items()) + [(last, tlen)]))
         # Cadence mirrors the Greek line numbers: multiples of 5 in the column,
         # plus line 1 at the very top when the column begins at line 1.

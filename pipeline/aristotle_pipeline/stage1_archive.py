@@ -82,11 +82,11 @@ def _resolve_anchors(rel: str, chunks: list[dict]) -> dict[str, list]:
         else:
             missing.append(ref)
     # A pinned tick is a guess at a column edge; a tick found in place is not.
-    # Drop a pin that shares a found tick's offset (the gutter would keep one)
-    # or puts the lines out of order.
+    # Drop a pin whose line is already placed, that shares a placed tick's
+    # offset (the gutter would keep one), or that puts the lines out of order.
     for cid, n, off, ref in pinned:
         found = line_ms.get(cid, [])
-        if any(o == off or (m < n) != (o < off) for m, o in found if m != n):
+        if any(m == n or o == off or (m < n) != (o < off) for m, o in found):
             missing.append(ref)
         else:
             line_ms.setdefault(cid, []).append((n, off))

@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import pytest
 
-from aristotle_pipeline import stage1_archive
+from aristotle_pipeline import stage1_archive, stage1_english
 
 
 def _chunks(*texts):
@@ -99,6 +99,46 @@ def test_a_pin_yields_to_line_order(tmp_path, monkeypatch, capsys):
                    "1a40", "Gamma five six seven.")
     assert got == {"1:1a": [(35, 16)]}
     assert "1 unresolved: ['1a40']" in capsys.readouterr().out
+
+
+def test_a_pin_yields_to_a_found_tick_for_its_own_line(tmp_path, monkeypatch, capsys):
+    # Two anchors for one line: the one found in place wins.
+    chunks = _chunks("Alpha one. Beta two three four.", "Gamma five six seven.", "Eps.")
+    got = _resolve(tmp_path, monkeypatch, chunks, "1a40", "two three four.",
+                   "1a40", "Gamma five six seven.")
+    assert got == {"1:1a": [(40, 16)]}
+    assert "1 unresolved: ['1a40']" in capsys.readouterr().out
+
+
+def test_a_pin_yields_to_an_earlier_pin(tmp_path, monkeypatch, capsys):
+    # Two lines spilled into the next column would claim one sentence boundary.
+    chunks = _chunks("Alpha one. Beta two.", "Gamma three four five. Delta six seven eight.", "Eps.")
+    got = _resolve(tmp_path, monkeypatch, chunks, "1a35", "Gamma three four five.",
+                   "1a40", "Delta six seven eight.")
+    assert got == {"1:1a": [(35, 11)]}
+    assert "1 unresolved: ['1a40']" in capsys.readouterr().out
+
+
+def test_the_gutter_keeps_a_found_tick_at_the_column_start():
+    # Pol 1257b: the column opens with line 5's words. The gutter's default
+    # line-1 tick at offset 0 must not hide it.
+    english = {"chunks": [{"id": "1:1b", "text": "Gamma five six. " * 40}],
+               "_line_ms": {"1:1b": [(5, 0)]}}
+    spine = {"segments": [{"id": "1:1b", "lines": [{"n": n} for n in range(1, 41)]}]}
+    stage1_english.add_bekker_gutter(english, spine, dense=True)
+    first = english["chunks"][0]["bekker"][0]
+    assert first == {"n": 5, "offset": 0, "real": True}
+
+
+def test_the_gutter_keeps_a_mid_column_start_line():
+    # Rhet 1404a: the book begins at line 6 and a milestone gives line 1 at
+    # offset 0. Line 6 still anchors the column's start for the estimates.
+    english = {"chunks": [{"id": "3:1404a", "text": "word " * 600}],
+               "_line_ms": {"3:1404a": [(1, 0), (20, 1400)]}}
+    spine = {"segments": [{"id": "3:1404a", "lines": [{"n": n} for n in range(6, 40)]}]}
+    stage1_english.add_bekker_gutter(english, spine)
+    ten = next(t for t in english["chunks"][0]["bekker"] if t["n"] == 10)
+    assert ten["offset"] == 400  # 4/14 of the way from line 6 at 0 to line 20 at 1400
 
 
 def test_across_a_cut_the_whole_phrase_must_match(tmp_path, monkeypatch):
