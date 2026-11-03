@@ -1,0 +1,98 @@
+[
+ {
+  "work": "EN",
+  "book": 3,
+  "column": "1114a",
+  "find": "had the possibilty not to become",
+  "replace": "had the possibility not to become",
+  "source": "no free scan (archive.org nicomacheanethic00aris is a lending copy; OCR text not downloadable): judged by sense against Martin Ostwald, Nicomachean Ethics (Bobbs-Merrill, 1962), EN 1114a15",
+  "dir": "ostwald",
+  "kind": "changed words",
+  "confidence": "sense-only",
+  "note": "'possibilty'"
+ },
+ {
+  "work": "EN",
+  "book": 7,
+  "column": "1148a",
+  "find": "\"in regard to suchand 10-such,\" e.g.,",
+  "replace": "\"in regard to such-and-such,\" 10 e.g.,",
+  "source": "no free scan (archive.org nicomacheanethic00aris is a lending copy; OCR text not downloadable): judged by sense against Martin Ostwald, Nicomachean Ethics (Bobbs-Merrill, 1962), EN 1148a5",
+  "dir": "ostwald",
+  "kind": "hyphen or spacing",
+  "confidence": "sense-only",
+  "note": "the hyphen after 'such' was lost and the margin line number 10 landed inside the word, so the site shows 'suchand 10-such' (the parser only drops a line number that stands alone); the replace keeps the 10 as its own token so the gutter tick survives (detector candidate 'suchand')"
+ },
+ {
+  "work": "EN",
+  "book": 7,
+  "column": "1147b",
+  "find": "*νικῶν* on the authority of K^b.",
+  "replace": "*νικῶν* on the authority of Kb.",
+  "source": "no free scan (archive.org nicomacheanethic00aris is a lending copy; OCR text not downloadable): judged by sense against Martin Ostwald, Nicomachean Ethics (Bobbs-Merrill, 1962), EN 1147b35 (note 327)",
+  "dir": "ostwald",
+  "kind": "hyphen or spacing",
+  "confidence": "sense-only",
+  "note": "footnote: the transcription's '^' (meant as superscript b, manuscript Kb) is shown as a literal caret; the footnote renderer escapes HTML, so plain 'Kb' (or Unicode 'Kᵇ') is the practical fix (detector candidate '^'); Ostwald note 327 (numbered within book 7 on the site)"
+ },
+ {
+  "work": "EN",
+  "book": 7,
+  "column": "1150a",
+  "find": "διὰ προαίρεσιν* of M^b to the",
+  "replace": "διὰ προαίρεσιν* of Mb to the",
+  "source": "no free scan (archive.org nicomacheanethic00aris is a lending copy; OCR text not downloadable): judged by sense against Martin Ostwald, Nicomachean Ethics (Bobbs-Merrill, 1962), EN 1150a20 (note 340)",
+  "dir": "ostwald",
+  "kind": "hyphen or spacing",
+  "confidence": "sense-only",
+  "note": "footnote: literal caret for superscript b (manuscript Mb), as above (detector candidate '^'); Ostwald note 340 (numbered within book 7 on the site)"
+ },
+ {
+  "work": "EN",
+  "book": 7,
+  "column": "1150b",
+  "find": "you feel another's tick- ling less",
+  "replace": "you feel another's tickling less",
+  "source": "no free scan (archive.org nicomacheanethic00aris is a lending copy; OCR text not downloadable): judged by sense against Martin Ostwald, Nicomachean Ethics (Bobbs-Merrill, 1962), EN 1150b20 (note 346)",
+  "dir": "ostwald",
+  "kind": "hyphen or spacing",
+  "confidence": "sense-only",
+  "note": "footnote: word split at the print's line end ('tick- ling'); Ostwald note 346 (numbered within book 7 on the site)"
+ },
+ {
+  "work": "EN",
+  "book": 7,
+  "column": "1153a",
+  "find": "and elliptic para- graph is Stewart's",
+  "replace": "and elliptic paragraph is Stewart's",
+  "source": "no free scan (archive.org nicomacheanethic00aris is a lending copy; OCR text not downloadable): judged by sense against Martin Ostwald, Nicomachean Ethics (Bobbs-Merrill, 1962), EN 1153a (note 371)",
+  "dir": "ostwald",
+  "kind": "hyphen or spacing",
+  "confidence": "sense-only",
+  "note": "footnote: word split at the print's line end ('para- graph'); Ostwald note 371 (numbered within book 7 on the site)"
+ },
+ {
+  "work": "EN",
+  "book": 9,
+  "column": "1170b",
+  "find": "most recent cal- culations, Athens had",
+  "replace": "most recent calculations, Athens had",
+  "source": "no free scan (archive.org nicomacheanethic00aris is a lending copy; OCR text not downloadable): judged by sense against Martin Ostwald, Nicomachean Ethics (Bobbs-Merrill, 1962), EN 1170b30 (note 461)",
+  "dir": "ostwald",
+  "kind": "hyphen or spacing",
+  "confidence": "sense-only",
+  "note": "footnote: word split at the print's line end ('cal- culations'); Ostwald note 461 (numbered within book 9 on the site)"
+ },
+ {
+  "work": "EN",
+  "book": 10,
+  "column": "1177a",
+  "find": "from I. 5, 1095b14–1196a5; VI. 7",
+  "replace": "from I. 5, 1095b14–1096a5; VI. 7",
+  "source": "no free scan (archive.org nicomacheanethic00aris is a lending copy; OCR text not downloadable): judged by sense against Martin Ostwald, Nicomachean Ethics (Bobbs-Merrill, 1962), EN 1177a15 (note 487)",
+  "dir": "ostwald",
+  "kind": "punctuation",
+  "confidence": "sense-only",
+  "note": "footnote: Bekker reference '1196a5' cannot be in Book I, chap. 5 (1095b14-1096a10); almost certainly '1096a5' (could be Ostwald's own misprint rather than the transcription's); Ostwald note 487 (numbered within book 10 on the site)"
+ }
+]

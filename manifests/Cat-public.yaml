@@ -48,7 +48,7 @@ english:
     anchors: "cat-edghill/anchors.yaml"
   secondary:
     id: taylor
-    name: "Thomas Taylor (London, 1812)"
+    name: "Thomas Taylor (1812, modernized)"
     model: archive
     dir: "cat-taylor"
     books: 1

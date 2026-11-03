@@ -3,7 +3,7 @@
   import { fetchBekkerIndex, fetchLemmata, type LemmaRef } from '../lib/data';
   import { workPath, getWork } from '../lib/works';
   import { resumeFor } from '../lib/resume';
-  import { citationTargets, hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
+  import { citationTarget, citationTargets, hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
 
   // The work currently open in the reader (enables Bekker-citation jumps);
   // null on pages with no work context (home, landings).
@@ -77,15 +77,16 @@
     if (cite) {
       const index = await fetchBekkerIndex().catch(() => ({}));
       if (mySeq !== seq) return; // a newer keystroke superseded this pass
+      const jump = citationTarget(cite);
       for (const hit of citationTargets(index, cite.column, cite.line ?? 1, work)) {
         const w = getWork(hit.work);
         out.push({
           kind: 'bekker',
-          label: `Go to ${cite.column}${cite.line ?? ''}`,
+          label: jump.label,
           detail: w ? `${w.title} · Book ${hit.book}` : `${hit.work} · Book ${hit.book}`,
-          href: cite.line != null
-            ? `${base}${workPath(hit.work, hit.book)}?loc=${cite.column}:${cite.line}`
-            : `${base}${workPath(hit.work, hit.book)}#${cite.column}`,
+          href: jump.loc != null
+            ? `${base}${workPath(hit.work, hit.book)}?loc=${jump.loc}`
+            : `${base}${workPath(hit.work, hit.book)}#${jump.hash ?? cite.column}`,
         });
       }
     }

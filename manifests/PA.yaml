@@ -37,7 +37,7 @@ chapters:
 english:
   primary:
     id: ogle
-    name: "William Ogle (Oxford, 1882)"
+    name: "William Ogle (Oxford, 1912)"
     model: archive
     dir: "pa-ogle"
     books: 4

@@ -1,0 +1,382 @@
+[
+ {
+  "dir": "oec-forster",
+  "work": "Oec",
+  "book": 1,
+  "chapter": 3,
+  "cat": "letter-swap",
+  "found": "ward",
+  "suggest": "word",
+  "why": "'ward off attacks' is right (print agrees)"
+ },
+ {
+  "dir": "poet-butcher",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 1,
+  "cat": "letter-swap",
+  "found": "entitles",
+  "suggest": "entities",
+  "why": "'entitles' is right; the same phrase does drop 'indiscriminately', which is corrected separately"
+ },
+ {
+  "dir": "poet-butcher",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 2,
+  "cat": "letter-swap",
+  "found": "Nomes",
+  "suggest": "Names",
+  "why": "'Nomes' (nomic poems) is right, as printed"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 21,
+  "cat": "split-word",
+  "found": "pray-er",
+  "suggest": "prayer",
+  "why": "'pray-er' is Fyfe's own coinage for arêtêr (the 1927 print has 'pray-er')"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 21,
+  "cat": "greek-in-english",
+  "found": "κρῖ",
+  "suggest": "",
+  "why": "Greek quotation printed in Greek in the Loeb; not English"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 22,
+  "cat": "stray-character",
+  "found": "|",
+  "suggest": "",
+  "why": "metrical bars in the scanned Greek line (Euclid's burlesque), as printed"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 22,
+  "cat": "stray-character",
+  "found": "|",
+  "suggest": "",
+  "why": "metrical bars in the scanned Greek line, as printed"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 22,
+  "cat": "stray-character",
+  "found": "|",
+  "suggest": "",
+  "why": "metrical bars in the scanned Greek line, as printed"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 22,
+  "cat": "stray-character",
+  "found": "|",
+  "suggest": "",
+  "why": "metrical bars in the scanned Greek line, as printed"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 22,
+  "cat": "stray-character",
+  "found": "|",
+  "suggest": "",
+  "why": "metrical bars in the scanned Greek line, as printed"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 22,
+  "cat": "stray-character",
+  "found": "|",
+  "suggest": "",
+  "why": "metrical bars in the scanned Greek line, as printed"
+ },
+ {
+  "dir": "pol-ellis",
+  "work": "Pol",
+  "book": 1,
+  "chapter": 8,
+  "cat": "doubled-word",
+  "found": "another another",
+  "suggest": "another",
+  "why": "'one thing and another another' is the printed idiom"
+ },
+ {
+  "dir": "pol-ellis",
+  "work": "Pol",
+  "book": 1,
+  "chapter": 12,
+  "cat": "letter-swap",
+  "found": "laver",
+  "suggest": "lover",
+  "why": "'his laver' is right (Amasis's foot-pan story), as printed"
+ },
+ {
+  "dir": "pol-ellis",
+  "work": "Pol",
+  "book": 7,
+  "chapter": 6,
+  "cat": "letter-swap",
+  "found": "port",
+  "suggest": "part",
+  "why": "'the port, the city, the sea' is right, as printed"
+ },
+ {
+  "dir": "pol-ellis",
+  "work": "Pol",
+  "book": 8,
+  "chapter": 3,
+  "cat": "letter-swap",
+  "found": "eases",
+  "suggest": "cases",
+  "why": "'eases with pleasure' is as printed"
+ },
+ {
+  "dir": "pol-jowett",
+  "work": "Pol",
+  "book": 2,
+  "chapter": 4,
+  "cat": "letter-swap",
+  "found": "lauds",
+  "suggest": "lands",
+  "why": "'lauds' is right, as printed"
+ },
+ {
+  "dir": "pol-jowett",
+  "work": "Pol",
+  "book": 7,
+  "chapter": 6,
+  "cat": "letter-swap",
+  "found": "ports",
+  "suggest": "parts",
+  "why": "'their ports' is right, as printed"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 1,
+  "chapter": 2,
+  "cat": "run-together",
+  "found": "perhas",
+  "suggest": "per has",
+  "why": "the archive's mechanical transliteration of the Greek (house convention)"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 1,
+  "chapter": 11,
+  "cat": "letter-swap",
+  "found": "spake",
+  "suggest": "spoke",
+  "why": "'He spake' is the printed (archaic) verse rendering"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 3,
+  "chapter": 2,
+  "cat": "letter-swap",
+  "found": "dignify",
+  "suggest": "dignity",
+  "why": "'to dignify him' is right, as printed"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 3,
+  "chapter": 11,
+  "cat": "letter-swap",
+  "found": "roam",
+  "suggest": "room",
+  "why": "'you must roam as free as a sacred victim' is as printed"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 3,
+  "chapter": 11,
+  "cat": "doubled-word",
+  "found": "stranger stranger",
+  "suggest": "stranger",
+  "why": "deliberate pun ('a stranger stranger'), as printed"
+ },
+ {
+  "dir": "pol-jowett",
+  "work": "Pol",
+  "book": 2,
+  "chapter": 12,
+  "cat": "scandiff",
+  "found": "Onomacritus was the first person who",
+  "suggest": "first people (1921 print)",
+  "why": "the 1921 print has the misprint 'the first people who'; the 1885 edition and sense have 'person', as the site does"
+ },
+ {
+  "dir": "pol-jowett",
+  "work": "Pol",
+  "book": 0,
+  "chapter": 0,
+  "cat": "scandiff",
+  "found": "honor, labor, practice(d), connection, judgment, neighbor, license, fulfill ...",
+  "suggest": "honour, labour, practise(d), connexion, judgement ...",
+  "why": "American spelling applied throughout the archive text (house convention); not reported"
+ },
+ {
+  "dir": "pol-jowett",
+  "work": "Pol",
+  "book": 3,
+  "chapter": 14,
+  "cat": "scandiff",
+  "found": "a hereditary despotic government; while (for whilst)",
+  "suggest": "an hereditary; whilst",
+  "why": "modernisations of the same kind as the spelling; not reported"
+ },
+ {
+  "dir": "pol-jowett",
+  "work": "Pol",
+  "book": 0,
+  "chapter": 0,
+  "cat": "scandiff",
+  "found": "wealth getting, well ordered, flute players, fellow-travelers",
+  "suggest": "hyphenated in print",
+  "why": "hyphen-only differences (punctuation), no change of sense"
+ },
+ {
+  "dir": "poet-butcher",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 9,
+  "cat": "scandiff",
+  "found": "a historical subject; if it conforms",
+  "suggest": "an historical; if it conform",
+  "why": "modernisations in the archive text, like its American spelling (meter, color); not reported"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 17,
+  "cat": "odd.py",
+  "found": "Amphiaraos was was made to rise",
+  "suggest": "was",
+  "why": "the doubled 'was' is in the 1927 print too; the 1932 printing could not be checked, so left as printed"
+ },
+ {
+  "dir": "poet-fyfe",
+  "work": "Poet",
+  "book": 1,
+  "chapter": 0,
+  "cat": "scandiff",
+  "found": "lampooned / serious / Spectacle / costumier / dislocated ... (some 40 wordings)",
+  "suggest": "assailed / heroic / Scenic display / stage-carpenter / disturbed ... (1927)",
+  "why": "Fyfe revised his translation for the 1932 printing the site follows; differences from the 1927 scan are revisions, not errors"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 0,
+  "chapter": 0,
+  "cat": "scandiff",
+  "found": "scan-only '(i)', '(a)', 'C3)'",
+  "suggest": "(1), (2), (3)",
+  "why": "OCR readings of the printed enumerators (1), (2), (3), which the site has (scandiff drops digit tokens); only '(5)' in III.6 is really missing, and is corrected"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 2,
+  "chapter": 19,
+  "cat": "scandiff",
+  "found": "The arguments for the non-occurrence of anything",
+  "suggest": "occurrence (scan text)",
+  "why": "the print has italic 'non-', lost in the OCR text; site right"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 2,
+  "chapter": 2,
+  "cat": "scandiff",
+  "found": "an impulse, accompanied by pain",
+  "suggest": "by a pain (scan text)",
+  "why": "page image n91: 'a' was the bold section number 2 in the margin; site right"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 2,
+  "chapter": 5,
+  "cat": "scandiff",
+  "found": "things that are a very long way off",
+  "suggest": "are very long way off (scan text)",
+  "why": "page image n103 has 'a very long way off'; site right"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 2,
+  "chapter": 23,
+  "cat": "scandiff",
+  "found": "If you count tall boys men",
+  "suggest": "tallboys (scan text)",
+  "why": "page image n149 prints 'tall boys'; site right"
+ },
+ {
+  "dir": "rhet-roberts",
+  "work": "Rhet",
+  "book": 0,
+  "chapter": 0,
+  "cat": "scandiff",
+  "found": "tekmerhiou, tekmarh, peperhasmeuou, Thratt' ei su ...",
+  "suggest": "Greek",
+  "why": "the archive's mechanical transliteration of the printed Greek (house convention); not reported"
+ },
+ {
+  "dir": "pol-ellis",
+  "work": "Pol",
+  "book": 0,
+  "chapter": 0,
+  "cat": "scandiff",
+  "found": "_homosipuoi_, _kosmoi_, xeugitai, potagogides",
+  "suggest": "Greek",
+  "why": "transliterations of printed Greek (house convention); 'xeugitai' (for zeugitai) looks like a slip in the transliteration itself but is left with them"
+ },
+ {
+  "dir": "oec-forster",
+  "work": "Oec",
+  "book": 1,
+  "chapter": 2,
+  "cat": "scandiff",
+  "found": "then a wife...,",
+  "suggest": "",
+  "why": "the print has 'then a wife . . . ,' (Hesiod quoted with an ellipsis); site right"
+ },
+ {
+  "dir": "oec-forster",
+  "work": "Oec",
+  "book": 2,
+  "chapter": 2,
+  "cat": "scandiff",
+  "found": "when their land was untilled",
+  "suggest": "unfilled (scan text)",
+  "why": "OCR error in the scan; 'untilled' is right"
+ }
+]

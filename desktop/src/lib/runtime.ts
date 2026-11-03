@@ -62,14 +62,18 @@ export function errorText(e: unknown): string {
 
 type AtomicFs = Pick<typeof import('@tauri-apps/plugin-fs'), 'writeTextFile' | 'rename'>;
 
+// Each write gets its own temp name. Two overlapping writes to the same path
+// used to share `<path>.tmp` and rename each other's bytes.
+let tmpSerial = 0;
+
 /**
- * Write-then-rename: stage `body` under `<path>.tmp` and move it into place
+ * Write-then-rename: stage `body` under `<path>.<n>.tmp` and move it into place
  * only once fully written, so a crash mid-write can never leave a truncated
  * file at `path`. rename() is atomic on every desktop filesystem Tauri
  * targets (same directory).
  */
 export async function atomicWriteText(fs: AtomicFs, path: string, body: string): Promise<void> {
-  const tmp = `${path}.tmp`;
+  const tmp = `${path}.${++tmpSerial}.tmp`;
   await fs.writeTextFile(tmp, body);
   await fs.rename(tmp, path);
 }

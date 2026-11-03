@@ -1,0 +1,4 @@
+# Paragraph openings in OUR text, placed by tools/place_paragraphs.py.
+# Positions from: W. A. Pickard-Cambridge, Internet Classics Archive full text, classics.mit.edu/Aristotle/sophist_refut.mb.txt
+# offset = characters into the chapter's prose; at = our own opening words.
+- {book: 1, chapter: 15, offset: 3002, at: "It is also a sophistical"}

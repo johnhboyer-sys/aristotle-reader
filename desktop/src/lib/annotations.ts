@@ -23,8 +23,8 @@
 export interface GreekTarget {
   kind: 'greek';
   book: number;
-  start: { column: string; line: number; word: number };  // word = .tok index in line
-  end: { column: string; line: number; word: number };    // inclusive
+  start: { column: string; line: number; word: number; sub?: string };  // word = .tok index in line
+  end: { column: string; line: number; word: number; sub?: string };    // inclusive
 }
 
 export interface EnglishTarget {
@@ -62,6 +62,7 @@ export const PALETTE: AnnColor[] = ['yellow', 'green', 'pink', 'blue', 'purple',
 
 import { isTauri, errorText, atomicWriteText } from './runtime';
 import { memoAsync } from '@shared/lib/memo';
+import { anchorCite, lineAnchor, lineRef } from '@shared/lib/data';
 
 interface AnnRead {
   anns: Annotation[];
@@ -127,10 +128,36 @@ async function tauriStore(): Promise<AnnStore> {
 const store = memoAsync<AnnStore>(() => (isTauri() ? tauriStore() : Promise.resolve(browserStore)));
 
 const _cache = new Map<string, AnnRead>();
+let storeOverride: AnnStore | null = null;
+
+async function activeStore(): Promise<AnnStore> {
+  return storeOverride ?? store();
+}
+
+const commitTails = new Map<string, Promise<void>>();
+
+/** Tests install a store double. Pass null to use the real store again. */
+export function setAnnotationStoreForTests(next: AnnStore | null): void {
+  storeOverride = next;
+  _cache.clear();
+  _loading.clear();
+  commitTails.clear();
+}
+
+// One read per work, shared by every caller. Two reads racing a commit let the
+// later one put the pre-commit list back in the cache.
+const _loading = new Map<string, Promise<AnnRead>>();
 
 async function entryFor(work: string): Promise<AnnRead> {
-  if (!_cache.has(work)) _cache.set(work, await (await store()).read(work));
-  return _cache.get(work)!;
+  const cached = _cache.get(work);
+  if (cached) return cached;
+  let loading = _loading.get(work);
+  if (!loading) {
+    loading = activeStore().then(s => s.read(work));
+    _loading.set(work, loading);
+    loading.then(e => _cache.set(work, e), () => {}).finally(() => _loading.delete(work));
+  }
+  return loading;
 }
 
 export async function listAnnotations(work: string): Promise<Annotation[]> {
@@ -148,12 +175,20 @@ export function annotationsProblem(work: string): string | null {
  *  read refuses every write. The in-memory list changes only after the write
  *  succeeded, so a failed save is never shown as saved. */
 async function commit(work: string, mutate: (anns: Annotation[]) => Annotation[] | null): Promise<void> {
-  const entry = await entryFor(work);
-  if (entry.problem) throw new Error(entry.problem);
-  const next = mutate(entry.anns);
-  if (!next) return;
-  await (await store()).write(work, next);
-  entry.anns = next;
+  const prev = commitTails.get(work) ?? Promise.resolve();
+  const run = prev.then(async () => {
+    const entry = await entryFor(work);
+    if (entry.problem) throw new Error(entry.problem);
+    const next = mutate(entry.anns);
+    if (!next) return;
+    await (await activeStore()).write(work, next);
+    entry.anns = next;
+  });
+  // A rejection stays on `run` for this caller. The tail swallows it so the
+  // next commit for this work still runs.
+  const tail = run.then(() => {}, () => {});
+  commitTails.set(work, tail);
+  return run;
 }
 
 export async function addAnnotation(a: Annotation): Promise<void> {
@@ -176,10 +211,11 @@ export function newId(): string {
 
 // ── capture: DOM selection → target ─────────────────────────────────────────
 
-const lineIdOf = (el: Element | null): { column: string; line: number } | null => {
+const lineIdOf = (el: Element | null): { column: string; line: number; sub?: string } | null => {
   const host = el?.closest?.('.greek-line[id], tr[id^="L"]');
-  const m = host?.id.match(/^L(.+?)-(\d+)(?:-c)?$/);
-  return m ? { column: m[1], line: Number(m[2]) } : null;
+  const m = host?.id.match(/^L(.+?)-(\d+)([a-z])?(?:-c)?$/);
+  if (!m) return null;
+  return { column: m[1], line: Number(m[2]), ...(m[3] ? { sub: m[3] } : {}) };
 };
 
 const nodeEl = (n: Node): Element | null =>
@@ -195,18 +231,14 @@ const nodeEl = (n: Node): Element | null =>
 // — which is what left hard line breaks / footnote digits in normal copies;
 // see App.svelte's onDocumentCopy).
 
-// L1094a-3 → 1094a3; L1094a-3-c → 1094a3 (mirrors Reader.svelte's idToBekker
-// for Greek lines — same id shape, `L<column>-<line>[-c]`).
-const idToBekker = (id: string) => id.slice(1).replace(/-(\d+)(-c)?$/, '$1');
-
 /** Greek-line citation for a Range, e.g. "(NE 1094a3)" or "(NE 1094a3–1094a5)".
  * Returns null off a Greek line (English/mixed selection). */
 export function greekCiteForRange(range: Range, abbr: string): string | null {
   const startLine = nodeEl(range.startContainer)?.closest('.greek-line[id]') ?? null;
   const endLine = nodeEl(range.endContainer)?.closest('.greek-line[id]') ?? null;
   if (!startLine && !endLine) return null;
-  const s = startLine ? idToBekker(startLine.id) : null;
-  const f = endLine ? idToBekker(endLine.id) : null;
+  const s = startLine ? anchorCite(startLine.id) : null;
+  const f = endLine ? anchorCite(endLine.id) : null;
   return s && f && s !== f ? `(${abbr} ${s}–${f})` : `(${abbr} ${s ?? f})`;
 }
 
@@ -418,10 +450,12 @@ export function captureSelection(book: number, activeTranslation: string): Captu
 // ── resolve: target → Range, and paint via CSS Custom Highlights ───────────
 
 export function greekRange(t: GreekTarget): Range[] {
-  const hostOf = (column: string, line: number): Element | null =>
-    document.getElementById(`L${column}-${line}`) ?? document.getElementById(`L${column}-${line}-c`);
-  const sh = hostOf(t.start.column, t.start.line);
-  const eh = hostOf(t.end.column, t.end.line);
+  const hostOf = (column: string, line: number, sub?: string): Element | null => {
+    const id = lineAnchor(column, line, sub);
+    return document.getElementById(id) ?? document.getElementById(`${id}-c`);
+  };
+  const sh = hostOf(t.start.column, t.start.line, t.start.sub);
+  const eh = hostOf(t.end.column, t.end.line, t.end.sub);
   if (!sh || !eh) return [];
 
   // One sub-range PER LINE, each spanning only that line's `.tok` run. Painting
@@ -598,8 +632,8 @@ export function clearPending(): void {
 /** A short citation label for the panel, e.g. "1097a15–1097b2" or "1097a (Ostwald)". */
 export function annotationLabel(a: Annotation): string {
   if (a.target.kind === 'greek') {
-    const s = `${a.target.start.column}${a.target.start.line}`;
-    const e = `${a.target.end.column}${a.target.end.line}`;
+    const s = `${a.target.start.column}${lineRef(a.target.start.line, a.target.start.sub)}`;
+    const e = `${a.target.end.column}${lineRef(a.target.end.line, a.target.end.sub)}`;
     return s === e ? s : `${s}–${e}`;
   }
   return `${a.target.column} (${a.target.translation})`;

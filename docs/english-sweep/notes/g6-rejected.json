@@ -1,0 +1,182 @@
+[
+ {
+  "dir": "aud-loveday-forster",
+  "work": "Aud",
+  "book": 1,
+  "chapter": 1,
+  "cat": "run-together",
+  "found": "exits",
+  "suggest": "ex its",
+  "why": "real word ('stops up the exits')"
+ },
+ {
+  "dir": "aud-loveday-forster",
+  "work": "Aud",
+  "book": 1,
+  "chapter": 1,
+  "cat": "run-together",
+  "found": "Wallis",
+  "suggest": "Wall is",
+  "why": "an editor's name inside a footnote that the text had absorbed; the whole run-in footnote is removed by a correction (804b14-15)"
+ },
+ {
+  "dir": "ga-platt",
+  "work": "GA",
+  "book": 1,
+  "chapter": 18,
+  "cat": "doubled-word",
+  "found": "flesh flesh",
+  "suggest": "flesh",
+  "why": "as printed: 'Blood, then, will not be blood, nor flesh flesh' (GA 722b)"
+ },
+ {
+  "dir": "ga-platt",
+  "work": "GA",
+  "book": 4,
+  "chapter": 1,
+  "cat": "doubled-word",
+  "found": "it it",
+  "suggest": "it",
+  "why": "as printed: 'if he had seen it it is strange' (GA 764a)"
+ },
+ {
+  "dir": "ma-farquharson",
+  "work": "MA",
+  "book": 1,
+  "chapter": 3,
+  "cat": "doubled-word",
+  "found": "pushed pushed",
+  "suggest": "pushed",
+  "why": "as printed: 'so is the pushed pushed' (MA 699b)"
+ },
+ {
+  "dir": "mirab-dowdall",
+  "work": "Mirab",
+  "book": 1,
+  "chapter": 26,
+  "cat": "run-together",
+  "found": "islet",
+  "suggest": "is let",
+  "why": "real word: 'in an islet situated beyond them'"
+ },
+ {
+  "dir": "mirab-dowdall",
+  "work": "Mirab",
+  "book": 1,
+  "chapter": 78,
+  "cat": "letter-swap",
+  "found": "Gaius",
+  "suggest": "Gains",
+  "why": "as printed ('Aulus the Peucestian and Gaius'), both OCRs"
+ },
+ {
+  "dir": "mirab-dowdall",
+  "work": "Mirab",
+  "book": 1,
+  "chapter": 86,
+  "cat": "run-together",
+  "found": "hasten",
+  "suggest": "has ten",
+  "why": "real word ('to hasten for this leaf')"
+ },
+ {
+  "dir": "mirab-dowdall",
+  "work": "Mirab",
+  "book": 1,
+  "chapter": 96,
+  "cat": "run-together",
+  "found": "Themis",
+  "suggest": "Them is",
+  "why": "the goddess Themis"
+ },
+ {
+  "dir": "mirab-dowdall",
+  "work": "Mirab",
+  "book": 1,
+  "chapter": 122,
+  "cat": "letter-swap",
+  "found": "rood",
+  "suggest": "road",
+  "why": "real word: a rood (measure of land), as printed"
+ },
+ {
+  "dir": "mxg-loveday-forster",
+  "work": "MXG",
+  "book": 1,
+  "chapter": 4,
+  "cat": "doubled-word",
+  "found": "being being",
+  "suggest": "being",
+  "why": "correct: 'as regards Being and Not-being being unmoved'"
+ },
+ {
+  "dir": "mxg-loveday-forster",
+  "work": "MXG",
+  "book": 1,
+  "chapter": 6,
+  "cat": "greek-in-english",
+  "found": "μὴ",
+  "suggest": "",
+  "why": "inside a long footnote that the text had absorbed; the footnote is removed by a correction (979a35-37)"
+ },
+ {
+  "dir": "pa-ogle",
+  "work": "PA",
+  "book": 2,
+  "chapter": 17,
+  "cat": "letter-swap",
+  "found": "gad",
+  "suggest": "god",
+  "why": "as printed: 'gad-flies'"
+ },
+ {
+  "dir": "pa-ogle",
+  "work": "PA",
+  "book": 3,
+  "chapter": 7,
+  "cat": "run-together",
+  "found": "bloodlike",
+  "suggest": "blood like",
+  "why": "as printed: 'bloodlike character' (PA 670a; unhyphenated in the scan, not at a line end)"
+ },
+ {
+  "dir": "pa-ogle",
+  "work": "PA",
+  "book": 4,
+  "chapter": 3,
+  "cat": "run-together",
+  "found": "hasten",
+  "suggest": "has ten",
+  "why": "real word ('to hasten the concoction of food')"
+ },
+ {
+  "dir": "phgn-loveday-forster",
+  "work": "Phgn",
+  "book": 1,
+  "chapter": 1,
+  "cat": "greek-in-english",
+  "found": "τι",
+  "suggest": "",
+  "why": "inside a footnote that the text had absorbed; the footnote is removed by a correction (805b15)"
+ },
+ {
+  "dir": "phgn-loveday-forster",
+  "work": "Phgn",
+  "book": 1,
+  "chapter": 6,
+  "cat": "letter-swap",
+  "found": "fop",
+  "suggest": "top",
+  "why": "real word ('characteristic of a fop'); only the footnote mark after it is corrected"
+ },
+ {
+  "dir": "vent-forster",
+  "work": "Vent",
+  "book": 1,
+  "chapter": 1,
+  "cat": "run-together",
+  "found": "Thebe",
+  "suggest": "The be",
+  "why": "place name (the plain of Thebe in Mysia)"
+ }
+]

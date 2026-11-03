@@ -1,0 +1,317 @@
+[
+ {
+  "dir": "apo-bouchier",
+  "work": "APo",
+  "book": 1,
+  "chapter": 6,
+  "cat": "doubled-word",
+  "found": "for for",
+  "why": "print reads \"asked for for the purposes\" (Bouchier p. 15, djvu.txt l. 806); not an error",
+  "context": "…). A difficulty might perhaps be raised as to why accidental premises are asked for for the purposes of a conclusion, if the conclusion drawn from them be not necessar…"
+ },
+ {
+  "dir": "apo-bouchier",
+  "work": "APo",
+  "book": 1,
+  "chapter": 11,
+  "cat": "doubled-word",
+  "found": "not not",
+  "why": "legitimate \"not not-animal\" (print, djvu.txt l. 1269)",
+  "context": "…ough Not-man be also such and such, it be simply granted that man is animal and not not-animal; then Callias [being man] will be animal and not not-animal, even though…"
+ },
+ {
+  "dir": "apo-bouchier",
+  "work": "APo",
+  "book": 1,
+  "chapter": 11,
+  "cat": "doubled-word",
+  "found": "not not",
+  "why": "legitimate \"not not-animal\" (print, djvu.txt l. 1270)",
+  "context": "…t man is animal and not not-animal; then Callias [being man] will be animal and not not-animal, even though not-Callias be also man. The reason of this is that the maj…"
+ },
+ {
+  "dir": "apo-bouchier",
+  "work": "APo",
+  "book": 2,
+  "chapter": 19,
+  "cat": "letter-swap",
+  "found": "halt",
+  "why": "\"the remaining particulars halt\" is the printed reading (djvu.txt l. 5732); \"half\" would be wrong",
+  "context": "… universal, not with the particular man Callias. Then the remaining particulars halt, and the process continues until indivisible and universal ideas are formed. Th…"
+ },
+ {
+  "dir": "apr-owen",
+  "work": "APr",
+  "book": 1,
+  "chapter": 22,
+  "cat": "doubled-word",
+  "found": "it it",
+  "why": "the print itself reads \"in this figure it it is evident\" (organonorlogicalt01aris djvu.txt l. 8809); site matches the print",
+  "context": "…the same mode as in universals, and by the same terms. Wherefore in this figure it it is evident, when and how there will be a syllogism, and when of the contingent,…"
+ },
+ {
+  "dir": "apr-owen",
+  "work": "APr",
+  "book": 1,
+  "chapter": 46,
+  "cat": "doubled-word",
+  "found": "not not",
+  "why": "legitimate double negative \"it is not not good\" (print l. 11018)",
+  "context": "… every affirmation there is negation, and hence of this the negation is, \"it is not not good.\" They have this order indeed with respect to each other: let to be good b…"
+ },
+ {
+  "dir": "apr-owen",
+  "work": "APr",
+  "book": 1,
+  "chapter": 46,
+  "cat": "doubled-word",
+  "found": "not not",
+  "why": "legitimate \"it is not not white\" (print l. 11038)",
+  "context": "…o-subsist, D will be present, for of what is white we may truly say, that it is not not white, yet A is not predicated of every D, for, in short, we can not truly pred…"
+ },
+ {
+  "dir": "cat-owen",
+  "work": "Cat",
+  "book": 1,
+  "chapter": 12,
+  "cat": "doubled-word",
+  "found": "falsehood falsehood",
+  "why": "quotation from King John (\"falsehood falsehood cures\") is correct; but the whole \"Notes\" block it sits in is Owen's footnotes leaked into the text (see g2-notes.md)",
+  "context": "…In campo, semper rectus, et in tunicâ. \"Indirection thereby grows indirect, And falsehood falsehood cures: as fire cools fire Within the scorched veins of one new burn'd.\" \"Sure h…"
+ },
+ {
+  "dir": "int-owen",
+  "work": "Int",
+  "book": 1,
+  "chapter": 10,
+  "cat": "doubled-word",
+  "found": "not not",
+  "why": "legitimate \"he is not not a just man\" (print l. 4054)",
+  "context": "…s, \"a man is not just;\" \"he is not a just man,\" the negative of this is, \"he is not not a just man,\" for here the word \"is,\" and \"is not,\" will be added to the \"just\" …"
+ },
+ {
+  "dir": "int-taylor",
+  "work": "Int",
+  "book": 1,
+  "chapter": 10,
+  "cat": "doubled-word",
+  "found": "not not",
+  "why": "legitimate (Taylor 1812, djvu.txt l. 8193)",
+  "context": "…his is, a man is not just. He is not a just man; of this the negation is, he is not not a just man. For here the [verb] is and is not are added to the just, and the no…"
+ },
+ {
+  "dir": "int-taylor",
+  "work": "Int",
+  "book": 1,
+  "chapter": 10,
+  "cat": "doubled-word",
+  "found": "not not",
+  "why": "legitimate \"that is not not just which is not man\" (l. 8207)",
+  "context": "…on-man is just, non-man is not just. That is not just which is not man, that is not not just which is not man. There are not, however, more oppositions than these. But…"
+ },
+ {
+  "dir": "int-taylor",
+  "work": "Int",
+  "book": 1,
+  "chapter": 10,
+  "cat": "doubled-word",
+  "found": "not not",
+  "why": "legitimate \"he is not not a man white\" (l. 8304)",
+  "context": "…same with the enunciation he is a white man, the negation will either be, he is not not a man white, or he is not a man white. But the one is a negation of this, he is…"
+ },
+ {
+  "dir": "int-taylor",
+  "work": "Int",
+  "book": 1,
+  "chapter": 11,
+  "cat": "doubled-word",
+  "found": "white white",
+  "why": "print reads \"a man white white, and this to infinity\" (l. 8354); part of the argument",
+  "context": "…, if the same thing is white, the whole also is white; so that it will be a man white white, and this to infinity. And again, a musician white walking; and these frequentl…"
+ },
+ {
+  "dir": "isa-owen",
+  "work": "Isa",
+  "book": 1,
+  "chapter": 2,
+  "cat": "digit-in-word",
+  "found": "fig1",
+  "why": "[[fig1]] is the pipeline's figure marker (isa-owen/figures.json), not text",
+  "context": "… animal, under which is man, under man Socrates, Plato, and men particularly. [[fig1]] Still, of these, substance is the most generic, and that which alone is genus…"
+ },
+ {
+  "dir": "se-owen",
+  "work": "SE",
+  "book": 1,
+  "chapter": 4,
+  "cat": "greek-in-english",
+  "found": "οὔ",
+  "why": "Greek in the print (οὔ); the site keeps Greek letters, house-acceptable",
+  "context": "…ccuse him as having spoken absurdly, for they solve this by accent, saying that οὔ is to be marked with an acute accent. Also about the dream of Agamemnon, becaus…"
+ },
+ {
+  "dir": "se-owen",
+  "work": "SE",
+  "book": 1,
+  "chapter": 13,
+  "cat": "doubled-word",
+  "found": "number number",
+  "why": "print reads \"there is a number number having a middle\" (sophism example; bub_gb_cm4TmBSZEn8C djvu.txt l. 15666)",
+  "context": "…d is a number having a middle, but there is an odd number, wherefore there is a number number having a middle, and if τὸ σιμον is a concavity of nose, but there is a concave…"
+ },
+ {
+  "dir": "se-owen",
+  "work": "SE",
+  "book": 1,
+  "chapter": 13,
+  "cat": "doubled-word",
+  "found": "nose nose",
+  "why": "print reads \"there is then nose nose concave\" (l. 15668)",
+  "context": "… if τὸ σιμον is a concavity of nose, but there is a concave nose, there is then nose nose concave. They seem to produce (trifling) sometimes which really do not produce …"
+ },
+ {
+  "dir": "se-owen",
+  "work": "SE",
+  "book": 1,
+  "chapter": 14,
+  "cat": "greek-in-english",
+  "found": "ο",
+  "why": "Greek letters (ο and ν) are printed as Greek; fine",
+  "context": "…niture,) but which have a feminine or masculine inflection, for whatever end in ο and ν , have alone the inflection of σκεύη as ξύλον , wood, σχοινίον , a rope, …"
+ },
+ {
+  "dir": "cat-owen",
+  "work": "Cat",
+  "book": 1,
+  "chapter": 7,
+  "cat": "scandiff/checked",
+  "found": "since for the most part we derive",
+  "why": "page image organonorlogicalt01aris n33 shows \"for the most part\"; scan OCR had dropped \"the\""
+ },
+ {
+  "dir": "int-owen",
+  "work": "Int",
+  "book": 1,
+  "chapter": 7,
+  "cat": "scandiff/checked",
+  "found": "he enunciates of universals, not universally",
+  "why": "page image n66: print \"univer-/sals\"; scan OCR misread \"sal\""
+ },
+ {
+  "dir": "apr-owen",
+  "work": "APr",
+  "book": 1,
+  "chapter": 26,
+  "cat": "scandiff/checked",
+  "found": "what easy of proof",
+  "why": "page image n154: print \"of proof\" (first letter cut by the scan margin)"
+ },
+ {
+  "dir": "apo-owen",
+  "work": "APo",
+  "book": 1,
+  "chapter": 7,
+  "cat": "scandiff/checked",
+  "found": "but axioms are they from which (demonstration is made)",
+  "why": "page image n273: print has \"they\""
+ },
+ {
+  "dir": "apo-owen",
+  "work": "APo",
+  "book": 2,
+  "chapter": 7,
+  "cat": "scandiff/checked",
+  "found": "those who define according to the present methods of definition",
+  "why": "page image n337: print has \"the\""
+ },
+ {
+  "dir": "apo-owen",
+  "work": "APo",
+  "book": 1,
+  "chapter": 13,
+  "cat": "scandiff/checked",
+  "found": "those who exercise the sense, but to know why it is",
+  "why": "page image n289: print has \"but\""
+ },
+ {
+  "dir": "se-owen",
+  "work": "SE",
+  "book": 1,
+  "chapter": 17,
+  "cat": "scandiff/checked",
+  "found": "\"Does not man also belong to animals?\" \"Yes.\"",
+  "why": "page image bub_gb_cm4TmBSZEn8C n235: print \"Yes.\"; OCR read \"Yea.\""
+ },
+ {
+  "dir": "se-owen",
+  "work": "SE",
+  "book": 1,
+  "chapter": 12,
+  "cat": "scandiff/checked",
+  "found": "For the one, indeed, say that the happy man",
+  "why": "page image n223: print \"For the one,† indeed\"; \"The wise\" is the margin note"
+ },
+ {
+  "dir": "top-owen",
+  "work": "Top",
+  "book": 1,
+  "chapter": 11,
+  "cat": "scandiff/checked",
+  "found": "as it is necesary from what we have said",
+  "why": "misspelling is in the print (bub_gb_cm4TmBSZEn8C djvu.txt l. 2367); site matches the print"
+ },
+ {
+  "dir": "se-owen",
+  "work": "SE",
+  "book": 1,
+  "chapter": 33,
+  "cat": "scandiff/checked",
+  "found": "sometimes it is not to be despised",
+  "why": "print reads \"not to despised\" (misprint, l. 17986-7); site supplies \"be\"; not reverted"
+ },
+ {
+  "dir": "apr-owen",
+  "work": "APr",
+  "book": 1,
+  "chapter": 7,
+  "cat": "scandiff/checked",
+  "found": "per impossibile",
+  "why": "OCR shows \"per impossible\" in 3 of ~35 places; site's \"impossibile\" kept (OCR/print-variant, not changed)"
+ },
+ {
+  "dir": "top-owen",
+  "work": "Top",
+  "book": 2,
+  "chapter": 8,
+  "cat": "scandiff/checked",
+  "found": "both the subverter and the constructers must consider",
+  "why": "OCR \"constructors\" vs site \"constructers\"; e/o OCR-ambiguous, Owen also uses \"constructer\"; kept"
+ },
+ {
+  "dir": "int-taylor",
+  "work": "Int",
+  "book": 1,
+  "chapter": 7,
+  "cat": "scandiff/checked",
+  "found": "Every man is white. vs. No man is white.",
+  "why": "\"vs.\" and the list layout are the site source's editorial formatting of Taylor; not a transcription error (see notes)"
+ },
+ {
+  "dir": "cat-taylor",
+  "work": "Cat",
+  "book": 1,
+  "chapter": 4,
+  "cat": "scandiff/checked",
+  "found": "To Suffer (pati, πάσχειν) 2. But a Substance is such as",
+  "why": "the \"2.\" belongs to the site source's editorial list of categories, not a stray footnote number"
+ },
+ {
+  "dir": "apo-owen",
+  "work": "APo",
+  "book": 1,
+  "chapter": 12,
+  "cat": "scandiff/checked",
+  "found": "these things also exist[,] the existence of which I know, as B, from these[,] then I will",
+  "why": "punctuation only: page image organonorlogicalt01aris n285 has no commas here, only the sidenote marks ‡ and §; the transcriber's bracketed \"[,]\" do not change the sense, so not reported (remove them only if the maintainers want the print's bare text)"
+ }
+]

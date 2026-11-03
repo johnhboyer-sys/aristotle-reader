@@ -6,14 +6,28 @@
 
 import { WORKS, getWork, type Work } from './works';
 import { greekFold } from './search';
-import type { BekkerRef, LemmaRef } from './data';
+import { lineRef, parseBekker, type BekkerRef, type LemmaRef } from './data';
 
-// "1103a14" (column+line) or a bare column "1103a" — tolerant of spaces/case.
-// One- and two-digit columns are citations too: the Categories runs 1a–15b.
-export function parseCitation(q: string): { column: string; line: number | null } | null {
-  const m = q.trim().toLowerCase().replace(/\s+/g, '').match(/^(\d{1,4})([ab])\.?(\d+)?$/);
-  if (!m) return null;
-  return { column: m[1] + m[2], line: m[3] ? Number(m[3]) : null };
+// "1103a14" (column+line), a lettered line "775a11a", or a bare column
+// "1103a" — tolerant of spaces/case. One- and two-digit columns are citations
+// too: the Categories runs 1a–15b. A lettered line comes from parseBekker; a
+// bare column is the extra case that function refuses.
+export function parseCitation(q: string): { column: string; line: number | null; sub?: string } | null {
+  const full = parseBekker(q);
+  if (full) return { column: full.column, line: full.line, ...(full.sub ? { sub: full.sub } : {}) };
+  const bare = q.trim().toLowerCase().replace(/\s+/g, '').match(/^(\d{1,4})([ab])$/);
+  if (!bare) return null;
+  return { column: bare[1] + bare[2], line: null };
+}
+
+// The palette jump for a parsed citation. A line keeps its letter in the loc
+// (`775a:11a` → anchor L775a-11a). A bare column is a hash, not a loc.
+export function citationTarget(
+  cite: { column: string; line: number | null; sub?: string },
+): { label: string; loc?: string; hash?: string } {
+  if (cite.line == null) return { label: `Go to ${cite.column}`, hash: cite.column };
+  const ref = lineRef(cite.line, cite.sub);
+  return { label: `Go to ${cite.column}${ref}`, loc: `${cite.column}:${ref}` };
 }
 
 // Which work (and book) a Bekker citation belongs to, corpus-wide — the palette
