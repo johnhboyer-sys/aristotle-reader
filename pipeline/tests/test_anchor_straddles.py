@@ -20,8 +20,10 @@ def _chunks(*texts):
     return [{"id": f"1:{c}", "book": 1, "column": c, "text": t} for c, t in zip(cols, texts)]
 
 
-def _resolve(tmp_path, monkeypatch, chunks, bekker, at):
-    (tmp_path / "anchors.yaml").write_text(f'- bekker: "{bekker}"\n  at: "{at}"\n', encoding="utf-8")
+def _resolve(tmp_path, monkeypatch, chunks, bekker, at, *more):
+    pairs = [(bekker, at), *zip(more[::2], more[1::2])]
+    (tmp_path / "anchors.yaml").write_text(
+        "".join(f'- bekker: "{b}"\n  at: "{a}"\n' for b, a in pairs), encoding="utf-8")
     monkeypatch.setattr(stage1_archive, "SOURCES_DIR", tmp_path)
     return stage1_archive._resolve_anchors("anchors.yaml", chunks)
 
@@ -76,6 +78,35 @@ def test_neighbours_in_another_book_are_not_searched(tmp_path, monkeypatch):
     chunks[1]["book"] = 2
     chunks[1]["id"] = "2:1b"
     got = _resolve(tmp_path, monkeypatch, chunks, "1b5", "Beta two three four five.")
+    assert got == {}
+
+
+def test_a_pin_yields_to_a_tick_found_at_its_offset(tmp_path, monkeypatch, capsys):
+    # Pol 1257b: the column opens with line 5's own words. Line 1's pin at
+    # offset 0 would take that place in the gutter and hide line 5.
+    chunks = _chunks("Alpha one. Beta two three four.", "Gamma five six. Delta.", "Eps.")
+    got = _resolve(tmp_path, monkeypatch, chunks, "1b1", "Beta two three four.",
+                   "1b5", "Gamma five six.")
+    assert got == {"1:1b": [(5, 0)]}
+    assert "1 unresolved: ['1b1']" in capsys.readouterr().out
+
+
+def test_a_pin_yields_to_line_order(tmp_path, monkeypatch, capsys):
+    # Pol 1282a: the last sentence boundary falls before line 35's own words,
+    # so pinning line 40 there would read 35 after 40.
+    chunks = _chunks("Alpha one. Beta two three four.", "Gamma five six seven.", "Eps.")
+    got = _resolve(tmp_path, monkeypatch, chunks, "1a35", "two three four.",
+                   "1a40", "Gamma five six seven.")
+    assert got == {"1:1a": [(35, 16)]}
+    assert "1 unresolved: ['1a40']" in capsys.readouterr().out
+
+
+def test_across_a_cut_the_whole_phrase_must_match(tmp_path, monkeypatch):
+    # A four-word prefix repeated in the previous column must not stand in for
+    # a phrase the text no longer has.
+    chunks = _chunks("Alpha beta gamma delta unrelated.", "Start. Alpha beta",
+                     "gamma delta missing ending.")
+    got = _resolve(tmp_path, monkeypatch, chunks, "1b1", "Alpha beta gamma delta expected ending.")
     assert got == {}
 
 

@@ -55,6 +55,7 @@ def _resolve_anchors(rel: str, chunks: list[dict]) -> dict[str, list]:
     for i, c in enumerate(chunks):
         by_col.setdefault(c["column"], []).append(i)
     line_ms: dict[str, list] = {}
+    pinned: list[tuple[str, int, int, str]] = []
     missing = []
     for e in entries:
         ref = str(e["bekker"]).strip()
@@ -72,12 +73,23 @@ def _resolve_anchors(rel: str, chunks: list[dict]) -> dict[str, list]:
             for i in by_col.get(column, []):
                 off = _pin_across_cut(chunks, i, phrase, n)
                 if off is not None:
-                    hit = (chunks[i]["id"], off)
+                    pinned.append((chunks[i]["id"], n, off, ref))
                     break
-        if hit and n is not None:
+            else:
+                missing.append(ref)
+        elif hit and n is not None:
             line_ms.setdefault(hit[0], []).append((n, hit[1]))
         else:
             missing.append(ref)
+    # A pinned tick is a guess at a column edge; a tick found in place is not.
+    # Drop a pin that shares a found tick's offset (the gutter would keep one)
+    # or puts the lines out of order.
+    for cid, n, off, ref in pinned:
+        found = line_ms.get(cid, [])
+        if any(o == off or (m < n) != (o < off) for m, o in found if m != n):
+            missing.append(ref)
+        else:
+            line_ms.setdefault(cid, []).append((n, off))
     if missing:
         print(f"  anchors: {len(missing)} unresolved: {missing[:8]}")
     return line_ms
@@ -98,9 +110,13 @@ def _pin_across_cut(chunks: list[dict], i: int, phrase: str, n: int) -> int | No
     near = lambda j: chunks[j]["text"] if 0 <= j < len(chunks) and chunks[j]["book"] == own["book"] else ""
     before = near(i - 1)
     start = len(before) + 1
-    off = _find_phrase(f"{before} {own['text']} {near(i + 1)}", phrase)
-    if off < 0:
+    # The whole phrase, not _find_phrase's short prefixes: a four-word prefix
+    # can recur in a neighbour and stand in for words the text no longer has.
+    m = re.search(r"\s+".join(re.escape(w) for w in phrase.split()),
+                  f"{before} {own['text']} {near(i + 1)}")
+    if not m:
         return None
+    off = m.start()
     if off < start:
         return 0 if n == 1 else None
     if off < start + len(own["text"]):
