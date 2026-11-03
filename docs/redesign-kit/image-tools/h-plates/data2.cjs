@@ -1,0 +1,14 @@
+const fs = require('fs');
+const src = fs.readFileSync(process.argv[2], 'utf8').split('\n')[229];
+const window = {};
+eval(src);
+const D = window.DATA;
+const W = D.registry.works;
+const show = (id) => { const w = W.find(x=>x.id===id); const c = {...w}; console.log(JSON.stringify(c, null, 1).slice(0, 2500)); };
+show('EN'); show('Cat'); show('Isa');
+console.log('photos keys', Object.keys(D.photos).length, JSON.stringify(D.photos.EN));
+console.log('further EN', JSON.stringify(D.registry.further.EN));
+console.log('workChapters EN book1', JSON.stringify(D.workChapters.EN['1']));
+console.log('allTitles EN keys', Object.keys(D.allTitles));
+console.log('titles', JSON.stringify(D.titles));
+console.log('chapters keys', Object.keys(D.chapters), D.chapters['1'].length);

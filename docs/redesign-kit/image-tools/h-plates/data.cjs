@@ -1,0 +1,11 @@
+const fs = require('fs');
+const src = fs.readFileSync(process.argv[2], 'utf8').split('\n')[229];
+const window = {};
+eval(src);
+const D = window.DATA;
+console.log('keys:', Object.keys(D).join(', '));
+const W = D.registry.works;
+console.log('works:', W.length);
+for (const w of W) console.log(w.id.padEnd(8), (w.title||'').padEnd(40), '|', w.greekTitle, '| books', w.books, '| auth', w.authenticity, '| trans', w.translations.map(t=>t.id).join(','));
+console.log('\ncategories:');
+for (const c of D.registry.categories) console.log(c.numeral, c.title, c.subcategories ? c.subcategories.map(s=>s.label+': '+s.works.map(x=>x.id).join(',')).join(' ; ') : c.works.map(x=>x.id).join(','));
