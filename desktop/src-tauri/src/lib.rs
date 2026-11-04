@@ -6,8 +6,8 @@ use tauri::{AppHandle, Emitter};
 const QUIT_SAVE_TIMEOUT: Duration = Duration::from_secs(5);
 
 /// Once the page has answered, how much longer ⌘Q waits for its `quit_now`.
-/// The page caps its own wait at 5 s, so this fires only if the page died
-/// (a crash or reload) between answering and quitting.
+/// The page caps its own wait at 5 s, so this fires only if the page fails
+/// to finish the quit it answered for: a crash, a reload, a stalled script.
 const QUIT_ACKED_TIMEOUT: Duration = Duration::from_secs(10);
 
 /// Each ⌘Q is numbered. When the page answers, the first deadline for that
