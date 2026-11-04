@@ -13,6 +13,39 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-04 — DEPLOYED: Sens chapter 7, review follow-ups (PRs #182, #186)
+
+`gh-pages ca680c55 → 669a81af`, source `origin/main` `6388eb22b3` (the #186 merge). John asked whether
+last night's sessions had redeployed (only the 18:33 deploy above had), then said "sure" to a rebuild
+and deploy. `npm run deploy:dry`, then `npm run deploy -- --verify`.
+
+**What shipped:** #186, Sens chapter 7 starts at 447a12, not 448a28 (re-pinned with skip/extra, 15
+piled anchors dropped; 447a15–448a25 have no anchors now and need a re-alignment or Beare's margins).
+#182, the review follow-ups listed in the entry below: the paragraph loader checks `at` on whole
+words and an empty one matches nothing, the corrections test no longer skips its "old text gone"
+check when `find` sits inside `replace`, Pol's manifests
+say Book V has 12 chapters, and the palette takes a bare column with a dot (`1094a.`). #183–#185
+are desktop and docs only; #181 was the record below.
+
+**Build:** full `build:public` from main `6388eb22b3` (Node 22.23.1): 41 works, stage 2 PASS
+throughout; Sens anchors 1 unresolved (442b30), as #186 predicted; 6,586 pages. Pipeline tests not
+rerun here; both PRs merged on green CI.
+
+**Gates:** link integrity **0 broken** (6,589 / 565,831 / 434,070). Leak check at baseline (Rackham 2,
+`EN/footnotes.json`, `EN/manifest.json`; positive control 1,621; 29 gated book files clean). Shard
+gate: 139 indexes, 3,842,957 postings. Dangling-reference gate: 1 removed bundle, 0 referenced.
+
+**Deploy diff:** 943 files — 1 A / 941 M / 1 D / 0 R; the A and D are the `CommandPalette` bundle.
+Data: `Sens/` (book, chapters, two search files), 299 lemmata, 144 search shards, 36 ngrams. The
+lemma changes are the Sens chapter 7 range (`adiairetos.json`, checked: `448a28–449b4` →
+`447a12–449b4`). The 21 stale `data/search-shards/english/` files were again restored, not removed;
+`--allow-data-deletions=data/search-shards/english` still awaits John's go. 0 deletions under `data/`.
+
+**Live-verified:** the script's URL set (old `CommandPalette.Cnl4rbOH.js` 404 after about two
+minutes of cache, `/bonitz/` 404). Fetched from live: `data/Sens/chapters.json` gives ch. 6
+445b3–447a11 and ch. 7 447a12–449b4; the home page names `CommandPalette.uwPDmCnC.js`, whose
+bare-column pattern is `(\d{1,4})([ab])\.?$`.
+
 ## 2026-11-03 — DEPLOYED: English corrections, paragraph breaks, anchor placement (PRs #176–#178, #123, #180)
 
 `gh-pages 17ab83bd → ca680c55`, source `origin/main` `0cf1bdc400` (the #180 merge). John said "deploy",
