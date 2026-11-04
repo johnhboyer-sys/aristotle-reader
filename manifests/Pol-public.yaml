@@ -5,8 +5,8 @@
 # sole English, via the chapter-anchored archive path — so Rackham never enters
 # the published data or search index. Tradeoff vs Pol.yaml: Jowett is
 # chapter-anchored (interpolated gutter), no per-line Bekker, no two-translation
-# compare. The Greek is identical. NB Jowett Book 5 has 11 chapters to Ross's 12
-# (folds the closing Plato critique); that Ross-chapter shows no English.
+# compare. The Greek is identical. Jowett's Book 5 has all 12 of Ross's chapters
+# since 2026-11, when V.12 (the closing Plato critique) was restored to its page.
 #
 # Build this (not Pol.yaml) for the public deploy. Keep Pol.yaml for the local
 # full build (Rackham primary + aligned Jowett), which must NOT be published.

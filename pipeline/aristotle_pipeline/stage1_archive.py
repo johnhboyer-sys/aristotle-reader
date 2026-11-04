@@ -282,8 +282,9 @@ def _column_starts(rel: str, prose: dict[tuple[int, int], str]) -> tuple[dict, l
 def _load_paragraphs(cfg: dict, prose: dict[tuple[int, int], str]) -> dict[tuple[int, int], list[dict]]:
     """Paragraph openings {(book, chapter): [entry, ...]} from the optional
     sources/<dir>/paragraphs.yaml (see tools/place_paragraphs.py). Each entry's
-    `at` must be our text at its `offset`: a source edit that moves the prose
-    must stop the build, not scatter the breaks."""
+    `at` must be whole words of our text at its `offset`: a source edit that
+    moves the prose must stop the build, not scatter the breaks. An empty `at`
+    would match anywhere, and a repeated entry would break twice."""
     path = SOURCES_DIR / cfg["dir"] / "paragraphs.yaml" if cfg.get("dir") else None
     if not path or not path.exists():
         return {}
@@ -291,13 +292,18 @@ def _load_paragraphs(cfg: dict, prose: dict[tuple[int, int], str]) -> dict[tuple
     if not entries:
         raise ValueError(f"{cfg['dir']}/paragraphs.yaml: no entries")
     out: dict[tuple[int, int], list[dict]] = {}
-    bad = []
+    bad, seen = [], set()
     for e in entries:
         key = (e["book"], e["chapter"])
-        pattern = r"\s+".join(re.escape(w) for w in e["at"].split())
-        if not re.compile(pattern).match(prose.get(key, ""), e["offset"]):
+        words = str(e["at"]).split()
+        pattern = r"(?<!\S)" + r"\s+".join(re.escape(w) for w in words) + r"(?!\S)"
+        if not words or not re.compile(pattern).match(prose.get(key, ""), e["offset"]):
             bad.append(f"{key}@{e['offset']}")
             continue
+        if (key, e["offset"]) in seen:
+            bad.append(f"{key}@{e['offset']} duplicate")
+            continue
+        seen.add((key, e["offset"]))
         out.setdefault(key, []).append(e)
     if bad:
         raise ValueError(f"{cfg['dir']}/paragraphs.yaml: words not at offset: {bad[:8]}")
