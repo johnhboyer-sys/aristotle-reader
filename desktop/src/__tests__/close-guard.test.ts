@@ -38,11 +38,15 @@ describe('holdCloseUntil', () => {
 
   it('lets the window close when the drain hangs past the limit', async () => {
     await holdCloseUntil(() => new Promise<void>(() => {}), 10);
-    await win.handler!(closeEvent());
+    const e = closeEvent();
+    await win.handler!(e);
+    expect(e.preventDefault).not.toHaveBeenCalled();
   });
 
   it('lets the window close when the drain rejects', async () => {
     await holdCloseUntil(() => Promise.reject(new Error('disk gone')));
-    await win.handler!(closeEvent());
+    const e = closeEvent();
+    await win.handler!(e);
+    expect(e.preventDefault).not.toHaveBeenCalled();
   });
 });
