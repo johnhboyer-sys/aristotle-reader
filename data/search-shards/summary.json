@@ -15,9 +15,9 @@
   },
   "english": {
    "sources": 57,
-   "shards": 366,
-   "words": 22952,
-   "postings": 1950436
+   "shards": 345,
+   "words": 22387,
+   "postings": 1954532
   }
  }
 }
