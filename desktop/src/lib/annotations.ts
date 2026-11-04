@@ -160,7 +160,10 @@ async function entryFor(work: string): Promise<AnnRead> {
   return loading;
 }
 
+/** Waits for the work's queued saves first, so a read (the library export's,
+ *  say) never returns the list a pending save is about to replace. */
 export async function listAnnotations(work: string): Promise<Annotation[]> {
+  await commitTails.get(work);
   return (await entryFor(work)).anns;
 }
 
@@ -189,6 +192,18 @@ async function commit(work: string, mutate: (anns: Annotation[]) => Annotation[]
   const tail = run.then(() => {}, () => {});
   commitTails.set(work, tail);
   return run;
+}
+
+/** Settles once every queued save has finished, including saves queued while
+ *  it waits. Never rejects: a failed save's own caller gets the error. */
+export async function flushAnnotations(): Promise<void> {
+  const waited = new Set<Promise<void>>();
+  for (;;) {
+    const pending = [...commitTails.values()].filter(t => !waited.has(t));
+    if (!pending.length) return;
+    pending.forEach(t => waited.add(t));
+    await Promise.all(pending);
+  }
 }
 
 export async function addAnnotation(a: Annotation): Promise<void> {

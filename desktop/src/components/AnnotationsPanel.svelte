@@ -10,11 +10,13 @@
   import {
     annColor, annStyle, annotationLabel, deleteAnnotation, updateAnnotation, type Annotation,
   } from '../lib/annotations';
+  import { errorText } from '../lib/runtime';
 
   export let work: string;
   export let shown: string[];               // translation id(s) on screen (mono: 1; compare: 2)
   export let annotations: Annotation[] = [];
   export let onChanged: () => void;         // persist happened → repaint/reload
+  export let onError: (msg: string) => void; // persist refused → tell the user
   export let onJump: (a: Annotation) => void;
   export let onClose: () => void;
 
@@ -45,12 +47,23 @@
     editText = a.body;
   }
   async function saveEdit(a: Annotation) {
-    await updateAnnotation(work, a.id, editText.trim());
+    try {
+      await updateAnnotation(work, a.id, editText.trim());
+    } catch (e) {
+      // The editor stays open with the text intact — nothing was written.
+      onError(`Note not saved: ${errorText(e)}`);
+      return;
+    }
     editing = null;
     onChanged();
   }
   async function remove(a: Annotation) {
-    await deleteAnnotation(work, a.id);
+    try {
+      await deleteAnnotation(work, a.id);
+    } catch (e) {
+      onError(`Annotation not deleted: ${errorText(e)}`);
+      return;
+    }
     onChanged();
   }
 </script>

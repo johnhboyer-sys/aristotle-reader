@@ -5,7 +5,7 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  addAnnotation, annotationsProblem, captureSelection, deleteAnnotation, greekCiteForRange, greekRange,
+  addAnnotation, annotationsProblem, captureSelection, deleteAnnotation, flushAnnotations, greekCiteForRange, greekRange,
   listAnnotations, setAnnotationStoreForTests, updateAnnotation, type Annotation, type GreekTarget,
 } from '../lib/annotations';
 import { atomicWriteText } from '../lib/runtime';
@@ -146,6 +146,62 @@ describe('annotations store', () => {
     await expect(p1).rejects.toThrow('disk full');
     await p2;
     expect((await listAnnotations(work)).find((a) => a.id === 'A')?.body).toBe('second');
+  });
+
+  it('a read during a slow save returns the saved list, not the one it replaces', async () => {
+    const work = 'slow-read';
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    let writes = 0;
+    setAnnotationStoreForTests({
+      async read() { return { anns: [ann(work, 'A', 'old')] }; },
+      async write() {
+        writes += 1;
+        await gate;
+      },
+    });
+    expect((await listAnnotations(work))[0].body).toBe('old');
+    const saved = updateAnnotation(work, 'A', 'new text');
+    await vi.waitUntil(() => writes >= 1);
+    const listed = listAnnotations(work);   // what the library export does
+    release();
+    await saved;
+    expect((await listed)[0].body).toBe('new text');
+  });
+
+  it('flushAnnotations waits for a save queued behind one still on disk', async () => {
+    const work = 'flush-work';
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    const stored: string[] = [];
+    setAnnotationStoreForTests({
+      async read() { return { anns: [ann(work, 'A', 'old')] }; },
+      async write(_work, anns) {
+        if (!stored.length) await gate;
+        stored.push(anns[0].body);
+      },
+    });
+    const p1 = updateAnnotation(work, 'A', 'first');
+    const p2 = updateAnnotation(work, 'A', 'second');
+    let flushed = false;
+    const flush = flushAnnotations().then(() => { flushed = true; });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(flushed).toBe(false);
+    release();
+    await flush;
+    expect(stored).toEqual(['first', 'second']);
+    await Promise.all([p1, p2]);
+  });
+
+  it('flushAnnotations settles when a queued save fails', async () => {
+    const work = 'flush-fail';
+    setAnnotationStoreForTests({
+      async read() { return { anns: [ann(work, 'A', 'old')] }; },
+      async write() { throw new Error('disk full'); },
+    });
+    const rejected = expect(updateAnnotation(work, 'A', 'new text')).rejects.toThrow('disk full');
+    await flushAnnotations();
+    await rejected;
   });
 });
 
