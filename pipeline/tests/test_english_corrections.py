@@ -74,7 +74,11 @@ def _book_text(d: str, book: int) -> str:
 
 def _stray(find: str, replace: str, text: str) -> bool:
     """Whether `find` occurs in `text` anywhere but inside an occurrence of `replace`."""
-    spans = [(m.start(), m.end()) for m in re.finditer(re.escape(replace), text)]
+    # Overlapping occurrences of replace count too, so no finditer.
+    spans, j = [], text.find(replace)
+    while j != -1:
+        spans.append((j, j + len(replace)))
+        j = text.find(replace, j + 1)
     i = text.find(find)
     while i != -1:
         if not any(s <= i and i + len(find) <= e for s, e in spans):
@@ -133,6 +137,12 @@ def test_the_check_fails_on_a_stray_copy_of_an_appended_find():
              and c["find"] in c["replace"])
     text = _book_text("pol-jowett", 5)
     assert _problems(c, f"{c['find']} {text}") == [f"uncorrected text is back: {c['find']!r}"]
+
+
+def test_a_find_inside_overlapping_replaces_is_not_stray():
+    # Both "ababa" occurrences (at 0 and 2) overlap; every "aba" lies inside one.
+    assert not _stray("aba", "ababa", "abababa")
+    assert _stray("aba", "ababa", "aba ababa")
 
 
 def test_the_check_fails_on_an_empty_parse():

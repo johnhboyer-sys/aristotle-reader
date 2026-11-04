@@ -283,8 +283,8 @@ def _load_paragraphs(cfg: dict, prose: dict[tuple[int, int], str]) -> dict[tuple
     """Paragraph openings {(book, chapter): [entry, ...]} from the optional
     sources/<dir>/paragraphs.yaml (see tools/place_paragraphs.py). Each entry's
     `at` must be whole words of our text at its `offset`: a source edit that
-    moves the prose must stop the build, not scatter the breaks. An empty `at`
-    would match anywhere, and a repeated entry would break twice."""
+    moves the prose must stop the build, not scatter the breaks. An empty or
+    non-string `at` would match anywhere, and a repeated entry would break twice."""
     path = SOURCES_DIR / cfg["dir"] / "paragraphs.yaml" if cfg.get("dir") else None
     if not path or not path.exists():
         return {}
@@ -295,9 +295,12 @@ def _load_paragraphs(cfg: dict, prose: dict[tuple[int, int], str]) -> dict[tuple
     bad, seen = [], set()
     for e in entries:
         key = (e["book"], e["chapter"])
-        words = str(e["at"]).split()
+        at, off = e["at"], e["offset"]
+        words = at.split() if isinstance(at, str) else []
         pattern = r"(?<!\S)" + r"\s+".join(re.escape(w) for w in words) + r"(?!\S)"
-        if not words or not re.compile(pattern).match(prose.get(key, ""), e["offset"]):
+        # re clamps a negative position to 0, and False is an int: check both first.
+        if (not words or type(off) is not int or off < 0
+                or not re.compile(pattern).match(prose.get(key, ""), off)):
             bad.append(f"{key}@{e['offset']}")
             continue
         if (key, e["offset"]) in seen:

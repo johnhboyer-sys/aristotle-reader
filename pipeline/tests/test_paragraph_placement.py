@@ -149,3 +149,17 @@ def test_every_shipped_paragraphs_file_loads():
         loaded = stage1_archive._load_paragraphs(cfg, stage1_archive._load_prose(cfg))
         total += sum(len(v) for v in loaded.values())
     assert total == 468
+
+
+@pytest.mark.parametrize("entry, text", [
+    ("{book: 1, chapter: 1, offset: 0, at: 123}", "123 things"),    # not a string: str() would match
+    ("{book: 1, chapter: 1, offset: 0, at: null}", "None things"),
+    ("{book: 1, chapter: 1, offset: -1, at: Alpha}", "Alpha one"),  # re clamps a negative position to 0
+    ("{book: 1, chapter: 1, offset: false, at: Alpha}", "Alpha one"),
+])
+def test_malformed_entry_stops_the_build(tmp_path, monkeypatch, entry, text):
+    (tmp_path / "tst").mkdir()
+    (tmp_path / "tst" / "paragraphs.yaml").write_text(f"- {entry}\n", encoding="utf-8")
+    monkeypatch.setattr(stage1_archive, "SOURCES_DIR", tmp_path)
+    with pytest.raises(ValueError, match="paragraphs.yaml"):
+        stage1_archive._load_paragraphs({"dir": "tst"}, {(1, 1): text})
