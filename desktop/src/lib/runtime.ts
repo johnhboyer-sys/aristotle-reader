@@ -76,7 +76,8 @@ export async function holdCloseUntil(drain: () => Promise<unknown>, ms = 5000): 
  * The same wait for ⌘Q. Tauri's built-in Quit ends the app with no
  * close-requested event, so ours (src-tauri/src/lib.rs) emits `quit-requested`
  * and quits by itself unless the page answers `quit_ack` in time. Once it has,
- * the page owns the quit and must call `quit_now`, drain or no drain.
+ * the page must call `quit_now`, drain or no drain (Rust waits a while longer,
+ * then quits anyway, in case the page died).
  */
 export async function quitAfter(drain: () => Promise<unknown>, ms = 5000): Promise<() => void> {
   const { listen } = await import('@tauri-apps/api/event');

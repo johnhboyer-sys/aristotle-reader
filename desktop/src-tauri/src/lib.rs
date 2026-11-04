@@ -5,9 +5,14 @@ use tauri::{AppHandle, Emitter};
 /// How long ⌘Q waits for the page to answer before quitting anyway.
 const QUIT_SAVE_TIMEOUT: Duration = Duration::from_secs(5);
 
-/// Each ⌘Q is numbered. When the page answers, it owns the quit, so the
-/// timeout for that ⌘Q and every earlier one stands down. Numbering keeps a
-/// second ⌘Q from re-arming the first timeout.
+/// Once the page has answered, how much longer ⌘Q waits for its `quit_now`.
+/// The page caps its own wait at 5 s, so this fires only if the page died
+/// (a crash or reload) between answering and quitting.
+const QUIT_ACKED_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Each ⌘Q is numbered. When the page answers, the first deadline for that
+/// ⌘Q and every earlier one gives way to the longer second one. Numbering
+/// keeps a second ⌘Q from moving the first one's deadline.
 static QUIT_REQUESTED: AtomicU64 = AtomicU64::new(0);
 static QUIT_ACKED: AtomicU64 = AtomicU64::new(0);
 
@@ -32,9 +37,10 @@ fn handle_menu_event<R: tauri::Runtime>(app: &AppHandle<R>, id: &str) {
         let app = app.clone();
         std::thread::spawn(move || {
             std::thread::sleep(QUIT_SAVE_TIMEOUT);
-            if QUIT_ACKED.load(Ordering::SeqCst) < request {
-                app.exit(0);
+            if QUIT_ACKED.load(Ordering::SeqCst) >= request {
+                std::thread::sleep(QUIT_ACKED_TIMEOUT);
             }
+            app.exit(0);
         });
     }
 }
@@ -52,7 +58,8 @@ pub fn run() {
     // The built-in Quit ends the app with no close-requested event, so a save
     // still queued was lost. Our own Quit (⌘Q) asks the page to finish its
     // saves, then quits; if the page never answers, it quits anyway after
-    // QUIT_SAVE_TIMEOUT. Only macOS gets a default menu, and with it a Quit;
+    // QUIT_SAVE_TIMEOUT, and if it answers but never quits, after
+    // QUIT_ACKED_TIMEOUT more. Only macOS gets a default menu, and with it a Quit;
     // elsewhere the window has no menu and quitting means closing it, which
     // the page already waits on (holdCloseUntil).
     #[cfg(target_os = "macos")]
