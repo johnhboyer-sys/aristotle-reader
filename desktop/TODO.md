@@ -39,6 +39,16 @@ too, so this is a known limit rather than a regression.
 Item 6 (concurrent annotation changes, and the shared `.tmp` name) was fixed
 in `794a2cdcd` on 2026-09-23.
 
+8. **⌘Q can still drop a queued annotation save.** Closing the window now
+   waits for the queue (`holdCloseUntil` in `desktop/src/lib/runtime.ts`), but
+   Tauri's built-in Quit menu item ends the app without a close-requested
+   event, so that wait never runs. *Effect:* save a note while an earlier save
+   is still on disk, press ⌘Q at once, and the note is lost. Moerbeke fixed the
+   same gap by replacing the built-in Quit with its own menu item that asks the
+   page to save first (`~/Developer/moerbeke/src-tauri/src/lib.rs`,
+   `src/lib/quit.ts`); porting that is Rust work. Source-traced from Moerbeke's
+   notes, not reproduced here.
+
 ## Provenance
 
 Items 1–4 and 6 (now fixed) came from adversarial reviews run on 2026-09-08/09 against the

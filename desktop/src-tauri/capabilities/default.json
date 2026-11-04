@@ -1,10 +1,11 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Main window: read the bundled/app-data corpus; native dialogs for the future import flow. fs:allow-rename is what the library stores need (src/lib/imports.ts, annotations.ts): every file is written to a .tmp beside it and renamed into place, so a crash mid-write cannot leave a truncated map or annotation file. The appdata write set already carries rename; the explicit grant is here so the app cannot lose it to a plugin default change while the suite stays green.",
+  "description": "Main window: read the bundled/app-data corpus; native dialogs for the future import flow. fs:allow-rename is what the library stores need (src/lib/imports.ts, annotations.ts): every file is written to a .tmp beside it and renamed into place, so a crash mid-write cannot leave a truncated map or annotation file. The appdata write set already carries rename; the explicit grant is here so the app cannot lose it to a plugin default change while the suite stays green. core:window:allow-destroy is what closing the window needs: src/lib/runtime.ts holdCloseUntil() listens for close-requested so queued annotation saves can finish, and once that listener exists the window closes only when the page destroys it.",
   "windows": ["main"],
   "permissions": [
     "core:default",
+    "core:window:allow-destroy",
     "dialog:default",
     "fs:default",
     "fs:allow-appdata-read-recursive",

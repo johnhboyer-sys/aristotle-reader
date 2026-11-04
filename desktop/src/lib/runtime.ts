@@ -60,7 +60,26 @@ export function errorText(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-type AtomicFs = Pick<typeof import('@tauri-apps/plugin-fs'), 'writeTextFile' | 'rename'>;
+/**
+ * Keep the window open until `drain` settles, so a save still queued when the
+ * user closes it reaches disk. Tauri destroys the window once this handler
+ * returns, which needs core:window:allow-destroy (capabilities/default.json).
+ * A drain that fails, or hangs past `ms`, lets the close go ahead: a stuck
+ * disk must not leave a window that will not close.
+ */
+export async function holdCloseUntil(drain: () => Promise<unknown>, ms = 5000): Promise<() => void> {
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+  return getCurrentWindow().onCloseRequested(async () => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    await Promise.race([
+      drain().catch(() => {}),
+      new Promise<void>(resolve => { timer = setTimeout(resolve, ms); }),
+    ]);
+    clearTimeout(timer);
+  });
+}
+
+type AtomicFs =Pick<typeof import('@tauri-apps/plugin-fs'), 'writeTextFile' | 'rename'>;
 
 // Each write gets its own temp name. Two overlapping writes to the same path
 // used to share `<path>.tmp` and rename each other's bytes.

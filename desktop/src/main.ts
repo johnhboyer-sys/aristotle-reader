@@ -10,11 +10,18 @@ import '@fontsource/eb-garamond/600.css';
 import '@shared/styles/global.css';
 import './desktop.css';
 import { mount } from 'svelte';
-import { initDataLayer } from './lib/runtime';
+import { holdCloseUntil, initDataLayer } from './lib/runtime';
 import { loadImports } from './lib/imports';
+import { flushAnnotations } from './lib/annotations';
 import App from './App.svelte';
 
 const info = await initDataLayer();
+// Closing the window waits for annotation saves still in the queue.
+if (info.host === 'tauri') {
+  holdCloseUntil(flushAnnotations).catch((e: unknown) => {
+    console.error('The close guard could not be installed:', e);
+  });
+}
 // Imported translations must be registered before the Reader mounts — it
 // resolves its translation list once, at component init.
 await loadImports().catch((e: unknown) => {

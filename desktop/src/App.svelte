@@ -1158,6 +1158,7 @@
       shown={annShown}
       {annotations}
       onChanged={refreshAnnotations}
+      onError={(msg) => showToast(msg, 10000)}
       onJump={annJump}
       onClose={toggleAnn}
     />
