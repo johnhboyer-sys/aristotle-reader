@@ -13,6 +13,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import yaml
 
 from aristotle_pipeline import stage1_archive
 
@@ -110,3 +111,55 @@ def test_exact_hit_past_the_window_is_not_taken():
     prose = {(1, 1): f"Opening here. {far} Wanted paragraph opens right at this place."}
     r = place_paragraphs.place(prose, ["Wanted paragraph opens right at this place"])
     assert not r["entries"] and r["unmatched"]
+
+
+@pytest.mark.parametrize("at, offset", [
+    ("lpha one is", 1),      # starts inside 'Alpha'
+    ("Alpha one i", 0),      # ends inside 'is'
+    ("", 3),                 # no words: matches anywhere
+    ("   ", 3),
+])
+def test_entry_that_is_not_whole_words_at_its_offset_stops_the_build(tmp_path, monkeypatch, at, offset):
+    with pytest.raises(ValueError, match="paragraphs.yaml"):
+        _build(tmp_path, monkeypatch, f'- {{book: 1, chapter: 1, offset: {offset}, at: "{at}"}}\n')
+
+
+def test_duplicate_entry_stops_the_build(tmp_path, monkeypatch):
+    entry = f'- {{book: 1, chapter: 1, offset: {BETA_FOUR}, at: "Beta four"}}\n'
+    with pytest.raises(ValueError, match="duplicate"):
+        _build(tmp_path, monkeypatch, entry * 2)
+
+
+def test_every_shipped_paragraphs_file_loads():
+    # The checks above must not reject a real entry; an empty glob would pass, so count them.
+    root = Path(__file__).resolve().parents[2]
+    slots = {}
+    for path in sorted((root / "manifests").glob("*.yaml"), key=lambda p: "-public" not in p.name):
+        eng = (yaml.safe_load(path.read_text(encoding="utf-8")) or {}).get("english") or {}
+        for cfg in eng.values():
+            for c in cfg if isinstance(cfg, list) else [cfg]:
+                if isinstance(c, dict) and c.get("dir"):
+                    slots.setdefault(c["dir"], c)
+    files = sorted((root / "sources").glob("*/paragraphs.yaml"))
+    assert len(files) == 6
+    total = 0
+    for f in files:
+        cfg = slots[f.parent.name]
+        cfg = dict(cfg, books=cfg.get("books", 1))
+        loaded = stage1_archive._load_paragraphs(cfg, stage1_archive._load_prose(cfg))
+        total += sum(len(v) for v in loaded.values())
+    assert total == 468
+
+
+@pytest.mark.parametrize("entry, text", [
+    ("{book: 1, chapter: 1, offset: 0, at: 123}", "123 things"),    # not a string: str() would match
+    ("{book: 1, chapter: 1, offset: 0, at: null}", "None things"),
+    ("{book: 1, chapter: 1, offset: -1, at: Alpha}", "Alpha one"),  # re clamps a negative position to 0
+    ("{book: 1, chapter: 1, offset: false, at: Alpha}", "Alpha one"),
+])
+def test_malformed_entry_stops_the_build(tmp_path, monkeypatch, entry, text):
+    (tmp_path / "tst").mkdir()
+    (tmp_path / "tst" / "paragraphs.yaml").write_text(f"- {entry}\n", encoding="utf-8")
+    monkeypatch.setattr(stage1_archive, "SOURCES_DIR", tmp_path)
+    with pytest.raises(ValueError, match="paragraphs.yaml"):
+        stage1_archive._load_paragraphs({"dir": "tst"}, {(1, 1): text})

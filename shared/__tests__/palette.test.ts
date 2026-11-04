@@ -11,6 +11,9 @@ describe('parseCitation', () => {
   });
   it('tolerates spaces and a dot separator', () => {
     expect(parseCitation(' 1094 a.1 ')).toEqual({ column: '1094a', line: 1 });
+    // A bare column with the dot but no line, as the old regex's `\.?` allowed.
+    expect(parseCitation('1094a.')).toEqual({ column: '1094a', line: null });
+    expect(parseCitation(' 1094 A. ')).toEqual({ column: '1094a', line: null });
   });
   it('parses the short columns of the Organon', () => {
     // Categories runs 1a–15b, De Interpretatione 16a–24b: one- and two-digit

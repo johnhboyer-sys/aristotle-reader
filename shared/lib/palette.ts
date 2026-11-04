@@ -11,11 +11,11 @@ import { lineRef, parseBekker, type BekkerRef, type LemmaRef } from './data';
 // "1103a14" (column+line), a lettered line "775a11a", or a bare column
 // "1103a" — tolerant of spaces/case. One- and two-digit columns are citations
 // too: the Categories runs 1a–15b. A lettered line comes from parseBekker; a
-// bare column is the extra case that function refuses.
+// bare column ("1103a" or "1103a.") is the extra case that function refuses.
 export function parseCitation(q: string): { column: string; line: number | null; sub?: string } | null {
   const full = parseBekker(q);
   if (full) return { column: full.column, line: full.line, ...(full.sub ? { sub: full.sub } : {}) };
-  const bare = q.trim().toLowerCase().replace(/\s+/g, '').match(/^(\d{1,4})([ab])$/);
+  const bare = q.trim().toLowerCase().replace(/\s+/g, '').match(/^(\d{1,4})([ab])\.?$/);
   if (!bare) return null;
   return { column: bare[1] + bare[2], line: null };
 }

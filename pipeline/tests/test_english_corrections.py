@@ -13,7 +13,7 @@ This test parses each entry's translation the way stage 1 does (the work's publi
 primary English, or the slot whose `dir` the entry names) and fails if any
 `find` is back or any `replace` is missing. Where the find is part of the
 replace (an append: text restored where the archive serves a page cut off), the
-find is meant to stay, so only the replace is checked.
+find is meant to stay inside the replace, so only a copy outside it counts.
 """
 
 from __future__ import annotations
@@ -72,11 +72,26 @@ def _book_text(d: str, book: int) -> str:
     return re.sub(r"\s+", " ", " ".join(v for _, v in chapters))
 
 
+def _stray(find: str, replace: str, text: str) -> bool:
+    """Whether `find` occurs in `text` anywhere but inside an occurrence of `replace`."""
+    # Overlapping occurrences of replace count too, so no finditer.
+    spans, j = [], text.find(replace)
+    while j != -1:
+        spans.append((j, j + len(replace)))
+        j = text.find(replace, j + 1)
+    i = text.find(find)
+    while i != -1:
+        if not any(s <= i and i + len(find) <= e for s, e in spans):
+            return True
+        i = text.find(find, i + 1)
+    return False
+
+
 def _problems(c: dict, text: str) -> list[str]:
     if not text:
         return [f"{_dir(c)} book {c['book']} parsed to nothing"]
     out = []
-    if c["find"] not in c["replace"] and c["find"] in text:
+    if _stray(c["find"], c["replace"], text):
         out.append(f"uncorrected text is back: {c['find']!r}")
     if c["replace"] not in text:
         out.append(f"corrected text is missing: {c['replace']!r}")
@@ -111,7 +126,23 @@ def test_the_check_fails_when_a_restored_page_is_cut_again():
     text = _book_text("pol-jowett", 5)
     assert _problems(c, text) == []
     cut = text[: text.index(c["replace"]) + len(c["find"])]
-    assert _problems(c, cut) == [f"corrected text is missing: {c['replace']!r}"]
+    # The cut page is the uncorrected text: its find now stands outside any replace.
+    assert _problems(c, cut) == [f"uncorrected text is back: {c['find']!r}",
+                                 f"corrected text is missing: {c['replace']!r}"]
+
+
+def test_the_check_fails_on_a_stray_copy_of_an_appended_find():
+    # The find of an append sits inside its replace; a copy outside it is the old text back.
+    c = next(c for c in CORRECTIONS if c.get("dir") == "pol-jowett" and c["book"] == 5
+             and c["find"] in c["replace"])
+    text = _book_text("pol-jowett", 5)
+    assert _problems(c, f"{c['find']} {text}") == [f"uncorrected text is back: {c['find']!r}"]
+
+
+def test_a_find_inside_overlapping_replaces_is_not_stray():
+    # Both "ababa" occurrences (at 0 and 2) overlap; every "aba" lies inside one.
+    assert not _stray("aba", "ababa", "abababa")
+    assert _stray("aba", "ababa", "aba ababa")
 
 
 def test_the_check_fails_on_an_empty_parse():

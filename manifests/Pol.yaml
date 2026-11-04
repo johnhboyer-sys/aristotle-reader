@@ -37,9 +37,9 @@ chapters:
 
 # Second (unmarked) translation: Benjamin Jowett from the MIT Internet Classics
 # Archive ("Part <Roman>" chapter markers), aligned via the Rackham primary as
-# Bekker reference. NB Jowett's Book 5 has only 11 chapters to Ross's 12 (Jowett
-# folds/omits the closing critique of Plato, 1315b10ff); per John we keep Ross's
-# numbering, so Jowett Book 5's last Ross-chapter carries no secondary overlay.
+# Bekker reference. Jowett's Book 5 has all 12 of Ross's chapters: the archive's
+# page stopped short of V.12 (the closing critique of Plato, 1315b10ff) until
+# 2026-11, when it was restored from the 1921 print.
 english:
   secondary:
     id: jowett
