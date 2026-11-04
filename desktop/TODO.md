@@ -49,6 +49,13 @@ in `794a2cdcd` on 2026-09-23.
    8 was, by a rarer path. Moerbeke has the same gap. Source-traced, not
    reproduced.
 
+10. **Neither save-queue wait has been tried in the built app.** Closing the
+    window (#183) and ⌘Q (#184) should both hold until a queued annotation
+    save is written, but only unit tests check that: no one has saved a note
+    while an earlier save was still on disk, closed or quit at once, and
+    looked for the note after a relaunch. Do that once in a packaged build,
+    then delete this item.
+
 ## Provenance
 
 Items 1–4 and 6 (now fixed) came from adversarial reviews run on 2026-09-08/09 against the
