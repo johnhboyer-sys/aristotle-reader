@@ -13,6 +13,73 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-03 — DEPLOYED: English corrections, paragraph breaks, anchor placement (PRs #176–#178, #123, #180)
+
+`gh-pages 17ab83bd → ca680c55`, source `origin/main` `0cf1bdc400` (the #180 merge). John said "deploy",
+then "codex hasn't run on these. do reviews first", then "Fix ticks first", then "Merge and deploy".
+`npm run deploy:dry`, then `npm run deploy -- --verify`.
+
+**What shipped:** #176 service-worker cache writes tied to the fetch event; #177 paragraph breaks from
+the editions' positions for Cat, Int, Poet, Mech, EE, SE; #123 desktop lettered lines (its shared
+palette and `data.ts` parts reach the site); #178 English corrections, the first full build of them:
+3,008 print-checked fixes across 52 translations, five cut archive pages restored (De Caelo I,
+Meteorology II, Politics II, V and VII), Politics V.12 its own chapter (Book V now 12 English
+chapters), Owen's Categories 15 chapters, five edition labels; #180 anchor placement, below.
+
+**Reviews:** Codex GPT-6.1-Sol (medium) on each of #176, #177, #123, #178 after they merged, none
+blocking (`~/.claude/reviews/deploy-2026-11-03/`). Not yet fixed, each for its own PR: #177's
+paragraph loader accepts a phrase starting inside a word and an empty `at`; #178's corrections test
+skips the "old text gone" check when `find` is inside `replace`, and the Pol manifests' comments still
+say Jowett has 11 chapters in Book V; #123's palette no longer jumps on `1094a.`, and the desktop
+annotation queue loses pending writes on quit, exports stale state, and leaves write failures
+unhandled (desktop only).
+
+**#180, why:** the first build of #178 left four Bekker anchors unresolved that resolved before it
+(DA 410b30, Mirab 844b5, Phgn 814a5, Pol 1314a1): the corrections moved the proportional column cuts,
+and each phrase now straddled a cut or sat in the neighbouring column. `_resolve_anchors` looked only
+in its own column's chunk, and its fallback, for a phrase found verbatim anywhere, pinned the tick to
+the end of its own column whatever its line: main's build had **126 segments with ticks out of line
+order**, among them about 60 Politics line-1 ticks at their column's end. Now the chunk is searched
+joined with its same-book neighbours (whole phrase only); a phrase starting in the column keeps its
+place, one in the next column pins to the last sentence boundary, one starting in the column before
+places only line 1, at offset 0; a pin yields to any tick found in place. The gutter's first-line
+default at offset 0 yields to an anchor found there for a later line. Against main's build: 278 tick
+changes, nothing else; segments out of order 126 → 19 (all 19 already so on main); about 20
+straddling lines (DA 410b30 among them) get real ticks. Phgn 814a5 and Mirab 844b5 start in the
+previous column and are not line 1, so they keep interpolated ticks. Known cost: EE 1239b and Phgn
+812b/813a, whose proportional cuts are far off, show estimated ticks bunched near the one found tick
+(pairs under 30 chars apart 85 → 90), and Sens's anchors, a column or more out of step (447a15–447b30
+share one phrase), fall back to interpolation. Anchor-driven column cuts would fix both. The
+"anchors: N unresolved" counts now count the anchors the old fallback placed wrongly, so several rose.
+Three Codex passes on #180: the first two found faults, fixed with tests; the third found none.
+
+**Build:** full `build:public` from `claude/anchor-cut-ticks` `95972d93a0` (Node 22.23.1); main at
+`0cf1bdc400` differs from it only in #179's docs (`docs/redesign-kit/`, `HANDOFF-REDESIGN.md`,
+`CLAUDE.md`), so the build was not rerun. 41 works, stage 2 PASS throughout (Pol and Cael included,
+Pol's 1316a/1316b allowance gone); no "words not at offset" or "landed in no chunk"; stage 9 English
+22,387 words from 57 sources, 345 shards; preflight ok; shared LSJ verified (63,261 keys); 6,586
+pages. Pipeline tests 3,756 passed (on main before #180, 3,739 passed and 0 skipped where 3,737 + 2
+skipped were expected: the two skips need the TLG data this machine has).
+
+**Gates:** link integrity **0 broken** (6,589 / 565,831 / 434,070). Leak check at baseline (Rackham 2,
+`EN/footnotes.json`, `EN/manifest.json`; positive control 1,621; 29 gated book files clean). Shard
+gate: 139 indexes, 3,842,957 postings. Dangling-reference gate: 10 removed bundles, 0 referenced.
+
+**Deploy diff:** 780 files — 3 A / 767 M / 3 D / 7 R, every A/D/R an `_astro` bundle. Data: the book
+files of 39 works, 302 search shards, 132 ngrams. rsync staged 21 `data/search-shards/english/` files
+for deletion and the script restored them: they are stale, not live-only. Each holds an OCR misreading
+or markup that #178 corrected away (`cjions`, `lphicrates`, `zvhat`, `href`, …), the new
+`search-shards/index.json` lists none of them in its English stream, and `shared/lib/search.ts`
+fetches only listed shards, so they are never read. Remove them with
+`--allow-data-deletions=data/search-shards/english` on a later deploy. 0 deletions under `data/`.
+
+**Live-verified:** the script's URL set (new `Reader.eB2EXhyv.js` 200, old bundles 404, `/bonitz/`
+404). Fetched from live: Pol book 5's chapter 12 starts in 1315b (1315b11–1316b27) with "Yet no forms
+of government are so short-lived" there and English in 1316a and 1316b; De Caelo I.12 ends in 283b
+"…the very same that destroy it."; EN 1137b reads "the error is not in the law"; Pol's label is
+"Benjamin Jowett, rev. W. D. Ross (Oxford, 1921)"; Pol 1257a line 1 at offset 0; DA 410b30 a real
+tick at 2300.
+
 ## 2026-10-26 — DEPLOYED: Bekker alignment of 17 works, rulings (PRs #168–#175)
 
 `gh-pages 100ed975 → 17ab83bd`, source `origin/main` `c243c40b9b` (the #175 merge). John said
