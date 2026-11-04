@@ -69,14 +69,33 @@ export function errorText(e: unknown): string {
  */
 export async function holdCloseUntil(drain: () => Promise<unknown>, ms = 5000): Promise<() => void> {
   const { getCurrentWindow } = await import('@tauri-apps/api/window');
-  return getCurrentWindow().onCloseRequested(async () => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    await Promise.race([
-      drain().catch(() => {}),
-      new Promise<void>(resolve => { timer = setTimeout(resolve, ms); }),
-    ]);
-    clearTimeout(timer);
+  return getCurrentWindow().onCloseRequested(() => drainWithin(drain, ms));
+}
+
+/**
+ * The same wait for ⌘Q. Tauri's built-in Quit ends the app with no
+ * close-requested event, so ours (src-tauri/src/lib.rs) emits `quit-requested`
+ * and quits by itself unless the page answers `quit_ack` in time. Once it has,
+ * the page owns the quit and must call `quit_now`, drain or no drain.
+ */
+export async function quitAfter(drain: () => Promise<unknown>, ms = 5000): Promise<() => void> {
+  const { listen } = await import('@tauri-apps/api/event');
+  const { invoke } = await import('@tauri-apps/api/core');
+  return listen('quit-requested', async () => {
+    await invoke('quit_ack');
+    await drainWithin(drain, ms);
+    await invoke('quit_now');
   });
+}
+
+/** Settles when `drain` does, or after `ms`; never rejects. */
+async function drainWithin(drain: () => Promise<unknown>, ms: number): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  await Promise.race([
+    drain().catch(() => {}),
+    new Promise<void>(resolve => { timer = setTimeout(resolve, ms); }),
+  ]);
+  clearTimeout(timer);
 }
 
 type AtomicFs =Pick<typeof import('@tauri-apps/plugin-fs'), 'writeTextFile' | 'rename'>;

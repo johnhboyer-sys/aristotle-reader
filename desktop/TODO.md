@@ -39,15 +39,15 @@ too, so this is a known limit rather than a regression.
 Item 6 (concurrent annotation changes, and the shared `.tmp` name) was fixed
 in `794a2cdcd` on 2026-09-23.
 
-8. **⌘Q can still drop a queued annotation save.** Closing the window now
-   waits for the queue (`holdCloseUntil` in `desktop/src/lib/runtime.ts`), but
-   Tauri's built-in Quit menu item ends the app without a close-requested
-   event, so that wait never runs. *Effect:* save a note while an earlier save
-   is still on disk, press ⌘Q at once, and the note is lost. Moerbeke fixed the
-   same gap by replacing the built-in Quit with its own menu item that asks the
-   page to save first (`~/Developer/moerbeke/src-tauri/src/lib.rs`,
-   `src/lib/quit.ts`); porting that is Rust work. Source-traced from Moerbeke's
-   notes, not reproduced here.
+9. **Quitting from outside the menu can still drop a queued annotation save.**
+   ⌘Q and the menu's Quit now wait for the queue (`quitAfter` in
+   `desktop/src/lib/runtime.ts`, the Quit item in `src-tauri/src/lib.rs`), but
+   Dock › Quit, an AppleScript `quit` and logout go straight to
+   `NSApplication terminate:`. Tauri's macOS layer (tao 0.35.3,
+   `platform_impl/macos/app_delegate.rs`) hooks only `applicationWillTerminate:`,
+   which cannot delay the exit, and gives the page no event. *Effect:* as item
+   8 was, by a rarer path. Moerbeke has the same gap. Source-traced, not
+   reproduced.
 
 ## Provenance
 
