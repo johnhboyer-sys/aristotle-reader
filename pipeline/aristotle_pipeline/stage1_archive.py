@@ -51,10 +51,11 @@ def _resolve_anchors(rel: str, chunks: list[dict]) -> dict[str, list]:
     if not path.exists():
         return {}
     entries = yaml.safe_load(path.read_text(encoding="utf-8")) or []
-    by_col: dict[str, list[dict]] = {}
-    for c in chunks:
-        by_col.setdefault(c["column"], []).append(c)
+    by_col: dict[str, list[int]] = {}
+    for i, c in enumerate(chunks):
+        by_col.setdefault(c["column"], []).append(i)
     line_ms: dict[str, list] = {}
+    pinned: list[tuple[str, int, int, str]] = []
     missing = []
     for e in entries:
         ref = str(e["bekker"]).strip()
@@ -63,28 +64,65 @@ def _resolve_anchors(rel: str, chunks: list[dict]) -> dict[str, list]:
         n = int(line) if line.isdigit() else None
         phrase = e["at"].strip()
         hit = None
-        for c in by_col.get(column, []):
-            off = _find_phrase(c["text"], phrase)
+        for i in by_col.get(column, []):
+            off = _find_phrase(chunks[i]["text"], phrase)
             if off >= 0:
-                hit = (c["id"], off)
+                hit = (chunks[i]["id"], off)
                 break
-        if hit and n is not None:
+        if not hit and n is not None:
+            for i in by_col.get(column, []):
+                off = _pin_across_cut(chunks, i, phrase, n)
+                if off is not None:
+                    pinned.append((chunks[i]["id"], n, off, ref))
+                    break
+            else:
+                missing.append(ref)
+        elif hit and n is not None:
             line_ms.setdefault(hit[0], []).append((n, hit[1]))
-        elif n is not None and by_col.get(column) and any(phrase in c["text"] for c in chunks):
-            # An end-of-column line (e.g. 11b38, the last line of 11b) whose
-            # sentence the proportional cut spilled into the next column. The
-            # phrase is elsewhere, but the line genuinely belongs at the END of
-            # its own column, so pin a real tick to this column's last sentence
-            # boundary rather than mislabel it under the next column's gutter.
-            chunk = by_col[column][-1]
-            t = chunk["text"]
-            bounds = [m.end() for m in re.finditer(r'[.?!][")\']?\s', t)]
-            line_ms.setdefault(chunk["id"], []).append((n, bounds[-1] if bounds else len(t)))
         else:
             missing.append(ref)
+    # A pinned tick is a guess at a column edge; a tick found in place is not.
+    # Drop a pin whose line is already placed, that shares a placed tick's
+    # offset (the gutter would keep one), or that puts the lines out of order.
+    for cid, n, off, ref in pinned:
+        found = line_ms.get(cid, [])
+        if any(m == n or o == off or (m < n) != (o < off) for m, o in found):
+            missing.append(ref)
+        else:
+            line_ms.setdefault(cid, []).append((n, off))
     if missing:
         print(f"  anchors: {len(missing)} unresolved: {missing[:8]}")
     return line_ms
+
+
+def _pin_across_cut(chunks: list[dict], i: int, phrase: str, n: int) -> int | None:
+    """Tick offset in chunks[i] for line `n`'s anchor when the proportional
+    column cut moved its phrase out of the chunk, or None if it cannot be
+    placed. The chunk is searched joined with its neighbours in the same book,
+    so a phrase that straddles a cut is found whole. A phrase that starts in
+    this chunk keeps its place. One in the column after is an end-of-column line
+    (e.g. 11b38) and pins to this column's last sentence boundary. One that
+    starts in the column before places only line 1, at offset 0: any later line
+    pinned there would land on line 1's tick and vanish, so it keeps its
+    interpolated tick instead. The tick never goes into the neighbour's chunk:
+    the reader would label it with that column."""
+    own = chunks[i]
+    near = lambda j: chunks[j]["text"] if 0 <= j < len(chunks) and chunks[j]["book"] == own["book"] else ""
+    before = near(i - 1)
+    start = len(before) + 1
+    # The whole phrase, not _find_phrase's short prefixes: a four-word prefix
+    # can recur in a neighbour and stand in for words the text no longer has.
+    m = re.search(r"\s+".join(re.escape(w) for w in phrase.split()),
+                  f"{before} {own['text']} {near(i + 1)}")
+    if not m:
+        return None
+    off = m.start()
+    if off < start:
+        return 0 if n == 1 else None
+    if off < start + len(own["text"]):
+        return off - start
+    bounds = [m.end() for m in re.finditer(r'[.?!][")\']?\s', own["text"])]
+    return bounds[-1] if bounds else len(own["text"])
 
 
 _BEKKER = re.compile(r"^(\d{1,4}[ab])(\d{1,3})$")
