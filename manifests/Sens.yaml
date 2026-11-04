@@ -20,6 +20,13 @@ bekker_range:
 chapters:
   source: grc_tei
   grc_tei: "tlg0086.tlg041.1st1K-grc1.xml"
+  # Div 7's opening ("Ἔστι δέ τις ἀπορία…") differs in word order from the
+  # spine ("Ἔστι δ' ἀπορία… τις"), so text-alignment mis-pins it at 448a28,
+  # mid-sentence, on a 3-word hit. It is re-pinned via `extra` at 447a12,
+  # where both the Greek and Beare's Part 7 begin.
+  skip: [7]
+  extra:
+    - { n: 7, bekker: "447a12" }
 
 english:
   primary:
