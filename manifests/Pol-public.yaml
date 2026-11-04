@@ -44,6 +44,7 @@ english:
     # (docs/gloss-aligner-recipe.md): {bekker, at: verbatim Jowett phrase},
     # resolved per column → dense gutter, replacing the interpolated estimate.
     anchors: pol-jowett/anchors.yaml
+    anchor_cuts: true
   # Second translation: William Ellis (1776/1912), public domain, from
   # Gutenberg #6762. Chapter counts per book (13/12/18/16/12/8/17/7) match the
   # canonical grc-TEI division exactly, so this is a clean Tier 0 secondary: no

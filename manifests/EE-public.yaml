@@ -36,6 +36,7 @@ english:
     books: 5
     chapter_marker: number
     anchors: "ee-solomon/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
+    anchor_cuts: true
     # anchors: ee-solomon/anchors.yaml   # Phase 2 (gloss aligner)
 
 books:
