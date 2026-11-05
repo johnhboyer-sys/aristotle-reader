@@ -16,7 +16,7 @@ Track: the commentary layer's design and its sources (plan in `docs/commentary-l
 4. **How CT was proofed**: Alarcón, *Anuario Filosófico* 35 (2002) 791–801. CT is Busa's Index Thomisticus tapes, converted by program; he claims no errata from the transfer. He describes no check of Busa's keying against the printed books. Our test of De anima found no non-word typos.
 5. **English of Aquinas**:
    - De anima: Foster–Humphries (1951), **cleared** (2026-11-05).
-   - Metaphysics: Rowan (Regnery 1961), **free to host** (registered A538676, no 1989 renewal found). Text taken from isidore, checked against the 1961 print ("Yes, from isidore").
+   - Metaphysics: Rowan (Regnery 1961), **free to host** (registered A538676, no 1989 renewal found). Text taken from isidore, to be checked against the 1961 print ("Yes, from isidore"); not yet checked.
    - Translations still in copyright (Litzinger's 1964 Ethics, White's 2005 De sensu, Larcher's 1970 Posterior Analytics, Pasnau 1999): John thinks them "fair game (for our purposes)" but is "not going to go yolo and say go". Not authorized.
    - Greek commentators: the labelled AI translation of the plan's pilot stands.
 6. **isidore.co is grey**: it mirrors Joseph Kenny's old site, which the Dominicans pulled over copyright. John is "fine with grey, personally speaking". So isidore may supply the text of a translation we have cleared; it never makes an uncleared one hostable.
