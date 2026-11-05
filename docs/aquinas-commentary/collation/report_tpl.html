@@ -1,0 +1,162 @@
+<title>Parma against Corpus Thomisticum</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya:ital,wght@0,400;0,500;0,700;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one reading column; each place is a margin reference beside an apparatus line, its Latin, and the printed words cut from the Parma scan. */
+:root{
+  --paper:#f3f4f1; --ink:#1b1f22; --mute:#5a636a; --rule:#d5d9d5; --accent:#2b5a73; --mark:rgba(43,90,115,.15); --card:#fbfbf9;
+  --scan-filter:none;
+  --text:"Alegreya", "Iowan Old Style", Georgia, serif;
+  --ui:"Alegreya Sans", "Gill Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --paper:#121518; --ink:#e3e6e2; --mute:#9aa3a8; --rule:#2b3136; --accent:#8db9cf; --mark:rgba(141,185,207,.2); --card:#181c20;
+  --scan-filter:invert(.9) contrast(1.05); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --paper:#121518; --ink:#e3e6e2; --mute:#9aa3a8; --rule:#2b3136; --accent:#8db9cf; --mark:rgba(141,185,207,.2); --card:#181c20;
+  --scan-filter:invert(.9) contrast(1.05); color-scheme:dark }
+body{background:var(--paper);color:var(--ink);font:19px/1.55 var(--text);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:28px 64px}
+main{max-width:860px;margin:0 auto;display:grid;gap:44px}
+h1,h2,h3{text-wrap:balance;margin:0;font-weight:500}
+h1{font-size:clamp(32px,5.4vw,46px);line-height:1.1}
+h2{font-size:26px;line-height:1.2}
+h3{font-family:var(--ui);font-size:15px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--mute);
+  display:flex;gap:10px;align-items:baseline;padding-bottom:8px;border-bottom:1px solid var(--rule)}
+h3 .n{font-weight:500;font-variant-numeric:tabular-nums}
+p{margin:0}
+.eyebrow{font-family:var(--ui);font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:700}
+header{display:grid;gap:14px}
+.lede{max-width:62ch;color:var(--ink)}
+.sg{font-family:var(--ui);font-variant-caps:all-small-caps;letter-spacing:.06em;color:var(--mute);font-size:1.05em}
+.verdict{border-left:3px solid var(--accent);padding:4px 0 4px 18px;display:grid;gap:8px;max-width:62ch}
+.verdict strong{font-weight:700}
+/* the funnel: counts down the page, each a step of the sieve */
+.sieve{display:grid;grid-template-columns:auto 1fr;column-gap:22px;row-gap:6px;margin:0;font-variant-numeric:tabular-nums}
+.sieve dt{text-align:right;font-family:var(--ui);font-weight:500;font-size:19px}
+.sieve dd{margin:0;color:var(--mute)}
+.sieve .last{color:var(--ink);font-weight:700}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters button{font:500 16px/1 var(--ui);padding:11px 14px;min-height:44px;border-radius:999px;border:1px solid var(--rule);background:var(--card);color:var(--ink);cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper)}
+.filters button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.places{display:grid;gap:36px}
+.book{display:grid;gap:0}
+.pl{display:grid;grid-template-columns:132px minmax(0,1fr);gap:18px;padding:16px 0;border-bottom:1px solid var(--rule)}
+.ref{font-family:var(--ui);font-size:16px;line-height:1.35;display:grid;gap:2px;font-variant-numeric:tabular-nums}
+.ref .pg{color:var(--mute);font-size:15px}
+.body{display:grid;gap:8px;min-width:0}
+.app{font-size:21px}
+.app .lem{font-weight:700}
+.app .rd{font-weight:700;color:var(--accent)}
+.ctx{color:var(--mute)}
+mark{background:var(--mark);color:var(--ink);padding:0 3px;border-radius:3px}
+.scan{display:block;max-width:100%;overflow-x:auto}
+.scan img{display:block;height:46px;width:auto;max-width:none;filter:var(--scan-filter);border-radius:3px}
+.notes{display:grid;gap:14px;max-width:66ch}
+.notes dl{margin:0;display:grid;gap:12px}
+.notes dt{font-weight:700}
+.notes dd{margin:0}
+ol.how{margin:0;padding-left:1.3em;display:grid;gap:10px;max-width:66ch}
+ul.lim{margin:0;padding-left:1.2em;display:grid;gap:10px;max-width:66ch}
+a{color:var(--accent)}
+@media (max-width:600px){
+  body{font-size:18px}
+  .pl{grid-template-columns:1fr;gap:6px}
+  .ref{grid-auto-flow:column;justify-content:start;gap:14px}
+  .app{font-size:20px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<main>
+<header>
+  <p class="eyebrow">Sentencia libri De anima</p>
+  <h1>Parma against Corpus Thomisticum</h1>
+  <p class="lede">Every word of Aquinas's commentary as Corpus Thomisticum gives it (the Turin 1959 text, keyed by Busa), set against the Parma edition, vol. 20 (1866), read from archive.org's scan. Only Aquinas's words: Parma's footnotes, its two Latin texts of Aristotle and its lectio summaries are left out. <span class="sg">ct</span> Corpus Thomisticum, <span class="sg">p</span> Parma.</p>
+</header>
+
+<section class="verdict">
+  <p><strong>The two texts print different words in {{N_ALL}} places out of 90,700 words.</strong> Every other difference is spelling, an abbreviation, or the scanner's error.</p>
+  <p>Most of the {{N_ALL}} are one letter of an ending (<i>esse</i>/<i>esset</i>, <i>qua</i>/<i>quae</i>). Some change the sense: II, l.&nbsp;11, n.&nbsp;10, where Parma lacks <i>non</i>, and I, l.&nbsp;5, n.&nbsp;3, where its lemma reads <i>Democritus</i> for <i>Diogenes</i>.</p>
+</section>
+
+<section>
+  <dl class="sieve">
+    <dt>90,700</dt><dd>words in Corpus Thomisticum, 873 paragraphs</dd>
+    <dt>91,705</dt><dd>Parma words in the commentary's type</dd>
+    <dt>76.7%</dt><dd>identical as the scanner read them</dd>
+    <dt>20,915</dt><dd>differences left to sort</dd>
+    <dt>19,269</dt><dd>scanner noise: Parma's form is no Latin word and lies close to Corpus's</dd>
+    <dt>395</dt><dd>stray marks and page furniture: running heads, footers</dd>
+    <dt>1,251</dt><dd>cut from the page image and read again, with 80 noise places as a control</dd>
+    <dt>167</dt><dd>still in doubt, read by eye from the crop</dd>
+    <dt class="last">{{N_ALL}}</dt><dd class="last">places where the words differ</dd>
+  </dl>
+</section>
+
+<section style="display:grid;gap:18px">
+  <h2>The {{N_ALL}} places</h2>
+  <div class="filters" role="group" aria-label="Show places by kind">
+    <button type="button" id="f-all" data-f="all" aria-pressed="true">All {{N_ALL}}</button>
+    <button type="button" id="f-word" data-f="word" aria-pressed="false">Another word {{N_WORD}}</button>
+    <button type="button" id="f-lacks" data-f="lacks" aria-pressed="false">Parma lacks {{N_LACKS}}</button>
+    <button type="button" id="f-adds" data-f="adds" aria-pressed="false">Parma adds {{N_ADDS}}</button>
+  </div>
+  <div class="places">
+{{PLACES}}
+  </div>
+</section>
+
+<section class="notes">
+  <h2>Spelling, abbreviation, spacing</h2>
+  <dl>
+    <dt>et cetera, etc.</dt><dd>Corpus writes <i>et cetera</i> 102 times; Parma prints <i>etc.</i></dd>
+    <dt>i and j, u and v</dt><dd>Corpus has <i>huius, eius, iam</i>, Parma <i>hujus, ejus, jam</i>. Compared as one letter, as are u and v, æ and ae, and accents. Case and punctuation are not compared.</dd>
+    <dt>Figures</dt><dd>Parma prints book numbers as figures, <i>in 1 Euclidis, in 6 Metaphysicorum</i>; Corpus writes <i>in primo, in sexto</i>.</dd>
+    <dt>Spellings</dt><dd><i>numquam</i> / <i>nunquam</i> three times, <i>cuicumque</i> / <i>cuicunque</i>, <i>Alchmaeonis</i> / <i>Alcmaeonis</i>.</dd>
+    <dt>Word division</dt><dd><i>quoad</i> / <i>quo ad</i> four times, <i>supradictum</i> / <i>supra dictum</i>, <i>utpote</i> / <i>ut pote</i>, <i>quodquid</i> / <i>quod quid</i>.</dd>
+    <dt>Diagrams</dt><dd>Corpus prints <i>(Figura)</i> where Parma draws the figure (II, l.&nbsp;3, n.&nbsp;4).</dd>
+    <dt>Book III</dt><dd>Both begin it at the same place, <i>Hic incipit liber tertius apud Graecos</i>.</dd>
+  </dl>
+</section>
+
+<section class="notes">
+  <h2>How it was done</h2>
+  <ol class="how">
+    <li>Corpus Thomisticum's three book pages, split into its 873 numbered paragraphs.</li>
+    <li>Parma: archive.org's OCR of vol. 20 with its word boxes. Only lines in the commentary's type size were kept. Parma sets Aristotle's two Latin versions and its footnotes in smaller type, and its headings and summaries in larger.</li>
+    <li>Both texts cut down to letters and lined up word by word.</li>
+    <li>A difference was called scanner noise when Parma's form is not a Latin word and lies close to Corpus's word. The word list is 13,183 forms from Corpus's text of seven of Aquinas's Aristotle commentaries.</li>
+    <li>Every other difference was cut from the page image and read a second time by another OCR engine (Tesseract). Where the second read gave Corpus's word, the place was dropped.</li>
+    <li>The 167 places left were read by eye from the crops. {{N_ALL}} hold. Each crop links to its page of the scan.</li>
+  </ol>
+</section>
+
+<section class="notes">
+  <h2>What this cannot see</h2>
+  <ul class="lim">
+    <li>A real reading that the scanner garbled into a near copy of Corpus's word would be dropped at step 4. A control of 80 such places, read again from the scan, found none.</li>
+    <li>Parma's worn <i>c</i> often prints like <i>e</i>, so neither OCR engine tells <i>cum</i> from <i>eum</i>. These were read by eye and by sense, and none is counted.</li>
+    <li>The readings by eye are Claude's, from the crops shown here; no second reader has checked them.</li>
+    <li>One scan, one OCR. The 1948 photo reprint of Parma on archive.org is lending only.</li>
+  </ul>
+</section>
+</main>
+
+<script>
+(() => {
+  const btns = [...document.querySelectorAll('.filters button')];
+  const show = f => {
+    for (const b of btns) b.setAttribute('aria-pressed', String(b.dataset.f === f));
+    for (const a of document.querySelectorAll('.pl')) a.hidden = !(f === 'all' || a.dataset.k === f);
+    for (const s of document.querySelectorAll('.book')) {
+      const n = s.querySelectorAll('.pl:not([hidden])').length;
+      s.hidden = n === 0; s.querySelector('.n').textContent = n;
+    }
+  };
+  for (const b of btns) b.addEventListener('click', () => show(b.dataset.f));
+})();
+</script>
