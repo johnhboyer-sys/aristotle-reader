@@ -1,0 +1,994 @@
+<title>Aquinas Commentary Study</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Layout: a dark study bar, then a "device" stage that renders the reader at a chosen width
+   (scaled to fit), then the study notes. Inside the stage the skin is the live site's own tokens,
+   so what is judged is layout and behaviour, not the look (the redesign will reskin it). */
+:root{
+  --font-greek:"Cardo","Gentium Plus","Noto Serif",Georgia,serif;
+  --font-english:"EB Garamond",Georgia,"Times New Roman",serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --col-bg:#faf8f3; --page-bg:#f3efe6; --text:#1a1814; --text-mid:#5a5550; --text-light:#6e685f;
+  --accent:#7a4e2d; --accent-light:#b8845a; --border:#d8d0c4; --popup-bg:#ffffff; --on-accent:#ffffff;
+  --popup-shadow:0 4px 24px rgba(0,0,0,.18);
+  --lit-bg:#fbefcf; --lit-rule:#b8845a; --hot-bg:#ffd97a; --sel-bg:#fff6d6;
+  --bar-bg:#24201c; --bar-fg:#f1ebe1; --bar-mid:#b3a897; --bar-line:#3d3730; --bar-on:#f0c48a;
+  --fs-greek:1.05rem; --fs-english:1.08rem; --lh-greek:1.7; --lh-english:1.72;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --col-bg:#211d18; --page-bg:#181511; --text:#e9e2d4; --text-mid:#b6ac9b; --text-light:#8f8676;
+  --accent:#cf9d68; --accent-light:#e6bd8a; --border:#3a342b; --popup-bg:#26221b; --on-accent:#211d18;
+  --popup-shadow:0 6px 28px rgba(0,0,0,.55);
+  --lit-bg:rgba(255,206,84,.12); --lit-rule:#cf9d68; --hot-bg:rgba(255,206,84,.34); --sel-bg:rgba(255,206,84,.16);
+  --bar-bg:#0f0d0b; --bar-fg:#efe9df; --bar-mid:#a49a8c; --bar-line:#2c2722; --bar-on:#e9b878;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --col-bg:#211d18; --page-bg:#181511; --text:#e9e2d4; --text-mid:#b6ac9b; --text-light:#8f8676;
+  --accent:#cf9d68; --accent-light:#e6bd8a; --border:#3a342b; --popup-bg:#26221b; --on-accent:#211d18;
+  --popup-shadow:0 6px 28px rgba(0,0,0,.55);
+  --lit-bg:rgba(255,206,84,.12); --lit-rule:#cf9d68; --hot-bg:rgba(255,206,84,.34); --sel-bg:rgba(255,206,84,.16);
+  --bar-bg:#0f0d0b; --bar-fg:#efe9df; --bar-mid:#a49a8c; --bar-line:#2c2722; --bar-on:#e9b878;
+  color-scheme:dark }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--page-bg);color:var(--text);font:15px/1.5 var(--font-ui)}
+button{font:inherit;color:inherit}
+/* EB Garamond's Latin locl turns u into v ("Sicvt"); Parma prints u */
+[lang="la"]{font-feature-settings:"locl" 0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ── study bar ── */
+.mbar{background:var(--bar-bg);color:var(--bar-fg);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px}
+.mbar .name{font:600 14px/1.2 var(--font-ui);letter-spacing:.01em;margin-right:4px}
+.mbar .grp{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.mbar .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--bar-mid);margin-right:4px}
+.mbar button{background:transparent;border:1px solid var(--bar-line);color:var(--bar-fg);border-radius:5px;padding:5px 10px;font-size:13px;cursor:pointer;min-height:32px}
+.mbar button[aria-pressed="true"]{border-color:var(--bar-on);color:var(--bar-on)}
+.mbar .read{font:12px var(--font-ui);color:var(--bar-mid);font-variant-numeric:tabular-nums;margin-left:auto}
+
+/* ── stage ── */
+.stage-wrap{padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.stage-box{position:relative;margin:0 auto;max-width:100%}
+.stage{position:absolute;top:0;left:0;transform-origin:0 0;background:var(--col-bg);color:var(--text);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+
+/* site chrome inside the stage */
+.site-head{flex:none;height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--border);background:var(--page-bg);font-size:14px;color:var(--text-mid)}
+.site-head .work{color:var(--text);font-weight:600}
+.site-head .sp{flex:1}
+.site-head .hb{border:1px solid var(--border);border-radius:6px;padding:4px 10px;background:var(--col-bg)}
+.toolbar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:8px 18px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-mid)}
+.toolbar .lab{font-size:12px;color:var(--text-light)}
+.toolbar .where{color:var(--text);font-weight:600}
+.toolbar .where small{font-weight:400;color:var(--text-mid);margin-left:6px}
+.toolbar .sp{flex:1}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;vertical-align:middle}
+.seg button{border:0;border-left:1px solid var(--border);background:transparent;color:var(--text-mid);padding:4px 10px;cursor:pointer;min-height:30px;font-size:13px}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.nav{display:inline-flex;align-items:center;gap:6px}
+.nav button{border:1px solid var(--border);background:transparent;border-radius:6px;min-width:30px;min-height:30px;cursor:pointer;color:var(--text-mid)}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;padding:2px 0;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.phone .seg button,.phone .nav button,.phone select{min-height:40px}
+select{font:inherit;font-size:14px;color:var(--text);background:var(--col-bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px}
+
+/* panes */
+.body{flex:1;min-height:0;display:flex;position:relative}
+.scroll{overflow:auto;position:relative;overscroll-behavior:contain}
+.ari{flex:none;background:var(--page-bg);border-right:1px solid var(--border)}
+.aq{flex:1;min-width:0}
+.pane-head{position:sticky;top:0;z-index:3;background:inherit;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;padding:10px 18px 8px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-mid)}
+.ari .pane-head{background:var(--page-bg)}
+.pane-head b{color:var(--text);font-weight:600}
+.pane-head .sp{flex:1}
+
+/* Aristotle text */
+.colhd{font:600 12px var(--font-ui);letter-spacing:.06em;color:var(--text-light);padding:14px 18px 4px 0;margin-left:calc(var(--mk) + 2.6em)}
+.gk{font-family:var(--font-greek);font-size:var(--fs-greek);line-height:var(--lh-greek)}
+.ln{display:grid;grid-template-columns:var(--mk) 2.6em minmax(0,1fr);align-items:baseline;padding-right:14px;cursor:default}
+.ln .mk{font:600 10.5px var(--font-ui);color:var(--accent);text-align:right;padding-right:6px;white-space:nowrap;letter-spacing:.02em}
+.ln .mk .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--accent-light);vertical-align:middle}
+.ln .no{font:var(--fs-ln,11.5px) var(--font-ui);color:var(--text-light);text-align:right;padding-right:.9em;font-variant-numeric:tabular-nums;user-select:none}
+.ln .no.q{visibility:hidden}
+.ln:hover .no.q,.ln.sel .no.q,.ln.lit .no.q{visibility:visible}
+.clickable .ln .no{cursor:pointer}
+.clickable .ln .no:hover{color:var(--accent);text-decoration:underline}
+.ari .ln{cursor:pointer}
+.ln.lit{background:var(--lit-bg);box-shadow:inset 3px 0 var(--lit-rule)}
+.ln.dim .tx{opacity:.58}
+.ln.sel{background:var(--sel-bg);box-shadow:inset 3px 0 var(--accent)}
+.w.hot,.ms span.hot{background:var(--hot-bg);border-radius:2px;box-shadow:0 0 0 2px var(--hot-bg)}
+.enp{font-family:var(--font-english);font-size:var(--fs-english);line-height:var(--lh-english);margin:0;padding:0 18px 0 0}
+.ep.lit{background:var(--lit-bg)}
+.ep.dim{opacity:.58}
+.ep.hot{background:var(--hot-bg)}
+.ep.sel{background:var(--sel-bg)}
+.tk{font:10.5px var(--font-ui);color:var(--text-light);vertical-align:super;margin:0 2px}
+.pair{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);column-gap:22px;align-items:start}
+.enlit{margin:6px 14px 10px calc(var(--mk) + 2.6em);padding:8px 12px;border-left:2px solid var(--lit-rule);background:var(--col-bg);font-family:var(--font-english);font-size:var(--fs-english);line-height:var(--lh-english)}
+.enlit .who{display:block;font:11.5px var(--font-ui);color:var(--text-light);margin-bottom:2px}
+.moer{font-family:var(--font-english);font-size:var(--fs-english);line-height:var(--lh-english);padding:6px 18px 6px 0}
+.mp{display:grid;grid-template-columns:4.4em minmax(0,1fr);margin:0 0 .7em}
+.mp .ref{font:11.5px var(--font-ui);color:var(--text-light);text-align:right;padding-right:.9em;padding-top:.35em;font-variant-numeric:tabular-nums}
+.ms{cursor:pointer;border-radius:2px}
+.ms.lit{background:var(--lit-bg)}
+.ms.dim{opacity:.58}
+.src-note{font-size:12px;color:var(--text-light);padding:14px 18px 22px;max-width:40em}
+
+/* Aquinas */
+.aqhead{padding:22px 28px 6px}
+.aqhead h2{font:500 1.5rem/1.2 var(--font-english);margin:0 0 6px;color:var(--text)}
+.aqhead .sum{font-family:var(--font-english);font-style:italic;font-size:1.04rem;color:var(--text-mid);max-width:44em}
+.aqhead .sum span{display:block}
+.crumb{position:sticky;top:0;z-index:2;background:var(--col-bg);border-bottom:1px solid var(--border);padding:8px 28px;font-size:12.5px;color:var(--text-mid);display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline}
+.crumb button{border:0;background:none;color:var(--text-mid);cursor:pointer;padding:0;font-size:12.5px}
+.crumb button:hover{color:var(--accent);text-decoration:underline}
+.crumb .sep{color:var(--border)}
+.crumb .rng{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--text-light)}
+.aqp{display:grid;grid-template-columns:3.2em minmax(0,1fr);padding:.55em 28px .55em 0;position:relative}
+.aqp .pn{font:12px var(--font-ui);color:var(--text-light);text-align:right;padding-right:1em;padding-top:.42em;font-variant-numeric:tabular-nums}
+.aqp.cur .pn{color:var(--accent);font-weight:700}
+.aqp.onscr::before{content:"";position:absolute;left:6px;top:.7em;bottom:.7em;width:3px;border-radius:2px;background:var(--lit-rule)}
+.aqp.flash{animation:flash 1.4s ease}
+@keyframes flash{0%{background:var(--hot-bg)}100%{background:transparent}}
+.aqt{font-family:var(--font-english);font-size:var(--fs-english);line-height:var(--lh-english);min-width:0}
+.aqt .la,.aqt .en{max-width:36em}
+.aqt.side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:2.2em}
+.aqt.stack .en{margin-top:.5em;padding-left:.9em;border-left:1px solid var(--border);color:var(--text-mid)}
+.aqt p{margin:0}
+.la q{quotes:"\00ab" "\00bb"}
+.en q{quotes:"\201c" "\201d"}
+q[data-t],q[data-x]{color:var(--accent);cursor:pointer;text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:3px;border-radius:2px}
+q.hot{background:var(--hot-bg)}
+.colhead{display:grid;grid-template-columns:3.2em minmax(0,1fr);padding:10px 28px 0 0;font:600 11px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-light)}
+.colhead .two{display:grid;grid-template-columns:1fr 1fr;column-gap:2.2em}
+.endnav{margin:18px 28px 40px 3.2em;padding-top:14px;border-top:1px solid var(--border);font-size:13px;color:var(--text-mid)}
+.endnav i{font-family:var(--font-english);font-size:1.02rem}
+
+/* phone passage blocks */
+.pas{margin:.9em 16px .3em 16px;border-left:3px solid var(--lit-rule);background:var(--page-bg);border-radius:0 6px 6px 0}
+.pas > button{display:flex;gap:10px;align-items:baseline;width:100%;text-align:left;background:none;border:0;padding:10px 12px;cursor:pointer;min-height:44px}
+.pas .r{font:600 12.5px var(--font-ui);color:var(--accent);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pas .inc{flex:1;min-width:0;color:var(--text-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pas .chev{color:var(--text-light)}
+.pas .full{padding:0 0 10px}
+.pas .full .ln{--mk:0px}
+.phone .aqp{grid-template-columns:2.6em minmax(0,1fr);padding-right:16px}
+.phone .aqhead{padding:16px 16px 4px}
+
+/* panel + floating controls */
+.panel{flex:none;background:var(--page-bg);border-left:1px solid var(--border)}
+.panel .pane-head{background:var(--page-bg)}
+.panel .aqp{padding-right:22px}
+.pill{position:sticky;top:44px;z-index:4;margin:8px 16px 0;display:flex;gap:10px;align-items:center;background:var(--popup-bg);border:1px solid var(--border);border-radius:8px;box-shadow:var(--popup-shadow);padding:8px 12px;font-size:13px}
+.pill[hidden]{display:none}
+.jump{position:absolute;right:18px;bottom:16px;z-index:5;border:1px solid var(--border);background:var(--popup-bg);color:var(--text);border-radius:20px;padding:7px 14px;box-shadow:var(--popup-shadow);cursor:pointer;font-size:13px}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:20;max-height:64%;display:flex;flex-direction:column;background:var(--popup-bg);border-top:1px solid var(--border);border-radius:12px 12px 0 0;box-shadow:var(--popup-shadow)}
+.sheet.side{left:auto;right:0;bottom:0;width:52%;max-height:none;border-top:0;border-left:1px solid var(--border);border-radius:12px 0 0 0}
+.sheet .sh-head{flex-wrap:wrap;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-mid)}
+.sheet .sh-head b{color:var(--text)}
+.sheet .sh-head .x{margin-left:auto;border:0;background:none;font-size:22px;line-height:1;min-width:44px;min-height:44px;cursor:pointer;color:var(--text-mid)}
+.sheet .sh-body{overflow:auto;padding-bottom:10px}
+.toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;background:var(--text);color:var(--col-bg);padding:9px 14px;border-radius:8px;font-size:13px;max-width:80%;box-shadow:var(--popup-shadow)}
+.pop{position:absolute;left:12px;right:12px;bottom:12px;z-index:25;background:var(--popup-bg);border:1px solid var(--border);border-radius:10px;box-shadow:var(--popup-shadow);padding:10px 12px 12px}
+.pop .x{float:right;border:0;background:none;font-size:22px;min-width:40px;min-height:40px;margin:-8px -6px 0 0;cursor:pointer;color:var(--text-mid)}
+.pop .r{font:600 12px var(--font-ui);color:var(--accent)}
+.pop .g{font-family:var(--font-greek);font-size:var(--fs-greek);line-height:1.6}
+.pop .m{font-family:var(--font-english);font-size:var(--fs-english);color:var(--text-mid)}
+
+/* contents page */
+.cpage{flex:1;min-height:0}
+.cwrap{max-width:1180px;margin:0 auto;padding:30px 32px 60px}
+.eyebrow{font-size:13px;color:var(--text-mid);margin:0 0 4px}
+.cwrap h1{font:500 2.1rem/1.15 var(--font-english);margin:0 0 4px;text-wrap:balance}
+.cwrap .lat{font-family:var(--font-english);font-style:italic;font-size:1.1rem;color:var(--text-mid);margin:0 0 16px}
+.acts{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 20px}
+.acts button{border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);border-radius:6px;padding:8px 14px;cursor:pointer;font-size:14px;min-height:40px}
+.acts button.ghost{background:transparent;color:var(--accent)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 28px;padding:14px 0 18px;border-block:1px solid var(--border);margin-bottom:26px}
+.facts div{font-size:13.5px;color:var(--text-mid)}
+.facts b{display:block;font:500 1.25rem/1.2 var(--font-english);color:var(--text);font-variant-numeric:tabular-nums}
+.cgrid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:40px}
+.cgrid.one{grid-template-columns:minmax(0,1fr)}
+.cgrid h3{font:600 12px var(--font-ui);letter-spacing:.08em;text-transform:uppercase;color:var(--text-light);margin:0 0 10px;display:flex;align-items:center;gap:10px}
+.cgrid h3 .seg{text-transform:none;letter-spacing:0;font-weight:400}
+.lrow{display:grid;grid-template-columns:2em 4.6em minmax(0,1fr) 92px;gap:12px;align-items:baseline;width:100%;text-align:left;border:0;border-top:1px solid var(--border);background:none;padding:10px 4px;cursor:pointer;color:var(--text)}
+.lrow:hover{background:var(--page-bg)}
+.lrow .ln_{font:600 13px var(--font-ui);color:var(--accent);font-variant-numeric:tabular-nums}
+.lrow .st{font:12.5px var(--font-ui);color:var(--text-mid);font-variant-numeric:tabular-nums}
+.lrow .su{font-family:var(--font-english);font-size:1.02rem;line-height:1.4}
+.lrow .su small{display:block;font-family:var(--font-ui);font-size:12px;color:var(--text-light);margin-top:2px}
+.lrow .wt{font:11.5px var(--font-ui);color:var(--text-light);text-align:right;font-variant-numeric:tabular-nums}
+.lrow .wt i{display:block;height:4px;background:var(--accent-light);border-radius:2px;margin:0 0 4px auto}
+.lrow.miss .su{color:var(--text-light);font-style:italic}
+.brow{display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--border);padding:12px 4px;font-size:14px;color:var(--text-mid)}
+.brow b{color:var(--text);font-weight:600}
+.tree,.tree ul{list-style:none;margin:0;padding:0}
+.tree ul{margin-left:16px;padding-left:12px;border-left:1px solid var(--border)}
+.tree li{margin:2px 0}
+.node{display:grid;grid-template-columns:22px minmax(0,1fr) auto;gap:6px;align-items:baseline;padding:6px 4px;border-radius:5px}
+.node:hover{background:var(--page-bg)}
+.node .tg{border:0;background:none;color:var(--text-light);cursor:pointer;width:22px;min-height:24px;padding:0}
+.node .lb{border:0;background:none;text-align:left;cursor:pointer;padding:0;color:var(--text)}
+.node .lb .l1{font-family:var(--font-english);font-size:1.04rem;line-height:1.35}
+.node .lb .l2{display:block;font-size:12.5px;color:var(--text-mid)}
+.node .rg{font:12px var(--font-ui);color:var(--text-light);font-variant-numeric:tabular-nums;white-space:nowrap}
+.node.out .l1{color:var(--text-mid)}
+.legal{font-size:13px;color:var(--text-mid);margin-top:26px;padding-top:14px;border-top:1px solid var(--border);max-width:62em}
+
+/* ── notes ── */
+.notes{padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.notes .in{max-width:62rem;margin:0 auto;display:grid;gap:30px}
+.notes h1{font:500 2rem/1.15 var(--font-english);margin:0;text-wrap:balance}
+.notes h2{font:600 12px var(--font-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--text-light);margin:0 0 10px}
+.notes p,.notes li{font-family:var(--font-english);font-size:1.12rem;line-height:1.55;max-width:42em}
+.notes p{margin:0 0 .6em}
+.notes ul,.notes ol{margin:0;padding-left:1.2em;display:grid;gap:.45em}
+.nums{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px 24px}
+.nums div{font-size:13px;color:var(--text-mid)}
+.nums b{display:block;font:500 1.7rem/1.1 var(--font-english);color:var(--text);font-variant-numeric:tabular-nums}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;font-size:14px;min-width:560px}
+.tbl th,.tbl td{text-align:left;vertical-align:top;padding:8px 14px 8px 0;border-top:1px solid var(--border)}
+.tbl th{font:600 12px var(--font-ui);color:var(--text-light);letter-spacing:.04em}
+.tbl td:first-child{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--text)}
+.tbl td{color:var(--text-mid)}
+.q li b{color:var(--text)}
+@media (prefers-reduced-motion: reduce){ .aqp.flash{animation:none} *{scroll-behavior:auto!important} }
+</style>
+
+<div class="mbar" role="toolbar" aria-label="Study controls">
+  <span class="name">Aquinas beside Aristotle</span>
+  <span class="grp" id="tabs"><span class="lbl">View</span>
+    <button data-v="lectio">Aquinas, lectio 1</button>
+    <button data-v="reader">De Anima with Aquinas</button>
+    <button data-v="contents">Aquinas contents</button>
+  </span>
+  <span class="grp" id="presets"><span class="lbl">Width</span>
+    <button data-p="fit">Fit window</button>
+    <button data-p="phone">Phone, landscape</button>
+    <button data-p="laptop">Laptop 1440</button>
+    <button data-p="wide">Monitor 1920</button>
+  </span>
+  <span class="read" id="readout"></span>
+</div>
+
+<div class="stage-wrap"><div class="stage-box" id="box"><div class="stage" id="stage"></div></div></div>
+
+<section class="notes" aria-label="Study notes"><div class="in">
+  <div>
+    <h1>Showing Aquinas beside Aristotle</h1>
+    <p>A working mockup for one lectio: Aquinas on <i>De Anima</i> I, lectio 1, against 402a1–403a2. The three views above are the two ways in (Aquinas as the book, or Aristotle as the book) and the commentary's own contents page. Switch widths in the bar to see what each screen can hold. On the reading views, hover a lemma in Aquinas, click a Greek line, or click a line number.</p>
+  </div>
+  <div>
+    <h2>What the numbers say</h2>
+    <div class="nums">
+      <div><b>4.3×</b>Aquinas's Latin against the Greek it comments on (90,795 words to 20,959)</div>
+      <div><b>43</b>words of Aquinas per Bekker line, on average</div>
+      <div><b>56</b>lectiones across three books; 873 numbered paragraphs</div>
+      <div><b>~38</b>Bekker lines per lectio; lectio 1 covers 54 (402a1–403a2)</div>
+    </div>
+    <p style="margin-top:14px">So a screen of Aristotle carries about four screens of Aquinas. Two panes that scroll together cannot both be readable: one of them has to hold still while the other moves.</p>
+  </div>
+  <div>
+    <h2>Three rules the mockup tests</h2>
+    <ol>
+      <li><b>The short text follows the long one, never the reverse.</b> When you read Aquinas, the Aristotle pane holds the lectio's passage and lights the lines the current paragraph is about; it moves a line or two per paragraph. When you read Aristotle, the Aquinas panel does not chase the text (it would jump four screens per screen). It marks which paragraphs cover the lines in view and offers to go there.</li>
+      <li><b>Mark his structure, not his presence.</b> Aquinas comments on every line, so a dot on every annotated line would mark the whole text. The margin shows where his lectiones start and where his division of the text turns. Any line number opens what he says about that line.</li>
+      <li><b>Each pane keeps its own language switch, and a pane folds its second language before the panes fold.</b> Aristotle: Greek, Moerbeke's Latin, English, or Greek with English. Aquinas: Latin, both, or English.</li>
+    </ol>
+  </div>
+  <div>
+    <h2>Four languages: what fits</h2>
+    <div class="tbl"><table>
+      <thead><tr><th>Width</th><th>Reading Aquinas</th><th>Reading Aristotle</th></tr></thead>
+      <tbody>
+        <tr><td>1880 px and up</td><td>All four side by side: Greek | English | Latin | English</td><td>Greek | English | Aquinas Latin | Aquinas English</td></tr>
+        <tr><td>1200–1880</td><td>Three columns. With all four asked for, the English of Aristotle appears only under the lit Greek lines; if that is still too wide, Aquinas's English goes under each Latin paragraph</td><td>Greek | English | Aquinas in one language (both stack in the panel)</td></tr>
+        <tr><td>Under 1000 (phones)</td><td>One column. Each paragraph opens with the lines it covers; tap a lemma to see the Greek</td><td>Tap a line number; Aquinas opens in a drawer beside the text (landscape, since a phone on its side has width but no height) or a sheet from the bottom (upright), with a link to read the lectio</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div>
+    <h2>A fifth text</h2>
+    <p>Aquinas did not read Greek. He comments on William of Moerbeke's Latin, and his lemmata quote it word for word. The Parma edition prints that Latin at the head of every lectio, along with a later Latin version (its "Recens"). Offering Moerbeke in the Aristotle pane lets a Latin reader match each quoted lemma exactly; the Greek still matches, but through a translation.</p>
+  </div>
+  <div>
+    <h2>What is real in the mockup</h2>
+    <ul>
+      <li>Greek and J. A. Smith's English: the site's own build of De Anima. Smith's English is split by line from the real Bekker ticks (every fifth line) and spread between them by length, so line-level English is approximate.</li>
+      <li>Aquinas's Latin and Moerbeke's Latin: the Parma edition, vol. 20 (1866), public domain, from archive.org's OCR, corrected by hand for this mockup and not yet checked against the scan.</li>
+      <li>The English of Aquinas: a working draft written for this mockup. It is not a candidate for the site.</li>
+      <li>Which lines each paragraph expounds, and where each lemma falls in the Greek: mapped by hand for lectio 1.</li>
+      <li>Lectio start lines on the contents page: read by hand from Parma's Moerbeke incipits, unchecked; lectiones 7 and 8 were not read. Word counts per lectio are counts of the Latin.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Two corrections to the decision doc</h2>
+    <ul>
+      <li>Lectio 1 runs 402a1–403a2, not 402a1–a22. Its paragraphs 11–15 cover "Primum autem fortassis" through "dialectice dictae sunt et vanae omnes", and Parma prints Moerbeke's text for exactly that span.</li>
+      <li>Parma gives each lectio a one-sentence summary and prints two Latin versions of Aristotle before the commentary. The schema has no place for either yet.</li>
+    </ul>
+  </div>
+  <div class="q">
+    <h2>Decisions for you</h2>
+    <ol>
+      <li><b>Follow or wait.</b> Reading Aristotle with the Aquinas panel open: should the panel stay put and mark where the text is (the default here), or follow the text when it comes to rest (the Follow switch)?</li>
+      <li><b>Which pane gets its second language first</b> at laptop width: Aristotle (Greek with English) or Aquinas (Latin with English)?</li>
+      <li><b>Moerbeke's Latin</b> as an Aristotle option in the Aquinas reader. It is a fifth text to OCR and correct, from the same scans.</li>
+      <li><b>English for Aquinas.</b> No public-domain English of this commentary is known (Foster and Humphries, 1951, is unresolved). Latin only, an AI translation like the Themistius plan, or wait? This decides whether "Both" exists on the public site.</li>
+      <li><b>The citation unit.</b> Marietti paragraph numbers (I, l. 1, n. 6) as Aquinas's addresses in URLs and citations.</li>
+    </ol>
+  </div>
+</div></section>
+
+<script>
+// Aquinas, Sententia libri De anima, Liber I, Lectio 1.
+// Latin: Parma edition, vol. 20 (1866), OCR from archive.org `sanctithomaeaqui20thom`,
+// corrected by hand for this mockup and not yet checked against the scan.
+// Paragraph numbers follow the Marietti numbering (n. 1-15 in this lectio).
+// English: a working draft made for this mockup, not a candidate for the site.
+// q[data-t] marks a lemma Aquinas quotes from Moerbeke; data-t names the Greek/Latin target(s).
+
+const MOER = [ // Moerbeke's Latin as Parma prints it ("Antiqua"), split into sentences with Bekker spans
+  {r:['402a1','402a4'], p:1, t:'<span data-t="bon">Bonorum et honorabilium</span> <span data-t="not">notitiam opinantes</span>, magis autem alteram altera, aut <span data-t="cert">secundum certitudinem</span>, aut ex eo quod et <span data-t="mel">meliorum</span> et <span data-t="mir">mirabiliorum</span> est: <span data-t="utr">propter utraque haec</span>, <span data-t="hist">animae historiam</span> rationabiliter utique <span data-t="prim">in primis</span> ponemus.'},
+  {r:['402a4','402a6'], t:'<span data-t="vid1">Videtur autem et ad veritatem omnem</span>, cognitio ipsius multum conducere; maxime autem ad naturam.'},
+  {r:['402a6','402a7'], t:'Est enim <span data-t="tamq">tamquam</span> <span data-t="princ">principium animalium</span>.'},
+  {r:['402a7','402a10'], p:1, t:'<span data-t="inq">Inquirimus autem</span> <span data-t="cons">considerare</span> <span data-t="cogn">et cognoscere</span> naturam ipsius, et substantiam, <span data-t="acc">postea quaecumque accidunt circa ipsam</span>. Quorum aliae propriae passiones animae esse videntur, aliae autem communes, et animalibus propter illam inesse.'},
+  {r:['402a10','402a11'], p:1, t:'<span data-t="omn">Omnino autem et penitus difficillimorum est</span>, accipere aliquam fidem de ipsa.'},
+  {r:['402a11','402a16'], t:'Cum enim sit quaestio communis multis aliis (dico autem eam quae est circa substantiam, et eam quae quid est), fortassis alicui videbitur una quaedam methodus esse de omnibus de quibus volumus cognoscere substantiam, sicut et eorum quae sunt secundum accidens, propriorum demonstratio; quare quaerendum utique erit methodum istam.'},
+  {r:['402a16','402a19'], t:'Si autem non est una quaedam et communis methodus de eo quod quid est, amplius difficilius est negotiari. Oportebit enim accipere circa unumquodque, quis modus.'},
+  {r:['402a19','402a22'], t:'Si autem manifestum sit, utrum demonstratio aliqua sit, aut divisio, aut etiam aliqua alia methodus, adhuc multas habet dubitationes et errores, ex quibus oportet quaerere. Alia enim aliorum principia, sicut numerorum et planorum.'},
+  {r:['402a23','402a25'], p:1, t:'<span data-t="prim2">Primum autem fortassis</span> necessarium est dividere in quo generum, et quid sit. Dico autem, utrum hoc aliquid et substantia sit, aut qualitas, aut quantitas, aut etiam quoddam aliud divisorum praedicamentorum.'},
+  {r:['402a25','402b1'], t:'Adhuc autem, utrum eorum quae in potentia sunt, an magis endelechia quaedam sit: differt enim non aliquid parum.'},
+  {r:['402b1','402b3'], t:'Considerandum autem et si partibilis sit aut impartibilis, et utrum similis speciei sit omnis anima, aut non. Si autem non similis speciei, utrum specie differat, aut genere.'},
+  {r:['402b3','402b5'], t:'Nunc quidem enim dicentes et quaerentes de anima, de humana solum videntur intendere.'},
+  {r:['402b5','402b7'], t:'Formidandum autem quatenus non lateat, utrum una ratio ipsius est, sicut animalis, aut secundum unumquodque altera: ut equi, canis, hominis, aut <span data-t="dei">Dei</span>.'},
+  {r:['402b7','402b8'], t:'<span data-t="univ">Animal autem universale, aut nihil est, aut posterius</span>. Similiter autem et si aliquod commune aliud praedicetur.'},
+  {r:['402b9','402b11'], p:1, t:'<span data-t="ampl">Amplius autem</span> et si non multae animae, sed partes, utrum oporteat quaerere prius totam animam, aut partes. Difficile autem est determinare quaenam partes natura alterae abinvicem sint.'},
+  {r:['402b11','402b16'], t:'Et utrum partes oporteat quaerere prius, aut opera ipsarum, ut intelligere, aut intellectivum, et sentire, aut sensitivum. Similiter autem et in aliis. Si autem opera prius, iterum utique dubitabit aliquis si objecta horum prius quaerendum, sicut sensibile sensitivo, et intelligibile intellectivo.'},
+  {r:['402b16','402b22'], p:1, t:'<span data-t="vid2">Videtur autem</span> non solum quod quid est cognoscere, utile esse ad cognoscendum causas accidentium in substantiis, sicut in mathematicis quid rectum et quid obliquum, et quid linea, et quid planum, ad cognoscendum quot rectis trianguli anguli sunt aequales; sed et e contrario accidentia conferunt magnam partem ad cognoscendum quod quid est.'},
+  {r:['402b22','402b25'], t:'Cum enim habeamus tradere secundum phantasiam de accidentibus, aut omnibus, aut pluribus, tunc et de substantia habebimus dicere aliquid optime.'},
+  {r:['402b25','403a2'], t:'Omnis enim demonstrationis principium est quod quid est. Quare secundum quascumque definitiones non contingit accidentia cognoscere, sed neque conjecturari de ipsis facile, manifestum est quod dialectice dictae sunt et vanae omnes.'}
+];
+
+// Greek targets for the lemmata: [line, exact substring]
+const TGT = {
+  bon:  [['402a1','Τῶν καλῶν καὶ τιμίων']],
+  not:  [['402a1','τὴν εἴδησιν ὑπολαμβάνοντες']],
+  cert: [['402a2',"κατ' ἀκρίβειαν"]],
+  mel:  [['402a2','βελτιόνων']],
+  mir:  [['402a3','θαυμασιωτέρων']],
+  utr:  [['402a3',"δι' ἀμφότερα ταῦτα"]],
+  hist: [['402a3','τῆς ψυχῆς'],['402a4','ἱστορίαν']],
+  prim: [['402a4','ἐν πρώτοις']],
+  vid1: [['402a4','δοκεῖ δὲ καὶ'],['402a5','πρὸς ἀλήθειαν ἅπασαν']],
+  tamq: [['402a6','οἷον']],
+  princ:[['402a6','ἀρχὴ'],['402a7','τῶν ζῴων']],
+  inq:  [['402a7','ἐπιζητοῦμεν δὲ']],
+  cons: [['402a7','θεωρῆσαι']],
+  cogn: [['402a7','καὶ γνῶναι']],
+  acc:  [['402a8',"εἶθ' ὅσα συμβέβηκε περὶ αὐτήν"]],
+  omn:  [['402a10','πάντῃ δὲ πάντως']],
+  prim2:[['402a23',"πρῶτον δ' ἴσως"]],
+  dei:  [['402b7','θεοῦ']],
+  univ: [['402b7','τὸ δὲ ζῷον τὸ καθόλου ἤτοι οὐθέν'],['402b8','ἐστιν ἢ ὕστερον']],
+  ampl: [['402b9','ἔτι δέ']],
+  vid2: [['402b16',"ἔοικε δ'"]]
+};
+
+// Lectio 1. r = the Bekker span the paragraph expounds (null = the whole treatise).
+const AQ = [
+ {n:1, r:null,
+  la:'Sicut docet Philosophus in undecimo de Animalibus, in quolibet genere rerum necesse est prius considerare communia et seorsum, et postea propria unicuique illius generis: quem quidem modum Aristoteles servat in Philosophia prima. In Metaphysicae enim primo tractat et considerat communia entis inquantum ens, postea vero considerat propria unicuique enti. Cujus ratio est, quia nisi hoc fieret, idem diceretur frequenter. Rerum autem animatarum omnium quoddam genus est; et ideo in consideratione rerum animatarum oportet prius considerare ea quae sunt communia omnibus animatis, postmodum vero illa quae sunt propria cuilibet rei animatae. Commune autem omnibus rebus animatis est anima: in hoc enim omnia animata conveniunt. Ad tradendum igitur de rebus animatis scientiam, necessarium fuit primo tradere scientiam de anima tamquam communem eis. Aristoteles ergo volens tradere scientiam de ipsis rebus animatis, primo tradit scientiam de anima, postmodum vero determinat de propriis singulis animatis in sequentibus libris.',
+  en:'As the Philosopher teaches in the eleventh book <i>On Animals</i>, in any genus of things one must first consider what is common, and separately, and afterwards what is proper to each member of that genus. Aristotle keeps to this method in first philosophy: in the first book of the <i>Metaphysics</i> he treats and considers what is common to being as being, and afterwards what is proper to each being. The reason is that, were this not done, the same things would be said again and again. Now all living things make up a kind of genus; so in considering living things one must first consider what is common to all of them, and afterwards what is proper to each. What is common to all living things is the soul: in this they all agree. To hand on a science of living things, then, it was necessary first to hand on the science of the soul, as what is common to them. So Aristotle, wishing to hand on a science of living things, first hands on the science of the soul, and afterwards, in the books that follow, settles what is proper to each kind.'},
+ {n:2, r:['402a1','403a2'],
+  la:'In tractatu autem de anima, quem habemus prae manibus, primo ponit prooemium, in quo facit tria quae necessaria sunt in quolibet prooemio. Qui enim facit prooemium tria intendit. Primo enim ut auditorem reddat benevolum. Secundo ut reddat docilem. Tertio ut reddat attentum. Benevolum quidem reddit, ostendendo utilitatem scientiae: docilem, praemittendo ordinem et distinctionem tractatus: attentum, attestando difficultatem tractatus. Quae quidem tria Aristoteles facit in prooemio hujus tractatus. Primo enim ostendit dignitatem hujus scientiae. Secundo vero ordinem hujus tractatus, quis sit, scilicet, et qualiter sit tractandum de anima, ibi, <q data-t="inq">Inquirimus autem</q>. Tertio vero ostendit difficultatem hujus scientiae, ibi, <q data-t="omn">Omnino autem et penitus, et difficillimorum etc.</q> Circa primum duo facit. Primo enim ostendit dignitatem hujus scientiae. Secundo utilitatem ejus, ibi, <q data-t="vid1">Videtur autem et ad veritatem, etc.</q>',
+  en:'In the treatise on the soul which we have in hand, he first sets down a preface, in which he does the three things any preface needs. Whoever writes a preface intends three things: first, to make the hearer well disposed; second, teachable; third, attentive. He makes him well disposed by showing the usefulness of the science; teachable, by setting out beforehand the order and division of the treatise; attentive, by bearing witness to its difficulty. Aristotle does all three in this preface. First he shows the dignity of this science. Second, the order of the treatise, what it is and how the soul is to be treated, at <q data-t="inq">We seek</q>. Third, he shows the difficulty of this science, at <q data-t="omn">Altogether and in every way, and of the most difficult</q>. About the first he does two things: first he shows the dignity of this science; second, its usefulness, at <q data-t="vid1">It seems also to contribute to all truth</q>.'},
+ {n:3, r:['402a1','402a4'],
+  la:'Circa primum sciendum est, quod omnis scientia bona est: et non solum bona, verum etiam honorabilis. Nihilominus tamen una scientia in hoc superexcellit aliam. Quod autem omnis scientia sit bona, patet; quia bonum rei est illud, secundum quod res habet esse perfectum: hoc enim unaquaeque res quaerit et desiderat. Cum igitur scientia sit perfectio hominis, inquantum homo, scientia est bonum hominis. Inter bona autem quaedam sunt laudabilia, illa scilicet quae sunt utilia in ordine ad finem aliquem: laudamus enim bonum equum, quia bene currit: quaedam vero sunt etiam honorabilia, illa scilicet quae sunt propter seipsa; honoramus enim fines. In scientiis autem quaedam sunt practicae, et quaedam speculativae: et hae differunt, quia practicae sunt propter opus, speculativae autem propter seipsas. Et ideo scientiarum, speculativae, et bonae sunt et honorabiles, practicae vero laudabiles tantum. Omnis ergo scientia speculativa bona est et honorabilis.',
+  en:'About the first, one should know that every science is good, and not only good but honourable; yet one science surpasses another in this. That every science is good is plain: the good of a thing is that by which it has its perfect being, for this is what each thing seeks and desires. Since science is a perfection of man as man, science is a good of man. Among goods, some are praiseworthy, namely those useful for some end: we praise a good horse because it runs well. Others are also honourable, namely those that are for their own sake: for we honour ends. Among the sciences some are practical and some speculative, and they differ in that the practical are for the sake of a work, the speculative for their own sake. So the speculative sciences are both good and honourable, the practical only praiseworthy. Every speculative science, therefore, is good and honourable.'},
+ {n:4, r:['402a1','402a4'],
+  la:'Sed et in ipsis scientiis speculativis invenitur gradus quantum ad bonitatem et honorabilitatem. Scientia namque omnis ex actu laudatur: omnis autem actus laudatur ex duobus: ex objecto et qualitate seu modo: sicut aedificare est melius quam facere lectum, quia objectum aedificationis est melius lecto. In eodem autem, respectu ejusdem rei, ipsa qualitas gradum quemdam facit; quia quanto modus aedificii est melior, tanto melius est aedificium. Sic ergo, si consideretur scientia, seu actus ejus, ex objecto, patet, quod illa scientia est nobilior, quae est meliorum et honorabiliorum. Si vero consideretur ex qualitate seu modo, sic scientia illa est nobilior, quae est certior. Sic ergo dicitur una scientia magis nobilis altera, aut quia est meliorum et honorabiliorum, aut quia est magis certa.',
+  en:'But among the speculative sciences themselves there are degrees of goodness and honour. Every science is praised for its act, and every act is praised on two counts: from its object, and from its quality or manner. Building is better than making a bed, because the object of building is better than a bed. And in the same act, with respect to the same thing, the quality itself makes a degree: the better the manner of building, the better the building. So if a science, or its act, is considered from its object, the science of better and more honourable things is plainly the nobler. If it is considered from its quality or manner, the more certain science is the nobler. So one science is called nobler than another either because it is about better and more honourable things, or because it is more certain.'},
+ {n:5, r:['402a1','402a4'],
+  la:'Sed hoc est in quibusdam scientiis diversum: quia aliquae sunt magis certae aliis, et tamen sunt de rebus minus honorabilibus: aliae vero sunt de rebus magis honorabilibus et melioribus, et tamen sunt minus certae. Nihilominus tamen illa est melior quae de rebus melioribus et honorabilioribus est. Cujus ratio est, quia sicut dicit Philosophus in lib. undecimo de Animalibus, magis concupiscimus scire modicum de rebus honorabilibus et altissimis, etiam si topice et probabiliter illud sciamus, quam scire multum, et per certitudinem, de rebus minus nobilibus. Hoc enim habet nobilitatem ex se et ex sua substantia, illud vero ex modo et ex qualitate.',
+  en:'But in some sciences these come apart: some are more certain than others and yet about less honourable things, while others are about more honourable and better things and yet less certain. Even so, the one about better and more honourable things is the better. The reason is that, as the Philosopher says in the eleventh book <i>On Animals</i>, we long more to know a little about honourable and very high things, even if we know it only by probable argument, than to know much, and with certainty, about less noble things. The one has its nobility of itself and from its substance; the other from its manner and quality.'},
+ {n:6, r:['402a1','402a4'],
+  la:'Haec autem scientia, scilicet de anima, utrumque habet: quia et certa est, hoc enim quilibet experitur in seipso, quod scilicet habeat animam, et quod anima vivificet. Et quia est nobilior: anima enim est nobilior inter inferiores creaturas. Et hoc est quod dicit, <q data-t="not">Nos opinantes notitiam</q>, idest scientiam speculativam <q data-t="bon">omnium esse bonorum</q>, id est de numero bonorum, <q data-t="bon">et honorabilium</q>. Sed altera scientia est magis bona et honorabilis altera dupliciter. Aut quia est magis certa, ut dictum est: unde dicit <q data-t="cert">secundum certitudinem</q>, aut ex eo quod <q data-t="mel">meliorum</q>, illorum scilicet quae sunt in sua natura bona, <q data-t="mir">et mirabiliorum</q>, idest illorum quorum causa ignoratur, <q data-t="utr">propter utraque</q>, idest propter haec duo <q data-t="hist">animae historiam</q>. Et dicit <q data-t="hist">historiam</q>, quia in quadam summa tractat de anima, non perveniendo ad finalem inquisitionem omnium quae pertinent ad ipsam animam, in hoc tractatu. Hoc enim est de ratione historiae. <q data-t="prim">In primis</q>: hoc si accipiatur quantum ad totam scientiam naturalem, non dicit ordinem, sed dignitatem. Si vero ad scientiam de rebus animatis tantum, sic <q data-t="prim">in primis</q> dicit ordinem.',
+  en:'This science, the science of the soul, has both. It is certain, for everyone finds in himself that he has a soul and that the soul gives life. And it is nobler, for the soul is the noblest among the lower creatures. This is what he says: <q data-t="not">We, holding knowledge</q>, that is, speculative science, <q data-t="bon">to be among goods</q>, that is, in the number of goods, <q data-t="bon">and honourable ones</q>. But one science is better and more honourable than another in two ways: either because it is more certain, as was said, so he says <q data-t="cert">by certainty</q>; or from its being <q data-t="mel">of better things</q>, those good in their own nature, <q data-t="mir">and more wonderful</q>, those whose cause is unknown. <q data-t="utr">On both counts</q>, that is, for these two reasons, <q data-t="hist">the history of the soul</q>. He says <q data-t="hist">history</q> because in this treatise he treats the soul in a kind of summary, without reaching a final inquiry into all that belongs to it; and that is what a history is. <q data-t="prim">Among the first</q>: taken with respect to the whole of natural science, this names not order but dignity; taken with respect to the science of living things alone, <q data-t="prim">among the first</q> names order.'},
+ {n:7, r:['402a4','402a7'],
+  la:'Consequenter cum dicit <q data-t="vid1">videtur autem</q>, reddit auditorem benevolum ex utilitate hujus scientiae: dicens, quod cognitio de anima videtur multum proficere ad omnem veritatem, quae traditur in aliis scientiis. Ad omnes enim partes philosophiae insignes dat occasiones. Quia si ad Philosophiam primam attendamus, non possumus devenire in cognitionem divinarum et altissimarum causarum, nisi per ea quae ex virtute intellectus possibilis acquirimus. Si enim natura intellectus possibilis esset nobis ignota, non possemus scire ordinem substantiarum separatarum, sicut dicit Commentator super undecimo Metaphysicae. Si vero attendatur quantum ad Moralem, non possumus perfecte ad scientiam moralem pervenire, nisi sciamus potentias animae. Et inde est, quod Philosophus in Ethicis attribuit quaslibet virtutes diversis potentiis animae. Ad Naturalem vero utilis est, quia magna pars naturalium est habens animam, et ipsa anima est fons et principium omnis motus in rebus animatis. <q data-t="tamq princ">Est enim</q> anima <q data-t="tamq princ">tamquam principium animalium</q>. Ly <q data-t="tamq">tamquam</q> non ponitur similitudinarie, sed expressive.',
+  en:'Next, at <q data-t="vid1">It seems also</q>, he makes the hearer well disposed from the usefulness of this science, saying that knowledge of the soul seems to contribute much to all the truth handed on in the other sciences. It gives striking openings to every part of philosophy. If we look to first philosophy, we cannot come to know the divine and highest causes except through what we acquire by the power of the possible intellect: were its nature unknown to us, we could not know the order of the separate substances, as the Commentator says on the eleventh book of the <i>Metaphysics</i>. If we look to moral philosophy, we cannot reach moral science perfectly unless we know the powers of the soul; hence the Philosopher in the <i>Ethics</i> assigns the virtues to different powers of the soul. And it serves natural philosophy, because a great part of natural things have a soul, and the soul is the source and principle of all motion in living things. <q data-t="tamq princ">For it is</q> the soul <q data-t="tamq princ">as it were the principle of animals</q>. The word <q data-t="tamq">as it were</q> is put not to make a likeness but to state a fact.'},
+ {n:8, r:['402a7','402a10'],
+  la:'Consequenter cum dicit <q data-t="inq">inquirimus autem</q>, ostendit ordinem hujus tractatus: dicens, quod intendimus <q data-t="cons">considerare</q> per signa scilicet, <q data-t="cogn">et cognoscere</q> per demonstrationem scilicet, quid sit anima, seu naturam ipsius et substantiam, <q data-t="acc">et postea quaecumque accidunt circa ipsam</q>, idest passiones ejus. Et in hoc est quaedam diversitas: quia quaedam videntur passiones animae tantum, sicut intelligentia et speculatio: quaedam vero per ipsam animam inesse videntur communiter animalibus, sicut delectatio et tristitia, sensus et phantasia.',
+  en:'Next, at <q data-t="inq">We seek</q>, he shows the order of this treatise, saying that we intend <q data-t="cons">to consider</q>, that is, through signs, <q data-t="cogn">and to know</q>, that is, through demonstration, what the soul is, its nature and substance, <q data-t="acc">and afterwards whatever happens to it</q>, that is, its attributes. And here there is a difference: some seem to be attributes of the soul alone, such as understanding and contemplation; others seem to belong through the soul to animals in common, such as pleasure and sorrow, sensation and imagination.'},
+ {n:9, r:['402a10','402a19'],
+  la:'Consequenter cum dicit <q data-t="omn">omnino autem</q>, ostendit difficultatem hujus tractatus. Et hoc quantum ad duo. Primo quantum ad cognoscendum substantiam animae. Secundo quantum ad cognoscendum accidentia, seu proprias passiones, ibi, <q data-x="dub">Dubitationem autem, etc.</q> Quantum autem ad primum, ostendit duplicem difficultatem. Et primo quantum ad modum definiendi ipsam. Secundo quantum ad ea quae intrant definitionem, ibi, <q data-t="prim2">Primum autem fortassis, etc.</q> Dicit ergo: quamvis sit utilis scientia de anima, tamen difficile est scire de anima quid est: et haec est difficultas in qualibet re, cum sit una communis quaestio animae et multis aliis, circa substantiam eorum, et circa quod quid est. Est ergo prima difficultas, quia nos nescimus per quam viam procedendum sit ad definitionem: quia quidam dicunt, quod demonstrando: quidam, quod dividendo; quidam vero, quod componendo. Aristoteles autem voluit, quod componendo.',
+  en:'Next, at <q data-t="omn">Altogether</q>, he shows the difficulty of this treatise, and that on two heads: first, as to knowing the substance of the soul; second, as to knowing its accidents, or proper attributes, at <q data-x="dub">There is doubt also about the attributes</q>. As to the first he shows a twofold difficulty: first, as to the way of defining it; second, as to what enters the definition, at <q data-t="prim2">First, perhaps</q>. He says, then: though the science of the soul is useful, it is hard to know what the soul is; and this difficulty belongs to anything whatever, since the question about substance and about what a thing is is common to the soul and to many other things. The first difficulty is that we do not know by what road to proceed to a definition: some say by demonstrating, some by dividing, some by composing. Aristotle held: by composing.'},
+ {n:10, r:['402a19','402a22'],
+  la:'Secunda difficultas est de his quae ponuntur in definitione. Definitio enim notificat essentiam rei, quae non potest sciri nisi sciantur principia: sed diversorum sunt diversa principia; et ideo difficile est scire, ex quibus sumantur principia. Illa ergo quae ingerunt difficultatem ponentibus et inquirentibus definitionem, reducuntur ad tria: quorum primum est circa substantiam animae; secundum circa partes ejus; tertium circa adjutorium, quod necessarium est in definitionibus ex accidentibus animae.',
+  en:'The second difficulty concerns what is placed in the definition. A definition makes known the essence of a thing, which cannot be known unless its principles are known; but different things have different principles, so it is hard to know from what the principles are to be taken. What makes difficulty for those who lay down and seek a definition comes, then, to three things: the first concerns the substance of the soul; the second, its parts; the third, the help from the soul’s accidents that defining needs.'},
+ {n:11, r:['402a23','402b3'],
+  la:'Circa substantiam est dubitatio de genere. Hoc enim primo quaerimus in definitione cujuslibet rei, ut scilicet sciamus genus. Et ideo quaerendum est in quo genere sit ponenda anima; utrum scilicet in genere substantiae, vel in quanto, vel in quali. Et non solum est accipere genus supremum, sed propinquum. Neque enim quando hominem definimus, substantiam accipimus, sed animal. Et si anima invenitur in genere substantiae, adhuc, cum unumquodque genus dicatur dupliciter, hoc quidem potentia, hoc autem actu, quaerendum erit utrum sit potentia, vel actus. Item quia substantiarum quaedam sunt compositae, quaedam simplices, quaerendum erit, utrum anima sit composita, aut simplex; et utrum partibilis vel impartibilis. Est etiam quaestio utrum sit unius speciei omnis anima ad omnem animam, aut non. Et si non sit unius speciei, adhuc est quaestio utrum differant etiam genere, vel non. Item adhuc dubitatio est circa ea quae participant definitione. Quaedam enim definiuntur ut genus, quaedam vero ut species. Et ideo videtur esse quaestio, utrum definitio animae sit sicut generis, aut sicut speciei specialissimae.',
+  en:'About the substance there is the doubt of its genus. This is the first thing we seek in defining anything: to know its genus. So we must ask in what genus the soul is to be placed: substance, quantity, or quality. And we must take not only the highest genus but the nearest: when we define man we take not substance but animal. And if the soul is found in the genus of substance, then, since each genus is said in two ways, in potency and in act, we must ask whether it is potency or act. Again, since some substances are composite and some simple, we must ask whether the soul is composite or simple, and whether divisible or indivisible. There is also the question whether every soul is of one species with every other, or not; and if not, whether they differ even in genus. There is a further doubt about what shares in the definition: some things are defined as a genus, others as a species. So the question seems to be whether the definition of soul is that of a genus or of a most specific species.'},
+ {n:12, r:['402b3','402b7'],
+  la:'Nam aliqui quaerentes de anima videntur intendere solum de anima humana. Et quia apud antiquos philosophos erat duplex opinio de anima. Platonici enim, qui ponebant universalia separata, scilicet quod essent formae et ideae, et erant causae rebus particularibus cognitionis et esse, volebant quod esset quaedam anima separata per se, quae esset causa et idea animabus particularibus; et quod quicquid invenitur in eis, derivatur ab illa. Naturales autem philosophi volebant, quod non essent substantiae universales nisi particulares tantum, et quod universalia nihil sint in rerum natura. Et propter hoc est quaestio, utrum sit quaerenda solum una communis ratio animae, sicut dicebant Platonici: vel hujus vel illius animae, sicut dicebant naturales, scilicet ut animae equi, vel hominis, aut Dei. Et dicit <q data-t="dei">Dei</q>, quia credebant corpora caelestia esse Deos, et dicebant ea esse animata.',
+  en:'For some who inquire about the soul seem to aim only at the human soul. And among the ancient philosophers there were two opinions about the soul. The Platonists, who posited separate universals, forms and ideas that were causes of knowing and of being to particular things, held that there was a soul separate in itself, the cause and idea of particular souls, from which whatever is found in them is derived. The natural philosophers held that there are no universal substances but only particular ones, and that universals are nothing in the nature of things. Hence the question whether one should seek only one common account of the soul, as the Platonists said, or an account of this soul or that, as the natural philosophers said: the soul of a horse, of a man, or of a god. He says <q data-t="dei">of a god</q> because they believed the heavenly bodies were gods, and said they were alive.'},
+ {n:13, r:['402b7','402b8'],
+  la:'Aristoteles autem vult quod quaeratur ratio utriusque: et communis animae, et cujuslibet speciei. Quod autem circa hoc dicit <q data-t="univ">animal autem universale, aut nihil est, aut posterius</q>: sciendum est, quod de animali universali possumus loqui dupliciter: quia aut secundum quod est universale, quod scilicet est unum in multis aut de multis: aut secundum quod est animal: et hoc, vel secundum quod in rerum natura, vel secundum quod est in intellectu. Secundum autem quod est in rerum natura, Plato voluit animal universale aliquid esse, et esse prius particulari; quia, ut dictum est, posuit universalia separata et ideas. Aristoteles autem vult quod [universale] ut sic, nihil est in rerum natura. Et si aliquid est, dixit illud esse posterius. Si autem accipiamus naturam animalis non secundum quod subjacet intentioni universalitatis, sic aliquid est, et prius, sicut quod est in potentia, prius est quam id quod est in actu.',
+  en:'Aristotle wants the account of both to be sought: of soul in common, and of each species. As to his saying here, <q data-t="univ">but the universal animal either is nothing or is posterior</q>: we can speak of the universal animal in two ways, either as universal, one in many or said of many, or as animal; and this either as it is in the nature of things or as it is in the intellect. As it is in the nature of things, Plato held that the universal animal is something, and prior to the particular, because, as was said, he posited separate universals and ideas. Aristotle holds that the universal as such is nothing in the nature of things; and if it is something, he said it is posterior. But if we take the nature of animal not as it falls under the intention of universality, then it is something, and prior, as what is in potency is prior to what is in act.'},
+ {n:14, r:['402b9','402b16'],
+  la:'Consequenter cum dicit <q data-t="ampl">amplius autem</q>, tangit difficultates, quae emergunt circa potentias animae. In anima enim sunt partes potentiales, scilicet intellectivum, sensitivum et vegetativum. Est ergo quaestio, utrum hae sint diversae animae, sicut Platonici volebant, et etiam ponebant: an sint partes potentiales animae. Et si sint partes potentiales animae, quaeritur etiam, utrum primo debeamus quaerere potentias ipsas quam actus, aut primo actus quam potentias, ut intelligere ante intellectum, et sentire, quod est actus, ante sensitivum quod est potentia, et similiter in aliis potentiis et actibus. Et si primo debemus quaerere actus quam potentias, adhuc erit quaestio utrum sint prius quaerenda objecta horum actuum quam potentiae, ut puta prius debeat quaeri sensibile quam sensitivum, aut intelligibile quam intellectivum.',
+  en:'Next, at <q data-t="ampl">Further</q>, he touches the difficulties that arise about the powers of the soul. In the soul there are potential parts: the intellective, the sensitive, and the vegetative. So the question is whether these are different souls, as the Platonists held, or potential parts of one soul. And if they are potential parts, one asks further whether we ought first to inquire into the powers themselves or into their acts: understanding before intellect, sensing (an act) before the sensitive power (a potency), and likewise for the other powers and acts. And if acts come before powers, there is still the question whether the objects of these acts should be inquired into before the powers: the sensible, for example, before the sensitive power, or the intelligible before the intellective.'},
+ {n:15, r:['402b16','403a2'],
+  la:'Consequenter etiam cum dicit <q data-t="vid2">videtur autem</q>, ponit difficultates, quae emergunt quantum ad illa quae sunt in adjutorium definitionis animae. Quia in definitione oportet non solum cognoscere principia essentialia, sed etiam accidentalia. Si enim recte definirentur et possent cognosci principia essentialia, definitio non indigeret accidentibus. Sed quia principia essentialia rerum sunt nobis ignota, ideo oportet quod utamur differentiis accidentalibus in designatione essentialium: bipes enim non est essentiale, sed ponitur in designatione essentialis. Et per eas, scilicet per differentias accidentales, devenimus in cognitionem essentialium. Et ideo difficile est, quia oportet nos prius cognoscere quod quid est animae, ad cognoscendum facilius accidentia animae; sicut in mathematicis valde utile est praeaccipere quod quid erat esse recti et curvi et plani ad cognoscendum quod rectis trianguli anguli sint aequales. E converso etiam accidentia, si praeaccipiantur, multum conferunt ad cognoscendum quod quid erat esse, ut dictum est. Si quis ergo assignet definitionem, per quam non deveniatur in cognitionem accidentium rei definitae, illa definitio non est realis, sed remota et dialectica. Sed illa definitio per quam devenitur in cognitionem accidentium, est realis, et ex propriis, et essentialibus rei.',
+  en:'Next too, at <q data-t="vid2">It seems</q>, he sets out the difficulties that arise about what helps toward a definition of the soul. In a definition one must know not only the essential principles but also the accidental ones. If the essential principles could be rightly defined and known, a definition would need no accidents. But because the essential principles of things are unknown to us, we must use accidental differences to point out the essential ones: two-footed is not essential, but it is used to point out what is. Through accidental differences we come to know the essential. So the difficulty is this: we must first know what the soul is in order to know its accidents more easily, as in mathematics it helps greatly to grasp beforehand what straight and curved and plane are, in order to know that the angles of a triangle equal two right angles. Conversely, the accidents, if grasped beforehand, contribute much to knowing what a thing is. So a definition that does not lead to knowledge of the accidents of the thing defined is not real but remote and dialectical; a definition that does lead to it is real, and drawn from what is proper and essential to the thing.'}
+];
+
+// Aquinas's division of the passage (the divisio textus), as he states it in n. 2, 9 and 10.
+// go = the paragraphs that expound the part; said = the paragraph that states the division.
+const DIV = {id:'proem', la:'Prooemium', en:'The preface', r:['402a1','403b24'], said:2, go:[2], kids:[
+  {id:'dign', la:'Ostendit dignitatem hujus scientiae', en:'The dignity of this science', r:['402a1','402a7'], said:2, go:[3], kids:[
+    {id:'dign1', la:'Dignitas', en:'Its dignity: certain, and of noble things', r:['402a1','402a4'], said:2, go:[3,4,5,6]},
+    {id:'util', la:'Utilitas, ibi «Videtur autem et ad veritatem»', en:'Its usefulness', r:['402a4','402a7'], said:2, go:[7]}]},
+  {id:'ord', la:'Ordo tractatus, ibi «Inquirimus autem»', en:'The order of the treatise', r:['402a7','402a10'], said:2, go:[8]},
+  {id:'diff', la:'Difficultas, ibi «Omnino autem et penitus»', en:'The difficulty of the inquiry', r:['402a10','403b24'], said:2, go:[9], kids:[
+    {id:'subst', la:'Quantum ad cognoscendum substantiam animae', en:'In knowing the soul’s substance', r:['402a10','403a2'], said:9, go:[9], kids:[
+      {id:'mod', la:'Quantum ad modum definiendi', en:'How to define it', r:['402a10','402a22'], said:9, go:[9,10]},
+      {id:'intr', la:'Quantum ad ea quae intrant definitionem, ibi «Primum autem fortassis»', en:'What enters the definition', r:['402a23','403a2'], said:9, go:[11], kids:[
+        {id:'gen', la:'Circa substantiam: genus, actus, species', en:'Its genus, act or potency, species', r:['402a23','402b8'], said:10, go:[11,12,13]},
+        {id:'part', la:'Circa partes, ibi «Amplius autem»', en:'Its parts and powers', r:['402b9','402b16'], said:10, go:[14]},
+        {id:'adj', la:'Circa adjutorium ex accidentibus, ibi «Videtur autem»', en:'The help its accidents give', r:['402b16','403a2'], said:10, go:[15]}]}]},
+    {id:'accid', la:'Quantum ad accidentia, ibi «Dubitationem autem»', en:'In knowing its attributes', r:['403a3','403b24'], said:9, lectio:2}]}]};
+
+// Book I lectiones. start = first Bekker line, identified by hand from Parma's Moerbeke incipit (unchecked);
+// words / paras = counts of the Latin per lectio (Marietti paragraphing). sum = Parma's own lectio heading.
+const LECTIONES = [
+ {l:1, start:'402a1', end:'403a2', words:1949, paras:15, inc:'Bonorum et honorabilium notitiam opinantes', la:'Dignitatem, utilitatem, ordinem, ac difficultatem hujus scientiae ad alias ostendit.', en:'He shows the dignity, usefulness, order and difficulty of this science.'},
+ {l:2, start:'403a3', end:'403b24', words:1917, paras:15, inc:'Dubitationem autem habent et passiones animae', la:'Hujus scientiae praemissa difficultate, ac variis definiendi et sciendi generibus, ostendit de anima contemplationem ad quam philosophiae partem spectat.', en:'Having set out the difficulty and the kinds of definition, he shows to which part of philosophy the study of the soul belongs.'},
+ {l:3, start:'403b25', words:1773, paras:12, inc:'Principium autem quaestionis', la:'Motu et sensu animam fuisse cognitam a philosophis dicit: et illorum affert sententias ac reprobat, qui se animam ex motu cognovisse existimarunt.', en:'The philosophers knew the soul by motion and sensation; he sets out and rejects those who thought they knew it from motion.'},
+ {l:4, start:'404b8', words:1421, paras:10, inc:'Quicumque autem ad cognoscere, et sentire', la:'Empedoclis et Platonis sententias exponit, qui ex parte cognitionis animam cognoverunt.', en:'Empedocles and Plato, who knew the soul from the side of knowing.'},
+ {l:5, start:'404b30', words:2017, paras:15, inc:'Differunt autem de principiis', la:'Varias philosophorum opiniones adducit, qui animam ipsam unum aliquod sensibilium elementorum esse existimaverunt.', en:'Those who thought the soul was one of the sensible elements.'},
+ {l:6, start:'405b31', words:1887, paras:19, inc:'Considerandum autem primum quidem de motu', la:'Adversus illos pluribus rationibus contendit, qui animam secundum substantiam moveri opinabantur.', en:'Against those who held that the soul is moved in its substance.'},
+ {l:7, words:1763, paras:20},
+ {l:8, words:2516, paras:25},
+ {l:9, start:'407b27', words:1466, paras:14, inc:'Alia autem quaedam opinio tradita est de anima', la:'Quorumdam minus recte de anima philosophantium opinionem variis argumentis reprobat, qui eam esse harmoniam existimaverunt.', en:'Against those who thought the soul a harmony.'},
+ {l:10, start:'408a34', words:2113, paras:22, inc:'Rationabilius autem dubitabit utique aliquis', la:'Destruit illorum sententiam, qui animam per se moveri existimaverunt.', en:'Against those who held that the soul moves of itself.'},
+ {l:11, start:'408b32', words:1532, paras:10, inc:'Multo autem his quae dicta sunt irrationabilissimum', la:'Eorum opiniones variis argumentis rejicit, qui animam definierunt esse numerum seipsum moventem.', en:'Against the definition of the soul as a self-moving number.'},
+ {l:12, start:'409b19', words:1734, paras:14, inc:'Tribus autem modis traditis', la:'Multis rationibus redarguit Empedoclem, qui ex omnibus principiis et elementis animam, ut omnia cognosceret, componi asseruit.', en:'Against Empedocles, who made the soul of all the elements so that it might know all things.'},
+ {l:13, start:'411a7', words:676, paras:6, inc:'Et in toto autem quidem ipsam mistam esse dicunt', la:'Eorum sententiam exponit ac reprobat qui animam ipsis elementis attribuere ausi sunt.', en:'Against those who gave soul to the elements themselves.'},
+ {l:14, start:'411a24', words:1096, paras:12, inc:'Quoniam autem cognoscere animae est', la:'Duas quaestiones proponit et solvit; videlicet, num variae animae operationes uni tantum animae conveniant, vel diversis ejus potentiis; et vitae ipsius quodnam sit principium.', en:'Whether the soul’s operations belong to the one soul or to its powers; and what the principle of life is.'}
+];
+const BOOKS = [{b:1, lect:14, words:23860, bk:'402a1–411b30'},{b:2, lect:24, words:37199, bk:'412a3–424b18'},{b:3, lect:18, words:29736, bk:'424b22–435b25'}];
+
+const ARI = {"lines": [["402a", 1, "Τῶν καλῶν καὶ τιμίων τὴν εἴδησιν ὑπολαμβάνοντες, μᾶλλον"], ["402a", 2, "δ' ἑτέραν ἑτέρας ἢ κατ' ἀκρίβειαν ἢ τῷ βελτιόνων τε"], ["402a", 3, "καὶ θαυμασιωτέρων εἶναι, δι' ἀμφότερα ταῦτα τὴν περὶ τῆς ψυχῆς"], ["402a", 4, "ἱστορίαν εὐλόγως ἂν ἐν πρώτοις τιθείημεν. δοκεῖ δὲ καὶ"], ["402a", 5, "πρὸς ἀλήθειαν ἅπασαν ἡ γνῶσις αὐτῆς μεγάλα συμβάλλεσθαι,"], ["402a", 6, "μάλιστα δὲ πρὸς τὴν φύσιν· ἔστι γὰρ οἷον ἀρχὴ"], ["402a", 7, "τῶν ζῴων. ἐπιζητοῦμεν δὲ θεωρῆσαι καὶ γνῶναι τήν τε φύσιν"], ["402a", 8, "αὐτῆς καὶ τὴν οὐσίαν, εἶθ' ὅσα συμβέβηκε περὶ αὐτήν·"], ["402a", 9, "ὧν τὰ μὲν ἴδια πάθη τῆς ψυχῆς εἶναι δοκεῖ, τὰ δὲ δι'"], ["402a", 10, "ἐκείνην καὶ τοῖς ζῴοις ὑπάρχειν. πάντῃ δὲ πάντως ἐστὶ τῶν"], ["402a", 11, "χαλεπωτάτων λαβεῖν τινα πίστιν περὶ αὐτῆς. καὶ γάρ, ὄντος"], ["402a", 12, "κοινοῦ τοῦ ζητήματος καὶ πολλοῖς ἑτέροις, λέγω δὲ τοῦ περὶ"], ["402a", 13, "τὴν οὐσίαν καὶ τὸ τί ἐστι, τάχ' ἄν τῳ δόξειε μία τις εἶναι"], ["402a", 14, "μέθοδος κατὰ πάντων περὶ ὧν βουλόμεθα γνῶναι τὴν οὐσίαν,"], ["402a", 15, "ὥσπερ καὶ τῶν κατὰ συμβεβηκὸς ἰδίων ἀπόδειξις,"], ["402a", 16, "ὥστε ζητητέον ἂν εἴη τὴν μέθοδον ταύτην· εἰ δὲ μὴ ἔστι μία"], ["402a", 17, "τις καὶ κοινὴ μέθοδος περὶ τὸ τί ἐστιν, ἔτι χαλεπώτερον"], ["402a", 18, "γίνεται τὸ πραγματευθῆναι· δεήσει γὰρ λαβεῖν περὶ ἕκαστον"], ["402a", 19, "τίς ὁ τρόπος, ἐὰν δὲ φανερὸν ᾖ πότερον ἀπόδειξίς"], ["402a", 20, "ἐστιν ἢ διαίρεσις ἢ καί τις ἄλλη μέθοδος, ἔτι πολλὰς"], ["402a", 21, "ἀπορίας ἔχει καὶ πλάνας, ἐκ τίνων δεῖ ζητεῖν· ἄλλαι γὰρ"], ["402a", 22, "ἄλλων ἀρχαί, καθάπερ ἀριθμῶν καὶ ἐπιπέδων."], ["402a", 23, "πρῶτον δ' ἴσως ἀναγκαῖον διελεῖν ἐν τίνι τῶν γενῶν καὶ τί"], ["402a", 24, "ἐστι, λέγω δὲ πότερον τόδε τι καὶ οὐσία ἢ ποιὸν ἢ ποσόν, ἢ καί τις"], ["402a", 25, "ἄλλη τῶν διαιρεθεισῶν κατηγοριῶν, ἔτι δὲ πότερον τῶν ἐν"], ["402a", 26, "δυνάμει ὄντων ἢ μᾶλλον ἐντελέχειά τις· διαφέρει γὰρ οὔ τι"], ["402b", 1, "μικρόν. σκεπτέον δὲ καὶ εἰ μεριστὴ ἢ ἀμερής, καὶ πότερον"], ["402b", 2, "ὁμοειδὴς ἅπασα ψυχὴ ἢ οὔ· εἰ δὲ μὴ ὁμοειδής, πότερον"], ["402b", 3, "εἴδει διαφέρουσα ἢ γένει. νῦν μὲν γὰρ οἱ λέγοντες καὶ ζητοῦντες"], ["402b", 4, "περὶ ψυχῆς περὶ τῆς ἀνθρωπίνης μόνης ἐοίκασιν ἐπισκοπεῖν·"], ["402b", 5, "εὐλαβητέον δ' ὅπως μὴ λανθάνῃ πότερον εἷς ὁ λόγος"], ["402b", 6, "αὐτῆς ἐστι, καθάπερ ζῴου, ἢ καθ' ἕκαστον ἕτερος, οἷον"], ["402b", 7, "ἵππου, κυνός, ἀνθρώπου, θεοῦ, τὸ δὲ ζῷον τὸ καθόλου ἤτοι οὐθέν"], ["402b", 8, "ἐστιν ἢ ὕστερον, ὁμοίως δὲ κἂν εἴ τι κοινὸν ἄλλο κατηγοροῖτο·"], ["402b", 9, "ἔτι δέ, εἰ μὴ πολλαὶ ψυχαὶ ἀλλὰ μόρια, πότερον δεῖ"], ["402b", 10, "ζητεῖν πρότερον τὴν ὅλην ψυχὴν ἢ τὰ μόρια. χαλεπὸν δὲ καὶ"], ["402b", 11, "τούτων διορίσαι ποῖα πέφυκεν ἕτερα ἀλλήλων, καὶ πότερον"], ["402b", 12, "τὰ μόρια χρὴ ζητεῖν πρότερον ἢ τὰ ἔργα αὐτῶν, οἷον τὸ"], ["402b", 13, "νοεῖν ἢ τὸν νοῦν, καὶ τὸ αἰσθάνεσθαι ἢ τὸ αἰσθητικόν· ὁμοίως"], ["402b", 14, "δὲ καὶ ἐπὶ τῶν ἄλλων. εἰ δὲ τὰ ἔργα πρότερον, πάλιν ἄν τις"], ["402b", 15, "ἀπορήσειεν εἰ τὰ ἀντικείμενα πρότερον τούτων ζητητέον, οἷον"], ["402b", 16, "τὸ αἰσθητὸν τοῦ αἰσθητικοῦ, καὶ τὸ νοητὸν τοῦ νοῦ. ἔοικε δ'"], ["402b", 17, "οὐ μόνον τὸ τί ἐστι γνῶναι χρήσιμον εἶναι πρὸς τὸ θεωρῆσαι"], ["402b", 18, "τὰς αἰτίας τῶν συμβεβηκότων ταῖς οὐσίαις (ὥσπερ ἐν τοῖς"], ["402b", 19, "μαθήμασι τί τὸ εὐθὺ καὶ τὸ καμπύλον, ἢ τί γραμμὴ καὶ ἐπίπεδον,"], ["402b", 20, "πρὸς τὸ κατιδεῖν πόσαις ὀρθαῖς αἱ τοῦ τριγώνου γωνίαι"], ["402b", 21, "ἴσαι), ἀλλὰ καὶ ἀνάπαλιν τὰ συμβεβηκότα συμβάλλεται"], ["402b", 22, "μέγα μέρος πρὸς τὸ εἰδέναι τὸ τί ἐστιν· ἐπειδὰν γὰρ ἔχωμεν"], ["402b", 23, "ἀποδιδόναι κατὰ τὴν φαντασίαν περὶ τῶν συμβεβηκότων,"], ["402b", 24, "ἢ πάντων ἢ τῶν πλείστων, τότε καὶ περὶ τῆς οὐσίας"], ["402b", 25, "ἕξομεν λέγειν κάλλιστα· πάσης γὰρ ἀποδείξεως ἀρχὴ τὸ"], ["402b", 26, "τί ἐστιν, ὥστε καθ' ὅσους τῶν ὁρισμῶν μὴ συμβαίνει τὰ συμβεβηκότα"], ["403a", 1, "γνωρίζειν, ἀλλὰ μηδ' εἰκάσαι περὶ αὐτῶν εὐμαρές,"], ["403a", 2, "δῆλον ὅτι διαλεκτικῶς εἴρηνται καὶ κενῶς ἅπαντες."], ["403a", 3, "ἀπορίαν δ' ἔχει καὶ τὰ πάθη τῆς ψυχῆς, πότερόν ἐστι πάντα"], ["403a", 4, "κοινὰ καὶ τοῦ ἔχοντος ἢ ἔστι τι καὶ τῆς ψυχῆς ἴδιον"], ["403a", 5, "αὐτῆς· τοῦτο γὰρ λαβεῖν μὲν ἀναγκαῖον, οὐ ῥᾴδιον δέ. φαίνεται"], ["403a", 6, "δὲ τῶν μὲν πλείστων οὐθὲν ἄνευ τοῦ σώματος πάσχειν οὐδὲ"], ["403a", 7, "ποιεῖν, οἷον ὀργίζεσθαι, θαρρεῖν, ἐπιθυμεῖν, ὅλως αἰσθάνεσθαι,"], ["403a", 8, "μάλιστα δ' ἔοικεν ἰδίῳ τὸ νοεῖν· εἰ δ' ἐστὶ καὶ τοῦτο φαντασία"], ["403a", 9, "τις ἢ μὴ ἄνευ φαντασίας, οὐκ ἐνδέχοιτ' ἂν οὐδὲ τοῦτ' ἄνευ"], ["403a", 10, "σώματος εἶναι. εἰ μὲν οὖν ἔστι τι τῶν τῆς ψυχῆς ἔργων ἢ"], ["403a", 11, "παθημάτων ἴδιον, ἐνδέχοιτ' ἂν αὐτὴν χωρίζεσθαι· εἰ δὲ μηθέν"], ["403a", 12, "ἐστιν ἴδιον αὐτῆς, οὐκ ἂν εἴη χωριστή, ἀλλὰ καθάπερ τῷ"]], "en": {"402a1": "Holding as we do that, while knowledge of any kind is a thing to be honoured and prized, ", "402a2": "one kind of it may, either by reason of its greater exactness or of a higher dignity ", "402a3": "and greater wonderfulness in its objects, be more honourable and precious than another, on both ", "402a4": "accounts we should naturally be led to place in the front rank the study of the soul. ", "402a5": "The knowledge of the soul admittedly contributes greatly to the advance of truth in general, ", "402a6": "and, above all, to our understanding of Nature, for the soul is in some ", "402a7": "sense the principle of animal life. Our aim is to grasp and understand, first its essential ", "402a8": "nature, and secondly its properties; of these some are thought to be affections ", "402a9": "proper to the soul itself, while others are considered to attach to the animal ", "402a10": "owing to the presence within it of soul.\nTo attain any assured knowledge ", "402a11": "about the soul is one of the most difficult things in the world. As the ", "402a12": "form of question which here presents itself, viz. the question 'What is it?', ", "402a13": "recurs in other fields, it might be supposed that there was some single ", "402a14": "method of inquiry applicable to all objects whose essential nature ", "402a15": "we are endeavouring to ascertain (as there is for derived properties the single method ", "402a16": "of demonstration); in that case what we should have to seek for would be this unique method. But if ", "402a17": "there is no such single and general method for solving the question of essence, our task becomes still ", "402a18": "more difficult; in the case of each different subject we shall have to determine the appropriate ", "402a19": "process of investigation. If to this there be a clear answer, e.g. that the process ", "402a20": "is demonstration or division, or some other known method, difficulties and hesitations ", "402a21": "still beset us-with what facts shall we begin the inquiry? For the facts which form the starting-points ", "402a22": "in different subjects must be different, as e.g. in the case ", "402a23": "of numbers and surfaces.\nFirst, no doubt, it is necessary to determine in which of the summa ", "402a24": "genera soul lies, what it is; is it 'a this-somewhat, 'a substance, or is it a quale or a quantum, or some ", "402a25": "other of the remaining kinds of predicates which we have distinguished? Further, does soul belong to the class of ", "402a26": "potential existents, or is it not rather an actuality? Our answer to this question is of the greatest importance.", "402b1": "We must consider also whether soul is divisible or is without parts, and whether it ", "402b2": "is everywhere homogeneous or not; and if not homogeneous, whether its various ", "402b3": "forms are different specifically or generically: up to the present time those who have discussed ", "402b4": "and investigated soul seem to have confined themselves to the human soul. ", "402b5": "We must be careful not to ignore the question whether soul can be defined in a single unambiguous ", "402b6": "formula, as is the case with animal, or whether we must not give a separate formula for ", "402b7": "each sort of it, as we do for horse, dog, man, god (in the latter case the 'universal' animal-and so too every ", "402b8": "other 'common predicate'-being treated either as nothing at all or as a later product). Further, if what exists ", "402b9": "is not a plurality of souls, but a plurality of parts of one soul, which ought we to ", "402b10": "investigate first, the whole soul or its parts? (It is also a difficult problem ", "402b11": "to decide which of these parts are in nature distinct from one another.) ", "402b12": "Again, which ought we to investigate first, these parts or ", "402b13": "their functions, mind or thinking, the faculty or the act of sensation, and ", "402b14": "so on? If the investigation of the functions precedes that of the parts, ", "402b15": "the further question suggests itself: ought we not before either ", "402b16": "to consider the correlative objects, e.g. of sense or thought? It ", "402b17": "seems not only useful for the discovery of the causes of the derived ", "402b18": "properties of substances to be acquainted with the essential ", "402b19": "nature of those substances (as in mathematics it is useful ", "402b20": "for the understanding of the property of the equality of the interior angles of a triangle to ", "402b21": "two right angles to know the essential nature of the straight and the curved or of the ", "402b22": "line and the plane) but also conversely, for the knowledge of the essential nature of a substance is ", "402b23": "largely promoted by an acquaintance with its properties: for, when we are able to give an ", "402b24": "account conformable to experience of all or most of the properties of a substance, ", "402b25": "we shall be in the most favourable position to say something worth saying about the essential nature ", "402b26": "of that subject; in all demonstration a definition of the essence is required as a starting-point, so that definitions ", "403a1": "which do not enable us to discover the derived properties, or which fail to facilitate ", "403a2": "even a conjecture about them, must obviously, one and all, be dialectical and futile.", "403a3": "A further problem presented by the affections of soul is this: are they all affections of the ", "403a4": "complex of body and soul, or is there any one among them peculiar to the soul ", "403a5": "by itself? To determine this is indispensable but difficult. If we consider the majority ", "403a6": "of them, there seems to be no case in which the soul can act or be acted ", "403a7": "upon without involving the body; e.g. anger, courage, appetite, and sensation generally. ", "403a8": "Thinking seems the most probable exception; but if this too proves to be a form ", "403a9": "of imagination or to be impossible without imagination, it too requires ", "403a10": "a body as a condition of its existence. If there is any way of acting ", "403a11": "or being acted upon proper to soul, soul will be capable of separate existence; ", "403a12": "if there is none, its separate existence is impossible."}, "enReal": ["402a1", "402a5", "402a10", "402a15", "402a20", "402a25", "402b1", "402b5", "402b10", "402b15", "402b20", "402b25", "403a3", "403a5", "403a10"]};
+</script>
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm = s => s.replace(/[’'ʼ᾽]/g, "'");
+const num = k => { const m = /^(\d+)([ab])(\d+)$/.exec(k); return (+m[1]) * 1000 + (m[2] === 'b' ? 500 : 0) + (+m[3]); };
+const inR = (k, r) => !!r && num(k) >= num(r[0]) && num(k) <= num(r[1]);
+const overlap = (a, b) => !!a && !!b && num(a[0]) <= num(b[1]) && num(b[0]) <= num(a[1]);
+const colOf = k => /^(\d+[ab])/.exec(k)[1];
+const lineOf = k => +/(\d+)$/.exec(k)[1];
+function fmtR(r){
+  if (!r) return '';
+  const [a, b] = r, ca = colOf(a), cb = colOf(b);
+  if (ca === cb) return `${a}–${lineOf(b)}`;
+  if (ca.slice(0, -1) === cb.slice(0, -1)) return `${a}–${cb.slice(-1)}${lineOf(b)}`;
+  return `${a}–${b}`;
+}
+const KEYS = ARI.lines.map(l => l[0] + l[1]);
+const GK = Object.fromEntries(ARI.lines.map(l => [l[0] + l[1], l[2]]));
+const EN = ARI.en, EN_REAL = new Set(ARI.enReal);
+const LECT1 = ['402a1', '403a2'];
+const LECT2 = ['403a3', '403b24'];
+const keysIn = r => KEYS.filter(k => inR(k, r));
+const P = Object.fromEntries(AQ.map(p => [p.n, p]));
+
+// Greek target spans per line
+const LINE_T = {};
+for (const [tid, arr] of Object.entries(TGT)) for (const [k, sub] of arr) {
+  const t = norm(GK[k] || ''), i = t.indexOf(norm(sub));
+  if (i < 0) { console.warn('target not found', tid, k, sub); continue; }
+  (LINE_T[k] ??= []).push({ s: i, e: i + sub.length, id: tid });
+}
+function gkHTML(k){
+  const t = GK[k]; let out = '', p = 0;
+  for (const x of (LINE_T[k] || []).sort((a, b) => a.s - b.s)) {
+    if (x.s < p) continue;
+    out += esc(t.slice(p, x.s)) + `<span class="w" data-t="${x.id}">${esc(t.slice(x.s, x.e))}</span>`; p = x.e;
+  }
+  return out + esc(t.slice(p));
+}
+const TLINES = Object.fromEntries(Object.entries(TGT).map(([id, a]) => [id, a.map(x => x[0])]));
+
+// divisio helpers
+const NODES = []; (function walk(n, path){ const p = [...path, n]; NODES.push({ n, path: p }); (n.kids || []).forEach(k => walk(k, p)); })(DIV, []);
+function nodeFor(pn){
+  let best = null;
+  for (const x of NODES) if ((x.n.go || []).includes(pn)) if (!best || x.path.length > best.path.length) best = x;
+  return best;
+}
+const DIV_STARTS = new Set(NODES.map(x => x.n.r[0]).filter(k => k !== '402a1' && inR(k, LECT1)));
+function bestPara(k){
+  // most specific paragraph whose span holds line k (n. 1 and 2 only as a last resort)
+  let best = null;
+  for (const p of AQ) if (p.r && inR(k, p.r)) {
+    const w = num(p.r[1]) - num(p.r[0]);
+    if (!best || w < best.w) best = { p, w };
+  }
+  return best ? best.p : null;
+}
+function parasFor(k){
+  return AQ.filter(p => p.r && inR(k, p.r)).sort((a, b) => (num(a.r[1]) - num(a.r[0])) - (num(b.r[1]) - num(b.r[0])));
+}
+
+// ── state ──
+const S = { view: 'lectio', preset: 'fit', ari: 'grc', aq: 'la', bview: 'both', comm: true, follow: false,
+            cur: null, sel: null, openPas: {}, sumLang: 'en', treeOpen: {}, goPara: null, goLine: null };
+try { const v = JSON.parse(localStorage.getItem('aq-study') || '{}'); Object.assign(S, v); } catch (e) {}
+const save = () => { try { localStorage.setItem('aq-study', JSON.stringify({ preset: S.preset, ari: S.ari, aq: S.aq, bview: S.bview, follow: S.follow, sumLang: S.sumLang })); } catch (e) {} };
+const VIEWS = ['lectio', 'reader', 'contents'];
+const fromHash = () => { const h = location.hash.slice(1); if (VIEWS.includes(h)) S.view = h; };
+fromHash();
+
+const PRESETS = { phone: [932, 430], laptop: [1440, 900], wide: [1920, 1080] };
+let W = 1200, H = 800, Z = 1;
+const stage = $('#stage'), box = $('#box');
+
+function size(){
+  const wrap = box.parentElement;
+  const cs = getComputedStyle(wrap);
+  const availW = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const availH = Math.max(420, window.innerHeight - $('.mbar').offsetHeight - 30);
+  if (S.preset === 'fit') { W = Math.round(availW); H = Math.round(Math.min(availH, 1100)); Z = 1; }
+  else { [W, H] = PRESETS[S.preset]; Z = Math.min(1, availW / W, availH / H); }
+  stage.style.width = W + 'px'; stage.style.height = H + 'px';
+  stage.style.transform = Z < 1 ? `scale(${Z})` : '';
+  box.style.width = (W * Z) + 'px'; box.style.height = (H * Z) + 'px';
+  $('#readout').textContent = `${W} × ${H} px` + (Z < 1 ? ` · shown at ${Math.round(Z * 100)}%` : '');
+}
+
+function bar(){
+  $$('#tabs button').forEach(b => b.setAttribute('aria-pressed', b.dataset.v === S.view));
+  $$('#presets button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === S.preset));
+}
+
+function seg(name, opts, val){
+  return `<span class="seg" role="group" aria-label="${name}">` + opts.map(([v, l]) =>
+    `<button data-seg="${name}" data-val="${v}" aria-pressed="${v === val}">${l}</button>`).join('') + '</span>';
+}
+function siteHead(work){
+  return `<div class="site-head"><span class="hb">☰ Contents</span><span>Home ›</span><span class="work">${work} ▾</span><span class="sp"></span><span>Search</span><span>Lexicon</span><span>Settings</span></div>`;
+}
+let toastT;
+function toast(msg){
+  $('.toast', stage)?.remove();
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; stage.appendChild(t);
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2600);
+}
+
+// ── shared renderers ──
+function lineHTML(k, opts = {}){
+  const n = lineOf(k), q = !(n === 1 || n % 5 === 0);
+  let mk = '';
+  if (opts.marks) {
+    if (k === '402a1') mk = '<span title="Aquinas, lectio 1 begins">l. 1</span>';
+    else if (k === '403a3') mk = '<span title="Aquinas, lectio 2 begins">l. 2</span>';
+    else if (DIV_STARTS.has(k)) mk = '<span class="dot" title="Aquinas divides the text here"></span>';
+  }
+  return `<div class="ln" data-k="${k}"><span class="mk">${mk}</span><span class="no${q && !opts.allNos ? ' q' : ''}" ${opts.clickNo ? 'role="button" tabindex="0"' : ''} title="${opts.clickNo ? 'Aquinas on ' + k : k}">${n}</span><span class="tx gk">${gkHTML(k)}</span></div>`;
+}
+function enHTML(keys){
+  return '<p class="enp">' + keys.map(k => {
+    const n = lineOf(k);
+    const tick = EN_REAL.has(k) ? `<sup class="tk">${n === 1 ? colOf(k) : n}</sup>` : '';
+    return `${tick}<span class="ep" data-k="${k}">${esc(EN[k] || '')}</span>`;
+  }).join('') + '</p>';
+}
+function moerHTML(){
+  let out = '<div class="moer">', open = false;
+  MOER.forEach((m, i) => {
+    if (m.p || i === 0) { if (open) out += '</div></div>'; out += `<div class="mp"><span class="ref">${m.r[0]}</span><div>`; open = true; }
+    out += `<span class="ms" data-r0="${m.r[0]}" data-r1="${m.r[1]}">${m.t}</span> `;
+  });
+  return out + '</div></div></div>';
+}
+function columnsIn(r){ const cols = []; for (const k of keysIn(r)) { const c = colOf(k); if (!cols.includes(c)) cols.push(c); } return cols; }
+
+function aqBody(p, mode){
+  if (mode === 'la') return `<div class="aqt"><p class="la" lang="la">${p.la}</p></div>`;
+  if (mode === 'en') return `<div class="aqt"><p class="en">${p.en}</p></div>`;
+  if (mode === 'side') return `<div class="aqt side"><p class="la" lang="la">${p.la}</p><p class="en">${p.en}</p></div>`;
+  return `<div class="aqt stack"><p class="la" lang="la">${p.la}</p><p class="en">${p.en}</p></div>`;
+}
+const aqMode = (pref, room2) => pref === 'both' ? (room2 ? 'side' : 'stack') : pref;
+
+// ── View A: Aquinas as the book ──
+function viewLectio(){
+  const phone = W < 1000;
+  stage.classList.toggle('phone', phone);
+  const sumL = LECTIONES[0];
+  const head = (pad) => `<div class="aqhead"><h2>Liber I, lectio 1</h2><div class="sum">${S.aq !== 'en' ? `<span lang="la">${sumL.la}</span>` : ''}${S.aq !== 'la' ? `<span>${sumL.en}</span>` : ''}</div></div>`;
+  if (phone) return viewLectioPhone(head);
+
+  // width budget
+  const ARI1 = S.ari === 'grc' ? 540 : 470, ARI2 = 1000, AQ1 = 480, AQ2 = 900;
+  let ari = S.ari, aq = S.aq === 'both' ? 'side' : S.aq, folds = [];
+  let need = (ari === 'grc+en' ? ARI2 : ARI1) + (aq === 'side' ? AQ2 : AQ1);
+  if (need > W && ari === 'grc+en') { ari = 'grc+enlit'; folds.push('Aristotle’s English under the lit lines'); need = ARI1 + (aq === 'side' ? AQ2 : AQ1); }
+  if (need > W && aq === 'side') { aq = 'stack'; folds.push('Aquinas’s English under each Latin paragraph'); }
+  const ariW = ari === 'grc+en' ? ARI2 : ari === 'grc' || ari === 'grc+enlit' ? 540 : 470;
+
+  stage.innerHTML = siteHead('Aquinas, On the Soul') +
+    `<div class="toolbar">
+      <span class="nav"><button data-act="prevL" aria-label="Previous lectio">‹</button><span class="where">Liber I, lectio 1<small>402a1–403a2</small></span><button data-act="nextL" aria-label="Next lectio">›</button></span>
+      <span class="sp"></span>
+      <span class="lab">Aristotle</span>${seg('ari', [['grc', 'Greek'], ['la', 'Latin'], ['en', 'English'], ['grc+en', 'Greek + English']], S.ari)}
+      <span class="lab">Aquinas</span>${seg('aq', [['la', 'Latin'], ['both', 'Both'], ['en', 'English']], S.aq)}
+    </div>
+    <div class="body">
+      <div class="ari scroll" style="width:${ariW}px;--mk:1.2em">${ariPane(ari)}</div>
+      <div class="aq scroll" id="aqpane">
+        ${head()}
+        <div class="crumb" id="crumb"></div>
+        ${aq === 'side' ? `<div class="colhead"><span></span><span class="two"><span>Latin · Parma, 1866</span><span>English · draft</span></span></div>` : ''}
+        ${AQ.map(p => `<div class="aqp" id="p${p.n}" data-n="${p.n}"><span class="pn" title="Marietti n. ${p.n}">${p.n}</span>${aqBody(p, aq)}</div>`).join('')}
+        <div class="endnav">End of lectio 1. Next: lectio 2, from 403a3 <i lang="la">«Dubitationem autem habent et passiones animae»</i> <button class="linkbtn" data-act="nextL">Lectio 2 ›</button></div>
+      </div>
+    </div>`;
+  if (folds.length) toast('At ' + W + ' px: ' + folds.join('; '));
+  bindLectio(false);
+}
+function ariPane(mode){
+  const cols = columnsIn(LECT1);
+  const head = `<div class="pane-head"><b>De Anima I.1</b><span>402a1–403a2</span><span class="sp"></span><button class="linkbtn" data-act="toReader">Read in De Anima ›</button></div>`;
+  if (mode === 'la') return head + moerHTML() + `<p class="src-note">Moerbeke's Latin as Parma prints it at the head of the lectio (“Antiqua”). The lemmata Aquinas quotes come from this text.</p>`;
+  if (mode === 'en') return head + `<div style="padding:8px 0 0 18px">` + cols.map(c => enHTML(keysIn(LECT1).filter(k => colOf(k) === c))).join('') + `</div><p class="src-note">J. A. Smith (Oxford, 1931). Lines between the printed ticks are placed by length.</p>`;
+  if (mode === 'grc+en') return head + cols.map(c => {
+    const ks = keysIn(LECT1).filter(k => colOf(k) === c);
+    return `<div class="colhd">${c}</div><div class="pair"><div>${ks.map(k => lineHTML(k)).join('')}</div>${enHTML(ks)}</div>`;
+  }).join('');
+  return head + cols.map(c => `<div class="colhd">${c}</div>` + keysIn(LECT1).filter(k => colOf(k) === c).map(k => lineHTML(k)).join('')).join('') +
+    (mode === 'grc+enlit' ? '<div class="enlit" id="enlit" hidden></div>' : '') + '<div style="height:40vh"></div>';
+}
+
+function viewLectioPhone(head){
+  const ariOpts = [['grc', 'Greek'], ['la', 'Latin (Moerbeke)'], ['en', 'English']];
+  const ari = S.ari === 'grc+en' ? 'grc' : S.ari;
+  let prevR = null, html = '';
+  for (const p of AQ) {
+    if (p.r && fmtR(p.r) !== fmtR(prevR)) {
+      const ks = keysIn(p.r), id = 'pas' + p.n, small = ks.length <= 8;
+      const open = S.openPas[id] ?? small;
+      let inc = '';
+      if (ari === 'grc') inc = GK[ks[0]];
+      else if (ari === 'en') inc = EN[ks[0]];
+      else { const m = MOER.find(m => overlap(m.r, p.r)); inc = m ? m.t.replace(/<[^>]+>/g, '') : ''; }
+      let full = '';
+      if (open) {
+        if (ari === 'grc') full = ks.map(k => lineHTML(k, { allNos: true })).join('');
+        else if (ari === 'en') full = `<div style="padding:0 12px">${enHTML(ks)}</div>`;
+        else full = `<div class="moer" style="padding:0 12px">${MOER.filter(m => overlap(m.r, p.r)).map(m => m.t).join(' ')}</div>`;
+      }
+      html += `<div class="pas"><button data-act="pas" data-id="${id}" aria-expanded="${open}"><span class="r">${fmtR(p.r)}</span><span class="inc ${ari === 'grc' ? 'gk' : ''}">${open ? '' : esc(inc)}</span><span class="chev">${open ? '▾' : '▸'}</span></button>${open ? `<div class="full">${full}</div>` : ''}</div>`;
+      prevR = p.r;
+    }
+    html += `<div class="aqp" id="p${p.n}" data-n="${p.n}"><span class="pn">${p.n}</span>${aqBody(p, S.aq === 'both' ? 'stack' : S.aq)}</div>`;
+  }
+  stage.innerHTML = siteHead('Aquinas, On the Soul') +
+    `<div class="toolbar">
+       <span class="nav"><button data-act="prevL" aria-label="Previous lectio">‹</button><span class="where">I, lectio 1</span><button data-act="nextL" aria-label="Next lectio">›</button></span>
+       <span class="sp"></span>
+       <label class="lab">Aristotle <select data-sel="ari">${ariOpts.map(([v, l]) => `<option value="${v}" ${v === ari ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+       <label class="lab">Aquinas <select data-sel="aq">${[['la', 'Latin'], ['both', 'Both'], ['en', 'English']].map(([v, l]) => `<option value="${v}" ${v === S.aq ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+     </div>
+     <div class="body"><div class="aq scroll" id="aqpane" style="--mk:0px">${head()}${html}<div class="endnav" style="margin-left:16px">End of lectio 1. <button class="linkbtn" data-act="nextL">Lectio 2 ›</button></div></div></div>`;
+  bindLectio(true);
+}
+
+function setLit(r, scope){
+  const pane = $('.ari', stage); if (!pane) return;
+  $$('.ln', pane).forEach(el => { const on = inR(el.dataset.k, r); el.classList.toggle('lit', on); el.classList.toggle('dim', !!r && !on); });
+  $$('.ep', pane).forEach(el => { const on = inR(el.dataset.k, r); el.classList.toggle('lit', on); el.classList.toggle('dim', !!r && !on); });
+  $$('.ms', pane).forEach(el => { const on = overlap([el.dataset.r0, el.dataset.r1], r); el.classList.toggle('lit', on); el.classList.toggle('dim', !!r && !on); });
+  const box = $('#enlit', pane);
+  if (box) {
+    if (!r || keysIn(r).length > 26) { box.hidden = true; }
+    else {
+      const ks = keysIn(r), last = $(`.ln[data-k="${ks[ks.length - 1]}"]`, pane);
+      box.innerHTML = `<span class="who">Smith, ${fmtR(r)}</span>` + esc(ks.map(k => EN[k] || '').join(''));
+      box.hidden = false; last.after(box);
+    }
+  }
+  const first = $('.lit', pane);
+  if (first) {
+    const top = first.offsetTop, vis0 = pane.scrollTop + 50, vis1 = pane.scrollTop + pane.clientHeight - 90;
+    if (top < vis0 || top > vis1) pane.scrollTo({ top: Math.max(0, top - 70), behavior: 'smooth' });
+  }
+}
+function setCur(n){
+  if (S.cur === n) return; S.cur = n;
+  $$('.aqp', stage).forEach(el => el.classList.toggle('cur', +el.dataset.n === n));
+  setLit(P[n].r);
+  const crumb = $('#crumb', stage); if (!crumb) return;
+  let parts;
+  if (n === 1) parts = [{ t: S.aq === 'la' ? 'Ante prooemium' : 'Before the preface', go: 1 }, { t: S.aq === 'la' ? 'cur de anima primo' : 'why the soul comes first', go: 1 }];
+  else { const nd = nodeFor(n); parts = (nd ? nd.path : [DIV]).map(x => ({ t: S.aq === 'la' ? x.la.replace(/, ibi.*$/, '') : x.en, go: (x.go || [2])[0] })); }
+  crumb.innerHTML = parts.map((x, i) => (i ? '<span class="sep">›</span>' : '') + `<button data-go="${x.go}">${esc(x.t)}</button>`).join('') + `<span class="rng">${P[n].r ? fmtR(P[n].r) : 'the whole treatise'}</span>`;
+}
+function scrollToPara(n, pane, flash){
+  const el = $(`.aqp[data-n="${n}"]`, pane); if (!el) return;
+  pane.scrollTo({ top: Math.max(0, el.offsetTop - pane.clientHeight * 0.18), behavior: 'smooth' });
+  if (flash) { el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+}
+function hot(ids, on){
+  for (const id of ids) {
+    $$(`.w[data-t~="${id}"], .ms span[data-t~="${id}"], q[data-t~="${id}"]`, stage).forEach(e => e.classList.toggle('hot', on));
+    for (const k of (TLINES[id] || [])) $$(`.ep[data-k="${k}"]`, stage).forEach(e => e.classList.toggle('hot', on));
+  }
+}
+function bindLectio(phone){
+  const pane = $('#aqpane', stage);
+  S.cur = null;
+  const spy = () => {
+    const y = pane.scrollTop + pane.clientHeight * 0.28; let cur = 1;
+    for (const el of $$('.aqp', pane)) { if (el.offsetTop <= y) cur = +el.dataset.n; else break; }
+    setCur(cur);
+  };
+  let raf = 0; pane.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(spy); });
+  if (!phone) spy();
+  if (S.goPara) { const n = S.goPara; S.goPara = null; requestAnimationFrame(() => { pane.scrollTop = Math.max(0, $(`#p${n}`, pane).offsetTop - pane.clientHeight * 0.18); if (!phone) spy(); }); }
+  // lemma hover / click
+  pane.addEventListener('mouseover', e => { const q = e.target.closest('q[data-t]'); if (q) hot(q.dataset.t.split(' '), true); });
+  pane.addEventListener('mouseout', e => { const q = e.target.closest('q[data-t]'); if (q) hot(q.dataset.t.split(' '), false); });
+  pane.addEventListener('click', e => {
+    const q = e.target.closest('q[data-t],q[data-x]');
+    if (q && q.dataset.x) { toast('This lemma opens lectio 2 (403a3), which the mockup does not include.'); return; }
+    if (q && phone) { lemmaPop(q.dataset.t.split(' ')); return; }
+    if (q) { const id = q.dataset.t.split(' ')[0]; const k = TLINES[id][0]; const ln = $(`.ari [data-k="${k}"], .ari .ms span[data-t~="${id}"]`, stage); const ap = $('.ari', stage); if (ln && ap) ap.scrollTo({ top: Math.max(0, ln.offsetTop - ap.clientHeight * .3), behavior: 'smooth' }); hot([id], true); setTimeout(() => hot([id], false), 1600); return; }
+  });
+  const ap = $('.ari', stage);
+  if (ap) {
+    ap.addEventListener('mouseover', e => { const w = e.target.closest('.w,.ms span[data-t]'); if (w) hot(w.dataset.t.split(' '), true); });
+    ap.addEventListener('mouseout', e => { const w = e.target.closest('.w,.ms span[data-t]'); if (w) hot(w.dataset.t.split(' '), false); });
+    ap.addEventListener('click', e => {
+      if (e.target.closest('button')) return;
+      const el = e.target.closest('.ln,.ep,.ms'); if (!el) return;
+      const k = el.dataset.k || el.dataset.r0; const p = bestPara(k);
+      if (p) scrollToPara(p.n, pane, true);
+    });
+  }
+}
+function lemmaPop(ids){
+  $('.pop', stage)?.remove();
+  const ks = [...new Set(ids.flatMap(id => TLINES[id] || []))];
+  const moer = ids.map(id => $(`.ms span[data-t~="${id}"]`, stage)?.textContent).filter(Boolean);
+  const m = MOER.flatMap(x => [...x.t.matchAll(/<span data-t="([^"]+)">([^<]+)<\/span>/g)]).filter(x => ids.some(id => x[1].split(' ').includes(id))).map(x => x[2]);
+  const d = document.createElement('div'); d.className = 'pop';
+  d.innerHTML = `<button class="x" aria-label="Close">×</button><div class="r">${ks.length ? fmtR([ks[0], ks[ks.length - 1]]) : ''}</div>` +
+    ks.map(k => `<div class="g">${gkHTML(k)}</div>`).join('') + (m.length ? `<div class="m" lang="la">Moerbeke: ${esc([...new Set(m)].join(' … '))}</div>` : '');
+  stage.appendChild(d);
+  ids.forEach(id => $$(`.pop .w[data-t~="${id}"]`, stage).forEach(e => e.classList.add('hot')));
+  d.querySelector('.x').onclick = () => d.remove();
+}
+
+// ── View B: Aristotle as the book ──
+function viewReader(){
+  const phone = W < 1000;
+  stage.classList.toggle('phone', phone);
+  const panelOK = S.comm && W >= 1200;
+  // panel takes about a third; four columns (Latin and English side by side) only from 1880 px
+  let pw = 0, pmode = S.aq;
+  if (panelOK) {
+    if (S.aq === 'both' && W >= 1880) { pw = Math.round(W * 0.5); pmode = 'side'; }
+    else { pw = Math.max(420, Math.min(560, Math.round(W * 0.34))); pmode = S.aq === 'both' ? 'stack' : S.aq; }
+  }
+  const cols = ['402a', '402b', '403a'];
+  const rows = cols.map(c => {
+    const ks = KEYS.filter(k => colOf(k) === c);
+    const g = `<div class="gkcol">${ks.map(k => lineHTML(k, { marks: S.comm, clickNo: S.comm })).join('')}</div>`;
+    const e = enHTML(ks);
+    const body = S.bview === 'greek' ? g : S.bview === 'english' ? `<div style="padding-left:18px">${e}</div>` : `<div class="pair" style="grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)">${g}${e}</div>`;
+    return `<div class="colhd" style="margin-left:${S.bview === 'english' ? '18px' : 'calc(var(--mk) + 2.6em)'}">${c}</div>${body}`;
+  }).join('');
+  stage.innerHTML = siteHead('De Anima') +
+    `<div class="toolbar">
+       <span class="where">Book I, chapter 1<small>402a1–403b19</small></span>
+       <span class="sp"></span>
+       ${seg('bview', [['greek', 'Greek'], ['both', 'Both'], ['english', 'English']], S.bview)}
+       ${phone ? '' : '<span class="lab">J. A. Smith (1931) ▾</span>'}
+       <span class="lab">Commentary</span>${seg('comm', [['off', 'Off'], ['aquinas', 'Aquinas']], S.comm ? 'aquinas' : 'off')}
+     </div>
+     <div class="body">
+       <div class="txt scroll ${S.comm ? 'clickable' : ''}" id="txt" style="flex:1;--mk:${S.comm ? '2.6em' : '0.6em'}">${rows}<div style="height:50vh"></div></div>
+       ${panelOK ? `<div class="panel scroll" id="panel" style="width:${pw}px">
+          <div class="pane-head"><b>Aquinas</b><span>Liber I, lectio 1 · 402a1–403a2</span><span class="sp"></span>${seg('aq', [['la', 'Latin'], ['both', 'Both'], ['en', 'English']], S.aq)}</div>
+          <div class="pill" id="pill" hidden><span>The text has reached lectio 2 (403a3).</span><button class="linkbtn" data-act="nextL">Open lectio 2</button></div>
+          <div style="display:flex;gap:12px;align-items:center;padding:8px 22px 0 3.2em;font-size:12.5px;color:var(--text-mid)"><label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="follow" ${S.follow ? 'checked' : ''}> Follow the text when it comes to rest</label><span class="sp" style="flex:1"></span><button class="linkbtn" data-act="toLectio">Read as a book ›</button></div>
+          ${AQ.map(p => `<div class="aqp" id="q${p.n}" data-n="${p.n}"><span class="pn">${p.n}</span>${aqBody(p, pmode)}</div>`).join('')}
+          <div style="height:40vh"></div>
+          <button class="jump" id="jump" hidden>↓ To the text on screen</button>
+        </div>` : ''}
+     </div>`;
+  bindReader(phone, panelOK);
+}
+function bindReader(phone, panelOK){
+  const txt = $('#txt', stage), panel = $('#panel', stage);
+  let userPanelAt = 0, idle;
+  const visible = () => {
+    const y0 = txt.scrollTop, y1 = y0 + txt.clientHeight;
+    return $$('.ln', txt).filter(el => el.offsetTop + el.offsetHeight > y0 + 10 && el.offsetTop < y1 - 10).map(el => el.dataset.k);
+  };
+  const update = () => {
+    if (!panel) return;
+    let vis = visible();
+    if (!vis.length) vis = $$('.ep', txt).filter(el => el.offsetTop < txt.scrollTop + txt.clientHeight && el.offsetTop + el.offsetHeight > txt.scrollTop).map(el => el.dataset.k);
+    const vr = vis.length ? [vis[0], vis[vis.length - 1]] : null;
+    let on = AQ.filter(p => p.n > 2 && p.r && overlap(p.r, vr)).map(p => p.n);
+    if (!on.length && vr && overlap(LECT1, vr)) on = [2];
+    $$('.aqp', panel).forEach(el => el.classList.toggle('onscr', on.includes(+el.dataset.n)));
+    $('#pill', panel).hidden = !(vr && num(vr[0]) >= num('403a3'));
+    const firstOn = on.length ? $(`#q${on[0]}`, panel) : null;
+    const inView = firstOn && firstOn.offsetTop < panel.scrollTop + panel.clientHeight - 40 && firstOn.offsetTop + firstOn.offsetHeight > panel.scrollTop + 60;
+    $('#jump', panel).hidden = !firstOn || inView;
+    $('#jump', panel).onclick = () => scrollToPara(on[0], panel, true);
+    clearTimeout(idle);
+    if (S.follow && firstOn && !inView) idle = setTimeout(() => { if (Date.now() - userPanelAt > 2500) scrollToPara(on[0], panel, false); }, 450);
+  };
+  let raf = 0; txt.addEventListener('scroll', () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); });
+  if (panel) {
+    panel.addEventListener('wheel', () => userPanelAt = Date.now(), { passive: true });
+    panel.addEventListener('touchmove', () => userPanelAt = Date.now(), { passive: true });
+    panel.addEventListener('scroll', () => { const j = $('#jump', panel); if (!j.hidden || true) { cancelAnimationFrame(raf); raf = requestAnimationFrame(update); } });
+    $('#follow', panel).onchange = e => { S.follow = e.target.checked; save(); update(); };
+    panel.addEventListener('mouseover', e => { const q = e.target.closest('q[data-t]'); if (q) hot(q.dataset.t.split(' '), true); });
+    panel.addEventListener('mouseout', e => { const q = e.target.closest('q[data-t]'); if (q) hot(q.dataset.t.split(' '), false); });
+    panel.addEventListener('click', e => {
+      const q = e.target.closest('q[data-t]'); if (!q) return;
+      const k = TLINES[q.dataset.t.split(' ')[0]][0]; const el = $(`.ln[data-k="${k}"]`, txt) || $(`.ep[data-k="${k}"]`, txt);
+      if (el) txt.scrollTo({ top: Math.max(0, el.offsetTop - txt.clientHeight * .3), behavior: 'smooth' });
+    });
+  }
+  txt.addEventListener('mouseover', e => { const w = e.target.closest('.w'); if (w) hot(w.dataset.t.split(' '), true); });
+  txt.addEventListener('mouseout', e => { const w = e.target.closest('.w'); if (w) hot(w.dataset.t.split(' '), false); });
+  const pick = k => {
+    if (!S.comm) return;
+    $$('.sel', txt).forEach(e => e.classList.remove('sel'));
+    $$(`[data-k="${k}"]`, txt).forEach(e => e.classList.add('sel'));
+    S.sel = k;
+    if (num(k) >= num('403a3')) { if (panel) toast('403a3 onward is lectio 2, which the mockup does not include.'); else sheet(k); return; }
+    if (panel) { const p = bestPara(k); if (p) scrollToPara(p.n, panel, true); userPanelAt = Date.now(); }
+    else sheet(k);
+  };
+  txt.addEventListener('click', e => {
+    const no = e.target.closest('.no'); if (no) { pick(no.parentElement.dataset.k); return; }
+    const ep = e.target.closest('.ep'); if (ep && S.bview === 'english') pick(ep.dataset.k);
+  });
+  txt.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.classList.contains('no')) { e.preventDefault(); pick(e.target.parentElement.dataset.k); } });
+  if (S.goLine) { const k = S.goLine; S.goLine = null; requestAnimationFrame(() => { const el = $(`.ln[data-k="${k}"]`, txt) || $(`.ep[data-k="${k}"]`, txt); if (el) txt.scrollTop = Math.max(0, el.offsetTop - 80); if (panel && S.goPara) { scrollToPara(S.goPara, panel, true); } S.goPara = null; update(); }); }
+  else update();
+}
+function sheet(k){
+  $('.sheet', stage)?.remove();
+  const d = document.createElement('div'); d.className = 'sheet';
+  let body;
+  if (num(k) >= num('403a3')) body = `<p style="padding:14px 16px;margin:0">${k} falls in lectio 2 (403a3–403b24), which the mockup does not include.</p>`;
+  else {
+    const ps = parasFor(k).filter(p => p.n > 2).slice(0, 2);
+    const list = ps.length ? ps : [P[2]];
+    body = list.map(p => `<div class="aqp" data-n="${p.n}"><span class="pn">${p.n}</span>${aqBody(p, S.aq === 'both' ? 'stack' : S.aq)}</div>`).join('') +
+      `<div style="padding:4px 16px 8px 2.6em"><button class="linkbtn" data-act="toLectio" data-n="${list[0].n}">Read lectio 1 from n. ${list[0].n} ›</button></div>`;
+  }
+  // a landscape phone has width to spare and no height: a side drawer keeps the tapped line in view
+  if (W > H) { d.classList.add('side'); d.style.top = $('.body', stage).offsetTop + 'px'; }
+  d.innerHTML = `<div class="sh-head"><b>Aquinas on ${k}</b><span>Liber I, lectio 1</span>${seg('aq', [['la', 'Latin'], ['both', 'Both'], ['en', 'English']], S.aq)}<button class="x" aria-label="Close">×</button></div><div class="sh-body">${body}</div>`;
+  stage.appendChild(d);
+  d.querySelector('.x').onclick = () => { d.remove(); $$('.sel', stage).forEach(e => e.classList.remove('sel')); };
+  d.dataset.k = k;
+}
+
+// ── View C: contents ──
+function viewContents(){
+  const phone = W < 1000;
+  stage.classList.toggle('phone', phone);
+  const maxW = Math.max(...LECTIONES.map(l => l.words));
+  const rows = LECTIONES.map(l => {
+    const miss = !l.la;
+    const su = miss ? 'Heading not read from the scan yet' : (S.sumLang === 'la' ? `<span lang="la">${l.la}</span>` : l.en) + (l.inc ? `<small lang="la">${l.inc} …</small>` : '');
+    return `<button class="lrow ${miss ? 'miss' : ''}" data-l="${l.l}"><span class="ln_">${l.l}</span><span class="st">${l.start || '—'}</span><span class="su">${su}</span><span class="wt"><i style="width:${Math.round(80 * l.words / maxW)}px"></i>${l.words.toLocaleString('en')} words</span></button>`;
+  }).join('');
+  const nodeHTML = (n) => {
+    const open = S.treeOpen[n.id] ?? true, kids = n.kids || [];
+    return `<li><div class="node ${n.lectio ? 'out' : ''}">${kids.length ? `<button class="tg" data-tg="${n.id}" aria-expanded="${open}" aria-label="Toggle">${open ? '▾' : '▸'}</button>` : '<span></span>'}<button class="lb" data-node="${n.id}"><span class="l1" lang="la">${n.la}</span><span class="l2">${n.en}${n.lectio ? ' · in lectio ' + n.lectio : ''}${n.said ? ' · stated in n. ' + n.said : ''}</span></button><span class="rg">${fmtR(n.r)}</span></div>${kids.length && open ? `<ul>${kids.map(nodeHTML).join('')}</ul>` : ''}</li>`;
+  };
+  stage.innerHTML = siteHead('Aquinas, On the Soul') +
+    `<div class="cpage scroll"><div class="cwrap" style="${phone ? 'padding:20px 16px 50px' : ''}">
+      <p class="eyebrow">Thomas Aquinas · c. 1267–68 · commentary on Aristotle</p>
+      <h1>On Aristotle's De Anima</h1>
+      <p class="lat" lang="la">Sententia libri De anima</p>
+      <div class="acts"><button data-act="toLectio">Read lectio 1</button><button class="ghost" data-act="toReader">Read De Anima with Aquinas</button></div>
+      <div class="facts">
+        <div><b>3 books, 56 lectiones</b>873 numbered paragraphs (Marietti)</div>
+        <div><b>90,800 words of Latin</b>about four times the Greek it explains</div>
+        <div><b>Latin: Parma, 1866</b>public domain; Moerbeke's Latin Aristotle printed with each lectio</div>
+        <div><b>English: not hosted</b>Foster and Humphries (1951) is still under copyright review</div>
+      </div>
+      <div class="cgrid ${phone ? 'one' : ''}">
+        <div>
+          <h3>Book I <span class="seg">${seg('sum', [['en', 'English'], ['la', 'Latin']], S.sumLang).replace(/^<span class="seg"[^>]*>|<\/span>$/g, '')}</span></h3>
+          ${rows}
+          ${BOOKS.slice(1).map(b => `<div class="brow"><span><b>Book ${b.b === 2 ? 'II' : 'III'}</b> · ${b.lect} lectiones · ${b.bk}</span><span>${b.words.toLocaleString('en')} words</span></div>`).join('')}
+        </div>
+        <div>
+          <h3>How Aquinas divides lectio 1</h3>
+          <ul class="tree">${nodeHTML(DIV)}</ul>
+          <p class="legal">Aquinas opens each lectio by dividing the passage before he expounds it, and names where each part begins (“ibi …”). The outline is that division. Pick a part to read the paragraphs on it with the lines lit.</p>
+        </div>
+      </div>
+    </div></div>`;
+}
+
+// ── render + events ──
+function render(){
+  size(); bar();
+  if (S.view === 'lectio') viewLectio();
+  else if (S.view === 'reader') viewReader();
+  else viewContents();
+}
+function go(view, extra = {}){
+  Object.assign(S, extra); S.view = view;
+  if (location.hash.slice(1) !== view) history.replaceState(null, '', '#' + view);
+  render();
+}
+stage.addEventListener('click', e => {
+  const b = e.target.closest('[data-seg]');
+  if (b) {
+    const n = b.dataset.seg, v = b.dataset.val;
+    if (n === 'ari') S.ari = v; else if (n === 'aq') S.aq = v; else if (n === 'bview') S.bview = v; else if (n === 'comm') S.comm = v === 'aquinas'; else if (n === 'sum') S.sumLang = v;
+    save();
+    const sh = $('.sheet', stage)?.dataset.k;
+    const keep = S.view === 'lectio' ? { goPara: S.cur } : {};
+    const txt = $('#txt', stage); const top = txt ? txt.scrollTop : 0;
+    go(S.view, keep);
+    if (S.view === 'reader') { const t2 = $('#txt', stage); if (t2) t2.scrollTop = top; if (sh) sheet(sh); }
+    return;
+  }
+  const a = e.target.closest('[data-act]');
+  if (a) {
+    const act = a.dataset.act;
+    if (act === 'prevL') toast('Lectio 1 is the first.');
+    else if (act === 'nextL') toast('Lectio 2 is not in this mockup.');
+    else if (act === 'toReader') { const lit = $('.ari .lit', stage); go('reader', { goLine: lit ? (lit.dataset.k || lit.dataset.r0) : '402a1', goPara: S.cur && S.cur > 1 ? S.cur : null }); }
+    else if (act === 'toLectio') { const n = +a.dataset.n || (S.sel ? (bestPara(S.sel)?.n) : null) || null; go('lectio', { goPara: n }); }
+    else if (act === 'pas') { S.openPas[a.dataset.id] = a.getAttribute('aria-expanded') !== 'true'; const pane = $('#aqpane', stage); const t = pane.scrollTop; viewLectio(); $('#aqpane', stage).scrollTop = t; }
+    return;
+  }
+  const g = e.target.closest('[data-go]'); if (g) { scrollToPara(+g.dataset.go, $('#aqpane', stage), true); return; }
+  const tg = e.target.closest('[data-tg]'); if (tg) { S.treeOpen[tg.dataset.tg] = !(S.treeOpen[tg.dataset.tg] ?? true); const c = $('.cpage', stage), t = c.scrollTop; viewContents(); $('.cpage', stage).scrollTop = t; return; }
+  const nd = e.target.closest('[data-node]');
+  if (nd) { const x = NODES.find(x => x.n.id === nd.dataset.node).n; if (x.lectio) { toast('That part is expounded in lectio 2, not in this mockup.'); return; } go('lectio', { goPara: (x.go || [2])[0] }); return; }
+  const lr = e.target.closest('[data-l]'); if (lr) { if (+lr.dataset.l === 1) go('lectio', { goPara: null }); else toast(`Lectio ${lr.dataset.l} is not in this mockup.`); }
+});
+stage.addEventListener('change', e => {
+  const s = e.target.closest('[data-sel]'); if (!s) return;
+  S[s.dataset.sel] = s.value; save(); go(S.view, { goPara: S.cur });
+});
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-v]'); if (b) go(b.dataset.v, { goPara: null, goLine: null }); });
+$('#presets').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) { S.preset = b.dataset.p; save(); render(); } });
+window.addEventListener('hashchange', () => { fromHash(); render(); });
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { const old = W; size(); if (S.preset === 'fit' && W !== old) render(); }, 150); });
+document.addEventListener('keydown', e => {
+  if (e.target.closest('input,select,textarea')) return;
+  const i = ['1', '2', '3'].indexOf(e.key); if (i >= 0 && !e.metaKey && !e.ctrlKey) go(VIEWS[i], { goPara: null, goLine: null });
+});
+render();
+})();
+</script>

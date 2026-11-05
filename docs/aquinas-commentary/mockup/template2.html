@@ -1,0 +1,1010 @@
+<title>Aquinas Folded Reader</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+/* Round 2. One document laid out as Aquinas's division: headings are rows, numbered text units are the
+   leaves, the five texts are columns. The short text holds still while the long one scrolls; folding the
+   document gives the division of the work, a book, or a lectio. Skin = the live site's tokens. */
+:root{
+  --font-greek:"Cardo","Gentium Plus","Noto Serif",Georgia,serif;
+  --font-english:"EB Garamond",Georgia,"Times New Roman",serif;
+  --font-ui:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --col-bg:#faf8f3; --page-bg:#f3efe6; --text:#1a1814; --text-mid:#5a5550; --text-light:#6e685f;
+  --accent:#7a4e2d; --accent-light:#b8845a; --border:#d8d0c4; --popup-bg:#ffffff; --on-accent:#ffffff;
+  --popup-shadow:0 4px 24px rgba(0,0,0,.18);
+  --lit-bg:#fbefcf; --hot-bg:#ffd97a; --var:#2a6a86; --var-bg:#dcecf2;
+  --bar-bg:#24201c; --bar-fg:#f1ebe1; --bar-mid:#b3a897; --bar-line:#3d3730; --bar-on:#f0c48a;
+  --fs-greek:1.05rem; --fs-english:1.08rem;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --col-bg:#211d18; --page-bg:#181511; --text:#e9e2d4; --text-mid:#b6ac9b; --text-light:#8f8676;
+  --accent:#cf9d68; --accent-light:#e6bd8a; --border:#3a342b; --popup-bg:#26221b; --on-accent:#211d18;
+  --popup-shadow:0 6px 28px rgba(0,0,0,.55);
+  --lit-bg:rgba(255,206,84,.13); --hot-bg:rgba(255,206,84,.34); --var:#86c1da; --var-bg:rgba(110,180,215,.2);
+  --bar-bg:#0f0d0b; --bar-fg:#efe9df; --bar-mid:#a49a8c; --bar-line:#2c2722; --bar-on:#e9b878;
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --col-bg:#211d18; --page-bg:#181511; --text:#e9e2d4; --text-mid:#b6ac9b; --text-light:#8f8676;
+  --accent:#cf9d68; --accent-light:#e6bd8a; --border:#3a342b; --popup-bg:#26221b; --on-accent:#211d18;
+  --popup-shadow:0 6px 28px rgba(0,0,0,.55);
+  --lit-bg:rgba(255,206,84,.13); --hot-bg:rgba(255,206,84,.34); --var:#86c1da; --var-bg:rgba(110,180,215,.2);
+  --bar-bg:#0f0d0b; --bar-fg:#efe9df; --bar-mid:#a49a8c; --bar-line:#2c2722; --bar-on:#e9b878;
+  color-scheme:dark }
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--page-bg);color:var(--text);font:15px/1.5 var(--font-ui)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* EB Garamond's Latin locl turns u into v ("Sicvt"); Parma prints u */
+[lang="la"]{font-feature-settings:"locl" 0}
+
+.mbar{background:var(--bar-bg);color:var(--bar-fg);padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px}
+.mbar .name{font:600 14px/1.2 var(--font-ui)}
+.mbar .grp{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.mbar .lbl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--bar-mid);margin-right:4px}
+.mbar button{background:transparent;border:1px solid var(--bar-line);color:var(--bar-fg);border-radius:5px;padding:5px 10px;font-size:13px;cursor:pointer;min-height:32px}
+.mbar button[aria-pressed="true"]{border-color:var(--bar-on);color:var(--bar-on)}
+.mbar .read{font:12px var(--font-ui);color:var(--bar-mid);font-variant-numeric:tabular-nums;margin-left:auto}
+
+.stage-wrap{padding-block:14px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.stage-box{position:relative;margin:0 auto;max-width:100%}
+.stage{position:absolute;top:0;left:0;transform-origin:0 0;background:var(--col-bg);color:var(--text);border:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column}
+
+.site-head{flex:none;height:46px;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--border);background:var(--page-bg);font-size:14px;color:var(--text-mid);white-space:nowrap;overflow:hidden}
+.site-head .work{color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis}
+.site-head .sp{flex:1}
+.site-head .hb{border:1px solid var(--border);border-radius:6px;padding:4px 10px;background:var(--col-bg)}
+.toolbar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 18px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-mid)}
+.toolbar .lab{font-size:12px;color:var(--text-light)}
+.toolbar .sp{flex:1}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;vertical-align:middle}
+.seg button{border:0;border-left:1px solid var(--border);background:transparent;color:var(--text-mid);padding:4px 10px;cursor:pointer;min-height:32px;font-size:13px}
+.seg button:first-child{border-left:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.chip{border:1px solid var(--border);background:transparent;color:var(--text-mid);border-radius:16px;padding:3px 11px;cursor:pointer;min-height:30px;font-size:13px}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--lit-bg)}
+.go input{width:9.5em;border:1px solid var(--border);border-radius:6px;background:var(--col-bg);padding:4px 8px;min-height:32px}
+select{font-size:14px;color:var(--text);background:var(--col-bg);border:1px solid var(--border);border-radius:6px;padding:4px 8px;min-height:36px}
+.narrowst .seg button,.narrowst .chip,.narrowst .go input{min-height:40px}
+.v{text-decoration:underline dotted var(--var);text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:pointer}
+.v.rd{color:var(--var);text-decoration-style:solid}
+.v.vsl{text-decoration-color:color-mix(in srgb,var(--var) 45%,transparent)}
+sup.vs.vsl{opacity:.6}
+.v.hot,.v.von{background:var(--var-bg);box-shadow:0 0 0 2px var(--var-bg);border-radius:2px}
+sup.vs{font:700 .62em/1 var(--font-ui);color:var(--var);margin-left:1px;cursor:pointer;vertical-align:super}
+.mgkchip[aria-pressed="true"]{border-color:var(--var);color:var(--var);background:var(--var-bg)}
+.app{margin-top:12px;padding-top:8px;border-top:1px solid var(--border);font-size:13px;font-family:var(--font-ui)}
+.apph{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.apph .tl{margin:0}.apph .dr{font-weight:400;text-transform:none;letter-spacing:0}
+.app .seg button{min-height:28px;padding:2px 9px;font-size:12px}
+.app ol{list-style:none;margin:0;padding:0}
+.app li{border-radius:6px}.app li.hot,.app li.von{background:var(--var-bg)}
+.vb{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 6px;width:100%;min-height:40px;padding:6px;border:0;background:none;color:var(--text);text-align:left;cursor:pointer;font:inherit}
+.vb .vs{font-weight:700;color:var(--var)}
+.vb .vk{color:var(--text-light);font-variant-numeric:tabular-nums}
+.vb .vr,.vb .vi{font-family:var(--font-greek);font-size:15px}
+.vb .vi{color:var(--var)}.vb .br{color:var(--text-light)}
+.vb .vla{font-family:var(--font-english);font-style:italic;font-size:14px;color:var(--text-mid)}
+.vb .gr{margin-left:auto;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light)}
+.vb .g-strong{color:var(--var);font-weight:700}
+.vn{padding:0 6px 8px 22px;color:var(--text-mid);font-family:var(--font-english);font-size:15px;line-height:1.45}
+.vn p{margin:0 0 4px}
+.vpop{position:absolute;z-index:40;background:var(--popup-bg);color:var(--text);border:1px solid var(--border);border-top:3px solid var(--var);border-radius:8px;box-shadow:var(--popup-shadow);padding:8px 12px 10px;font:15px/1.45 var(--font-english)}
+.vpop p{margin:6px 0 0}.vpop .dr{font:12px var(--font-ui);color:var(--text-light)}
+.vph{display:flex;align-items:center;gap:8px;font:13px var(--font-ui);margin-bottom:4px}
+.vph .vs{font-weight:700;color:var(--var)}.vph .vk{color:var(--text-light)}
+.vph .gr{margin-left:auto;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--text-light)}.vph .g-strong{color:var(--var);font-weight:700}
+.vx{border:0;background:none;color:var(--text-mid);font-size:22px;line-height:1;min-width:40px;min-height:40px;margin:-8px -10px -8px 0;cursor:pointer}
+.vrow{display:grid;grid-template-columns:7.5em 1fr;gap:8px;align-items:baseline}
+.vlab{font:11px var(--font-ui);letter-spacing:.04em;color:var(--text-light)}
+.vrow .vr,.vrow .vi{font-family:var(--font-greek);font-size:16px}.vrow .vi{color:var(--var)}.vrow .vla{font-style:italic}
+.linkbtn{border:0;background:none;color:var(--accent);cursor:pointer;padding:2px 0;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+
+.body{flex:1;min-height:0;display:flex}
+.doc{flex:1;min-width:0;overflow:auto;position:relative;overscroll-behavior:contain}
+.crumbbar{position:sticky;top:0;z-index:6;background:var(--col-bg);border-bottom:1px solid var(--border);padding:7px 18px;font-size:12.5px;color:var(--text-mid);display:flex;flex-wrap:wrap;gap:2px 6px;align-items:baseline;box-shadow:0 4px 10px -10px rgba(0,0,0,.4)}
+.crumbbar button{border:0;background:none;color:var(--text-mid);cursor:pointer;padding:0;font-size:12.5px}
+.crumbbar button:hover{color:var(--accent);text-decoration:underline}
+.crumbbar .sep{color:var(--border)}
+.crumbbar .rng{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--accent);font-weight:600}
+
+.dochead{padding:22px 18px 8px}
+.dochead .eyebrow{margin:0;font-size:13px;color:var(--text-mid)}
+.dochead h1{font:500 1.9rem/1.15 var(--font-english);margin:2px 0 4px}
+.dochead .sub{margin:0;font-family:var(--font-english);font-size:1.05rem;color:var(--text-mid)}
+
+.rule{display:flex;gap:10px;align-items:center;margin:16px 18px 2px;font:600 11.5px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.rule .rk{font-weight:400;letter-spacing:0;text-transform:none;color:var(--text-light);font-variant-numeric:tabular-nums}
+.rule::after{content:"";flex:1;height:1px;background:var(--accent-light);opacity:.55}
+.cref{font-style:normal;color:var(--text-light);white-space:nowrap;font-variant-numeric:tabular-nums}
+.own{margin:10px 0 14px;border-left:3px solid var(--accent-light)}
+.own .oh{display:flex;flex-wrap:wrap;gap:2px 10px;align-items:baseline;padding:10px 18px 8px 15px}
+.own .ok{font:600 11.5px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.own .ot{font-family:var(--font-english);font-style:italic;font-size:1.12rem}
+.own .on{margin-left:auto;font:12px var(--font-ui);color:var(--text-light);font-variant-numeric:tabular-nums}
+.narrowdoc .own .oh{padding:8px 14px 6px 11px}
+
+
+.nd > .h{display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:2px 10px;align-items:baseline;padding:9px 18px 7px calc(8px + var(--d) * 16px)}
+.narrowdoc .nd > .h{grid-template-columns:24px minmax(0,1fr);padding-left:calc(6px + min(var(--d),4) * 9px);padding-right:14px}
+.narrowdoc .nd > .h .meta{grid-column:2}
+.h .tg{border:0;background:none;color:var(--text-light);cursor:pointer;min-width:24px;min-height:28px;padding:0}
+.narrowdoc .h .tg{min-height:40px}
+.h .lb{border:0;background:none;text-align:left;cursor:pointer;padding:0;min-width:0}
+.h .l1{font-family:var(--font-english);font-weight:500;color:var(--text);line-height:1.3}
+.h .l2{display:block;font-family:var(--font-english);font-style:italic;font-size:.95rem;color:var(--text-mid);line-height:1.3}
+.d0 .l1{font-size:1.45rem}.d1 .l1{font-size:1.28rem}.d2 .l1{font-size:1.16rem}.d3 .l1{font-size:1.08rem}.nd.deep .l1{font-size:1.03rem}
+.h .meta{font:12px var(--font-ui);color:var(--text-light);font-variant-numeric:tabular-nums;white-space:nowrap}
+.narrowdoc .h .meta{white-space:normal}
+.modeari .nd:not(.leaf) > .h .l1{font-size:1rem;color:var(--text-mid)}
+.modeari .nd:not(.leaf) > .h .l2{display:none}
+.nd.flash > .h{animation:flash 1.4s ease}
+@keyframes flash{0%{background:var(--hot-bg)}100%{background:transparent}}
+.stub{margin:0 18px 10px calc(40px + var(--d) * 16px);font-size:13px;color:var(--text-light);font-style:italic}
+.narrowdoc .stub{margin-left:calc(36px + min(var(--d),4) * 9px)}
+
+.cells{display:grid;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:4px}
+.cell{min-width:0;padding:12px 20px 18px}
+.cell + .cell{border-left:1px solid var(--border)}
+.cell.ari{background:var(--page-bg)}
+.stk{position:sticky;top:var(--top);max-height:var(--stkmax);overflow:auto;overscroll-behavior:contain}
+.cells.narrow{display:block}
+.strip,.flat{background:var(--page-bg);padding:10px 16px;border-bottom:1px solid var(--border)}
+.strip{position:sticky;top:var(--top);z-index:3;max-height:calc(var(--stkmax) * .4);overflow:auto;overscroll-behavior:contain;box-shadow:0 8px 12px -12px rgba(0,0,0,.5)}
+.strip.tall{max-height:calc(var(--stkmax) * .8)}
+.strip .grip{position:sticky;bottom:-10px;display:block;width:calc(100% + 32px);margin:0 -16px -10px;height:40px;border:0;padding:14px 0 0;background:linear-gradient(to bottom, transparent, var(--page-bg) 55%);color:var(--accent);font-size:14px;cursor:pointer}
+.bars-off .site-head,.bars-off .toolbar{display:none}
+.narrowdoc .crumbbar,.shortdoc .crumbbar{flex-wrap:nowrap}
+.narrowdoc .crumbbar button,.shortdoc .crumbbar button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.narrowdoc .crumbbar .rng,.shortdoc .crumbbar .rng{flex:none;white-space:nowrap}
+.sents.one .sr{border-top:0;padding-top:2px;padding-bottom:6px}
+.narrowdoc .aqp{grid-template-columns:1.9em minmax(0,1fr)}
+.narrowdoc .aqt.side{column-gap:12px}
+.cells.narrow .cell.aq{padding-left:8px;padding-right:10px}
+.cells.narrow .cell.aq{padding:10px 16px 18px}
+.unit{display:flex;gap:8px;align-items:baseline;font:600 12.5px var(--font-ui);color:var(--accent);margin-bottom:6px;font-variant-numeric:tabular-nums}
+.unit .ur{color:var(--text-light);font-weight:400}
+.unit .more{margin-left:auto;border:0;background:none;color:var(--accent);cursor:pointer;font-size:12.5px;min-height:32px}
+.tl{font:600 10.5px var(--font-ui);letter-spacing:.07em;text-transform:uppercase;color:var(--text-light);margin:0 0 4px}
+.pairc{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px}
+.stackc > .tx + .tx{margin-top:12px;padding-top:10px;border-top:1px dashed var(--border)}
+.gk{font-family:var(--font-greek);font-size:var(--fs-greek);line-height:1.7}
+.ln{display:grid;grid-template-columns:3.4em minmax(0,1fr);align-items:baseline}
+.ln .no{font:11.5px var(--font-ui);color:var(--text-light);text-align:right;padding-right:.8em;cursor:pointer;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ln .no:hover{color:var(--accent);text-decoration:underline}
+.enp,.moer{font-family:var(--font-english);font-size:var(--fs-english);line-height:1.68;margin:0}
+.tk{font:10.5px var(--font-ui);color:var(--text-light);vertical-align:super;margin:0 2px}
+.w,.ms span[data-t]{border-radius:2px;cursor:pointer}
+.w.cur,.ms span.cur,.ep.cur,.ln.cur .tx{background:var(--lit-bg);box-shadow:0 0 0 2px var(--lit-bg)}
+.w.hot,.ms span.hot,.ep.hot,q.hot{background:var(--hot-bg);box-shadow:0 0 0 2px var(--hot-bg)}
+.sents .sr{padding:10px 0 11px 12px;margin-left:-12px;border-top:1px solid var(--border)}
+.sents.focus .sr,.sents.tabs .sr{border-top:0;padding-top:4px;padding-bottom:6px}
+.sents.focus .sr.on{margin-block:6px;padding-block:8px;background:var(--col-bg)}
+.sents .sr:first-child{border-top:0;padding-top:2px}
+.sents .sr.on{box-shadow:inset 3px 0 0 var(--accent-light)}
+.sents .sr.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:20px}
+.sents .sf + .sf{margin-top:9px}
+.sents .sr.cols .sf + .sf{margin-top:0}
+.sents .sv + .sv{margin-top:5px}
+.sents .sv-grc{font-family:var(--font-greek);font-size:var(--fs-greek);line-height:1.7}
+.sents .sv-en,.sents .sv-moer,.sents .sv-moen{font-family:var(--font-english);font-size:var(--fs-english);line-height:1.62}
+.sents .sv.sub{color:var(--text-mid);padding-left:.75em;border-left:2px solid var(--border)}
+.sents .sv-moer{font-feature-settings:"locl" 0}
+.sents.focus .sr:not(.on) .sv:not(.main){display:none}
+.sents.focus .sr:not(.on){cursor:pointer}
+.sents.focus .sr:not(.on) .sf:not(:has(.main)){display:none}
+.sents.tabs .sv:not(.t-on){display:none}
+.sents.tabs .sf:not(:has(.t-on)){display:none}
+.sents.tabs .sv.sub{color:inherit;padding-left:0;border-left:0}
+.gn{font:10.5px var(--font-ui);color:var(--text-light);margin:0 3px 0 1px;cursor:pointer;font-variant-numeric:tabular-nums}
+.gn:hover{color:var(--accent);text-decoration:underline}
+.gl.cur{background:var(--lit-bg)}
+.gl.hot{background:var(--hot-bg)}
+.tabbar{position:sticky;top:0;z-index:2;display:flex;gap:2px;background:var(--page-bg);padding:0 0 8px;margin-bottom:6px;border-bottom:1px solid var(--border)}
+.tabbar button{flex:1 1 auto;border:1px solid var(--border);background:var(--col-bg);color:var(--text-mid);border-radius:6px;padding:5px 8px;font:13px var(--font-ui);cursor:pointer;min-height:40px}
+.tabbar button[aria-selected="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.kids ol{margin:0;padding:0;list-style:none;counter-reset:k}
+.kids li{counter-increment:k}
+.kids button{display:grid;grid-template-columns:1.6em minmax(0,1fr);width:100%;text-align:left;border:0;border-top:1px solid var(--border);background:none;padding:7px 0;cursor:pointer;min-height:40px}
+.kids button::before{content:counter(k) ".";font:12px var(--font-ui);color:var(--text-light);padding-top:.3em}
+.kids .l1{font-family:var(--font-english);font-size:1.02rem}
+.kids .l2{display:block;font-family:var(--font-english);font-style:italic;color:var(--text-mid);font-size:.95rem}
+.kids .m{grid-column:2;font:12px var(--font-ui);color:var(--text-light);font-variant-numeric:tabular-nums}
+
+.aqp{display:grid;grid-template-columns:2.4em minmax(0,1fr);margin:0 0 .9em}
+.aqp .pn{font:12px var(--font-ui);color:var(--text-light);padding-top:.42em;font-variant-numeric:tabular-nums}
+.aqp.cur .pn{color:var(--accent);font-weight:700}
+.aqt{font-family:var(--font-english);font-size:var(--fs-english);line-height:1.68;min-width:0}
+.aqt p{margin:0;max-width:38em}
+.aqt.side{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:2em}
+.aqt.stack .la + .en{margin-top:.5em;padding-left:.9em;border-left:1px solid var(--border);color:var(--text-mid)}
+.la q{quotes:"\00ab" "\00bb"}
+.en q{quotes:"\201c" "\201d"}
+q[data-t],q[data-x]{color:var(--accent);cursor:pointer;text-decoration:underline dotted;text-decoration-thickness:1px;text-underline-offset:3px;border-radius:2px}
+.gloss{display:grid;grid-template-columns:auto auto minmax(0,1fr) auto;gap:10px;align-items:baseline;width:100%;text-align:left;border:1px solid var(--border);background:var(--col-bg);border-radius:6px;padding:8px 12px;cursor:pointer;min-height:44px}
+.gloss:hover{border-color:var(--accent-light)}
+.gloss .gn{font:600 12.5px var(--font-ui);color:var(--accent);white-space:nowrap}
+.gloss .gw{font:12px var(--font-ui);color:var(--text-light);white-space:nowrap}
+.gloss .gf{font-family:var(--font-english);font-style:italic;color:var(--text-mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.narrowdoc .gloss{grid-template-columns:auto minmax(0,1fr) auto}
+.narrowdoc .gloss .gw{display:none}
+.foldbtn{display:block;margin:0 0 8px auto}
+.glossrow{margin:0 18px 8px calc(40px + var(--d) * 16px)}
+.narrowdoc .glossrow{margin:0 14px 8px 14px}
+.toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;background:var(--text);color:var(--col-bg);padding:9px 14px;border-radius:8px;font-size:13px;max-width:86%;box-shadow:var(--popup-shadow)}
+
+.notes{padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.notes .in{max-width:62rem;margin:0 auto;display:grid;gap:28px}
+.notes h1{font:500 2rem/1.15 var(--font-english);margin:0;text-wrap:balance}
+.notes h2{font:600 12px var(--font-ui);letter-spacing:.09em;text-transform:uppercase;color:var(--text-light);margin:0 0 10px}
+.notes p,.notes li{font-family:var(--font-english);font-size:1.12rem;line-height:1.55;max-width:42em}
+.notes p{margin:0 0 .6em}
+.notes ul,.notes ol{margin:0;padding-left:1.2em;display:grid;gap:.45em}
+.notes b{color:var(--text)}
+.notes a{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){ .nd.flash > .h{animation:none} }
+</style>
+
+<div class="mbar" role="toolbar" aria-label="Study controls">
+  <span class="name">Aquinas beside Aristotle · round 2</span>
+  <span class="grp" id="presets"><span class="lbl">Width</span>
+    <button data-p="fit">Fit window</button>
+    <button data-p="up">Phone, upright</button>
+    <button data-p="phone">Phone, landscape</button>
+    <button data-p="laptop">Laptop 1440</button>
+    <button data-p="wide">Monitor 1920</button>
+  </span>
+  <span class="grp" id="acols"><span class="lbl">Aristotle column</span>
+    <button data-ac="blocks">Blocks</button>
+    <button data-ac="sent">Sentences</button>
+    <button data-ac="focus">Sentence opens</button>
+    <button data-ac="tabs">Tabs</button>
+  </span>
+  <span class="read" id="readout"></span>
+</div>
+
+<div class="stage-wrap"><div class="stage-box" id="box"><div class="stage" id="stage"></div></div></div>
+
+<section class="notes" aria-label="Study notes"><div class="in">
+  <div>
+    <h1>One document, folded</h1>
+    <p>Round 1 put Aquinas in a panel beside Aristotle and kept the division in a separate outline. This round drops both. There is one document for the commentary, and Aquinas's division of the text is its shape:</p>
+    <ul>
+      <li><b>His division is the rows.</b> Each heading is a part he names, then Aristotle's book and chapter, then Aquinas's lectiones, as in Berquist's division of the <i>Posterior Analytics</i>: <i>Aristotle's preface, I.1–2 (lect. 1–2)</i>. The leaves are numbered units of Aristotle's text, cut where he cuts it (the Dumb Ox numbering). In Outline the division stands alone; in Text, lectio starts run through it as thin rules.</li>
+      <li><b>Aquinas's own parts are not rows.</b> The opening of lectio 1 (n. 1–2), where his preface runs straight into the division of the text, comments on no part of Aristotle's text. It follows the lectio rule under a bar marked Aquinas, and the rows after it are Aristotle's division alone. A paragraph that sets out how a part divides sits on that part's heading, beside the list of its parts: n. 10 on <i>What enters the definition</i>.</li>
+      <li><b>The five texts are columns.</b> Greek, Smith's English, Moerbeke's Latin, Aquinas's Latin, an English of Aquinas. There is no English of Moerbeke: whoever reads his Latin reads Latin. Switch on any of them; each row lines them all up on the same unit.</li>
+      <li><b>Aristotle's three texts line up by sentence.</b> They are Aristotle's Greek with Smith's English, and the Latin Aquinas read; Moerbeke's Greek is marks on Ross's. So the column is cut into sentences, one of Moerbeke's to a row with the Greek and Smith that answer it (17 rows in lectio 1; Smith is cut at a colon or semicolon where he runs two of Moerbeke's together). Adding a text adds lines, not columns. Smith sits under the Greek behind a rule, at full size. The study bar's <i>Aristotle column</i> switch compares four ways to show them: <i>Blocks</i> (as before), <i>Sentences</i> (every text under every sentence, Greek and Latin side by side from about 1800px), <i>Sentence opens</i> (one text runs on; the sentence Aquinas is on, or the one tapped, opens the rest), and <i>Tabs</i> (one at a time; a switch keeps the place).</li>
+      <li><b>The short text holds still.</b> Inside a row, Aristotle's cell stays pinned while Aquinas scrolls past it, and it lights and scrolls to the words the paragraph you are reading is about. At the end of the row it lets go.</li>
+      <li><b>Divisions come from folding, not from a second view.</b> Show the whole of De Anima, a book, or lectio 1, as headings only (the division) or with the text. Any heading folds.</li>
+      <li><b>Read Aquinas and Read Aristotle are the same grid.</b> Read Aristotle folds Aquinas to a one-line gloss on each unit, so Aristotle's text runs on; open a gloss where you want him.</li>
+      <li><b>Moerbeke's Greek is an apparatus, not a seventh column.</b> No one has identified the Greek manuscript Moerbeke translated, so his Greek can only be inferred from his Latin. The switch marks each place where his Latin implies a Greek other than Ross's, in both texts, with the same letter; a short apparatus under each unit gives Ross ] the implied reading, the Latin that implies it, a grade, and the Aquinas paragraph that leans on it. Ross / Moerbeke swaps the implied readings into the Greek, so you can read his text as reconstructed.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Try</h2>
+    <ul>
+      <li>De Anima + Outline: the division of the whole work. Book I + Outline: of a book. Lectio 1 + Outline: of the lectio.</li>
+      <li>Lectio 1 + Text, then scroll: watch the Greek on the left light up word by word as each paragraph takes its lemma.</li>
+      <li>Switch on Moerbeke and its English, and hover a quoted lemma in Aquinas.</li>
+      <li>Read Aristotle, then open the gloss on unit [4].</li>
+      <li>Go to: 402b10, n. 12, or [5]. Then Phone, upright.</li>
+      <li>Switch on Moerbeke's Greek and Moerbeke's Latin, and go to unit [6]: Ross's τὸν νοῦν against his <i>intellectivum</i>. Tap the f, then Moerbeke in the apparatus.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>What it costs</h2>
+    <ul>
+      <li>In Read Aristotle the text comes cut into Aquinas's units, under his headings, not into the modern chapters. The site's chapter reader stays as it is for reading Aristotle without him.</li>
+      <li>A unit taller than the screen scrolls inside its own cell. Unit [4] (402a10–22) is the longest here; with Greek and Smith stacked it needs that.</li>
+      <li>Phones get one Aristotle text at a time, in a strip pinned above Aquinas; the strip expands on a tap.</li>
+    </ul>
+  </div>
+  <div>
+    <h2>Decisions</h2>
+    <ol>
+      <li><b>Unit grain.</b> One unit per leaf of his division (seven in lectio 1, as here), or one per "cum dicit «…»", which is finer and closer to Dumb Ox?</li>
+      <li><b>Read Aristotle.</b> Keep his headings between units, or show only unit numbers and rules so the text reads more nearly straight through?</li>
+      <li><b>Front page.</b> Is De Anima + Outline the commentary's works page, or does it still want a separate front page?</li>
+      <li><b>Defaults.</b> Which columns open by default at each width? Now: Greek, with Aquinas's Latin and English.</li>
+    </ol>
+  </div>
+  <div>
+    <h2>What is real</h2>
+    <ul>
+      <li>Greek and Smith's English are the site's build; Smith is split by line between the real Bekker ticks, so a unit's English edge can be a line off.</li>
+      <li>Aquinas's Latin is Corpus Thomisticum's (the Turin 1959 text). Moerbeke's is Parma vol. 20, hand-corrected from archive.org's OCR, unchecked against the scan.</li>
+      <li>The English of Aquinas is a draft written for this mockup.</li>
+      <li>The division of lectio 1 and the unit edges were mapped by hand. Book I below "The treatise" is read from each lectio's opening sentence in Parma and from the division he gives in I.6; Books II and III have only the two levels his Book II, lectio 1 states. Lectio starts are checked against the Greek and the Foster–Humphries ranges on isidore.co.</li>
+      <li>Moerbeke's Greek is my reading of his Latin against Ross, word by word, for lectio 1 only: eight places, one strong, one likely, six slight. A second model (GPT-6.1-Sol) checked it: it dropped two of my first entries (περί at 402a3; <i>endelechia</i>, a spelling Latin inherited) and added two (<i>aliqua</i>, <i>et si</i>). It is not checked against Ross's or Gauthier's apparatus, and the Latin is Parma's printing, not Gauthier's critical text. Some readings may come from James of Venice, whose version Moerbeke revised.</li>
+      <li>Round 1, for comparison: <a href="https://claude.ai/artifact/Qp8KzxHwk3caURSD9RN9Bx">panel and drawer</a>.</li>
+    </ul>
+  </div>
+</div></section>
+
+<script>
+/*DATA*/
+const ARI = /*ARI*/;
+</script>
+<script>
+(() => {
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const strip = s => s.replace(/<[^>]+>/g, '');
+const norm = s => s.replace(/[’'ʼ᾽]/g, "'");
+const num = k => { const m = /^(\d+)([ab])(\d+)$/.exec(k); return (+m[1]) * 1000 + (m[2] === 'b' ? 500 : 0) + (+m[3]); };
+const inR = (k, r) => !!r && num(k) >= num(r[0]) && num(k) <= num(r[1]);
+const overlap = (a, b) => !!a && !!b && num(a[0]) <= num(b[1]) && num(b[0]) <= num(a[1]);
+const colOf = k => /^(\d+[ab])/.exec(k)[1];
+const lineOf = k => +/(\d+)$/.exec(k)[1];
+function fmtR(r){
+  if (!r) return '';
+  const [a, b] = r, ca = colOf(a), cb = colOf(b);
+  if (a === b) return a;
+  if (ca === cb) return `${a}–${lineOf(b)}`;
+  if (ca.slice(0, -1) === cb.slice(0, -1)) return `${a}–${cb.slice(-1)}${lineOf(b)}`;
+  return `${a}–${b}`;
+}
+const KEYS = ARI.lines.map(l => l[0] + l[1]);
+const GK = Object.fromEntries(ARI.lines.map(l => [l[0] + l[1], l[2]]));
+const EN = ARI.en, EN_REAL = new Set(ARI.enReal);
+const LECT1 = ['402a1', '403a2'];
+const keysIn = r => KEYS.filter(k => inR(k, r));
+const P = Object.fromEntries(AQ.map(p => [p.n, p]));
+
+// ── lemma targets in the Greek ──
+const LINE_T = {};
+for (const [tid, arr] of Object.entries(TGT)) for (const [k, sub] of arr) {
+  const i = norm(GK[k] || '').indexOf(norm(sub));
+  if (i < 0) { console.warn('target not found', tid, k); continue; }
+  (LINE_T[k] ??= []).push({ s: i, e: i + sub.length, id: tid });
+}
+const TLINES = Object.fromEntries(Object.entries(TGT).map(([id, a]) => [id, a.map(x => x[0])]));
+
+// ── Moerbeke's Greek: where his Latin implies a Greek other than Ross's ──
+const posOf = (k, s) => KEYS.indexOf(k) * 1000 + s;
+const LINE_V = {}, VAR = {};
+for (const v of MGK) {
+  v.pieces = [];
+  for (const [k, sub, imp] of v.g) {
+    const i = norm(GK[k] || '').indexOf(norm(sub));
+    if (i < 0) { console.warn('variant not found', v.id, k); continue; }
+    const pc = { s: i, e: i + sub.length, id: v.id, imp, k };
+    v.pieces.push(pc); (LINE_V[k] ??= []).push(pc);
+  }
+  v.pos = v.pieces.length ? posOf(v.pieces[0].k, v.pieces[0].s) : Infinity;
+  VAR[v.id] = v;
+}
+MGK.sort((a, b) => a.pos - b.pos).forEach((v, i) => { v.letter = 'abcdefghijklmnopqrstuvwxyz'[i]; if (v.pieces.length) v.pieces[v.pieces.length - 1].last = true; });
+const vOn = id => (S.vOpen?.[id] ? ' von' : '') + (VAR[id]?.grade === 'slight' ? ' vsl' : '');
+const vSup = v => `<sup class="vs${vOn(v.id)}" data-v="${v.id}">${v.letter}</sup>`;
+function gkPart(k, a = 0, b = Infinity){
+  const t = GK[k]; b = Math.min(b, t.length);
+  if (S.mgk && LINE_V[k]) return gkMarked(k, a, b);
+  let out = '', p = a;
+  for (const x of (LINE_T[k] || []).slice().sort((u, v) => u.s - v.s)) {
+    if (x.e <= p || x.s >= b || x.s < p) continue;
+    out += esc(t.slice(p, x.s)) + `<span class="w" data-t="${x.id}">${esc(t.slice(x.s, Math.min(x.e, b)))}</span>`;
+    p = Math.min(x.e, b);
+  }
+  return out + esc(t.slice(p, b));
+}
+
+// a line cut at every lemma and variant edge; a piece can carry both marks
+function gkMarked(k, a, b){
+  const t = GK[k], L = LINE_T[k] || [], V = LINE_V[k] || [], read = S.mgkRead;
+  const cut = [...new Set([a, b, ...L.flatMap(x => [x.s, x.e]), ...V.flatMap(x => [x.s, x.e])])].filter(x => x >= a && x <= b).sort((u, w) => u - w);
+  let out = '';
+  for (let i = 0; i < cut.length - 1; i++) {
+    const p = cut[i], q = cut[i + 1], v = V.find(x => x.s <= p && x.e >= q);
+    if (v && read) {                       // Moerbeke's reading replaces Ross's words, once per piece
+      if (p !== Math.max(v.s, a)) continue;
+      out += `<span class="v rd${vOn(v.id)}" data-v="${v.id}" title="Ross: ${esc(t.slice(v.s, v.e))}">${esc(v.imp)}</span>` + (v.last ? vSup(VAR[v.id]) : '');
+      continue;
+    }
+    const ts = L.filter(x => x.s <= p && x.e >= q).map(x => x.id);
+    let h = esc(t.slice(p, q));
+    if (v) h = `<span class="v${vOn(v.id)}" data-v="${v.id}">${h}</span>`;
+    if (ts.length) h = `<span class="w" data-t="${ts.join(' ')}">${h}</span>`;
+    if (v && v.last && q === v.e) h += vSup(VAR[v.id]);
+    out += h;
+  }
+  return out;
+}
+function markV(i, html, key){
+  if (!S.mgk) return html;
+  for (const v of MGK) for (const [j, sub] of v[key] || []) {
+    if (j !== i) continue;
+    const at = html.indexOf(sub); if (at < 0) { console.warn('latin not found', v.id, sub); continue; }
+    html = html.slice(0, at) + `<span class="v${vOn(v.id)}" data-v="${v.id}">${sub}</span>${vSup(v)}` + html.slice(at + sub.length);
+  }
+  return html;
+}
+const inUnit = (v, s) => { const p = v.pos; return p >= posOf(s.k0, s.a0) && p < (s.b1 === Infinity ? posOf(s.k1, 999) : posOf(s.k1, s.b1)); };
+function appHTML(s){
+  const vs = MGK.filter(v => inUnit(v, s));
+  if (!vs.length) return '';   // a unit where his Latin fits Ross's Greek gets no box
+  const head = `<div class="apph"><span class="tl">Where Moerbeke read other Greek <span class="dr">inferred from his Latin · draft</span></span>${seg('mgkread', [['ross', 'Ross'], ['moer', 'Moerbeke']], S.mgkRead ? 'moer' : 'ross')}</div>`;
+  return `<div class="app">${head}<ol>` + vs.map(v => `<li class="${vOn(v.id).trim()}" data-v="${v.id}"><button class="vb" data-vt="${v.id}" aria-expanded="${!!S.vOpen?.[v.id]}"><span class="vs">${v.letter}</span><span class="vk">${v.pieces[0].k}</span><span class="vr" lang="grc">${esc(v.app.ross)}</span><span class="br">]</span><span class="vi" lang="grc">${esc(v.app.imp)}</span><span class="vla" lang="la">${esc(v.app.la)}</span><span class="gr g-${v.grade}">${v.grade}</span></button><div class="vn" ${S.vOpen?.[v.id] ? '' : 'hidden'}><p>${v.why}</p>${v.aq ? `<p>${v.aqnote} <button class="linkbtn" data-para="${v.aq}">Aquinas, n. ${v.aq} →</button></p>` : ''}</div></li>`).join('') + '</ol></div>';
+}
+
+// ── numbered units (cut at the lemma that opens each) ──
+const SEGS = SEG_DEF.map(d => {
+  let k0 = '402a1', a0 = 0;
+  if (d.start) { k0 = TLINES[d.start][0]; a0 = LINE_T[k0].find(x => x.id === d.start).s; }
+  return { ...d, k0, a0 };
+});
+SEGS.forEach((s, i) => {
+  const nx = SEGS[i + 1];
+  if (!nx) { s.k1 = '403a2'; s.b1 = Infinity; }
+  else if (nx.a0 > 0) { s.k1 = nx.k0; s.b1 = nx.a0; }
+  else { s.k1 = KEYS[KEYS.indexOf(nx.k0) - 1]; s.b1 = Infinity; }
+  s.r = [s.k0, s.k1];
+  s.lines = keysIn(s.r).map(k => ({ k, a: k === s.k0 ? s.a0 : 0, b: k === s.k1 ? s.b1 : Infinity }));
+});
+// Smith's English comes cut per Bekker line. A unit's cut falls at the sentence end nearest the point
+// its first Greek word holds in the line, so no unit starts or stops mid-sentence.
+const EN_ALL = KEYS.map(k => EN[k] || '').join('');
+const EN_AT = {};
+KEYS.reduce((p, k) => (EN_AT[k] = p) + (EN[k] || '').length, 0);
+const EN_CUTS = [0, ...[...EN_ALL.matchAll(/(?<!\b(?:e\.g|i\.e|viz|cf))[.?!][’”)]*(?:\s+|(?=[A-Z‘“]))/g)].map(m => m.index + m[0].length)];
+const enSnap = p => EN_CUTS.reduce((b, c) => Math.abs(c - p) < Math.abs(b - p) ? c : b, 0);
+SEGS.forEach((s, i) => {
+  s.e0 = i === 0 ? 0 : enSnap(EN_AT[s.k0] + Math.round(s.a0 / GK[s.k0].length * (EN[s.k0] || '').length));
+});
+SEGS.forEach((s, i) => { s.e1 = SEGS[i + 1] ? SEGS[i + 1].e0 : enSnap(EN_AT[KEYS[KEYS.indexOf(s.k1) + 1]] ?? EN_ALL.length); });
+
+// ── sentence rows: one of Moerbeke's sentences, with the Greek and Smith's English that answer it ──
+const SENTS = SENT_DEF.map((d, i) => {
+  const s = SEGS.find(x => x.m.includes(d.m[0])), first = s.m[0] === d.m[0];
+  const k0 = first ? s.k0 : d.g[0], a0 = first ? s.a0 : norm(GK[d.g[0]] || '').indexOf(norm(d.g[1]));
+  const e0 = first ? s.e0 : EN_ALL.indexOf(d.e, s.e0);
+  if (a0 < 0 || e0 < 0) console.warn('sentence anchor not found', i, d);
+  return { ...d, i, seg: s, k0, a0, e0 };
+});
+SENTS.forEach((r, i) => {
+  const nx = SENTS[i + 1];
+  if (nx && nx.seg === r.seg) { r.k1 = nx.k0; r.b1 = nx.a0; r.e1 = nx.e0; } else { r.k1 = r.seg.k1; r.b1 = r.seg.b1; r.e1 = r.seg.e1; }
+  if (r.b1 === 0) { r.k1 = KEYS[KEYS.indexOf(r.k1) - 1]; r.b1 = Infinity; }   // a row that ends at a line's start ends on the line before
+  r.lines = keysIn([r.k0, r.k1]).map(k => ({ k, a: k === r.k0 ? r.a0 : 0, b: k === r.k1 ? r.b1 : Infinity }));
+});
+const LEAF_SEG = Object.fromEntries(SEGS.map(s => [s.leaf, s]));
+
+// ── the division of the work ──
+const ALL = {}, PARENT = {}, DEPTH = {}, ROWS = [];
+(function ix(n, p, d){ ALL[n.id] = n; PARENT[n.id] = p; DEPTH[n.id] = d; ROWS.push(n.id); (n.kids || []).forEach(k => ix(k, n.id, d + 1)); })(WORK, null, 0);
+const pathOf = id => { const out = []; for (let x = id; x; x = PARENT[x]) out.unshift(x); return out; };
+// Aquinas's own parts (his preface, a lectio's opening) belong to no part of Aristotle's text
+const OWN_OF = {};
+for (const o of AQ_OWN) for (const n of o.n) OWN_OF[n] = o;
+const PARA_NODE = {};
+for (const p of AQ) {
+  if (OWN_OF[p.n]) continue;
+  let best = null;
+  for (const id in ALL) if ((ALL[id].go || []).includes(p.n) && (!best || DEPTH[id] > DEPTH[best])) best = id;
+  PARA_NODE[p.n] = best || 'proem';
+}
+const NODE_PARAS = {};
+for (const [n, id] of Object.entries(PARA_NODE)) (NODE_PARAS[id] ??= []).push(+n);
+for (const o of AQ_OWN) NODE_PARAS[o.id] = o.n;
+const RULE_AT = {};
+for (const r of RULES) {
+  const id = r.at || ROWS.find(x => x !== 'work' && ALL[x].r[0] === r.key);
+  if (id) RULE_AT[id] = r;
+}
+for (const o of AQ_OWN) { const row = Object.keys(RULE_AT).find(x => RULE_AT[x].key === o.at); for (const n of o.n) PARA_NODE[n] = row; }
+const SCOPES = { work: ['De Anima', ['402a1', '435b25']], b1: ['Book I', ['402a1', '411b30']], b2: ['Book II', ['412a3', '424b18']], b3: ['Book III', ['424b22', '435b25']], l1: ['Lectio 1', LECT1] };
+const LABEL = { grc: 'Greek', en: 'English · Smith', moer: 'Latin · Moerbeke', moen: 'English of Moerbeke · draft', aqla: 'Aquinas · Latin', aqen: 'Aquinas · English, draft' };
+
+// ── state ──
+const S = { preset: 'fit', acol: 'sent', tab: null, scope: 'l1', show: 'text', mode: 'aq', cols: { grc: true, en: false, moer: false, moen: false, aqla: true, aqen: true }, open: {}, rowOpen: {}, tall: false };
+try { const v = JSON.parse(localStorage.getItem('aq-r2') || '{}'); Object.assign(S, v); S.cols = Object.assign({ grc: true, en: false, moer: false, moen: false, aqla: true, aqen: true }, v.cols || {}); } catch (e) {}
+S.cols.moen = false;   // no English of Moerbeke for now: a reader of his Latin reads Latin
+const save = () => { try { localStorage.setItem('aq-r2', JSON.stringify({ preset: S.preset, acol: S.acol, tab: S.tab, scope: S.scope, show: S.show, mode: S.mode, cols: S.cols, mgk: S.mgk, mgkRead: S.mgkRead })); } catch (e) {} };
+
+const PRESETS = { up: [390, 844], phone: [932, 430], laptop: [1440, 900], wide: [1920, 1080] };
+let W = 1200, H = 800, Z = 1, TOP = 36;
+const stage = $('#stage'), box = $('#box');
+function size(){
+  const wrap = box.parentElement, cs = getComputedStyle(wrap);
+  const availW = wrap.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  const availH = Math.max(420, window.innerHeight - $('.mbar').offsetHeight - 30);
+  if (S.preset === 'fit') { W = Math.round(availW); H = Math.round(Math.min(availH, 1100)); Z = 1; }
+  else { [W, H] = PRESETS[S.preset]; Z = Math.min(1, availW / W, availH / H); }
+  stage.style.width = W + 'px'; stage.style.height = H + 'px';
+  stage.style.transform = Z < 1 ? `scale(${Z})` : '';
+  box.style.width = (W * Z) + 'px'; box.style.height = (H * Z) + 'px';
+  $('#readout').textContent = `${W} × ${H} px` + (Z < 1 ? ` · shown at ${Math.round(Z * 100)}%` : '');
+  $$('#presets button').forEach(b => b.setAttribute('aria-pressed', b.dataset.p === S.preset));
+  $$('#acols button').forEach(b => b.setAttribute('aria-pressed', b.dataset.ac === S.acol));
+}
+let toastT;
+function toast(msg){
+  $('.toast', stage)?.remove();
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; stage.appendChild(t);
+  clearTimeout(toastT); toastT = setTimeout(() => t.remove(), 2800);
+}
+const seg = (name, opts, val) => `<span class="seg" role="group" aria-label="${name}">` + opts.map(([v, l]) => `<button data-seg="${name}" data-val="${v}" aria-pressed="${v === val}">${l}</button>`).join('') + '</span>';
+
+// ── layout: which texts sit in which column ──
+function layout(){
+  const narrow = W < 840;
+  const A = ['grc', 'en'].filter(c => S.cols[c]), B = ['moer', 'moen'].filter(c => S.cols[c]), C = ['aqla', 'aqen'].filter(c => S.cols[c]);
+  const merged = S.acol !== 'blocks';
+  if (narrow) {
+    const a = merged ? [...A, ...B] : ['grc', 'en', 'moer'].filter(c => S.cols[c]).slice(0, 1);
+    const groups = [];
+    if (a.length) groups.push({ k: 'ari', items: a, side: false, narrow: true });
+    if (C.length) groups.push({ k: 'aq', items: C, side: C.length > 1 });
+    return { narrow, groups };
+  }
+  // reading Aquinas: Aristotle's texts share a third of the width and Aquinas has the rest, his Latin and
+  // English always in parallel columns. Reading Aristotle: each pair of Aristotle's texts gets a column.
+  const aqFirst = S.mode === 'aq' && C.length > 0;
+  let groups = [];
+  if (aqFirst) {
+    if (A.length + B.length) groups.push({ k: 'ari', items: [...A, ...B], fr: 1 });
+    groups.push({ k: 'aq', items: C, fr: 2 });
+  } else if (merged) {
+    if (A.length + B.length) groups.push({ k: 'ari', items: [...A, ...B], fr: A.length && B.length ? 2 : 1 });
+    if (C.length) groups.push({ k: 'aq', items: C, fr: 1.35 });
+  } else {
+    if (A.length) groups.push({ k: 'ari', items: A, fr: 1 });
+    if (B.length) groups.push({ k: 'ari', items: B, fr: 1 });
+    if (C.length) groups.push({ k: 'aq', items: C, fr: 1.35 });
+    const maxCols = Math.max(2, Math.floor(W / 420));
+    if (groups.length > maxCols && A.length && B.length) groups = [{ k: 'ari', items: [...A, ...B], fr: 1 }, ...groups.filter(g => g.k === 'aq')];
+  }
+  const tot = groups.reduce((s, g) => s + g.fr, 0);
+  groups.forEach(g => {
+    g.px = W * g.fr / tot;
+    const per = aqFirst && g.k === 'ari' ? 260 : 330;   // Aristotle's units are short: side by side from 260px a text
+    g.side = g.items.length > 1 && ((aqFirst && g.k === 'aq') || g.px >= g.items.length * per);
+    // sentence rows: Greek with Smith beside Latin with its English, from 260px a column
+    if (merged && g.k === 'ari') g.side = S.acol === 'sent' && A.length > 0 && B.length > 0 && g.px >= 2 * 260 + 40;
+  });
+  return { narrow, groups, template: groups.map(g => `minmax(0,${g.fr}fr)`).join(' ') };
+}
+
+// ── renderers ──
+const inScope = id => overlap(ALL[id].r, SCOPES[S.scope][1]);
+const isOpen = id => id === 'work' || (S.open[id] ?? true);   // the work itself never folds
+const visible = id => inScope(id) && pathOf(id).slice(0, -1).every(isOpen);
+const latinOnly = () => S.cols.aqla && !S.cols.aqen;
+function lab(n, ref = ''){
+  const txt = latinOnly() ? n.la : n.en;
+  const r = ref ? `<span class="cref">${/[?!.]$/.test(txt) ? ' ' : ', '}${ref}</span>` : '';
+  if (latinOnly()) return `<span class="l1"><span lang="la">${esc(n.la)}</span>${r}</span>`;
+  return `<span class="l1">${esc(n.en)}${r}</span>` + (S.cols.aqla ? `<span class="l2" lang="la">${esc(n.la)}</span>` : '');
+}
+// Aristotle's book.chapter, then Aquinas's lectiones: "I.1–2 (lect. 1–2)"
+const ROM = { 1: 'I', 2: 'II', 3: 'III' };
+function refOf(n){
+  const a = num(n.r[0]), b = num(n.r[1]);
+  const cs = CH.filter((c, i) => (num(c[2]) <= a || num(c[2]) < b) && (i + 1 === CH.length || num(CH[i + 1][2]) > a));
+  if (!cs.length) return '';
+  const f = cs[0], l = cs[cs.length - 1], one = f[0] === l[0];
+  const chs = ROM[f[0]] + '.' + f[1] + (f === l ? '' : '–' + (one ? '' : ROM[l[0]] + '.') + l[1]);
+  let lec = lecOf(n);
+  const bk = ROM[f[0]] + '.';
+  if (one && lec.startsWith(bk) && !lec.slice(bk.length).includes('.')) lec = lec.slice(bk.length);
+  return chs + (lec ? ` (lect. ${lec})` : '');
+}
+function segsOf(n){
+  const ss = SEGS.filter(s => inR(s.k0, n.r));
+  if (!ss.length) return '';
+  const a = ss[0].n, b = ss[ss.length - 1].n, more = num(n.r[1]) > num('403a2');
+  return `[${a}${b > a ? '–' + b : ''}${more ? ' …' : ''}]`;
+}
+const lecOf = n => n.lec || (n.lectio ? 'I.' + n.lectio : (inR(n.r[0], LECT1) && inR(n.r[1], LECT1) ? 'I.1' : ''));
+const saidOf = n => n.said == null ? '' : (typeof n.said === 'number' ? `stated in n. ${n.said}` : `stated in l. ${n.said}`);
+function headHTML(id){
+  const n = ALL[id], d = DEPTH[id];
+  const foldable = id !== 'work' && ((n.kids || []).some(k => inScope(k.id)) || LEAF_SEG[id] || NODE_PARAS[id]);
+  const open = isOpen(id);
+  const tg = foldable ? `<button class="tg" data-tg="${id}" aria-expanded="${open}" aria-label="${open ? 'Fold' : 'Unfold'}">${open ? '▾' : '▸'}</button>` : '<span class="tg"></span>';
+  const meta = [segsOf(n), fmtR(n.r), saidOf(n)].filter(Boolean).join(' · ');
+  const lb = foldable ? `<button class="lb" data-tg="${id}">${lab(n, refOf(n))}</button>` : `<span class="lb">${lab(n, refOf(n))}</span>`;
+  return `<div class="h">${tg}${lb}<span class="meta">${meta}</span></div>`;
+}
+function ariText(c, s){
+  if (c === 'grc') return '<div class="gk">' + s.lines.map(({ k, a, b }, i) => {
+    const ref = i === 0 || lineOf(k) === 1 ? k : String(lineOf(k));
+    return `<div class="ln" data-k="${k}"><span class="no" role="button" tabindex="0" title="Aquinas on ${k}">${ref}</span><span class="tx">${gkPart(k, a, b)}</span></div>`;
+  }).join('') + '</div>';
+  if (c === 'en') return '<p class="enp">' + enRun(s.e0, s.e1) + '</p>';
+  if (c === 'moer') return '<p class="moer" lang="la">' + s.m.map(i => `<span class="ms" data-i="${i}">${markV(i, MOER[i].t, 'm')}</span>`).join(' ') + '</p>';
+  return '<p class="moer">' + s.m.map(i => `<span class="ms me" data-i="${i}">${markV(i, MOER_EN[i], 'en')}</span>`).join(' ') + '</p>';
+}
+// Smith's English between two points, cut per Bekker line so the lemma lighting can find it
+function enRun(e0, e1){
+  return KEYS.filter(k => EN_AT[k] < e1 && EN_AT[k] + (EN[k] || '').length > e0).map(k => {
+    const a = EN_AT[k], tk = EN_REAL.has(k) && a >= e0 ? `<sup class="tk">${lineOf(k) === 1 ? colOf(k) : lineOf(k)}</sup>` : '';
+    return `${tk}<span class="ep" data-k="${k}">${esc(EN_ALL.slice(Math.max(a, e0), Math.min(a + EN[k].length, e1)))}</span>`;
+  }).join('');
+}
+// one row's text in one version; the Greek runs on, its line numbers raised where each line starts
+function sentText(c, r){
+  if (c === 'grc') return r.lines.map(({ k, a, b }) => `<span class="gl" data-k="${k}">${a === 0 ? `<sup class="no gn" data-k="${k}" role="button" tabindex="0" title="Aquinas on ${k}">${lineOf(k) === 1 ? colOf(k) : lineOf(k)}</sup>` : ''}${gkPart(k, a, b)}</span>`).join(' ');
+  if (c === 'en') return enRun(r.e0, r.e1);
+  if (c === 'moer') return r.m.map(i => `<span class="ms" data-i="${i}">${markV(i, MOER[i].t, 'm')}</span>`).join(' ');
+  return r.m.map(i => `<span class="ms me" data-i="${i}">${markV(i, MOER_EN[i], 'en')}</span>`).join(' ');
+}
+const SHORT = { grc: 'Greek', en: 'Smith', moer: 'Latin', moen: 'English of Latin' };
+// Aristotle's texts aligned by sentence. An English sits under its original, set off by a rule, never smaller.
+// sent: every version under every sentence. focus: one text runs on, and the sentence Aquinas is on (or the
+// one tapped) opens the others. tabs: one version at a time; a switch keeps the place.
+function sentGroup(g, s){
+  const it = g.items;
+  if (it.length < 2 && !g.narrow) return ariGroup(g, s);
+  const rows = SENTS.filter(r => r.seg === s), fams = [it.filter(c => c === 'grc' || c === 'en'), it.filter(c => c === 'moer' || c === 'moen')].filter(f => f.length);
+  const main = it.find(c => c === 'grc' || c === 'moer') || it[0];
+  const tab = it.includes(S.tab) ? S.tab : main;
+  const ver = (c, f, first, r) => {
+    const sub = f.length > 1 && (c === 'en' || c === 'moen');
+    return `<div class="sv sv-${c}${sub ? ' sub' : ''}${c === main ? ' main' : ''}${S.acol === 'tabs' && c === tab ? ' t-on' : ''}"${c === 'moer' ? ' lang="la"' : c === 'grc' ? ' lang="grc"' : ''}>${first && S.acol === 'sent' && it.length > 1 ? `<div class="tl">${LABEL[c]}</div>` : ''}${sentText(c, r)}</div>`;
+  };
+  const body = rows.map((r, i) => {
+    const fam = f => `<div class="sf">${f.map(c => ver(c, f, i === 0, r)).join('')}</div>`;
+    return `<div class="sr${g.side ? ' cols' : ''}" data-r="${r.i}">${fams.map(fam).join('')}</div>`;
+  }).join('');
+  const bar = S.acol === 'tabs' ? `<div class="tabbar" role="tablist">${it.map(c => `<button role="tab" data-tab="${c}" aria-selected="${c === tab}">${SHORT[c]}</button>`).join('')}</div>` : '';
+  return `${bar}<div class="sents ${S.acol}${it.length < 2 ? ' one' : ''}">${body}</div>`;
+}
+const ariGroup = (g, s) => `<div class="${g.side ? 'pairc' : 'stackc'}">` + g.items.map(c => `<div class="tx tx-${c}">${g.items.length > 1 ? `<div class="tl">${LABEL[c]}</div>` : ''}${ariText(c, s)}</div>`).join('') + '</div>';
+function kidsList(id){
+  const kids = (ALL[id].kids || []).filter(k => inScope(k.id));
+  return `<div class="kids"><ol>` + kids.map(k => `<li><button data-jump="${k.id}"><span>${lab(k, refOf(k))}</span><span class="m">${[segsOf(k), fmtR(k.r)].filter(Boolean).join(' · ')}</span></button></li>`).join('') + '</ol></div>';
+}
+function aqGroup(g, id){
+  const ps = NODE_PARAS[id].map(n => P[n]);
+  const en = g.items.includes('aqen'), la = g.items.includes('aqla');
+  if (S.mode === 'ari' && !S.rowOpen[id]) {
+    const words = ps.reduce((a, p) => a + strip(p.la).split(/\s+/).length, 0);
+    const first = strip(la ? ps[0].la : ps[0].en).slice(0, 110);
+    return `<button class="gloss" data-open="${id}"><span class="gn">Aquinas, n. ${ps[0].n}${ps.length > 1 ? '–' + ps[ps.length - 1].n : ''}</span><span class="gw">${words.toLocaleString('en')} words</span><span class="gf" ${la ? 'lang="la"' : ''}>${esc(first)}…</span><span>▸</span></button>`;
+  }
+  const fold = S.mode === 'ari' ? `<button class="linkbtn foldbtn" data-close="${id}">Fold Aquinas ▴</button>` : '';
+  return fold + ps.map(p => `<div class="aqp" data-n="${p.n}"><span class="pn" title="Marietti n. ${p.n}">${p.n}</span><div class="aqt ${g.side ? 'side' : 'stack'}">${la ? `<p class="la" lang="la">${p.la}</p>` : ''}${en ? `<p class="en">${p.en}</p>` : ''}</div></div>`).join('');
+}
+function bodyHTML(id, L){
+  if (S.show !== 'text' || !isOpen(id)) return '';
+  const n = ALL[id], s = LEAF_SEG[id];
+  const paras = NODE_PARAS[id];
+  if (!s && !paras) return (n.kids || []).length ? '' : `<div class="stub">${lecOf(n) ? 'Lectio ' + lecOf(n) : 'This part'}: text and commentary are not in this mockup.</div>`;
+  const ari = L.groups.filter(g => g.k === 'ari'), aq = paras ? L.groups.filter(g => g.k === 'aq') : [];
+  // reading Aristotle: a heading row carries only its folded gloss, so the text runs on
+  if (!s && S.mode === 'ari' && !S.rowOpen[id]) return aq.length ? `<div class="glossrow">${aqGroup(aq[0], id)}</div>` : '';
+  const stick = aq.length && (S.mode === 'aq' || S.rowOpen[id]);
+  const unit = s ? `<div class="unit"><span>[${s.n}]</span><span class="ur">${fmtR(s.r)}</span></div>` : '';
+  const ariInner = g => s ? (S.acol === 'blocks' ? ariGroup(g, s) : sentGroup(g, s)) : kidsList(id);
+  if (L.narrow) {
+    const a = ari[0], q = aq[0];
+    return `<div class="cells narrow">${a && (s || (n.kids || []).length) ? `<div class="${stick ? 'strip' : 'flat'}${stick && S.tall ? ' tall' : ''}">${stick ? '' : unit}${ariInner(a)}${s && S.mgk ? appHTML(s) : ''}</div>` : ''}${q ? `<div class="cell aq">${aqGroup(q, id)}</div>` : ''}</div>`;
+  }
+  let cells = '';
+  if (s) cells += ari.map((g, i) => `<div class="cell ari"><div class="${stick ? 'stk' : ''}">${i === 0 ? unit : ''}${ariInner(g)}${i === ari.length - 1 && S.mgk ? appHTML(s) : ''}</div></div>`).join('');
+  else if (ari.length) cells += `<div class="cell ari" style="grid-column:span ${ari.length}"><div class="${stick ? 'stk' : ''}">${ariInner(ari[0])}</div></div>`;
+  cells += aq.map(g => `<div class="cell aq">${aqGroup(g, id)}</div>`).join('');
+  const tpl = s || !aq.length ? L.template : L.groups.filter(g => g.k === 'ari').map(g => `minmax(0,${g.fr}fr)`).concat(aq.map(g => `minmax(0,${g.fr}fr)`)).join(' ');
+  return `<div class="cells" style="grid-template-columns:${tpl}">${cells}</div>`;
+}
+
+// Aquinas's own parts stand apart from the rows, which are the division of Aristotle's text
+function ownHTML(o, L){
+  const aq = L.groups.filter(g => g.k === 'aq'), ari = L.groups.filter(g => g.k === 'ari');
+  if (!aq.length) return '';
+  const head = `<div class="oh"><span class="ok">Aquinas</span><span class="ot">${o.en}</span><span class="on">n. ${o.n.join('–')}</span></div>`;
+  if (S.mode === 'ari' && !S.rowOpen[o.id]) return `<div class="own" data-own="${o.id}">${head}<div class="glossrow">${aqGroup(aq[0], o.id)}</div></div>`;
+  const side = o.divides ? kidsList(o.divides) : '';
+  if (L.narrow) return `<div class="own" data-own="${o.id}">${head}<div class="cells narrow">${ari.length && side ? `<div class="flat">${side}</div>` : ''}<div class="cell aq">${aqGroup(aq[0], o.id)}</div></div></div>`;
+  const cells = (ari.length ? `<div class="cell ari" style="grid-column:span ${ari.length}">${side}</div>` : '') + aq.map(g => `<div class="cell aq">${aqGroup(g, o.id)}</div>`).join('');
+  const tpl = ari.concat(aq).map(g => `minmax(0,${g.fr}fr)`).join(' ');
+  return `<div class="own" data-own="${o.id}">${head}<div class="cells" style="grid-template-columns:${tpl}">${cells}</div></div>`;
+}
+
+const mgkChip = () => `<button class="chip mgkchip" data-act="mgk" aria-pressed="${!!S.mgk}" title="Mark where Moerbeke's Latin implies a Greek other than Ross's">Moerbeke's Greek</button>`;
+function controls(L){
+  const scopeOpts = Object.entries(SCOPES).map(([k, v]) => [k, v[0]]);
+  if (L.narrow) {
+    const a = ['grc', 'en', 'moer'].find(c => S.cols[c]) || 'none';
+    const q = S.cols.aqla && S.cols.aqen ? 'both' : S.cols.aqla ? 'la' : S.cols.aqen ? 'en' : 'none';
+    return `<div class="toolbar narrowst">
+      <select data-sel="scope" aria-label="Show">${scopeOpts.map(([k, l]) => `<option value="${k}" ${k === S.scope ? 'selected' : ''}>${l}</option>`).join('')}</select>
+      ${seg('show', [['outline', 'Outline'], ['text', 'Text']], S.show)}
+      <button class="chip" data-act="ctl" aria-expanded="${!!S.ctl}" aria-pressed="${!!S.ctl}">Texts ${S.ctl ? '▴' : '▾'}</button>
+    </div>${S.ctl ? `<div class="toolbar narrowst">
+      ${seg('mode', [['aq', 'Read Aquinas'], ['ari', 'Read Aristotle']], S.mode)}
+      ${S.acol !== 'blocks' ? `<span class="lab">Aristotle</span>${['grc', 'en', 'moer'].map(c => `<button class="chip" data-col="${c}" aria-pressed="${!!S.cols[c]}">${SHORT[c]}</button>`).join('')}` : `<label class="lab">Aristotle <select data-sel="ari">${[['grc', 'Greek'], ['en', 'English (Smith)'], ['moer', "Moerbeke's Latin"], ['none', 'None']].map(([v, l]) => `<option value="${v}" ${v === a ? 'selected' : ''}>${l}</option>`).join('')}</select></label>`}
+      <label class="lab">Aquinas <select data-sel="aq">${[['la', 'Latin'], ['both', 'Latin + English'], ['en', 'English'], ['none', 'None']].map(([v, l]) => `<option value="${v}" ${v === q ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+      ${mgkChip()}
+      <label class="go"><input id="goto" placeholder="Go to 402b10" enterkeyhint="go" aria-label="Go to a line, paragraph or unit"></label>
+    </div>` : ''}`;
+  }
+  const chip = c => `<button class="chip" data-col="${c}" aria-pressed="${!!S.cols[c]}">${{ grc: 'Greek', en: 'English (Smith)', moer: "Moerbeke's Latin", moen: 'English of Moerbeke', aqla: 'Latin', aqen: 'English' }[c]}</button>`;
+  const go = `<label class="go lab">Go to <input id="goto" placeholder="402b10, n. 12, [5]" aria-label="Go to a line, paragraph or unit"></label>`;
+  const chips = `<span class="lab">Aristotle</span>${['grc', 'en', 'moer'].map(chip).join('')}<span class="lab" style="margin-left:10px">Aquinas</span>${['aqla', 'aqen'].map(chip).join('')}${mgkChip()}`;
+  // a short screen (phone on its side) gets one row; the texts and Go to sit behind a button
+  const short = H < 560;
+  return `<div class="toolbar">
+      <span class="lab">Show</span>${seg('scope', scopeOpts, S.scope)}
+      ${seg('show', [['outline', 'Outline'], ['text', 'Text']], S.show)}
+      ${seg('mode', [['aq', 'Read Aquinas'], ['ari', 'Read Aristotle']], S.mode)}
+      <span class="sp"></span>
+      ${short ? `<button class="chip" data-act="ctl" aria-expanded="${!!S.ctl}" aria-pressed="${!!S.ctl}">Texts ${S.ctl ? '\u25b4' : '\u25be'}</button>` : go}
+    </div>
+    ${!short ? `<div class="toolbar">${chips}</div>` : S.ctl ? `<div class="toolbar">${chips}<span class="sp"></span>${go}</div>` : ''}`;
+}
+
+function build(){
+  const L = layout();
+  const narrow = L.narrow;
+  let rows = '';
+  if (S.scope === 'work') rows += `<header class="dochead"><p class="eyebrow">Thomas Aquinas · c. 1267–68 · commentary</p><h1>On Aristotle’s De Anima</h1><p class="sub" lang="la">Sententia libri De anima · 3 books, 56 lectiones, 873 paragraphs</p></header>`;
+  for (const id of ROWS) {
+    if (!visible(id)) continue;
+    // a rule shows in the text only, and only when its lectio starts inside the scope (an ancestor row may
+    // start earlier); Aquinas's own parts follow it. The outline is Aristotle's division alone.
+    const r = RULE_AT[id], ruleHTML = S.show === 'text' && r && inR(r.key, SCOPES[S.scope][1])
+      ? `<div class="rule"><span>${r.label}</span><span class="rk">${r.key}</span></div>` + AQ_OWN.filter(o => o.at === r.key).map(o => ownHTML(o, L)).join('') : '';
+    if (id !== 'work') rows += ruleHTML;
+    // the commentary opens with lectio 1: its rule sits under the work's title, above n. 1
+    const mid = id === 'work' ? ruleHTML : '';
+    const d = DEPTH[id];
+    // the whole work has its title above (dochead), so its own heading would only repeat it
+    const head = id === 'work' && S.scope === 'work' ? '' : headHTML(id);
+    rows += `<section class="nd ${LEAF_SEG[id] ? 'leaf' : ''} ${d <= 3 ? 'd' + d : 'deep'}" data-id="${id}" style="--d:${d}">${head}${mid}${bodyHTML(id, L)}</section>`;
+  }
+  stage.innerHTML = `<div class="site-head"><span class="hb">☰</span><span class="work">Aquinas, On the Soul ▾</span><span class="sp"></span>${narrow ? '<span>⌕</span>' : '<span>Search</span><span>Lexicon</span><span>Settings</span>'}</div>` +
+    controls(L) +
+    `<div class="body"><div class="doc ${narrow ? 'narrowdoc' : ''} ${H < 560 ? 'shortdoc' : ''} ${S.mode === 'ari' ? 'modeari' : ''}" id="doc"><div class="crumbbar" id="crumb"></div>${rows}<div style="height:60vh"></div></div></div>`;
+  const doc = $('#doc', stage);
+  spy();                                   // fill the crumb first, then measure it
+  TOP = $('#crumb', stage).offsetHeight || 34;
+  doc.style.setProperty('--top', TOP + 'px');
+  doc.style.setProperty('--stkmax', Math.max(160, doc.clientHeight - TOP - 14) + 'px');
+  bind(doc);
+  // a pinned strip that holds more than it shows gets a grip at its foot
+  for (const st of $$('.strip', doc)) if (S.tall || st.scrollHeight > st.clientHeight + 2)
+    st.insertAdjacentHTML('beforeend', `<button class="grip" data-act="tall" aria-label="${S.tall ? 'Less of Aristotle' : 'More of Aristotle'}">${S.tall ? '▴' : '▾'}</button>`);
+  lastCur = null; spy();
+}
+
+// ── scrolling: crumb, current paragraph, short text follows ──
+let lastCur = null;
+function spy(){
+  const doc = $('#doc', stage); if (!doc) return;
+  const y0 = doc.scrollTop + TOP + 6;
+  let row = null;
+  for (const el of $$('section.nd', doc)) { if (el.offsetTop <= y0) row = el; else break; }
+  const id = row ? row.dataset.id : ($('section.nd', doc)?.dataset.id || 'work');
+  const path = pathOf(id).filter(x => x !== 'work'), short =n => latinOnly() ? n.la.replace(/, ibi.*$/, '') : n.en;
+  const shown = (doc.classList.contains('narrowdoc') || doc.classList.contains('shortdoc')) ? path.slice(-1) : path;
+  $('#crumb', stage).innerHTML = shown.map((x, i) => (i ? '<span class="sep">›</span>' : '') + (x === '…' ? `<button data-jump="${path[path.length - 3]}">…</button>` : `<button data-jump="${x}">${esc(short(ALL[x]))}</button>`)).join('') +
+    `<span class="rng">${LEAF_SEG[id] ? '[' + LEAF_SEG[id].n + '] ' : ''}${fmtR(id === 'work' ? SCOPES[S.scope][1] : ALL[id].r)}</span>`;
+  // current paragraph: the last one whose top has passed the reading line
+  const yr = doc.scrollTop + TOP + (doc.clientHeight - TOP) * 0.3;
+  let cur = null;
+  for (const el of $$('.aqp', doc)) { if (el.offsetTop <= yr) cur = el; else break; }
+  if (cur === lastCur) return;
+  lastCur = cur;
+  $$('.cur', doc).forEach(e => e.classList.remove('cur'));
+  if (!cur) return;
+  cur.classList.add('cur');
+  const sec = cur.closest('section.nd'), n = +cur.dataset.n;
+  const ids = [...new Set($$('q[data-t]', cur).flatMap(q => q.dataset.t.split(' ')))];
+  for (const t of ids) {
+    $$(`.w[data-t~="${t}"], .ms span[data-t~="${t}"]`, sec).forEach(e => e.classList.add('cur'));
+    for (const k of TLINES[t] || []) $$(`.ep[data-k="${k}"]`, sec).forEach(e => e.classList.add('cur'));
+  }
+  if (!ids.length && P[n].r) $$('.ln, .ep, .gl', sec).forEach(e => { if (inR(e.dataset.k, P[n].r)) e.classList.add('cur'); });
+  // the sentence row that holds the first lit words is the one Aquinas is on
+  for (const box of $$('.sents', sec)) {
+    const c = $('.sr .cur', box), row = c ? c.closest('.sr') : $('.sr', box);
+    $$('.sr', box).forEach(x => x.classList.toggle('on', x === row));
+  }
+  // the short text follows: bring the first lit words into view inside each pinned cell
+  for (const box of $$('.stk, .strip', sec)) {
+    const first = $('.cur', box); if (!first) continue;
+    const t = first.offsetTop, h = box.clientHeight;
+    if (t < box.scrollTop + 24 || t > box.scrollTop + h - 40) box.scrollTo({ top: Math.max(0, t - h * 0.25), behavior: 'smooth' });
+  }
+}
+// open or close one entry of the apparatus
+function openV(id){
+  S.vOpen ??= {};
+  const on = !S.vOpen[id];
+  if (on) S.vOpen[id] = true; else delete S.vOpen[id];
+  $$(`[data-v="${id}"]`, stage).forEach(e => e.classList.toggle('von', on));
+  for (const li of $$(`.app li[data-v="${id}"]`, stage)) { $('.vn', li).hidden = !on; $('.vb', li).setAttribute('aria-expanded', on); }
+}
+// a tap on a mark in the text: the entry opens beside it
+function popV(id, el){
+  closePop();
+  const v = VAR[id], r = el.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+  const pop = document.createElement('div'); pop.className = 'vpop'; pop.setAttribute('role', 'dialog'); pop.setAttribute('aria-label', `Moerbeke's Greek, ${v.letter}`); pop.dataset.for = id;
+  pop.innerHTML = `<div class="vph"><span class="vs">${v.letter}</span><span class="vk">${v.pieces.map(p => p.k).join(', ')}</span><span class="gr g-${v.grade}">${v.grade}</span><button class="vx" aria-label="Close">×</button></div>
+    <div class="vrow"><span class="vlab">Ross</span><span lang="grc" class="vr">${esc(v.app.ross)}</span></div>
+    <div class="vrow"><span class="vlab">Moerbeke read</span><span lang="grc" class="vi">${esc(v.app.imp)}</span></div>
+    <div class="vrow"><span class="vlab">from his Latin</span><span lang="la" class="vla">${esc(v.app.la)}</span></div>
+    <p>${v.why}</p>${v.aq ? `<p>${v.aqnote} <button class="linkbtn" data-para="${v.aq}">Aquinas, n. ${v.aq} →</button></p>` : ''}<p class="dr">Inferred from the Latin and checked by a second model; not checked against an apparatus.</p>`;
+  stage.appendChild(pop);
+  const W0 = stage.clientWidth, H0 = stage.clientHeight, w = Math.min(400, W0 - 24);
+  pop.style.width = w + 'px';
+  pop.style.left = Math.max(12, Math.min((r.left - sr.left) / Z - 24, W0 - w - 12)) + 'px';
+  let y = (r.bottom - sr.top) / Z + 8;
+  if (y + pop.offsetHeight > H0 - 8) y = Math.max(8, (r.top - sr.top) / Z - pop.offsetHeight - 8);
+  pop.style.top = y + 'px';
+  $$(`[data-v="${id}"]`, stage).forEach(e => e.classList.add('von'));
+  $('.vx', pop).focus({ preventScroll: true });
+}
+function closePop(){
+  const p = $('.vpop', stage); if (!p) return;
+  const id = p.dataset.for; p.remove();
+  if (!S.vOpen?.[id]) $$(`[data-v="${id}"]`, stage).forEach(e => e.classList.remove('von'));
+}
+function hot(ids, on){
+  for (const id of ids) {
+    $$(`.w[data-t~="${id}"], .ms span[data-t~="${id}"], q[data-t~="${id}"]`, stage).forEach(e => e.classList.toggle('hot', on));
+    for (const k of TLINES[id] || []) $$(`.ep[data-k="${k}"]`, stage).forEach(e => e.classList.toggle('hot', on));
+  }
+}
+function bind(doc){
+  let raf = 0, last = doc.scrollTop, skip = false;
+  const small = W < 840 || H < 560;
+  if (!small) stage.classList.toggle('bars-off', false);
+  const barsH = () => $$('.site-head, .toolbar', stage).reduce((a, e) => a + e.offsetHeight, 0);
+  doc.addEventListener('scroll', () => {
+    closePop(); cancelAnimationFrame(raf); raf = requestAnimationFrame(spy);
+    if (!small) return;
+    const y = doc.scrollTop, dy = y - last; last = y;
+    if (skip) { skip = false; return; }
+    const off = stage.classList.contains('bars-off');
+    if (!off && dy > 6 && y > 80 && !S.ctl) {
+      const h = barsH();
+      stage.classList.toggle('bars-off', true); skip = true; doc.scrollTop = y - h; last = doc.scrollTop;
+    } else if (off && (dy < -6 || y < 10)) {
+      stage.classList.toggle('bars-off', false);
+      const h = barsH();
+      skip = true; doc.scrollTop = y + h; last = doc.scrollTop;
+    }
+  });
+  doc.addEventListener('mouseover', e => { const x = e.target.closest('q[data-t], .w, .ms span[data-t]'); if (x) hot(x.dataset.t.split(' '), true); });
+  doc.addEventListener('mouseout', e => { const x = e.target.closest('q[data-t], .w, .ms span[data-t]'); if (x) hot(x.dataset.t.split(' '), false); });
+  const hv = (e, on) => { const v = e.target.closest('[data-v]'); if (v) $$(`[data-v="${v.dataset.v}"]`, stage).forEach(x => x.classList.toggle('hot', on)); };
+  doc.addEventListener('mouseover', e => hv(e, true));
+  doc.addEventListener('mouseout', e => hv(e, false));
+  const go = $('#goto', stage);
+  if (go) go.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); goTo(go.value); } });
+}
+
+// keep the reader's place across a rebuild
+function anchor(){
+  const doc = $('#doc', stage); if (!doc) return null;
+  const y0 = doc.scrollTop + TOP + 6; let row = null;
+  for (const el of $$('section.nd', doc)) { if (el.offsetTop <= y0) row = el; else break; }
+  return row ? { id: row.dataset.id, d: doc.scrollTop - row.offsetTop } : null;
+}
+function rebuild(keep = true, toId = null){
+  const a = keep ? anchor() : null;
+  lastCur = null; build();
+  const doc = $('#doc', stage);
+  const id = toId || a?.id;
+  if (!id) return;
+  let el = $(`section.nd[data-id="${id}"]`, doc);
+  for (let x = id; !el && x; x = PARENT[x]) el = $(`section.nd[data-id="${x}"]`, doc);
+  if (el) doc.scrollTop = Math.max(0, el.offsetTop + (toId ? -TOP - 4 : (a?.d || 0)));
+  spy();
+}
+function flash(el){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+function jump(id, then){
+  const doc = $('#doc', stage);
+  let el = $(`section.nd[data-id="${id}"]`, doc);
+  if (!el) {
+    if (!inScope(id)) S.scope = 'work';
+    for (const x of pathOf(id)) if (x !== id) S.open[x] = true;
+    rebuild(false, id);
+    el = $(`section.nd[data-id="${id}"]`, $('#doc', stage));
+  } else $('#doc', stage).scrollTop = Math.max(0, el.offsetTop - TOP - 4);
+  if (el) flash(el);
+  if (then) then($('#doc', stage), el);
+}
+function toPara(n){
+  const id = PARA_NODE[n];
+  if (S.mode === 'ari') S.rowOpen[OWN_OF[n]?.id || id] = true;
+  S.open[id] = true;
+  if (S.show !== 'text') S.show = 'text';
+  rebuild(false, id);
+  const doc = $('#doc', stage), el = $(`.aqp[data-n="${n}"]`, doc);
+  if (el) { doc.scrollTop = Math.max(0, el.offsetTop - TOP - (doc.clientHeight - TOP) * 0.25); spy(); }
+}
+function goTo(raw){
+  const t = raw.trim().replace(/\s+/g, '').toLowerCase();
+  let m;
+  if ((m = /^(4[0-3]\d[ab]\d{1,2})$/.exec(t))) {
+    const k = m[1], s = SEGS.find(s => inR(k, s.r));
+    if (s) {
+      if (S.show !== 'text') S.show = 'text';
+      S.open[s.leaf] = true;
+      jump(s.leaf, (doc, sec) => { const ln = sec && $(`.ln[data-k="${k}"], .gl[data-k="${k}"], .ep[data-k="${k}"]`, sec); if (ln) { ln.classList.add('hot'); setTimeout(() => ln.classList.remove('hot'), 1800); } });
+      return;
+    }
+    let best = 'work'; for (const id in ALL) if (inR(k, ALL[id].r) && DEPTH[id] >= DEPTH[best]) best = id;
+    jump(best); toast(`${k} is in lectio ${lecOf(ALL[best]) || '?'}, whose text is not in this mockup.`); return;
+  }
+  if ((m = /^n\.?(\d+)$/.exec(t))) { if (P[+m[1]]) toPara(+m[1]); else toast('Paragraphs 1–15 (lectio 1) are in this mockup.'); return; }
+  if ((m = /^\[?(\d+)\]?$/.exec(t))) { const s = SEGS.find(s => s.n === +m[1]); if (s) { if (S.show !== 'text') S.show = 'text'; S.open[s.leaf] = true; jump(s.leaf); } else toast('Units [1]–[7] (lectio 1) are in this mockup.'); return; }
+  toast('Try 402b10, n. 12, or [5].');
+}
+
+// ── events ──
+stage.addEventListener('click', e => {
+  const b = e.target.closest('[data-seg]');
+  if (b) {
+    const n = b.dataset.seg, v = b.dataset.val;
+    if (n === 'scope') { S.scope = v; save(); rebuild(false); return; }
+    if (n === 'show') S.show = v; else if (n === 'mode') { S.mode = v; S.rowOpen = {}; }
+    else if (n === 'mgkread') S.mgkRead = v === 'moer';
+    save(); rebuild(true); return;
+  }
+  const c = e.target.closest('[data-col]');
+  if (c) {
+    const k = c.dataset.col; S.cols[k] = !S.cols[k];
+    if (!Object.values(S.cols).some(Boolean)) S.cols[k] = true;
+    save(); rebuild(true); return;
+  }
+  const tg = e.target.closest('[data-tg]');
+  if (tg) { const id = tg.dataset.tg; S.open[id] = !isOpen(id); rebuild(true); return; }
+  const j = e.target.closest('[data-jump]'); if (j) { jump(j.dataset.jump); return; }
+  const o = e.target.closest('[data-open]'); if (o) { S.rowOpen[o.dataset.open] = true; rebuild(true); return; }
+  const cl = e.target.closest('[data-close]'); if (cl) { delete S.rowOpen[cl.dataset.close]; rebuild(true); return; }
+  const a = e.target.closest('[data-act="tall"]'); if (a) { S.tall = !S.tall; rebuild(true); return; }
+  const ct = e.target.closest('[data-act="ctl"]'); if (ct) { S.ctl = !S.ctl; rebuild(true); return; }
+  const mg = e.target.closest('[data-act="mgk"]'); if (mg) { S.mgk = !S.mgk; if (S.mgk && !S.cols.grc && !S.cols.moer) S.cols.grc = true; save(); rebuild(true); return; }
+  const pa = e.target.closest('[data-para]'); if (pa) { toPara(+pa.dataset.para); return; }
+  if ($('.vpop', stage) && !e.target.closest('.vpop')) closePop();
+  if (e.target.closest('.vx')) { closePop(); return; }
+  const vt = e.target.closest('[data-vt]'); if (vt) { openV(vt.dataset.vt); return; }
+  const vm = e.target.closest('.v[data-v], sup.vs[data-v]'); if (vm && !vm.closest('.vpop')) { popV(vm.dataset.v, vm); return; }
+  const no = e.target.closest('.ln .no, sup.gn');
+  if (no) {
+    const k = no.dataset.k || no.parentElement.dataset.k, sec = no.closest('section.nd'), id = sec.dataset.id;
+    const ps = NODE_PARAS[id] || [];
+    const hit = ps.find(n => $$('q[data-t]', $(`.aqp[data-n="${n}"]`, sec) || document.createElement('i')).some(q => q.dataset.t.split(' ').some(t => (TLINES[t] || []).includes(k)))) || ps.find(n => P[n].r && inR(k, P[n].r) && P[n].r[0] !== '402a1' || false) || ps[0];
+    if (hit) toPara(hit);
+    return;
+  }
+  const w = e.target.closest('.w, .ms span[data-t]');
+  if (w) {
+    const id = w.dataset.t.split(' ')[0], doc = $('#doc', stage);
+    const q = $(`q[data-t~="${id}"]`, doc);
+    if (q) { const p = q.closest('.aqp'); doc.scrollTo({ top: Math.max(0, p.offsetTop - TOP - (doc.clientHeight - TOP) * 0.25), behavior: 'smooth' }); hot([id], true); setTimeout(() => hot([id], false), 1600); }
+    else { const n = AQ.find(p => p.la.includes(`data-t="${id}`) || p.la.includes(` ${id}"`)); if (n) toPara(n.n); }
+    return;
+  }
+  const tb = e.target.closest('[data-tab]'); if (tb) { S.tab = tb.dataset.tab; save(); rebuild(true); return; }
+  const sr = e.target.closest('.sents.focus .sr');
+  if (sr && !sr.classList.contains('on')) { $$('.sr', sr.parentElement).forEach(x => x.classList.toggle('on', x === sr)); return; }
+  const qx = e.target.closest('q[data-x]'); if (qx) { toast('That lemma opens lectio 2 (403a3), which is not in this mockup.'); return; }
+});
+stage.addEventListener('change', e => {
+  const s = e.target.closest('[data-sel]'); if (!s) return;
+  const v = s.value;
+  if (s.dataset.sel === 'scope') { S.scope = v; save(); rebuild(false); return; }
+  if (s.dataset.sel === 'ari') { for (const c of ['grc', 'en', 'moer']) S.cols[c] = c === v; }
+  if (s.dataset.sel === 'aq') { S.cols.aqla = v === 'la' || v === 'both'; S.cols.aqen = v === 'en' || v === 'both'; }
+  if (!Object.values(S.cols).some(Boolean)) S.cols.aqla = true;
+  save(); rebuild(true);
+});
+stage.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closePop();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.ln .no, sup.gn')) { e.preventDefault(); e.target.click(); }
+});
+$('#acols').addEventListener('click', e => { const b = e.target.closest('[data-ac]'); if (b) { S.acol = b.dataset.ac; save(); size(); rebuild(true); } });
+$('#presets').addEventListener('click', e => { const b = e.target.closest('[data-p]'); if (b) { S.preset = b.dataset.p; save(); size(); rebuild(true); } });
+let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { const old = W; size(); if (S.preset === 'fit' && W !== old) rebuild(true); }, 150); });
+size(); build();
+})();
+</script>

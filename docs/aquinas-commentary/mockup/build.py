@@ -1,0 +1,7 @@
+t = open('template.html').read()
+d = open('aquinas-data.js').read()
+a = open('aristotle.json').read().strip()
+t = t.replace('/*DATA*/', d, 1).replace('/*ARI*/', a, 1)
+open('aquinas-commentary.html', 'w').write(t)
+open('preview.html', 'w').write('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">' + t + '</html>')
+print(len(t.encode()))
