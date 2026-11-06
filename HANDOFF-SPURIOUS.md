@@ -111,3 +111,12 @@ gates); brief is in this session. Its uncommitted edits at pause:
 `build/prob-ocr/work/round5b-snapshot.patch`. If it did not finish: read
 `build/prob-ocr/work/report-5b.md` if present, else restart from
 `c6e5acc65b` with the same brief. Then Claude checks, then Codex reviews.
+
+### 2026-11-06 17:18 — round 5 finished by Sonnet, committed `24dbee48d0`
+
+Agent reports verify clean, Opus harness 67/67, selftest 12/12, pipeline PASS
+(`docs/spurious-works/sonnet-round5-report-part2.md`). NOT yet re-run by the
+orchestrator and NOT yet reviewed by Codex. Next: re-run every gate and the
+harness, spot-check PRINT_READS against images, then Codex review. Open for
+John: 19.9 "y a flute"; 23.6-23.12 has no scan-A page image (23.9 "in"
+unchecked); Book 3/19 merges.
