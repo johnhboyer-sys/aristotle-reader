@@ -256,6 +256,14 @@ def test_numerals_and_editorial_refs_are_text_not_tokens():
         "ΟΣΑ", "δὲ", "χρόνος"]
 
 
+def test_a_damaged_fragment_with_a_numeral_mark_still_fails():
+    # Athenaion Politeia 2763: "φ[αʹ" is a broken word, not a numeral. A
+    # token that carried sigla, or holds more than a numeral's letters, stays
+    # a key failure.
+    _, _, key_failures = tokenize(_one_line_spine("ἐστὶ φ[αʹ ὅταν λόγοςʹ"))
+    assert [f["token"] for f in key_failures] == ["φαʹ", "λόγοςʹ"]
+
+
 def test_an_unknown_letter_inside_a_word_still_fails():
     # The skip is narrow: a Greek word with a stray Latin letter is a key
     # failure, not silently dropped.
