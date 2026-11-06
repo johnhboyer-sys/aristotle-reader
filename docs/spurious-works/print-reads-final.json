@@ -1,0 +1,380 @@
+[
+  [
+    1,
+    18,
+    "difficulty 7?",
+    "difficulty?",
+    "A22: call-out 5 read as 7"
+  ],
+  [
+    10,
+    38,
+    "of Speech ἐς",
+    "of speech?",
+    "A130: question mark and call-out 2, not Greek"
+  ],
+  [
+    19,
+    35,
+    "of 3 to x (for",
+    "of 3/2 to 1 (for",
+    "A220: stacked fraction ³⁄₂"
+  ],
+  [
+    19,
+    35,
+    "of 8 to 1 is",
+    "of 3/2 to 1 is",
+    "A220: stacked fraction ³⁄₂"
+  ],
+  [
+    1,
+    6,
+    "Is it. because,",
+    "Is it because,",
+    "A17: no full stop"
+  ],
+  [
+    4,
+    18,
+    "are so accounted For",
+    "are so accounted? For",
+    "A76: question mark"
+  ],
+  [
+    8,
+    15,
+    "because..",
+    "because …]",
+    "A109: ellipsis and closing bracket"
+  ],
+  [
+    15,
+    3,
+    "2, 3,4, 5",
+    "2, 3, 4, 5",
+    "A182: numbers separated by spaces"
+  ],
+  [
+    15,
+    3,
+    "‘one-five’, two-five,",
+    "‘one-five’, ‘two-five’,",
+    "A182: paired quotation marks"
+  ],
+  [
+    15,
+    5,
+    "object seen be.",
+    "object seen be Θ.",
+    "A184: theta is a body label"
+  ],
+  [
+    15,
+    5,
+    "sun at A falling on makes the shadow 4, the ray must fall on A.",
+    "sun at Α falling on Θ makes the shadow ΘΛ, the ray must fall on Λ.",
+    "A184: alpha, theta, theta-lambda, lambda"
+  ],
+  [
+    15,
+    5,
+    "comes to B, the ray from B will fall within @A,",
+    "comes to Β, the ray from Β will fall within ΘΛ,",
+    "A184–A185: beta and theta-lambda"
+  ],
+  [
+    15,
+    5,
+    "comes to I’;",
+    "comes to Γ;",
+    "A185: gamma, no prime"
+  ],
+  [
+    15,
+    5,
+    "AB is equal to BI,",
+    "ΑΒ is equal to ΒΓ,",
+    "A185: alpha-beta and beta-gamma"
+  ],
+  [
+    15,
+    5,
+    "them at 4",
+    "them at Δ",
+    "A185: delta, not 4"
+  ],
+  [
+    15,
+    5,
+    "side of d",
+    "side of Δ",
+    "A185: delta"
+  ],
+  [
+    15,
+    5,
+    "line AE will be greater than the line EZ within A@.",
+    "line ΛΕ will be greater than the line ΕΖ within ΛΘ.",
+    "A185: lambda-epsilon, epsilon-zeta, lambda-theta"
+  ],
+  [
+    15,
+    5,
+    "it is clear A 8 ΑΕ 4 that",
+    "it is clear that",
+    "A185: letters lie only in the diagram"
+  ],
+  [
+    15,
+    9,
+    "shadow, which A Z Ee B grows",
+    "shadow, which grows",
+    "A188: letters lie only in the diagram"
+  ],
+  [
+    15,
+    9,
+    "Let AB be the gnomon, and I’ and 4 two positions of the sun, The ray from I’, the line I'Z, will fall outside the line E;",
+    "Let ΑΒ be the gnomon, and Γ and Δ two positions of the sun. The ray from Γ, the line ΓΖ, will fall outside the line ΔΕ;",
+    "A188: Greek body labels and full stop after sun"
+  ],
+  [
+    15,
+    9,
+    "shadow BE",
+    "shadow ΒΕ",
+    "A188: beta-epsilon"
+  ],
+  [
+    15,
+    9,
+    "and BZ when",
+    "and ΒΖ when",
+    "A188: beta-zeta"
+  ],
+  [
+    15,
+    10,
+    "Let Ad be the r B ve si A gnomon, B the moon, and I’ the sun.",
+    "Let ΑΔ be the gnomon, Β the moon, and Γ the sun.",
+    "A189: body labels; remove labels found only in diagram"
+  ],
+  [
+    15,
+    10,
+    "moon is BZ, so that the shadow will be Z;",
+    "moon is ΒΖ, so that the shadow will be ΔΖ;",
+    "A189: beta-zeta and delta-zeta"
+  ],
+  [
+    15,
+    10,
+    "sun is I,",
+    "sun is ΓΕ,",
+    "A189: gamma-epsilon"
+  ],
+  [
+    15,
+    10,
+    "viz. JE.",
+    "viz. ΔΕ.",
+    "A189: delta-epsilon"
+  ],
+  [
+    19,
+    4,
+    "must with",
+    "must … with",
+    "A210: ellipsis"
+  ],
+  [
+    19,
+    4,
+    "one’s purpose. [But",
+    "one’s purpose.] [But",
+    "A210: closing bracket"
+  ],
+  [
+    24,
+    11,
+    "‘That cold, pure and simple,’ produces",
+    "That cold, pure and simple produces",
+    "A271: no quotation; raised 3 after simple"
+  ],
+  [
+    26,
+    14,
+    "marks the crisis or",
+    "marks the crisis? or",
+    "A288: question mark"
+  ],
+  [
+    26,
+    27,
+    "it, When the South wind begins. and",
+    "it, ‘When the South wind begins …’), and",
+    "A293: quotation, ellipsis, closing parenthesis and comma"
+  ],
+  [
+    26,
+    30,
+    "becomes cold.?, One",
+    "becomes cold. One",
+    "A294: full stop then call-out 2"
+  ],
+  [
+    31,
+    9,
+    "for example but",
+    "for example; but",
+    "A344: semicolon"
+  ],
+  [
+    34,
+    7,
+    "near the πιο.",
+    "near the mouth.",
+    "A363: mouth before the full stop"
+  ],
+  [
+    36,
+    2,
+    "head has. these",
+    "head has these",
+    "A369: no full stop"
+  ],
+  [
+    19,
+    12,
+    "the greater ὃ So",
+    "the greater? So",
+    "A212: question mark and raised 8, not Greek"
+  ],
+  [
+    30,
+    14,
+    "(ἐπιστή μὴ)",
+    "(ἐπιστήμη)",
+    "A338: one Greek word, epistemē"
+  ],
+  [
+    31,
+    13,
+    "alike Ὁ?",
+    "alike?",
+    "A344: raised call-out 7, not Greek"
+  ],
+  [
+    2,
+    29,
+    "ἢν is it",
+    "Why is it",
+    "A46: Why, not Greek"
+  ],
+  [
+    3,
+    34,
+    "aware οὗ it,",
+    "aware of it,",
+    "A68: of, not Greek"
+  ],
+  [
+    11,
+    43,
+    "used ἀρ,",
+    "used up,",
+    "A159: up, not Greek"
+  ],
+  [
+    23,
+    28,
+    "there is αὖ successive",
+    "there is a successive",
+    "A263: a with raised call-out 5"
+  ],
+  [
+    24,
+    11,
+    "result οὗ heat,",
+    "result of heat,",
+    "A271: of, not Greek"
+  ],
+  [
+    24,
+    13,
+    "escaping); απ speaking",
+    "escaping); and speaking",
+    "A271: and, not Greek"
+  ],
+  [
+    25,
+    11,
+    "ἢν is the air",
+    "Why is the air",
+    "A278: Why, not Greek"
+  ],
+  [
+    25,
+    20,
+    "νῶν is it",
+    "Why is it",
+    "A280: Why, not Greek"
+  ],
+  [
+    26,
+    54,
+    "evening and ἔγο the",
+    "evening and from the",
+    "A303: from, not Greek"
+  ],
+  [
+    30,
+    8,
+    "doctor’s ἅτε nor",
+    "doctor’s art nor",
+    "A336: art, with raised call-out 5"
+  ],
+  [
+    5,
+    21,
+    "fiercely?.",
+    "fiercely?",
+    "A90: question mark, no following full stop"
+  ],
+  [
+    37,
+    1,
+    "liquid)?.",
+    "liquid)?",
+    "A370: question mark, no following full stop"
+  ],
+  [
+    5,
+    19,
+    "body ὃ from",
+    "body from",
+    "A89: raised call-out 3, not Greek"
+  ],
+  [
+    19,
+    7,
+    "omitted nete,",
+    "omitted trite,",
+    "A211: body reads trite; the general note repair misread vzze"
+  ],
+  [
+    19,
+    12,
+    "two nete are",
+    "two netes are",
+    "A212: plural netes in the print"
+  ],
+  [
+    19,
+    32,
+    "Terpander took away nete and",
+    "Terpander took away trite and",
+    "A219: trite removed, nete added"
+  ]
+]

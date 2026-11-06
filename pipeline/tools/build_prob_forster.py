@@ -23,14 +23,16 @@ The tool needs only the standard library.
 
 Gate: `python3 pipeline/tools/build_prob_forster.py --verify --ocr-dir DIR [--books DIR]` checks the Parts
 against the raw hOCR words of both scans and shares no text-changing rule with the build (no cleaning, no
-vocabulary-driven repair or splitting on the scan side; digits stay). It leaves words out of a scan by
+vocabulary-driven repair; numeric and alphabetic runs are tokenized with all digits kept). It leaves words out of a scan by
 position and size only: margin numbers and column heads (outside the fitted body column), the running head
 (a gap above the first line), footnotes (smaller type, measured per scan), call-outs (raised, small). It
 exits 1 on (a) letters both scans read alike that ours lacks or changes, with no length cap, (b) ours words
 neither scan has, (c) a `”`, `*`, `†`, superscript digit, digit glued to a word or a capital inside a word
-that stayed in the prose, (d) a scan word that is English and that ours splits (judged by the system
-dictionary and the repo's other texts), (e) a quotation mark a scan has and ours lacks. It prints how much
-it examined and exits 2 if that is nothing. Reasoned exceptions, each settled from the page image, go in
+that stayed in the prose, (d) a re-spacing neither scan supports as separate words, (e) a quotation mark
+in a scan but not ours, (f) shared scan punctuation missing or changed, (g) punctuation in ours that neither
+scan has. Image transcriptions also check places where both OCR readings are wrong. It prints how much
+it examined and exits 2 if that is nothing. `--selftest` checks nine independent mutations against a
+fresh temporary copy each time; an existing finding cannot count as catching a mutation. Reasoned exceptions, each settled from the page image, go in
 VERIFY_ALLOW. `--books` points it at another folder of book-NN.html (to run it on an earlier build).
 
 How it works
@@ -94,13 +96,63 @@ EXPECT: dict[int, int] = {1: 56, 3: 36, 19: 51}
 MERGE: dict[int, list[int]] = {3: [26], 19: [36]}
 
 # Where both scans misread the print alike, so the merge cannot see it. Each entry was read off the
-# page image (leaf = image n of the second scan). (book, Part, our words, the print's words, where).
+# page image (A<n> = img/A<n>.jpg of scan A). (book, Part, our words, the print's words, where).
 # The build exits if an entry does not match exactly once, so a fix that goes stale fails loudly.
 PRINT_READS: list[tuple[int, int, str, str, str]] = [
-    (1, 18, "difficulty 7?", "difficulty?", "n22: call-out 5 read as 7"),
-    (10, 38, "of Bpeech", "of speech?", "n128: `speech ?²`, call-out and question mark lost"),
-    (19, 35, "of 3 to x (for", "of 3/2 to 1 (for", "n218: stacked fraction ³⁄₂"),
-    (19, 35, "of 8 to 1 is", "of 3/2 to 1 is", "n218: stacked fraction ³⁄₂"),
+    (1, 18, 'difficulty 7?', 'difficulty?', 'A22: call-out 5 read as 7'),
+    (10, 38, 'of Speech ἐς', 'of speech?', 'A130: question mark and call-out 2, not Greek'),
+    (19, 35, 'of 3 to x (for', 'of 3/2 to 1 (for', 'A220: stacked fraction ³⁄₂'),
+    (19, 35, 'of 8 to 1 is', 'of 3/2 to 1 is', 'A220: stacked fraction ³⁄₂'),
+    (1, 6, 'Is it. because,', 'Is it because,', 'A17: no full stop'),
+    (4, 18, 'are so accounted For', 'are so accounted? For', 'A76: question mark'),
+    (8, 15, 'because..', 'because …]', 'A109: ellipsis and closing bracket'),
+    (15, 3, '2, 3,4, 5', '2, 3, 4, 5', 'A182: numbers separated by spaces'),
+    (15, 3, '‘one-five’, two-five,', '‘one-five’, ‘two-five’,', 'A182: paired quotation marks'),
+    (15, 5, 'object seen be.', 'object seen be Θ.', 'A184: theta is a body label'),
+    (15, 5, 'sun at A falling on makes the shadow 4, the ray must fall on A.', 'sun at Α falling on Θ makes the shadow ΘΛ, the ray must fall on Λ.', 'A184: alpha, theta, theta-lambda, lambda'),
+    (15, 5, 'comes to B, the ray from B will fall within @A,', 'comes to Β, the ray from Β will fall within ΘΛ,', 'A184–A185: beta and theta-lambda'),
+    (15, 5, 'comes to I’;', 'comes to Γ;', 'A185: gamma, no prime'),
+    (15, 5, 'AB is equal to BI,', 'ΑΒ is equal to ΒΓ,', 'A185: alpha-beta and beta-gamma'),
+    (15, 5, 'them at 4', 'them at Δ', 'A185: delta, not 4'),
+    (15, 5, 'side of d', 'side of Δ', 'A185: delta'),
+    (15, 5, 'line AE will be greater than the line EZ within A@.', 'line ΛΕ will be greater than the line ΕΖ within ΛΘ.', 'A185: lambda-epsilon, epsilon-zeta, lambda-theta'),
+    (15, 5, 'it is clear A 8 ΑΕ 4 that', 'it is clear that', 'A185: letters lie only in the diagram'),
+    (15, 9, 'shadow, which A Z Ee B grows', 'shadow, which grows', 'A188: letters lie only in the diagram'),
+    (15, 9, "Let AB be the gnomon, and I’ and 4 two positions of the sun, The ray from I’, the line I'Z, will fall outside the line E;", 'Let ΑΒ be the gnomon, and Γ and Δ two positions of the sun. The ray from Γ, the line ΓΖ, will fall outside the line ΔΕ;', 'A188: Greek body labels and full stop after sun'),
+    (15, 9, 'shadow BE', 'shadow ΒΕ', 'A188: beta-epsilon'),
+    (15, 9, 'and BZ when', 'and ΒΖ when', 'A188: beta-zeta'),
+    (15, 10, 'Let Ad be the r B ve si A gnomon, B the moon, and I’ the sun.', 'Let ΑΔ be the gnomon, Β the moon, and Γ the sun.', 'A189: body labels; remove labels found only in diagram'),
+    (15, 10, 'moon is BZ, so that the shadow will be Z;', 'moon is ΒΖ, so that the shadow will be ΔΖ;', 'A189: beta-zeta and delta-zeta'),
+    (15, 10, 'sun is I,', 'sun is ΓΕ,', 'A189: gamma-epsilon'),
+    (15, 10, 'viz. JE.', 'viz. ΔΕ.', 'A189: delta-epsilon'),
+    (19, 4, 'must with', 'must … with', 'A210: ellipsis'),
+    (19, 4, 'one’s purpose. [But', 'one’s purpose.] [But', 'A210: closing bracket'),
+    (24, 11, '‘That cold, pure and simple,’ produces', 'That cold, pure and simple produces', 'A271: no quotation; raised 3 after simple'),
+    (26, 14, 'marks the crisis or', 'marks the crisis? or', 'A288: question mark'),
+    (26, 27, 'it, When the South wind begins. and', 'it, ‘When the South wind begins …’), and', 'A293: quotation, ellipsis, closing parenthesis and comma'),
+    (26, 30, 'becomes cold.?, One', 'becomes cold. One', 'A294: full stop then call-out 2'),
+    (31, 9, 'for example but', 'for example; but', 'A344: semicolon'),
+    (34, 7, 'near the πιο.', 'near the mouth.', 'A363: mouth before the full stop'),
+    (36, 2, 'head has. these', 'head has these', 'A369: no full stop'),
+    (19, 12, 'the greater ὃ So', 'the greater? So', 'A212: question mark and raised 8, not Greek'),
+    (30, 14, '(ἐπιστή μὴ)', '(ἐπιστήμη)', 'A338: one Greek word, epistemē'),
+    (31, 13, 'alike Ὁ?', 'alike?', 'A344: raised call-out 7, not Greek'),
+    (2, 29, 'ἢν is it', 'Why is it', 'A46: Why, not Greek'),
+    (3, 34, 'aware οὗ it,', 'aware of it,', 'A68: of, not Greek'),
+    (11, 43, 'used ἀρ,', 'used up,', 'A159: up, not Greek'),
+    (23, 28, 'there is αὖ successive', 'there is a successive', 'A263: a with raised call-out 5'),
+    (24, 11, 'result οὗ heat,', 'result of heat,', 'A271: of, not Greek'),
+    (24, 13, 'escaping); απ speaking', 'escaping); and speaking', 'A271: and, not Greek'),
+    (25, 11, 'ἢν is the air', 'Why is the air', 'A278: Why, not Greek'),
+    (25, 20, 'νῶν is it', 'Why is it', 'A280: Why, not Greek'),
+    (26, 54, 'evening and ἔγο the', 'evening and from the', 'A303: from, not Greek'),
+    (30, 8, 'doctor’s ἅτε nor', 'doctor’s art nor', 'A336: art, with raised call-out 5'),
+    (5, 21, 'fiercely?.', 'fiercely?', 'A90: question mark, no following full stop'),
+    (37, 1, 'liquid)?.', 'liquid)?', 'A370: question mark, no following full stop'),
+    (5, 19, "body ὃ from", "body from", "A89: raised call-out 3, not Greek"),
+    (19, 7, "omitted nete,", "omitted trite,", "A211: body reads trite; the general note repair misread vzze"),
+    (19, 12, "two nete are", "two netes are", "A212: plural netes in the print"),
+    (19, 32, "Terpander took away nete and", "Terpander took away trite and", "A219: trite removed, nete added"),
 ]
 
 # ----------------------------------------------------------------------------- hOCR
@@ -215,6 +267,7 @@ def layout(pg: dict) -> dict:
     fitL = _fit([(r["y"], _txt(r)[0]["x0"]) for r in full if abs(_txt(r)[0]["x0"] - bx0) < 120 * s], s)
     fitR = _fit([(r["y"], max(w["x1"] for w in _txt(r))) for r in full
                  if abs(max(w["x1"] for w in _txt(r)) - bx1) < 120 * s], s)
+    body_height = _med([_med([w["y1"] - w["y0"] for w in r["w"]]) for r in full])
     out = []
     for r in rest:
         ex0, ex1 = fitL(r["y"]), fitR(r["y"])
@@ -235,6 +288,15 @@ def layout(pg: dict) -> dict:
         if best is None or sc > best[0]:
             best = (sc, k)
     k = best[1]
+    # A complete body row can have a bad x_size in both scans (A76/B77).
+    # Its actual letter height and normal body pitch keep it above the note cut.
+    while 0 < k < n and out[k]["n"] >= 7 and not note_lead(out[k]["text"]):
+        height = _med([w["y1"] - w["y0"] for w in out[k]["text"]])
+        gap = out[k]["y"] - out[k-1]["y"]
+        if height >= .90 * body_height and 72 * s <= gap <= 105 * s:
+            k += 1
+        else:
+            break
     # a short last line of the text (a few words, body-sized) belongs to the text, not the notes
     while k < n - 1 and out[k]["n"] < 3 and out[k]["xs"] >= 60 * s and out[k + 1]["fnish"]:
         k += 1
@@ -396,8 +458,6 @@ def clean_word(t: str) -> str:
     # Forster quotes with single marks (‘ ’) and the prose has no * or †: a double quote mark, an
     # asterisk or a dagger is a footnote call-out (a small raised number or sign the OCR read as one)
     t = re.sub("[*†”“\"]", "", t)
-    # lower-case and accented Greek is a footnote mark here; capital Greek letters label figures
-    t = re.sub("[ά-ώα-ωἀ-῿]", "", t)
     t = re.sub(r"^[=©#+~*|]+", "", t)
     for _ in range(3):
         t = re.sub(r"[*©+|!^]+$", "", t)
@@ -411,7 +471,7 @@ def clean_word(t: str) -> str:
         t = re.sub(r"(?<=[A-Za-z,.;?:)])[‘]$", "", t)
         t = re.sub(r"(?<=’[.,;:?!])’$", "", t)     # a call-out after a closing quote and its stop (`‘word’,’`)
         t = re.sub(r"(?<=.)‘$", "", t)               # an opening mark at a word's end is a call-out
-    if not t or re.fullmatch(r"[;:?.,]+", t):
+    if not t or re.fullmatch(r"[;:?.,…\[\]()]+", t):
         return t
     if re.fullmatch(r"[*©+|!'`^~=<>{}\\/#@&%$\"“”‘’.,:;?\[\]()\-—–·]*", t):
         return ""
@@ -472,7 +532,7 @@ class BookStream:
                 continue
             if cap and h < 0.3 * cap and len(ws) >= 3:
                 continue        # a speck of ink the scan boxed as a word (a box a third of the line's height)
-            if w["c"] < 20 and re.fullmatch(r"[\d\W_]+", t):
+            if w["c"] < 20 and re.fullmatch(r"[\d\W_]+", t) and not re.fullmatch(r"[;:?.,…\[\]()]+", t):
                 continue        # a digit or mark the scan is all but sure is not there (`1` over `not`)
             if k == 0 and w["x0"] < l["ex0"] - 25 * s and len(t) >= 4 and t[0] in "SsIl|!OoZzgB3":
                 per = (w["x1"] - w["x0"]) / len(t)      # as wide as the letters it covers: cut those that lie left of the edge
@@ -482,6 +542,9 @@ class BookStream:
                 continue
             if t[:1] == "‘" and w["c"] < 85:
                 t = UQ + t[1:]
+            if t in ("[", "("):
+                pend += t
+                continue
             toks.append(dict(t=pend + t, c=w["c"]))
             pend = ""
         return toks
@@ -527,7 +590,7 @@ class BookStream:
                     continue
                 if tk["c"] >= 85 and re.fullmatch(r"[A-Za-z]+(?:-[A-Za-z]+)*s’", ct):
                     ct = ct[:-1] + POSS
-                if re.fullmatch(r"[;:?.,]+", ct) or (ct[0] in "—–" and self.words and pending is None):
+                if re.fullmatch(r"[;:?.,…\]\)]+", ct) or (ct[0] in "—–" and self.words and pending is None):
                     if self.words:
                         self.words[-1]["t"] += ct
                     continue
@@ -585,7 +648,7 @@ class BookStream:
 
 
 def norm(t):
-    return re.sub(r"[^a-z]", "", t.lower())
+    return re.sub(r"[^a-zά-ώα-ωἀ-῿]", "", t.lower())
 
 
 # ----------------------------------------------------------- merging two witnesses
@@ -612,6 +675,8 @@ def _same_word(wa: dict, wb: dict) -> str:
     keep the longer ending; otherwise the more confident reading. An opening quote mark either scan
     read stays: nothing the scans misread as a call-out stands before a word."""
     ta, tb = wa["t"], wb["t"]
+    if bool(re.search("[α-ωἀ-῿]", ta)) != bool(re.search("[α-ωἀ-῿]", tb)):
+        return ta if re.search("[α-ωἀ-῿]", ta) else tb
     if (POSS in ta) != (POSS in tb):      # a plural's apostrophe stands only where both scans are sure of it
         ta, tb = ta.replace(POSS, ""), tb.replace(POSS, "")
     lead = "‘" if (ta[:1] == "‘" or tb[:1] == "‘") else (UQ if (ta[:1] == UQ or tb[:1] == UQ) else "")
@@ -720,6 +785,12 @@ class Merged:
                             self.unsettled.append((len(self.w), wa["t"], wb["t"], t))
                     elif sa_ < 3 and sb_ < 3:
                         self.unsettled.append((len(self.w), wa["t"], wb["t"], t))
+                # A Greek body word wins over a Latin OCR approximation, but not
+                # over a known English word (Greek-shaped noise also occurs).
+                for source, other in ((wa, wb), (wb, wa)):
+                    if re.fullmatch(r"[‘(]*[ά-ώα-ωἀ-῿]{2,}[,.;:?!’)o]*", source["t"]) and not known_word(norm(other["t"])):
+                        t = source["t"]
+                        break
                 self._add(t, max(wa["c"], wb["c"]), i1 + d, j1 + d)
             return
         ba, bb = A[i1:i2], B[j1:j2]
@@ -1059,7 +1130,13 @@ def print_read(part, old: str, new: str, label: str):
         sys.exit(f"PRINT_READS {label}: {old!r} found {len(hits)} times, expected once")
     i, end = hits[0], hits[0] + len(ow)
     words = words[:i] + nw + words[end:]
-    first = [f + len(nw) - len(ow) if f >= end else min(f, i + len(nw) - 1) if f >= i else f for f in first]
+    mapping = {}
+    for tag, a, b, c, d in difflib.SequenceMatcher(None, ow, nw, autojunk=False).get_opcodes():
+        for offset in range(b - a):
+            # Equal words retain their place. A replaced label maps to its new
+            # label; deleted diagram material maps to the next surviving word.
+            mapping[i + a + offset] = i + min(c + offset, max(c, d - 1), len(nw) - 1)
+    first = [f + len(nw) - len(ow) if f >= end else mapping[f] if f >= i else f for f in first]
     return " ".join(words), first, words
 
 
@@ -1130,11 +1207,6 @@ def read_ticks(LA, LB, Ms, starts_all, chapters):
         # cross-scan duplicates: the same number within 40 words is one number
         # the two scans can read different numbers on one printed line (`20` and `30`): the reading the
         # scan is surer of stands, so that two numbers never share a line
-        best: dict[int, tuple] = {}
-        for e in ev:
-            if e[2] == "tick" and (e[0] not in best or e[4] > best[e[0]][4]):
-                best[e[0]] = e
-        ev = [e for e in ev if e[2] != "tick" or best[e[0]] is e or best[e[0]][3] == e[3]]
         ev2, seen_tick, seen_mark = [], {}, -999
         for pos, w, kind, v, _c in ev:
             if kind == "tick":
@@ -1148,31 +1220,32 @@ def read_ticks(LA, LB, Ms, starts_all, chapters):
             ev2.append((pos, kind, v))
         c, last, j = None, 0, -1
         assigned: list[tuple[int, int, int]] = []   # (pos, column index, value)
-        for pos, kind, v in ev2:
-            if kind != "tick":
-                continue
+        # Judge all readings at one text position together. OCR confidence cannot
+        # distinguish a lost leading 1/2/3 (A often reads 15/25/35 as 5).
+        # The earliest legal next tick follows the printed sequence; never let a
+        # second reading of the same row advance the sequence a second time.
+        positions = sorted({pos for pos, kind, v in ev2 if kind == "tick"})
+        for pos in positions:
+            values = {v for p, kind, v in ev2 if p == pos and kind == "tick"}
             jj = max(0, bisect_right(st, pos) - 1)
             if jj != j:
                 j = jj
                 c, last = chs[j][0], chs[j][1] - 1
                 if assigned and (assigned[-1][1] > c or (assigned[-1][1] == c and assigned[-1][2] >= chs[j][1])):
-                    # the previous problem's last numbers already carry this problem's opening line
                     c, last = assigned[-1][1], assigned[-1][2]
             end_c, end_l = chs[j + 1] if j + 1 < len(chs) else (chs[j][0] + 1, 99)
-            if v <= last:
-                if c + 1 <= end_c:
-                    c, last = c + 1, 0
-                else:
-                    skipped_noise += 1
+            choices = []
+            for v in values:
+                cc = c + (v <= last)
+                if cc > end_c or (cc == end_c and v > end_l + 2):
                     continue
-            if c == end_c and v > end_l + 2:
+                choices.append((cc, v))
+            if not choices:
                 skipped_noise += 1
                 continue
-            if v < last + 1:
-                skipped_noise += 1
-                continue
-            assigned.append((pos, c, v))
-            last = v
+            cc, v = min(choices)
+            assigned.append((pos, cc, v))
+            c, last = cc, v
         for pos, c, v in assigned:
             ticks.append((book, pos, f"{_col_label(c)}{v}"))
         # column marks: the opening of a column is the last mark before its first number
@@ -1249,6 +1322,15 @@ def anchor_entries(ticks, colstarts, starts_all, done_all, chapters, stats):
             if corpus.count(phrase) != 1:
                 stats["not_unique"] = stats.get("not_unique", 0) + 1
                 continue
+        book_words = [word for text, _first, ws in done_all[book - 1] for word in ws]
+        offset = sum(len(ws) for _t, _f, ws in done_all[book - 1][:j]) + i0
+        book_text = " ".join(book_words)
+        n = len(phrase.split())
+        while book_text.count(phrase) != 1 and offset + n < len(book_words):
+            n += 6
+            phrase = " ".join(book_words[offset:offset+n])
+        if book_text.count(phrase) != 1:
+            raise SystemExit(f"anchor {ref}: no unique phrase at {book}.{j+1}")
         if ref in UNPLACEABLE:
             stats["unplaceable"] = stats.get("unplaceable", 0) + 1
             continue
@@ -1260,7 +1342,7 @@ def anchor_entries(ticks, colstarts, starts_all, done_all, chapters, stats):
                              f"word {i0} ({phrase[:50]!r})")
         placed[place] = ref
         ents.append((ref, phrase))
-    return ents
+    return sorted(ents, key=lambda e: (_col_idx(re.match(r"(\d+[ab])", e[0])[1]), int(re.search(r"[ab](\d+)", e[0])[1])))
 
 
 def write_anchors(ents, stats):
@@ -1287,50 +1369,603 @@ def write_anchors(ents, stats):
 # by where the word sits on the page: margin numbers and column heads (outside the body column),
 # the running head (the top line, set apart by a gap), footnotes (smaller type, measured per scan,
 # below the text) and footnote call-outs (a raised word of small height). The build's page-range
-# finder is its only shared code, and that only says which pages belong to which book.
+# finder supplies book ranges; shared parsing and layout helpers supply raw boxes, never repaired text.
 
-# Known, reasoned exceptions to --verify: (book, problem, check, words, reason). `check` is "a" (both
-# scans have the words, ours lacks or changes them), "b" (ours has words neither scan has), "c" (a mark
-# that stayed in the prose), "d" (a word of the scan that ours splits, shown `scan -> ours`) or "e" (a
-# quotation mark a scan has and ours lacks). `words` is the finding as the check prints it (lower case),
-# or a tuple of such; `problem` None means any Part of the book. Each was settled from the page image
-# (leaf = the archive.org image n<leaf>.jpg of the first scan, worksofaristotle07arisuoft).
-_TERMS = ("nete", "mese", "hypate", "paranete", "lichanos")
-_GARBLED = ("vzze", "zese", "ese", "zefe", "hyfate", "hyfaze", "ze¢e", "zeze")
-VERIFY_ALLOW: list[tuple[int, int | None, str, str | tuple, str]] = [
-    (1, 17, "e", "‘where",
-     "no quote mark before `where` in the print (leaf 22); a scan pairs a speck there with the closing mark of "
-     "the real quotation ‘fire added to fire’ that follows"),
-    (5, 38, "b", ("at", "other"),
-     "print reads `at other seasons` (leaf 96); both scans read a speck between the words (`at’other`, `at”other`)"),
-    (9, 6, "b", "and",
-     "print reads `and other things` at the head of the line, with the margin number 30 beside it (leaf 115); "
-     "the scans read the two together as `scand` and `3oand`"),
-    (13, 5, "d", "fora -> for a", "print reads `for a movement takes place` (leaf 173)"),
-    (15, 1, "d", "fora -> for a", "print reads `for a rectilinear figure` (leaf 182)"),
-    (16, 1, "d", "apiece -> a piece", "print reads `even if a piece of wood` (leaf 192)"),
-    (20, 10, "d", "itas -> it as", "print reads `in it, as some contend` (leaf 233)"),
-    (29, 14, "d", "itas -> it as", "print reads `regarding it as useless` (leaf 324)"),
-    (24, 19, "a", "or perhaps vitriol",
-     "footnote 1 (`Or, perhaps, ‘vitriol’.`) at the foot of leaf 273; both scans' body lines include it, ours leaves it out"),
-    (26, 30, "a", "mornsing",
-     "print reads `morn-` / `ing`, with the margin line number 5 before `ing` (leaf 293); both scans read the 5 as S"),
-    (26, 30, "b", "morning", "the same place: ours reads `morning`, as the print does (leaf 293)"),
-    (19, 1, "b", "are", "print reads `those who are` with the margin number 1 after it (leaf 209); the scans read `areI`, `arel`"),
-    (19, 44, "b", "that", "print reads `starting-point—that will be` with `that` in italic (leaf 227); the scans read `/hat`"),
-    (19, 41, "d", "area -> are a", "print reads `Why are a double fifth` (leaf 224)"),
-    (19, 46, "d", "thana -> than a", "print reads `to sing a high note than a low note` (leaf 227)"),
-    (19, 35, "b", "3/2",
-     "print sets a stacked fraction ³⁄₂ twice, `ratio of ³⁄₂ to 1` (second scan, image n218); the scans read "
-     "`3 to 1`, `3 to x`, `8 to 1°`, `3 to 1°`; PRINT_READS puts it back"),
-    (19, 35, "a", "3", "the same place: the numerator the first scan read as a whole number"),
-    (19, None, "b", _TERMS + ("hypatereed", "netereed"),
-     "the notes of the scale are set in italic transliteration (hypate, nete, mese, paranete, lichanos; the reeds "
-     "`hypate-reed`, `nete-reed`, leaves 211, 212, 216, 217, 223, 225, 227, 228); both scans garble them "
-     "(`Aypaze`, `zefe`, `szese`) and `repair_terms` puts them back"),
-    (19, None, "a", _GARBLED,
-     "the scans' garbled readings of the same italic notes (leaves 211, 212, 216, 223, 225, 227); the page reads "
-     "nete, mese or hypate there"),
+# Each exception binds one finding to a book, Part, exact local context and maximum
+# occurrence count. No wildcard Parts or lists of interchangeable notes are allowed.
+# The reason cites a checked page image. Raw OCR remains evidence, including call-outs
+# and damaged labels; these entries account for the few cases layout cannot settle.
+# (book, Part, kind, exact finding, exact local context, maximum count, image reason).
+# Context includes the expected reading, so an allowance cannot accept another note or number.
+VERIFY_ALLOW = [
+    (1, 3, 'a', '1', 'a crisis and engender them, as [ours: ] do the seasons and the risings @A16', 1, 'A16: Footnote and printer signature text, below the body. It is not missing prose.'),
+    (1, 3, 'a', 'wet or cold 64525 b', 'a crisis and engender them, as [ours: ] do the seasons and the risings @A16', 1, 'A16: Footnote and printer signature text, below the body. It is not missing prose.'),
+    (1, 41, 'a', 'liquefactions’', 'nature can withstand, it carries these [ours: liquefactions] and any excretions that there may @A30', 1, 'A30: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (1, 41, 'a', '2', 'with them in the same direction. [ours: ] Drugs which partake of both these @A31', 1, 'A31: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (1, 16, 'e', '‘this', 'this part which generates lice. [This] is clear in the case @A21', 1, 'A21: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (1, 17, 'e', '‘where', 'who are in a condition [where] a very little will turn @A22', 1, 'A22: no quote mark before `where` in the print (leaf 22); a scan pairs a speck there with the closing mark of the real quotation ‘fire added to fire’ that follows'),
+    (1, 3, 'f', 'cause ?', 'and the Dogstar,} since they [cause] wind and rain and fine @A17', 1, 'A17: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 8, 'f', 'ophthalmia !', 'is unhealthy with fever and [ophthalmia?] Is it because the summer @A18', 1, 'A18: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 10, 'f', 'body ?', 'the nearest region of the [body,] and thus coughs are caused @A19', 1, 'A19: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 15, 'f', 'another ?', 'they are different, corrupt one [another;] for some have only just @A21', 1, 'A21: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 18, 'g', 'difficulty ?', 'on the legs only with [difficulty?] Is it because the moisture, @A22', 1, 'A22: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 24, 'f', 'south !', 'the wind is in the [south?] Is it because moisture becomes @A25', 1, 'A25: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 27, 'f', 'unhealthy !', 'Is it because changes are [unhealthy?] The autumn is more unhealthy @A26', 1, 'A26: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 35, 'f', 'own !', 'a medicinal power of its [own,] and ‘in all things it @A28', 1, 'A28: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 35, 'f', 'important ?', 'is the beginning that is [important’,] and so the copper, by @A28', 1, 'A28: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 38, 'f', 'gums !', 'salt stop inflammation of the [gums?] Is it because purslane contains @A29', 1, 'A29: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 38, 'f', 'together ?', 'or if it is crushed [together] for some time; for the @A29', 1, 'A29: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 41, 'f', 'scammony !', 'the lower part, for instance [scammony,] while others like elaterium and @A30', 1, 'A30: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 41, 'f', 'elaterium ?', 'instance scammony, while others like [elaterium] and the juice of thapsia @A30', 1, 'A30: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 42, 'f', 'overcome !', 'is to refuse to be [overcome] and which enters into the @A32', 1, 'A32: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 43, 'f', 'scammony ?', 'quantities affects the stomach, whereas [scammony] if taken in large quantities @A32', 1, 'A32: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 47, 'f', 'effect !', 'substances generally, have a purgative [effect?] Is it because anything which @A33', 1, 'A33: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 47, 'f', 'oil ?', 'milk, for example, and olive [oil] and unfermented wine; all these @A33', 1, 'A33: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 48, 'f', 'strongsmelling ?', 'no corporeal existence; for even [strong-smelling] plants, such as garlic, promote @A34', 1, 'A34: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 51, 'f', 'character ?', 'has already taken on this [character] by concoction, this can be @A35', 1, 'A35: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (1, 41, 'b', 'liquefactions', 'can withstand, it carries these [liquefactions] and any excretions that there @A30', 1, 'A30: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (2, 9, 'e', '‘these', 'it dries up the moisture? [These] processes are less likely to @A40', 1, 'A40: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (2, 11, 'e', 'increased’', 'but when it is gradually [increased?] For those who are in @A40', 1, 'A40: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (2, 18, 'e', '‘is', 'by water or by air? [Is] it because the moisture when @A42', 1, 'A42: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (2, 29, 'e', 'cold’', 'more freely when it is [cold?] Is it because the heat @A46', 1, 'A46: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (2, 37, 'e', '‘to', 'freely when we are clothed? [To] this we shall give the @A50', 1, 'A50: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (2, 39, 'e', 'above’', 'same answer as we gave [above.] Why is it that, although @A50', 1, 'A50: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (2, 1, 'f', 'relaxed !', 'but rather when it is [relaxed?] Is it because, when it @A38', 1, 'A38: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 4, 'f', 'lower !', 'perspire more freely than the [lower?] Is it because heat rises @A39', 1, 'A39: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 10, 'f', 'through ?', 'can find a way out [through] parts which are particularly porous @A40', 1, 'A40: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 16, 'f', 'freely !', 'who are asleep perspire more [freely?] Is it due to the @A42', 1, 'A42: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 22, 'f', 'reason ?', 'begin, both for the above [reason] and because the excretion takes @A44', 1, 'A44: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 25, 'f', 'stopping ?', 'up its channels, so by [stopping] the pores through administering food @A45', 1, 'A45: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 26, 'f', 'fear !', 'body under the influence of [fear] (hence the relaxation of the @A46', 1, 'A46: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 30, 'f', 'clothed !', 'by running naked rather than [clothed?] Is it because exertion in @A47', 1, 'A47: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 32, 'f', 'increased !', 'but when it is gradually [increased?] For if the heat is @A48', 1, 'A48: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (2, 41, 'f', 'heat !', 'by excessive moisture, and the [heat] is not completely retained, but @A51', 1, 'A51: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 5, 'e', '‘this', 'or to a blazing fire? [This] occurs also in those who @A53', 1, 'A53: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (3, 5, 'e', 'namely’', 'from all those described above; [namely,] when the matter whereby the @A53', 1, 'A53: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (3, 5, 'e', '‘the', 'lack of such a substance. [The] same cause seems to operate @A54', 1, 'A54: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (3, 9, 'e', 'objects’', 'to both near and distant [objects,] it would not see them, @A56', 1, 'A56: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (3, 1, 'f', 'diseases !', 'attacked by pleurisy and similar [diseases?] Is it because a large @A52', 1, 'A52: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 4, 'f', 'consistency !', 'when it has body and [consistency?] Why do drunkards tremble, and @A53', 1, 'A53: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 10, 'f', 'same !', 'be in contact with the [same] thing at the same time. @A57', 1, 'A57: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 18, 'f', 'repression !', 'wine has the effect of [repression;] while water is light and @A60', 1, 'A60: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 18, 'f', 'light ?', 'not unpleasant, and, therefore, being [light] it quickly penetrates downwards, but, @A60', 1, 'A60: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 20, 'f', 'drunkenness !', 'some as a test of [drunkenness?] Is it because the vision @A61', 1, 'A61: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 20, 'f', 'it ?', 'appears double if one puts [it] close to the eye. For @A61', 1, 'A61: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 22, 'f', 'expel !', 'thinner consistency but easier to [expel)?] Or is it because the @A62', 1, 'A62: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 26, 'f', 'burning !', 'a different manner? For example, [burning] is caused both by frost @A64', 1, 'A64: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 26, 'f', 'hold ?', 'one has not a good [hold] upon it, and this happens @A65', 1, 'A65: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 28, 'f', 'wine !', 'flavour other than that of [wine?] He then who is addicted @A66', 1, 'A66: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (3, 32, 'f', 'sun !', 'the sea delight in the [sun?] Is it because drunkards require @A67', 1, 'A67: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 10, 'a', '13 cp 878 335', 'Is it due to the fact [ours: ] that the change caused in them @A72', 1, 'A72: Footnote and printer signature text, below the body. It is not missing prose.'),
+    (4, 2, 'f', 'noticeably !', 'in sexual intercourse sink very [noticeably,] though the latter are near @A69', 1, 'A69: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 2, 'f', 'fruitful !', 'the fact that childless and [fruitful] women alike try the experiment @A70', 1, 'A70: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 3, 'f', 'alike ?', 'eunuchs, who never do so, [alike] lose their sharpness of vision? @A70', 1, 'A70: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 12, 'f', 'puberty !', 'in men or women before [puberty?] Is it because unconcocted matter @A73', 1, 'A73: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 13, 'f', 'and !', 'and a man from aman. [And] we do not value the @A75', 1, 'A75: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 16, 'f', 'phlegm !', 'in some diseases caused by [phlegm?] Is it because it involves @A76', 1, 'A76: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 20, 'f', 'breath !', 'accompanied by an emission of [breath.] If therefore a rush of @A77', 1, 'A77: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 20, 'f', 'semen ?', 'to impart movement to the [semen] and the latter becomes cold; @A77', 1, 'A77: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 24, 'f', 'said ?', 'because, as has already been [said,] in children the breath concocts @A78', 1, 'A78: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (4, 29, 'f', 'oppressed ?', 'have sexual intercourse are often [oppressed] by bile, which makes its @A81', 1, 'A81: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 26, 'a', '6', 'to the source of the veins. [ours: ] Or is it because the thigh @A92', 1, 'A92: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (5, 8, 'e', '‘swings', 'runs more quickly if he [swings] his arms than if he @A86', 1, 'A86: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (5, 30, 'e', 'complete’', 'the concoction of anything is [complete?] Or is it owing to @A93', 1, 'A93: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (5, 1, 'f', 'country !', 'level ground than over uneven [country?] Is it because much movement @A83', 1, 'A83: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 6, 'f', 'oneself !', 'oil with which one rubs [oneself?] Is it because the oil @A84', 1, 'A84: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 7, 'f', 'said !', 'which, as we have already [said,] happens in those who have @A85', 1, 'A85: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 12, 'f', 'fatiguing !', 'so. Why are short walks [fatiguing?] Is it because they involve @A87', 1, 'A87: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 14, 'f', 'nourishment !', 'that it is near the [nourishment.] Since, therefore, generally speaking, fat @A88', 1, 'A88: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 15, 'f', 'drawn ?', 'heels quiver and are hastily [drawn] down again? Is it because, @A88', 1, 'A88: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 18, 'f', 'walking !', 'fall when running than when [walking?] Is it because in the @A89', 1, 'A89: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 20, 'f', 'fixed !', 'is prolonged and continuous and [fixed] the strain falls most upon @A90', 1, 'A90: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 23, 'f', 'road !', 'even than on an uneven [road?] Is it because it is @A91', 1, 'A91: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 26, 'f', 'heat ?', 'fleshy, and therefore the natural [heat] there is considerable? Why is @A93', 1, 'A93: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 27, 'f', 'people ?', 'is it that in some [people] sores are formed as the @A93', 1, 'A93: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 32, 'f', 'involves !', 'the left leg, since it [involves] a distorted attitude, is unnatural, @A94', 1, 'A94: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 34, 'f', 'remains !', 'moister, for the internal moisture [remains,] but the surface moisture is @A95', 1, 'A95: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 38, 'f', 'anointing !', 'baths, in the winter by [anointing?] Is it because the latter, @A96', 1, 'A96: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 40, 'f', 'carried ?', 'for as they are forcibly [carried] upwards in an unnatural manner, @A97', 1, 'A97: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 41, 'f', 'forward !', 'natural, while putting the foot [forward] is a mean between the @A98', 1, 'A98: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (5, 38, 'b', 'at', 'the former is commoner than [at] other seasons; for indulgence in @A96', 1, 'A96: print reads `at other seasons` (leaf 96); both scans read a speck between the words (`at’other`, `at”other`)'),
+    (5, 38, 'b', 'other', 'former is commoner than at [other] seasons; for indulgence in drinking @A96', 1, 'A96: print reads `at other seasons` (leaf 96); both scans read a speck between the words (`at’other`, `at”other`)'),
+    (6, 1, 'f', 'over !', 'owing to its heat prevails [over] the nourishment); but those who @A99', 1, 'A99: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (7, 1, 'f', 'yawn !', 'yawn when they see others [yawn?] Is it because, if they @A101', 1, 'A101: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (7, 4, 'f', 'health !', 'becomes healthy through contact with [health?] Is it because disease is @A102', 1, 'A102: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (7, 5, 'f', 'mentioned !', 'sounds, therefore, which we have [mentioned] being harsh, the hair bristles @A103', 1, 'A103: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (7, 5, 'f', 'actually ?', 'more distinct; therefore the effects [actually] occurring in others are reproduced @A103', 1, 'A103: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (7, 8, 'f', 'breath !', 'disease, because, in inhaling the [breath] by which he becomes infected, @A104', 1, 'A104: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (7, 9, 'f', 'gums !', 'salt stop inflammation of the [gums?] Is it because purslane contains @A105', 1, 'A105: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (7, 9, 'f', 'together ?', 'or if it be crushed [together] for some time; for the @A105', 1, 'A105: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (8, 4, 'e', '‘heat', 'and does not contain any [heat;] fat, on the other hand, @A106', 1, 'A106: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (8, 10, 'e', '‘a', 'and to strength; for obviously [a] condition of health is one @A108', 1, 'A108: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (8, 13, 'e', 'up’', 'has passed out they fill [up] again with cold air, for @A109', 1, 'A109: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (8, 2, 'f', 'sleep !', 'those who are chilled cannot [sleep?] Is it because any one @A106', 1, 'A106: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (8, 8, 'f', 'urine !', 'after sneezing and after passing [urine?] Is it because in both @A107', 1, 'A107: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (8, 15, 'g', 'because ]', 'more upright? [Or is it [because…]] Why in the winter are @A109', 1, 'A109: Image closes the square bracket after the ellipsis.'),
+    (8, 17, 'f', 'although !', 'it is colder at dawn, [although] the sun is nearer to @A110', 1, 'A110: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (8, 17, 'f', 'congealed ?', 'nearer they fall and become [congealed,] because the longer the sun @A110', 1, 'A110: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (8, 21, 'f', 'upright !', 'together, the hair grows more [upright,] just as when one fixes @A112', 1, 'A112: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (9, 4, 'f', 'part !', 'the middle is the reddest [part?] Is it because the fennel-stalk @A114', 1, 'A114: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (9, 5, 'f', 'blacker !', 'the aged the flesh becomes [blacker,] and their congenital scars are @A115', 1, 'A115: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (9, 9, 'f', 'thapsia !', 'a double nature. Why are [thapsia] and metal ladles used to @A116', 1, 'A116: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (9, 11, 'f', 'again !', 'it has a black appearance. [Again] large and inveterate wounds form @A117', 1, 'A117: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (9, 6, 'b', 'and', 'force owing to their rarity, [and] other things for various other @A115', 1, 'A115: print reads `and other things` at the head of the line, with the margin number 30 beside it (leaf 115); the scans read the two together as `scand` and `3oand`'),
+    (10, 7, 'd', 'dosome -> do some', 'put the question generally, why [do some] animals change and others not @A119', 1, 'A119: Image has separate body words: do some. Both OCR scans join them.'),
+    (10, 12, 'a', '1', 'yet perfectly proportioned, like Melitaean terriers. [ours: ] The reason is that the process @A121', 1, 'A121: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (10, 52, 'a', '2', 'also most beautiful is not true. [ours: ] But we regard as beautiful that @A136', 1, 'A136: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (10, 43, 'e', '‘those', 'of the bladder are wide? [Those] animals which produce their young @A131', 1, 'A131: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (10, 45, 'e', 'places’', 'a wild state in some [places,] and wild dogs are found @A132', 1, 'A132: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (10, 50, 'e', '‘in', 'animals, is liable to epilepsy [in] infancy, when distortion of the @A135', 1, 'A135: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (10, 52, 'e', 'equally’', 'are pleasure and the beautiful [equally] pleasing to all men; for @A135', 1, 'A135: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (10, 2, 'f', 'lymph !', 'than pure blood and resembles [lymph.] Why is it that some @A118', 1, 'A118: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 3, 'f', 'loose ?', 'the skin there is naturally [loose,] and this moisture being concocted @A118', 1, 'A118: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 17, 'f', 'necks !', 'it because some have no [necks] and so cannot move their @A123', 1, 'A123: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 21, 'f', 'the !', 'the natural heat cannot concoct [the] nourishment. But the pig does @A124', 1, 'A124: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 21, 'f', 'pig ?', 'concoct the nourishment. But the [pig] does not shed its hair, @A124', 1, 'A124: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 23, 'f', 'above !', 'sheep, obtaining the nourishment described [above,] receives less food because it @A125', 1, 'A125: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 26, 'f', 'feet !', 'have an even number of [feet?] Is it because it is @A126', 1, 'A126: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 26, 'f', 'things ?', 'Since, then, progression involves two [things,] namely, movement and rest, we @A126', 1, 'A126: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 26, 'f', 'pair ?', 'we immediately get here a [pair] and an even number. Quadrupeds @A126', 1, 'A126: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 28, 'f', 'man !', 'so with the young of [man?] Is it because human twins @A127', 1, 'A127: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 32, 'f', 'perfection ?', 'attain a state of physical [perfection,] whilst others are late in @A128', 1, 'A128: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 35, 'f', 'excretions !', 'animals which are full of [excretions] are mild-tempered, for that which @A129', 1, 'A129: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 35, 'f', 'those ?', 'at the time of birth? [Those,] on the other hand, who @A129', 1, 'A129: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 38, 'f', 'too !', 'only one voice? Has man [too] really only one voice, but @A130', 1, 'A130: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 40, 'f', 'implies !', 'of speech, as its name [implies,] is simply being unable to @A131', 1, 'A131: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 40, 'f', 'simply ?', 'as its name implies, is [simply] being unable to explain one’s @A131', 1, 'A131: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 43, 'f', 'fishes ?', 'interval, like certain of the [fishes,] never have bladders, but the @A131', 1, 'A131: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 44, 'f', 'eruct !', 'animals and birds do not [eruct?] Is it owing to the @A132', 1, 'A132: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 44, 'f', 'tails ?', 'animals with long manes and [tails,] owing to the length of @A132', 1, 'A132: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 52, 'f', 'elsewhere !', 'to it is dealt with [elsewhere;] but to add that what @A136', 1, 'A136: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 54, 'f', 'heat ?', 'the animal stands. Now the [heat,] as it travels along, distributes @A137', 1, 'A137: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 54, 'f', 'off !', 'breath and by the drawing [off] of those humours which are @A138', 1, 'A138: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 54, 'f', 'all ?', 'wipes away watery matter. These [all] having been set in motion, @A138', 1, 'A138: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 56, 'f', 'nourishment !', 'takes more moist than dry [nourishment?] Is it because man is @A139', 1, 'A139: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 61, 'f', 'confused ?', 'being when the semen becomes [confused] and disturbed either in the @A140', 1, 'A140: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 62, 'f', 'man !', 'owing to its abundance, in [man] it breaks out only on @A141', 1, 'A141: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 62, 'f', 'neither ?', 'the head; for man is [neither] on the one hand devoid @A141', 1, 'A141: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (10, 66, 'f', 'colours !', 'of wax? Now the sun [colours] the skin, but it does @A142', 1, 'A142: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 32, 'a', '7', 'those who are afraid speak shrilly? [ours: ] Is it because in. those who @A155', 1, 'A155: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (11, 33, 'a', 'hears’', 'mind which sees, the mind which [ours: hears’.] But at night when our sight @A156', 1, 'A156: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (11, 54, 'e', '‘this', 'that part of the body? [This] is why those who hesitate, @A162', 1, 'A162: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (11, 59, 'e', 'withdrawn’', 'those who produce it are [withdrawn,] but its character is unchanged? @A164', 1, 'A164: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (11, 1, 'f', 'source !', 'to arise from the same [source?] Now language, which is a @A143', 1, 'A143: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 6, 'f', 'raised ?', 'question which we have already [raised.] It is for the same @A145', 1, 'A145: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 8, 'f', 'ground ?', 'vessels are buried in the [ground] and lids placed on them, @A146', 1, 'A146: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 16, 'f', 'voices !', 'while adult men have deep [voices?] Is it because the thin @A149', 1, 'A149: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 27, 'f', 'things !', 'same time? Sometimes, however, these [things] do not go together, but @A153', 1, 'A153: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 27, 'f', 'organ ?', 'has been perfected before the [organ] by which the voice is @A153', 1, 'A153: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 33, 'f', 'day !', 'the night than in the [day?] Is it for the reason @A156', 1, 'A156: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 33, 'f', 'anaxagoras ?', 'it for the reason that [Anaxagoras] gives, namely, that in the @A156', 1, 'A156: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 34, 'f', 'that !', 'wide (just as also is [that] leading to the testicles), and @A157', 1, 'A157: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 46, 'f', 'stomach ?', 'meal but on an empty [stomach.] Now since a person in @A160', 1, 'A160: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 49, 'f', 'travels !', 'although light is rarer and [travels] farther and quicker than sound? @A161', 1, 'A161: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 53, 'f', 'shrilly ?', 'those who are afraid speak [shrilly,] though a feeling of shame @A162', 1, 'A162: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 55, 'f', 'speech !', 'apt to become hesitating in [speech?] Is it because he alone @A163', 1, 'A163: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 60, 'f', 'speech !', 'the cause of hesitancy in [speech?] Are those who hesitate in @A165', 1, 'A165: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 60, 'f', 'moment ?', 'come forth before the proper [moment] of exhalation? Or is the @A165', 1, 'A165: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (11, 33, 'b', 'hears', 'which sees, the mind which [hears’.] But at night when our @A156', 1, 'A156: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (12, 1, 'a', '25', 'the air in a weak form, [ours: ] as happens in medicinal myrrh? Or @A167', 1, 'A167: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (12, 4, 'f', 'distance !', 'perfumes smell sweeter at a [distance,] whereas close at hand they @A169', 1, 'A169: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (12, 4, 'f', 'odours ?', 'the other hand, the mingled [odours] are simultaneously perceptible in the @A169', 1, 'A169: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (12, 9, 'f', 'distance !', 'less pleasant at a short [distance?] Is it because at a @A170', 1, 'A170: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (12, 9, 'f', 'scent ?', 'flowers when rubbed lose their [scent.] Are scents smoke [or air] @A170', 1, 'A170: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (12, 11, 'f', 'heat !', 'earthy element and the slow [heat] does not destroy it. Why @A171', 1, 'A171: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (13, 4, 'a', '2', 'to the smell except the panther [ours: ] which is pleasing even to the @A172', 1, 'A172: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (13, 3, 'f', 'odour !', 'the flower, mingles with the [odour?] Why is it that no @A172', 1, 'A172: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (13, 4, 'f', 'disease !', 'unpleasant, as the result of [disease.] Also the exhalations and eructations @A173', 1, 'A173: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (13, 6, 'f', 'say !', 'of the followers of Heraclitus [say,] vaporization takes place in the @A174', 1, 'A174: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (13, 7, 'f', 'change !', 'cannot undergo any process of [change.] Why has the armpit a @A175', 1, 'A175: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (13, 12, 'f', 'motion !', 'odour when they are in [motion?] Is it because they fill @A176', 1, 'A176: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (14, 8, 'e', '‘powerful', 'in cold districts have a [powerful] principle of growth in themselves, @A179', 1, 'A179: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (14, 13, 'e', 'air’', 'air becomes hotter than dry [air.] Or perhaps the air is @A180', 1, 'A180: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (14, 2, 'f', 'years !', 'cold, keeps intact for many [years?] Is it because the extraneous @A177', 1, 'A177: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (14, 5, 'f', 'offspring !', 'to the birth of female [offspring?] Is it because a large @A178', 1, 'A178: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (14, 13, 'f', 'districts !', 'more so than in warm [districts?] Is it because of the @A180', 1, 'A180: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (14, 15, 'f', 'flood !', 'regions having perished in the [Flood,] so that the latter stand @A181', 1, 'A181: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 5, 'a', 'a', 'Θ. When therefore the sun at [ours: Α] falling on Θ makes the shadow @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', '4', 'falling on Θ makes the shadow [ours: ΘΛ,] the ray must fall on Λ. @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', 'a', 'ΘΛ, the ray must fall on [ours: Λ.] But when the sun comes to @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', 'b', 'But when the sun comes to [ours: Β,] the ray from Β will fall @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', 'b', 'comes to Β, the ray from [ours: Β] will fall within ΘΛ, and similarly @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', 'a', 'ray from Β will fall within [ours: ΘΛ,] and similarly again when the sun @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', 'ab', 'line at two points. Since therefore [ours: ΑΒ] is equal to ΒΓ, the angles @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', 'bi', 'Since therefore ΑΒ is equal to [ours: ΒΓ,] the angles which subtend them at @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', '4', 'the angles which subtend them at [ours: Δ] will also be equal, for they @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', 'ae', 'into two equal parts, the line [ours: ΛΕ] will be greater than the line @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'a', 'ez', 'will be greater than the line [ours: ΕΖ] within ΛΘ. So too with the @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'a', 'ab', 'that from the lower point. Let [ours: ΑΒ] be the gnomon, and Γ and @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'a', '4', 'be the gnomon, and Γ and [ours: Δ] two positions of the sun. The @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'a', '4', 'ΓΖ, will fall outside the line [ours: ΔΕ;] and the shadow ΒΕ is formed @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'a', 'be', 'the line ΔΕ; and the shadow [ours: ΒΕ] is formed when the sun is @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'a', 'bz', 'is higher in the heavens, and [ours: ΒΖ] when it is lower, and it @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'a', 'ad', 'that from the lower point? Let [ours: ΑΔ] be the gnomon, Β the moon, @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'a', 'b', 'point? Let ΑΔ be the gnomon, [ours: Β] the moon, and Γ the sun. @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'a', 'i', 'the gnomon, Β the moon, and [ours: Γ] the sun. The ray from the @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'a', '4 z', 'so that the shadow will be [ours: ΔΖ;] but the ray from the sun @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'a', 'je', 'therefore will necessarily be less, viz. [ours: ΔΕ.] Why is it that during eclipses @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 3, 'e', 'number’', '&c., combined with a preceding [number,] and thus a different number @A183', 1, 'A183: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (15, 3, 'e', 'result’', 'ten proportions four cubic numbers [result,] from which numbers the Pythagoreans @A183', 1, 'A183: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (15, 1, 'f', 'diameter !', 'alone bears the name of [diameter?] Is it because the diameter, @A182', 1, 'A182: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 4, 'f', 'seem !', 'always similar. This does not [seem] to be so unless one @A184', 1, 'A184: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 5, 'f', 'be .', 'and let the object seen [be] Θ. When therefore the sun @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'f', 'them ?', 'ΒΓ, the angles which subtend [them] at Δ will also be @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 6, 'f', 'acone !', 'is in the form of [acone,] and the base of a @A186', 1, 'A186: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 7, 'f', 'us !', 'which was formerly opposite to [us),] so that part of the @A187', 1, 'A187: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 8, 'f', 'things !', 'flat? Is it because all [things] of which the distance is @A188', 1, 'A188: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 9, 'f', 'sun ,', 'Δ two positions of the [sun.] The ray from Γ, the @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'g', 'sun .', 'Δ two positions of the [sun.] The ray from Γ, the @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 11, 'f', 'earth !', 'in the direction of the [earth?] Is it because, just as, @A189', 1, 'A189: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 12, 'f', 'refractor !', 'when refracted from a small [refractor.] (So too a halo does @A190', 1, 'A190: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 12, 'f', 'weakened ?', 'nor does the sight ascend [weakened] by passing under the earth. @A190', 1, 'A190: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (15, 5, 'b', 'θ', 'let the object seen be [Θ.] When therefore the sun at @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'α', 'When therefore the sun at [Α] falling on Θ makes the @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'θ', 'sun at Α falling on [Θ] makes the shadow ΘΛ, the @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'θλ', 'on Θ makes the shadow [ΘΛ,] the ray must fall on @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'λ', 'the ray must fall on [Λ.] But when the sun comes @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'β', 'when the sun comes to [Β,] the ray from Β will @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'β', 'to Β, the ray from [Β] will fall within ΘΛ, and @A184', 1, 'A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'θλ', 'from Β will fall within [ΘΛ,] and similarly again when the @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'γ', 'when the sun comes to [Γ;] otherwise one straight line will @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'αβ', 'at two points. Since therefore [ΑΒ] is equal to ΒΓ, the @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'βγ', 'therefore ΑΒ is equal to [ΒΓ,] the angles which subtend them @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'δ', 'angles which subtend them at [Δ] will also be equal, for @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'δ', 'angles on this side of [Δ] are equal, so also are @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'λε', 'two equal parts, the line [ΛΕ] will be greater than the @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'εζ', 'be greater than the line [ΕΖ] within ΛΘ. So too with @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 5, 'b', 'λθ', 'than the line ΕΖ within [ΛΘ.] So too with the other @A185', 1, 'A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'b', 'αβ', 'from the lower point. Let [ΑΒ] be the gnomon, and Γ @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'b', 'γ', 'ΑΒ be the gnomon, and [Γ] and Δ two positions of @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'b', 'δ', 'the gnomon, and Γ and [Δ] two positions of the sun. @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'b', 'δε', 'will fall outside the line [ΔΕ;] and the shadow ΒΕ is @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'b', 'βε', 'line ΔΕ; and the shadow [ΒΕ] is formed when the sun @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 9, 'b', 'βζ', 'higher in the heavens, and [ΒΖ] when it is lower, and @A188', 1, 'A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'b', 'αδ', 'from the lower point? Let [ΑΔ] be the gnomon, Β the @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'b', 'γ', 'gnomon, Β the moon, and [Γ] the sun. The ray from @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'b', 'βζ', 'ray from the moon is [ΒΖ,] so that the shadow will @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'b', 'δζ', 'that the shadow will be [ΔΖ;] but the ray from the @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'b', 'γε', 'ray from the sun is [ΓΕ,] and its shadow therefore will @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (15, 10, 'b', 'δε', 'will necessarily be less, viz. [ΔΕ.] Why is it that during @A189', 1, 'A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label.'),
+    (16, 2, 'e', '‘the', 'necessarily produce a hemispherical form? [The] corresponding hemisphere below is cut @A192', 1, 'A192: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (16, 4, 'e', 'it’', 'the fact that, striking against [it] in their course, they revolve @A193', 1, 'A193: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (16, 1, 'f', 'but !', '(there is no continuous shadow [but)] it is cut off by @A192', 1, 'A192: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 1, 'f', 'point ?', 'by the water at that [point.] Is no shadow really formed? @A192', 1, 'A192: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 3, 'f', 'you !', 'the unweighted side turned towards [you?] Is it because the heavier @A193', 1, 'A193: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 3, 'f', 'part ?', 'same line, while since one [part] travels more quickly than the @A193', 1, 'A193: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 4, 'f', 'ground !', 'perpendicular is raised above the [ground] and then thrust forward. For @A194', 1, 'A194: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 5, 'f', 'line !', 'described by the same straight [line,] and when the straight line @A195', 1, 'A195: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 5, 'f', 'is ?', 'the same centre, the result [is] that, since they touch the @A195', 1, 'A195: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 6, 'f', 'crooked !', 'it is cut obliquely becomes [crooked?] Is it due to the @A196', 1, 'A196: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 6, 'f', 'partly ?', 'is not parallel but is [partly] more and partly less distant @A196', 1, 'A196: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 8, 'f', 'other !', 'a straight line like the [other] elements. When therefore the water-clock @A197', 1, 'A197: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 8, 'f', 'contract ?', 'first holes; for it cannot [contract] into itself. The fact that @A197', 1, 'A197: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 8, 'f', 'movement !', 'up and down causes considerable [movement] in the water inside the @A198', 1, 'A198: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 8, 'f', 'itself ?', 'drawn up and being in [itself] continuous, remains in the same @A198', 1, 'A198: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 8, 'f', 'it !', 'it when it has moved [it,] and to do so for @A199', 1, 'A199: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (16, 12, 'f', 'weight !', 'that in magnitudes of uneven [weight,] if you set the lighter @A200', 1, 'A200: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (17, 1, 'f', 'men !', 'side by side with other [men] than by themselves? Is it @A202', 1, 'A202: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (18, 8, 'd', 'isit -> is it', 'no trifling can ever occur? [Is it] because such reasoning is apparent @A207', 1, 'A207: Image has separate body words: is it. Both OCR scans join them.'),
+    (18, 1, 'f', 'book !', 'awake by taking up a [book?] Is it because in those @A204', 1, 'A204: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (18, 3, 'f', 'fables ?', 'displays men prefer examples and [fables] rather than enthymemes? Is it @A205', 1, 'A205: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (18, 5, 'f', 'nature !', 'while the philosopher discusses the [nature] of tyranny? Why is it @A206', 1, 'A206: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (18, 6, 'f', 'proficiency ?', 'he may improve his own [proficiency] in it? Now when men @A206', 1, 'A206: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (18, 7, 'f', 'rout !', 'a standstill. (Similarly during a [rout,] if the leader halts, all @A207', 1, 'A207: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 9, 'd', 'ofa -> of a', 'sings it to the accompaniment [of a] flute or lyre? Yet the @A212', 1, 'A212: Image has separate body words: of a. Both OCR scans join them.'),
+    (19, 7, 'a', 'vzze', 'they left in both and omitted [ours: trite,] or is the truer answer that @A211', 1, "A211: scan 'vzze' -> print 'trite,', at this one occurrence."),
+    (19, 12, 'a', '7 zese', 'the less; but if one omits [ours: mese,] when one should sound both, the @A212', 1, "A212: scan '7 zese' -> print 'mese,', at this one occurrence."),
+    (19, 20, 'a', 'ese', 'natural; for in all good music [ours: mese] occurs frequently, and all good composers @A216', 1, "A216: scan 'ese' -> print 'mese', at this one occurrence."),
+    (19, 24, 'a', 'zefe', 'in length. Why, if one strikes [ours: nete] and then stops it down, does @A217', 1, "A217: scan 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 35, 'a', '3', 'to mese in the ratio of [ours: 3/2] to 1 (for a fifth is @A220', 1, "A220: scan '3' -> print '3/2', at this one occurrence."),
+    (19, 37, 'a', 'songs’', 'the top notes, and the ‘Orthian [ours: songs’] and high music are hard to @A221', 1, "A221: scan 'songs’' -> print 'songs’', at this one occurrence."),
+    (19, 37, 'a', '2', 'carried violently along is carried swiftly. [ours: ] Hence persons in robust health can @A222', 1, "A222: scan '2' -> print '', at this one occurrence."),
+    (19, 39, 'a', 'zefe', 'voices are separated in pitch as [ours: nete] is from hypate. Now any concord @A223', 1, "A223: scan 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 39, 'a', 'hyfate', 'in pitch as nete is from [ours: hypate.] Now any concord is more pleasing @A223', 1, "A223: scan 'hyfate' -> print 'hypate.', at this one occurrence."),
+    (19, 39, 'a', 'zefe', 'nete, for the second stroke which [ours: nete] makes upon the air is Hypate. @A223', 1, "A223: scan 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 42, 'a', 'hyfaze', 'the similarity can be taken from [ours: hypate] as being a response to nete.) @A225', 1, "A225: scan 'hyfaze' -> print 'hypate', at this one occurrence."),
+    (19, 42, 'a', 'zefe', 'response to a note, and when [ours: nete] ceases a sound? is set in @A225', 1, "A225: scan 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 42, 'a', 'ze¢e', 'natural owing to the similarity that [ours: nete] should seem to set Hypate in @A225', 1, "A225: scan 'ze¢e' -> print 'nete', at this one occurrence."),
+    (19, 42, 'a', 'zefe', 'in motion. For we know that [ours: nete] is not in motion, because it @A225', 1, "A225: scan 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 42, 'a', 'zeze', 'would be nothing extraordinary if, after [ours: nete] is struck when it is very @A225', 1, "A225: scan 'zeze' -> print 'nete', at this one occurrence."),
+    (19, 47, 'a', 'zefe', 'strings, leave in Hypate but not [ours: nete?] Or should we say that they @A227', 1, "A227: scan 'zefe' -> print 'nete?', at this one occurrence."),
+    (19, 47, 'a', 'ese', 'upper ‘pycnon’; whence came the name [ours: mese,] because it was the end of @A228', 1, "A228: scan 'ese' -> print 'mese,', at this one occurrence."),
+    (19, 27, 'e', '‘this', 'such and such a sound? [This] movement resembles moral character both @A218', 1, 'A218: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (19, 35, 'e', 'term’', 'is as great as that [term] and one third as great @A220', 1, 'A220: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (19, 39, 'e', 'force’', 'they are not equal in [force,] and being unequal they make @A223', 1, 'A223: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (19, 43, 'e', 'account’', 'and exist, on their own [account,] show up the mistakes of @A226', 1, 'A226: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (19, 4, 'g', 'purpose ]', 'to it according to one’s [purpose.]] [But what is the first @A210', 1, 'A210: Image closes the square bracket after purpose.'),
+    (19, 13, 'f', 'versa !', 'the high, but not vice [versa?] Is it because, if possible, @A213', 1, 'A213: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 15, 'f', 'mode !', 'so they sang in one [mode.] For it is easier for @A214', 1, 'A214: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 15, 'f', 'rhythm ?', 'simple; for there is one [rhythm] and one unit of metre. @A214', 1, 'A214: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 17, 'f', 'note !', 'same as the other ‘symphonic’ [note,] as are the notes which @A215', 1, 'A215: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 17, 'f', 'accord ?', 'octave apart? For in the [accord] in the octave the deep @A215', 1, 'A215: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 20, 'f', 'used !', 'when that particular string is [used?] Surely this is only natural; @A216', 1, 'A216: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 23, 'f', 'instruments !', 'produced? So too with wind [instruments,] the sound produced through the @A217', 1, 'A217: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 35, 'f', 'else ?', 'of air or of something [else,] a sound which is in @A221', 1, 'A221: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 37, 'f', 'possession !', 'air. Is it because the [possession] of a naturally high voice @A222', 1, 'A222: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 39, 'f', 'antiphony !', 'has this characteristic. Why is [‘antiphony’] more pleasant than ‘homophony’? Is @A223', 1, 'A223: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 39, 'f', 'pleasing !', 'in the octave is very [pleasing.] Now ‘magadizing’ is made up @A224', 1, 'A224: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 39, 'f', 'notes ?', 'is made up of contrary [notes,] and for this reason it @A224', 1, 'A224: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 41, 'f', 'ratio !', 'which are in a proper [ratio] to one another, and sounds @A224', 1, 'A224: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 42, 'f', 'respond !', 'it down, Hypate seems to [respond?] Is it because ze?ze, as @A225', 1, 'A225: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 43, 'f', 'listen !', 'in them. Why do we [listen] with greater pleasure to a @A226', 1, 'A226: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 44, 'f', 'startingpoint ?', 'alone forms a kind of [starting-point,] that which lies between the @A227', 1, 'A227: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 47, 'f', 'tone !', 'and the interval of a [tone?] They treated mese, then, as @A227', 1, 'A227: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 47, 'f', 'pycnon ?', 'lower note of the upper [‘pycnon’;] whence came the name mese, @A228', 1, 'A228: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 49, 'f', 'melody !', 'lower is more suited to [melody?] Is it because melody is @A229', 1, 'A229: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (19, 1, 'b', 'are', 'are grieving and those who [are] enjoying themselves alike have the @A209', 1, "A209: A 'areI', B 'arel' -> print 'are', at this one occurrence."),
+    (19, 3, 'b', 'nete', 'a degree than when singing [nete] and the higher notes, although @A209', 1, "A209: A 'wefe', B 'mefe' -> print 'nete', at this one occurrence."),
+    (19, 4, 'b', 'hypate', 'parhypate difficult to sing, but [Hypate] easy, although there is only @A210', 1, "A210: A 'Lyfaze', B 'Lypaze' -> print 'Hypate', at this one occurrence."),
+    (19, 4, 'b', 'hypate', 'between them? Is it because [Hypate] is accompanied by relaxation of @A210', 1, "A210: A 'Aypare', B 'Ayfaze' -> print 'Hypate', at this one occurrence."),
+    (19, 4, 'b', 'paranete', 'says with this note or [Paranete.] [For one must… with a @A210', 1, "A210: A 'Aaranete.’', B 'Jaraneze.' -> print 'Paranete.', at this one occurrence."),
+    (19, 7, 'b', 'hypate', 'scale seven notes, leave in [Hypate] and not nete? Is this @A211', 1, "A211: A 'Ayfazte', B 'Ayfaze' -> print 'Hypate', at this one occurrence."),
+    (19, 7, 'b', 'nete', 'leave in Hypate and not [nete?] Is this a false statement, @A211', 1, 'A211: A "zefe?\'", B "xefe?\'" -> print \'nete?\', at this one occurrence.'),
+    (19, 7, 'b', 'trite', 'left in both and omitted [trite,] or is the truer answer @A211', 1, "A211: A '7 vzZe,', B '/vzze,' -> print 'trite,', at this one occurrence."),
+    (19, 7, 'b', 'hypate', 'the higher note, so that [Hypate] gives the impression of the @A211', 1, "A211: A 'Zypate', B 'Aypaze' -> print 'Hypate', at this one occurrence."),
+    (19, 7, 'b', 'nete', 'the octave above better than [(nete] for the high note needs @A211', 1, "A211: A '(ze¢e', B '(zefe' -> print '(nete', at this one occurrence."),
+    (19, 12, 'b', 'paranete', 'tune? For if one omits [Paranete,] when one should sound it @A212', 1, "A212: A 'Aaranefe,', B 'Zaraneze,' -> print 'Paranete,', at this one occurrence."),
+    (19, 12, 'b', 'mese', 'one should sound it with [mese,] the tune is given none @A212', 1, "A212: A 'zzese,', B 'ese,' -> print 'mese,', at this one occurrence."),
+    (19, 12, 'b', 'mese', 'less; but if one omits [mese,] when one should sound both, @A212', 1, "A212: A '7 zese,', B '7 zese,' -> print 'mese,', at this one occurrence."),
+    (19, 12, 'b', 'hypate', 'the greater? So too if [Hypate] is stopped down in the @A212', 1, "A212: A 'Lyfare', B 'hyZate' -> print 'Hypate', at this one occurrence."),
+    (19, 12, 'b', 'netes', 'down in the centre, two [netes] are produced. Why is it @A212', 1, "A212: A 'e/es', B 'zezes' -> print 'netes', at this one occurrence."),
+    (19, 19, 'b', 'mese', 'they alone are equidistant from [mese?] The presence then of this @A215', 1, 'A215: A \'szese??\', B \'wese?"\' -> print \'mese?\', at this one occurrence.'),
+    (19, 20, 'b', 'mese', 'the other strings, one alters [mese] and uses the instrument, the @A215', 1, "A215: A 'weese', B 'meese' -> print 'mese', at this one occurrence."),
+    (19, 20, 'b', 'lichanos', 'piece as well, whereas, if [Lichanos] or any other string is @A216', 1, "A216: A '“chanos', B 'Zcehanos' -> print 'Lichanos', at this one occurrence."),
+    (19, 20, 'b', 'mese', 'for in all good music [mese] occurs frequently, and all good @A216', 1, "A216: A 'ese', B '#ese' -> print 'mese', at this one occurrence."),
+    (19, 23, 'b', 'hypate', 'in quick singing. Why is [Hypate] double nete? Is it because @A216', 1, "A216: A 'Zyfaze', B 'Zyfate' -> print 'Hypate', at this one occurrence."),
+    (19, 23, 'b', 'nete', 'singing. Why is Hypate double [nete?] Is it because in the @A216', 1, "A216: A 'wefe?*', B 'zefe?*' -> print 'nete?', at this one occurrence."),
+    (19, 23, 'b', 'hypatereed', 'the extreme end of the [Hypate-reed,] but fill up the nete-reed @A217', 1, "A217: A 'Aypaze-reed,', B '#yfaze-reed,' -> print 'Hypate-reed,', at this one occurrence."),
+    (19, 23, 'b', 'netereed', 'Hypate-reed, but fill up the [nete-reed] to the middle. Similarly they @A217', 1, "A217: A '~e¢e-reed', B 'wefe-reed' -> print 'nete-reed', at this one occurrence."),
+    (19, 23, 'b', 'hypate', 'of 4 to 3. Further, [Hypate] and nete on triangular stringed @A217', 1, "A217: A 'Aypazte', B 'Zypate' -> print 'Hypate', at this one occurrence."),
+    (19, 24, 'b', 'nete', 'length. Why, if one strikes [nete] and then stops it down, @A217', 1, "A217: A 'zefe*', B '~zefe*' -> print 'nete', at this one occurrence."),
+    (19, 24, 'b', 'hypate', 'because the vibration produced from [hypate] is very much of the @A217', 1, "A217: A '“yZaze', B '“yfaze' -> print 'hypate', at this one occurrence."),
+    (19, 24, 'b', 'nete', 'nature as the sound of [nete,] because it is in accord @A217', 1, "A217: A 'zefe,', B 'ze¢e,' -> print 'nete,', at this one occurrence."),
+    (19, 32, 'b', 'trite', 'and then Terpander took away [trite] and added nete, and in @A219', 1, "A219: A '¢rzze', B '¢vzze' -> print 'trite', at this one occurrence."),
+    (19, 32, 'b', 'nete', 'took away trite and added [nete,] and in his time it @A219', 1, "A219: A 'zeZe,', B 'veze,' -> print 'nete,', at this one occurrence."),
+    (19, 35, 'b', 'nete', 'and as hypate is two, [nete] is four; and so on. @A220', 1, "A220: A 'ele', B 'nefe' -> print 'nete', at this one occurrence."),
+    (19, 35, 'b', 'nete', 'four; and so on. But [nete] is to mese in the @A220', 1, "A220: A 'xefe', B 'xeze' -> print 'nete', at this one occurrence."),
+    (19, 35, 'b', '3/2', 'mese in the ratio of [3/2] to 1 (for a fifth @A220', 1, "A220: A '3', B '3' -> print '3/2', at this one occurrence."),
+    (19, 35, 'b', '3/2', 'is in the ratio of [3/2] to 1 is not contained @A220', 1, "A220: A '8', B '3' -> print '3/2', at this one occurrence."),
+    (19, 36, 'b', 'mese', 'if on the other hand [mese] is left alone and one @A221', 1, "A221: A 'zese', B 'ese' -> print 'mese', at this one occurrence."),
+    (19, 36, 'b', 'mese', 'is out of tune but [mese] is not altered, naturally the @A221', 1, "A221: A 'szese', B 'mwese' -> print 'mese', at this one occurrence."),
+    (19, 37, 'b', 'songs', 'top notes, and the ‘Orthian [songs’] and high music are hard @A221', 1, "A221: A 'songs’ ἢ', B 'songs’' -> print 'songs’', at this one occurrence."),
+    (19, 39, 'b', 'nete', 'are separated in pitch as [nete] is from hypate. Now any @A223', 1, "A223: A 'zefe', B 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 39, 'b', 'hypate', 'pitch as nete is from [hypate.] Now any concord is more @A223', 1, "A223: A 'hyfate.', B 'hyfate.' -> print 'hypate.', at this one occurrence."),
+    (19, 39, 'b', 'hypate', 'singing louder than others. Furthermore, [Hypate] happens to have the same @A223', 1, "A223: A 'ZyZate', B 'Zypate' -> print 'Hypate', at this one occurrence."),
+    (19, 39, 'b', 'nete', 'periods in its sounds as [nete,] for the second stroke which @A223', 1, 'A223: A "zefe,\'\'", B "wzeZe,\'!" -> print \'nete,\', at this one occurrence.'),
+    (19, 39, 'b', 'nete', 'for the second stroke which [nete] makes upon the air is @A223', 1, "A223: A 'zefe', B 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 39, 'b', 'hypate', 'makes upon the air is [Hypate.] As, then, these notes, though @A223', 1, "A223: A 'yfate.', B 'Aypate.' -> print 'Hypate.', at this one occurrence."),
+    (19, 42, 'b', 'nete', 'it that, if one strikes [nete] and then stops it down, @A225', 1, "A225: A 'wee', B 'ze¢e' -> print 'nete', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'and then stops it down, [Hypate] seems to respond? Is it @A225', 1, "A225: A '2 ypaze', B 'AyPaze' -> print 'Hypate', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'ceases and dies down, becomes [Hypate?] (This can be illustrated by @A225', 1, "A225: A '/yfate?', B 'Ayfate?' -> print 'Hypate?', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'similarity can be taken from [hypate] as being a response to @A225', 1, "A225: A 'hyfaze', B 'hyfaze' -> print 'hypate', at this one occurrence."),
+    (19, 42, 'b', 'nete', 'as being a response to [nete.)] And since an echo is @A225', 1, "A225: A 'zefe.*)', B 'zeze.*)' -> print 'nete.)', at this one occurrence."),
+    (19, 42, 'b', 'nete', 'to a note, and when [nete] ceases a sound? is set @A225', 1, "A225: A 'zefe', B 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'same as the note of [Hypate,] it is only natural owing @A225', 1, "A225: A 'Ayfaze,', B 'AyZaze,' -> print 'Hypate,', at this one occurrence."),
+    (19, 42, 'b', 'nete', 'owing to the similarity that [nete] should seem to set Hypate @A225', 1, "A225: A 'ze¢e', B 'ze¢e' -> print 'nete', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'nete should seem to set [Hypate] in motion. For we know @A225', 1, "A225: A 'Lypaze', B 'hyfare' -> print 'Hypate', at this one occurrence."),
+    (19, 42, 'b', 'nete', 'motion. For we know that [nete] is not in motion, because @A225', 1, "A225: A 'zefe', B 'zefe' -> print 'nete', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'stopped down, and seeing that [hypate] itself is not stopped down @A225', 1, "A225: A '2 yfaze', B '“yAaze' -> print 'hypate', at this one occurrence."),
+    (19, 42, 'b', 'nete', 'be nothing extraordinary if, after [nete] is struck when it is @A225', 1, "A225: A 'zeze', B 'zeze' -> print 'nete', at this one occurrence."),
+    (19, 42, 'b', 'nete', 'sound. Now the sound of [nete] is alien to the other @A225', 1, "A225: A 'ze/e', B 'zee' -> print 'nete', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'but is the same as [Hypate] in its end. This having @A225', 1, "A225: A 'Aypate', B 'Aypaze' -> print 'Hypate', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'added to the movement of [Hypate] itself, it would not be @A225', 1, "A225: A '“ypaze', B 'Aypaze' -> print 'Hypate', at this one occurrence."),
+    (19, 42, 'b', 'hypate', 'to be entirely that of [Hypate;] and it will be louder @A225', 1, "A225: A 'Zypaze;', B 'Zyfaze;' -> print 'Hypate;', at this one occurrence."),
+    (19, 42, 'b', 'nete', 'as it were impelled by [nete,] give only a soft sound, @A225', 1, "A225: A 'vzeze,', B 'xere,' -> print 'nete,', at this one occurrence."),
+    (19, 44, 'b', 'that', 'space, being also a starting-point [that] will be the true middle. @A227', 1, "A227: A '/hat', B 'zha¢' -> print 'that', at this one occurrence."),
+    (19, 44, 'b', 'mese', 'the second tetrachord, the name [mese] (‘middle note’) is amply justified; @A227', 1, "A227: A 'wese', B 'szese' -> print 'mese', at this one occurrence."),
+    (19, 47, 'b', 'hypate', 'of seven strings, leave in [Hypate] but not nete? Or should @A227', 1, "A227: A 'AySaze', B 'hyfaze' -> print 'Hypate', at this one occurrence."),
+    (19, 47, 'b', 'nete', 'leave in Hypate but not [nete?] Or should we say that @A227', 1, "A227: A 'zefe?®', B 'zefe?®' -> print 'nete?', at this one occurrence."),
+    (19, 47, 'b', 'nete', 'say that they omitted not [nete] but what is now called @A227', 1, "A227: A 'zefe', B 'zeZ/e' -> print 'nete', at this one occurrence."),
+    (19, 47, 'b', 'mese', '‘pycnon’; whence came the name [mese,] because it was the end @A228', 1, "A228: A 'ese,', B 'ese,' -> print 'mese,', at this one occurrence."),
+    (20, 5, 'f', 'moistening ?', 'do not require so much [moistening,] while the drier plants must @A230', 1, 'A230: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 7, 'f', 'seed !', 'all things flourish until their [seed] reaches its prime (for man @A231', 1, 'A231: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 7, 'f', 'height ?', 'age of thirty, sometimes in [height] and sometimes in bulk), but @A231', 1, 'A231: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 8, 'f', 'large !', 'plants, the roots become very [large?] Is it because the barley-husks, @A232', 1, 'A232: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 13, 'f', 'summer !', 'an extraordinary size in the [summer?] Is it because the heaping @A234', 1, 'A234: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 14, 'f', 'pumpkinplant !', 'roots can survive; for the [pumpkinplant] is not a biennial. Plants @A235', 1, 'A235: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 14, 'f', 'way ?', 'biennial. Plants treated in this [way] will bear fruit more quickly @A235', 1, 'A235: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 17, 'f', 'seeds !', 'than those grown from fresh [seeds?] Is it because, just as @A236', 1, 'A236: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 21, 'f', 'which !', 'is unconcocted nutriment in them, [which] in winter does not become @A237', 1, 'A237: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 22, 'f', 'pupil ?', 'makes one cover up the [pupil),] whereas marjoram and other pungent @A237', 1, 'A237: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 24, 'f', 'which ?', 'and clusters of grapes, in [which] the small grapes have no @A238', 1, 'A238: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 26, 'f', 'onions !', 'for example, and garlic and [onions?] Is it because they all @A239', 1, 'A239: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 28, 'f', 'away !', 'sprout when they are stored [away?] Is it because they are @A240', 1, 'A240: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 30, 'f', 'pungent ?', 'odour; and this is naturally [pungent.] Similarly, all other fruits when @A240', 1, 'A240: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 32, 'f', 'melons !', 'are stored away. Why do [melons] grow best in marshy plains @A241', 1, 'A241: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (20, 34, 'f', 'out !', 'the result that it drives [out] the flatulence enclosed within it. @A242', 1, 'A242: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 2, 'f', 'barley ?', 'it to do so? But [barley] is less cohesive, and so @A243', 1, 'A243: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 10, 'f', 'does !', 'it is heated than barley-cake [does?] Is it because dough contains @A245', 1, 'A245: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 12, 'f', 'expands !', 'when it is wetted, it [expands.] This juice, therefore, being present @A246', 1, 'A246: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 12, 'f', 'thing ?', 'dough is kneaded the same [thing] happens, as is proved by @A246', 1, 'A246: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 12, 'f', 'digestible ?', 'is boiled it becomes more [digestible.] When, therefore, the bread is @A246', 1, 'A246: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 13, 'f', 'them ?', 'that when one has discharged [them,] though their first nutriment has @A247', 1, 'A247: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 14, 'f', 'vessel !', 'the desire, just as a [vessel] is filled; for desire is @A248', 1, 'A248: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 21, 'f', 'reason !', 'holds more both for this [reason] and also because both flour @A250', 1, 'A250: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (21, 26, 'f', 'less ?', 'whether they are more or [less] numerically? Barley-meal then is soft; @A251', 1, 'A251: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (22, 2, 'e', '‘when', 'we cease being thirsty only [when] they have received this in @A252', 1, 'A252: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (22, 10, 'e', 'dried’', 'that figs when they are [dried] in an oven are harder @A254', 1, 'A254: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (22, 3, 'f', 'them !', 'not satiate our desire with [them,] because we still lack nutriment @A253', 1, 'A253: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 3, 'a', '1', 'is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256', 1, 'A256: Footnote and printer signature text, below the body. It is not missing prose.'),
+    (23, 3, 'a', 'cp below', 'is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256', 1, 'A256: Footnote and printer signature text, below the body. It is not missing prose.'),
+    (23, 3, 'a', 'chapter 24', 'is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256', 1, 'A256: Footnote and printer signature text, below the body. It is not missing prose.'),
+    (23, 3, 'a', '12 and 28 omitting', 'is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256', 1, 'A256: Footnote and printer signature text, below the body. It is not missing prose.'),
+    (23, 3, 'a', '64525 r', 'is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256', 1, 'A256: Footnote and printer signature text, below the body. It is not missing prose.'),
+    (23, 2, 'e', '‘this', 'motion at the same time. [This] effect is not produced in @A256', 1, 'A256: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (23, 6, 'e', 'air’', 'and is refracted into the [air,] but is not refracted from @A258', 1, 'A258: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (23, 1, 'f', 'shallow !', 'where it is confined and [shallow?] Is it because a small @A256', 1, 'A256: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 5, 'f', 'air !', 'time follows the rush of [air] into the sea and into @A257', 1, 'A257: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 5, 'f', 'against !', 'wind. For the currents flowing [against] one another try to thrust @A258', 1, 'A258: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 13, 'f', 'nature ?', 'is of a more corporeal [nature,] and sea water is more @A259', 1, 'A259: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 15, 'f', 'heat !', 'closely allied is it to [heat;] and sea water possesses both @A260', 1, 'A260: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 21, 'f', 'elsewhere !', 'salty, but this happens less [elsewhere?] Is it because the water @A261', 1, 'A261: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 21, 'f', 'through ?', 'time the sea also percolates [through] and, because it has had @A261', 1, 'A261: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 22, 'f', 'through ?', 'the latter penetrates, but percolates [through] to a less extent, because @A262', 1, 'A262: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 23, 'f', 'it ?', 'the sea grows blacker beneath [it.] Are there two reasons? Firstly, @A262', 1, 'A262: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 23, 'f', 'because ?', 'blue or black.) And, secondly, [because,] when the sight is at @A262', 1, 'A262: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 26, 'f', 'mix !', 'as the wine does not [mix] with the water, the salty @A263', 1, 'A263: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 32, 'f', 'surface !', 'oil which forms on the [surface] of salt water? Why does @A265', 1, 'A265: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 37, 'f', 'salty !', 'drinkable but afterwards it becomes [salty?] Is it because the water @A266', 1, 'A266: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (23, 5, 'b', 'so', 'are swallowed up and disappear [so] completely that no wreckage even @A257', 1, 'A257: Image prints so; the OCR joins it to the margin column/line number.'),
+    (24, 11, 'e', '‘that', 'the moisture and causes hardening? [That] cold, pure and simple produces @A271', 1, 'A271: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (24, 11, 'e', 'simple’', 'hardening? That cold, pure and [simple] produces this effect is clear @A271', 1, 'A271: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (24, 3, 'f', 'so !', 'wood, whereas the flame does [so?] Is it because the flame, @A268', 1, 'A268: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (24, 11, 'f', 'of !', 'into being through the action [of] hot waters? Or, while it @A271', 1, 'A271: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (24, 11, 'f', 'simple ,', 'hardening? That cold, pure and [simple] produces this effect is clear @A271', 1, 'A271: Image has no comma or quote after simple; the apparent mark is call-out 3.'),
+    (24, 14, 'f', 'body !', 'it is still upon the [body?] Or, while it has this @A272', 1, 'A272: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (25, 16, 'a', 'forerunners’', 'For the periodical winds and the [ours: ‘forerunners’] blow less at night. Why is @A279', 1, 'A279: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (25, 8, 'e', '‘this', 'and additional liquid as well. [This] is more especially the case @A276', 1, 'A276: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (25, 8, 'e', 'water’', 'for when ashes are sprinkled [water] is attracted to any spot @A277', 1, 'A277: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (25, 10, 'e', '‘that', 'water as to cause waves? [That] it becomes cold is clear @A278', 1, 'A278: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (25, 13, 'e', 'lighter’', 'floats, and when it is [lighter] it sinks? Why is it @A279', 1, 'A279: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (25, 17, 'e', 'uncorrupted’', 'and closely covered vessels remain [uncorrupted?] Is it because things which @A279', 1, 'A279: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (25, 8, 'f', 'thinner !', 'and so the water, being [thinner,] sinks in more and saturates @A277', 1, 'A277: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (25, 10, 'f', 'waves !', 'upon water as to cause [waves?] That it becomes cold is @A278', 1, 'A278: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (25, 16, 'b', 'forerunners', 'the periodical winds and the [‘forerunners’] blow less at night. Why @A279', 1, 'A279: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (26, 14, 'a', 'cloudwinds’', 'itself all at once like the [ours: ‘cloud-winds’,] and therefore quickly dies down again? @A288', 1, 'A288: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (26, 29, 'a', 'clouds’', 'it to himself, as Caecias draws [ours: clouds’?] For the other winds simply drive @A293', 1, 'A293: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (26, 30, 'a', 'mornsing', 'wind blows cold in the early [ours: morning] from rivers but not from the @A293', 1, 'A293: print reads `morn-` / `ing`, with the margin line number 5 before `ing` (leaf 293); both scans read the 5 as S'),
+    (26, 1, 'e', '‘are', 'the earth, where, besides, there [are] no clouds... The East wind @A283', 1, 'A283: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (26, 12, 'e', 'blowing’', 'it is, these prevent their [blowing.] Or is it because a @A287', 1, 'A287: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (26, 1, 'f', 'caecias !', 'Why does the North-East wind [(Caecias)] alone of the winds attract @A282', 1, 'A282: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 1, 'f', 'said ?', 'and falling, as has been [said,] upon the western regions of @A283', 1, 'A283: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 2, 'f', 'it !', 'moisture which is formed in [it] is quickly dissolved. Also moisture @A284', 1, 'A284: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 5, 'f', 'back !', 'and of its being thrown [back] is the fact that the @A285', 1, 'A285: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 6, 'f', 'cloudwinds ?', 'it can find. Why do [cloud-winds] stop sooner when rain falls? @A285', 1, 'A285: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 12, 'f', 'it !', 'air which is nearest to [it] and at this solstice it @A288', 1, 'A288: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 19, 'f', 'ending !', 'beginning but when it is [ending?] Is it because it collects @A290', 1, 'A290: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 23, 'f', 'wind !', 'is it a sign of [wind?] Is it because they are @A291', 1, 'A291: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 27, 'f', 'eurus !', 'wind and the South-East wind [(Eurus),] which are warmer than their @A292', 1, 'A292: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 27, 'f', 'brought !', 'which is very warm, is [brought] from the land. Or is @A293', 1, 'A293: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 30, 'f', 'cold ?', 'hot liquids cools and becomes [cold.] One would therefore find that @A294', 1, 'A294: Image has a full stop then call-out 2, with no question mark.'),
+    (26, 36, 'f', 'kind ?', 'from a source of some [kind.] It cannot, therefore, rise any @A297', 1, 'A297: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 40, 'f', 'landwind !', 'is the reflux of a [land-wind.] What is the origin of @A298', 1, 'A298: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 48, 'f', 'motion !', 'channel and then set in [motion] the adjoining air, and then @A301', 1, 'A301: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 48, 'f', 'natural ?', 'remain still, it is only [natural] that its motion should be @A301', 1, 'A301: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 51, 'f', 'blow !', 'season at which they do [blow] and with the force with @A302', 1, 'A302: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 53, 'f', 'eurus !', 'larger when the South-East wind [(Eurus)] blows? Is it because it @A303', 1, 'A303: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 54, 'f', 'produces !', 'the moisture to itself and [produces] the West wind in our @A304', 1, 'A304: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 56, 'f', 'eurus !', 'north. Round Lesbos the South-East [(Eurus)] and South winds bring much @A305', 1, 'A305: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 56, 'f', 'drive ?', 'from the open sea and [drive] it against the land. Similar @A305', 1, 'A305: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 60, 'f', 'itself !', 'night the North wind expends [itself,] but it is less apt @A306', 1, 'A306: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 61, 'f', 'webs ?', 'it that when many spiders’ [webs] are borne through the air, @A306', 1, 'A306: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (26, 14, 'b', 'cloudwinds', 'all at once like the [‘cloud-winds’,] and therefore quickly dies down @A288', 1, 'A288: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (26, 29, 'b', 'clouds', 'to himself, as Caecias draws [clouds’?] For the other winds simply @A293', 1, 'A293: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (26, 30, 'b', 'morning', 'blows cold in the early [morning] from rivers but not from @A293', 1, 'A293: the same place: ours reads `morning`, as the print does (leaf 293)'),
+    (27, 1, 'f', 'tremble !', 'do those who are afraid [tremble?] Is it due to the @A307', 1, 'A307: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (27, 3, 'f', 'warmed ?', 'order that they may be [warmed.] It seems probable that owing @A308', 1, 'A308: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (27, 4, 'f', 'less !', 'cooling; with the result that [less] heat remains in the region @A309', 1, 'A309: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (27, 10, 'f', 'urine !', 'and they desire to pass [urine?] Is it because the heat @A311', 1, 'A311: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (27, 10, 'f', 'loosened ?', 'and bladder becoming heated are [loosened] and make these organs ready @A311', 1, 'A311: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (27, 10, 'f', 'body !', 'the lower parts of the [body,] and some of those which @A312', 1, 'A312: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (27, 10, 'f', 'urine ?', 'garlic, which passes into the [urine.] Now heat coming from the @A312', 1, 'A312: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (28, 6, 'a', '2', 'pleasure it gives is more intense. [ours: ] Further, he who is thirsty needs @A315', 1, 'A315: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (28, 1, 'f', 'siege !', 'the tyrant, when during the [siege] he ceased drinking for a @A313', 1, 'A313: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (28, 2, 'f', 'taste !', 'the senses, namely, touch and [taste?] Is it because of the @A314', 1, 'A314: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (28, 6, 'f', 'hunger !', 'we endure thirst less than [hunger?] Is it because the former @A315', 1, 'A315: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (29, 13, 'e', '‘superiority', 'the plaintiff has established some [superiority.] Similarly, when the votes of @A321', 1, 'A321: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (29, 13, 'e', 'mind’', 'sentence and then change their [mind,] it is impossible to take @A321', 1, 'A321: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (29, 2, 'f', 'loan !', 'a deposit than of a [loan?] Is it because it is @A317', 1, 'A317: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (29, 3, 'f', 'verdict !', 'courts the jury give their [verdict] in accordance with the birth @A318', 1, 'A318: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (29, 11, 'f', 'greater !', 'and so he commits a [greater] injustice? Or is it because @A320', 1, 'A320: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (29, 13, 'f', 'property ?', 'not handing over the disputed [property] to the accuser but allowing @A321', 1, 'A321: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (29, 13, 'f', 'lives !', 'to do so, if he [lives] so circumspectly as never to @A322', 1, 'A322: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (29, 14, 'f', 'double ?', 'house, he merely pays back [double] the value of what he @A323', 1, 'A323: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (29, 14, 'f', 'own !', 'his garments next to his [own] when he has stripped himself; @A324', 1, 'A324: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (29, 14, 'f', 'where !', 'house is in a place [where] it is easy for him @A325', 1, 'A325: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 1, 'a', '1', 'their condition, which is itself natural. [ours: ] When the heat is extinguished suddenly, @A332', 1, 'A332: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (30, 1, 'e', '‘bile', 'stomach are due to black [bile.] Now wine has the quality @A328', 1, 'A328: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (30, 1, 'e', 'pleasure’', 'emitting semen find a certain [pleasure] in rubbing their sexual organs @A328', 1, 'A328: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (30, 1, 'e', '‘the', 'to Archelaus, King of Macedonia. [The] force which gives rise to @A331', 1, 'A331: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (30, 8, 'e', 'condition’', 'from the Opposite or intermediate [condition,] until he achieves a state @A336', 1, 'A336: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (30, 1, 'f', 'him ?', 'ancients ‘the sacred disease after [him.] That his temperament was atrabilious @A326', 1, 'A326: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 1, 'f', 'childhood !', 'who have been epileptic from [childhood,] and very similar to. those @A327', 1, 'A327: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 1, 'f', 'people ?', 'this effect also on some [people] and therefore Homer writes, He @A327', 1, 'A327: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 1, 'f', 'persons !', 'the condition found in atrabilious [persons.] This condition is obvious in @A329', 1, 'A329: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 1, 'f', 'down !', 'whom the excessive heat dies [down] to a mean temperature are @A330', 1, 'A330: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 1, 'f', 'that ?', 'state causes great variation, in [that] many of those who are @A330', 1, 'A330: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 1, 'f', 'extinguished ?', 'natural. When the heat is [extinguished] suddenly, most men make away @A332', 1, 'A332: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 4, 'f', 'equal !', 'it, all other conditions being [equal?] Is it because to know @A333', 1, 'A333: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 4, 'f', 'proposition ?', 'as it were converts the [proposition] and the mind draws a @A333', 1, 'A333: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 5, 'f', 'faculty !', 'is related similarly to that [faculty,] and conversely, as the instruments @A334', 1, 'A334: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 5, 'f', 'which ?', 'so are the faculties of [which] they are the instruments to @A334', 1, 'A334: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 7, 'f', 'actions ?', 'alone causes us pleasure, whereas [actions] give rise to the pleasure @A335', 1, 'A335: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 8, 'f', 'finally ?', 'a less extreme condition and, [finally,] a condition of a certain @A336', 1, 'A336: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 10, 'f', 'character !', 'artists generally persons of bad [character?] Is it because they partake @A337', 1, 'A337: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (30, 14, 'b', 'ἐπιστήμη', 'rest hence the word knowledge [(ἐπιστήμη)] seems to be derived from @A338', 1, 'A338: Image prints one word ἐπιστήμη; A splits it as ἐπιστή μὴ.'),
+    (31, 7, 'a', '2', 'make corresponding movements, which is impossible. [ours: ] The distortion of the eyes is @A342', 1, 'A342: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (31, 1, 'f', 'sneezing !', 'does rubbing the eye stop [sneezing?] Is it because by this @A340', 1, 'A340: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (31, 3, 'f', 'part ?', 'more sensitive and easily affected [part,] as though it were suffering @A341', 1, 'A341: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (31, 7, 'f', 'point !', 'not rest on the same [point,] they must be distorted; for @A343', 1, 'A343: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (31, 21, 'f', 'because ?', 'the inner flesh to smart, [because] the latter is the rarest @A347', 1, 'A347: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (31, 23, 'f', 'disease !', 'tends to get rid of [disease.] For if the excretion is @A348', 1, 'A348: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (31, 25, 'f', 'light !', 'man cannot discern how the [light] falls on the object seen; @A349', 1, 'A349: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (32, 4, 'd', 'isit -> is it', 'dirt in the ears bitter? [Is it] because sweat is corrupt? It @A352', 1, 'A352: Image has separate body words: is it. Both OCR scans join them.'),
+    (32, 3, 'a', '3', 'round their ears? Is it in [ours: ] order that the sea may not @A351', 1, 'A351: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (32, 1, 'f', 'shame !', 'blushing in those who feel [shame?] Is it because extraneous moisture @A351', 1, 'A351: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (32, 5, 'f', 'out ?', 'the breath seems to pass [out;] for it is said that @A352', 1, 'A352: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (33, 11, 'd', 'asa -> as a', 'between midnight and midday regarded [as a] bad thing, but between midday @A358', 1, 'A358: Image has separate body words: as a. Both OCR scans join them.'),
+    (33, 2, 'a', '7', 'rubs the eye, one sneezes less? [ours: ] Is it because what causes the @A355', 1, 'A355: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (33, 1, 'f', 'eructation !', 'hiccuping but does not stop [eructation?] Is it because they are @A355', 1, 'A355: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (33, 12, 'f', 'breath !', 'longer able to raise the [breath] up with ease, and, when @A359', 1, 'A359: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (34, 12, 'e', '‘then', 'draw the breath in again. [Then] when we have opened the @A365', 1, 'A365: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (34, 12, 'e', 'without’', 'becomes dry. Also we walk [without] giving attention to the manner @A365', 1, 'A365: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark.'),
+    (34, 1, 'f', 'longlived !', 'have spongy teeth are not [long-lived?] Is it because the long-lived @A362', 1, 'A362: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (34, 12, 'f', 'breath !', 'emit the fire with the [breath.] Now when the breath and @A365', 1, 'A365: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (34, 7, 'b', 'mouth', 'placing the hand near the [mouth.] Or is the air which @A363', 1, 'A363: Image prints mouth; A reads πιο and B mouth.t.'),
+    (35, 6, 'a', 'laughs’', 'of the body with which one [ours: laughs).] Now that which comes unawares tends @A367', 1, 'A367: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (35, 4, 'f', 'inwards !', 'cold and heat are driven [inwards] inversely to the seasons, and @A367', 1, 'A367: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (35, 4, 'f', 'seasons ?', 'driven inwards inversely to the [seasons,] and in the summer the @A367', 1, 'A367: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (35, 8, 'f', 'dissolve ?', 'process they become moist or [dissolve] into breath as the result @A368', 1, 'A368: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (35, 6, 'b', 'laughs', 'the body with which one [laughs).] Now that which comes unawares @A367', 1, 'A367: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (36, 2, 'f', 'fleshy !', 'it is far from being [fleshy?] Is it because parts which @A369', 1, 'A369: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (36, 2, 'f', 'freely ?', 'one perspires most readily and [freely] on the forehead, for it @A369', 1, 'A369: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (37, 1, 'f', 'excreted ?', 'little liquid)? For what is [excreted] is more, which accounts for @A370', 1, 'A370: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (37, 3, 'f', 'health ?', 'densified in order to promote [health.] For just as a city @A371', 1, 'A371: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (37, 3, 'f', 'which !', 'constructed parts of the body, [which] least require to be deprived @A372', 1, 'A372: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (37, 3, 'f', 'dried ?', 'parts which need to be [dried,] for, because they are remote, @A372', 1, 'A372: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (38, 7, 'a', '7', 'while fire does not? Is it [ours: ] because the heat of the sun @A375', 1, 'A375: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image.'),
+    (38, 1, 'f', 'flesh !', 'olive oil, but darkens the [flesh?] Is it because it bleaches @A374', 1, 'A374: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (38, 3, 'f', 'form !', 'air cools the excrements which [form] and ventilates the body. Further, @A375', 1, 'A375: raised footnote number read as punctuation; body punctuation checked in the image'),
+    (38, 9, 'f', 'older !', 'darker complexioned as they become [older?] Is it because anything which @A376', 1, 'A376: raised footnote number read as punctuation; body punctuation checked in the image'),
+]
+
+# Independent image transcriptions: output checks, never witness repairs.
+VERIFY_PRINT = [
+    (1, 6, 'g', 'Is it because', 'A17: no full stop after it'),
+    (4, 19, 'a', 'sexual intercourse? Is it because the ducts become full?', 'A76: final body row, not a footnote'),
+    (5, 42, 'f', 'more careful?]', 'A98: question mark and closing bracket'),
+    (11, 30, 'f', 'letter or syllable; hesitancy', 'A155: semicolon before call-out 1'),
+    (15, 3, 'e', '‘one-five’, ‘two-five’,', 'A182: both terms have paired quotes'),
+    (15, 3, 'd', '2, 3, 4, 5', 'A182: four separate numbers'),
+    (15, 5, 'a', 'object seen be Θ.', 'A184: theta in body'),
+    (15, 5, 'a', 'falling on Θ makes the shadow ΘΛ,', 'A184: theta and theta-lambda in body'),
+    (15, 5, 'a', 'within ΘΛ,', 'A185: theta-lambda'),
+    (15, 5, 'a', 'comes to Γ;', 'A185: gamma, no prime'),
+    (15, 5, 'a', 'ΑΒ is equal to ΒΓ', 'A185: body labels'),
+    (15, 5, 'a', 'them at Δ', 'A185: delta, not digit 4'),
+    (15, 5, 'a', 'side of Δ', 'A185: delta, not d'),
+    (15, 5, 'a', 'line ΛΕ will be greater than the line ΕΖ within ΛΘ.', 'A185: lambda, not A'),
+    (15, 5, 'b', 'it is clear that the shadow', 'A185: intervening letters belong only to diagram'),
+    (15, 9, 'b', 'shadow, which grows ever less', 'A188: intervening letters belong only to diagram'),
+    (15, 9, 'a', 'Let ΑΒ be the gnomon, and Γ and Δ two positions', 'A188: body labels'),
+    (15, 9, 'a', 'ray from Γ, the line ΓΖ, will fall outside the line ΔΕ;', 'A188: body labels'),
+    (15, 9, 'a', 'shadow ΒΕ', 'A188: body label'),
+    (15, 9, 'a', 'and ΒΖ when', 'A188: body label'),
+    (15, 10, 'a', 'Let ΑΔ be the gnomon, Β the moon, and Γ the sun.', 'A189: body labels; omit diagram'),
+    (15, 10, 'a', 'moon is ΒΖ, so that the shadow will be ΔΖ;', 'A189: body labels'),
+    (15, 10, 'a', 'sun is ΓΕ,', 'A189: body label'),
+    (15, 10, 'a', 'viz. ΔΕ.', 'A189: body label'),
+    (19, 4, 'f', 'must … with', 'A210: ellipsis'),
+    (19, 4, 'f', 'one’s purpose.]', 'A210: closing bracket'),
+    (19, 4, 'f', 'concordant music?]', 'A210: question mark and bracket'),
+    (19, 7, 'a', 'omitted trite,', 'A211: trite, not nete'),
+    (19, 12, 'a', 'two netes are', 'A212: plural netes'),
+    (19, 18, 'f', 'singing? For', 'A215: question mark followed by raised 3'),
+    (19, 20, 'a', 'such as τε and καί,', 'A216: Greek particles'),
+    (19, 32, 'a', 'Terpander took away trite and', 'A219: trite removed, nete added'),
+    (24, 11, 'g', 'That cold, pure and simple produces', 'A271: no quotes or comma after simple'),
+    (26, 30, 'g', 'becomes cold. One', 'A294: full stop followed by raised 2'),
+    (36, 2, 'g', 'the head has these', 'A369: no full stop'),
 ]
 
 _SUPER = "⁰¹²³⁴⁵⁶⁷⁸⁹"
@@ -1353,12 +1988,41 @@ def _tok(piece: str) -> str | None:
     return s or None
 
 
+def _lexical_pieces(text: str) -> list[str]:
+    """Separate numeric and alphabetic runs without dropping either.
+
+    In particular `forward.4` supplies both the body word and the call-out digit;
+    `4Z` supplies both characters of the damaged label. Size filtering, or a
+    counted image exception, must account for the digit if both scans have it.
+    Fractions and internal apostrophes remain whole.
+    """
+    text = re.sub(r"(?<=\d),(?=\d)", ", ", text)
+    text = re.sub(r"(?<=[^\W\d_])(?=\d)|(?<=\d)(?=[^\W\d_])|(?<=[.,;:?!’')])(?=\d)", " ", text)
+    return [p for p in re.split(r"[\s—–]+", text) if p]
+
+
+def _raw_tokens(text: str) -> list[str]:
+    """Keep standalone punctuation on its word; split comma-separated numeric lists."""
+    out, prefix = [], ""
+    for piece in _lexical_pieces(text):
+        if not piece:
+            continue
+        if _tok(piece):
+            out.append(prefix + piece)
+            prefix = ""
+        elif all(c in "([‘'" for c in piece):
+            prefix += piece
+        elif out:
+            out[-1] += piece
+    return out
+
+
 def _toks(text: str) -> list[str]:
     """Comparison words of our text. A trailing `’` after an `s` is a quote closer, and goes, when a
     `‘` is open in the Part; otherwise it is a plural possessive and stays."""
     out = []
     depth = 0
-    for piece in re.split(r"[\s—–]+", text):
+    for piece in _raw_tokens(text):
         t = _tok(piece)
         if not t:
             continue
@@ -1453,26 +2117,34 @@ def page_body_lines(pg: dict, thr: float, stats: dict) -> list[list[tuple[str, i
         hs = sorted(w["y1"] - w["y0"] for w in ws)
         mh = hs[len(hs) // 2]
         out = []
+        leading_note_mark = any(
+            x["x1"] <= ws[0]["x0"] and x["y1"] - x["y0"] < .75 * mh
+            and x["y1"] < statistics.median(y["y1"] for y in ws) - .15 * mh
+            for x in l["ws"])
         for k, w in enumerate(ws):
             # the baseline near this word: the lowest bottom among full-height neighbours that sit
             # on it (a descender hangs below it; a raised mark does not reach full height)
             nb = [x["y1"] for x in ws[max(0, k - 3):k + 4] if x is not w and x["y1"] - x["y0"] >= 0.9 * mh] or [w["y1"]]
             raised = w["y1"] < min(nb) - 0.35 * mh and (w["y1"] - w["y0"]) < 0.62 * mh
-            if raised and len(ws) >= 3:
+            if raised and len(ws) >= 3 and not any(c.isalpha() for c in w["t"]):
                 stats["callout"] = stats.get("callout", 0) + 1
+                leading_note_mark |= not out
                 continue
             out.append(w)
         if out:
-            kept.append(dict(l, ws=out))
+            kept.append(dict(l, ws=out, note_mark=leading_note_mark))
     if not kept:
         return []
     # footnote zone: runs to the foot of the page. It opens at the first line of small type after which
     # (nearly) every long line is small too; a body line the scan sized small does not open it
     zone = len(kept)
+    body_rows = [l for l in kept if l["xs"] >= thr and len(l["ws"]) >= 4]
+    body_pitch = _med([b["y"] - a["y"] for a, b in zip(body_rows, body_rows[1:])])
     for i, l in enumerate(kept):
-        if l["xs"] < thr and len(l["ws"]) >= 4:
+        separated = i > 0 and body_pitch and l["y"] - kept[i-1]["y"] > 1.05 * body_pitch
+        if l["xs"] < thr and len(l["ws"]) >= 2 and (l["note_mark"] or separated):
             rest = [m for m in kept[i + 1:] if len(m["ws"]) >= 4]
-            if not rest or sum(1 for m in rest if m["xs"] < thr) >= 0.8 * len(rest):
+            if (rest and sum(1 for m in rest if m["xs"] < thr) >= 0.8 * len(rest)) or (not rest and l["note_mark"]):
                 zone = i
                 break
     # a one- or two-word note line can sit just above the zone; the notes start after the wider gap that
@@ -1482,7 +2154,7 @@ def page_body_lines(pg: dict, thr: float, stats: dict) -> list[list[tuple[str, i
         pitch = sorted(b["y"] - a["y"] for a, b in zip(kept, kept[1:]) if len(a["ws"]) >= 4)
         pitch = pitch[len(pitch) // 2] if pitch else 0
         while zone > 1 and pitch and len(kept[zone - 1]["ws"]) < 4 and \
-                kept[zone - 1]["y"] - kept[zone - 2]["y"] > 1.25 * pitch:
+                kept[zone - 1]["y"] - kept[zone - 2]["y"] > 1.25 * pitch and kept[zone - 1]["xs"] < thr:
             zone -= 1
     body = kept[:zone]
     stats["note_lines"] = stats.get("note_lines", 0) + len(kept) - zone
@@ -1516,50 +2188,49 @@ def witness_book(pages, thr, a: int, b: int, stats: dict) -> list[dict]:
         if last and t and t[-1] in _HYPHENS and len(t) > 1:
             carry, carry_c = t[:-1], conf
             continue
-        # a digit run set against a word's letters (`direction.2,`, `2—which`) is a footnote call-out
-        # the scan did not set apart; a number between spaces or inside a list (`3,4,`) is not
-        g = re.sub(r"(?<=[A-Za-z])\d{1,2}(?!\d)|(?<=[A-Za-z][.,;:?!’'\)])\d{1,2}(?!\d)|^\d{1,2}(?=[A-Za-z—–])", "", t)
-        g = re.sub(r"^\d{1,3}[°%”’'\"]?(?=[A-Za-z]{2,})", "", g)
-        g = re.sub(r"^([.,;:?!’'\)]+)\d{1,2}$", r"\1", g)
-        if g != t and g:
-            stats["glued"] = stats.get("glued", 0) + 1
-            t = g
-        for piece in re.split(r"[—–]+", t):
+        for piece in _lexical_pieces(t):
             n = _tok(piece)
             # a lone opening mark stands for the word after it
             if re.fullmatch(r"[‘'`]+", piece):
-                if conf >= 60:
-                    depth += 1
-                    since_open = 0
-                    pend_open = True
+                depth += 1
+                since_open = 0
+                pend_open = True
                 continue
+            if not n and out and any(c in piece for c in "?;:.,!()[]…"):
+                out[-1]["raw"] += piece
             was_open = pend_open or bool(re.match(r"[‘']", piece))
-            if conf >= 85 or re.match(r"‘.*[A-Za-z]’", piece):
-                depth += piece.count("‘")
+            depth += piece.count("‘")
             if depth:
                 since_open += 1
-                if since_open > 40:
-                    depth = 0
             if n:
                 closer = bool(re.search(r"[A-Za-z.,;:?!)]’[.,;:?!)”]*$", piece))
-                if n.endswith("’") and (conf < 85 or depth > 0):    # a call-out read as a mark, or a closing quote
+                if n.endswith("’") and depth > 0:    # a call-out read as a mark, or a closing quote
                     n = n[:-1]
                 mid = bool(out) and not re.search(r"[.?!:;]['’”\")]*$", prev_raw)
-                paired = closer and depth > 0 and conf >= 85
+                paired = closer and depth > 0
                 if closer:
                     depth = max(0, depth - 1)
-                out.append(dict(n=n, page=i, name=piece[:1].isupper() and mid, conf=conf, cr=closer,
-                                op=was_open and (conf >= 85 or bool(re.match(r"‘.*[A-Za-z]’", piece))), cl=paired))
+                out.append(dict(n=n, raw=piece, page=i, name=piece[:1].isupper() and mid, conf=conf, cr=closer,
+                                op=was_open, cl=paired))
                 pend_open = False
         prev_raw = t
-    # an opening mark the scan is sure of (85 or more) stays with a closing mark within 120 words and no other
-    # opening one between; the rest are specks, as in ours
+    # Pair marks without a confidence cutoff or a word-distance limit. A closer
+    # counts only when it belongs to a retained opener, not to a rejected speck.
+    for w in out:
+        w["cl"] = False
     for i, w in enumerate(out):
-        if w["op"]:
-            win = out[i:i + 120]
-            j = next((k for k, x in enumerate(win) if x["cr"]), None)
-            if j is None or any(x["op"] for x in win[1:j + 1]):
-                w["op"] = False
+        if not w["op"]:
+            continue
+        mate = next((k for k in range(i, len(out)) if out[k]["cr"] or (k > i and out[k]["op"])), None)
+        if mate is None or not out[mate]["cr"]:
+            w["op"] = False
+        else:
+            out[mate]["cl"] = True
+    for w in out:
+        # Only a proved closer can consume a plural's apostrophe.
+        n = _tok(w["raw"])
+        if n and n.endswith("’"):
+            w["n"] = n[:-1] if w["cl"] else n
     return out
 
 
@@ -1590,9 +2261,10 @@ def _matched(a: list[str], b: list[str]):
 
 
 def _agreed(a: list[str], da: list[tuple], b: list[str], db: list[tuple]):
-    """Gaps where both scans read the same letters and ours reads others. The differences of the two
-    scans are grouped where their stretches of ours overlap; a group is agreed when the scans' words
-    over it have the same letters. Yields (A words, B words, ours j1, ours j2, A index)."""
+    """Shared words inside overlapping unmatched stretches. Neighbouring OCR errors,
+    including different headings, cannot hide agreement within a larger gap.
+    Yields (A words, B words, ours start, ours end, A index).
+    """
     ev = sorted([(d[2], d[3], "A", d) for d in da] + [(d[2], d[3], "B", d) for d in db])
     groups, cur = [], None
     for j1, j2, w, d in ev:
@@ -1610,40 +2282,25 @@ def _agreed(a: list[str], da: list[tuple], b: list[str], db: list[tuple]):
             continue
         xa = a[min(d[0] for d in ma_):max(d[1] for d in ma_)]
         xb = b[min(d[0] for d in mb_):max(d[1] for d in mb_)]
-        if "".join(xa) == "".join(xb) and xa:
-            yield xa, xb, j1, j2, min(d[0] for d in ma_)
+        # Compare words inside the overlap: a garbled neighbour must not hide agreement.
+        base = min(d[0] for d in ma_)
+        for block in difflib.SequenceMatcher(None, xa, xb, autojunk=False).get_matching_blocks():
+            if block.size:
+                yield xa[block.a:block.a + block.size], xb[block.b:block.b + block.size], j1, j2, base + block.a
 
 
-_DICT: set[str] | None = None
+
+_VERIFY_INPUTS = {}
 
 
-def _real(w: str) -> bool:
-    """A real English word by the system dictionary, with the plain endings the dictionary lacks."""
-    global _DICT
-    if _DICT is None:
-        d = Path("/usr/share/dict/words")
-        if not d.exists():
-            raise SystemExit("--verify needs /usr/share/dict/words")
-        _DICT = {x.strip().lower() for x in d.read_text(errors="ignore").split()}
-    if len(w) < 4 or not w.isalpha():
-        return False
-    vocab()
-    if len(w) >= 6 and _UNI.get(w, 0) >= 1:     # the repo's other English texts use it
-        return True
-    stems = [w]
-    for suf, rep in (("s", ""), ("es", ""), ("ed", ""), ("d", ""), ("ing", ""), ("ing", "e"), ("ies", "y"), ("ly", ""),
-                     ("ed", "e"), ("er", ""), ("ers", ""), ("ness", "")):
-        if w.endswith(suf) and len(w) - len(suf) >= 3:
-            stems.append(w[:len(w) - len(suf)] + rep)
-    return any(x in _DICT for x in stems)
-
-
-def verify(ocr_dir: Path, books: Path | None = None) -> int:
-    PA = parse_hocr(ocr_dir / f"{IDS['A']}_hocr.html")
-    PB = parse_hocr(ocr_dir / f"{IDS['B']}_hocr.html")
-    thrA, thrB = _vol_threshold(PA), _vol_threshold(PB)
-    bA = book_ranges([layout(p) for p in PA])      # page ranges only
-    bB = book_ranges([layout(p) for p in PB])
+def verify(ocr_dir: Path, books: Path | None = None, findings: list | None = None) -> int:
+    key = str(ocr_dir.resolve())
+    if key not in _VERIFY_INPUTS:
+        PA = parse_hocr(ocr_dir / f"{IDS['A']}_hocr.html")
+        PB = parse_hocr(ocr_dir / f"{IDS['B']}_hocr.html")
+        _VERIFY_INPUTS[key] = (PA, PB, _vol_threshold(PA), _vol_threshold(PB),
+                               book_ranges([layout(p) for p in PA]), book_ranges([layout(p) for p in PB]))
+    PA, PB, thrA, thrB, bA, bB = _VERIFY_INPUTS[key]
     stA: dict = {}
     stB: dict = {}
     n_parts = n_words = n_wa = n_wb = n_runs = n_title = n_resp = 0
@@ -1655,7 +2312,7 @@ def verify(ocr_dir: Path, books: Path | None = None) -> int:
             tk = _toks(txt)
             ours += tk
             where += [pi] * len(tk)
-            raw_ctx += [t for t in re.split(r"[\s—–]+", txt) if _tok(t)]
+            raw_ctx += _raw_tokens(txt)
         n_parts += len(parts)
         n_words += len(ours)
         for pi, txt in enumerate(parts, 1):
@@ -1679,24 +2336,29 @@ def verify(ocr_dir: Path, books: Path | None = None) -> int:
                     if k in o2a_a:
                         return f"A{wa[o2a_a[k]]['page']}"
             return "A?"
-        # re-spacings: a word of the scan that ours splits (or two that ours joins) is a fault when the
-        # whole word is English (by the system dictionary) or a name in mid-sentence
+        # Judge every re-spacing, including many-to-many changes and non-dictionary words.
         for wit, resp in ((wa, resp_a), (wb, resp_b)):
             for i1, i2, j1, j2 in resp:
                 n_resp += 1
                 ctx = (" ".join(raw_ctx[max(0, j1 - 5):j1]) + " [" + " ".join(raw_ctx[j1:j2]) + "] " +
                        " ".join(raw_ctx[j2:j2 + 5]) + " @" + leaf(j1))
-                if i2 - i1 == 1 and j2 - j1 > 1:       # ours splits one word of the scan
-                    w = wit[i1]
-                    if _real(w["n"]) or (w["name"] and len(w["n"]) >= 5 and len(ours[j2 - 1]) == 1):
-                        fa.append((book, where[j1], "d", w["n"] + " -> " + " ".join(ours[j1:j2]), ctx))
-                elif j2 - j1 == 1 and i2 - i1 > 1 and all(_real(wit[x]["n"]) or wit[x]["n"] in ("a", "i") for x in range(i1, i2)):
-                    # ours joins words the scan has apart, and each is English
-                    fa.append((book, where[j1], "d", " ".join(wit[x]["n"] for x in range(i1, i2)) + " -> " + ours[j1], ctx))
+                other_matches = mb_o if wit is wa else ma_o
+                # Agreement with the other scan settles OCR spacing. Otherwise judge all
+                # splits, joins and many-to-many changes, including numbers and unknown words.
+                if all(j in other_matches for j in range(j1, j2)):
+                    continue
+                fa.append((book, where[j1], "d", " ".join(wit[x]["n"] for x in range(i1,i2)) +
+                           " -> " + " ".join(ours[j1:j2]), ctx))
         # (a) letters both scans read alike where ours reads others: gaps of any length
         for xa, xb, j1, j2, ia in _agreed(ta, diff_a, tb, diff_b):
-            if j2 == 0 and len(xa) <= 40 and wa[ia]["page"] == bA[book - 1][0]:
-                n_title += len(xa)    # the book's title lines, above its first problem
+            # Only exempt actual uppercase heading words on the book's first page.
+            heading = set()
+            for line in page_body_lines(PA[bA[book - 1][0]], thrA, {}):
+                if any(re.match(r"W[a-z]*[Hh][Yy]|Wuy|Why", t) for t, _ in line):
+                    break
+                heading.update(_tok(t) for t, _ in line)
+            if j1 == 0 and wa[ia]["page"] == bA[book - 1][0] and all(w in heading for w in xa):
+                n_title += len(xa)
                 continue
             n_runs += 1
             at = min(j1, len(where) - 1)
@@ -1715,6 +2377,29 @@ def verify(ocr_dir: Path, books: Path | None = None) -> int:
             elif any(x["cl"] for x in xs) and not re.search(r"[’'”\"]", rw) and not ours[j].endswith("’"):
                 fa.append((book, where[j], "e", ours[j] + "’", " ".join(raw_ctx[max(0, j - 5):j]) + " [" + rw + "] " +
                            " ".join(raw_ctx[j + 1:j + 6]) + f" @A{pg}"))
+        # (f,g) punctuation at each word boundary, on both sides of the word.
+        for j in sorted(set(o2a_a) & set(o2a_b)):
+            aa, bb = wa[o2a_a[j]], wb[o2a_b[j]]
+            def marks(raw):
+                raw = re.sub(r"\.(?:\s*\.){2,}", "…", raw)
+                letters = [k for k, c in enumerate(raw) if c.isalnum()]
+                if not letters:
+                    return ("", "")
+                return tuple("".join(c for c in x if c in "?;:.,!()[]…")
+                             for x in (raw[:letters[0]], raw[letters[-1] + 1:]))
+            am, bm, om = marks(aa["raw"]), marks(bb["raw"]), marks(raw_ctx[j])
+            for side in (0, 1):
+                common = set(am[side]) & set(bm[side])
+                missing = common - set(om[side])
+                extra = set(om[side]) - (set(am[side]) | set(bm[side]))
+                ctx = " ".join(raw_ctx[max(0,j-5):j]) + " [" + raw_ctx[j] + "] " + " ".join(raw_ctx[j+1:j+6]) + f" @A{aa['page']}"
+                if missing:
+                    fa.append((book, where[j], "f", ours[j] + " " + "".join(sorted(missing)), ctx))
+                if extra:
+                    fa.append((book, where[j], "g", ours[j] + " " + "".join(sorted(extra)), ctx))
+        for b, part, kind, expected, reason in VERIFY_PRINT:
+            if b == book and parts[part - 1].count(expected) != 1:
+                fa.append((book, part, kind, expected, reason))
         # (b) words of ours that neither scan has
         for j in range(len(ours)):
             if j not in ma_o and j not in mb_o:
@@ -1722,14 +2407,17 @@ def verify(ocr_dir: Path, books: Path | None = None) -> int:
                            " ".join(raw_ctx[max(0, j - 5):j]) + " [" + raw_ctx[j] + "] " + " ".join(raw_ctx[j + 1:j + 6]) + " @" + leaf(j)))
     seen, final, allowed = set(), [], 0
 
+    used = {}
     def listed(e: tuple) -> bool:
-        return any(e[0] == b and p in (None, e[1]) and e[2] == c and e[3] in (w if isinstance(w, tuple) else (w,))
-                   for b, p, c, w, _r in VERIFY_ALLOW)
-    for e in fa:
+        for index, (b, p, c, w, ctx, count, reason) in enumerate(VERIFY_ALLOW):
+            if e[:4] == (b, p, c, w) and e[4] == ctx and used.get(index, 0) < count:
+                used[index] = used.get(index, 0) + 1
+                return True
+        return False
+    for e in dict.fromkeys(fa):
         if listed(e):
             allowed += 1
-        elif e not in seen:
-            seen.add(e)
+        else:
             final.append(e)
     print(f"verify: examined {n_parts} Parts, {n_words} words of ours; scans A {n_wa} words, B {n_wb} words "
           f"(left out by position: A {stA.get('margin', 0)} margin words, {stA.get('heads', 0)} running heads, "
@@ -1738,9 +2426,13 @@ def verify(ocr_dir: Path, books: Path | None = None) -> int:
           f"{stB.get('glued', 0)}); type-size cut A {thrA:.1f}, B {thrB:.1f}; {n_title} title words skipped; "
           f"{n_runs} agreed gaps; {n_resp} re-spacings judged; {allowed} allowed by VERIFY_ALLOW")
     names = {"a": "(a) in both scans, missing from ours", "b": "(b) in ours, in neither scan",
-             "c": "(c) mark left in the prose", "d": "(d) a word re-spaced that is English whole",
-             "e": "(e) quote mark in a scan, not in ours"}
-    for k in "abcde":
+             "c": "(c) mark left in the prose", "d": "(d) re-spacing not supported by either scan",
+             "e": "(e) quote mark in a scan, not in ours",
+             "f": "(f) shared scan punctuation missing or changed",
+             "g": "(g) punctuation in neither scan"}
+    if findings is not None:
+        findings.extend(final)
+    for k in "abcdefg":
         sel = [e for e in final if e[2] == k]
         print(f"{names[k]}: {len(sel)}")
         for book, p, _k, w, ctx in sel:
@@ -1749,6 +2441,49 @@ def verify(ocr_dir: Path, books: Path | None = None) -> int:
         print("verify: examined nothing")
         return 2
     return 1 if final else 0
+
+
+def selftest(ocr_dir: Path, books: Path | None = None) -> int:
+    """Run each loss or addition alone against a fresh copy of the books."""
+    import contextlib
+    import io
+    import shutil
+    import tempfile
+    mutations = [
+        (1, "Why is it that great excesses cause disease? ", "", "opening sentence"),
+        (19, "nete is from hypate", "nete is from nete", "wrong note, 19.39"),
+        (7, "disease is a state of movement", "disease is a state of", "ordinary word, 7.4"),
+        (12, "the fire destroys the odour", "the fire never destroys the odour", "insert never, 12.1"),
+        (7, "Why do purslane and salt stop inflammation of the gums?", "Why do purslane and salt stop inflammation of the gums", "opening question mark, 7.9"),
+        (12, "Is it because the effluvium", "Is it. because the effluvium", "stray full stop, 12.1"),
+        (19, "a fifth is in the ratio of 3 to 2", "a fifth is in the ratio of 3 to 4", "number, 19.41"),
+        (5, "Why do we walk with difficulty up a steep slope? ", "", "page-top sentence, A98"),
+        (23, "animals’ hoofs", "animals hoofs", "plural possessive"),
+    ]
+    with contextlib.redirect_stdout(io.StringIO()):
+        baseline = []
+        verify(ocr_dir, books, baseline)
+    base = {(b,p,k,w) for b,p,k,w,_ in baseline}
+    failed = 0
+    work = ROOT / "build/prob-ocr/work"
+    work.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=work) as td:
+        dest = Path(td)
+        for n, (book, old, new, label) in enumerate(mutations, 1):
+            for src in (books or OUT).glob("book-*.html"):
+                shutil.copyfile(src, dest / src.name)
+            path = dest / f"book-{book:02d}.html"
+            text = path.read_text()
+            if text.count(old) != 1:
+                raise SystemExit(f"selftest {n}: {old!r} found {text.count(old)} times")
+            path.write_text(text.replace(old, new))
+            with contextlib.redirect_stdout(io.StringIO()):
+                changed = []
+                result = verify(ocr_dir, dest, changed)
+            caught = result == 1 and any((b,p,k,w) not in base for b,p,k,w,_ in changed)
+            print(f"{n}: {'CAUGHT' if caught else 'MISSED'} {label}", flush=True)
+            failed += not caught
+    return int(bool(failed))
 
 
 # --------------------------------------------------------------------------- main
@@ -1765,7 +2500,10 @@ def main():
                     help="with --verify: the folder of book-NN.html to check (default sources/prob-forster)")
     ap.add_argument("--verify", action="store_true",
                     help="compare sources/prob-forster/ with the raw hOCR of both scans; exit 1 on any finding")
+    ap.add_argument("--selftest", action="store_true", help="test nine independent mutations of temporary book copies")
     args = ap.parse_args()
+    if args.selftest:
+        sys.exit(selftest(args.ocr_dir, args.books))
     if args.verify:
         sys.exit(verify(args.ocr_dir, args.books))
     LA = [layout(p) for p in parse_hocr(args.ocr_dir / f"{IDS['A']}_hocr.html")]
