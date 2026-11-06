@@ -1,0 +1,285 @@
+{
+ "seed": 20261105,
+ "items": [
+  {
+   "k": 1,
+   "id": "Top.2.24",
+   "stratum": "C_pool_random",
+   "lex_rank": 294,
+   "emb_rank": 190
+  },
+  {
+   "k": 2,
+   "id": "Meta.11.8",
+   "stratum": "B_emb_only",
+   "lex_rank": 2352,
+   "emb_rank": 192
+  },
+  {
+   "k": 3,
+   "id": "Cael.1.9",
+   "stratum": "C_pool_random",
+   "lex_rank": 984,
+   "emb_rank": 1806
+  },
+  {
+   "k": 4,
+   "id": "Meta.2.9",
+   "stratum": "C_pool_random",
+   "lex_rank": 851,
+   "emb_rank": 1014
+  },
+  {
+   "k": 5,
+   "id": "EN.6.47",
+   "stratum": "C_pool_random",
+   "lex_rank": 919,
+   "emb_rank": 2943
+  },
+  {
+   "k": 6,
+   "id": "PA.2.24",
+   "stratum": "C_pool_random",
+   "lex_rank": 239,
+   "emb_rank": 6086
+  },
+  {
+   "k": 7,
+   "id": "Mirab.1.90",
+   "stratum": "E_rest_random",
+   "lex_rank": 7813,
+   "emb_rank": 8544
+  },
+  {
+   "k": 8,
+   "id": "EN.9.13",
+   "stratum": "C_pool_random",
+   "lex_rank": 856,
+   "emb_rank": 7481
+  },
+  {
+   "k": 9,
+   "id": "GA.5.4",
+   "stratum": "A_lex_top200",
+   "lex_rank": 193,
+   "emb_rank": 87
+  },
+  {
+   "k": 10,
+   "id": "GA.4.58",
+   "stratum": "C_pool_random",
+   "lex_rank": 756,
+   "emb_rank": 4810
+  },
+  {
+   "k": 11,
+   "id": "SE.1.69",
+   "stratum": "B_emb_only",
+   "lex_rank": 1996,
+   "emb_rank": 432
+  },
+  {
+   "k": 12,
+   "id": "APr.2.34",
+   "stratum": "B_emb_only",
+   "lex_rank": 4588,
+   "emb_rank": 281
+  },
+  {
+   "k": 13,
+   "id": "Meta.11.50",
+   "stratum": "B_emb_only",
+   "lex_rank": 4073,
+   "emb_rank": 110
+  },
+  {
+   "k": 14,
+   "id": "Pol.5.16",
+   "stratum": "D_just_outside",
+   "lex_rank": 1700,
+   "emb_rank": 7259
+  },
+  {
+   "k": 15,
+   "id": "EE.1.6",
+   "stratum": "D_just_outside",
+   "lex_rank": 1611,
+   "emb_rank": 2048
+  },
+  {
+   "k": 16,
+   "id": "Phys.8.29",
+   "stratum": "A_lex_top200",
+   "lex_rank": 130,
+   "emb_rank": 441
+  },
+  {
+   "k": 17,
+   "id": "APr.1.157",
+   "stratum": "C_pool_random",
+   "lex_rank": 283,
+   "emb_rank": 615
+  },
+  {
+   "k": 18,
+   "id": "APr.1.77",
+   "stratum": "C_pool_random",
+   "lex_rank": 102,
+   "emb_rank": 410
+  },
+  {
+   "k": 19,
+   "id": "EN.3.11",
+   "stratum": "B_emb_only",
+   "lex_rank": 2506,
+   "emb_rank": 490
+  },
+  {
+   "k": 20,
+   "id": "Meta.12.32",
+   "stratum": "B_emb_only",
+   "lex_rank": 2314,
+   "emb_rank": 386
+  },
+  {
+   "k": 21,
+   "id": "Rhet.2.362",
+   "stratum": "A_lex_top200",
+   "lex_rank": 190,
+   "emb_rank": 247
+  },
+  {
+   "k": 22,
+   "id": "Top.4.40",
+   "stratum": "C_pool_random",
+   "lex_rank": 511,
+   "emb_rank": 2418
+  },
+  {
+   "k": 23,
+   "id": "APr.2.49",
+   "stratum": "A_lex_top200",
+   "lex_rank": 198,
+   "emb_rank": 906
+  },
+  {
+   "k": 24,
+   "id": "APr.1.71",
+   "stratum": "A_lex_top200",
+   "lex_rank": 52,
+   "emb_rank": 96
+  },
+  {
+   "k": 25,
+   "id": "PA.3.58",
+   "stratum": "C_pool_random",
+   "lex_rank": 443,
+   "emb_rank": 6504
+  },
+  {
+   "k": 26,
+   "id": "APo.1.9",
+   "stratum": "C_pool_random",
+   "lex_rank": 631,
+   "emb_rank": 95
+  },
+  {
+   "k": 27,
+   "id": "Phys.3.47",
+   "stratum": "D_just_outside",
+   "lex_rank": 1373,
+   "emb_rank": 2585
+  },
+  {
+   "k": 28,
+   "id": "APr.1.56",
+   "stratum": "A_lex_top200",
+   "lex_rank": 44,
+   "emb_rank": 196
+  },
+  {
+   "k": 29,
+   "id": "APr.1.55",
+   "stratum": "A_lex_top200",
+   "lex_rank": 57,
+   "emb_rank": 109
+  },
+  {
+   "k": 30,
+   "id": "Pol.3.26",
+   "stratum": "D_just_outside",
+   "lex_rank": 1769,
+   "emb_rank": 2407
+  },
+  {
+   "k": 31,
+   "id": "Top.8.53",
+   "stratum": "E_rest_random",
+   "lex_rank": 3514,
+   "emb_rank": 1272
+  },
+  {
+   "k": 32,
+   "id": "EN.3.61",
+   "stratum": "B_emb_only",
+   "lex_rank": 3775,
+   "emb_rank": 436
+  },
+  {
+   "k": 33,
+   "id": "APr.2.38",
+   "stratum": "B_emb_only",
+   "lex_rank": 3253,
+   "emb_rank": 265
+  },
+  {
+   "k": 34,
+   "id": "Phys.3.38",
+   "stratum": "C_pool_random",
+   "lex_rank": 1039,
+   "emb_rank": 370
+  },
+  {
+   "k": 35,
+   "id": "GA.5.55",
+   "stratum": "C_pool_random",
+   "lex_rank": 238,
+   "emb_rank": 1204
+  },
+  {
+   "k": 36,
+   "id": "Top.2.38",
+   "stratum": "C_pool_random",
+   "lex_rank": 471,
+   "emb_rank": 875
+  },
+  {
+   "k": 37,
+   "id": "Rhet.2.317",
+   "stratum": "E_rest_random",
+   "lex_rank": 8479,
+   "emb_rank": 4048
+  },
+  {
+   "k": 38,
+   "id": "Rhet.1.31",
+   "stratum": "A_lex_top200",
+   "lex_rank": 35,
+   "emb_rank": 154
+  },
+  {
+   "k": 39,
+   "id": "Phys.8.32",
+   "stratum": "C_pool_random",
+   "lex_rank": 8111,
+   "emb_rank": 486
+  },
+  {
+   "k": 40,
+   "id": "Col.1.17",
+   "stratum": "E_rest_random",
+   "lex_rank": 3697,
+   "emb_rank": 4760
+  }
+ ]
+}

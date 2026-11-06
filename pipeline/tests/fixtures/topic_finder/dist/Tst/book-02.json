@@ -1,0 +1,34 @@
+{
+ "book": 2,
+ "segments": [
+  {
+   "id": "2:1028a",
+   "column": "1028a",
+   "chapterStarts": [],
+   "greek": [
+    {
+     "n": 1,
+     "text": "τῶν",
+     "tokens": [
+      {
+       "t": "τῶν",
+       "o": 0,
+       "k": "tw=n"
+      }
+     ]
+    }
+   ],
+   "english": {
+    "text": "Book two.",
+    "markers": [],
+    "bekker": [
+     {
+      "n": 1,
+      "offset": 0,
+      "real": true
+     }
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,23 @@
+# Embedding queries for necessity — written 2026-11-05 from topic-map.yaml's
+# own sense and problem labels ONLY, never from any answer-key passage, so the
+# embedding test cannot be tuned toward Sorabji. Plain English, the register
+# of the old Oxford/Loeb translations.
+
+core:
+  - "whether things happen of necessity or could have been otherwise"
+  - "what is necessary and what is contingent or possible"
+senses:
+  condition: "that without which a thing cannot exist or live; what must be present if an end is to come about"
+  force: "what is done under compulsion or force, against nature or against one's choice"
+  cannot_be_otherwise: "what cannot be otherwise: eternal things, what always is, the past that cannot be undone"
+  essential: "what belongs to a thing in virtue of itself, as part of what it is"
+  demonstrative: "a conclusion that follows necessarily from premises; demonstration of what cannot be otherwise"
+  natural: "natural processes that happen always or for the most part, if nothing prevents them"
+  modal_logic: "necessary and possible premises and the conclusions that follow from them"
+problems:
+  P1_chance: "chance, luck and spontaneity, and events that happen by coincidence"
+  P2_final_vs_material: "whether nature acts for the sake of an end or things come about through their matter"
+  P3_voluntary: "what is voluntary and involuntary, what is in our power, and when we are praised or blamed"
+  P4_essential_vs_accidental: "the difference between what belongs to a thing essentially and what belongs to it by accident"
+  P5_future_truth: "whether statements about the future are already true or false"
+  P6_capacity: "capacities and whether they are exercised when the conditions are present"

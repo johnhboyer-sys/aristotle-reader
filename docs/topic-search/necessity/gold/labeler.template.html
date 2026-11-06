@@ -1,0 +1,189 @@
+<title>Necessity Sample</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=GFS+Didot&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: one passage at a time, Greek beside English on wide screens, stacked on phones; a fixed tray of five bucket buttons. */
+:root{
+  --paper:#f3f4f2; --sheet:#fbfbf9; --ink:#1c2128; --muted:#5d6671; --rule:#d9ddd8;
+  --accent:#2d5d68; --accent-ink:#ffffff; --chosen:#e3ecea; --dot:#c7ccc6;
+  --f-greek:"GFS Didot","Noto Serif","Times New Roman",serif;
+  --f-text:"Spectral",Georgia,serif;
+  --f-ui:"IBM Plex Sans",system-ui,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#14181d; --sheet:#1b2026; --ink:#e4e7ea; --muted:#9aa3ad; --rule:#2e353d;
+  --accent:#7fb5bf; --accent-ink:#0f1a1d; --chosen:#22343a; --dot:#3a424b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#14181d; --sheet:#1b2026; --ink:#e4e7ea; --muted:#9aa3ad; --rule:#2e353d;
+  --accent:#7fb5bf; --accent-ink:#0f1a1d; --chosen:#22343a; --dot:#3a424b; color-scheme:dark}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--f-ui);font-size:17px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 230px}
+header{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between}
+h1{font-family:var(--f-text);font-weight:600;font-size:1.5rem;margin:0}
+.count{font-variant-numeric:tabular-nums;color:var(--muted)}
+.dots{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 18px}
+.dots button{width:30px;height:30px;border-radius:50%;border:1px solid var(--dot);background:transparent;color:var(--muted);font:500 .72rem var(--f-ui);font-variant-numeric:tabular-nums;cursor:pointer;padding:0}
+.dots button.done{background:var(--dot);color:var(--ink)}
+.dots button.here{outline:2px solid var(--accent);outline-offset:1px;color:var(--ink)}
+.ref{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;margin-bottom:10px}
+.ref .loc{font-family:var(--f-text);font-size:1.25rem;font-weight:600}
+.ref .bk{font-variant-numeric:tabular-nums;color:var(--muted)}
+.ref .tr{color:var(--muted);font-size:.85rem}
+.texts{display:grid;grid-template-columns:1fr 1fr;gap:28px;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:22px 24px}
+.texts>div{min-width:0}
+.greek{font-family:var(--f-greek);font-size:1.3rem;line-height:1.6}
+.english{font-family:var(--f-text);font-size:1.12rem;line-height:1.65}
+.ctx{font-family:var(--f-text);font-size:1rem;line-height:1.6;color:var(--muted);border-left:2px solid var(--rule);padding-left:12px;margin:0 0 14px}
+.ctx.after{margin:14px 0 0}
+.ctxlabel{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.linkbtn{background:none;border:none;color:var(--accent);font:500 .95rem var(--f-ui);padding:10px 0;cursor:pointer}
+.tray{position:fixed;left:0;right:0;bottom:0;background:var(--sheet);border-top:1px solid var(--rule);padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));padding-top:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tray-in{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.b{min-height:64px;border:1px solid var(--rule);border-radius:6px;background:var(--paper);color:var(--ink);font:500 .95rem/1.25 var(--f-ui);padding:8px 10px;text-align:left;cursor:pointer;display:flex;gap:8px;align-items:flex-start}
+.b .n{font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums}
+.b[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.b[aria-pressed="true"] .n{color:var(--accent-ink)}
+.b:focus-visible,.dots button:focus-visible,.linkbtn:focus-visible,.nav button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nav{max-width:1180px;margin:0 auto 8px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.nav button{background:none;border:1px solid var(--rule);border-radius:6px;color:var(--ink);font:500 .9rem var(--f-ui);padding:8px 14px;cursor:pointer;min-height:40px}
+.status{font-size:.85rem;color:var(--muted);text-align:center;flex:1}
+@media (max-width:760px){
+  .texts{grid-template-columns:1fr;gap:18px;padding:16px}
+  .tray-in{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .b.none{grid-column:1/-1;min-height:48px}
+  .wrap{padding-block:16px 330px}
+}
+@media (prefers-reduced-motion:no-preference){.b{transition:background .12s,color .12s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Necessity Sample</h1>
+    <span class="count" id="count">0 of 40 labelled</span>
+  </header>
+  <div class="dots" id="dots" aria-label="Passages"></div>
+  <section id="passage" aria-live="polite">
+    <div class="ref"><span class="loc" id="loc"></span><span class="bk" id="bk"></span><span class="tr" id="tr"></span></div>
+    <div class="texts">
+      <div>
+        <div class="ctx" id="prev" hidden></div>
+        <div class="greek" id="greek" lang="grc"></div>
+      </div>
+      <div>
+        <div class="english" id="english" lang="en"></div>
+        <div class="ctx after" id="next" hidden></div>
+      </div>
+    </div>
+    <button class="linkbtn" id="ctxbtn" type="button">Show the paragraphs before and after</button>
+  </section>
+</div>
+
+<div class="tray">
+  <div class="nav">
+    <button type="button" id="back">← Previous</button>
+    <span class="status" id="status">Loading saved labels…</span>
+    <button type="button" id="fwd">Next →</button>
+  </div>
+  <div class="tray-in" id="tray">
+    <button class="b" type="button" data-v="1"><span class="n">1</span><span>Directly about necessity</span></button>
+    <button class="b" type="button" data-v="2"><span class="n">2</span><span>Discussed to address another issue</span></button>
+    <button class="b" type="button" data-v="3"><span class="n">3</span><span>A nearby problem</span></button>
+    <button class="b" type="button" data-v="4"><span class="n">4</span><span>Applied as a principle</span></button>
+    <button class="b none" type="button" data-v="0"><span class="n">0</span><span>Not about necessity</span></button>
+  </div>
+</div>
+
+<script>
+const ITEMS = __ITEMS__;
+const ROMAN = ["","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV"];
+const META_BOOKS = ["","Α","α","Β","Γ","Δ","Ε","Ζ","Η","Θ","Ι","Κ","Λ","Μ","Ν"];
+let labels = {};          // id -> {bucket, at}
+let pos = 0, showCtx = false, db = null;
+const $ = id => document.getElementById(id);
+
+function where(it){
+  const bk = it.work === "Meta" ? META_BOOKS[it.book] : ROMAN[it.book];
+  return it.nbooks === 1 ? `${it.title} ${it.chapter}` : `${it.title} ${bk} ${it.chapter}`;
+}
+function para(el, text){ el.textContent = text; }
+
+function render(){
+  const it = ITEMS[pos];
+  $("loc").textContent = where(it);
+  $("bk").textContent = it.start === it.end ? it.start : `${it.start}–${it.end}`;
+  $("tr").textContent = it.translator;
+  para($("greek"), it.greek);
+  para($("english"), it.english);
+  for (const [id, txt, label] of [["prev", it.prev, "Before"], ["next", it.next, "After"]]){
+    const el = $(id);
+    el.hidden = !(showCtx && txt);
+    el.replaceChildren();
+    if (showCtx && txt){
+      const l = document.createElement("div"); l.className = "ctxlabel"; l.textContent = label;
+      const t = document.createElement("div"); t.textContent = txt;
+      el.append(l, t);
+    }
+  }
+  $("ctxbtn").textContent = showCtx ? "Hide the paragraphs before and after" : "Show the paragraphs before and after";
+  const cur = labels[it.id]?.bucket;
+  for (const b of $("tray").querySelectorAll(".b")) b.setAttribute("aria-pressed", String(cur === Number(b.dataset.v)));
+  const dots = $("dots"); dots.replaceChildren();
+  ITEMS.forEach((x, i) => {
+    const d = document.createElement("button");
+    d.type = "button"; d.textContent = String(i + 1);
+    d.className = (labels[x.id] ? "done " : "") + (i === pos ? "here" : "");
+    d.setAttribute("aria-label", `Passage ${i + 1}${labels[x.id] ? ", labelled" : ""}`);
+    d.onclick = () => { pos = i; showCtx = false; render(); window.scrollTo({top: 0}); };
+    dots.append(d);
+  });
+  const n = ITEMS.filter(x => labels[x.id]).length;
+  $("count").textContent = `${n} of ${ITEMS.length} labelled`;
+}
+
+async function choose(v){
+  const it = ITEMS[pos];
+  labels[it.id] = {bucket: v, at: new Date().toISOString()};
+  render();
+  if (!db){ $("status").textContent = "Not saved: the label store is unavailable in this view"; return; }
+  try{
+    await db.collection("labels").doc(it.id.replace(/\./g, "_")).set({id: it.id, k: it.k, bucket: v, at: labels[it.id].at});
+    $("status").textContent = `Saved passage ${pos + 1}`;
+  }catch(e){
+    $("status").textContent = `Not saved (${e.code || "error"}); click the bucket again`;
+    return;
+  }
+  const nextOpen = ITEMS.findIndex((x, i) => i > pos && !labels[x.id]);
+  if (nextOpen >= 0){ pos = nextOpen; showCtx = false; setTimeout(() => { render(); window.scrollTo({top: 0}); }, 250); }
+  else if (ITEMS.every(x => labels[x.id])) $("status").textContent = "All 40 labelled. Saved.";
+}
+
+$("tray").addEventListener("click", e => { const b = e.target.closest(".b"); if (b) choose(Number(b.dataset.v)); });
+$("ctxbtn").onclick = () => { showCtx = !showCtx; render(); };
+$("back").onclick = () => { if (pos > 0){ pos--; showCtx = false; render(); window.scrollTo({top: 0}); } };
+$("fwd").onclick = () => { if (pos < ITEMS.length - 1){ pos++; showCtx = false; render(); window.scrollTo({top: 0}); } };
+document.addEventListener("keydown", e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if ("01234".includes(e.key)) choose(Number(e.key));
+  else if (e.key === "ArrowRight") $("fwd").click();
+  else if (e.key === "ArrowLeft") $("back").click();
+});
+
+render();
+(async () => {
+  const timer = setTimeout(() => { $("status").textContent = "Saved labels can't be reached yet"; }, 10000);
+  db = await window.claude?.use?.("db") ?? null;
+  if (!db){ clearTimeout(timer); $("status").textContent = "Labels won't save in this view"; return; }
+  db.collection("labels").onSnapshot(snap => {
+    if (!snap.metadata.fromCache) clearTimeout(timer);
+    for (const d of snap.docs){ const x = d.data(); if (x && x.id) labels[x.id] = {bucket: x.bucket, at: x.at}; }
+    const first = ITEMS.findIndex(x => !labels[x.id]);
+    if (!render.started && first > 0) pos = first;
+    render.started = true;
+    $("status").textContent = snap.metadata.fromCache ? "Showing saved labels; checking for newer" : "Click a bucket, or press 0–4";
+    render();
+  }, err => { clearTimeout(timer); $("status").textContent = `Saved labels unavailable (${err.code})`; });
+})();
+</script>

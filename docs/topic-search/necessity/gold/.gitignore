@@ -1,0 +1,3 @@
+# Filled page carries translation prose (Rackham EN is gated); rebuild from
+# labeler.template.html by replacing __ITEMS__ with the sample items JSON.
+labeler.html
