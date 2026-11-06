@@ -51,9 +51,18 @@ preflight · app build 7,080 pages · links 0 broken.
 - Codex review 1 (GPT-6.1-Sol medium): `docs/spurious-works/codex-review-1.md`.
   All eight findings fixed and checked by hand.
 - Codex review 2: brief `docs/spurious-works/codex-brief-2.md`, job
-  `task-mw59f4wk-6266om`. Result to be saved as
-  `docs/spurious-works/codex-review-2.md`. **John said: pause when it lands —
-  report findings, change nothing until he says.**
+  `task-mw59f4wk-6266om`, landed 11:50, saved as
+  `docs/spurious-works/codex-review-2.md`. Review 1's findings confirmed fixed
+  (item 5 partly). Six new should-fix findings, NOT yet checked by Claude:
+  15 lost anchor ticks are regressions (scan B reads them); verify's "agreed
+  gaps" and re-spacing logic can hide shared missing words (it deleted 1.1's
+  first sentence in memory and verify stayed green); VERIFY_ALLOW entries are
+  unbound to place/count (19.39 hypate->nete passes); punctuation losses
+  (19.18, 11.30, 19.4, 15.3 'two-five' quotes; older 5.42, 24.11, 26.30, 1.6,
+  36.2); Book 15 figure labels are OCR debris in the prose, and 19.20 loses
+  Greek τε/καί; verify still shares vocab()/digit rules with the build.
+  **John said pause here: nothing changed since. Next: his go-ahead, then
+  verify Codex's claims, then fix (Sonnet), then Codex review 3.**
 
 ### Open
 
