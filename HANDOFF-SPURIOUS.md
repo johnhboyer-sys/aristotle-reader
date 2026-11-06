@@ -24,7 +24,7 @@ Forster (Oxford 1927, public domain) rebuilt from two archive.org scans by
 
 ### Rebuild
 
-The OCR inputs are in `build/prob-ocr/` (ignored; re-download from archive.org
+The OCR inputs, and scan A's 406 page images (`img/A<n>.jpg`), are in `build/prob-ocr/` (ignored; re-download from archive.org
 items `worksofaristotle07arisuoft` and `worksofaristotle0007unse_o7n4` if lost).
 
 ```
@@ -61,8 +61,17 @@ preflight · app build 7,080 pages · links 0 broken.
   (19.18, 11.30, 19.4, 15.3 'two-five' quotes; older 5.42, 24.11, 26.30, 1.6,
   36.2); Book 15 figure labels are OCR debris in the prose, and 19.20 loses
   Greek τε/καί; verify still shares vocab()/digit rules with the build.
-  **John said pause here: nothing changed since. Next: his go-ahead, then
-  verify Codex's claims, then fix (Sonnet), then Codex review 3.**
+  All six claims re-checked by Claude and confirmed.
+- Fix round 3: Codex GPT-6.1-Sol implemented (brief `codex-brief-3-fix.md`,
+  reports `codex-fix-3-report*.md`), committed as `34751dd8a8`. `--selftest`
+  plants 9 defects, all caught; Claude planted 10 more, all caught. 15 ticks
+  restored (1,460 entries). All uv gates green. Claude found 309 punctuation
+  allowances sharing one stock reason, one hiding a real comma (24.11).
+- Fix round 4 (running): `codex-brief-4-followup.md`, Codex job
+  `task-mw5czk6e-eiq8fv` (resumed session). Decide call-outs by geometry, one
+  reason per allowance, restore 24.11 comma, selftest 12/12.
+- Because Codex implemented rounds 3-4, the final review must be Claude or
+  Grok, not Codex.
 
 ### Open
 
