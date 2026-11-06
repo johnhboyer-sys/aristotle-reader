@@ -1,0 +1,92 @@
+# Topic map: necessity (ἀνάγκη) — DRAFT for John's review, 2026-11-05.
+#
+# Sources: Aristotle's own list (Meta Δ 5), Sorabji's ten kinds (NCB pp. 222–4),
+# John's four contexts, Bonitz's sense heads for ἀναγκαῖος/ἀνάγκη. A map drawn
+# from one scholar finds that scholar's book, so each part names its source.
+#
+# Lemmas are written as the corpus lemmatizer names them (Diogenes/Perseus),
+# which is not always the dictionary head: συμβεβηκός is under συμβαίνω, αἴτιον
+# and αἰτία under αἴτιος. The finder maps each to the corpus's lemma keys and
+# stops if one matches nothing. English terms match the public translations.
+
+topic: necessity
+
+# --- Words that signal the topic itself (bucket 1 and 2 evidence) ----------
+core:
+  lemmas: [ἀνάγκη, ἀναγκαῖος, ἀναγκάζω, ἐνδέχομαι, δυνατός, ἀδύνατος]
+  phrases:                       # lemma sequences, gaps of up to 3 words allowed
+    - ἐκ ἀνάγκη                  # ἐξ ἀνάγκης
+    - ἐκ ὑπόθεσις                # ἐξ ὑποθέσεως
+    - ὡς ἐπί ὁ πολύς             # ὡς ἐπὶ τὸ πολύ
+    - ἐνδέχομαι ἄλλως ἔχω       # "cannot be otherwise"
+    - ἀδύνατος ἄλλως ἔχω
+  english: [necessity, necessary, necessarily, "of necessity", "hypothetical necessity",
+            "cannot be otherwise", inevitable, contingent, "for the most part"]
+  not_core:                      # too common or mostly another sense; context only
+    - δεῖ                        # mostly "one must" (advice); Sorabji uses it once (APo II 16)
+    - "must"                     # English modal, mostly not necessity
+
+# --- Senses (tag on each bucket-1/2 locus) ---------------------------------
+# Aristotle's own division first (Meta Δ 5, 1015a20–b15), Sorabji's finer
+# kinds under it.
+senses:
+  condition:     "that without which a thing cannot be or live (hypothetical necessity: matter needed for an end)"
+  force:         "compulsion against nature or choice (βία); acts under threat"
+  cannot_be_otherwise: "what cannot be otherwise: the eternal, what always is, the fixed past"
+  essential:     "what belongs to a thing in itself (καθ' αὑτό); necessity of essential predication"
+  demonstrative: "necessity of a conclusion given its premises (relative), and of demonstrated truths"
+  natural:       "natural processes that happen of necessity, or 'if nothing prevents'"
+  modal_logic:   "the necessary as a modality in the syllogistic and in Int 12–13"
+  # Open question for John: Sorabji also splits de re / de dicto (composite vs
+  # divided) and "necessity of what always is" from "the fixed past". Fold or keep?
+
+# --- Nearby problems (bucket 3), each with its own vocabulary ---------------
+# P1–P4 are John's four contexts; P5–P6 come from Sorabji's parts.
+problems:
+  P1_chance:
+    label: "chance and spontaneity vs necessity"
+    lemmas: [τύχη, αὐτόματος, συμβαίνω, ἀεί]        # συμβαίνω = συμβεβηκός
+    english: [chance, spontaneity, spontaneous, coincidence, accident, accidental, luck]
+  P2_final_vs_material:
+    label: "final cause vs material/efficient cause"
+    lemmas: [ἕνεκα, τέλος, ὕλη, αἴτιος, φύσις]       # αἴτιος covers αἰτία and αἴτιον
+    english: ["for the sake of", end, purpose, matter, "final cause", "material cause"]
+  P3_voluntary:
+    label: "the voluntary, what is up to us, praise and blame"
+    lemmas: [ἑκούσιος, ἀκούσιος, προαίρεσις, βουλεύω, βία, βίαιος, ἔπαινος, ψόγος]
+    phrases: [ἐπί ἐγώ]                        # ἐφ' ἡμῖν
+    english: [voluntary, involuntary, "in our power", "up to us", choice, deliberate, compulsion,
+              force, praise, blame]
+  P4_essential_vs_accidental:
+    label: "essential vs accidental properties"
+    lemmas: [συμβαίνω, ὁρισμός, ἴδιος]
+    phrases: [κατά ἑαυτοῦ, κατά αὐτός, τίς εἰμί]  # καθ' αὑτό, τί ἐστι
+    english: [essence, essential, "in virtue of itself", accident, accidental, definition, property]
+  P5_future_truth:
+    label: "time, truth and the future (the sea battle)"
+    lemmas: [μέλλω, ἀληθής, ψευδής, ἀντίφασις, γίγνομαι]
+    english: ["will be", future, past, true, false, contradiction]
+  P6_capacity:
+    label: "capacities and their exercise"
+    lemmas: [δύναμις, ἐνέργεια, ἐμποδίζω]
+    english: [capacity, potentiality, potency, "if nothing prevents", actuality]
+
+# --- Context that marks the logical sense, so it is tagged, not dropped ------
+logical_context:
+  lemmas: [συμπέρασμα, πρότασις, συλλογισμός, ἀπόδειξις]
+  # plus term letters Α Β Γ standing alone; the finder detects these
+
+# --- Anchor texts, by source ----------------------------------------------
+# Used to pull in neighbouring chapters and doublets. NOT counted when recall
+# is measured against Sorabji, since many come from him.
+anchors:
+  aristotle_own:     ["Meta 5.5"]             # the dictionary entry on "necessary"
+  sorabji_titles:    ["Meta 6.3", "Int 9", "GC 2.11", "PA 1.1", "Phys 2.9", "EN 3.1-5"]
+  standard_others:   ["Phys 2.4-8", "Meta 6.2", "Meta 11.8", "APo 1.4-6", "APo 2.11", "Cael 1.12",
+                      "Meta 9.3-5", "APr 1.3", "APr 1.8-22"]   # last two: modal syllogistic, thin in Sorabji
+
+# --- Open questions for John ------------------------------------------------
+# 1. Does the modal syllogistic (APr I 8–22, Int 12–13) belong in bucket 1, or is
+#    "necessary" as a logical modality a separate topic?
+# 2. Should δυνατός/ἀδύνατος and ἐνδέχομαι count as core, or only as P6/modal context?
+#    They pull in all of Meta Θ and the logic.

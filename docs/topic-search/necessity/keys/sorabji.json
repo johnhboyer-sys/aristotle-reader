@@ -1,0 +1,1150 @@
+{
+ "source": "docs/topic-search/research/sorabji-method.md, Locus table",
+ "loci": [
+  {
+   "row": 1,
+   "work": "Meta",
+   "book": 6,
+   "chapter": "3",
+   "ranges": [
+    [
+     "1027a29",
+     "1027b16"
+    ]
+   ],
+   "pages": 34,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 2,
+   "work": "Meta",
+   "book": 6,
+   "chapter": "2",
+   "ranges": [
+    [
+     "1026b22",
+     "1027a28"
+    ]
+   ],
+   "pages": 16,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 3,
+   "work": "Meta",
+   "book": 11,
+   "chapter": "8",
+   "ranges": [
+    [
+     "1064b33",
+     "1065a21"
+    ]
+   ],
+   "pages": 9,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 4,
+   "work": "Meta",
+   "book": 5,
+   "chapter": "30",
+   "ranges": [
+    [
+     "1025a14",
+     "1025a34"
+    ]
+   ],
+   "pages": 8,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 5,
+   "work": "Int",
+   "book": 1,
+   "chapter": "9",
+   "ranges": [
+    [
+     "18a28",
+     "19b4"
+    ]
+   ],
+   "pages": 32,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 6,
+   "work": "Cael",
+   "book": 1,
+   "chapter": "12",
+   "ranges": [
+    [
+     "281a28",
+     "283b22"
+    ]
+   ],
+   "pages": 14,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 7,
+   "work": "GC",
+   "book": 2,
+   "chapter": "11",
+   "ranges": [
+    [
+     "337a34",
+     "338b19"
+    ]
+   ],
+   "pages": 19,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 8,
+   "work": "GC",
+   "book": 2,
+   "chapter": "10",
+   "ranges": [
+    [
+     "336a15",
+     "337a33"
+    ]
+   ],
+   "pages": 3,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 9,
+   "work": "Phys",
+   "book": 2,
+   "chapter": "9",
+   "ranges": [
+    [
+     "199b34",
+     "200b8"
+    ]
+   ],
+   "pages": 13,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 10,
+   "work": "PA",
+   "book": 1,
+   "chapter": "1",
+   "ranges": [
+    [
+     "639b21",
+     "640a9"
+    ],
+    [
+     "642a1",
+     "642b4"
+    ]
+   ],
+   "pages": 24,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 11,
+   "work": "PA",
+   "book": 1,
+   "chapter": "1",
+   "ranges": [
+    [
+     "640a10",
+     "641a17"
+    ]
+   ],
+   "pages": 24,
+   "bucket": "3",
+   "core": true
+  },
+  {
+   "row": 12,
+   "work": "APo",
+   "book": 2,
+   "chapter": "11",
+   "ranges": [
+    [
+     "94b27",
+     "95a3"
+    ]
+   ],
+   "pages": 23,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 13,
+   "work": "APo",
+   "book": 2,
+   "chapter": "11",
+   "ranges": [
+    [
+     "94a20",
+     "94a36"
+    ]
+   ],
+   "pages": 23,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 14,
+   "work": "APo",
+   "book": 2,
+   "chapter": "12",
+   "ranges": [
+    [
+     "95a10",
+     "96a19"
+    ]
+   ],
+   "pages": 9,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 15,
+   "work": "APo",
+   "book": 2,
+   "chapter": "16",
+   "ranges": [
+    [
+     "98a35",
+     "98b38"
+    ]
+   ],
+   "pages": 11,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 16,
+   "work": "APo",
+   "book": 2,
+   "chapter": "8",
+   "ranges": [
+    [
+     "93a1",
+     "93b20"
+    ]
+   ],
+   "pages": 9,
+   "bucket": "4",
+   "core": true
+  },
+  {
+   "row": 17,
+   "work": "APo",
+   "book": 2,
+   "chapter": "10",
+   "ranges": [
+    [
+     "93b29",
+     "94a19"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 18,
+   "work": "APo",
+   "book": 1,
+   "chapter": "2",
+   "ranges": [
+    [
+     "71b9",
+     "72b4"
+    ]
+   ],
+   "pages": 14,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 19,
+   "work": "APo",
+   "book": 1,
+   "chapter": "4",
+   "ranges": [
+    [
+     "73a21",
+     "74a3"
+    ]
+   ],
+   "pages": 14,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 20,
+   "work": "APo",
+   "book": 1,
+   "chapter": "6",
+   "ranges": [
+    [
+     "74b5",
+     "75a37"
+    ]
+   ],
+   "pages": 14,
+   "bucket": "1",
+   "core": true
+  },
+  {
+   "row": 21,
+   "work": "APo",
+   "book": 1,
+   "chapter": "8",
+   "ranges": [
+    [
+     "75b21",
+     "75b36"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 22,
+   "work": "APo",
+   "book": 1,
+   "chapter": "13",
+   "ranges": [
+    [
+     "78a22",
+     "79a16"
+    ]
+   ],
+   "pages": 7,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 23,
+   "work": "Phys",
+   "book": 2,
+   "chapter": "3",
+   "ranges": [
+    [
+     "194b16",
+     "195b30"
+    ]
+   ],
+   "pages": 13,
+   "bucket": "3",
+   "core": true
+  },
+  {
+   "row": 24,
+   "work": "Phys",
+   "book": 2,
+   "chapter": "4",
+   "ranges": [
+    [
+     "195b36",
+     "196a24"
+    ]
+   ],
+   "pages": 5,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 25,
+   "work": "Phys",
+   "book": 2,
+   "chapter": "5",
+   "ranges": [
+    [
+     "196b10",
+     "197a35"
+    ]
+   ],
+   "pages": 12,
+   "bucket": "3",
+   "core": true
+  },
+  {
+   "row": 26,
+   "work": "Phys",
+   "book": 2,
+   "chapter": "6",
+   "ranges": [
+    [
+     "198a2",
+     "198a13"
+    ]
+   ],
+   "pages": 3,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 27,
+   "work": "Phys",
+   "book": 2,
+   "chapter": "7",
+   "ranges": [
+    [
+     "198b5",
+     "198b9"
+    ]
+   ],
+   "pages": 7,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 28,
+   "work": "Phys",
+   "book": 2,
+   "chapter": "8",
+   "ranges": [
+    [
+     "198b10",
+     "199a8"
+    ],
+    [
+     "199b15",
+     "199b26"
+    ]
+   ],
+   "pages": 16,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 29,
+   "work": "GA",
+   "book": 5,
+   "chapter": "8",
+   "ranges": [
+    [
+     "789b2",
+     "789b20"
+    ]
+   ],
+   "pages": 12,
+   "bucket": "3",
+   "core": true
+  },
+  {
+   "row": 30,
+   "work": "GA",
+   "book": 5,
+   "chapter": "8",
+   "ranges": [
+    [
+     "788b9",
+     "789a4"
+    ]
+   ],
+   "pages": 12,
+   "bucket": "4",
+   "core": true
+  },
+  {
+   "row": 31,
+   "work": "GA",
+   "book": 2,
+   "chapter": "1",
+   "ranges": [
+    [
+     "734b9",
+     "735a4"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 32,
+   "work": "GA",
+   "book": 2,
+   "chapter": "4",
+   "ranges": [
+    [
+     "738a33",
+     "738b9"
+    ],
+    [
+     "739b26",
+     "739b30"
+    ],
+    [
+     "740b21",
+     "741a3"
+    ]
+   ],
+   "pages": 8,
+   "bucket": "4",
+   "core": true
+  },
+  {
+   "row": 33,
+   "work": "GA",
+   "book": 2,
+   "chapter": "6",
+   "ranges": [
+    [
+     "742b17",
+     "743a1"
+    ],
+    [
+     "743a36",
+     "743b18"
+    ]
+   ],
+   "pages": 7,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 34,
+   "work": "GA",
+   "book": 4,
+   "chapter": "8",
+   "ranges": [
+    [
+     "776a15",
+     "777a3"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 35,
+   "work": "PA",
+   "book": 4,
+   "chapter": "2",
+   "ranges": [
+    [
+     "676b16",
+     "677a19"
+    ]
+   ],
+   "pages": 7,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 36,
+   "work": "PA",
+   "book": 3,
+   "chapter": "2",
+   "ranges": [
+    [
+     "663a1",
+     "663a6"
+    ],
+    [
+     "663b14",
+     "663b35"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 37,
+   "work": "PA",
+   "book": 3,
+   "chapter": "7",
+   "ranges": [
+    [
+     "670a30",
+     "670b23"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 38,
+   "work": "PA",
+   "book": 2,
+   "chapter": "2",
+   "ranges": [
+    [
+     "648a36",
+     "649a24"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 39,
+   "work": "DA",
+   "book": 2,
+   "chapter": "4",
+   "ranges": [
+    [
+     "415a14",
+     "415a22"
+    ],
+    [
+     "416a9",
+     "416a18"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 40,
+   "work": "Meta",
+   "book": 1,
+   "chapter": "3",
+   "ranges": [
+    [
+     "983a25",
+     "983b3"
+    ],
+    [
+     "984a16",
+     "984b22"
+    ]
+   ],
+   "pages": 5,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 41,
+   "work": "GC",
+   "book": 2,
+   "chapter": "6",
+   "ranges": [
+    [
+     "333b4",
+     "333b22"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 42,
+   "work": "Meta",
+   "book": 5,
+   "chapter": "5",
+   "ranges": [
+    [
+     "1015a20",
+     "1015b15"
+    ]
+   ],
+   "pages": 5,
+   "bucket": "1",
+   "core": false
+  },
+  {
+   "row": 43,
+   "work": "Meta",
+   "book": 12,
+   "chapter": "7",
+   "ranges": [
+    [
+     "1072b11",
+     "1072b13"
+    ]
+   ],
+   "pages": 5,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 44,
+   "work": "Meta",
+   "book": 9,
+   "chapter": "3",
+   "ranges": [
+    [
+     "1046b29",
+     "1047a29"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 45,
+   "work": "Meta",
+   "book": 9,
+   "chapter": "4",
+   "ranges": [
+    [
+     "1047b3",
+     "1047b16"
+    ]
+   ],
+   "pages": 3,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 46,
+   "work": "Meta",
+   "book": 9,
+   "chapter": "5",
+   "ranges": [
+    [
+     "1047b35",
+     "1048a21"
+    ]
+   ],
+   "pages": 8,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 47,
+   "work": "Meta",
+   "book": 9,
+   "chapter": "7",
+   "ranges": [
+    [
+     "1048b37",
+     "1049a18"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 48,
+   "work": "Meta",
+   "book": 9,
+   "chapter": "8",
+   "ranges": [
+    [
+     "1050b6",
+     "1050b30"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 49,
+   "work": "Meta",
+   "book": 7,
+   "chapter": "15",
+   "ranges": [
+    [
+     "1039b27",
+     "1040a7"
+    ]
+   ],
+   "pages": 5,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 50,
+   "work": "APr",
+   "book": 1,
+   "chapter": "13",
+   "ranges": [
+    [
+     "32a18",
+     "32a20"
+    ],
+    [
+     "32b4",
+     "32b13"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "1",
+   "core": false
+  },
+  {
+   "row": 51,
+   "work": "APr",
+   "book": 1,
+   "chapter": "10",
+   "ranges": [
+    [
+     "30b31",
+     "30b40"
+    ]
+   ],
+   "pages": 2,
+   "bucket": "1",
+   "core": false
+  },
+  {
+   "row": 52,
+   "work": "SE",
+   "book": 1,
+   "chapter": "4",
+   "ranges": [
+    [
+     "166a23",
+     "166a31"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 53,
+   "work": "Phys",
+   "book": 8,
+   "chapter": "4",
+   "ranges": [
+    [
+     "255a30",
+     "255b31"
+    ]
+   ],
+   "pages": 5,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 54,
+   "work": "Phys",
+   "book": 8,
+   "chapter": "2; 5-6",
+   "ranges": [
+    [
+     "253a7",
+     "253a21"
+    ],
+    [
+     "258a1",
+     "258a2"
+    ],
+    [
+     "258b12",
+     "258b32"
+    ],
+    [
+     "259b1",
+     "259b20"
+    ]
+   ],
+   "pages": 3,
+   "bucket": "3",
+   "core": false
+  },
+  {
+   "row": 55,
+   "work": "MA",
+   "book": 1,
+   "chapter": "7-9",
+   "ranges": [
+    [
+     "701a16",
+     "701a16"
+    ],
+    [
+     "702a10",
+     "702a17"
+    ],
+    [
+     "702b24",
+     "702b24"
+    ]
+   ],
+   "pages": 7,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 56,
+   "work": "Poet",
+   "book": 1,
+   "chapter": "7-10",
+   "ranges": [
+    [
+     "1450b27",
+     "1451a12"
+    ],
+    [
+     "1452a18",
+     "1452a21"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 57,
+   "work": "Rhet",
+   "book": 1,
+   "chapter": "10",
+   "ranges": [
+    [
+     "1368b35",
+     "1369b32"
+    ]
+   ],
+   "pages": 5,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 58,
+   "work": "Rhet",
+   "book": 3,
+   "chapter": "17",
+   "ranges": [
+    [
+     "1418a3",
+     "1418a5"
+    ]
+   ],
+   "pages": 3,
+   "bucket": "4",
+   "core": false
+  },
+  {
+   "row": 59,
+   "work": "Rhet",
+   "book": 1,
+   "chapter": "2",
+   "ranges": [
+    [
+     "1357a8",
+     "1357a34"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 60,
+   "work": "EN",
+   "book": 3,
+   "chapter": "1",
+   "ranges": [
+    [
+     "1109b30",
+     "1111b3"
+    ]
+   ],
+   "pages": 25,
+   "bucket": "3",
+   "core": true
+  },
+  {
+   "row": 61,
+   "work": "EN",
+   "book": 3,
+   "chapter": "3",
+   "ranges": [
+    [
+     "1112a18",
+     "1113a14"
+    ]
+   ],
+   "pages": 4,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 62,
+   "work": "EN",
+   "book": 3,
+   "chapter": "5",
+   "ranges": [
+    [
+     "1113b3",
+     "1115a5"
+    ]
+   ],
+   "pages": 29,
+   "bucket": "3",
+   "core": true
+  },
+  {
+   "row": 63,
+   "work": "EN",
+   "book": 6,
+   "chapter": "2",
+   "ranges": [
+    [
+     "1138b35",
+     "1139b13"
+    ]
+   ],
+   "pages": 11,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 64,
+   "work": "EE",
+   "book": 2,
+   "chapter": "6",
+   "ranges": [
+    [
+     "1222b15",
+     "1223a20"
+    ]
+   ],
+   "pages": 5,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 65,
+   "work": "EE",
+   "book": 2,
+   "chapter": "8",
+   "ranges": [
+    [
+     "1223b37",
+     "1225a33"
+    ]
+   ],
+   "pages": 9,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 66,
+   "work": "EE",
+   "book": 2,
+   "chapter": "10",
+   "ranges": [
+    [
+     "1225b17",
+     "1227b11"
+    ]
+   ],
+   "pages": 11,
+   "bucket": "2",
+   "core": true
+  },
+  {
+   "row": 67,
+   "work": "EN",
+   "book": 7,
+   "chapter": "3",
+   "ranges": [
+    [
+     "1146b31",
+     "1147b19"
+    ]
+   ],
+   "pages": 7,
+   "bucket": "2",
+   "core": false
+  },
+  {
+   "row": 68,
+   "work": "EN",
+   "book": 7,
+   "chapter": "7-8",
+   "ranges": [
+    [
+     "1150a20",
+     "1150b22"
+    ],
+    [
+     "1151a13",
+     "1151a20"
+    ]
+   ],
+   "pages": 17,
+   "bucket": "3",
+   "core": true
+  },
+  {
+   "row": 69,
+   "work": "EN",
+   "book": 10,
+   "chapter": "9",
+   "ranges": [
+    [
+     "1179b4",
+     "1180a5"
+    ]
+   ],
+   "pages": 10,
+   "bucket": "3",
+   "core": true
+  },
+  {
+   "row": 70,
+   "work": "EE",
+   "book": 2,
+   "chapter": "9",
+   "ranges": [
+    [
+     "1225a34",
+     "1225b16"
+    ]
+   ],
+   "pages": 13,
+   "bucket": "B",
+   "core": false
+  },
+  {
+   "row": 71,
+   "work": "EN",
+   "book": 5,
+   "chapter": "8",
+   "ranges": [
+    [
+     "1135a15",
+     "1136a9"
+    ]
+   ],
+   "pages": 26,
+   "bucket": "B",
+   "core": false
+  },
+  {
+   "row": 72,
+   "work": "Rhet",
+   "book": 1,
+   "chapter": "13",
+   "ranges": [
+    [
+     "1374a27",
+     "1374b10"
+    ]
+   ],
+   "pages": 6,
+   "bucket": "B",
+   "core": false
+  }
+ ],
+ "unparsed": []
+}

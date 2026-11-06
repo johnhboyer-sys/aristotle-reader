@@ -1,0 +1,19 @@
+{
+ "work": {
+  "id": "Tst"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 2,
+   "first_column": "1027a",
+   "last_column": "1027b"
+  },
+  {
+   "book": 2,
+   "segments": 1,
+   "first_column": "1028a",
+   "last_column": "1028a"
+  }
+ ]
+}

@@ -1,0 +1,126 @@
+{
+ "book": 1,
+ "segments": [
+  {
+   "id": "1:1027a",
+   "column": "1027a",
+   "chapterStarts": [],
+   "greek": [
+    {
+     "n": 29,
+     "text": "ἀνάγκη ἐστί",
+     "tokens": [
+      {
+       "t": "ἀνάγκη",
+       "o": 0,
+       "k": "a)na/gkh"
+      },
+      {
+       "t": "ἐστί",
+       "o": 7,
+       "k": "e)sti/"
+      }
+     ]
+    },
+    {
+     "n": 30,
+     "text": "τῶν γένεσις",
+     "tokens": [
+      {
+       "t": "τῶν",
+       "o": 0,
+       "k": "tw=n"
+      },
+      {
+       "t": "γένεσις",
+       "o": 4,
+       "k": "ge/nesis"
+      }
+     ]
+    },
+    {
+     "n": 31,
+     "text": "ἐξ ἀνάγκης",
+     "tokens": [
+      {
+       "t": "ἐξ",
+       "o": 0,
+       "k": "e)c"
+      },
+      {
+       "t": "ἀνάγκης",
+       "o": 3,
+       "k": "a)na/gkhs"
+      }
+     ]
+    }
+   ],
+   "english": {
+    "text": "First paragraph.\nSecond paragraph runs on and",
+    "markers": [],
+    "bekker": [
+     {
+      "n": 29,
+      "offset": 0,
+      "real": true
+     },
+     {
+      "n": 31,
+      "offset": 17,
+      "real": true
+     }
+    ]
+   }
+  },
+  {
+   "id": "1:1027b",
+   "column": "1027b",
+   "chapterStarts": [],
+   "greek": [
+    {
+     "n": 1,
+     "text": "ἀνάγκη ξξξ",
+     "tokens": [
+      {
+       "t": "ἀνάγκη",
+       "o": 0,
+       "k": "a)na/gkh"
+      },
+      {
+       "t": "ξξξ",
+       "o": 7,
+       "k": "ccc"
+      }
+     ]
+    },
+    {
+     "n": 2,
+     "text": "ἐστί",
+     "tokens": [
+      {
+       "t": "ἐστί",
+       "o": 0,
+       "k": "e)sti/"
+      }
+     ]
+    }
+   ],
+   "english": {
+    "text": "crosses the line.\nThird paragraph.",
+    "markers": [],
+    "bekker": [
+     {
+      "n": 1,
+      "offset": 0,
+      "real": true
+     },
+     {
+      "n": 2,
+      "offset": 18,
+      "real": false
+     }
+    ]
+   }
+  }
+ ]
+}
