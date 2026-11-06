@@ -103,7 +103,6 @@ PRINT_READS: list[tuple[int, int, str, str, str]] = [
     (10, 38, 'of Speech ἐς', 'of speech?', 'A130: question mark and call-out 2, not Greek'),
     (19, 35, 'of 3 to x (for', 'of 3/2 to 1 (for', 'A220: stacked fraction ³⁄₂'),
     (19, 35, 'of 8 to 1 is', 'of 3/2 to 1 is', 'A220: stacked fraction ³⁄₂'),
-    (1, 6, 'Is it. because,', 'Is it because,', 'A17: no full stop'),
     (4, 18, 'are so accounted For', 'are so accounted? For', 'A76: question mark'),
     (8, 15, 'because..', 'because …]', 'A109: ellipsis and closing bracket'),
     (15, 3, '2, 3,4, 5', '2, 3, 4, 5', 'A182: numbers separated by spaces'),
@@ -129,11 +128,8 @@ PRINT_READS: list[tuple[int, int, str, str, str]] = [
     (19, 4, 'one’s purpose. [But', 'one’s purpose.] [But', 'A210: closing bracket'),
     (24, 11, '‘That cold, pure and simple,’ produces', 'That cold, pure and simple, produces', 'A271 line 18: comma after simple precedes raised call-out 3; no quotation marks'),
     (26, 14, 'marks the crisis or', 'marks the crisis? or', 'A288: question mark'),
-    (26, 27, 'it, When the South wind begins. and', 'it, ‘When the South wind begins …’), and', 'A293: quotation, ellipsis, closing parenthesis and comma'),
-    (26, 30, 'becomes cold.?, One', 'becomes cold. One', 'A294: full stop then call-out 2'),
     (31, 9, 'for example but', 'for example; but', 'A344: semicolon'),
     (34, 7, 'near the πιο.', 'near the mouth.', 'A363: mouth before the full stop'),
-    (36, 2, 'head has. these', 'head has these', 'A369: no full stop'),
     (19, 12, 'the greater ὃ So', 'the greater? So', 'A212: question mark and raised 8, not Greek'),
     (30, 14, '(ἐπιστή μὴ)', '(ἐπιστήμη)', 'A338: one Greek word, epistemē'),
     (31, 13, 'alike Ὁ?', 'alike?', 'A344: raised call-out 7, not Greek'),
@@ -147,12 +143,19 @@ PRINT_READS: list[tuple[int, int, str, str, str]] = [
     (25, 20, 'νῶν is it', 'Why is it', 'A280: Why, not Greek'),
     (26, 54, 'evening and ἔγο the', 'evening and from the', 'A303: from, not Greek'),
     (30, 8, 'doctor’s ἅτε nor', 'doctor’s art nor', 'A336: art, with raised call-out 5'),
-    (5, 21, 'fiercely?.', 'fiercely?', 'A90: question mark, no following full stop'),
-    (37, 1, 'liquid)?.', 'liquid)?', 'A370: question mark, no following full stop'),
     (5, 19, "body ὃ from", "body from", "A89: raised call-out 3, not Greek"),
     (19, 7, "omitted nete,", "omitted trite,", "A211: body reads trite; the general note repair misread vzze"),
     (19, 12, "two nete are", "two netes are", "A212: plural netes in the print"),
     (19, 32, "Terpander took away nete and", "Terpander took away trite and", "A219: trite removed, nete added"),
+    (10, 11, 'greenish,t', 'greenish,', 'A120: greenish, followed by raised 4; no t'),
+    (11, 7, '‘They', 'They', 'A145: They begins an unquoted answer after refraction?'),
+    (11, 7, 'air is’', 'air is', 'A146: is is followed by raised 1, not a closing quote'),
+    (30, 1, '‘the sacred disease after', '‘the sacred disease’ after', 'A326: closing quote after disease, before after him'),
+    (30, 1, 'mortals.’', 'mortals.', 'A326: full stop and raised 7 after mortals; no quote'),
+    (30, 1, 'Aleian', 'Aleïan', 'A326: diaeresis over i in Aleïan'),
+    (26, 27, 'it, When the South wind begins and', 'it, ‘When the South wind begins …’), and', 'A293: quotation, ellipsis, closing parenthesis and comma'),
+    (26, 32, '(as 941 6-23).', '(as 941b 6-23).', 'A295: superscript b belongs to the body cross-reference 941b'),
+    (10, 62, 'body ’—in', 'body —in', 'A140: body followed by raised 5 and a dash, no quote'),
 ]
 
 # ----------------------------------------------------------------------------- hOCR
@@ -669,11 +672,42 @@ def wscore(t: str, conf: int) -> float:
     return s + conf / 100.0
 
 
-def _same_word(wa: dict, wb: dict) -> str:
-    """The same word read by both scans. Marks only ever add characters to a token, and the
-    cleaning removes them, so a stop one scan has and the other lacks is one the other lost:
-    keep the longer ending; otherwise the more confident reading. An opening quote mark either scan
-    read stays: nothing the scans misread as a call-out stands before a word."""
+def _case_choice(ta: str, tb: str, prev: str) -> str | None:
+    """The reading of two scans that differ only in letter case which fits its place:
+    a capital stands at a sentence's start (the Part's first word or one after a stop)
+    and nowhere else, and never inside a word. None when neither fits better."""
+    la, lb = re.sub(r"[^A-Za-z]", "", ta), re.sub(r"[^A-Za-z]", "", tb)
+    if not la or la == lb or la.casefold() != lb.casefold():
+        return None
+    starts = not prev or re.search(r"[.?!:][’”\"')\]]*$", prev) is not None
+
+    def cost(x: str) -> int:
+        return 2 * sum(c.isupper() for c in x[1:]) + (x[0].islower() if starts else x[0].isupper())
+    ca, cb = cost(la), cost(lb)
+    if ca == cb:
+        return None
+    best, other = (la, lb) if ca < cb else (lb, la)
+    if not starts and best.islower() and best not in vocab() and other[0].isupper():
+        return None      # a lower-case reading of what may be a name: leave it to the old vote
+    if not starts and best[0].isupper() and best.lower() in vocab():
+        return best.lower()   # both scans capitalise a common word inside a sentence
+    return best
+
+
+def _same_word(wa: dict, wb: dict, prev: str = "") -> str:
+    """Merge readings of the same word. A longer suffix is provisional: OCR
+    can add specks as well as lose stops. Postprocess checks sentence and
+    bracket structure, and image readings settle ambiguous fused marks.
+    Readings that differ in case go by `_case_choice`."""
+    r = _same_word_marks(wa, wb)
+    best = _case_choice(wa["t"], wb["t"], prev)
+    if best is None:
+        return r
+    it = iter(best)
+    return "".join(next(it) if re.match(r"[A-Za-z]", c) else c for c in r)
+
+
+def _same_word_marks(wa: dict, wb: dict) -> str:
     ta, tb = wa["t"], wb["t"]
     if bool(re.search("[α-ωἀ-῿]", ta)) != bool(re.search("[α-ωἀ-῿]", tb)):
         return ta if re.search("[α-ωἀ-῿]", ta) else tb
@@ -740,7 +774,7 @@ class Merged:
             if tag == "equal":
                 for d in range(i2 - i1):
                     wa, wb = A[i1 + d], B[j1 + d]
-                    t = _same_word(wa, wb)
+                    t = _same_word(wa, wb, self.w[-1]["t"] if self.w else "")
                     self._add(t, max(wa["c"], wb["c"]), i1 + d, j1 + d)
             elif tag == "delete":
                 run = i2 - i1
@@ -769,7 +803,7 @@ class Merged:
                 wa, wb = A[i1 + d], B[j1 + d]
                 sa_, sb_ = wscore(wa["t"], wa["c"]), wscore(wb["t"], wb["c"])
                 if norm(wa["t"]) == norm(wb["t"]):
-                    t = _same_word(wa, wb)
+                    t = _same_word(wa, wb, self.w[-1]["t"] if self.w else "")
                 else:
                     t = wb["t"] if sb_ > sa_ + 0.3 else wa["t"]
                     if sa_ >= 3 and sb_ >= 3:
@@ -1048,7 +1082,37 @@ def repair_terms(tokens: list[str]) -> list[str]:
 def postprocess(tokens: list[str]) -> str:
     """Join words; drop a closing quote mark that closes nothing (a footnote mark), a `?`
     that runs on into a lower-case word (a footnote mark), and run-together words."""
-    tokens = [re.sub(r"[|>]", "", t) for t in tokens]   # marks that no stage of the cleaning caught
+    tokens = [re.sub(r"[|>{}]", "", t) for t in tokens]   # marks that no stage of the cleaning caught
+    # Raised call-outs can leave impossible adjacent stops after the scans
+    # merge. Remove the call-out form, retaining the question or comma itself.
+    tokens = [re.sub(r"(?<=\?)[,;:.]+$", "", t) for t in tokens]
+    tokens = [re.sub(r"(?<=[,.;:])\?+$", "", t) for t in tokens]
+    tokens = [re.sub(r"‘(?=[),.;:!?])", "", t) for t in tokens]
+    tokens = [re.sub(r",(?=a$)", ", ", t) for t in tokens]
+    for i, t in enumerate(tokens[:-1]):
+        if t.endswith(".") and re.match(r"[a-z]", tokens[i+1]) and not re.search(
+                r"(?:\b(?:viz|etc|sc|cp)|e\.g|i\.e)\.$",t,re.I):
+            tokens[i] = t[:-1]
+    # A closing bracket without an opener in this Part is scan debris.
+    depth = {"(": 0, "[": 0}
+    for i,t in enumerate(tokens):
+        kept = []
+        for c in t:
+            if c in depth:
+                depth[c] += 1
+            elif c in ") ]".replace(" ", ""):
+                opener = "(" if c==")" else "["
+                if not depth[opener]:
+                    continue
+                depth[opener] -= 1
+            kept.append(c)
+        tokens[i] = "".join(kept)
+    first = next((i for i, t in enumerate(tokens) if t), None)
+    for i, t in enumerate(tokens):
+        # two capitals before a small letter, or a lone `SO`, stand inside a sentence only as scan noise;
+        # the book's opening word (small capitals) is settled below
+        if i != first and (re.match(r"^[A-Z]{2}[a-z]", t) or re.fullmatch(r"SO[,;:.?!]?", t)):
+            tokens[i] = t.lower()
     tokens = [re.sub(r"\?{2,}$", "?", t) for t in tokens]   # a call-out read as a second `?`
     for i, t in enumerate(tokens[:-1]):
         if t.endswith("?") and not t.endswith("??") and re.match(r"[a-z]", tokens[i + 1]) and len(t) > 1 \
@@ -1077,7 +1141,7 @@ def postprocess(tokens: list[str]) -> str:
     first = next((i for i, t in enumerate(tokens) if t), None)
     if first is not None and re.fullmatch(r"[A-Z]{2,}[^A-Za-z]*", tokens[first]):
         tokens[first] = tokens[first][0] + tokens[first][1:].lower()
-    elif first is not None and re.fullmatch(r"W[a-z]?H[a-z]?", tokens[first]):
+    elif first is not None and re.fullmatch(r"W[a-z]?H[a-z]?|Wuy|Whuy", tokens[first]):
         tokens[first] = "Why"     # `WHY` in small capitals, read as `WuHy`
     out: list[str] = []
     first_idx: list[int] = []   # for each input token, the index of its first output word
@@ -1101,6 +1165,8 @@ def postprocess(tokens: list[str]) -> str:
             allowed = 0
         open_s = max(0, open_s + n_open - allowed)
         out.extend(t.split(" "))
+    # dropping a call-out's quote mark can leave a stop and a `?` side by side (`them,’?`)
+    out = [re.sub(r"(?<=[,.;:])\?+$", "", re.sub(r"(?<=\?)[,;:.]+$", "", w)) for w in out]
     return " ".join(out), first_idx, out
 
 
@@ -2215,7 +2281,13 @@ def page_body_lines(pg: dict, thr: float, stats: dict) -> list[list[tuple[str, i
         separated = i > 0 and body_pitch and l["y"] - kept[i-1]["y"] > 1.05 * body_pitch
         if l["xs"] < thr and len(l["ws"]) >= 2 and (l["note_mark"] or separated):
             rest = [m for m in kept[i + 1:] if len(m["ws"]) >= 4]
-            if (rest and sum(1 for m in rest if m["xs"] < thr) >= 0.8 * len(rest)) or (not rest and l["note_mark"]):
+            # The type-size figure reads just under the cut for stretches of some body pages (62.3
+            # against 63), so a run of lines only a little under it is text: the notes' own figures
+            # lie well under the cut.
+            if (rest and sum(1 for m in rest if m["xs"] < thr) >= 0.8 * len(rest)
+                    and sum(m["xs"] >= thr - 1 for m in rest[:3]) < 2
+                    and not any(thr + 4 <= m["xs"] <= 78 for m in rest if len(m["ws"]) >= 8)) or (
+                    not rest and l["note_mark"] and (separated or i == 0 or abs(l["xs"] - kept[i - 1]["xs"]) > 1.5)):
                 zone = i
                 break
     # a one- or two-word note line can sit just above the zone; the notes start after the wider gap that
@@ -2362,6 +2434,64 @@ def _agreed(a: list[str], da: list[tuple], b: list[str], db: list[tuple]):
 
 
 
+def _marks(raw: str) -> tuple[str, str]:
+    raw = re.sub(r"\.(?:\s*\.){2,}", "…", raw)
+    letters = [k for k, c in enumerate(raw) if c.isalnum()]
+    if not letters:
+        return ("", "")
+    return tuple("".join(c for c in x if c in "?;:.,!()[]{}…")
+                 for x in (raw[:letters[0]], raw[letters[-1] + 1:]))
+
+
+def _case_letters(raw: str) -> str:
+    return "".join(c for c in raw if c.isalpha())
+
+
+def _reading_garbled(w: dict, ours: str) -> bool:
+    """A missing alignment, changed letters, a glued digit or alien glyph, or
+    confidence below 60 makes this word an uncertain punctuation witness.
+    A plain, well-read word with no stop is evidence that the stop is absent.
+    """
+    raw = w["raw"]
+    letters = _case_letters(raw).casefold()
+    target = _case_letters(ours).casefold()
+    return (letters != target or w["conf"] < 60 or
+            (bool(letters) and any(c.isdigit() for c in raw)) or
+            bool(re.search(r"[^\w\s‘’'`“”\"?;:.,!()\[\]{}…—–\-]", raw)))
+
+
+def _our_quotes(raws: list[str]):
+    """Quote positions and balance errors. Internal apostrophes join letters;
+    an unpaired apostrophe immediately after a final s is a possessive.
+    After a stop it is a quote, not a possessive. Greek point primes are labels.
+    """
+    flags = [dict(op=False, cl=False) for _ in raws]
+    opened = []
+    errors = []
+    for j, raw in enumerate(raws):
+        for k, c in enumerate(raw):
+            if c not in "‘’":
+                continue
+            before, after = raw[:k], raw[k+1:]
+            if before and after and before[-1].isalpha() and after[0].isalpha():
+                continue
+            if c == "’" and re.fullmatch(r"[Α-Ω]{1,2}", before):
+                continue
+            if c == "’" and not opened and before.endswith("s"):
+                continue
+            if c == "‘":
+                flags[j]["op"] = True
+                opened.append(j)
+            else:
+                flags[j]["cl"] = True
+                if opened:
+                    opened.pop()
+                else:
+                    errors.append((j, "unmatched closing quote"))
+    errors += [(j, "unclosed opening quote") for j in opened]
+    return flags, errors
+
+
 _VERIFY_INPUTS = {}
 
 
@@ -2376,6 +2506,7 @@ def verify(ocr_dir: Path, books: Path | None = None, findings: list | None = Non
     stA: dict = {"geometry": _mark_geometry(PA[bA[0][0]:bA[-1][1]], thrA)}
     stB: dict = {"geometry": _mark_geometry(PB[bB[0][0]:bB[-1][1]], thrB)}
     n_parts = n_words = n_wa = n_wb = n_runs = n_title = n_resp = 0
+    coverage = []
     fa: list[tuple] = []   # (book, problem, kind, words, context)
     for book in range(1, 39):
         parts = ours_parts(book, books)
@@ -2414,7 +2545,7 @@ def verify(ocr_dir: Path, books: Path | None = None, findings: list | None = Non
                 n_resp += 1
                 ctx = (" ".join(raw_ctx[max(0, j1 - 5):j1]) + " [" + " ".join(raw_ctx[j1:j2]) + "] " +
                        " ".join(raw_ctx[j2:j2 + 5]) + " @" + leaf(j1))
-                other_matches = mb_o if wit is wa else ma_o
+                other_matches = set(o2a_b) if wit is wa else set(o2a_a)
                 # Agreement with the other scan settles OCR spacing. Otherwise judge all
                 # splits, joins and many-to-many changes, including numbers and unknown words.
                 if all(j in other_matches for j in range(j1, j2)):
@@ -2437,38 +2568,122 @@ def verify(ocr_dir: Path, books: Path | None = None, findings: list | None = Non
             ctx = " ".join(raw_ctx[max(0, j1 - 6):j1]) + " [ours: " + " ".join(raw_ctx[j1:j2]) + "] " + \
                 " ".join(raw_ctx[j2:j2 + 6]) + f" @A{wa[ia]['page']}"
             fa.append((book, where[at], "a", " ".join(xa), ctx))
-        # (e) quotation marks a scan carries (an opening mark; a closing one that closes an opening
-        # one) on a word that ours bears bare
+        def context(j):
+            return (" ".join(raw_ctx[max(0,j-5):j]) + " [" + raw_ctx[j] + "] " +
+                    " ".join(raw_ctx[j+1:j+6]) + " @" + leaf(j))
+
+        # A run of 6 or more words that one scan has and the other lacks (a page the other scan missed).
+        ab = difflib.SequenceMatcher(None, ta, tb, autojunk=False)
+        absent_a, absent_b = set(), set()
+        for tag, a1, a2, b1, b2 in ab.get_opcodes():
+            if a2-a1 >= 6 and b2-b1 <= (a2-a1) / 4:
+                absent_a.update(range(a1,a2))
+            if b2-b1 >= 6 and a2-a1 <= (b2-b1) / 4:
+                absent_b.update(range(b1,b2))
+
+        # Record every stretch of ours that only one scan matches, or neither does: those words are
+        # checked against one scan, or none, and verify says so (word count, scan, why).
+        start = 0
+        while start < len(ours):
+            status = (start in o2a_a, start in o2a_b)
+            end = start + 1
+            while end < len(ours) and where[end] == where[start] and (end in o2a_a, end in o2a_b) == status:
+                end += 1
+            if status != (True, True):
+                which = "A" if status == (True, False) else "B" if status == (False, True) else "neither"
+                if which == "neither":
+                    why = "both scans read this differently (no equal-word match in either)"
+                else:
+                    own, gap, mp = (wa, absent_a, o2a_a) if which == "A" else (wb, absent_b, o2a_b)
+                    other_name = "B" if which == "A" else "A"
+                    if all(mp[k] in gap for k in range(start, end)):
+                        why = f"scan {other_name} has no text here (a run of 6 or more words it lacks)"
+                    else:
+                        why = f"scan {other_name} reads a different spelling, spacing or token here"
+                coverage.append((book, where[start], end-start, which, why, " ".join(raw_ctx[start:end]), leaf(start)))
+            start = end
+
+        # Missing source words within a missing-page/body region. An isolated
+        # OCR disagreement between two present readings still needs agreement.
+        for wit, diffs, other, absent in ((wa,diff_a,o2a_b,absent_a),(wb,diff_b,o2a_a,absent_b)):
+            for i1,i2,j1,j2 in diffs:
+                if i2 == i1 or j1 == 0:
+                    continue
+                neighbours = range(max(0,j1-1), min(len(ours),j2+1))
+                missing_region = all(i in absent for i in range(i1,i2)) or not any(j in other for j in neighbours)
+                if not missing_region:
+                    continue
+                at = min(j1,len(where)-1)
+                ctx = (" ".join(raw_ctx[max(0,j1-6):j1]) + " [ours: " + " ".join(raw_ctx[j1:j2]) + "] " +
+                       " ".join(raw_ctx[j2:j2+6]) + " @" + leaf(at))
+                fa.append((book,where[at],"a"," ".join(wit[i]["n"] for i in range(i1,i2)),ctx))
+
+        qflags = []
+        for pi, txt in enumerate(parts,1):
+            raws = _raw_tokens(txt)
+            flags, errors = _our_quotes(raws)
+            offset = len(qflags)
+            qflags += flags
+            for j, reason in errors:
+                at = offset+j
+                fa.append((book,pi,"e",reason,context(at)))
+
+        # Punctuation, quotes and case also run where just one scan is present.
         for j in sorted(set(o2a_a) | set(o2a_b)):
-            xs = [w[o2a[j]] for w, o2a in ((wa, o2a_a), (wb, o2a_b)) if j in o2a]
+            xs = [w[mp[j]] for w,mp in ((wa,o2a_a),(wb,o2a_b)) if j in mp]
             rw = raw_ctx[j]
-            pg = xs[0]["page"]
-            if any(x["op"] for x in xs) and not re.match(r"[‘'“\"]", rw):
-                fa.append((book, where[j], "e", "‘" + ours[j], " ".join(raw_ctx[max(0, j - 5):j]) + " [" + rw + "] " +
-                           " ".join(raw_ctx[j + 1:j + 6]) + f" @A{pg}"))
-            elif any(x["cl"] for x in xs) and not re.search(r"[’'”\"]", rw) and not ours[j].endswith("’"):
-                fa.append((book, where[j], "e", ours[j] + "’", " ".join(raw_ctx[max(0, j - 5):j]) + " [" + rw + "] " +
-                           " ".join(raw_ctx[j + 1:j + 6]) + f" @A{pg}"))
-        # (f,g) punctuation at each word boundary, on both sides of the word.
-        for j in sorted(set(o2a_a) & set(o2a_b)):
-            aa, bb = wa[o2a_a[j]], wb[o2a_b[j]]
-            def marks(raw):
-                raw = re.sub(r"\.(?:\s*\.){2,}", "…", raw)
-                letters = [k for k, c in enumerate(raw) if c.isalnum()]
-                if not letters:
-                    return ("", "")
-                return tuple("".join(c for c in x if c in "?;:.,!()[]…")
-                             for x in (raw[:letters[0]], raw[letters[-1] + 1:]))
-            am, bm, om = marks(aa["raw"]), marks(bb["raw"]), marks(raw_ctx[j])
-            for side in (0, 1):
-                common = set(am[side]) & set(bm[side])
-                missing = common - set(om[side])
-                extra = set(om[side]) - (set(am[side]) | set(bm[side]))
-                ctx = " ".join(raw_ctx[max(0,j-5):j]) + " [" + raw_ctx[j] + "] " + " ".join(raw_ctx[j+1:j+6]) + f" @A{aa['page']}"
+            ctx = context(j)
+            if any(x["op"] for x in xs) and not qflags[j]["op"]:
+                fa.append((book,where[j],"e","‘"+ours[j],ctx))
+            elif any(x["cl"] for x in xs) and not qflags[j]["cl"] and not ours[j].endswith("’"):
+                fa.append((book,where[j],"e",ours[j]+"’",ctx))
+            for side, flag in ((0,"op"),(1,"cl")):
+                if qflags[j][flag] and not any(x[flag] for x in xs):
+                    fa.append((book,where[j],"g",ours[j]+(" ‘" if side==0 else " ’"),ctx))
+            om = _marks(rw)
+            ms = [_marks(x["raw"]) for x in xs]
+            for side in (0,1):
+                common = set.intersection(*(set(mark[side]) for mark in ms))
+                # Any witness's question mark must be accounted for.
+                question = {"?"} if any("?" in mark[side] for mark in ms) else set()
+                missing = (common | question) - set(om[side])
+                extra = set(om[side]) - set.union(*(set(mark[side]) for mark in ms))
+                for x,mark in zip(xs,ms):
+                    if len(xs)==1 or not _reading_garbled(x,rw):
+                        extra |= set(om[side]) - set(mark[side])
                 if missing:
-                    fa.append((book, where[j], "f", ours[j] + " " + "".join(sorted(missing)), ctx))
+                    fa.append((book,where[j],"f",ours[j]+" "+"".join(sorted(missing)),ctx))
                 if extra:
-                    fa.append((book, where[j], "g", ours[j] + " " + "".join(sorted(extra)), ctx))
+                    fa.append((book,where[j],"g",ours[j]+" "+"".join(sorted(extra)),ctx))
+            oc = _case_letters(rw)
+            for x in xs:
+                wc = _case_letters(x["raw"])
+                if j==0 and re.fullmatch(r"W[HhUu]?[HhUu]?[Yy]",wc) and oc=="Why":
+                    continue     # the printed small-cap WHY opening
+                if oc.casefold()==wc.casefold() and oc!=wc:
+                    fa.append((book,where[j],"c",wc+" -> "+oc,ctx))
+
+        # A repeated run must have enough copies in a witness; intersecting two
+        # index alignments can assign their single copies to different repeats.
+        j = 0
+        while j < len(ours):
+            end=j+1
+            while end<len(ours) and where[end]==where[j] and ours[end]==ours[j]:
+                end+=1
+            if end-j>1:
+                supported=0
+                for wit,mp in ((wa,o2a_a),(wb,o2a_b)):
+                    indices=[mp[k] for k in range(max(0,j-2),min(len(ours),end+2)) if k in mp]
+                    if not indices:
+                        continue
+                    run=best=0
+                    for w in wit[max(0,min(indices)-1):max(indices)+2]:
+                        run=run+1 if w["n"]==ours[j] else 0
+                        best=max(best,run)
+                    supported=max(supported,best)
+                if end-j>supported:
+                    fa.append((book,where[j],"b","repeated "+ours[j],context(j)))
+            j=end
         for b, part, kind, expected, reason in VERIFY_PRINT:
             if b == book and parts[part - 1].count(expected) != 1:
                 fa.append((book, part, kind, expected, reason))
@@ -2493,10 +2708,15 @@ def verify(ocr_dir: Path, books: Path | None = None, findings: list | None = Non
             final.append(e)
     print(f"verify: examined {n_parts} Parts, {n_words} words of ours; scans A {n_wa} words, B {n_wb} words "
           f"(left out by position: A {stA.get('margin', 0)} margin words, {stA.get('heads', 0)} running heads, "
-          f"{stA.get('note_lines', 0)} note lines, {stA.get('callout', 0)} raised call-outs, {stA.get('glued', 0)} glued digits; "
-          f"B {stB.get('margin', 0)}, {stB.get('heads', 0)}, {stB.get('note_lines', 0)}, {stB.get('callout', 0)}, "
-          f"{stB.get('glued', 0)}); type-size cut A {thrA:.1f}, B {thrB:.1f}; {n_title} title words skipped; "
+          f"{stA.get('note_lines', 0)} note lines; "
+          f"B {stB.get('margin', 0)}, {stB.get('heads', 0)}, {stB.get('note_lines', 0)}"
+          f"); type-size cut A {thrA:.1f}, B {thrB:.1f}; {n_title} title words skipped; "
           f"{n_runs} agreed gaps; {n_resp} re-spacings judged; {allowed} allowed by VERIFY_ALLOW")
+    for book,part,count,which,why,text,pg in coverage:
+        print(f"one-scan {book}.{part}: {count} words; {which}; {pg}; {why}; {text}")
+    print("one-scan totals: " + "; ".join(
+        f"{which} {sum(c for _,_,c,w,_,_,_ in coverage if w==which)} words in "
+        f"{sum(w==which for _,_,_,w,_,_,_ in coverage)} stretches" for which in ("A","B","neither")))
     for name, stats in (("A", stA), ("B", stB)):
         geom = stats["geometry"]
         print(f"call-out geometry {name}: x-height {geom['xheight']:.2f} at width 2418; "
