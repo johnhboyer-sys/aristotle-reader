@@ -100,3 +100,14 @@ preflight · app build 7,080 pages · links 0 broken.
   check the page text before trusting a crop.
 - Both scans misread stacked fractions; the merge cannot see an error both share.
   `PRINT_READS` holds those, read off the image, and stops the build if stale.
+
+### 2026-11-06 17:16 — paused (laptop closed)
+
+Round 5: Codex stopped on its usage window; a Sonnet agent did the text fixes
+and stricter gate (WIP commit `c6e5acc65b`, verify exits 1 on purpose). A
+second Sonnet agent was finishing it (judge 256 findings on the images,
+rebuild VERIFY_ALLOW, run Opus's 67 mutations on a clean baseline, remaining
+gates); brief is in this session. Its uncommitted edits at pause:
+`build/prob-ocr/work/round5b-snapshot.patch`. If it did not finish: read
+`build/prob-ocr/work/report-5b.md` if present, else restart from
+`c6e5acc65b` with the same brief. Then Claude checks, then Codex reviews.
