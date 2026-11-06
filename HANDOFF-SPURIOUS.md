@@ -70,8 +70,14 @@ preflight · app build 7,080 pages · links 0 broken.
 - Fix round 4 (running): `codex-brief-4-followup.md`, Codex job
   `task-mw5czk6e-eiq8fv` (resumed session). Decide call-outs by geometry, one
   reason per allowance, restore 24.11 comma, selftest 12/12.
-- Because Codex implemented rounds 3-4, the final review must be Claude or
-  Grok, not Codex.
+- Round 4 landed as `4bdf8a3368` (selftest 12/12, all gates green).
+- Opus 5.5 cross-family review of round 4: `docs/spurious-works/opus-review-5.md`
+  (harness `opus-review/mut.py`). Verify still passes broken text: 20 of 51
+  planted defects missed, ~50 live defects (stray stops, "?)", "Wuy", stray
+  quotes) — all predating round 3. Blockers: re-spacing check skips on the other
+  scan's own re-spacing; ~2,300 words checked against one scan only, silently.
+  Orchestrator confirmed the live defects by grep. **Waiting on John: go-ahead
+  for fix round 5.**
 
 ### Open
 
