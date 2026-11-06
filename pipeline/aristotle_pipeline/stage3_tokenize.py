@@ -36,6 +36,17 @@ _SIGLA = "†*<>[]⎪⟦⟧⌜⌞⌝⌟"
 
 _STRIP = _PUNCT + _SIGLA
 _APOSTROPHE_END = re.compile(r"['’᾽ʼ]$")
+# Not words: Greek numerals (βʹ with the keraia; book heads numbered with
+# stigma, Κϛ, in the Problemata) and the parts of Bekker's page
+# cross-reference "(p. 941b 4—23.)". The line text keeps them; they get no
+# lookup token. Anything else that will not transliterate — a Latin word
+# included — is still a key failure.
+_NUMERAL_MARKS = "ʹʹϛϚ"  # ʹ ʹ ϛ Ϛ
+_BEKKER_REF_PART = re.compile(r"p|\d+[ab]?")
+
+
+def _not_a_word(token: str) -> bool:
+    return any(ch in _NUMERAL_MARKS for ch in token) or bool(_BEKKER_REF_PART.fullmatch(token))
 
 
 def _clean(raw: str) -> tuple[str, bool]:
@@ -69,7 +80,7 @@ def tokenize(spine: dict) -> tuple[dict, list[dict], list[dict]]:
                 token, had_sigla = _clean(raw)
                 if had_sigla:
                     sigla_log.append({"ref": ref, "raw": raw, "kept": token})
-                if not token:
+                if not token or _not_a_word(token):
                     continue
                 entry = {"t": token, "o": m.start()}
                 try:

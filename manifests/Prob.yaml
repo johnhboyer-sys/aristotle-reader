@@ -1,0 +1,185 @@
+# Problemata — pipeline manifest.
+#
+# A spurious collection of 38 books of "problems" (Bekker 859a-967b). Greek spine from the
+# cached TLG export (tlg0086.036); chapter structure from the First1KGreek TEI, one chapter
+# per problem (889 in all). Primary English = E. S. Forster (Oxford, The Works of Aristotle
+# vol. VII, 1927), public domain; archive-model with a gutter read from the printed marginal
+# line numbers (sources/prob-forster/anchors.yaml).
+
+work:
+  id: Prob
+  title: "Problemata"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "036"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "E. S. Forster (Oxford, 1927)"
+
+bekker_range:
+  first_column: "859a"
+  last_column: "967b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg036.1st1K-grc1.xml"
+  chapter_subtype: chapter
+  # First1KGreek has 889 problem divs, Forster prints 890 problems; 36 of the 38 books agree 1:1.
+  # Book 1: the TEI has no div n=6 (its 55 divs are numbered 1-5, 7-56). Bekker's text
+  # has the problem at 859b5 ("Διὰ τί τῶν ἀπὸ χολῆς νοσημάτων ἐν τῷ θέρει ... ὀξέα ... ἐν
+  # τῷ χειμῶνι"), and Forster prints it as problem 6 ("Why is it that, though the
+  # diseases due to bile occur in the summer ... acute diseases due to bile occur
+  # rather in the winter?"), so it is added back with `extra`: 56 Parts, 56 chapters.
+  #
+  # Book 3: Forster numbers 1-24, 25a, 25b, 26-35 (36 problems under 35 numbers), and the TEI
+  # has 36 divs (n=25a follows n=25), but the pipeline reads only numeric divs and drops
+  # n="25a": its chapters are 1-35. Parts 25a and 25b are therefore one Part 25, as under
+  # Forster's one number; pipeline/tools/build_prob_forster.py reads them together (MERGE) and
+  # the paragraph break between them is not kept (the source has no paragraphs.yaml).
+  #
+  # `skip: [28, 29, 40, 54]` + `extra`: the aligner finds each chapter by its first eight words,
+  # in order, and cannot be told to skip one chapter in one book; `skip` drops a chapter number
+  # in every book, and `extra` puts each back at the Bekker line where its opening stands in
+  # Bekker's text (for the books where the aligner had it right, the line it found).
+  #   n=40 and n=54 of Book 10: the TEI's opening differs from Bekker's by a word ("τῶν ἄλλων
+  #   ζῴων" for "τῶν ζῴων"; "μάλιστα τῶν ζῴων" for "τῶν ζῴων μάλιστα"), so the search runs on
+  #   to a later repeat of the problem (905a, 950b) and every chapter after it is lost.
+  #   n=28 of Book 20: chapters 27 and 28 begin with the same eight words ("Διὰ τί ποτε τὰ
+  #   σκόροδα καὶ τὰ κρόμμυα"), parting at the ninth ("ὅσῳ" / "μόνα"); both land on 926a11, so
+  #   chapter 28 holds no Greek. Bekker has them at 926a11 and 926a16. With 28 gone, Book 10's
+  #   chapter 29 (which repeats the opening of its chapter 27) would land on chapter 27, so n=29
+  #   is pinned too.
+  skip: [28, 29, 40, 54]
+  extra:
+    - { book: 1, n: 29, bekker: "862b25" }
+    - { book: 2, n: 29, bekker: "869a19" }
+    - { book: 3, n: 29, bekker: "875b5" }
+    - { book: 4, n: 29, bekker: "880a22" }
+    - { book: 5, n: 29, bekker: "883b37" }
+    - { book: 10, n: 29, bekker: "894a12" }
+    - { book: 11, n: 29, bekker: "902b9" }
+    - { book: 19, n: 29, bekker: "920a3" }
+    - { book: 20, n: 29, bekker: "926a21" }
+    - { book: 23, n: 29, bekker: "934b9" }
+    - { book: 26, n: 29, bekker: "943a32" }
+    - { book: 31, n: 29, bekker: "960a29" }
+    - { book: 1, n: 6, bekker: "859b5" }
+    - { book: 1, n: 28, bekker: "862b16" }
+    - { book: 1, n: 40, bekker: "863b29" }
+    - { book: 1, n: 54, bekker: "866a5" }
+    - { book: 2, n: 28, bekker: "869a13" }
+    - { book: 2, n: 40, bekker: "870b6" }
+    - { book: 3, n: 28, bekker: "875b1" }
+    - { book: 4, n: 28, bekker: "880a11" }
+    - { book: 5, n: 28, bekker: "883b33" }
+    - { book: 5, n: 40, bekker: "885a14" }
+    - { book: 10, n: 28, bekker: "894a7" }
+    - { book: 10, n: 40, bekker: "895a15" }
+    - { book: 10, n: 54, bekker: "897a1" }
+    - { book: 11, n: 28, bekker: "902a36" }
+    - { book: 11, n: 40, bekker: "903b30" }
+    - { book: 11, n: 54, bekker: "905a16" }
+    - { book: 19, n: 28, bekker: "919b38" }
+    - { book: 19, n: 40, bekker: "921a32" }
+    - { book: 20, n: 28, bekker: "926a16" }
+    - { book: 23, n: 28, bekker: "934b4" }
+    - { book: 23, n: 40, bekker: "935b34" }
+    - { book: 26, n: 28, bekker: "943a28" }
+    - { book: 26, n: 40, bekker: "945a1" }
+    - { book: 26, n: 54, bekker: "946a35" }
+    - { book: 31, n: 28, bekker: "960a21" }
+
+english:
+  primary:
+    id: forster
+    name: "E. S. Forster (Oxford, 1927)"
+    model: archive
+    dir: "prob-forster"
+    books: 38
+    chapter_marker: part
+    anchors: "prob-forster/anchors.yaml"
+    anchor_cuts: true   # the `...1` entries are Forster's printed column marks: cut the English there
+
+mid_column_book_starts:
+  - { book: 2, column: "866b" }
+  - { book: 4, column: "876a" }
+  - { book: 5, column: "880b" }
+  - { book: 6, column: "885b" }
+  - { book: 7, column: "886a" }
+  - { book: 8, column: "887b" }
+  - { book: 9, column: "889b" }
+  - { book: 10, column: "891a" }
+  - { book: 11, column: "898b" }
+  - { book: 12, column: "906a" }
+  - { book: 13, column: "907b" }
+  - { book: 14, column: "909a" }
+  - { book: 15, column: "910b" }
+  - { book: 16, column: "913a" }
+  - { book: 17, column: "915b" }
+  - { book: 19, column: "917b" }
+  - { book: 20, column: "923a" }
+  - { book: 21, column: "927a" }
+  - { book: 22, column: "930a" }
+  - { book: 23, column: "931a" }
+  - { book: 24, column: "936a" }
+  - { book: 25, column: "937b" }
+  - { book: 26, column: "940a" }
+  - { book: 27, column: "947b" }
+  - { book: 28, column: "949a" }
+  - { book: 29, column: "950a" }
+  - { book: 30, column: "953a" }
+  - { book: 31, column: "957a" }
+  - { book: 32, column: "960a" }
+  - { book: 33, column: "961b" }
+  - { book: 34, column: "963b" }
+  - { book: 35, column: "964b" }
+  - { book: 37, column: "965b" }
+  - { book: 38, column: "966b" }
+
+# Each book opens at its heading line in the TLG text (Bekker numbers the heading).
+books:
+  - { n: 1, start: "859a1", end: "866b6" }
+  - { n: 2, start: "866b8", end: "870b38" }
+  - { n: 3, start: "871a1", end: "876a28" }
+  - { n: 4, start: "876a30", end: "880b12" }
+  - { n: 5, start: "880b14", end: "885b11" }
+  - { n: 6, start: "885b13", end: "886a21" }
+  - { n: 7, start: "886a23", end: "887b7" }
+  - { n: 8, start: "887b9", end: "889b7" }
+  - { n: 9, start: "889b9", end: "891a5" }
+  - { n: 10, start: "891a7", end: "898b25" }
+  - { n: 11, start: "898b27", end: "906a20" }
+  - { n: 12, start: "906a22", end: "907b19" }
+  - { n: 13, start: "907b21", end: "909a10" }
+  - { n: 14, start: "909a12", end: "910b8" }
+  - { n: 15, start: "910b10", end: "913a16" }
+  - { n: 16, start: "913a18", end: "915b35" }
+  - { n: 17, start: "915b37", end: "916a39" }
+  - { n: 18, start: "916b1", end: "917b16" }
+  - { n: 19, start: "917b18", end: "923a3" }
+  - { n: 20, start: "923a5", end: "927a8" }
+  - { n: 21, start: "927a10", end: "930a3" }
+  - { n: 22, start: "930a5", end: "931a32" }
+  - { n: 23, start: "931a34", end: "936a10" }
+  - { n: 24, start: "936a12", end: "937b28" }
+  - { n: 25, start: "937b30", end: "940a15" }
+  - { n: 26, start: "940a17", end: "947b9" }
+  - { n: 27, start: "947b11", end: "949a20" }
+  - { n: 28, start: "949a22", end: "950a19" }
+  - { n: 29, start: "950a21", end: "953a7" }
+  - { n: 30, start: "953a9", end: "957a35" }
+  - { n: 31, start: "957a37", end: "960a33" }
+  - { n: 32, start: "960a35", end: "961b6" }
+  - { n: 33, start: "961b8", end: "963b15" }
+  - { n: 34, start: "963b17", end: "964b19" }
+  - { n: 35, start: "964b21", end: "965a39" }
+  - { n: 36, start: "965b1", end: "965b17" }
+  - { n: 37, start: "965b19", end: "966b18" }
+  - { n: 38, start: "966b20", end: "967b27" }
+
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

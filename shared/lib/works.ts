@@ -774,6 +774,25 @@ export const WORKS: Work[] = [
     blurb: 'The earliest surviving treatise on mechanics — a preface and thirty-five problems — is spurious.',
   },
   {
+    id: 'Prob',
+    title: 'Problemata',
+    greekTitle: 'Προβλήματα',
+    abbr: 'Prob.',
+    author: 'Aristotle',
+    books: 38,
+    bookLabels: Array.from({ length: 38 }, (_, i) => String(i + 1)),
+    greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
+    greekSource: {
+      short: 'Bekker (Berlin, 1831)',
+      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1927)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'Nearly nine hundred questions of natural science, each asked as “Why…?” and answered with a conjecture, gathered into thirty-eight books.',
+  },
+  {
     id: 'Col',
     title: 'De Coloribus',
     greekTitle: 'Περὶ χρωμάτων',
@@ -1347,6 +1366,7 @@ export const CATEGORIES: Category[] = [
       { id: 'DM' },
       { id: 'MXG' },
       { id: 'Mech' },
+      { id: 'Prob' },
       { id: 'Col' },
       { id: 'Aud' },
       { id: 'Phgn' },
