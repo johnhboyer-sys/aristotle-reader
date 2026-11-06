@@ -21,6 +21,12 @@ Two passes, because the ticks need the Greek:
   4. run the pipeline again; it prints any anchors it cannot place (see UNPLACEABLE).
 The tool needs only the standard library.
 
+Gate: `python3 pipeline/tools/build_prob_forster.py --verify --ocr-dir DIR` word-aligns the Parts
+against the body text of both scans and exits 1 if (a) both scans have 1-4 words ours lacks,
+(b) ours has words neither scan has, or (c) a `”`, `*`, `†`, superscript digit or a digit glued
+to a word stayed in the prose. It prints how many Parts and words it examined and exits 2 if that
+is none. Reasoned exceptions go in VERIFY_ALLOW.
+
 How it works
   1. hOCR words -> rows. Body text is told from footnotes by type size (the notes are set smaller);
      margins by a fitted left and right edge (the scans are skewed). Recto pages carry the problem
@@ -70,13 +76,16 @@ UNPLACEABLE = {"862b5", "864b5", "917b5", "919a10", "920a5", "943a5", "949b5", "
 
 # Problems per book in Forster's print where it differs from First1KGreek (see manifests/Prob.yaml).
 # Book 1 prints 56 (First1KGreek has no div n=6). Book 3 prints 36: Forster numbers 1-24, 25a,
-# 25b, 26-35.
-EXPECT: dict[int, int] = {1: 56, 3: 36}
+# 25b, 26-35. Book 19 prints 51: his 35 is 35a (`Why is the accord in the octave the most
+# beautiful`) and 35b (`Why <is the sound shrillest in the middle of the note>`), as the page
+# image shows (the first scan read `35a` as `35°`); First1KGreek has one chapter 35 of both.
+EXPECT: dict[int, int] = {1: 56, 3: 36, 19: 51}
 # Problems read into the one before them. Forster's 25a and 25b (Book 3) share his number 25,
 # and the pipeline's chapter reader takes only numeric First1KGreek divs (it drops n="25a"), so
-# the chapters of Book 3 are 1-35 and the Parts must be 1-35: 25a and 25b are one Part.
+# the chapters of Book 3 are 1-35 and the Parts must be 1-35: 25a and 25b are one Part. The same
+# holds for Book 19: 35a and 35b (the 36th problem in print order) are one Part.
 # Keys: book -> problems (1-based, in print order) read into the one before.
-MERGE: dict[int, list[int]] = {3: [26]}
+MERGE: dict[int, list[int]] = {3: [26], 19: [36]}
 
 # ----------------------------------------------------------------------------- hOCR
 
@@ -145,12 +154,27 @@ def _fit(pts, s):
     return lambda y: a + b * y
 
 
+_NOTE_WORD = re.compile(r"^(Cp|Cf|i\.e|Reading|Omitting|Omit|See|Inserting|Transposing|Deleting)\b")
+
+
+def note_lead(text: list[dict]) -> bool:
+    """A footnote's first line: a call-out mark, then a word notes open with (`1 Cp. chapter 23.`).
+    Its type size can sit on the line between note and text, so the size alone cannot tell it."""
+    if len(text) < 2:
+        return False
+    t0 = text[0]["t"]
+    return bool(re.fullmatch(r"[^A-Za-z]{1,2}|\d{1,2}", t0)) and bool(_NOTE_WORD.match(text[1]["t"]))
+
+
 def layout(pg: dict) -> dict:
-    """Rows of one page split into running head, body, footnotes and margin tokens."""
+    """Rows of one page split into running head, body, footnotes and margin tokens.
+    A row above the cut-off line is a running head only if it is short (the head is
+    `PROBLEMATA 859a` or `BOOK V. 41 885a`). A page the scan shifted up (witness B) puts its
+    first line of text above the line; a row of seven words or more is that line, not a head."""
     s = pg["W"] / 2418
     rows = _rows(pg, s)
-    hdr = [r for r in rows if r["y"] < 340 * s]
-    rest = [r for r in rows if r["y"] >= 340 * s]
+    hdr = [r for r in rows if r["y"] < 340 * s and len(r["w"]) < 7]
+    rest = [r for r in rows if r["y"] >= 340 * s or len(r["w"]) >= 7]
     full = [r for r in rest if len(r["w"]) >= 7 and _med([w["xs"] for w in r["w"]]) >= 62 * s]
     if not full:
         return dict(hdr=hdr, lines=[], side=None, bx0=None, bx1=None, k=0, s=s)
@@ -172,7 +196,8 @@ def layout(pg: dict) -> dict:
         nt = len(text)
         xsm = _med([w["xs"] for w in text]) if text else 70 * s
         out.append(dict(y=r["y"], text=text, inner=inner, outer=outer, n=nt, xs=xsm,
-                        fnish=nt >= 3 and xsm < 62 * s, body=nt >= 3 and xsm >= 62 * s))
+                        fnish=nt >= 3 and (xsm < 62 * s or note_lead(text)),
+                        body=nt >= 3 and xsm >= 62 * s and not note_lead(text)))
     n = len(out)
     best = None
     for k in range(n + 1):
@@ -306,6 +331,9 @@ def clean_word(t: str) -> str:
     t = re.sub(r"^(?:8[5-9]\d|9[0-6]\d)[°”\"’'%2-7]?(?=[A-Za-z]|$)", "", t)
     # signs that are never in the prose: footnote marks and OCR debris
     t = re.sub("[°®¢_]", "", t)
+    # Forster quotes with single marks (‘ ’) and the prose has no * or †: a double quote mark, an
+    # asterisk or a dagger is a footnote call-out (a small raised number or sign the OCR read as one)
+    t = re.sub("[*†”“\"]", "", t)
     # lower-case and accented Greek is a footnote mark here; capital Greek letters label figures
     t = re.sub("[ά-ώα-ωἀ-῿]", "", t)
     t = re.sub(r"^[=©#+~*|]+", "", t)
@@ -316,6 +344,8 @@ def clean_word(t: str) -> str:
         t = re.sub(r"(?<=[A-Za-z])\d{1,2}$", "", t) if re.fullmatch(r"[A-Za-z’'-]{2,}\d{1,2}", t) else t
         t = re.sub(r"\?{2,}$", "?", t)
         t = re.sub(r"(?<=[,.;:])\?$", "", t)
+        t = re.sub(r"(?<=[,.;:])\?(?=\)$)", "", t)
+        t = re.sub(r"(?<=[a-z]{2})I$", "", t)   # a raised 1 read as capital I (`areI`)
         t = re.sub(r"(?<=[A-Za-z,.;?:)])[‘]$", "", t)
     if not t or re.fullmatch(r"[;:?.,]+", t):
         return t
@@ -459,6 +489,17 @@ def _same_word(wa: dict, wb: dict) -> str:
     return ta if wb["c"] <= wa["c"] + 15 else tb
 
 
+def _lost_line(run: int, w: dict) -> bool:
+    """Keep a word that only one scan has? A long stretch is lines the other scan lost, and its
+    words stay; so does a stretch of a line's length (6 or more) in plain letters, which keeps
+    `mese` and `weese`, words the vocabulary lacks. A single plain lower-case word the scan is
+    sure of (`slope`, `jury`) stays too: the vocabulary is only the repo's other texts. Other
+    short stretches go by `wscore`."""
+    plain = re.fullmatch(r"[A-Za-z’'‘]+[.,;:?)’']*", w["t"]) is not None
+    return run >= 40 or (run >= 6 and plain) or (plain and w["c"] >= 90 and len(w["t"]) >= 4
+                                                 and w["t"][:1].islower())
+
+
 class Merged:
     """The two witnesses of one book, word-aligned and voted into one word list."""
 
@@ -503,12 +544,12 @@ class Merged:
             elif tag == "delete":
                 run = i2 - i1
                 for i in range(i1, i2):
-                    if run >= 40 or wscore(A[i]["t"], A[i]["c"]) >= 3:
+                    if _lost_line(run, A[i]) or wscore(A[i]["t"], A[i]["c"]) >= 3:
                         self._add(A[i]["t"], A[i]["c"], a=i)
             elif tag == "insert":
                 run = j2 - j1
                 for j in range(j1, j2):
-                    if run >= 40 or wscore(B[j]["t"], B[j]["c"]) >= 3.6:
+                    if _lost_line(run, B[j]) or wscore(B[j]["t"], B[j]["c"]) >= 3.6:
                         self._add(B[j]["t"], B[j]["c"], b=j)
             else:
                 self._replace(i1, i2, j1, j2)
@@ -736,6 +777,13 @@ def split_run_together(t: str) -> str:
     parts = _segment(low, 3)
     if not parts or len(parts) < 2 or not any(p in FUNC for p in parts):
         return t
+    # a real run-together is function words and whole words; a long word cut into scraps
+    # (`ventilates` -> `ventil at es`, `stickiest` -> `stick i est`) is not: a part is a function
+    # word (not `i`) or a word of 4+ letters in the vocabulary or a 3-letter word the repo's
+    # other English texts use often
+    if not all((p in FUNC and p != "i") or (len(p) >= 4 and p in vocab()) or (len(p) == 3 and _UNI.get(p, 0) >= 25)
+               for p in parts):
+        return t
     if core[:1].isupper():
         parts[0] = parts[0].capitalize()
     return lead + " ".join(parts) + trail
@@ -749,6 +797,8 @@ def repair_terms(tokens: list[str]) -> list[str]:
     v = vocab()
     out = []
     for t in tokens:
+        # italic `that` after a dash (`starting-point—that will be`): both scans misread it
+        t = re.sub(r"—(?:/hat|zhat?)(?![A-Za-z])", "—that", t)
         m = re.fullmatch(r"([^A-Za-z/]*)([A-Za-z/]{2,10})([^A-Za-z/]*)", t)
         if m:
             lead, core, trail = m.groups()
@@ -761,6 +811,8 @@ def repair_terms(tokens: list[str]) -> list[str]:
                     new = "paranete"
                 elif re.fullmatch(r"[a-z]{0,2}ese", low) and len(low) >= 3:
                     new = "mese"
+                elif re.fullmatch(r"[a-z]{0,3}c?e?hanos", low):
+                    new = "lichanos"
                 elif 2 <= len(low) <= 5 and re.fullmatch(r"[b-df-hj-np-tv-z]*e[b-df-hj-np-tv-z]*e?[b-df-hj-np-tv-z]*", low) \
                         and not re.search(r"[aiouy]", low):
                     new = "nete"
@@ -776,6 +828,7 @@ def postprocess(tokens: list[str]) -> str:
     """Join words; drop a closing quote mark that closes nothing (a footnote mark), a `?`
     that runs on into a lower-case word (a footnote mark), and run-together words."""
     tokens = [re.sub(r"[|>]", "", t) for t in tokens]   # marks that no stage of the cleaning caught
+    tokens = [re.sub(r"\?{2,}$", "?", t) for t in tokens]   # a call-out read as a second `?`
     for i, t in enumerate(tokens[:-1]):
         if t.endswith("?") and not t.endswith("??") and re.match(r"[a-z]", tokens[i + 1]) and len(t) > 1 \
                 and not re.search(r"[)’”\"']\?$", t):
@@ -796,11 +849,13 @@ def postprocess(tokens: list[str]) -> str:
         if not t:
             continue
         n_open = t.count("‘")
-        m = re.search(r"[’']+$", t)
-        k = len(m.group(0)) if m else 0
+        m = re.search(r"([’']+)([.,;:?!)—]*)$", t)
+        k = len(m.group(1)) if m else 0
         if k:
             allowed = min(k, open_s + n_open)
-            t = t[: len(t) - k] + "’" * allowed
+            if re.search(r"(?<![A-Za-z])[A-Z]$", t[: m.start(1)]):
+                allowed = k   # the prime of a point in a figure (`I’` for Γ’), not a quote mark
+            t = re.sub(r"\?{2,}$", "?", t[: m.start(1)] + "’" * allowed + m.group(2))
         else:
             allowed = 0
         open_s = max(0, open_s + n_open - allowed)
@@ -1023,6 +1078,164 @@ def write_anchors(ents, stats):
     return len(ents)
 
 
+# --------------------------------------------------------------------------- verify
+
+# Known, reasoned exceptions to --verify: (book, problem, check, words, reason). `check` is "a"
+# (both scans have the words, ours lacks them), "b" (ours has words neither scan has) or "c" (a
+# mark that stayed in the prose). `words` is the gap as the check prints it (lower case, spaces).
+VERIFY_ALLOW: list[tuple[int, int, str, str, str]] = []
+
+_SUPER = "⁰¹²³⁴⁵⁶⁷⁸⁹"
+# a printed margin number (5, 10 ... 40) as the scans misread it: every letter is one of the
+# shapes an OCR gives a digit, and the token has at most three letters
+_MARGIN_SHAPE = re.compile(r"^[tilrjIL1|!oOgGqQ0zZ2aAeEsSbBhH3-9fF][tilrjIL1|!oOgGqQ0zZ2aAeEsSbBhH3-9fFnN]{0,2}$")
+
+
+def _letters(t: str) -> str:
+    return re.sub(r"[^a-z]", "", t.lower())
+
+
+def _tokens(text: str) -> list[str]:
+    """Words for comparison: split at spaces and dashes (not hyphens), letters only, lower case."""
+    out = []
+    for piece in re.split(r"[\s—–]+", text):
+        n = _letters(piece)
+        if n:
+            out.append(n)
+    return out
+
+
+def witness_tokens(L, a: int, b: int, book: int) -> list[dict]:
+    """Every text word of a witness's pages a..b-1 (body and footnotes; running heads and the
+    margins are not in `lines`), cleaned as the build cleans, with its place on the line."""
+    out: list[dict] = []
+    carries: dict[bool, str | None] = {False: None, True: None}   # a hyphen runs on in its own stream
+    for i in range(a, b):
+        for l in L[i]["lines"]:
+            carry = carries[l["fn"]]
+            toks = []
+            for w in l["text"]:
+                ct = clean_word(w["t"])
+                if ct and re.search(r"[A-Za-z]", ct):
+                    toks.append(ct)
+            if not toks:
+                continue
+            if carry is not None:
+                toks[0] = carry + toks[0]
+                carries[l["fn"]] = None
+            if re.search(r"[A-Za-z]-$", toks[-1]):
+                carries[l["fn"]] = toks.pop()[:-1]
+                if not toks:
+                    continue
+            if book == 19:
+                toks = repair_terms(toks)
+            toks = [split_run_together(t) for t in toks]
+            toks = [p for t in toks for p in t.split(" ")]
+            n = len(toks)
+            for k, t in enumerate(toks):
+                for piece in re.split(r"[—–]+", t):
+                    nm = _letters(piece)
+                    if nm:
+                        out.append(dict(n=nm, fn=l["fn"], edge=(k == 0 or k == n - 1), page=i))
+    return out
+
+
+def ours_parts(book: int) -> list[str]:
+    s = (OUT / f"book-{book:02d}.html").read_text(encoding="utf-8")
+    return [html.unescape(m.group(2)) for m in re.finditer(r"Part (\d+)\s*\n\s*<p>(.*?)</p>", s, re.S)]
+
+
+def _diff_unmatched(a: list[str], b: list[str]):
+    """Opcodes of a->b: gaps (b lacks words a has) and the b positions that match nothing in a."""
+    sm = difflib.SequenceMatcher(None, a, b, autojunk=False)
+    gaps, loose = {}, set()
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag in ("delete", "replace") and i2 > i1:
+            gaps.setdefault(j1, []).append((i1, i2))
+        if tag in ("insert", "replace"):
+            loose.update(range(j1, j2))
+    return gaps, loose
+
+
+def verify(ocr_dir: Path) -> int:
+    LA = [layout(p) for p in parse_hocr(ocr_dir / f"{IDS['A']}_hocr.html")]
+    LB = [layout(p) for p in parse_hocr(ocr_dir / f"{IDS['B']}_hocr.html")]
+    bA, bB = book_ranges(LA), book_ranges(LB)
+    n_parts = n_words = n_wa = n_wb = n_gaps = 0
+    fa: list[tuple] = []   # (book, problem, kind, words, context)
+    for book in range(1, 39):
+        parts = ours_parts(book)
+        ours, where = [], []
+        raw_ctx = []
+        for pi, txt in enumerate(parts, 1):
+            tk = _tokens(txt)
+            ours += tk
+            where += [pi] * len(tk)
+            raw_ctx += [t for t in re.split(r"[\s—–]+", txt) if _letters(t)]
+        n_parts += len(parts)
+        n_words += len(ours)
+        # (c) marks left in the prose
+        for pi, txt in enumerate(parts, 1):
+            if txt.count("”") > txt.count("“"):
+                for m in re.finditer("”", txt):
+                    fa.append((book, pi, "c", "”", txt[max(0, m.start() - 40):m.end() + 25]))
+                    break
+            for m in re.finditer(r"[*†]|[%s]|[A-Za-z]\d|\d[A-Za-z]" % _SUPER, txt):
+                fa.append((book, pi, "c", m.group(0), txt[max(0, m.start() - 40):m.end() + 25]))
+        wa = witness_tokens(LA, *bA[book - 1], book)
+        wb = witness_tokens(LB, *bB[book - 1], book)
+        n_wa += len(wa)
+        n_wb += len(wb)
+        ta, tb = [w["n"] for w in wa], [w["n"] for w in wb]
+        # witness gaps are measured against ours: ours is the second sequence, so gaps are keyed by
+        # the position in ours where the witness has words ours lacks
+        ga, la = _diff_unmatched(ta, ours)
+        gb, lb = _diff_unmatched(tb, ours)
+        for pos, spans_a in ga.items():
+            for (a1, a2) in spans_a:
+                if not 1 <= a2 - a1 <= 4:
+                    continue
+                n_gaps += 1
+                words = "".join(ta[a1:a2])
+                for dj in (0, -1, 1):
+                    for (b1, b2) in gb.get(pos + dj, []):
+                        if "".join(tb[b1:b2]) == words and 1 <= b2 - b1 <= 4:
+                            toks = ta[a1:a2]
+                            if len(toks) == 1 and len(words) <= 3 and _MARGIN_SHAPE.match(words) \
+                                    and (wa[a1]["edge"] or wb[b1]["edge"]):
+                                continue   # a margin number misread as a word (point 3)
+                            if all(wa[x]["fn"] for x in range(a1, a2)):
+                                continue   # footnote text
+                            p = where[min(pos, len(where) - 1)] if where else 0
+                            ctx = " ".join(raw_ctx[max(0, pos - 6):pos]) + " [" + " ".join(toks) + "] " + \
+                                " ".join(raw_ctx[pos:pos + 6])
+                            fa.append((book, p, "a", " ".join(toks), ctx))
+        for j in sorted(set(range(len(ours))) & la & lb):
+            fa.append((book, where[j], "b", ours[j],
+                       " ".join(raw_ctx[max(0, j - 5):j]) + " [" + raw_ctx[j] + "] " + " ".join(raw_ctx[j + 1:j + 6])))
+    seen, final, allowed = set(), [], 0
+    allow = {(b, p, c, w) for b, p, c, w, _r in VERIFY_ALLOW}
+    for e in fa:
+        if e[:4] in allow:
+            allowed += 1
+        elif (e[0], e[1], e[2], e[3], e[4]) not in seen:
+            seen.add((e[0], e[1], e[2], e[3], e[4]))
+            final.append(e)
+    print(f"verify: examined {n_parts} Parts, {n_words} words of ours; witnesses A {n_wa} words, B {n_wb} words; "
+          f"{n_gaps} witness gaps of 1-4 words checked; {allowed} allowed by VERIFY_ALLOW")
+    names = {"a": "(a) in both scans, missing from ours", "b": "(b) in ours, in neither scan",
+             "c": "(c) mark left in the prose"}
+    for k in "abc":
+        sel = [e for e in final if e[2] == k]
+        print(f"{names[k]}: {len(sel)}")
+        for book, p, _k, w, ctx in sel:
+            print(f"  {book}.{p}  [{w}]  ...{ctx}...")
+    if n_parts == 0 or n_words == 0 or n_wa == 0 or n_wb == 0:
+        print("verify: examined nothing")
+        return 2
+    return 1 if final else 0
+
+
 # --------------------------------------------------------------------------- main
 
 
@@ -1033,7 +1246,11 @@ def main():
                     help="the pipeline's chapters.json for Prob (needed for the Bekker ticks)")
     ap.add_argument("--pass1", action="store_true",
                     help="write the Parts and an empty anchors.yaml only (run the pipeline, then run again)")
+    ap.add_argument("--verify", action="store_true",
+                    help="compare sources/prob-forster/ with both scans; exit 1 if words are lost or marks remain")
     args = ap.parse_args()
+    if args.verify:
+        sys.exit(verify(args.ocr_dir))
     LA = [layout(p) for p in parse_hocr(args.ocr_dir / f"{IDS['A']}_hocr.html")]
     LB = [layout(p) for p in parse_hocr(args.ocr_dir / f"{IDS['B']}_hocr.html")]
     bA, bB = book_ranges(LA), book_ranges(LB)
