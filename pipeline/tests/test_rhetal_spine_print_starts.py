@@ -59,6 +59,7 @@ def test_every_image_read_line_opening_holds():
     reads = json.loads((ROOT / "sources" / "rhetal-greek" / "bekker-line-reads.json")
                        .read_text(encoding="utf-8"))["reads"]
     assert len(reads) == 343   # 344 read; 1431a8 (Fuhrmann's lacuna) left out
+    assert len({r["line"] for r in reads}) == 343   # one reading per line, no repeats
     lines = _lines()
     for r in reads:
         assert lines[r["line"]].split()[:1] == ([r["opens"]] if r["opens"] else []), r
