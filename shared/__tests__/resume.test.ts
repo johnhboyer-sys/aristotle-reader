@@ -88,3 +88,14 @@ describe('lastRead', () => {
     expect(lastRead()).toBeNull();
   });
 });
+
+describe('citeShown: how a saved position reads on the resume buttons', () => {
+  it('reads "49.3" for the Athenian Constitution and the saved cite for any other work', async () => {
+    const { citeShown } = await import('../lib/resume');
+    expect(citeShown('AthPol', '49a3')).toBe('49.3');
+    expect(citeShown('AthPol', '49a')).toBe('49');
+    expect(citeShown('EN', '1103a14')).toBe('1103a14');
+    expect(citeShown('Isa', '3a5')).toBe('3a5');
+    expect(citeShown('NoSuchWork', '49a3')).toBe('49a3');
+  });
+});
