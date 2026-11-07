@@ -181,9 +181,8 @@ PRINT_READS: list[tuple[int, int, str, str, str]] = [
     (30, 1, 'which, their', 'which their', 'A330: no comma after which'),
     (30, 1, 'characters, Now', 'characters. Now', 'A332: full stop after characters'),
     (23, 9, 'is ing the', 'is in the', 'no page image (A lacks 23.6-23.12); scan B reads ing, the same Part has wind is in the north'),
-    (1, 47, 'those Substances which', 'those substances which', 'A18-region: margin number, then a capital S that begins a line; the print has lower case'),
-    (3, 16, 'that Wine mingles', 'that wine mingles', 'margin number, then a capital W that begins a line; the print has lower case'),
-    (4, 8, 'intercourse Or vomit', 'intercourse or vomit', 'A78: the print has lower-case or'),
+    (1, 47, 'those Substances which', 'those substances which', 'A33: margin number, then a capital S that begins a line; the print has lower case'),
+    (4, 8, 'intercourse Or vomit', 'intercourse or vomit', 'A72: the print has lower-case or'),
     (5, 34, 'boiled Nor ought', 'boiled. Nor ought', 'scan A reads boiled. with raised 2; the stop is in the print'),
     (6, 5, 'work, Or is', 'work. Or is', 'A100: full stop after work'),
     (8, 9, 'danger, One recovers', 'danger, one recovers', 'A107: one begins the next line in lower case'),
@@ -1599,7 +1598,6 @@ VERIFY_ALLOW = [
     (3, 10, 'f', 'same !', 'be in contact with the [same] thing at the same time. @A57', 1, 'A57, 3.10: print reads “same¹ thing”; the extra scan mark same ! belongs to the raised note number, beside the printed body punctuation shown here.'),
     (3, 13, 'f', 'remarked ?', 'and it has already been [remarked] that drunkenness is due to @A58', 1, "A58: after 'remarked' the print has a raised call-out and no '?'; scan A reads 'remarked' for it, and ours keeps 'remarked' before 'that'."),
     (3, 14, 'c', 'Wine -> wine', 'heat, reaches the head? Diluted [wine] on the other hand, being @A58', 1, "A58: the print has lower-case 'wine' between 'Diluted' and 'on'; scan A reads 'wine', capitalised at a line start or by case noise."),
-    (3, 16, 'c', 'Wine -> wine', 'true, as Chaeremon says, that [wine] mingles with the temper of @A58', 1, "A58: the print has lower-case 'wine' between 'that' and 'mingles'; scan A reads 'Wine', capitalised at a line start or by case noise."),
     (3, 17, 'g', 'drinking ?', 'stops the ill effects of [drinking?] Is it because its juice @A59', 1, "A59: the print has 'drinking?' before 'Is' as ours does; scan A reads 'drinking' with another mark."),
     (3, 17, 'f', 'juice ?', 'thoroughly and draining off the [juice] and letting it cool. In @A59', 1, "A59: after 'juice' the print has a raised call-out and no '?'; scan A reads 'juice!' for it, and ours keeps 'juice' before 'and'."),
     (3, 17, 'c', 'Causes -> causes', 'their senses, but the headache [causes] them pain when they are @A59', 1, "A59: the print has lower-case 'causes' between 'headache' and 'them'; scan A reads 'causes', capitalised at a line start or by case noise."),
@@ -1726,7 +1724,7 @@ VERIFY_ALLOW = [
     (10, 2, 'f', 'lymph !', 'than pure blood and resembles [lymph.] Why is it that some @A118', 1, 'A118, 10.2: print reads “lymph.¹”; the extra scan mark lymph ! belongs to the raised note number, beside the printed body punctuation shown here.'),
     (10, 3, 'f', 'loose ?', 'the skin there is naturally [loose,] and this moisture being concocted @A118', 1, 'A118, 10.3: print reads “loose,² and”; the extra scan mark loose ? belongs to the raised note number, beside the printed body punctuation shown here.'),
     (10, 4, 'c', 'A -> a', 'alone, like old buildings, have [a] loose structure of their component @A119', 1, "A119: the print has lower-case 'a' between 'have' and 'loose'; scan A reads 'a', capitalised at a line start or by case noise."),
-    (10, 5, 'f', 'leprosy !', 'that man alone has white [leprosy?] Is it because he is @A119', 1, "A119: after 'leprosy?' the print has a raised call-out and no '!'; scan A reads 'leprosy?!' for it, and ours keeps 'leprosy?' before 'Is'."),
+    (10, 5, 'f', 'leprosy !', 'that man alone has white [leprosy?] Is it because he is @A119', 1, "A119: the print reads 'leprosy?¹ Is' (body question mark, then raised call-out 1); scan A reads the call-out as '!' in 'leprosy?!'; ours keeps 'leprosy?' before 'Is'."),
     (10, 7, 'c', 'Whereas -> whereas', 'animals in the new locality, [whereas] with other animals (man, for @A119', 1, "A119: the print has lower-case 'whereas' between 'locality,' and 'with'; scan A reads 'Whereas', capitalised at a line start or by case noise."),
     (10, 8, 'f', 'hotter !', 'Is it because they are [hotter,] and heat is productive of @A120', 1, "A120: after 'hotter,' the print has a raised call-out and no '!'; scan A reads 'hotter,'!' for it, and ours keeps 'hotter,' before 'and'."),
     (10, 10, 'f', 'male ?', 'to the condition of the [male] and female parents? The other @A120', 1, "A120: after 'male' the print has a raised call-out and no '?'; scan A reads 'male?' for it, and ours keeps 'male' before 'and'."),
@@ -3228,11 +3226,13 @@ def verify(ocr_dir: Path, books: Path | None = None, findings: list | None = Non
     if n_parts == 0 or n_words == 0 or n_wa == 0 or n_wb == 0:
         print("verify: examined nothing")
         return 2
-    # An allowance that matched nothing is stale: it no longer guards any finding. Only the default
-    # books can say so (an earlier build, run with --books, legitimately lacks most of them).
-    unused = [VERIFY_ALLOW[i] for i in range(len(VERIFY_ALLOW)) if not used.get(i)] if books is None else []
-    print(f"VERIFY_ALLOW entries that matched nothing: {len(unused)}" if books is None else
-          "VERIFY_ALLOW entries that matched nothing: not checked (--books)")
+    # An allowance that matched nothing is stale: it no longer guards any finding.
+    # With --books it is checked too: a copy of these books that restores a scan's wrong reading
+    # (a capital the print lacks, say) makes no finding, only an unused allowance, so skipping it hid
+    # such regressions (review 6: 10.7 `Whereas`, 23.16 `Over Open`). An earlier build fails here
+    # as well as elsewhere, which is right.
+    unused = [VERIFY_ALLOW[i] for i in range(len(VERIFY_ALLOW)) if not used.get(i)]
+    print(f"VERIFY_ALLOW entries that matched nothing: {len(unused)}")
     for b, p, c, w, ctx, _count, _reason in unused:
         print(f"  stale {b}.{p} ({c}) [{w[:60]}] ...{ctx}...")
     return 1 if final or unused else 0
