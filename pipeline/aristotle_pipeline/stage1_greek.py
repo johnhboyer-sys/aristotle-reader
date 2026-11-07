@@ -15,7 +15,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from .config import BUILD_DIR, Manifest
+from .config import BUILD_DIR, SOURCES_DIR, Manifest
 
 EXPORT_DIR = BUILD_DIR / "export"
 
@@ -256,8 +256,22 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
     }
 
 
+def spine_xml(manifest: Manifest) -> Path:
+    """The verse-mode XML the spine is parsed from. A work whose Greek is not in
+    the TLG export (De Plantis) vendors one under sources/ as `work.greek_lines`,
+    in the same <div type="Bekker-page"><l n=...> shape; every other work runs
+    the Diogenes export."""
+    rel = manifest.data["work"].get("greek_lines")
+    if not rel:
+        return run_export(manifest)
+    path = SOURCES_DIR / rel
+    if not path.exists():
+        raise FileNotFoundError(f"work.greek_lines: {path} is missing")
+    return path
+
+
 def run(manifest: Manifest) -> Path:
-    xml_path = run_export(manifest)
+    xml_path = spine_xml(manifest)
     spine = parse_spine(xml_path, manifest)
     out = BUILD_DIR / "stage1" / "greek_spine.json"
     out.parent.mkdir(parents=True, exist_ok=True)

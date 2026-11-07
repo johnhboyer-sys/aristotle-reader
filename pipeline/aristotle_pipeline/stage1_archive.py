@@ -249,20 +249,27 @@ def build_overlay(spine: dict, chapters: list[dict], cfg: dict,
     return chunks
 
 
-def _column_starts(rel: str, prose: dict[tuple[int, int], str]) -> tuple[dict, list]:
+def _column_starts(rel: str, prose: dict[tuple[int, int], str],
+                   first_lines: dict[str, int] | None = None) -> tuple[dict, list]:
     """The `{column}1` entries of an anchors file as the align-map build_chunks
     cuts on ({"book:chapter": {"anchors": [...]}}): each phrase is located in the
     chapter prose, so a column's English begins where its first Bekker line does
     instead of at a proportional estimate. Also returns (book, column, pattern,
     citation) per break, for build_english to confirm each one took. A phrase that is not
     in the prose exactly once raises: a break must not quietly fall back to the
-    proportional cut."""
+    proportional cut.
+
+    `first_lines` ({column: first spine line}) admits the entry at a column's
+    first line when that is not 1 (De Plantis 815b opens at line 10). It is
+    keyed `{column}1` in the map, the key build_chunks cuts on; the primary
+    build takes its ticks from _resolve_anchors, not from this map."""
     entries = yaml.safe_load((SOURCES_DIR / rel).read_text(encoding="utf-8")) or []
     amap: dict[str, dict] = {}
     breaks, bad = [], []
+    first_lines = first_lines or {}
     for e in entries:
         m = _BEKKER.match(str(e["bekker"]).strip())
-        if not m or m.group(2) != "1":
+        if not m or int(m.group(2)) != first_lines.get(m.group(1), 1):
             continue
         pattern = r"\s+".join(re.escape(w) for w in e["at"].split())
         hits = [(key, h.start()) for key, text in prose.items()
@@ -272,7 +279,7 @@ def _column_starts(rel: str, prose: dict[tuple[int, int], str]) -> tuple[dict, l
             continue
         (book, chap), off = hits[0]
         amap.setdefault(f"{book}:{chap}", {"anchors": []})["anchors"].append(
-            {"citation": m.group(0), "offset": off, "confidence": "certain"})
+            {"citation": f"{m.group(1)}1", "offset": off, "confidence": "certain"})
         breaks.append((book, m.group(1), pattern, m.group(0)))
     if bad:
         raise ValueError(f"anchor cuts: {rel}: phrase not found exactly once: {bad}")
@@ -319,7 +326,12 @@ def build_english(manifest: Manifest, spine: dict, chapters: list[dict],
     prose = _load_prose(cfg)
     # `anchor_cuts: true` (Lin): column breaks come from the anchors file's
     # line-1 entries rather than from the proportional estimate.
-    amap, breaks = _column_starts(cfg["anchors"], prose) if cfg.get("anchor_cuts") else (None, [])
+    first_lines: dict[str, int] = {}
+    for seg in spine["segments"]:
+        if seg["lines"]:
+            first_lines.setdefault(seg["column"], seg["lines"][0]["n"])
+    amap, breaks = (_column_starts(cfg["anchors"], prose, first_lines)
+                    if cfg.get("anchor_cuts") else (None, []))
     pieces = build_chunks(spine, chapters, prose, amap)
     paragraphs = _load_paragraphs(cfg, prose)
     placed = 0
