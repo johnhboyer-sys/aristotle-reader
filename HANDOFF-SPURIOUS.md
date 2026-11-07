@@ -232,3 +232,17 @@ and 6 pairs of Forster's pointed brackets that our text had as parentheses (now 
 - Genie reads `$?^2$` as the question mark plus note number; read every "?" difference
   on the leaf, because Genie sometimes drops a printed "?" and sometimes adds none.
 - Not covered: wording both scans and Genie share wrongly; Genie's read of Books 15 and 19 figure labels.
+
+### 2026-11-07 10:00 — Problemata Genie pass done, `53274f34e9`
+
+Sonnet diffed Forster against Genie's vol. VII and judged every difference on scan A:
+57 PRINT_READS added (our errors: e.g. 19.36 "if mese is altered", 10.36 "their nature",
+11.1 "per accidens … per se", stray "?" call-outs, 21 Book 19 note names lower-cased, six
+⟨ ⟩ pointed brackets that we had as parentheses; John kept the ⟨ ⟩ on 2026-11-07).
+All gates green. Codex review 10 (`docs/spurious-works/codex-review-10.md`): no findings.
+
+Genie is not a clean witness: on page 883a (between 5.22 and 5.25) it returned a Virgin
+Galactic earnings press release instead of Forster, and it dropped 941 words of 23.6. Use
+Genie only to flag places to look; never copy its text. Mirab: a model wrote English for
+Dowdall's three Latin marvels (Parts 2, 10, 12) in `cf32f2dc2f`; not copied from Hett's Loeb
+(checked against archive.org `aristotle-marvels-l-307`). John: restore the Latin for now.
