@@ -76,7 +76,8 @@ De Audibilibus (`Aud`), De Lineis Insecabilibus (`Lin`, Joachim 1908), Ventorum 
 (`Vent`, Forster 1913), De Mirabilibus Auscultationibus (`Mirab`, Dowdall 1909). Each has
 `manifests/<Id>.yaml` with `authenticity: spurious` and a `shared/lib/works.ts` entry —
 11 spurious works in the registry, grouped under "Spurious Works" on the home page (PR #28,
-same deploy). NB `git log --oneline -- manifests/<Id>.yaml` cannot reach these commits:
+same deploy; retitled "Doubtful and Spurious Works" on 2026-11-07, John's call, once
+Problemata and Oeconomica were relabelled dubious after Barnes). NB `git log --oneline -- manifests/<Id>.yaml` cannot reach these commits:
 this clone is shallow and every one of these manifests bottoms out at the boundary
 `040423e` (2026-07-27), so the PR numbers above come from `DEPLOY-STATUS.md` and GitHub,
 not from git history.

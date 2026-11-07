@@ -185,3 +185,7 @@ judge differences on the page images.
 
 Note: several sessions running stage8 at once crawl (35+ min each) and one
 was SIGTERMed; run stage8 one at a time.
+
+### 2026-11-07 07:30 — appendix retitled
+
+John chose the retitle over moving the marked works into Bekker order: the home-page group is now **"Doubtful and Spurious Works"** (`shared/lib/works.ts`). This closes Codex review 9's P2. Shared vitest 648/648, app build 7,080 pages, 0 broken links.

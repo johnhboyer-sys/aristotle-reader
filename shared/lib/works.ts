@@ -1355,12 +1355,12 @@ export const CATEGORIES: Category[] = [
       { id: 'Poet' },
     ],
   },
-  // Appendix — the doubtful/spurious works transmitted under Aristotle's name but
-  // judged not to be by him. Grouped OUTSIDE the numbered divisions (no numeral);
-  // each card still carries its Dubious/Spurious badge.
+  // Appendix — the works transmitted under Aristotle's name whose authenticity is
+  // doubted or denied (Barnes 1984: * or **). Grouped OUTSIDE the numbered divisions
+  // (no numeral); each card still carries its Dubious/Spurious badge.
   {
     numeral: '',
-    title: 'Spurious Works',
+    title: 'Doubtful and Spurious Works',
     appendix: true,
     works: [
       { id: 'DM' },
