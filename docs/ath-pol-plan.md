@@ -246,7 +246,7 @@ The home page groups works into the five numbered divisions plus the "Spurious W
 ## 6. Questions and John's answers (2026-11-06)
 
 1. **Q1 Greek: TLG** (Oppermann 1928), the same loader family as the other works. Its costs, and how Kenyon's sections line up against it, are under P1.
-2. **Q2 Place and label: open.** John asked what the literature says; section 9 answers that, and he decides from it.
+2. **Q2 Label: `dubious`** (John, 2026-11-06). **Place: open.** He asked what Barnes's Oxford *Complete Works* does; section 9 now answers that too.
 3. **Q3 Kenyon's footnotes: kept** as notes (P5).
 4. **Q4 Fragments:** John asked why Kenyon doesn't translate them; section 10 answers. The plan leaves them out, as before, unless John says otherwise after reading section 10.
 5. **Q5 Id: `AthPol`, shown as "Ath. Pol."**
@@ -299,6 +299,49 @@ Codex returned 18 findings. Its full text is in the side-session notes folder (`
 - **Place: the appendix, beside the Magna Moralia.** That keeps one rule for the home page: the numbered divisions hold the works taken as Aristotle's own, and every work whose authorship is doubted sits in the appendix with its badge.
   - The appendix is titled "Spurious Works", which already misdescribes the Magna Moralia (the MM session flagged this). Retitling it "Doubtful and Spurious Works" fixes both. It changes the home page heading for every visitor, so it is John's call.
   - The case for Division IV instead: the work is the surviving piece of the research the *Politics* draws on (*NE* 1181b17). It would sit after the *Politics* with its `dubious` badge, the badge alone carrying the doubt.
+
+**What Barnes's Oxford *Complete Works* does** (John's question, 2026-11-06)
+
+Source: Jonathan Barnes (ed.), *The Complete Works of Aristotle: The Revised Oxford Translation*, Princeton 1984 (Bollingen), 2 vols. I could not open the pages of these lending scans. Everything below comes from archive.org's full-text search, which returns OCR snippets of 100–300 characters. Each scan prints the contents of both volumes:
+
+- vol. 1: `completeworksofa0001unse_v6x6` (cleanest OCR of the contents)
+- vol. 2: `completeworksofa0002unse_z3o6` (sixth printing with corrections, 1995)
+- a one-volume copy: `completeworksofa0000aris`
+
+*How he marks doubt* ("Note to the Reader", at the front of each volume; it is page vii or viii, and the OCR does not show which). Quoted in full from three snippets that overlap:
+
+> "The traditional corpus aristotelicum contains several works which were certainly or probably not written by Aristotle. A single asterisk against the title of a work indicates that its authenticity has been seriously doubted; a pair of asterisks indicates that its spuriousness has never been seriously contested. These asterisks appear both in the Table of Contents and on the title pages of the individual works concerned."
+
+So he has two grades: * for doubted and ** for spurious. They match this repo's `dubious` and `spurious`. He brackets nothing, and he does not move the marked works out of their places. Each one stays where Bekker's order puts it.
+
+*Where the works sit* (contents of vol. 2, start page and marks as the OCR prints them). Vol. 1 ends with *Physiognomonics*** at p. 1237, and vol. 2 opens at p. 1251:
+
+| p. | Work | Mark |
+|---|---|---|
+| 1251 | On Plants | ** |
+| — | On Marvellous Things Heard; Mechanics | ** each |
+| 1319 | Problems | * |
+| 1528 | On Indivisible Lines | ** |
+| 1537 | The Situations and Names of Winds | ** |
+| 1539 | On Melissus, Xenophanes, and Gorgias | ** |
+| 1552 | Metaphysics | — |
+| 1729 | Nicomachean Ethics | — |
+| 1868 | Magna Moralia | * |
+| 1922 | Eudemian Ethics | — |
+| 1982 | On Virtues and Vices | ** |
+| 1986 | Politics | — |
+| 2130 | Economics | * |
+| (OCR unreadable) | Rhetoric | — |
+| 2270 | Rhetoric to Alexander | ** |
+| 2316 | Poetics | — |
+| **2341** | **Constitution of Athens** | **none** |
+| 2384 | Fragments | — |
+
+- **Ath. Pol. comes last of the treatises**, after the *Poetics* and before the Fragments. That is the only spot outside Bekker's order. A snippet from the "Note to the Reader" gives the reason in part: "…included in Bekker's edition, so that the customary Bekker-references are absent." I could not see the words before it. The index cites it as "CA n", which "give section-numbers in the Constitution of Athens" (vol. 2, before the Index of Names).
+- **Ath. Pol. carries no asterisk.** Barnes therefore does not count it among works whose authenticity "has been seriously doubted". This comes from the OCR, not the page images. It is the same in both copies of the contents. The OCR keeps the marks on the works around it (*Economics**, *Rhetoric to Alexander***). Its title page is too garbled in the OCR to show a mark either way. I did not find Ath. Pol. named in the vol. 1 Preface. It is credited to F. G. Kenyon, on the text of Kenyon's OCT 1920.
+- **Seen in the snippets:** the Note's wording, the order of the works, and the marks on *Magna Moralia** (in the contents and on its title page, "MAGNA MORALIA* St. G. Stock"), *Economics**, *Problems**, *On Plants*** and *Rhetoric to Alexander***. **Inferred:** that Ath. Pol. has no mark, from its absence in two OCR copies of the contents. The page numbers for *Marvellous Things* and *Mechanics* disagree between the two copies, so I left them out.
+
+**What this means for placement.** Barnes keeps each doubted or spurious work where Bekker put it and lets the asterisk carry the doubt. He puts Ath. Pol., which has no Bekker place, after the last treatise, with no mark. The site does it the other way: doubted works go into an appendix outside the numbered divisions (`shared/lib/works.ts`, the "Spurious Works" block). So Barnes gives no direct answer to "appendix or division". The nearest match to his practice is the Division IV option above: Ath. Pol. last in the division, after the *Poetics*, with its `dubious` badge. The appendix option keeps this site's own rule instead, which differs from Barnes's for every marked work. Either way, John's `dubious` label is stricter than Barnes, who leaves the work unmarked.
 
 ## 10. Q4: why Kenyon does not translate the fragments
 

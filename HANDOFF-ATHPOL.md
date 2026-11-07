@@ -10,7 +10,7 @@ Plan: [`docs/ath-pol-plan.md`](docs/ath-pol-plan.md). Branch `claude/ath-pol-pla
   - **Q1:** Greek from TLG (Oppermann 1928). The costs are recorded under P1.
   - **Q3:** footnotes kept. **Q5:** `AthPol`, shown as "Ath. Pol.". **Q6:** "10.7" left unlinked. **Q7:** palette in v1 (R6). **Q8:** parked.
 - **Still open:**
-  - Q2, placement and label. The literature summary is in plan section 9; the recommendation is `dubious`, in the appendix beside MM, with the appendix possibly retitled.
+  - Q2: label settled as `dubious` (John). Placement still open. Plan section 9 covers the literature and Barnes's *Complete Works*. Barnes puts Ath. Pol. after the *Poetics*, last of the treatises, with no asterisk; he leaves doubted works in Bekker's order, marked * or **.
   - Q4: the answer to his "why" is in plan section 10. The fragments stay out unless he says otherwise. Section 10 also surveys six later translations: Rackham and von Fritz–Kapp include both Heraclides and the quoted fragments; Rhodes 2017 prints six fragments before ch. 1 (from a review; Heraclides not confirmed); Moore and Rhodes 1984 include Heraclides only; the 1984 revised Oxford (Kenyon) has none.
   - Building waits on his go-ahead.
 - English: Kenyon, Oxford *Works* vol. X (1921), archive.org `worksofaristotle0010wdro_x8m2`, `/page/n370`–`n448`. Public domain, with chapter and section numbers in the margin. Footnotes kept as notes.
