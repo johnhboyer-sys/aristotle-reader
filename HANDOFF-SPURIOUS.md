@@ -246,3 +246,13 @@ Galactic earnings press release instead of Forster, and it dropped 941 words of 
 Genie only to flag places to look; never copy its text. Mirab: a model wrote English for
 Dowdall's three Latin marvels (Parts 2, 10, 12) in `cf32f2dc2f`; not copied from Hett's Loeb
 (checked against archive.org `aristotle-marvels-l-307`). John: restore the Latin for now.
+
+### 2026-11-07 10:47 — for the redesign track: true indented verse
+
+John chose, on my recommendation, to set De Mundo's 21 verse quotations as one-line
+paragraphs now (the Rhetoric's convention; `claude/ocr-pass-dm-vv-oec`). True indented
+verse (a block, no inter-line gap, hanging indent for wraps) is left to the redesign: it
+needs a `verse` marker in the source, stage1 and stage7 markers, the reader's flowParts,
+CSS, desktop, and the shared/ copies in plato-reader and homer. The Rhetoric (Roberts)
+and the Poetics quote verse too. Raise it in HANDOFF-REDESIGN.md when that file is free
+(another session held uncommitted edits to it on 2026-11-07).
