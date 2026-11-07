@@ -31,9 +31,9 @@ shows. Anything else fails, and so does an entry that accounts for no finding
 
   --selftest  plants each of PLANTS (a lost word, sentence, line at a page's
               foot and at its head, a changed number word, a stray mark, a
-              lost quote, an added figure), cuts a whole page, and empties the
-              text, and fails unless every one is reported and the clean text
-              reports nothing unaccepted.
+              lost quote, an added figure), cuts a whole page, empties the
+              text and repeats an ACCEPTED entry, and fails unless every one is
+              reported and the clean text reports nothing unaccepted.
 
 Run from the repo root:
   python3 pipeline/tools/verify_rhetal_forster.py --ocr-dir build/rhetal/ocr [--selftest]
@@ -299,9 +299,16 @@ def unaccepted(report: list) -> list:
 
 def stale_or_loose(report: list) -> list:
     """Each ACCEPTED entry must account for exactly one finding: one that
-    matches none has gone stale, one that matches more is too loose."""
-    return [(k, a, n) for k, a, _ in ACCEPTED
-            if (n := sum(1 for r in report if r[0] == k and a in r[2])) != 1]
+    matches none has gone stale, one that matches more is too loose. And each
+    accepted finding must be accounted for by exactly one entry, so two entries
+    cannot share it."""
+    bad = [(k, a, n) for k, a, _ in ACCEPTED
+           if (n := sum(1 for r in report if r[0] == k and a in r[2])) != 1]
+    for r in report:
+        n = sum(1 for k, a, _ in ACCEPTED if r[0] == k and a in r[2])
+        if n > 1:
+            bad.append((r[0], r[2], n))
+    return bad
 
 
 # ------------------------------------------------------------- self-test
@@ -357,6 +364,14 @@ def selftest(text: str, scans: dict) -> bool:
     print(f"  {'caught' if got else 'MISSED'}: lost page ({len(text) - len(cut)} characters, page {LOST_PAGE})"
           + (f" -> {got[0][2][:90]}" if got else ""))
     ok = ok and bool(got)
+    report = check(text, scans)
+    ACCEPTED.append(ACCEPTED[-1])   # two entries sharing one finding
+    try:
+        shared = bool(stale_or_loose(report))
+    finally:
+        ACCEPTED.pop()
+    print(f"  {'caught' if shared else 'MISSED'}: an ACCEPTED entry repeated")
+    ok = ok and shared and not stale_or_loose(report)
     try:
         check("", scans)
         print("  MISSED: empty text")
@@ -389,7 +404,7 @@ def main(argv=None) -> int:
         print(f"  {kind}: {msg}")
     loose = stale_or_loose(report)
     for kind, a, n in loose:
-        print(f"  ACCEPTED {kind} {a[:60]!r} matches {n} findings, want one")
+        print(f"  ACCEPTED {kind} {a[:60]!r}: {n} matches, want one")
     return 1 if bad or loose else 0
 
 
