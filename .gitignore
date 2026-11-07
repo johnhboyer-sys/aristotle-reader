@@ -11,6 +11,9 @@ skills-lock.json
 TLG Files/
 *.TXT
 *.IDT
+# ...but on a case-insensitive disk *.TXT also matches lowercase .txt. Taylor's 1812
+# page transcripts are English and must be tracked (build_taylor_1812.py reads them).
+!pipeline/data/taylor1812/n*.txt
 Diogenes-Resources/
 
 # Python

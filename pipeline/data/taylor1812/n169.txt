@@ -1,0 +1,39 @@
+=== body
+versal; as, for instance, every man is white, no man is white. But
+when he enunciates of things universal not universally[^8], these are not
+contrary. The things signified[^9], may, however, sometimes be contrary[^1].
+But I say, to enunciate not universally of things universal; as, for in-
+stance, man is white, man is not white. For man being a universal, is
+not used as a universal in the enunciation; since the word *every*[^2] does
+not signify universal, but [shows that the subject] is universally [as-
+sumed]. Of that, however, which is universally predicated, the uni-
+versal predicate is not true. For no affirmation will be true, in which
+the universal is predicated of that which is universally predicated[^3]; as
+for instance, every man is every animal. I say, therefore, that affir-
+mation is opposed to negation contradictorily; the affirmation which
+signifies a universal, to that which signifies that the same is not to be
+universally assumed; as every man is white, not every man is white;
+=== notes
+the same genus, are most distant from each other, and of this kind are these enunciations. Be-
+sides, contraries may at one and the same time be absent from a subject, but they cannot at one
+and the same time be inherent in it. Thus a body may be neither white nor black, but may be
+red or green; yet it cannot at one and the same time be black and white. In like manner, these
+enunciations may be at one and the same time, but they cannot be at one and the same time true,
+as Aristotle will show in the course of this chapter.
+¶[^8] That is, not adding the universal mark *every, no one,* nor the particular mark *some one, not*
+*every one.*
+¶[^9] That is, the things conceived in the mind by those who pronounce an indefinite enunciation.
+¶[^1] That is, when some one assumes the indefinite for the universal; as when Aristotle in the
+second chapter of the third book of his Nicomachean Ethics reasons as follows: “Opinion is
+employed about all things, therefore, pre-election is not opinion.” In which place, unless the
+antecedent were universally assumed, the argument would have no force.
+¶[^2] The same thing must also be said of the mark *no one.*
+¶[^3] Either the attribute extends more widely than the subject, or reciprocates with it. When it
+extends more widely, it is certain that the universal mark is falsely added to the attribute. For
+it will be falsely said, that every man is every animal; unless man is horse and ox, and every
+other animal. But when the attribute reciprocates with the subject, it may be doubted whether
+it may be truly said, that every man is every thing endued with reason, and every man is every
+thing which is risible. This, however, will also be falsely asserted; because that which is said
+of every man, may also be said of Socrates. Hence, if every man were every thing risible,
+Socrates also would be every thing risible. Socrates, therefore, would be Plato and Aristotle,
+and every thing which is risible; which is evidently absurd.
