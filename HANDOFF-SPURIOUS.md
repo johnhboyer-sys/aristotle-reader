@@ -26,8 +26,8 @@ How the branches were joined, and the two rulings it took, are in
   - Indented verse needs a `verse` marker in the source, stage 1 and stage 7 markers, the reader's flowParts, CSS, desktop, and the `shared/` copies in plato-reader and homer. The Rhetoric (Roberts) and the Poetics quote verse too.
   - Move this note into `HANDOFF-REDESIGN.md` when that file is free; another session holds uncommitted edits to it.
 - Lin (Joachim): a stray Greek fragment. This is a display question.
-- History Genie returned an unrelated Virgin Galactic earnings press release for Problemata page 883a (between 5.22 and 5.25): a possible leak of another customer's data. Whether to report it to History Genie is John's call. Genie is a flag-raiser only, never a witness: never copy its text.
-- Plates for the six new works: branch `claude/new-work-plates-61b59e`, unmerged and not deployed.
+- History Genie returned an unrelated Virgin Galactic earnings press release for Problemata page 883a (between 5.22 and 5.25): a possible leak of another customer's data. Whether to report it to History Genie is John's call. Genie only flags places to check, never decides a reading: never copy its text.
+- Plates for the six new works (John's six picks): branch `claude/new-work-plates-61b59e`, unmerged and not deployed.
 - The desktop Rust tests were not run for this deploy; only its vitest suite was.
 
 Problemata questions last listed as open for John (2026-11-06). Check whether they were settled before acting:
