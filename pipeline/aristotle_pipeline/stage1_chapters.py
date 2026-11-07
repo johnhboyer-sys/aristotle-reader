@@ -288,7 +288,8 @@ def extract_chapters_explicit(spine: dict, chapter_list: list[dict]) -> list[dic
     The Greek spine is Bekker-lineated, so each (column, line) is authoritative.
     An entry may name its `book` (default 1, for single-treatise works; the
     first entry of each book is that book's start) and the `word` of the line
-    it opens on (default 0), for chapters that begin mid-line (Magna Moralia)."""
+    it opens on (default 0), for chapters that begin mid-line (Magna Moralia,
+    Rh. Al.)."""
     cols = {s["column"] for s in spine["segments"]}
     chapters: list[dict] = []
     for entry in chapter_list:
@@ -303,12 +304,17 @@ def extract_chapters_explicit(spine: dict, chapter_list: list[dict]) -> list[dic
         book = int(entry.get("book", 1))
         chapter = {
             "book": book, "chapter": str(entry["n"]), "column": column,
-            "line": line, "wordIndex": int(entry.get("word", 0)),
+            "line": line, "wordIndex": 0,
             "bookstart": all(c["book"] != book for c in chapters),
         }
-        # A `word` is the Greek text's own chapter division, so stage 6 may
-        # claim token precision for it (as for a text-matched grc chapter).
+        # Optional `word`: the chapter opens at that word of its line (counted
+        # as _spine_words counts them), read against the Greek text itself, so
+        # it is word-exact as a matched grc opening is.
         if "word" in entry:
+            word = entry["word"]
+            if type(word) is not int or word < 0:
+                raise ValueError(f"chapters: explicit {ref}: bad word {word!r}")
+            chapter["wordIndex"] = word
             chapter["wordAnchor"] = True
         # Optional human section title (e.g. "Of Genus and Species" for the
         # Isagoge), surfaced by stage7 as chapter-titles.json and shown by the

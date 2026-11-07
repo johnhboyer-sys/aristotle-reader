@@ -149,6 +149,11 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
     label: 'Rhetoric & Poetics',
     entries: [
       W('Rhet', 'Rhetoric', 'tlg0086.tlg038'),
+      // TLG files it under Anaximenes (0547), to whom it is usually given.
+      slot('RhetAl', 'Rhetoric to Alexander', 'tlg0547.tlg001', {
+        authenticity: 'spurious',
+        aliases: 'rhetorica ad alexandrum anaximenes',
+      }),
       W('Poet', 'Poetics', 'tlg0086.tlg034'),
     ],
   },

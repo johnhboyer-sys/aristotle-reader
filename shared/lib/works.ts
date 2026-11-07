@@ -1020,6 +1020,27 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
   },
   {
+    id: 'RhetAl',
+    title: 'Rhetorica ad Alexandrum',
+    greekTitle: 'Ῥητορικὴ πρὸς Ἀλέξανδρον',
+    abbr: 'Rh. Al.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    // Fuhrmann's words on Bekker's printed lines (sources/rhetal-greek): every
+    // Bekker number is read from Bekker's page, none interpolated.
+    greekEdition: 'Fuhrmann, Anaximenis Ars Rhetorica (Teubner, 1966), on Bekker’s lines',
+    greekSource: {
+      short: 'Fuhrmann (Teubner, 1966)',
+      full: 'M. Fuhrmann, ed. Anaximenis ars rhetorica quae vulgo fertur Aristotelis ad Alexandrum. Leipzig: Teubner, 1966. Lines and numbers from I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1924)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'A handbook of rhetoric in thirty-eight chapters, prefaced by a letter to Alexander; usually given to Anaximenes.',
+  },
+  {
     id: 'Poet',
     title: 'Poetics',
     greekTitle: 'Περὶ ποιητικῆς',
@@ -1467,6 +1488,7 @@ export const CATEGORIES: Category[] = [
       { id: 'VV' },
       { id: 'Oec' },
       { id: 'Spir' },
+      { id: 'RhetAl' },
     ],
   },
   // Porphyry's Isagoge (id 'Isa') is intentionally NOT a home division: it's

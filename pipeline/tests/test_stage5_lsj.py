@@ -149,3 +149,24 @@ def test_magna_moralia_links_by_book(reference, expected):
 )
 def test_magna_moralia_numbers_outside_its_columns_stay_unlinked(reference):
     assert render_bibl(f'n="{reference}"') == '<span class="lsj-bibl">citation</span>'
+
+
+def test_rhet_al_is_cited_under_anaximenes():
+    # LSJ shows "Arist. Rh.Al." but its Perseus number is Anaximenes's, 0547.001.
+    assert render_bibl('n="Perseus:abo:tlg,0547,001:1438b:5"') == (
+        '<a class="lsj-bibl" href="/RhetAl/book/1?loc=1438b:5">citation</a>'
+    )
+
+
+@pytest.mark.parametrize(
+    "attributes",
+    [
+        'n="Perseus:abo:tlg,0547,002:1438b:5"',  # only 0547.001 is RhetAl
+        'n="Perseus:abo:tlg,0548,001:1438b:5"',
+        'n="Perseus:abo:tlg,0547,001:pr:9:1"',   # LSJ's non-Bekker forms
+        'n="Perseus:abo:tlg,0547,001:p.376S"',
+        'n="Perseus:abo:tlg,0547,001:1448a:1"',  # past the work's last column
+    ],
+)
+def test_other_authors_and_forms_stay_inert(attributes):
+    assert render_bibl(attributes) == '<span class="lsj-bibl">citation</span>'

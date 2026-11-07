@@ -7,8 +7,10 @@
 # read off the page images (MARGIN_READS, LOST_MARKS there). `at` is the start
 # of the printed line the number stands beside (its first whole word). A
 # column label stands as the column's first Berlin line, so 815b and 822b
-# open at their own first lines. Forster prints 827a8 and 827a12, not 827a10:
-# he moves the bracketed 827a9-11 to the head of the page.
+# open at their own first lines. 815b opens at line 10 (a translator's
+# prologue fills 1-9), so its entry is marked `cut: true`: the English
+# breaks there. Forster prints 827a8 and 827a12, not 827a10: he moves the
+# bracketed 827a9-11 to the head of the page.
 - bekker: "815a10"
   at: "Life is found in"
 - bekker: "815a15"
@@ -23,6 +25,7 @@
   at: "plants possess these characteristics,"
 - bekker: "815b10"
   at: "Let us first examine"
+  cut: true
 - bekker: "815b15"
   at: "sensation. The view of"
 - bekker: "815b20"

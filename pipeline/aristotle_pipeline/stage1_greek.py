@@ -21,7 +21,13 @@ EXPORT_DIR = BUILD_DIR / "export"
 
 
 def exported_xml_path(manifest: Manifest) -> Path:
+    """The verse-mode TEI the spine is read from. A work whose TLG text has no
+    Bekker lineation (Rhetorica ad Alexandrum: TLG 0547.001 is Fuhrmann's,
+    lineated by chapter and section) names a vendored spine relined to Bekker's
+    printed lines instead: `work.spine_tei`, relative to sources/."""
     w = manifest.data["work"]
+    if w.get("spine_tei"):
+        return SOURCES_DIR / w["spine_tei"]
     return (
         EXPORT_DIR
         / "Diogenes-Resources"
@@ -37,6 +43,8 @@ def run_export(manifest: Manifest) -> Path:
     if out.exists():
         return out
     w = manifest.data["work"]
+    if w.get("spine_tei"):
+        raise FileNotFoundError(f"work.spine_tei {out} is missing")
     EXPORT_DIR.mkdir(parents=True, exist_ok=True)
     subprocess.run(
         [

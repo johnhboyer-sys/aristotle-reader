@@ -141,14 +141,14 @@ def test_every_shipped_paragraphs_file_loads():
                 if isinstance(c, dict) and c.get("dir"):
                     slots.setdefault(c["dir"], c)
     files = sorted((root / "sources").glob("*/paragraphs.yaml"))
-    assert len(files) == 7
+    assert len(files) == 8
     total = 0
     for f in files:
         cfg = slots[f.parent.name]
         cfg = dict(cfg, books=cfg.get("books", 1))
         loaded = stage1_archive._load_paragraphs(cfg, stage1_archive._load_prose(cfg))
         total += sum(len(v) for v in loaded.values())
-    assert total == 494
+    assert total == 623
 
 
 @pytest.mark.parametrize("entry, text", [

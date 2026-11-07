@@ -34,7 +34,8 @@ _PUNCT = ".,·;—()|\"‘«»" + "·;"  # ano teleia, Greek question mark
 # strip like the other seclusion brackets so the bracketed words tokenize.
 # ‖ (U+2016) stands between clauses in Jaeger's De Spiritu (TLG 0086.043) to mark
 # a break in the sense; on its own it tokenizes to nothing.
-_SIGLA = "†*<>[]⎪⟦⟧⌜⌞⌝⌟‖"
+# { } are Fuhrmann's deletion braces in the Rhetorica ad Alexandrum (TLG 0547).
+_SIGLA = "†*<>[]⎪⟦⟧⌜⌞⌝⌟‖{}"
 
 _STRIP = _PUNCT + _SIGLA
 _APOSTROPHE_END = re.compile(r"['’᾽ʼ]$")

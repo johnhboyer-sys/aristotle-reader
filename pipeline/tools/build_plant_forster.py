@@ -754,6 +754,11 @@ TITLE = "De Plantis"
 CREDIT = "Translated by E. S. Forster (Oxford, 1913)"
 
 
+# Columns that open below line 1, other than the work's first: their entry is
+# the column break (stage1_archive._column_starts admits only line 1 or a cut).
+CUTS = {"815b10"}
+
+
 def render(chapters, found) -> dict[str, str]:
     """{file name: content} for sources/plant-forster/."""
     files = {}
@@ -776,12 +781,16 @@ def render(chapters, found) -> dict[str, str]:
         "# read off the page images (MARGIN_READS, LOST_MARKS there). `at` is the start",
         "# of the printed line the number stands beside (its first whole word). A",
         "# column label stands as the column's first Berlin line, so 815b and 822b",
-        "# open at their own first lines. Forster prints 827a8 and 827a12, not 827a10:",
-        "# he moves the bracketed 827a9-11 to the head of the page.",
+        "# open at their own first lines. 815b opens at line 10 (a translator's",
+        "# prologue fills 1-9), so its entry is marked `cut: true`: the English",
+        "# breaks there. Forster prints 827a8 and 827a12, not 827a10: he moves the",
+        "# bracketed 827a9-11 to the head of the page.",
     ]
     body = []
     for a in found:
         body += [f'- bekker: "{a["bekker"]}"', f'  at: {json.dumps(a["at"], ensure_ascii=False)}']
+        if a["bekker"] in CUTS:
+            body.append("  cut: true")
     files["anchors.yaml"] = "\n".join(head + body) + "\n"
     return files
 
