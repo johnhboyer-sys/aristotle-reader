@@ -29,6 +29,7 @@ CITATION_WORKS: dict[str, str | list[tuple[str, str, str]]] = {
     "019": "Lin",  # verified against LSJ 2026-08-18
     "020": "Long",  # verified against LSJ 2026-08-18
     "021": "MA",  # verified against LSJ 2026-08-18
+    "022": "MM",  # verified against LSJ 2026-11-06; its two EE columns here (1216b, 1235a) fall outside MM's books and stay unlinked
     "023": "Mech",  # verified against LSJ 2026-08-18
     "024": "Mem",  # verified against LSJ 2026-08-18
     "025": "Meta",  # verified against LSJ 2026-08-18
