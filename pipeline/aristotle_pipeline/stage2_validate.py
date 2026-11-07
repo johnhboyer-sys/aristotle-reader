@@ -366,7 +366,12 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
     # column set ("1a".."22a") and drops the editorial section-heading lines, so
     # the standard Bekker completeness (which expects both a/b sides) and the
     # line-gap check (which sees the dropped heading lines as gaps) don't apply.
-    busse = ((manifest.data.get("citation") or {}).get("scheme", "bekker") == "busse")
+    scheme = (manifest.data.get("citation") or {}).get("scheme", "bekker")
+    busse = scheme == "busse"
+    # chapter-section (the Athenian Constitution): chapter N is synthetic column
+    # "Na", so it shares busse's a-side-only column set; but its sections run
+    # 1..n with nothing dropped, so it keeps the strict line-gap check.
+    a_side_only = busse or scheme == "chapter-section"
 
     # --- 1. column completeness + monotonicity --------------------------
     seen_cols: list[str] = []
@@ -377,7 +382,7 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
     # manifest's first_column to its last. Taking the spine's own columns as the
     # expectation (as this did) made `missing`/`extra` empty by construction —
     # the check passed however many Busse pages the export had dropped.
-    if busse:
+    if a_side_only:
         first_page, _ = column_key(manifest.first_column)
         last_page, _ = column_key(manifest.last_column)
         expected = [f"{p}a" for p in range(first_page, last_page + 1)]
@@ -664,7 +669,114 @@ def validate(manifest: Manifest, spine: dict, english: dict, alignment: dict) ->
         "ok": True,  # informational
     }
 
+    if scheme == "chapter-section":
+        report["checks"]["sections"] = check_sections(manifest, spine, english)
+
     report["ok"] = all(c.get("ok") for c in report["checks"].values())
+    return report
+
+
+def _section_starts(cit: dict) -> dict[str, str]:
+    """The recorded opening words of each Greek section, {"49a4": "words"}:
+    inline in the manifest (tests) or a YAML file under sources/."""
+    starts = cit.get("starts") or {}
+    if isinstance(starts, str):
+        import yaml
+
+        from .config import SOURCES_DIR
+
+        starts = yaml.safe_load((SOURCES_DIR / starts).read_text(encoding="utf-8")) or {}
+    return {str(k): str(v) for k, v in starts.items()}
+
+
+def check_sections(manifest: Manifest, spine: dict, english: dict) -> dict:
+    """The section inventory of a chapter-section work, from four witnesses:
+
+    - the spine (what stage 1 parsed from the TLG export);
+    - `greek_sections`: the Greek edition's sections per chapter, pinned;
+    - `english_sections`: the sections per chapter printed in the translation's
+      margins, an independent witness; the two may differ only by the declared
+      `merges` (Kenyon's 49.5 printed inside Oppermann's 49.4);
+    - `starts`: each Greek section's opening words, recorded from the export,
+      so a section boundary that moves (a parsing change, a re-export) fails.
+
+    And every Greek section must carry a REAL English tick (a resolved anchor),
+    in section order: an anchor phrase that fails to resolve leaves at best an
+    estimate, which is a hole here, not a pass. Counts of what was examined are
+    reported, so a check that looked at nothing says so."""
+    cit = manifest.data.get("citation") or {}
+    n_cols = column_key(manifest.last_column)[0] - column_key(manifest.first_column)[0] + 1
+    english_inv = list(cit.get("english_sections") or [])
+    greek_inv = list(cit.get("greek_sections") or [])
+    merges = list(cit.get("merges") or [])
+    report: dict = {
+        "chapters": n_cols,
+        "english_sections": sum(english_inv),
+        "greek_sections": sum(greek_inv),
+        "merges": len(merges),
+    }
+    problems = False
+    if not (len(english_inv) == len(greek_inv) == n_cols) or not n_cols:
+        report["inventory_length"] = {"bekker_range": n_cols, "english": len(english_inv),
+                                      "greek": len(greek_inv)}
+        problems = True
+    first = column_key(manifest.first_column)[0]
+
+    spine_counts: dict[int, list[int]] = defaultdict(list)
+    for seg in spine["segments"]:
+        chap = column_key(seg["column"])[0]
+        spine_counts[chap].extend(l["n"] for l in seg["lines"])
+    spine_vs_greek = []
+    for i, want in enumerate(greek_inv):
+        chap = first + i
+        got = spine_counts.get(chap, [])
+        if got != list(range(1, want + 1)):
+            spine_vs_greek.append({"chapter": chap, "spine": len(got), "greek": want})
+    extra_chapters = sorted(set(spine_counts) - set(range(first, first + len(greek_inv))))
+    for chap in extra_chapters:
+        spine_vs_greek.append({"chapter": chap, "spine": len(spine_counts[chap]), "greek": 0})
+    report["spine_vs_greek"] = spine_vs_greek
+
+    declared: dict[int, int] = defaultdict(int)
+    for m in merges:
+        declared[int(m["chapter"])] += 1
+    greek_vs_english = []
+    for i, (e, g) in enumerate(zip(english_inv, greek_inv)):
+        chap = first + i
+        if e - g != declared.get(chap, 0):
+            greek_vs_english.append({"chapter": chap, "english": e, "greek": g,
+                                     "declared": declared.get(chap, 0)})
+    report["greek_vs_english"] = greek_vs_english
+
+    starts = _section_starts(cit)
+    texts = {f"{seg['column']}{l['n']}": l["text"] for seg in spine["segments"] for l in seg["lines"]}
+    expected_refs = [f"{first + i}a{s}" for i, want in enumerate(greek_inv) for s in range(1, want + 1)]
+    witness_missing = [r for r in expected_refs if r not in starts]
+    witness_mismatch = [r for r in expected_refs
+                        if r in starts and not " ".join(texts.get(r, "").split()).startswith(
+                            " ".join(starts[r].split()))]
+    report["witnesses"] = len(expected_refs) - len(witness_missing)
+    report["witness_missing"] = witness_missing
+    report["witness_mismatch"] = witness_mismatch
+
+    anchor_problems = []
+    anchors = 0
+    chunks_by_col: dict[str, list[dict]] = defaultdict(list)
+    for c in english.get("chunks", []):
+        chunks_by_col[c["column"]].append(c)
+    for i, want in enumerate(greek_inv):
+        col = f"{first + i}a"
+        ticks = [t for c in chunks_by_col.get(col, []) for t in c.get("bekker", [])]
+        real = [t["n"] for t in sorted(ticks, key=lambda t: t["offset"]) if t.get("real")]
+        expected = list(range(1, want + 1))
+        if real != expected:
+            anchor_problems.append({"column": col, "real": real, "expected": expected})
+        anchors += sum(1 for n in real if n in expected)
+    report["anchors"] = anchors
+    report["anchor_problems"] = anchor_problems
+
+    report["ok"] = not (problems or spine_vs_greek or greek_vs_english or witness_missing
+                        or witness_mismatch or anchor_problems)
     return report
 
 

@@ -148,6 +148,8 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
     # only) so refs.py/config/stage7 and the reader's column:line machinery work
     # unchanged; the reader relabels the gutter from the registry citation flag.
     scheme = (manifest.data.get("citation") or {}).get("scheme", "bekker")
+    if scheme == "chapter-section":
+        return _parse_sections(tree, manifest)
     page_type = "page" if scheme == "busse" else "Bekker-page"
     # Flat list of (column, line_no, text) in document order.
     flat: list[dict] = []
@@ -184,21 +186,7 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
         if compound:
             flush()
 
-    # Rejoin hyphenated words: a line ending in "-" takes the first
-    # whitespace-delimited token of the next line (which may sit in the
-    # next column).
-    for i, line in enumerate(flat):
-        if not line["text"].endswith("-"):
-            continue
-        if i + 1 >= len(flat) or not flat[i + 1]["text"]:
-            raise ValueError(
-                f"hyphenated line with no continuation: {line['column']}{line['n']}"
-            )
-        nxt = flat[i + 1]
-        head, _, rest = nxt["text"].partition(" ")
-        line["text"] = line["text"][:-1] + head
-        line["joined"] = True
-        nxt["text"] = rest
+    _rejoin_hyphens(flat)
 
     # A compound range can overlap a flanking plain-numbered line (Cael 294a:
     # plain 25 then n="25-26"; DM 401a: n="2-3" ending παρ- then plain 3).
@@ -219,7 +207,70 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
             continue
         merged.append(line)
     flat = merged
+    return _segment(flat, headings, manifest)
 
+
+def _rejoin_hyphens(flat: list[dict]) -> None:
+    """Rejoin hyphenated words: a line ending in "-" takes the first
+    whitespace-delimited token of the next line (which may sit in the next
+    column)."""
+    for i, line in enumerate(flat):
+        if not line["text"].endswith("-"):
+            continue
+        if i + 1 >= len(flat) or not flat[i + 1]["text"]:
+            raise ValueError(
+                f"hyphenated line with no continuation: {line['column']}{line['n']}"
+            )
+        nxt = flat[i + 1]
+        head, _, rest = nxt["text"].partition(" ")
+        line["text"] = line["text"][:-1] + head
+        line["joined"] = True
+        nxt["text"] = rest
+
+
+def _parse_sections(tree, manifest: Manifest) -> dict:
+    """citation.scheme: chapter-section (the Athenian Constitution). The export
+    nests <div type="Section" n=C> (chapter) > <div type="subsection" n=S>
+    (section) > printed <l> lines. Chapter C becomes synthetic column "Ca" and
+    section S becomes line S, so the column:line machinery runs unchanged; each
+    section's printed lines are joined into ONE spine line, after the same
+    hyphen rejoin as the Bekker path. A word hyphenated across a section break
+    therefore stays whole in the earlier section, which carries `joined`."""
+    flat: list[dict] = []
+    headings: list[dict] = []
+    for chap in tree.iter("{*}div"):
+        if chap.get("type") != "Section":
+            continue
+        column = f"{int(chap.get('n'))}a"
+        for sub in chap.iter("{*}div"):
+            if sub.get("type") != "subsection":
+                continue
+            n = int(sub.get("n"))
+            for l in sub.iter("{*}l"):
+                text = _line_text(l, strip_bars=True)
+                if not (l.get("n") or "").isdigit():
+                    headings.append({"column": column, "text": text})
+                    continue
+                flat.append({"column": column, "n": n, "text": text})
+    _rejoin_hyphens(flat)
+    sections: list[dict] = []
+    for line in flat:
+        prev = sections[-1] if sections else None
+        if prev is not None and (prev["column"], prev["n"]) == (line["column"], line["n"]):
+            prev["text"] = (prev["text"] + " " + line["text"]).strip()
+            # Only the section's LAST printed line can hand a word on to the
+            # next section; a join inside the section is now inside one line.
+            prev.pop("joined", None)
+            if line.get("joined"):
+                prev["joined"] = True
+            continue
+        sections.append(dict(line))
+    for s in sections:
+        s["text"] = re.sub(r"\s+", " ", s["text"]).strip()
+    return _segment(sections, headings, manifest)
+
+
+def _segment(flat: list[dict], headings: list[dict], manifest: Manifest) -> dict:
     # Group into per-(book, column) segments, preserving document order.
     segments: list[dict] = []
     seg_by_key: dict[tuple, dict] = {}
