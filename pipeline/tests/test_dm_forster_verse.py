@@ -38,8 +38,11 @@ VERSE = [
     "Hiding them all away, and again to the glad light of heaven",
     "Bringing them back at his will, performing terrible marvels.",
 ]
-# the prose that resumes after a verse line ending in ',' or ';'
-RESUMED = ["and the heavenly body", "and trees which produce autumn", "and animals, both wild"]
+# the prose that resumes after a verse line: after ',' or ';' the break is a
+# paragraphs.yaml entry; after a full stop it is the parse's own "\n"
+RESUMED = ["and the heavenly body", "and trees which produce autumn", "and animals, both wild",
+           "This, too, is borne out", "Therefore also the objects", "To use a somewhat humble",
+           "So must we suppose", "I think also that God"]   # one after each of the seven passages
 
 
 def _cfg() -> dict:
