@@ -10,7 +10,14 @@
 //   _index.json   — [{ slug, key }]  (drives the Astro getStaticPaths)
 // and public/data/lemmata.json — the popup manifest { lsjKey: {slug, head, count} }
 // so the in-reader word popup can show "appears N×" and link, only for lemmata
-// that actually have a page. The build is the single source of truth for slugs.
+// that actually have a page.
+//
+// Slugs are addresses, so they are kept, not recomputed: the record at
+// LEMMA_SLUGS_PATH (default ../sources/lemma-slugs.json, { lsjKey: slug }) holds
+// every slug ever issued. A recorded key keeps its slug; a new key gets a fresh
+// one that no recorded key holds, and is appended. Nothing is ever removed, so a
+// key that drops below MIN_COUNT keeps its slug reserved. Commit the record after
+// a build that adds to it.
 //
 // This is a spike: top-N lemmata only, occurrences capped, Bonitz layer stubbed.
 // Run: node scripts/build-lemmata.mjs   (from app/)
@@ -99,6 +106,28 @@ const works = readdirSync(DATA, { withFileTypes: true })
 if (works.length === 0) {
   console.error(`build-lemmata: no Aristotle work with analyses.json under ${DATA} — refusing to write.`);
   process.exit(1);
+}
+
+// The slug record. Without it every slug would be recomputed from frequency
+// order, which is exactly what renumbered /lemma/chorion — so refuse.
+const SLUGS_PATH = process.env.LEMMA_SLUGS_PATH || join('..', 'sources', 'lemma-slugs.json');
+if (!existsSync(SLUGS_PATH)) {
+  console.error(`build-lemmata: no slug record at ${SLUGS_PATH} — refusing to write.`);
+  process.exit(1);
+}
+const slugRecord = JSON.parse(readFileSync(SLUGS_PATH, 'utf8'));
+const recordedSlugs = new Map();   // slug -> key
+for (const [key, slug] of Object.entries(slugRecord)) {
+  if (recordedSlugs.has(slug)) {
+    console.error(`build-lemmata: slug record gives "${slug}" to both ${recordedSlugs.get(slug)} and ${key} — refusing to write.`);
+    process.exit(1);
+  }
+  recordedSlugs.set(slug, key);
+}
+
+function formatSlugRecord(rec) {
+  const keys = Object.keys(rec).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+  return `{\n${keys.map((k) => `${JSON.stringify(k)}: ${JSON.stringify(rec[k])}`).join(',\n')}\n}\n`;
 }
 
 // Titles + a stable display order from each work's manifest.
@@ -260,15 +289,20 @@ const distinctiveness = existsSync(DISTINCTIVENESS_PATH)
   ? JSON.parse(readFileSync(DISTINCTIVENESS_PATH, 'utf8'))
   : {};
 
-const usedSlugs = new Set();
+let slugsAdded = 0;
 const manifest = {};   // popup: lsjKey -> { slug, head, count, distinctiveness_label? }
 const index = [];      // getStaticPaths: [{ slug, key }]
 
 for (const b of top) {
   const head = lsjHead(b.key) ?? b.lemmaBeta;
-  let slug = slugify(b.lemmaBeta || b.key);
-  if (usedSlugs.has(slug)) { let i = 2; while (usedSlugs.has(`${slug}-${i}`)) i++; slug = `${slug}-${i}`; }
-  usedSlugs.add(slug);
+  let slug = slugRecord[b.key];
+  if (!slug) {
+    slug = slugify(b.lemmaBeta || b.key);
+    if (recordedSlugs.has(slug)) { let i = 2; while (recordedSlugs.has(`${slug}-${i}`)) i++; slug = `${slug}-${i}`; }
+    slugRecord[b.key] = slug;
+    recordedSlugs.set(slug, b.key);
+    slugsAdded++;
+  }
 
   const byWork = Object.entries(b.byWork)
     .map(([w, n]) => ({ work: w, title: title[w], count: n }))
@@ -323,6 +357,8 @@ for (const b of top) {
 
 writeFileSync(join(DATA, 'lemmata.json'), JSON.stringify(manifest));
 writeFileSync(join(OUT, '_index.json'), JSON.stringify(index));
+// One entry per line, sorted by key, so a build's additions read as a plain diff.
+if (slugsAdded) writeFileSync(SLUGS_PATH, formatSlugRecord(slugRecord));
 
 // ── Emit the picker shards ──────────────────────────────────────────────────
 // One file per fold-initial letter: { fold: { n: tokens, c: [{ h: head,
@@ -389,6 +425,7 @@ console.log(`distinct lemmata   : ${lemmata.size.toLocaleString()}`);
 console.log(`pages emitted      : ${top.length.toLocaleString()} (count ≥ ${MIN_COUNT})`);
 console.log(`  freq range       : ${top[0].count.toLocaleString()} … ${top[top.length - 1].count}`);
 console.log(`held back (<${MIN_COUNT})   : ${(ranked.length - top.length).toLocaleString()} rarer lemmata`);
+console.log(`slugs recorded     : ${recordedSlugs.size.toLocaleString()} (${slugsAdded.toLocaleString()} new${slugsAdded ? ` — commit ${SLUGS_PATH}` : ''})`);
 console.log(`sample slugs       : ${top.slice(0, 12).map((b) => manifest[b.key].slug).join(', ')}`);
 console.log(`picker fold keys   : ${picker.size.toLocaleString()} (${pickerHeads.toLocaleString()} headwords, ${shards.size} shards)`);
 console.log(`  no headword      : ${unresolved.toLocaleString()} (listed under the fold key)`);

@@ -771,6 +771,12 @@ async function main() {
   const sourceBranch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
   const dirty = git(['status', '--porcelain', '--untracked-files=no']);
   console.log(`  source: ${sourceSha} (${sourceBranch})${dirty ? ' — WORKING TREE HAS UNCOMMITTED CHANGES' : ''}`);
+  // build-lemmata appends a slug for every new lemma page. Shipped but not
+  // committed, the next build from a clean checkout hands those keys other
+  // slugs, and /lemma/<slug> links already out open a different word.
+  if (git(['status', '--porcelain', '--', 'sources/lemma-slugs.json'])) {
+    fail('sources/lemma-slugs.json has uncommitted changes — the build issued new lemma slugs. Commit the record first; its slugs are live addresses.');
+  }
   if (sourceBranch !== 'main') console.log(`  note: deploying from ${sourceBranch}, not main — valid only if origin/main has not moved since the fork (see DEPLOY-STATUS.md 2026-09-01).`);
   const remote = options.remote ?? git(['remote', 'get-url', 'origin']);
   console.log(`  remote: ${remote}`);
