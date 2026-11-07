@@ -143,3 +143,13 @@ def test_each_figure_cited_as_often_as_printed():
 def test_markers_sit_between_words():
     assert not re.search(r"[^\W\d_]\[\^\d+\][^\W\d_]", _text())
     assert not re.search(r"\]\[\^", _text())          # no doubled marker
+
+
+def test_dashes_closed_up_as_printed():
+    # Dobson sets his dashes close ("bones—for"). Six end a printed line; a
+    # check against Genie's OCR found the build had left a space after each.
+    text = re.sub(r"\s+", " ", MARKER.sub("", _text()))
+    assert "— " not in text
+    for s in ("impossible—but there", "respiration?—what is", "ones—e.g. the radius",
+              "sinews—thus we find", "cook—though, perhaps", "agent—either generally"):
+        assert text.count(s) == 1, s

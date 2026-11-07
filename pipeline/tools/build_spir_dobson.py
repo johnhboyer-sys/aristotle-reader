@@ -334,16 +334,18 @@ def assemble(rows: list[dict]) -> tuple[list[list[list[str]]], dict, list[str]]:
     """Rows -> chapters of paragraphs of words, and for each printed row the
     place (chapter, paragraph, word) of the first word that BEGINS on it.
 
-    Two spacing rules, both typographic: the printing sets a space before ; : ?
+    Three spacing rules, all typographic: the printing sets a space before ; : ?
     and ! (and the OCR keeps it only sometimes), so a token that is only such a
     mark joins the word before; a line that opens with a dash continues the word
-    before it ("flesh / —not")."""
+    before it ("flesh / —not"); and a line that ends with one runs on into the
+    next line's first word ("agent— / either"), since Dobson closes his dashes up."""
     starts = {(leaf, i): n for n, leaf, i in CHAPTERS}
     paras_extra = set(PARA_BREAKS)
     no_para = set(NOT_PARA)
     chapters: list[list[list[str]]] = []
     placed: dict[tuple[int, int], tuple[int, int, int]] = {}
     carry = None          # first half of a word hyphenated across the line end
+    dash_open = False     # the line before ended in a dash
     joins = []
     for r in rows:
         key = (r["leaf"], r["i"])
@@ -362,6 +364,12 @@ def assemble(rows: list[dict]) -> tuple[list[list[list[str]]], dict, list[str]]:
         if not chapters:
             raise SystemExit(f"text before chapter 1 at {key}")
         para = chapters[-1][-1]
+        if dash_open and para:
+            # Dobson closes up his dashes ("bones—for"); one that ends a line
+            # takes the next line's first word with it, as a hyphen does.
+            para[-1] += words[0]
+            words = words[1:]
+        dash_open = False
         if carry is not None:
             pair = carry + words[0]
             word = carry + "-" + words[0] if pair in KEEP_HYPHEN else pair
@@ -384,6 +392,8 @@ def assemble(rows: list[dict]) -> tuple[list[list[list[str]]], dict, list[str]]:
         last = para[-1]
         if last.endswith("-") and not last.endswith("—") and len(last) > 1:
             carry = para.pop()[:-1]
+        elif last.endswith("—") and len(last) > 1:
+            dash_open = True
     assert carry is None
     return chapters, placed, joins
 
