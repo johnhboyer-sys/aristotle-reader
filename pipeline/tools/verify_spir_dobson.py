@@ -22,7 +22,10 @@ each reader, and the readers against each other.  It fails on:
            copy is matched in ours, unless T's geometry puts it outside the
            text column: the running head, the margin (line numbers), a raised
            note figure, or the footnotes (the closer-set block under the text);
-  furniture a token of ours matched to a T token in the head, margin or notes.
+  furniture a token of ours matched to a T token in the head, margin or notes;
+  mark     a note marker of ours ([^N]) where T prints nothing ours lacks (the
+           raised figure, which the OCR reads as ! ? ® * ° | or a digit), or a
+           raised figure T's geometry finds where ours has no marker.
 
 Places where Dobson's printed text is corrected (misprints, small capitals,
 footnote marks the readers took for letters) are listed in ALLOW, each bound
@@ -42,6 +45,7 @@ Exit 0 clean, 1 failures, 2 when it examined nothing or a read is incomplete
 from __future__ import annotations
 
 import argparse
+import bisect
 import difflib
 import random
 import re
@@ -73,6 +77,11 @@ ALLOW: list[tuple[str, str, str]] = [
     ("missing", "?", "process of emission? Through"),
     ("missing", "*", "and those leading from the bones"),
     ("missing", "*", "in a positive way are"),
+    # note figures the OCR of T lost (read on the page images); at "emission?"
+    # T's figure is a second "?", which the alignment pairs with ours
+    ("mark", "[^]", "no need of refrigeration: but"),
+    ("mark", "[^]", "receive nourishment. This question"),
+    ("mark", "[^]", "process of emission? Through"),
 ]
 
 WORD = re.compile(r"[^\W\d_]+(?:-[^\W\d_]+)*|\d+|\S")
@@ -91,11 +100,20 @@ def tokens(text: str, base: int = 0) -> list[tuple[str, int, int]]:
 
 # ---------------------------------------------------------------- ours
 
-def read_ours(html: str) -> tuple[str, list[tuple[str, int, int]]]:
-    """The paragraphs' text joined by newlines, and its tokens."""
-    paras = re.findall(r"<p>(.*?)</p>", html, re.S)
-    text = "\n".join(paras)
-    return text, tokens(text)
+NOTE_MARK = re.compile(r"\[\^\d+\]")
+
+
+def read_ours(html: str) -> tuple[str, list[int]]:
+    """The paragraphs' text joined by newlines, with the note markers taken
+    out, and the offset in that text where each marker stood."""
+    text = "\n".join(re.findall(r"<p>(.*?)</p>", html, re.S))
+    out, marks, last = [], [], 0
+    for m in NOTE_MARK.finditer(text):
+        out.append(text[last:m.start()])
+        marks.append(sum(map(len, out)))
+        last = m.end()
+    out.append(text[last:])
+    return "".join(out), marks
 
 
 # ---------------------------------------------------------------- T (hOCR)
@@ -373,7 +391,24 @@ class Fail:
     note: str = ""
 
 
-def check(text: str, T: list[TTok], A: list[str], verbose: bool = True) -> tuple[list[Fail], dict]:
+def mark_gaps(ours, o_t: dict[int, int], marks: list[int]) -> list[tuple[int, int, int]]:
+    """(offset, first, last): for each marker, the run of T tokens strictly
+    between the nearest tokens of ours on either side that T matched."""
+    ends = [e for _, _, e in ours]
+    out = []
+    for at in marks:
+        i = bisect.bisect_right(ends, at) - 1
+        lo, hi = i, i + 1
+        while lo >= 0 and lo not in o_t:
+            lo -= 1
+        while hi < len(ours) and hi not in o_t:
+            hi += 1
+        out.append((at, o_t[lo] + 1 if lo >= 0 else 0, o_t[hi] - 1 if hi < len(ours) else 10 ** 9))
+    return out
+
+
+def check(text: str, T: list[TTok], A: list[str], marks: list[int] = (),
+          verbose: bool = True) -> tuple[list[Fail], dict]:
     ours = tokens(text)
     o = [t for t, _, _ in ours]
     tt = [x.t for x in T]
@@ -416,6 +451,23 @@ def check(text: str, T: list[TTok], A: list[str], verbose: bool = True) -> tuple
         if j not in t_o and (i is None or i in o_t) and x.zone == "body":
             fails.append(Fail("missing", prev_end, x.t, f"both readers, leaf {x.leaf}"))
 
+    # the note marks
+    gaps = mark_gaps(ours, o_t, list(marks))
+    for k, at in enumerate(marks):
+        if 0 < at < len(text) and text[at - 1].isalpha() and text[at].isalpha():
+            fails.append(Fail("mark", at, "[^]", "inside a word"))
+        if k and marks[k - 1] == at:
+            fails.append(Fail("mark", at, "[^]", "two markers at one place"))
+    for at, j0, j1 in gaps:
+        if not any(j not in t_o for j in range(j0, min(j1, len(T) - 1) + 1)):
+            fails.append(Fail("mark", at, "[^]", "T prints nothing here"))
+    prev_end = 0
+    for j, x in enumerate(T):
+        if j in t_o:
+            prev_end = ours[t_o[j]][2]
+        elif x.zone == "mark" and not any(j0 <= j <= j1 for _, j0, j1 in gaps):
+            fails.append(Fail("mark", prev_end, x.t, f"raised figure in T, leaf {x.leaf}, no marker"))
+
     # the allowlist: each entry excuses one failure inside its phrase
     for kind, tok, phrase in ALLOW:
         n = text.count(phrase)
@@ -429,7 +481,8 @@ def check(text: str, T: list[TTok], A: list[str], verbose: bool = True) -> tuple
                               f"entry ({kind}, {phrase!r}) used {len(hits)} times, phrase found {n}"))
 
     stats = dict(ours=len(o), T=len(tt), A=len(A), both=both, one=one,
-                 neither=len(o) - both - one, agreed=agreed)
+                 neither=len(o) - both - one, agreed=agreed, marks=len(gaps),
+                 raised=sum(1 for x in T if x.zone == "mark"))
     return sorted(fails, key=lambda f: f.at), stats
 
 
@@ -470,8 +523,8 @@ def plants(text: str, ours, agreed_tok: set[int], rng: random.Random, n: int):
         yield "stray mark", text[:s] + mark + text[s:], s
 
 
-def selftest(text: str, T, A, n: int, seed: int) -> int:
-    base, _ = check(text, T, A)
+def selftest(text: str, marks: list[int], T, A, n: int, seed: int) -> int:
+    base, _ = check(text, T, A, marks)
     if base:
         print(f"self-test needs a clean baseline; it has {len(base)} failures")
         return 1
@@ -486,13 +539,54 @@ def selftest(text: str, T, A, n: int, seed: int) -> int:
     tally: dict[str, list[int]] = {}
     missed = []
     for kind, mutated, at in plants(text, ours, agreed_tok, rng, n):
-        fails, _ = check(mutated, T, A)
+        shift = len(mutated) - len(text)
+        fails, _ = check(mutated, T, A, [m if m <= at else m + shift for m in marks])
         hit = any(abs(f.at - at) <= 60 and f.kind != "allow" for f in fails)
         tally.setdefault(kind, [0, 0])
         tally[kind][0] += 1
         tally[kind][1] += hit
         if not hit:
             missed.append((kind, at, text[max(0, at - 40):at + 40].replace("\n", " ¶ ")))
+    # a note marker moved to another gap between words, or lost where T's
+    # geometry sees the raised figure
+    gaps = mark_gaps(ours, o_t, marks)
+    spaces = [m.start() for m in re.finditer(r" ", text) if all(abs(m.start() - x) > 60 for x in marks)]
+    for at in rng.sample(spaces, min(n, len(spaces))):
+        k = rng.randrange(len(marks))
+        moved = sorted(marks[:k] + marks[k + 1:] + [at])
+        fails, _ = check(text, T, A, moved)
+        hit = any(f.kind == "mark" and abs(f.at - at) <= 60 for f in fails)
+        tally.setdefault("moved note mark", [0, 0])
+        tally["moved note mark"][0] += 1
+        tally["moved note mark"][1] += hit
+        if not hit:
+            missed.append(("moved note mark", at, text[max(0, at - 40):at + 40].replace("\n", " ¶ ")))
+    for kind, place in (("note mark in word", lambda at: next(
+            (m.start() + 1 for m in re.finditer(r"[^\W\d_]{3}", text[at:at + 40])), None)),
+                        ("doubled note mark", lambda at: 0)):
+        for k in rng.sample(range(len(marks)), min(n, len(marks))):
+            off = place(marks[k])
+            if off is None:
+                continue
+            moved = sorted(marks[:k] + marks[k + 1:] + [marks[k] + off] + ([marks[k]] if not off else []))
+            fails, _ = check(text, T, A, moved)
+            hit = any(f.kind == "mark" and abs(f.at - marks[k] - off) <= 60 for f in fails)
+            tally.setdefault(kind, [0, 0])
+            tally[kind][0] += 1
+            tally[kind][1] += hit
+            if not hit:
+                missed.append((kind, marks[k], text[max(0, marks[k] - 40):marks[k] + 40]))
+    seen = [k for k, (_, j0, j1) in enumerate(gaps)
+            if any(T[j].zone == "mark" for j in range(j0, min(j1, len(T) - 1) + 1))]
+    print(f"  note marks T sees as raised figures: {len(seen)} of {len(marks)}")
+    for k in rng.sample(seen, min(n, len(seen))):
+        fails, _ = check(text, T, A, marks[:k] + marks[k + 1:])
+        hit = any(f.kind == "mark" and abs(f.at - marks[k]) <= 60 for f in fails)
+        tally.setdefault("lost note mark", [0, 0])
+        tally["lost note mark"][0] += 1
+        tally["lost note mark"][1] += hit
+        if not hit:
+            missed.append(("lost note mark", marks[k], text[max(0, marks[k] - 40):marks[k] + 40]))
     # a lost leaf: the read itself incomplete
     for leaf in (LEAVES[0], LEAVES[-1], 460):
         tally.setdefault("lost leaf", [0, 0])
@@ -531,20 +625,21 @@ def main() -> int:
     for p in (T_HOCR, A_TXT):
         if not p.exists():
             sys.exit(f"missing {p} — fetch the scans first (see build_spir_dobson.py)")
-    text, _ = read_ours(OURS.read_text(encoding="utf-8"))
+    text, marks = read_ours(OURS.read_text(encoding="utf-8"))
     T, A = read_t(T_HOCR), read_a(A_TXT)
     short = coverage(T, A)
     if short:
         print("\n".join(short))
         return 2
-    fails, st = check(text, T, A)
+    fails, st = check(text, T, A, marks)
     print(f"ours {st['ours']} tokens; T {st['T']}; A {st['A']}; readers agree on {st['agreed']}")
+    print(f"note markers of ours {st['marks']}; raised figures T's geometry finds {st['raised']}")
     print(f"ours tokens found in both readers {st['both']}, in one {st['one']}, in neither {st['neither']}")
     if st["ours"] == 0 or st["agreed"] == 0:
         print("examined nothing")
         return 2
     if args.selftest:
-        return selftest(text, T, A, args.n, args.seed)
+        return selftest(text, marks, T, A, args.n, args.seed)
     show(text, fails)
     print(f"{len(fails)} failures" if fails else "clean")
     return 1 if fails else 0

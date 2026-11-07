@@ -883,7 +883,7 @@ export const WORKS: Work[] = [
     },
     authenticity: 'spurious',
     translations: [
-      { id: 'dobson', name: 'J. F. Dobson (Oxford, 1914)', short: 'Dobson', slot: 'english' },
+      { id: 'dobson', name: 'J. F. Dobson (Oxford, 1914)', short: 'Dobson', slot: 'english', footnotes: true },
     ],
     blurb: 'A short spurious treatise on the inborn breath — how it grows, is fed, and moves the body.',
   },

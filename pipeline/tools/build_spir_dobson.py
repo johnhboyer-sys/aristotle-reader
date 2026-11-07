@@ -18,6 +18,12 @@ Writes (under sources/spir-dobson/):
   book-01.html     `Part N` per Dobson chapter (= Jaeger's chapters 1-9), one <p>
                    per printed paragraph (from the first-line indents)
   anchors.yaml     Bekker ticks read from Dobson's PRINTED margins
+  footnotes.json   Dobson's footnotes, numbered 1..N through the work; the prose
+                   carries a [^N] marker where he prints each figure
+
+Notes (committed): pipeline/tools/spir_dobson_notes.json, {"leaf.n": html}, each of
+Dobson's footnotes as printed on that leaf, transcribed from the page images by two
+readers and settled where they differed.
 
 Check the result with verify_spir_dobson.py, which reads a second scan and shares
 none of this code.
@@ -54,94 +60,106 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 OCR = ROOT / "build" / "spir-ocr" / "T_hocr_part.html"
 OUT = ROOT / "sources" / "spir-dobson"
+NOTES = Path(__file__).with_name("spir_dobson_notes.json")
+# The notes file is as printed; these misprints in the notes are corrected at
+# build, as READS corrects the text: (note, printed, corrected).
+NOTE_FIXES: list[tuple[str, str, str]] = [
+    ("463.2", "<em>de Caelo</em>, 239<sup>b</sup> 30", "<em>de Caelo</em>, 293<sup>b</sup> 30"),  # Tim. 40 B is quoted at 293b30-32
+]
+MARK = re.compile(r"\[\^(\d+\.\d+)\]")
+# Figures printed twice for one note; every other note's figure is printed once.
+TWICE = {"454.5": "lungs that / lungs cannot", "461.1": "opens and closes a bracketed passage"}
 LEAVES = range(452, 469)
 
 # ---------------------------------------------------------------------------
 # Settled readings. (leaf, OCR text, printed text). Filled in from the images.
-# Footnote marks (printed as superscript figures; OCR'd as ! ? ’ ” ‘ ® * ° | or a
-# stray digit or Greek letter) are dropped with the footnotes. "misprint" marks
-# the four places where we correct the 1914 printing.
+# A footnote mark (printed as a superscript figure; OCR'd as ! ? ’ ” ‘ ® * ° | or
+# a stray digit or Greek letter) becomes [^leaf.n], n the figure as printed; the
+# build numbers them through the work. "misprint" marks the four places where we
+# correct the 1914 printing.
 READS: list[tuple[int, str, str]] = [
     (452, "Wuat", "What"),                  # small capitals WHAT
-    (452, "nutriment! is", "nutriment is"),
-    (452, "re-\nceptacle.”", "re-\nceptacle."),
-    (452, "air® draws", "air draws"),
-    (452, "nutrition.*", "nutrition."),
-    (453, "out! and", "out and"),
-    (453, "if? there", "if there"),
-    (453, "inhalation.’", "inhalation."),
-    (453, "wind-pipe.*", "wind-pipe."),
-    (453, "difficulty ; ὅ", "difficulty ;"),
-    (453, "size.°", "size."),
-    (453, "and‘ the", "and the"),
-    (454, "1 However", "However"),
-    (454, "breath ? is", "breath is"),
-    (454, "breath.°", "breath."),
-    (454, "cause.*", "cause."),
-    (454, "lungs® that", "lungs that"),
-    (454, "lungs® cannot", "lungs cannot"),
-    (455, "| But", "But"),
-    (455, "untenable,”", "untenable,"),
-    (455, "excretions;*", "excretions;"),
-    (455, "animals.*", "animals."),
-    (455, "asking,®", "asking,"),
-    (455, "respiration.®", "respiration."),
-    (456, "also! it", "also it"),
+    (452, "nutriment! is", "nutriment[^452.1] is"),
+    (452, "re-\nceptacle.”", "re-\nceptacle.[^452.2]"),
+    (452, "air® draws", "air[^452.3] draws"),
+    (452, "nutrition.*", "nutrition.[^452.4]"),
+    (453, "out! and", "out[^453.1] and"),
+    (453, "if? there", "if[^453.2] there"),
+    (453, "inhalation.’", "inhalation.[^453.3]"),
+    (453, "wind-pipe.*", "wind-pipe.[^453.4]"),
+    (453, "difficulty ; ὅ", "difficulty ;[^453.5]"),
+    (453, "size.°", "size.[^453.6]"),
+    (453, "and‘ the", "and[^453.7] the"),
+    (454, "1 However", "[^454.1]However"),
+    (454, "breath ? is", "breath[^454.2] is"),
+    (454, "breath.°", "breath.[^454.3]"),
+    (454, "cause.*", "cause.[^454.4]"),
+    (454, "lungs® that", "lungs[^454.5] that"),
+    (454, "lungs® cannot", "lungs[^454.5] cannot"),
+    (455, "| But", "[^455.1]But"),
+    (455, "untenable,”", "untenable,[^455.2]"),
+    (455, "excretions;*", "excretions;[^455.3]"),
+    (455, "animals.*", "animals.[^455.4]"),
+    (455, "asking,®", "asking,[^455.5]"),
+    (455, "respiration.®", "respiration.[^455.6]"),
+    (456, "also! it", "also[^456.1] it"),
     (456, "ne need", "no need"),
-    (456, "case.°", "case."),
-    (457, "And!", "And"),
-    (457, "rate? strange", "rate strange"),
-    (457, "appears 5 that", "appears that"),
+    (456, "refrigeration: but", "refrigeration:[^456.2] but"),   # the OCR lost the figure
+    (456, "case.°", "case.[^456.3]"),
+    (457, "And!", "And[^457.1]"),
+    (457, "rate? strange", "rate[^457.2] strange"),
+    (457, "appears 5 that", "appears[^457.3] that"),
     (457, "tc the", "to the"),              # misprint: the page reads "tc"
-    (458, "equable!", "equable"),
-    (458, "gently,? the", "gently, the"),
-    (458, "regularity.’", "regularity."),
-    (458, "and,* as", "and, as"),
+    (457, "nourishment. This", "nourishment.[^457.4] This"),   # the OCR lost the figure
+    (458, "equable!", "equable[^458.1]"),
+    (458, "gently,? the", "gently,[^458.2] the"),
+    (458, "regularity.’", "regularity.[^458.3]"),
+    (458, "and,* as", "and,[^458.4] as"),
     (459, "a.\npotentiality", "a\npotentiality"),   # misprint: a stray full stop after "a"
     (459, "erows", "grows"),
-    (459, "it,! and", "it, and"),
-    (459, "which | has", "which has"),
-    (460, "creatures,! where", "creatures, where"),
-    (460, "helped? by", "helped by"),
-    (460, "and®", "and"),
-    (460, "which * resides", "which resides"),
-    (461, "[! For", "[For"),
-    (461, 'passage."]', "passage.]"),
-    (461, "“ΤῈ is", "It is"),
-    (461, "sideways ® from", "sideways from"),
-    (461, "side.*", "side."),
-    (461, "meeting-place® between", "meeting-place between"),
-    (461, "it ;°", "it ;"),
-    (462, "air-duct.!", "air-duct."),
+    (459, "it,! and", "it,[^459.1] and"),
+    (459, "which | has", "which has"),    # a speck, not a figure
+    (460, "creatures,! where", "creatures,[^460.1] where"),
+    (460, "helped? by", "helped[^460.2] by"),
+    (460, "and®", "and[^460.3]"),
+    (460, "which * resides", "which[^460.4] resides"),
+    (461, "[! For", "[[^461.1]For"),
+    (461, 'passage."]', "passage.[^461.1]]"),
+    (461, "“ΤῈ is", "[^461.2]It is"),
+    (461, "sideways ® from", "sideways[^461.3] from"),
+    (461, "side.*", "side.[^461.4]"),
+    (461, "meeting-place® between", "meeting-place[^461.5] between"),
+    (461, "it ;°", "it ;[^461.6]"),
+    (462, "air-duct.!", "air-duct.[^462.1]"),
     (462, "Isits", "Is its"),
-    (462, "emission??", "emission?"),
-    (462, "fluid;*?", "fluid;"),
-    (462, "those* leading", "those leading"),
-    (462, "take place Ὁ", "take place?"),
-    (462, "connexions?®", "connexions?"),
-    (463, "other!’ animals", "other animals"),
-    (463, "verse.”", "verse."),
-    (464, "it.!", "it."),
-    (464, "joining ?and", "joining and"),
-    (464, "radii? which", "radii which"),
-    (464, "way* are", "way are"),
+    (462, "emission??", "emission?[^462.2]"),
+    (462, "fluid;*?", "fluid;[^462.3]"),
+    (462, "those* leading", "those[^462.4] leading"),
+    (462, "take place Ὁ", "take place?[^462.5]"),
+    (462, "connexions?®", "connexions?[^462.6]"),
+    (463, "other!’ animals", "other[^463.1] animals"),
+    (463, "verse.”", "verse.[^463.2]"),
+    (464, "it.!", "it.[^464.1]"),
+    (464, "joining ?and", "joining[^464.2] and"),
+    (464, "radii? which", "radii[^464.3] which"),
+    (464, "way* are", "way[^464.4] are"),
     (464, "so-—thus", "so—thus"),
-    (465, "bending,!", "bending,"),
-    (465, "present*;", "present;"),
-    (465, "for® (performing it well.)", "for ⟨performing it well.⟩"),   # Jaeger's supplement, in angle brackets
-    (465, "feet,‘ for", "feet, for"),
-    (465, "they Ὁ", "they"),
-    (465, "reason.®", "reason."),
-    (466, "universally! the", "universally the"),
+    (465, "bending,!", "bending,[^465.1]"),
+    (465, "present*;", "present[^465.2];"),
+    (465, "for® (performing it well.)", "for[^465.3] ⟨performing it well.⟩"),   # Jaeger's supplement, in angle brackets
+    (465, "feet,‘ for", "feet,[^465.4] for"),
+    (465, "they Ὁ", "they"),                # a speck, not a figure
+    (465, "reason.®", "reason.[^465.5]"),
+    (466, "universally! the", "universally[^466.1] the"),
     (466, "80 we must", "so we must"),
-    (467, "operates ' in", "operates in"),
+    (467, "operates ' in", "operates[^467.1] in"),
     (467, "both ἢ", "both?"),
-    (467, "ox,? this", "ox, this"),
+    (467, "ox,? this", "ox,[^467.2] this"),
     (467, "secking", "seeking"),
     (467, "scase—as", "case—as"),           # "s" is the margin's 25
-    (467, "Empedocles® stated", "Empedocles stated"),
+    (467, "Empedocles® stated", "Empedocles[^467.3] stated"),
     (467, "and_ softness", "and softness"),
-    (467, "Similarly * with", "Similarly with"),
+    (467, "Similarly * with", "Similarly[^467.4] with"),
 ]
 
 # Line-end hyphens Dobson printed (the word keeps its hyphen when rejoined).
@@ -353,7 +371,8 @@ def assemble(rows: list[dict]) -> tuple[list[list[list[str]]], dict, list[str]]:
             carry = None
         first = None
         for w in words:
-            if para and (re.fullmatch(r"[;:?!]+[—]?", w) or w.startswith("—")):
+            if para and (re.fullmatch(rf"[;:?!]+[—]?(?:{MARK.pattern})*", w) or w.startswith("—")
+                         or re.fullmatch(f"(?:{MARK.pattern})+", w)):
                 para[-1] += w
             else:
                 if first is None:
@@ -367,6 +386,38 @@ def assemble(rows: list[dict]) -> tuple[list[list[list[str]]], dict, list[str]]:
             carry = para.pop()[:-1]
     assert carry is None
     return chapters, placed, joins
+
+
+def number_notes(chapters: list[list[list[str]]], notes: dict[str, str]) -> dict[str, str]:
+    """Renumber each [^leaf.n] to [^k], k counting the notes in reading order
+    (a figure printed twice for one note keeps one number), and return the
+    footnotes as {k: html}. Every note must be cited and every mark defined."""
+    order: dict[str, int] = {}
+    times: dict[str, int] = {}
+
+    def renumber(m: re.Match) -> str:
+        times[m.group(1)] = times.get(m.group(1), 0) + 1
+        return f"[^{order.setdefault(m.group(1), len(order) + 1)}]"
+
+    for ch in chapters:
+        for para in ch:
+            para[:] = [MARK.sub(renumber, w) for w in para]
+    undefined = sorted(set(order) - set(notes))
+    uncited = sorted(set(notes) - set(order))
+    if undefined or uncited:
+        raise SystemExit(f"notes: marks with no note {undefined}; notes with no mark {uncited}")
+    # each page numbers its figures 1, 2, 3 ... down the page: a label out of
+    # that order is a figure pinned to the wrong note
+    seq = [tuple(map(int, k.split("."))) for k in order]
+    expect = [(leaf, n) for leaf in sorted({l for l, _ in seq})
+              for n in range(1, 1 + sum(1 for l, _ in seq if l == leaf))]
+    if seq != expect:
+        bad = next(f"{a[0]}.{a[1]}" for a, b in zip(seq, expect) if a != b)
+        raise SystemExit(f"notes: figure {bad} is out of the page's order")
+    wrong = {k: n for k, n in times.items() if n != (2 if k in TWICE else 1)}
+    if wrong:
+        raise SystemExit(f"notes: figures cited the wrong number of times {wrong}")
+    return {str(k): notes[key] for key, k in order.items()}
 
 
 def anchors(chapters: list[list[list[str]]], placed: dict, words: int = 9) -> list[tuple[str, str, int, int]]:
@@ -423,9 +474,17 @@ def main() -> int:
     chapters, placed, joins = assemble(rows)
     if args.joins:
         print("\n".join(joins))
+    notes = json.loads(NOTES.read_text(encoding="utf-8"))
+    for key, old, new in NOTE_FIXES:
+        if notes[key].count(old) != 1:
+            raise SystemExit(f"NOTE_FIXES: {old!r} occurs {notes[key].count(old)} times in note {key}")
+        notes[key] = notes[key].replace(old, new)
+    footnotes = number_notes(chapters, notes)
     ticks = anchors(chapters, placed)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / "book-01.html").write_text(write(chapters), encoding="utf-8")
+    (OUT / "footnotes.json").write_text(json.dumps(footnotes, ensure_ascii=False, indent=1) + "\n",
+                                        encoding="utf-8")
     head = ["# De Spiritu — Dobson (Oxford, 1914): real Bekker ticks.",
             "# Each entry is a number Dobson prints in his margin, read from the page images",
             "# (archive.org worksofaristotle03arisuoft, leaves 452-468); `at` is the start of",
@@ -440,7 +499,7 @@ def main() -> int:
     (OUT / "anchors.yaml").write_text("\n".join(head + body) + "\n", encoding="utf-8")
     nwords = sum(len(p) for c in chapters for p in c)
     print(f"wrote {OUT}: {len(chapters)} chapters, {sum(len(c) for c in chapters)} paragraphs, "
-          f"{nwords} words, {len(ticks)} ticks")
+          f"{nwords} words, {len(ticks)} ticks, {len(footnotes)} notes")
     return 0
 
 
