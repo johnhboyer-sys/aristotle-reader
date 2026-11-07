@@ -717,6 +717,29 @@ export const WORKS: Work[] = [
     blurb: 'A short treatise on household and civic economy — transmitted with Aristotle but not by him.',
   },
   {
+    id: 'MM',
+    title: 'Magna Moralia',
+    greekTitle: 'Ἠθικὰ μεγάλα',
+    abbr: 'MM',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'F. Susemihl, Aristotelis quae feruntur Magna moralia (Teubner, 1883)',
+    greekSource: {
+      short: 'Susemihl (Teubner, 1883)',
+      full: 'F. Susemihl, ed. Aristotelis quae feruntur Magna moralia. Leipzig: Teubner, 1883; text as printed by G. C. Armstrong (Loeb, 1935). Lines as in I. Bekker, ed. Aristotelis opera, vol. II. Berlin: Georg Reimer, 1831.',
+    },
+    authenticity: 'dubious',
+    // Contested: some hold it Aristotle's earliest ethics, most a Peripatetic
+    // digest of the Nicomachean and Eudemian Ethics. TLG's text carries no
+    // Bekker numbers; the spine's lines come from Bekker's printed pages (see
+    // pipeline/aristotle_pipeline/stage1_relineate.py).
+    translations: [
+      { id: 'stock', name: 'St. G. Stock (Oxford, 1915)', short: 'Stock', slot: 'english' },
+    ],
+    blurb: 'An ethics in two books over the ground of the Nicomachean and Eudemian Ethics; whether Aristotle wrote it is disputed.',
+  },
+  {
     id: 'VV',
     title: 'De Virtutibus et Vitiis',
     greekTitle: 'Περὶ ἀρετῶν καὶ κακιῶν',
@@ -1353,6 +1376,7 @@ export const CATEGORIES: Category[] = [
       { id: 'Mirab' },
       { id: 'Lin' },
       { id: 'Vent' },
+      { id: 'MM' },
       { id: 'VV' },
       { id: 'Oec' },
     ],
