@@ -13,10 +13,56 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
-## De Spiritu — BUILT, not yet deployed (2026-11-06, branch `claude/add-de-spiritu-9fadd2`)
+## 2026-11-07 — DEPLOYED: the new works, stable lemma addresses (PR #191)
+
+`gh-pages 669a81af → 1d3c1859`, source `5d06d2a32d` (the PR #191 branch tip; `origin/main` `5d4bc1089e`, the #191 merge, has the same tree). John said "Yes, merge and deploy". The orchestrator session merged #191 and ran `npm run deploy -- --verify` on the integration worktree's build.
+
+**What shipped:** nine branches joined in #191:
+- Problemata (`Prob`), De Spiritu (`Spir`), Magna Moralia (`MM`), De Plantis (`Plant`), Rhetorica ad Alexandrum (`RhetAl`), Athenian Constitution (`AthPol`, cited by chapter.section);
+- the Genie OCR correction pass over the vol. VI works, De Mundo (with its verse set line by line), VV and Oec;
+- Mirabilibus and On Dreams back in their printed Latin;
+- Taylor's 1812 Categories and On Interpretation in place of the modernised text, with John's tick review (`5731500a67`);
+- the Barnes 1984 labels (Prob, Oec, MM dubious), and the home division retitled "Doubtful and Spurious Works".
+
+De Spiritu ships: its hold was lifted on 2026-11-06 (`db348d1f6b`; Dobson 1914 is public domain).
+
+**Lemma addresses:** `/lemma/<slug>` slugs no longer move. `sources/lemma-slugs.json` records every slug ever issued, seeded from the live `_index.json` (6,418 keys); `build-lemmata.mjs` keeps a recorded slug, never reissues one, and appends new keys. The deploy refuses while the record has uncommitted changes. Without the record, this build would have moved 8 live slugs: chorion, antiphon and eneimi swapped in pairs; agonia and helos taken by another word. With it, 0 moved and 921 new slugs were appended (7,339 pages).
+
+**Merge rulings:** two clashes between branches were settled by the orchestrator. Notes are in `docs/spurious-works/integration-2026-11-07.md`.
+- A column opening below line 1 is cut only at an anchors entry marked `cut: true` (Rhet. Al.'s rule; De Plantis 815b10 now carries the mark).
+- The keraia keys as `#`, so a damaged fragment such as `φ[αʹ` stays a token. Stage 3 prints a per-work count of such tokens: AthPol 6, every other work 0.
+
+**Build:** `npm run build:public` at `5d06d2a32d` (Node 22.23.1):
+- 47 works, stage 2 PASS for all; preflight ok; shared LSJ 15,538 entries, 76,345 referenced keys across 47 works, all resolved;
+- stage 9: lemma 1,220,013 / form 995,731 / English 2,166,935 postings;
+- 7,558 pages.
+
+**Gates:**
+- Link integrity: **0 broken** (7,561 pages / 690,648 links / 536,100 anchors).
+- Tests: pipeline pytest 4,109; shared 690; desktop vitest 487 (21 skipped; Rust tests not run); app 97; scripts 99.
+- Taylor: Int 136 ticks, all anchored, none stacked; Cat 236 anchored, with one known stack (12b1/12b40).
+- Leak check at baseline: Rackham 2, `EN/footnotes.json` and `EN/manifest.json`; Ackrill, Tredennick and Irwin 0; positive control 1,633 files.
+- Held works: none. Shards against indexes: 157 indexes, 4,382,679 postings.
+- Dangling references to removed bundles: 0, with 16/16 positive controls.
+- Codex (gpt-6.1-sol) reviewed the merge resolutions and the slug fix: no findings.
+
+**Deploy diff:** 14,045 files, 2039 A / 11990 M / 11 D / 5 R. rsync staged 38 deletions: 16 rotated `_astro` bundles and 22 `data/search-shards/english` files. All 22 data deletions were restored from live, the known stale English shards; `--allow-data-deletions=data/search-shards/english` still awaits John. Additions:
+- the six works' data and pages (Prob 49 data files / 39 pages);
+- 921 lemma pages with their data;
+- 12 `data/reports` files and 7 search shards.
+
+**Live-verified:**
+- the script's URL set;
+- the six new works' book pages and manifests answer 200;
+- `/lemma/chorion` and `/lemma/antiphon` answer 200 (the build kept every live key on its live slug: 0 of 6,418 moved);
+- `/bonitz/` is 404;
+- the home page shows "Doubtful and Spurious Works";
+- live Int reads "as universals", with no "univerversals".
+
+## De Spiritu — BUILT 2026-11-06, DEPLOYED 2026-11-07 (PR #191, entry above)
 
 De Spiritu (`Spir`, Bekker 481a–486b, spurious): Jaeger's Greek (TLG 0086.043; chapters from First1KGreek) beside J. F. Dobson's Oxford translation, with Dobson's 80 printed margin numbers as real ticks.
-Public domain: Dobson's De Spiritu came out on its own in 1914 (Toronto's copy of Works vol. III binds it with its 1914 title page; the DLI copy, a 1968 reprint of the 1931 volume, keeps "First edition 1914"). An earlier note here and in `docs/dubious-works.md` gave 2027-01-01, which is the 1931 collected volume plus 95 years. John, 2026-11-06: treat it as public domain. It ships with the next `npm run build:public` and deploy.
+Public domain: Dobson's De Spiritu came out on its own in 1914 (Toronto's copy of Works vol. III binds it with its 1914 title page; the DLI copy, a 1968 reprint of the 1931 volume, keeps "First edition 1914"). An earlier note here and in `docs/dubious-works.md` gave 2027-01-01, which is the 1931 collected volume plus 95 years. John, 2026-11-06: treat it as public domain. It shipped on 2026-11-07 (PR #191).
 
 Dobson's 66 footnotes ride along as popups (`sources/spir-dobson/footnotes.json`; text in `pipeline/tools/spir_dobson_notes.json`, read from the page images by Opus and Grok and settled on the image where they differed). About 36 give the Greek Dobson or W. D. Ross read where it differs from Jaeger's text beside it. One misprinted citation is corrected at build (463 n.2, *de Caelo* 239b 30 → 293b 30).
 
