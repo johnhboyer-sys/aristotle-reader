@@ -41,7 +41,7 @@ no translation is removed from the site; every error is fixed; Ostwald waits.
   place), 5 `paragraphs.yaml`, Fyfe's rulings. 28 anchors the aligner had
   piled on the last words before the cuts were dropped.
 - **Labels**: Jowett rev. W. D. Ross (Oxford, 1921); Butcher 4th ed. 1907;
-  Peters rev. ed. 1893; Taylor 1812, modernized; Ogle's manifest 1912 (the
+  Peters rev. ed. 1893; Taylor 1812 (his own print since 2026-11-07); Ogle's manifest 1912 (the
   registry already said so). `Pol-public.yaml` lost its false note that Jowett
   omits the close of Book V, and the 1316a/1316b allowance that went with it.
 - **Tests**: `test_english_corrections.py` reads every slot by `dir`, treats a
@@ -101,8 +101,10 @@ no translation is removed from the site; every error is fixed; Ostwald waits.
   and record them like the rest.
 - **Rights questions for John** (nothing removed): On Dreams 459b27-460a23 and
   Mirabilibus chapters 2, 10 and 12 (the prints give these in Latin; the site's
-  English is of unknown origin); the Taylor text, a modernized edition from
-  "CLAA" whose modernizer is unknown.
+  English is of unknown origin). The Taylor question (a modernized "CLAA" text,
+  modernizer unknown) is closed: on 2026-11-07 Cat and Int were rebuilt from
+  Taylor's 1812 page images (`pipeline/tools/build_taylor_1812.py`), and the
+  30 corrections made to the CLAA text were retired.
 - Not swept: the gated translations (Ackrill, Tredennick, Irwin, Rackham).
 - The alignment review pages under `alignment-results/*/review/` are generated
   and still show old labels.

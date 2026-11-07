@@ -7,7 +7,7 @@ Match = the translation was made from the same text the site shows.
 | Work | Greek on the site | Translation | Made from | Status | archive.org id |
 |---|---|---|---|---|---|
 | Cat, Int | Minio-Paluello (OCT 1949) | Edghill (Oxford 1928) | Bekker 1831, departures in notes | stated | worksofaristotle0001emed |
-| Cat, Int | | Taylor (1812) | no scan found | not found | |
+| Cat, Int | | Taylor (1812) | not yet read for a statement (the site's text is built from this scan since 2026-11-07) | not checked | works00taylgoog |
 | Organon, Isa | various | Owen (Bohn 1853) | none named; one note follows "Bekker, Buhle, and Taylor" | not stated | theorganon01arisuoft, organonorlogicalt01aris |
 | APr | Ross (OCT 1964) | Jenkinson (Oxford 1928) | Bekker, with Waitz | stated | worksofaristotle0001emed |
 | APo | Ross (OCT 1964) | Mure (Oxford 1928) | Bekker "as a foundation" | stated | worksofaristotle0001emed |

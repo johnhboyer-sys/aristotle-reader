@@ -199,6 +199,8 @@ Ackrill 68/68) via 14 per-chapter alignment subagents.
 - **Taylor ch14 gap:** CLAA's chapter-14 page is a broken duplicate of ch13;
   Taylor's actual ch14 was reconstructed from the 1812 *Organon* scan on
   archive.org (OCR cleaned of commentary/footnotes) — flagged in Int.yaml.
+  Superseded 2026-11-07: both Taylor texts are now his 1812 print with notes,
+  built from the page images by `pipeline/tools/build_taylor_1812.py`.
 - **Inline table rendering (new, reusable):** these chapters have tables.
   - The Greek itself carries the ch13 modal square at 22a24–31, encoded with the
     `⎪` (U+23AA) column divider — added to stage3 sigla; stage7 `_greek_cells`

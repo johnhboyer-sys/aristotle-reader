@@ -133,7 +133,7 @@ export const WORKS: Work[] = [
     // keyed to Bekker via Ackrill's per-paragraph stamps.
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
-      { id: 'taylor', name: 'Thomas Taylor (1812, modernized)', short: 'Taylor', slot: 'secondary' },
+      { id: 'taylor', name: 'Thomas Taylor (1812)', short: 'Taylor', slot: 'secondary', footnotes: true },
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
@@ -154,11 +154,11 @@ export const WORKS: Work[] = [
       full: 'L. Minio-Paluello, ed. Aristotelis categoriae et liber de interpretatione. Oxford: Clarendon Press, 1949.',
     },
     // Edghill (1928) + Taylor (1812) public domain; Ackrill (1963) US-copyright,
-    // local build only (same gating as Categories). Taylor ch14 reconstructed
-    // from the 1812 Organon scan (CLAA's ch14 page was a broken duplicate).
+    // local build only (same gating as Categories). Taylor's text and notes are
+    // his 1812 print (pipeline/tools/build_taylor_1812.py).
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
-      { id: 'taylor', name: 'Thomas Taylor (1812, modernized)', short: 'Taylor', slot: 'secondary' },
+      { id: 'taylor', name: 'Thomas Taylor (1812)', short: 'Taylor', slot: 'secondary', footnotes: true },
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
