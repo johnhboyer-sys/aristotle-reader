@@ -45,8 +45,6 @@
   // figures or layout, which stay on `busse`. Each Greek line is a section.
   const chapterSection = isChapterSection(workMeta);
   const nonBekker = isNonBekker(workMeta);
-  // A section can be taller than the screen: a jump opens at its top.
-  const jumpBlock: ScrollLogicalPosition = chapterSection ? 'start' : 'center';
   // Analytical sidenotes ({N: text}) for a busse work, floated into a right rail.
   let sidenotesData: Record<string, string> = {};
   if (busse) fetchSidenotes(work).then(d => { sidenotesData = d; }).catch(() => {});
@@ -493,6 +491,21 @@
     ctxRaf = requestAnimationFrame(() => { ctxRaf = 0; updateChapterContext(); });
   }
 
+  // The reading area starts below the sticky header AND the sticky controls
+  // strip pinned beneath it, so the spy's detection band begins at the strip's bottom.
+  function readingTop(): number {
+    const headerH = Math.round(document.querySelector('.page-header')?.getBoundingClientRect().height ?? 60);
+    const ctrlBottom = document.querySelector('.reader-controls')?.getBoundingClientRect().bottom ?? 0;
+    return Math.max(headerH, Math.round(ctrlBottom));
+  }
+
+  // A chapter-section jump puts the section's top exactly at the reading
+  // area's top. A section is taller than the spy's band, so any of the section
+  // before left showing there would be what the spy cites (#49a2 for 49.3).
+  function alignSection(el: Element, behavior: ScrollBehavior) {
+    window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - readingTop(), behavior });
+  }
+
   function setupScrollSpy() {
     spyObserver?.disconnect();
     spyState = new Map();
@@ -502,11 +515,7 @@
     const els = Array.from(document.querySelectorAll(greekVisible ? '.greek-line[id]'
       : chapterSection ? '.english-col .bk-num' : '.segment[id]'));
     if (!els.length) return;
-    const headerH = Math.round(document.querySelector('.page-header')?.getBoundingClientRect().height ?? 60);
-    // The reading area starts below the sticky header AND the sticky controls
-    // strip pinned beneath it, so the detection band begins at the strip's bottom.
-    const ctrlBottom = document.querySelector('.reader-controls')?.getBoundingClientRect().bottom ?? 0;
-    const topInset = Math.max(headerH, Math.round(ctrlBottom));
+    const topInset = readingTop();
     // Detection band: a strip just below the sticky chrome. The intersecting
     // anchor highest on screen is the line currently at the top of the reading area.
     spyObserver = new IntersectionObserver((entries) => {
@@ -542,18 +551,20 @@
   function scrollToCitation(column: string, line: number, sub?: string) {
     suppressArmUntil = Date.now() + 800;
     const lineEl = document.getElementById(lineAnchor(column, line, sub));
-    // English only: a chapter-section work's Greek line is hidden, so go
-    // straight to the English section tick.
-    const greekHidden = chapterSection && view === 'english';
-    if (lineEl && !greekHidden && (lineEl as HTMLElement).offsetParent !== null) {
-      lineEl.scrollIntoView({ behavior: 'auto', block: jumpBlock });
-    } else {
-      // Greek hidden: a chapter-section work opens at the English section tick.
-      const sectionTick = chapterSection
+    if (chapterSection) {
+      // English only: the Greek line is hidden, so open at the English section tick.
+      const target = view === 'english'
         ? [...document.querySelectorAll(`#col-${column} .english-col .bk-num`)]
             .find((el) => el.textContent?.trim() === String(line))
-        : undefined;
-      (sectionTick ?? document.getElementById(`col-${column}`))?.scrollIntoView({ behavior: 'auto', block: 'start' });
+        : lineEl;
+      const el = target ?? document.getElementById(`col-${column}`);
+      if (el) alignSection(el, 'auto');
+      return;
+    }
+    if (lineEl && (lineEl as HTMLElement).offsetParent !== null) {
+      lineEl.scrollIntoView({ behavior: 'auto', block: 'center' });
+    } else {
+      document.getElementById(`col-${column}`)?.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
   }
 
@@ -1108,10 +1119,10 @@
             const bestEl = near ? document.getElementById(near) : null;
             if (bestEl) { el = bestEl; targetId = near as string; }
           }
-          // With the Greek hidden, a chapter-section jump opens at the English
-          // section tick (scrollToCitation's fallback): the Greek line is hidden.
-          if (el && chapterSection && view === 'english' && locCol && !Number.isNaN(locLine)) scrollToCitation(locCol, locLine);
-          else if (el) { suppressArmUntil = Date.now() + 1500; el.scrollIntoView({ behavior: 'smooth', block: jumpBlock }); }
+          // A chapter-section jump aligns the section (or, Greek hidden, its
+          // English tick) to the reading area's top; see scrollToCitation.
+          if (el && chapterSection && locCol && !Number.isNaN(locLine)) scrollToCitation(locCol, locLine);
+          else if (el) { suppressArmUntil = Date.now() + 1500; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
         } else if (hash) {
           const ref = parseBekker(hash);
           if (ref) {

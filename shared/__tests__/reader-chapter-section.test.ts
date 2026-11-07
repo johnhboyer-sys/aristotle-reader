@@ -100,25 +100,36 @@ describe('Reader, chapter-section scheme', () => {
     expect(container.querySelector('#L49a-3')).not.toBeNull();
   });
 
-  it('aligns a citation jump to the top, not the centre', async () => {
-    const spy = vi.spyOn(Element.prototype, 'scrollIntoView');
+  // A section is taller than the band the scroll spy reads, so a jump must put
+  // its top exactly at the reading area's top (the controls strip's bottom):
+  // any of the section before still showing there and the spy cites that one.
+  afterEach(() => { vi.restoreAllMocks(); });
+  function layout(targetTop: (el: Element) => number | undefined) {
+    vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+      const bottom = this.classList.contains('reader-controls') ? 251 : 0;
+      const top = targetTop(this) ?? 0;
+      return { top, bottom: bottom || top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON() {} } as DOMRect;
+    });
+    return vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+  }
+
+  it('puts the cited section exactly at the top of the reading area', async () => {
+    const scrollTo = layout(el => (el.id === 'L49a-3' ? 5000 : undefined));
     window.history.replaceState(null, '', '/AthPol?loc=49a:3');
     render(Reader, { props: { work: 'AthPol', bookNum: 1, bookData: book('49a', '49', '49a1–7') } });
-    await vi.waitFor(() => expect(spy).toHaveBeenCalled());
-    expect(spy.mock.calls[0][0]).toMatchObject({ block: 'start' });
-    expect((spy.mock.contexts[0] as Element).id).toBe('L49a-3');
+    await vi.waitFor(() => expect(scrollTo).toHaveBeenCalled());
+    expect(scrollTo.mock.calls.at(-1)?.[0]).toMatchObject({ top: 5000 - 251 });
   });
 
   it('with the Greek hidden, a citation jump opens at the English section tick', async () => {
     // The Greek line exists but is hidden: scrolling it into view goes nowhere.
-    const spy = vi.spyOn(Element.prototype, 'scrollIntoView');
+    const tick = (el: Element) =>
+      el.classList.contains('bk-num') && el.textContent?.trim() === '3' ? 3000 : undefined;
+    const scrollTo = layout(tick);
     window.history.replaceState(null, '', '/AthPol?loc=49a:3&view=english');
     render(Reader, { props: { work: 'AthPol', bookNum: 1, bookData: book('49a', '49', '49a1–7') } });
-    await vi.waitFor(() => expect(spy).toHaveBeenCalled());
-    const el = spy.mock.contexts[0] as Element;
-    expect(el.classList.contains('bk-num')).toBe(true);
-    expect(el.textContent?.trim()).toBe('3');
-    expect(spy.mock.calls[0][0]).toMatchObject({ block: 'start' });
+    await vi.waitFor(() => expect(scrollTo).toHaveBeenCalled());
+    expect(scrollTo.mock.calls.at(-1)?.[0]).toMatchObject({ top: 3000 - 251 });
   });
 });
 

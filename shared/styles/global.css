@@ -1094,15 +1094,6 @@ body {
   .sidenote-rail { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 0.4rem; margin: 0.3rem 0 0.7rem; }
   .sidenote { border-left: none; padding-left: 0; font-style: italic; }
 }
-/* A work cited by chapter.section (the Athenian Constitution): each Greek line
-   is a whole section and wraps in its column (no measured track is set, so
-   Greek-only falls back to the fixed measure). A citation jump aligns a section
-   to the top of the reading area, so it clears the sticky chrome as a segment
-   does; with the Greek hidden the jump lands on the English section tick. */
-.reader-body.chapter-section .greek-line,
-.reader-body.chapter-section .english-col .bk-num {
-  scroll-margin-top: calc(var(--header-h, 92px) + 3.5rem);
-}
 /* Inline diagrams (the Isagoge's Tree of Porphyry): a centered figure rendered
    in the prose flow, responsive on desktop + mobile. */
 .diagram { margin: 1.6rem auto; max-width: 24rem; font-family: var(--font-ui); }
