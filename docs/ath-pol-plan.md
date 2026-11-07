@@ -1,7 +1,7 @@
 # Athenian Constitution (Ath. Pol.): sources and plan
 
-Status: plan only, 2026-11-06. Nothing is built. John answered Q1 and Q3–Q8 the same
-day (section 6). Q2 waits on the findings in section 9, and building waits on his go-ahead.
+Status: 2026-11-06. John answered every question (section 6) and said to build it.
+The build is on branch `claude/ath-pol-plan-ccd05b`; HANDOFF-ATHPOL.md holds its state.
 
 The work has no Bekker numbers: the papyrus came to light in 1890, after Bekker.
 It is cited by chapter and section (69 chapters, 299 sections in Kenyon's OCT,
@@ -163,7 +163,7 @@ one formatter that prints "49.3" for this scheme and the old string for every ot
   - the English one: 69 per-chapter counts, 299 sections, read off Kenyon's 1921 margins;
   - the Greek one: the same, except chapter 49 has 4, so 298 in all.
   - Stage 2 fails if the spine differs from the Greek inventory in any chapter, not only in total. The English inventory comes from the printed translation, a witness independent of the TLG text, and the only difference allowed between the two is the declared 49.5 merge.
-- **P3. Manifest `manifests/AthPol.yaml`.** `work.authenticity` (Q2); `citation.scheme: chapter-section`; `bekker_range` 1a–69a; one book; `chapters.source: explicit`, 69 entries `{n: N, bekker: "Na1"}`; `english.primary` archive model, dir `athpol-kenyon`, `chapter_marker: part`.
+- **P3. Manifest `manifests/AthPol.yaml`.** no `work.authenticity` (Q2: unmarked, as in Barnes); `citation.scheme: chapter-section`; `bekker_range` 1a–69a; one book; `chapters.source: explicit`, 69 entries `{n: N, bekker: "Na1"}`; `english.primary` archive model, dir `athpol-kenyon`, `chapter_marker: part`.
 - **P4. LSJ.** Add a second pattern in `stage5_lsj._bibl_href` for `tlg,0086,003:(\d+)(?::(\d+))?`, mapping to `/AthPol/book/1?loc={C}a:{S or 1}`. It goes through the same guards as the Bekker branch: `resolve_citation`, `Manifest.for_work` (no manifest, no link) and `book_for_line`. It also returns no link unless the section is in the pinned inventory, so the branch is dead until the map entry and the manifest both exist. Add `"003": "AthPol"` to `CITATION_WORKS`, with a "verified against LSJ" note giving these counts. The 10.7 citation stays an unlinked span (Q6).
 - **P5. English source.** `sources/athpol-kenyon/book-01.html` with `Part N` markers, plus `anchors.yaml` holding 298 `{bekker: "49a3", at: phrase}` entries (compact refs: `stage1_archive` reads only an all-digit line part). There is one entry per Greek section, read from Kenyon's margins (his 49.5 has none; see P1), and the manifest names the file in `english.primary.anchors`. **Kenyon's footnotes are kept as notes** (John's Q3): `footnotes: true`, as on the Isagoge. Built by a script on the model of `build_spir_dobson.py`:
   - take the hOCR body text of n370–n448, with running heads dropped and footnotes split out by type size into the notes, keyed to their markers;
@@ -241,12 +241,12 @@ one formatter that prints "49.3" for this scheme and the old string for every ot
 
 ### Home page
 
-The home page groups works into the five numbered divisions plus the "Spurious Works" appendix (`shared/lib/works.ts` `CATEGORIES`). Placement and label wait on John (Q2); the findings and a recommendation are in section 9.
+The home page groups works into the five numbered divisions plus the "Spurious Works" appendix (`shared/lib/works.ts` `CATEGORIES`). Ath. Pol. goes last in Division V, after the *Poetics*, with no badge (Q2). The appendix keeps its name.
 
 ## 6. Questions and John's answers (2026-11-06)
 
 1. **Q1 Greek: TLG** (Oppermann 1928), the same loader family as the other works. Its costs, and how Kenyon's sections line up against it, are under P1.
-2. **Q2 Label: `dubious`** (John, 2026-11-06). **Place: open.** He asked what Barnes's Oxford *Complete Works* does; section 9 now answers that too.
+2. **Q2 "Match Barnes"** (John, 2026-11-06, after reading section 9). No authenticity mark and no badge, which replaces his first answer, `dubious`. Place: last of the treatises, after the *Poetics*, in Division V ("Rhetoric and Poetics"), not the appendix. The appendix keeps its name.
 3. **Q3 Kenyon's footnotes: kept** as notes (P5).
 4. **Q4 Fragments:** John asked why Kenyon doesn't translate them; section 10 answers. The plan leaves them out, as before, unless John says otherwise after reading section 10.
 5. **Q5 Id: `AthPol`, shown as "Ath. Pol."**
@@ -293,7 +293,7 @@ Codex returned 18 findings. Its full text is in the side-session notes folder (`
 - **Keaney, *The Composition of Aristotle's Athenaion Politeia* (OUP 1992)** defends Aristotle's own authorship on literary grounds, reading the work as a new genre (publisher abstract, Rutgers bio; the BMCR 3 (1992) 361–5 review not read).
 - **Net:** the ancients are unanimous for Aristotle. Modern opinion is split: Wilamowitz and Keaney hold it is his; Rhodes, the standard commentator, gives it to a pupil in his school; Kenyon would not decide. No one argues it was falsely ascribed or written long after Aristotle; the dating (after 329, before 322 BC, Kenyon p. xvi n.) puts it in his lifetime.
 
-**Recommendation**
+**Recommendation** (superseded: John ruled "Match Barnes", section 6 Q2)
 
 - **Label `dubious`, not `spurious`.** This repo's rule (`docs/dubious-works.md`): `dubious` is for "genuinely contested works (e.g. Magna Moralia)"; `spurious` is for works "transmitted with Aristotle but not by him". Ath. Pol. is contested, not disowned. At worst it is a pupil's work done under Aristotle's direction for his own research programme.
 - **Place: the appendix, beside the Magna Moralia.** That keeps one rule for the home page: the numbered divisions hold the works taken as Aristotle's own, and every work whose authorship is doubted sits in the appendix with its badge.
@@ -341,7 +341,7 @@ So he has two grades: * for doubted and ** for spurious. They match this repo's 
 - **Ath. Pol. carries no asterisk.** Barnes therefore does not count it among works whose authenticity "has been seriously doubted". This comes from the OCR, not the page images. It is the same in both copies of the contents. The OCR keeps the marks on the works around it (*Economics**, *Rhetoric to Alexander***). Its title page is too garbled in the OCR to show a mark either way. I did not find Ath. Pol. named in the vol. 1 Preface. It is credited to F. G. Kenyon, on the text of Kenyon's OCT 1920.
 - **Seen in the snippets:** the Note's wording, the order of the works, and the marks on *Magna Moralia** (in the contents and on its title page, "MAGNA MORALIA* St. G. Stock"), *Economics**, *Problems**, *On Plants*** and *Rhetoric to Alexander***. **Inferred:** that Ath. Pol. has no mark, from its absence in two OCR copies of the contents. The page numbers for *Marvellous Things* and *Mechanics* disagree between the two copies, so I left them out.
 
-**What this means for placement.** Barnes keeps each doubted or spurious work where Bekker put it and lets the asterisk carry the doubt. He puts Ath. Pol., which has no Bekker place, after the last treatise, with no mark. The site does it the other way: doubted works go into an appendix outside the numbered divisions (`shared/lib/works.ts`, the "Spurious Works" block). So Barnes gives no direct answer to "appendix or division". The nearest match to his practice is the Division IV option above: Ath. Pol. last in the division, after the *Poetics*, with its `dubious` badge. The appendix option keeps this site's own rule instead, which differs from Barnes's for every marked work. Either way, John's `dubious` label is stricter than Barnes, who leaves the work unmarked.
+**What this means for placement.** Barnes keeps each doubted or spurious work where Bekker put it and lets the asterisk carry the doubt. He puts Ath. Pol., which has no Bekker place, after the last treatise, with no mark. The site does it the other way: doubted works go into an appendix outside the numbered divisions (`shared/lib/works.ts`, the "Spurious Works" block). So Barnes gives no direct answer to "appendix or division". The nearest match to his practice is to put Ath. Pol. last in the division that holds the *Poetics* (Division V here), after it. The appendix option keeps this site's own rule instead, which differs from Barnes's for every marked work. Either way, John's `dubious` label is stricter than Barnes, who leaves the work unmarked.
 
 ## 10. Q4: why Kenyon does not translate the fragments
 
