@@ -398,14 +398,14 @@
    },
    {
     "citation": "16b25",
-    "offset": 1717,
+    "offset": 1731,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": null,
     "flags": [
-     "hand-placed 2026-11-07"
+     "hand-placed 2026-11-07, moved by John"
     ],
-    "at": "without which it is not possible to understand composites."
+    "at": "it is not possible to understand composites."
    }
   ]
  },
