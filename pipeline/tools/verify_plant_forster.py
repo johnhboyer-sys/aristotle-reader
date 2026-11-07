@@ -25,8 +25,10 @@ previous word. A hyphen at the end of a line joins the next line. Comparison
 is lower-case letters only, so gum-arabic still matches. A split-off opening
 ‘ glues onto the next word. SequenceMatcher (autojunk off) aligns our prose
 with each scan. Where the scans agree and ours does not, that is a flag.
-EXCEPTIONS lists the flags settled on the page images (2026-11-06). Exit 1 on any unexcused flag, or if nothing was
-examined. --selftest plants five defects and requires each flagged at its place.
+EXCEPTIONS lists the flags settled on the page images (2026-11-06), each by
+kind, context and detail exactly. Exit 1 on any unexcused flag, or if a book
+went unexamined (fewer than COVER of its words partnered in either scan). --selftest plants five defects and requires each flagged at its place, then
+a mark standing alone and a missing book.
 """
 
 import html
@@ -40,89 +42,90 @@ OURS = [Path("sources/plant-forster/book-01.html"), Path("sources/plant-forster/
 SCAN_A = Path("build/plant-ocr/forster/works0006aris_hocr.html")
 SCAN_B = Path("build/plant-ocr/forster/worksofaristotle06arisuoft_hocr.html")
 A_RANGE, B_RANGE = (83, 120), (78, 115)  # book II opens at A 101 / B 96
-EXCEPTIONS = [  # (kind, our_context_substring, reason); each read off A's page image
+COVER = 0.95    # share of each book's words that must find a partner in each scan
+EXCEPTIONS = [  # (kind, our context, detail, reason): one flag each, read off A's page image
     ('CHANGED', 'Life is found in animals and plants; but',
-     'small-capital opening LIFE (A reads lire)'),
+     'ours Life / scans lire', 'small-capital opening LIFE (A reads lire)'),
     ('PUNCTUATION', 'Now Anaxagoras and Empedocles say that they are',
-     'p83: a raised note figure after Empedocles read as ?'),
+     'ours none / scans ? on Empedocles', 'p83: a raised note figure after Empedocles read as ?'),
     ('CHANGED', 'of the sexes or not. But the great',
-     'p83: "or not." with a word space; the scans run it together'),
+     'ours or / scans ornot', 'p83: "or not." with a word space; the scans run it together'),
     ('INVENTED', 'the sexes or not. But the great diversity',
-     'p83: "or not." with a word space; the scans run it together'),
+     'not.', 'p83: "or not." with a word space; the scans run it together'),
     ('PUNCTUATION', 'and Democritus and Empedocles declared that they possessed',
-     'p84: a raised note figure after Empedocles read as ?'),
+     'ours none / scans ? on Empedocles', 'p84: a raised note figure after Empedocles read as ?'),
     ('PUNCTUATION', 'We know that sea-shells are animals which lack',
-     'p85: a raised note figure after sea-shells read as ?'),
+     'ours none / scans ? on sea-shells', 'p85: a raised note figure after sea-shells read as ?'),
     ('PUNCTUATION', 'that animals should have some common characteristic perfect',
-     'p86: a raised note figure after have read as ?'),
+     'ours none / scans ? on have', 'p86: a raised note figure after have read as ?'),
     ('PUNCTUATION', 'it possesses in itself. Some one might say',
-     'p86: itself. with a stop; both scans miss it'),
+     'ours . / scans none on itself.', 'p86: itself. with a stop; both scans miss it'),
     ('PUNCTUATION', 'which is given forth by them. A plant',
-     'p87: a raised note figure after forth read as ?'),
+     'ours none / scans ? on forth', 'p87: a raised note figure after forth read as ?'),
     ('CHANGED', 'generates it generates in another, and when the',
-     'p87: "in"; both scans read m'),
+     'ours in / scans m', 'p87: "in"; both scans read m'),
     ('PUNCTUATION', 'plant resembles the embryo in animals, being a',
-     'p88: a raised note figure after embryo read as ?'),
+     'ours none / scans ? on embryo', 'p88: a raised note figure after embryo read as ?'),
     ('PUNCTUATION', 'plant and many others. Empedocles said that plants',
-     'p90: others. with a stop; the scans read a comma'),
+     'ours . / scans , on others.', 'p90: others. with a stop; the scans read a comma'),
     ('PUNCTUATION', 'is that the moisture which is found in',
-     'p93: a raised note figure after moisture read as ?'),
+     'ours none / scans ? on moisture', 'p93: a raised note figure after moisture read as ?'),
     ('PUNCTUATION', 'the leaves and knots are not separated; in',
-     'p94: a raised note figure after knots read as ?'),
+     'ours none / scans ? on knots', 'p94: a raised note figure after knots read as ?'),
     ('PUNCTUATION', 'roots, like the thorn-tree and bramble. Vegetables are',
-     'p95: a raised note figure after thorn-tree read as ?'),
+     'ours none / scans ? on thorn-tree', 'p95: a raised note figure after thorn-tree read as ?'),
     ('CHANGED', 'of them have a number of superfluous stems',
-     'p95: "a number" with a word space'),
+     'ours a / scans anumber', 'p95: "a number" with a word space'),
     ('INVENTED', 'them have a number of superfluous stems growing',
-     'p95: "a number" with a word space'),
+     'number', 'p95: "a number" with a word space'),
     ('CHANGED', 'sea, others in rivers. Plants which grow in',
-     'p96: rivers. (scans otivers, tivers)'),
+     'ours rivers. / A otivers B tivers', 'p96: rivers. (scans otivers, tivers)'),
     ('PUNCTUATION', 'which is called Ziara, and increase there better',
-     'p96: a raised note figure after Ziara, read as ?'),
+     'ours , / scans ? on Ziara,', 'p96: a raised note figure after Ziara, read as ?'),
     ('PUNCTUATION', 'for example, the mediannus. Some plants have joints,',
-     'p96: a raised note figure after mediannus. read as ?'),
+     'ours . / scans ? on mediannus.', 'p96: a raised note figure after mediannus. read as ?'),
     ('PUNCTUATION', 'several husks, a cuticle and a shell, walnuts',
-     'p97: a raised note figure after cuticle read as ?'),
+     'ours none / scans ? on cuticle', 'p97: a raised note figure after cuticle read as ?'),
     ('PUNCTUATION', 'example, on wild plane, olive-trees on terebinth, mulberries',
-     'p98: a raised note figure after plane, read as ?'),
+     'ours , / scans ? on plane,', 'p98: a raised note figure after plane, read as ?'),
     ('PUNCTUATION', 'the process of concoction which takes place in',
-     'p101: a raised note figure after concoction read as ?'),
+     'ours none / scans ? on concoction', 'p101: a raised note figure after concoction read as ?'),
     ('PUNCTUATION', 'of the earthly element which attracts moisture; in',
-     'p102: a raised note figure after element read as ?'),
+     'ours none / scans ? on element', 'p102: a raised note figure after element read as ?'),
     ('PUNCTUATION', 'no rarity in them, and it is the',
-     'p103: a raised note figure after them, read as ?'),
+     'ours , / scans ? on them,', 'p103: a raised note figure after them, read as ?'),
     ('PUNCTUATION', 'the ground were rare, the vapour would make',
-     'p103: a raised note figure after rare, read as ?'),
+     'ours , / scans ? on rare,', 'p103: a raised note figure after rare, read as ?'),
     ('PUNCTUATION', 'We will now give the reason of this.',
-     'p104: a raised note figure after give read as ?'),
+     'ours none / scans ? on give', 'p104: a raised note figure after give read as ?'),
     ('PUNCTUATION', 'brain, and all foods also rise; so too',
-     'p107: a raised note figure after foods read as ?'),
+     'ours none / scans ? on foods', 'p107: a raised note figure after foods read as ?'),
     ('PUNCTUATION', 'the snow which causes this to be so;',
-     'p108: a raised note figure after causes read as ?'),
+     'ours none / scans ? on causes', 'p108: a raised note figure after causes read as ?'),
     ('CHANGED', 'to one another. Plants which grow on the',
-     'small-capital opening PLANTS (puants, prants)'),
+     'ours Plants / A puants B prants', 'small-capital opening PLANTS (puants, prants)'),
     ('PUNCTUATION', 'because the heat assimilates the water in the',
-     'p109: a raised note figure after assimilates read as ?'),
+     'ours none / scans ? on assimilates', 'p109: a raised note figure after assimilates read as ?'),
     ('PUNCTUATION', 'brimstone, it will recoil back again, and the',
-     'p110: a raised note figure after recoil read as ?'),
+     'ours none / scans ? on recoil', 'p110: a raised note figure after recoil read as ?'),
     ('PUNCTUATION', 'already seen, is found where there is fresh',
-     'p110: a raised note figure after found read as ?'),
+     'ours none / scans ? on found', 'p110: a raised note figure after found read as ?'),
     ('PUNCTUATION', 'it faces the east, it will grow quickly,',
-     'p111: a raised note figure after east, read as ?'),
+     'ours , / scans ? on east,', 'p111: a raised note figure after east, read as ?'),
     ('PUNCTUATION', 'the wind will invade the spot and the',
-     'p112: a raised note figure after invade read as ?'),
+     'ours none / scans ? on invade', 'p112: a raised note figure after invade read as ?'),
     ('CHANGED', 'have already said. The same theory applies to',
-     'p114: "The same" with a word space'),
+     'ours The / scans thesame', 'p114: "The same" with a word space'),
     ('INVENTED', 'already said. The same theory applies to olives,',
-     'p114: "The same" with a word space'),
+     'same', 'p114: "The same" with a word space'),
     ('PUNCTUATION', 'their appearance fully matured and are distributed through',
-     'p115: a raised note figure after matured read as ?'),
+     'ours none / scans ? on matured', 'p115: a raised note figure after matured read as ?'),
     ('CHANGED', 'have already said. The shedding of leaves from',
-     'small-capital opening THE (tue)'),
+     'ours The / scans tue', 'small-capital opening THE (tue)'),
     ('PUNCTUATION', 'to a harsh flavour. Next, the sun with',
-     'p120: flavour. with a stop; the scans read a comma'),
+     'ours . / scans , on flavour.', 'p120: flavour. with a stop; the scans read a comma'),
     ('LOST', 'will become bitter.',
-     'p120: "Here ends the book on Plants." is Forster\'s closing line from the Latin, not text'),
+     'here ends the book on plants', 'p120: "Here ends the book on Plants." is Forster\'s closing line from the Latin, not text'),
 ]
 
 _WORD = re.compile(r'<span class="ocrx_word"[^>]*title="([^"]*)"[^>]*>(.*?)</span>', re.S)
@@ -338,13 +341,25 @@ def _parse_ours(html1, html2):
             if part is None:
                 continue
             for para in re.findall(r"<p>(.*?)</p>", piece, re.S):
-                start = len(words)
+                start, loose = len(words), ""
                 for tok in html.unescape(para).split():
                     got = _norm(tok)
                     if not got or got[0] != "word":
+                        # a token with no letters ("*", "123", "—") rides on a word's
+                        # raw form, so the stray-mark check still sees it
+                        if len(words) > start:
+                            words[-1]["raw"] += " " + tok
+                        else:
+                            loose += tok + " "
                         continue
                     words.append({"book": book, "part": part, "key": got[1], "stop": got[2],
-                                   "lead": got[3], "raw": tok, "para": start, "i": len(words)})
+                                   "lead": got[3], "raw": loose + tok, "para": start, "i": len(words)})
+                    loose = ""
+                if loose and len(words) > start:
+                    words[-1]["raw"] += " " + loose.strip()
+                elif loose:
+                    words.append({"book": book, "part": part, "key": "", "stop": "", "lead": False,
+                                  "raw": loose.strip(), "para": start, "i": len(words)})
     return words
 
 
@@ -429,11 +444,37 @@ def compare(words, scan_a, scan_b):
         for i in opens:
             flags.append(_flag("LOST QUOTE", words, i, "no closing ’ in the paragraph", "our text", ["‘"]))
     for w in words:
-        bad = [ch for ch in w["raw"] if not (ch.isalpha() or ch in _ALLOWED)]
+        bad = [ch for ch in w["raw"] if not (ch.isalpha() or ch in _ALLOWED or ch == " ")]
         if bad:
             flags.append(_flag("STRAY MARK", words, w["i"], f"{''.join(bad)!r} in {w['raw']}", "our text", [w["key"]]))
     flags.sort(key=lambda f: (f["lo"], f["kind"]))
     return flags
+
+
+def _excused(flag):
+    """An exception names one flag exactly: kind, our context and the detail."""
+    return any((flag["kind"], flag["context"], flag["detail"]) == (k, c, d) for k, c, d, _why in EXCEPTIONS)
+
+
+def _coverage(words, scan_a, scan_b):
+    """Problems that mean part of the text went unexamined: a book with no words
+    on either side, or one where most words found no partner in a scan."""
+    problems = []
+    for name, scan, first2 in (("A", scan_a, A_RANGE[0] + 18), ("B", scan_b, B_RANGE[0] + 18)):
+        m_ours, _ = _align([w["key"] for w in words], [w["key"] for w in scan])
+        hit = {j for j in m_ours if j is not None}
+        for book in (1, 2):
+            ours = [i for i, w in enumerate(words) if w["book"] == book]
+            theirs = [j for j, w in enumerate(scan) if (w["page"] >= first2) == (book == 2)]
+            if not ours or not theirs:
+                problems.append(f"book {book}: our words {len(ours)}, scan {name} words {len(theirs)}")
+                continue
+            got_o = sum(1 for i in ours if m_ours[i] is not None) / len(ours)
+            got_s = sum(1 for j in theirs if j in hit) / len(theirs)
+            if min(got_o, got_s) < COVER:
+                problems.append(f"book {book}: only {got_o:.0%} of our words and {got_s:.0%} "
+                                f"of scan {name}'s found a partner (need {COVER:.0%})")
+    return problems
 
 
 def _report(words, stats_a, stats_b, flags):
@@ -447,7 +488,7 @@ def _report(words, stats_a, stats_b, flags):
           f"B head {stats_b['head']}, margin {stats_b['margin']}, notes {stats_b['note']}")
     shown = 0
     for flag in flags:
-        if any(flag["kind"] == kind and sub in flag["context"] for kind, sub, _why in EXCEPTIONS):
+        if _excused(flag):
             continue
         print(f"{flag['kind']} book {flag['book']} part {flag['part']} "
               f"@ {flag['context']} | {flag['detail']} | {flag['where']}")
@@ -470,9 +511,9 @@ def _sub_token(text, token, repl, nth):
 
 def selftest(html1, html2, scan_a, scan_b):
     base = _parse_ours(html1, html2)
-    sig = lambda fs: [(f["kind"], f["lo"], f["context"], f["detail"]) for f in fs]
-    if sig(compare(_parse_ours(html1, html2), scan_a, scan_b)) != sig(compare(base, scan_a, scan_b)):
-        print("FAIL unplanted text produced new flags")
+    left = [f for f in compare(base, scan_a, scan_b) if not _excused(f)]
+    if left:
+        print(f"FAIL the text as it stands has {len(left)} unexcused flags; plants would prove nothing")
         return 1
     ma, _ = _align([w["key"] for w in base], [w["key"] for w in scan_a])
     mb, _ = _align([w["key"] for w in base], [w["key"] for w in scan_b])
@@ -532,6 +573,15 @@ def selftest(html1, html2, scan_a, scan_b):
                   for f in compare(_parse_ours(h1, h2), scan_a, scan_b))
         print(f"{'PASS' if hit else 'FAIL'} {name}" + ("" if hit else f" not flagged at {index}"))
         failed += not hit
+    # A mark standing alone, not glued to a word, must not slip past the parser.
+    alone = html1.replace("plants,", "plants, *", 1)
+    hit = any(f["kind"] == "STRAY MARK" for f in compare(_parse_ours(alone, html2), scan_a, scan_b))
+    print(f"{'PASS' if hit else 'FAIL'} (f) stray-mark-alone")
+    failed += not hit
+    # A book gone missing on our side must stop the check, not pass it.
+    hit = bool(_coverage(_parse_ours(html1, re.sub(r"<p>.*?</p>", "", html2, flags=re.S)), scan_a, scan_b))
+    print(f"{'PASS' if hit else 'FAIL'} (g) empty-book")
+    failed += not hit
     return 1 if failed else 0
 
 
@@ -548,6 +598,10 @@ def main(argv):
         print("examined nothing: no pages or no words "
               f"(A pages {stats_a['pages']}, B pages {stats_b['pages']}, "
               f"our words {len(words)}, A body {len(scan_a)}, B body {len(scan_b)})")
+        return 1
+    problems = _coverage(words, scan_a, scan_b)
+    if problems:
+        print("examined too little: " + "; ".join(problems))
         return 1
     if "--selftest" in argv:
         return selftest(html1, html2, scan_a, scan_b)
