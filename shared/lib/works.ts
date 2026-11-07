@@ -706,8 +706,8 @@ export const WORKS: Work[] = [
       short: 'van Groningen and Wartelle (Les Belles Lettres, 1968)',
       full: 'B. A. van Groningen and A. Wartelle, eds. Aristote. Économique. Paris: Les Belles Lettres, 1968.',
     },
-    authenticity: 'spurious',
-    // Spurious/post-Aristotelian: Book I is possibly by a pupil, Book II by a
+    authenticity: 'dubious',
+    // Dubious (Barnes 1984 marks it *): Book I is possibly by a pupil, Book II by a
     // later Peripatetic. The Greek transmits only Books I–II; the traditional
     // Book III survives solely in medieval Latin and is omitted. Forster
     // (Oxford, 1920, PD) is the sole translation; Bekker gutter interpolated.
@@ -772,6 +772,25 @@ export const WORKS: Work[] = [
       { id: 'forster', name: 'E. S. Forster (Oxford, 1913)', short: 'Forster', slot: 'english' },
     ],
     blurb: 'The earliest surviving treatise on mechanics — a preface and thirty-five problems — is spurious.',
+  },
+  {
+    id: 'Prob',
+    title: 'Problemata',
+    greekTitle: 'Προβλήματα',
+    abbr: 'Prob.',
+    author: 'Aristotle',
+    books: 38,
+    bookLabels: Array.from({ length: 38 }, (_, i) => String(i + 1)),
+    greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
+    greekSource: {
+      short: 'Bekker (Berlin, 1831)',
+      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+    },
+    authenticity: 'dubious',
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1927)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'Nearly nine hundred questions of natural science, each asked as “Why…?” and answered with a conjecture, gathered into thirty-eight books.',
   },
   {
     id: 'Col',
@@ -1336,17 +1355,18 @@ export const CATEGORIES: Category[] = [
       { id: 'Poet' },
     ],
   },
-  // Appendix — the doubtful/spurious works transmitted under Aristotle's name but
-  // judged not to be by him. Grouped OUTSIDE the numbered divisions (no numeral);
-  // each card still carries its Dubious/Spurious badge.
+  // Appendix — the works transmitted under Aristotle's name whose authenticity is
+  // doubted or denied (Barnes 1984: * or **). Grouped OUTSIDE the numbered divisions
+  // (no numeral); each card still carries its Dubious/Spurious badge.
   {
     numeral: '',
-    title: 'Spurious Works',
+    title: 'Doubtful and Spurious Works',
     appendix: true,
     works: [
       { id: 'DM' },
       { id: 'MXG' },
       { id: 'Mech' },
+      { id: 'Prob' },
       { id: 'Col' },
       { id: 'Aud' },
       { id: 'Phgn' },

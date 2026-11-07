@@ -238,3 +238,34 @@ def test_stage3_hard_gate_passes_a_clean_work(tmp_path, monkeypatch, capsys):
     )
     assert report["ok"] is True
     assert "stage3-quality:" in capsys.readouterr().out
+
+
+def _one_line_spine(text):
+    return {"work": "T", "segments": [
+        {"id": "1a", "book": 1, "column": "1a", "lines": [{"n": 1, "text": text}]}]}
+
+
+def test_numerals_and_editorial_refs_are_text_not_tokens():
+    # Problemata: book heads numbered with stigma (Κϛ), numerals marked with
+    # the keraia (βʹ), and Bekker's cross-reference "(p. 941b 4—23.)". None is
+    # a word; the line text keeps them, but they get no lookup token.
+    tokens, _, key_failures = tokenize(
+        _one_line_spine("Κϛ. ΟΣΑ βʹ, γʹ, δὲ—χρόνος. (p. 941b 4—23.)"))
+    assert key_failures == []
+    assert [t["t"] for t in tokens["segments"][0]["lines"][0]["tokens"]] == [
+        "ΟΣΑ", "δὲ", "χρόνος"]
+
+
+def test_a_damaged_fragment_with_a_numeral_mark_still_fails():
+    # Athenaion Politeia 2763: "φ[αʹ" is a broken word, not a numeral. A
+    # token that carried sigla, or holds more than a numeral's letters, stays
+    # a key failure.
+    _, _, key_failures = tokenize(_one_line_spine("ἐστὶ φ[αʹ ὅταν λόγοςʹ"))
+    assert [f["token"] for f in key_failures] == ["φαʹ", "λόγοςʹ"]
+
+
+def test_an_unknown_letter_inside_a_word_still_fails():
+    # The skip is narrow: a Greek word with a stray Latin letter is a key
+    # failure, not silently dropped.
+    _, _, key_failures = tokenize(_one_line_spine("λόγoς quae feruntur"))
+    assert [f["token"] for f in key_failures] == ["λόγoς", "quae", "feruntur"]

@@ -11,7 +11,7 @@ work:
   author: "Aristotle"
   tlg_author: "0086"
   tlg_work: "029"
-  authenticity: spurious
+  authenticity: dubious  # Barnes 1984 marks it * (doubted)
   greek_edition: "van Groningen and Wartelle, Aristote. Économique (Les Belles Lettres, 1968)"
   english_translation: "E. S. Forster (Oxford, 1920)"
 

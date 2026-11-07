@@ -1,0 +1,612 @@
+Every current PRINT_READS entry is listed below. The first four existed before this task; their image citations now use scan A. All others are new.
+
+| Book.Part | Before | Print | Image and reason |
+|---|---|---|---|
+| 1.18 | difficulty 7? | difficulty? | A22: call-out 5 read as 7 |
+| 10.38 | of Speech ἐς | of speech? | A130: question mark and call-out 2, not Greek |
+| 19.35 | of 3 to x (for | of 3/2 to 1 (for | A220: stacked fraction ³⁄₂ |
+| 19.35 | of 8 to 1 is | of 3/2 to 1 is | A220: stacked fraction ³⁄₂ |
+| 1.6 | Is it. because, | Is it because, | A17: no full stop |
+| 4.18 | are so accounted For | are so accounted? For | A76: question mark |
+| 8.15 | because.. | because …] | A109: ellipsis and closing bracket |
+| 15.3 | 2, 3,4, 5 | 2, 3, 4, 5 | A182: numbers separated by spaces |
+| 15.3 | ‘one-five’, two-five, | ‘one-five’, ‘two-five’, | A182: paired quotation marks |
+| 15.5 | object seen be. | object seen be Θ. | A184: theta is a body label |
+| 15.5 | sun at A falling on makes the shadow 4, the ray must fall on A. | sun at Α falling on Θ makes the shadow ΘΛ, the ray must fall on Λ. | A184: alpha, theta, theta-lambda, lambda |
+| 15.5 | comes to B, the ray from B will fall within @A, | comes to Β, the ray from Β will fall within ΘΛ, | A184–A185: beta and theta-lambda |
+| 15.5 | comes to I’; | comes to Γ; | A185: gamma, no prime |
+| 15.5 | AB is equal to BI, | ΑΒ is equal to ΒΓ, | A185: alpha-beta and beta-gamma |
+| 15.5 | them at 4 | them at Δ | A185: delta, not 4 |
+| 15.5 | side of d | side of Δ | A185: delta |
+| 15.5 | line AE will be greater than the line EZ within A@. | line ΛΕ will be greater than the line ΕΖ within ΛΘ. | A185: lambda-epsilon, epsilon-zeta, lambda-theta |
+| 15.5 | it is clear A 8 ΑΕ 4 that | it is clear that | A185: letters lie only in the diagram |
+| 15.9 | shadow, which A Z Ee B grows | shadow, which grows | A188: letters lie only in the diagram |
+| 15.9 | Let AB be the gnomon, and I’ and 4 two positions of the sun, The ray from I’, the line I'Z, will fall outside the line E; | Let ΑΒ be the gnomon, and Γ and Δ two positions of the sun. The ray from Γ, the line ΓΖ, will fall outside the line ΔΕ; | A188: Greek body labels and full stop after sun |
+| 15.9 | shadow BE | shadow ΒΕ | A188: beta-epsilon |
+| 15.9 | and BZ when | and ΒΖ when | A188: beta-zeta |
+| 15.10 | Let Ad be the r B ve si A gnomon, B the moon, and I’ the sun. | Let ΑΔ be the gnomon, Β the moon, and Γ the sun. | A189: body labels; remove labels found only in diagram |
+| 15.10 | moon is BZ, so that the shadow will be Z; | moon is ΒΖ, so that the shadow will be ΔΖ; | A189: beta-zeta and delta-zeta |
+| 15.10 | sun is I, | sun is ΓΕ, | A189: gamma-epsilon |
+| 15.10 | viz. JE. | viz. ΔΕ. | A189: delta-epsilon |
+| 19.4 | must with | must … with | A210: ellipsis |
+| 19.4 | one’s purpose. [But | one’s purpose.] [But | A210: closing bracket |
+| 24.11 | ‘That cold, pure and simple,’ produces | That cold, pure and simple produces | A271: no quotation; raised 3 after simple |
+| 26.14 | marks the crisis or | marks the crisis? or | A288: question mark |
+| 26.27 | it, When the South wind begins. and | it, ‘When the South wind begins …’), and | A293: quotation, ellipsis, closing parenthesis and comma |
+| 26.30 | becomes cold.?, One | becomes cold. One | A294: full stop then call-out 2 |
+| 31.9 | for example but | for example; but | A344: semicolon |
+| 34.7 | near the πιο. | near the mouth. | A363: mouth before the full stop |
+| 36.2 | head has. these | head has these | A369: no full stop |
+| 19.12 | the greater ὃ So | the greater? So | A212: question mark and raised 8, not Greek |
+| 30.14 | (ἐπιστή μὴ) | (ἐπιστήμη) | A338: one Greek word, epistemē |
+| 31.13 | alike Ὁ? | alike? | A344: raised call-out 7, not Greek |
+| 2.29 | ἢν is it | Why is it | A46: Why, not Greek |
+| 3.34 | aware οὗ it, | aware of it, | A68: of, not Greek |
+| 11.43 | used ἀρ, | used up, | A159: up, not Greek |
+| 23.28 | there is αὖ successive | there is a successive | A263: a with raised call-out 5 |
+| 24.11 | result οὗ heat, | result of heat, | A271: of, not Greek |
+| 24.13 | escaping); απ speaking | escaping); and speaking | A271: and, not Greek |
+| 25.11 | ἢν is the air | Why is the air | A278: Why, not Greek |
+| 25.20 | νῶν is it | Why is it | A280: Why, not Greek |
+| 26.54 | evening and ἔγο the | evening and from the | A303: from, not Greek |
+| 30.8 | doctor’s ἅτε nor | doctor’s art nor | A336: art, with raised call-out 5 |
+| 5.21 | fiercely?. | fiercely? | A90: question mark, no following full stop |
+| 37.1 | liquid)?. | liquid)? | A370: question mark, no following full stop |
+| 5.19 | body ὃ from | body from | A89: raised call-out 3, not Greek |
+| 19.7 | omitted nete, | omitted trite, | A211: body reads trite; the general note repair misread vzze |
+| 19.12 | two nete are | two netes are | A212: plural netes in the print |
+| 19.32 | Terpander took away nete and | Terpander took away trite and | A219: trite removed, nete added |
+
+Every VERIFY_ALLOW entry below binds one exact finding to its Book, Part, context, and maximum count of one. All broad entries were replaced. The verifier keeps digits when it splits numeric and alphabetic runs; these exceptions account for raw call-outs and garbled labels rather than deleting their evidence.
+
+| # | Book.Part | Check | Finding | Required context | Count | Image and reason |
+|---|---|---|---|---|---|---|
+| 1 | 1.3 | a | 1 | a crisis and engender them, as [ours: ] do the seasons and the risings @A16 | 1 | A16: Footnote and printer signature text, below the body. It is not missing prose. |
+| 2 | 1.3 | a | wet or cold 64525 b | a crisis and engender them, as [ours: ] do the seasons and the risings @A16 | 1 | A16: Footnote and printer signature text, below the body. It is not missing prose. |
+| 3 | 1.41 | a | liquefactions’ | nature can withstand, it carries these [ours: liquefactions] and any excretions that there may @A30 | 1 | A30: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 4 | 1.41 | a | 2 | with them in the same direction. [ours: ] Drugs which partake of both these @A31 | 1 | A31: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 5 | 1.16 | e | ‘this | this part which generates lice. [This] is clear in the case @A21 | 1 | A21: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 6 | 1.17 | e | ‘where | who are in a condition [where] a very little will turn @A22 | 1 | A22: no quote mark before `where` in the print (leaf 22); a scan pairs a speck there with the closing mark of the real quotation ‘fire added to fire’ that follows |
+| 7 | 1.3 | f | cause ? | and the Dogstar,} since they [cause] wind and rain and fine @A17 | 1 | A17: raised footnote number read as punctuation; body punctuation checked in the image |
+| 8 | 1.8 | f | ophthalmia ! | is unhealthy with fever and [ophthalmia?] Is it because the summer @A18 | 1 | A18: raised footnote number read as punctuation; body punctuation checked in the image |
+| 9 | 1.10 | f | body ? | the nearest region of the [body,] and thus coughs are caused @A19 | 1 | A19: raised footnote number read as punctuation; body punctuation checked in the image |
+| 10 | 1.15 | f | another ? | they are different, corrupt one [another;] for some have only just @A21 | 1 | A21: raised footnote number read as punctuation; body punctuation checked in the image |
+| 11 | 1.18 | g | difficulty ? | on the legs only with [difficulty?] Is it because the moisture, @A22 | 1 | A22: raised footnote number read as punctuation; body punctuation checked in the image |
+| 12 | 1.24 | f | south ! | the wind is in the [south?] Is it because moisture becomes @A25 | 1 | A25: raised footnote number read as punctuation; body punctuation checked in the image |
+| 13 | 1.27 | f | unhealthy ! | Is it because changes are [unhealthy?] The autumn is more unhealthy @A26 | 1 | A26: raised footnote number read as punctuation; body punctuation checked in the image |
+| 14 | 1.35 | f | own ! | a medicinal power of its [own,] and ‘in all things it @A28 | 1 | A28: raised footnote number read as punctuation; body punctuation checked in the image |
+| 15 | 1.35 | f | important ? | is the beginning that is [important’,] and so the copper, by @A28 | 1 | A28: raised footnote number read as punctuation; body punctuation checked in the image |
+| 16 | 1.38 | f | gums ! | salt stop inflammation of the [gums?] Is it because purslane contains @A29 | 1 | A29: raised footnote number read as punctuation; body punctuation checked in the image |
+| 17 | 1.38 | f | together ? | or if it is crushed [together] for some time; for the @A29 | 1 | A29: raised footnote number read as punctuation; body punctuation checked in the image |
+| 18 | 1.41 | f | scammony ! | the lower part, for instance [scammony,] while others like elaterium and @A30 | 1 | A30: raised footnote number read as punctuation; body punctuation checked in the image |
+| 19 | 1.41 | f | elaterium ? | instance scammony, while others like [elaterium] and the juice of thapsia @A30 | 1 | A30: raised footnote number read as punctuation; body punctuation checked in the image |
+| 20 | 1.42 | f | overcome ! | is to refuse to be [overcome] and which enters into the @A32 | 1 | A32: raised footnote number read as punctuation; body punctuation checked in the image |
+| 21 | 1.43 | f | scammony ? | quantities affects the stomach, whereas [scammony] if taken in large quantities @A32 | 1 | A32: raised footnote number read as punctuation; body punctuation checked in the image |
+| 22 | 1.47 | f | effect ! | substances generally, have a purgative [effect?] Is it because anything which @A33 | 1 | A33: raised footnote number read as punctuation; body punctuation checked in the image |
+| 23 | 1.47 | f | oil ? | milk, for example, and olive [oil] and unfermented wine; all these @A33 | 1 | A33: raised footnote number read as punctuation; body punctuation checked in the image |
+| 24 | 1.48 | f | strongsmelling ? | no corporeal existence; for even [strong-smelling] plants, such as garlic, promote @A34 | 1 | A34: raised footnote number read as punctuation; body punctuation checked in the image |
+| 25 | 1.51 | f | character ? | has already taken on this [character] by concoction, this can be @A35 | 1 | A35: raised footnote number read as punctuation; body punctuation checked in the image |
+| 26 | 1.41 | b | liquefactions | can withstand, it carries these [liquefactions] and any excretions that there @A30 | 1 | A30: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 27 | 2.9 | e | ‘these | it dries up the moisture? [These] processes are less likely to @A40 | 1 | A40: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 28 | 2.11 | e | increased’ | but when it is gradually [increased?] For those who are in @A40 | 1 | A40: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 29 | 2.18 | e | ‘is | by water or by air? [Is] it because the moisture when @A42 | 1 | A42: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 30 | 2.29 | e | cold’ | more freely when it is [cold?] Is it because the heat @A46 | 1 | A46: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 31 | 2.37 | e | ‘to | freely when we are clothed? [To] this we shall give the @A50 | 1 | A50: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 32 | 2.39 | e | above’ | same answer as we gave [above.] Why is it that, although @A50 | 1 | A50: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 33 | 2.1 | f | relaxed ! | but rather when it is [relaxed?] Is it because, when it @A38 | 1 | A38: raised footnote number read as punctuation; body punctuation checked in the image |
+| 34 | 2.4 | f | lower ! | perspire more freely than the [lower?] Is it because heat rises @A39 | 1 | A39: raised footnote number read as punctuation; body punctuation checked in the image |
+| 35 | 2.10 | f | through ? | can find a way out [through] parts which are particularly porous @A40 | 1 | A40: raised footnote number read as punctuation; body punctuation checked in the image |
+| 36 | 2.16 | f | freely ! | who are asleep perspire more [freely?] Is it due to the @A42 | 1 | A42: raised footnote number read as punctuation; body punctuation checked in the image |
+| 37 | 2.22 | f | reason ? | begin, both for the above [reason] and because the excretion takes @A44 | 1 | A44: raised footnote number read as punctuation; body punctuation checked in the image |
+| 38 | 2.25 | f | stopping ? | up its channels, so by [stopping] the pores through administering food @A45 | 1 | A45: raised footnote number read as punctuation; body punctuation checked in the image |
+| 39 | 2.26 | f | fear ! | body under the influence of [fear] (hence the relaxation of the @A46 | 1 | A46: raised footnote number read as punctuation; body punctuation checked in the image |
+| 40 | 2.30 | f | clothed ! | by running naked rather than [clothed?] Is it because exertion in @A47 | 1 | A47: raised footnote number read as punctuation; body punctuation checked in the image |
+| 41 | 2.32 | f | increased ! | but when it is gradually [increased?] For if the heat is @A48 | 1 | A48: raised footnote number read as punctuation; body punctuation checked in the image |
+| 42 | 2.41 | f | heat ! | by excessive moisture, and the [heat] is not completely retained, but @A51 | 1 | A51: raised footnote number read as punctuation; body punctuation checked in the image |
+| 43 | 3.5 | e | ‘this | or to a blazing fire? [This] occurs also in those who @A53 | 1 | A53: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 44 | 3.5 | e | namely’ | from all those described above; [namely,] when the matter whereby the @A53 | 1 | A53: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 45 | 3.5 | e | ‘the | lack of such a substance. [The] same cause seems to operate @A54 | 1 | A54: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 46 | 3.9 | e | objects’ | to both near and distant [objects,] it would not see them, @A56 | 1 | A56: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 47 | 3.1 | f | diseases ! | attacked by pleurisy and similar [diseases?] Is it because a large @A52 | 1 | A52: raised footnote number read as punctuation; body punctuation checked in the image |
+| 48 | 3.4 | f | consistency ! | when it has body and [consistency?] Why do drunkards tremble, and @A53 | 1 | A53: raised footnote number read as punctuation; body punctuation checked in the image |
+| 49 | 3.10 | f | same ! | be in contact with the [same] thing at the same time. @A57 | 1 | A57: raised footnote number read as punctuation; body punctuation checked in the image |
+| 50 | 3.18 | f | repression ! | wine has the effect of [repression;] while water is light and @A60 | 1 | A60: raised footnote number read as punctuation; body punctuation checked in the image |
+| 51 | 3.18 | f | light ? | not unpleasant, and, therefore, being [light] it quickly penetrates downwards, but, @A60 | 1 | A60: raised footnote number read as punctuation; body punctuation checked in the image |
+| 52 | 3.20 | f | drunkenness ! | some as a test of [drunkenness?] Is it because the vision @A61 | 1 | A61: raised footnote number read as punctuation; body punctuation checked in the image |
+| 53 | 3.20 | f | it ? | appears double if one puts [it] close to the eye. For @A61 | 1 | A61: raised footnote number read as punctuation; body punctuation checked in the image |
+| 54 | 3.22 | f | expel ! | thinner consistency but easier to [expel)?] Or is it because the @A62 | 1 | A62: raised footnote number read as punctuation; body punctuation checked in the image |
+| 55 | 3.26 | f | burning ! | a different manner? For example, [burning] is caused both by frost @A64 | 1 | A64: raised footnote number read as punctuation; body punctuation checked in the image |
+| 56 | 3.26 | f | hold ? | one has not a good [hold] upon it, and this happens @A65 | 1 | A65: raised footnote number read as punctuation; body punctuation checked in the image |
+| 57 | 3.28 | f | wine ! | flavour other than that of [wine?] He then who is addicted @A66 | 1 | A66: raised footnote number read as punctuation; body punctuation checked in the image |
+| 58 | 3.32 | f | sun ! | the sea delight in the [sun?] Is it because drunkards require @A67 | 1 | A67: raised footnote number read as punctuation; body punctuation checked in the image |
+| 59 | 4.10 | a | 13 cp 878 335 | Is it due to the fact [ours: ] that the change caused in them @A72 | 1 | A72: Footnote and printer signature text, below the body. It is not missing prose. |
+| 60 | 4.2 | f | noticeably ! | in sexual intercourse sink very [noticeably,] though the latter are near @A69 | 1 | A69: raised footnote number read as punctuation; body punctuation checked in the image |
+| 61 | 4.2 | f | fruitful ! | the fact that childless and [fruitful] women alike try the experiment @A70 | 1 | A70: raised footnote number read as punctuation; body punctuation checked in the image |
+| 62 | 4.3 | f | alike ? | eunuchs, who never do so, [alike] lose their sharpness of vision? @A70 | 1 | A70: raised footnote number read as punctuation; body punctuation checked in the image |
+| 63 | 4.12 | f | puberty ! | in men or women before [puberty?] Is it because unconcocted matter @A73 | 1 | A73: raised footnote number read as punctuation; body punctuation checked in the image |
+| 64 | 4.13 | f | and ! | and a man from aman. [And] we do not value the @A75 | 1 | A75: raised footnote number read as punctuation; body punctuation checked in the image |
+| 65 | 4.16 | f | phlegm ! | in some diseases caused by [phlegm?] Is it because it involves @A76 | 1 | A76: raised footnote number read as punctuation; body punctuation checked in the image |
+| 66 | 4.20 | f | breath ! | accompanied by an emission of [breath.] If therefore a rush of @A77 | 1 | A77: raised footnote number read as punctuation; body punctuation checked in the image |
+| 67 | 4.20 | f | semen ? | to impart movement to the [semen] and the latter becomes cold; @A77 | 1 | A77: raised footnote number read as punctuation; body punctuation checked in the image |
+| 68 | 4.24 | f | said ? | because, as has already been [said,] in children the breath concocts @A78 | 1 | A78: raised footnote number read as punctuation; body punctuation checked in the image |
+| 69 | 4.29 | f | oppressed ? | have sexual intercourse are often [oppressed] by bile, which makes its @A81 | 1 | A81: raised footnote number read as punctuation; body punctuation checked in the image |
+| 70 | 5.26 | a | 6 | to the source of the veins. [ours: ] Or is it because the thigh @A92 | 1 | A92: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 71 | 5.8 | e | ‘swings | runs more quickly if he [swings] his arms than if he @A86 | 1 | A86: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 72 | 5.30 | e | complete’ | the concoction of anything is [complete?] Or is it owing to @A93 | 1 | A93: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 73 | 5.1 | f | country ! | level ground than over uneven [country?] Is it because much movement @A83 | 1 | A83: raised footnote number read as punctuation; body punctuation checked in the image |
+| 74 | 5.6 | f | oneself ! | oil with which one rubs [oneself?] Is it because the oil @A84 | 1 | A84: raised footnote number read as punctuation; body punctuation checked in the image |
+| 75 | 5.7 | f | said ! | which, as we have already [said,] happens in those who have @A85 | 1 | A85: raised footnote number read as punctuation; body punctuation checked in the image |
+| 76 | 5.12 | f | fatiguing ! | so. Why are short walks [fatiguing?] Is it because they involve @A87 | 1 | A87: raised footnote number read as punctuation; body punctuation checked in the image |
+| 77 | 5.14 | f | nourishment ! | that it is near the [nourishment.] Since, therefore, generally speaking, fat @A88 | 1 | A88: raised footnote number read as punctuation; body punctuation checked in the image |
+| 78 | 5.15 | f | drawn ? | heels quiver and are hastily [drawn] down again? Is it because, @A88 | 1 | A88: raised footnote number read as punctuation; body punctuation checked in the image |
+| 79 | 5.18 | f | walking ! | fall when running than when [walking?] Is it because in the @A89 | 1 | A89: raised footnote number read as punctuation; body punctuation checked in the image |
+| 80 | 5.20 | f | fixed ! | is prolonged and continuous and [fixed] the strain falls most upon @A90 | 1 | A90: raised footnote number read as punctuation; body punctuation checked in the image |
+| 81 | 5.23 | f | road ! | even than on an uneven [road?] Is it because it is @A91 | 1 | A91: raised footnote number read as punctuation; body punctuation checked in the image |
+| 82 | 5.26 | f | heat ? | fleshy, and therefore the natural [heat] there is considerable? Why is @A93 | 1 | A93: raised footnote number read as punctuation; body punctuation checked in the image |
+| 83 | 5.27 | f | people ? | is it that in some [people] sores are formed as the @A93 | 1 | A93: raised footnote number read as punctuation; body punctuation checked in the image |
+| 84 | 5.32 | f | involves ! | the left leg, since it [involves] a distorted attitude, is unnatural, @A94 | 1 | A94: raised footnote number read as punctuation; body punctuation checked in the image |
+| 85 | 5.34 | f | remains ! | moister, for the internal moisture [remains,] but the surface moisture is @A95 | 1 | A95: raised footnote number read as punctuation; body punctuation checked in the image |
+| 86 | 5.38 | f | anointing ! | baths, in the winter by [anointing?] Is it because the latter, @A96 | 1 | A96: raised footnote number read as punctuation; body punctuation checked in the image |
+| 87 | 5.40 | f | carried ? | for as they are forcibly [carried] upwards in an unnatural manner, @A97 | 1 | A97: raised footnote number read as punctuation; body punctuation checked in the image |
+| 88 | 5.41 | f | forward ! | natural, while putting the foot [forward] is a mean between the @A98 | 1 | A98: raised footnote number read as punctuation; body punctuation checked in the image |
+| 89 | 5.38 | b | at | the former is commoner than [at] other seasons; for indulgence in @A96 | 1 | A96: print reads `at other seasons` (leaf 96); both scans read a speck between the words (`at’other`, `at”other`) |
+| 90 | 5.38 | b | other | former is commoner than at [other] seasons; for indulgence in drinking @A96 | 1 | A96: print reads `at other seasons` (leaf 96); both scans read a speck between the words (`at’other`, `at”other`) |
+| 91 | 6.1 | f | over ! | owing to its heat prevails [over] the nourishment); but those who @A99 | 1 | A99: raised footnote number read as punctuation; body punctuation checked in the image |
+| 92 | 7.1 | f | yawn ! | yawn when they see others [yawn?] Is it because, if they @A101 | 1 | A101: raised footnote number read as punctuation; body punctuation checked in the image |
+| 93 | 7.4 | f | health ! | becomes healthy through contact with [health?] Is it because disease is @A102 | 1 | A102: raised footnote number read as punctuation; body punctuation checked in the image |
+| 94 | 7.5 | f | mentioned ! | sounds, therefore, which we have [mentioned] being harsh, the hair bristles @A103 | 1 | A103: raised footnote number read as punctuation; body punctuation checked in the image |
+| 95 | 7.5 | f | actually ? | more distinct; therefore the effects [actually] occurring in others are reproduced @A103 | 1 | A103: raised footnote number read as punctuation; body punctuation checked in the image |
+| 96 | 7.8 | f | breath ! | disease, because, in inhaling the [breath] by which he becomes infected, @A104 | 1 | A104: raised footnote number read as punctuation; body punctuation checked in the image |
+| 97 | 7.9 | f | gums ! | salt stop inflammation of the [gums?] Is it because purslane contains @A105 | 1 | A105: raised footnote number read as punctuation; body punctuation checked in the image |
+| 98 | 7.9 | f | together ? | or if it be crushed [together] for some time; for the @A105 | 1 | A105: raised footnote number read as punctuation; body punctuation checked in the image |
+| 99 | 8.4 | e | ‘heat | and does not contain any [heat;] fat, on the other hand, @A106 | 1 | A106: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 100 | 8.10 | e | ‘a | and to strength; for obviously [a] condition of health is one @A108 | 1 | A108: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 101 | 8.13 | e | up’ | has passed out they fill [up] again with cold air, for @A109 | 1 | A109: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 102 | 8.2 | f | sleep ! | those who are chilled cannot [sleep?] Is it because any one @A106 | 1 | A106: raised footnote number read as punctuation; body punctuation checked in the image |
+| 103 | 8.8 | f | urine ! | after sneezing and after passing [urine?] Is it because in both @A107 | 1 | A107: raised footnote number read as punctuation; body punctuation checked in the image |
+| 104 | 8.15 | g | because ] | more upright? [Or is it [because…]] Why in the winter are @A109 | 1 | A109: Image closes the square bracket after the ellipsis. |
+| 105 | 8.17 | f | although ! | it is colder at dawn, [although] the sun is nearer to @A110 | 1 | A110: raised footnote number read as punctuation; body punctuation checked in the image |
+| 106 | 8.17 | f | congealed ? | nearer they fall and become [congealed,] because the longer the sun @A110 | 1 | A110: raised footnote number read as punctuation; body punctuation checked in the image |
+| 107 | 8.21 | f | upright ! | together, the hair grows more [upright,] just as when one fixes @A112 | 1 | A112: raised footnote number read as punctuation; body punctuation checked in the image |
+| 108 | 9.4 | f | part ! | the middle is the reddest [part?] Is it because the fennel-stalk @A114 | 1 | A114: raised footnote number read as punctuation; body punctuation checked in the image |
+| 109 | 9.5 | f | blacker ! | the aged the flesh becomes [blacker,] and their congenital scars are @A115 | 1 | A115: raised footnote number read as punctuation; body punctuation checked in the image |
+| 110 | 9.9 | f | thapsia ! | a double nature. Why are [thapsia] and metal ladles used to @A116 | 1 | A116: raised footnote number read as punctuation; body punctuation checked in the image |
+| 111 | 9.11 | f | again ! | it has a black appearance. [Again] large and inveterate wounds form @A117 | 1 | A117: raised footnote number read as punctuation; body punctuation checked in the image |
+| 112 | 9.6 | b | and | force owing to their rarity, [and] other things for various other @A115 | 1 | A115: print reads `and other things` at the head of the line, with the margin number 30 beside it (leaf 115); the scans read the two together as `scand` and `3oand` |
+| 113 | 10.7 | d | dosome -> do some | put the question generally, why [do some] animals change and others not @A119 | 1 | A119: Image has separate body words: do some. Both OCR scans join them. |
+| 114 | 10.12 | a | 1 | yet perfectly proportioned, like Melitaean terriers. [ours: ] The reason is that the process @A121 | 1 | A121: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 115 | 10.52 | a | 2 | also most beautiful is not true. [ours: ] But we regard as beautiful that @A136 | 1 | A136: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 116 | 10.43 | e | ‘those | of the bladder are wide? [Those] animals which produce their young @A131 | 1 | A131: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 117 | 10.45 | e | places’ | a wild state in some [places,] and wild dogs are found @A132 | 1 | A132: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 118 | 10.50 | e | ‘in | animals, is liable to epilepsy [in] infancy, when distortion of the @A135 | 1 | A135: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 119 | 10.52 | e | equally’ | are pleasure and the beautiful [equally] pleasing to all men; for @A135 | 1 | A135: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 120 | 10.2 | f | lymph ! | than pure blood and resembles [lymph.] Why is it that some @A118 | 1 | A118: raised footnote number read as punctuation; body punctuation checked in the image |
+| 121 | 10.3 | f | loose ? | the skin there is naturally [loose,] and this moisture being concocted @A118 | 1 | A118: raised footnote number read as punctuation; body punctuation checked in the image |
+| 122 | 10.17 | f | necks ! | it because some have no [necks] and so cannot move their @A123 | 1 | A123: raised footnote number read as punctuation; body punctuation checked in the image |
+| 123 | 10.21 | f | the ! | the natural heat cannot concoct [the] nourishment. But the pig does @A124 | 1 | A124: raised footnote number read as punctuation; body punctuation checked in the image |
+| 124 | 10.21 | f | pig ? | concoct the nourishment. But the [pig] does not shed its hair, @A124 | 1 | A124: raised footnote number read as punctuation; body punctuation checked in the image |
+| 125 | 10.23 | f | above ! | sheep, obtaining the nourishment described [above,] receives less food because it @A125 | 1 | A125: raised footnote number read as punctuation; body punctuation checked in the image |
+| 126 | 10.26 | f | feet ! | have an even number of [feet?] Is it because it is @A126 | 1 | A126: raised footnote number read as punctuation; body punctuation checked in the image |
+| 127 | 10.26 | f | things ? | Since, then, progression involves two [things,] namely, movement and rest, we @A126 | 1 | A126: raised footnote number read as punctuation; body punctuation checked in the image |
+| 128 | 10.26 | f | pair ? | we immediately get here a [pair] and an even number. Quadrupeds @A126 | 1 | A126: raised footnote number read as punctuation; body punctuation checked in the image |
+| 129 | 10.28 | f | man ! | so with the young of [man?] Is it because human twins @A127 | 1 | A127: raised footnote number read as punctuation; body punctuation checked in the image |
+| 130 | 10.32 | f | perfection ? | attain a state of physical [perfection,] whilst others are late in @A128 | 1 | A128: raised footnote number read as punctuation; body punctuation checked in the image |
+| 131 | 10.35 | f | excretions ! | animals which are full of [excretions] are mild-tempered, for that which @A129 | 1 | A129: raised footnote number read as punctuation; body punctuation checked in the image |
+| 132 | 10.35 | f | those ? | at the time of birth? [Those,] on the other hand, who @A129 | 1 | A129: raised footnote number read as punctuation; body punctuation checked in the image |
+| 133 | 10.38 | f | too ! | only one voice? Has man [too] really only one voice, but @A130 | 1 | A130: raised footnote number read as punctuation; body punctuation checked in the image |
+| 134 | 10.40 | f | implies ! | of speech, as its name [implies,] is simply being unable to @A131 | 1 | A131: raised footnote number read as punctuation; body punctuation checked in the image |
+| 135 | 10.40 | f | simply ? | as its name implies, is [simply] being unable to explain one’s @A131 | 1 | A131: raised footnote number read as punctuation; body punctuation checked in the image |
+| 136 | 10.43 | f | fishes ? | interval, like certain of the [fishes,] never have bladders, but the @A131 | 1 | A131: raised footnote number read as punctuation; body punctuation checked in the image |
+| 137 | 10.44 | f | eruct ! | animals and birds do not [eruct?] Is it owing to the @A132 | 1 | A132: raised footnote number read as punctuation; body punctuation checked in the image |
+| 138 | 10.44 | f | tails ? | animals with long manes and [tails,] owing to the length of @A132 | 1 | A132: raised footnote number read as punctuation; body punctuation checked in the image |
+| 139 | 10.52 | f | elsewhere ! | to it is dealt with [elsewhere;] but to add that what @A136 | 1 | A136: raised footnote number read as punctuation; body punctuation checked in the image |
+| 140 | 10.54 | f | heat ? | the animal stands. Now the [heat,] as it travels along, distributes @A137 | 1 | A137: raised footnote number read as punctuation; body punctuation checked in the image |
+| 141 | 10.54 | f | off ! | breath and by the drawing [off] of those humours which are @A138 | 1 | A138: raised footnote number read as punctuation; body punctuation checked in the image |
+| 142 | 10.54 | f | all ? | wipes away watery matter. These [all] having been set in motion, @A138 | 1 | A138: raised footnote number read as punctuation; body punctuation checked in the image |
+| 143 | 10.56 | f | nourishment ! | takes more moist than dry [nourishment?] Is it because man is @A139 | 1 | A139: raised footnote number read as punctuation; body punctuation checked in the image |
+| 144 | 10.61 | f | confused ? | being when the semen becomes [confused] and disturbed either in the @A140 | 1 | A140: raised footnote number read as punctuation; body punctuation checked in the image |
+| 145 | 10.62 | f | man ! | owing to its abundance, in [man] it breaks out only on @A141 | 1 | A141: raised footnote number read as punctuation; body punctuation checked in the image |
+| 146 | 10.62 | f | neither ? | the head; for man is [neither] on the one hand devoid @A141 | 1 | A141: raised footnote number read as punctuation; body punctuation checked in the image |
+| 147 | 10.66 | f | colours ! | of wax? Now the sun [colours] the skin, but it does @A142 | 1 | A142: raised footnote number read as punctuation; body punctuation checked in the image |
+| 148 | 11.32 | a | 7 | those who are afraid speak shrilly? [ours: ] Is it because in. those who @A155 | 1 | A155: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 149 | 11.33 | a | hears’ | mind which sees, the mind which [ours: hears’.] But at night when our sight @A156 | 1 | A156: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 150 | 11.54 | e | ‘this | that part of the body? [This] is why those who hesitate, @A162 | 1 | A162: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 151 | 11.59 | e | withdrawn’ | those who produce it are [withdrawn,] but its character is unchanged? @A164 | 1 | A164: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 152 | 11.1 | f | source ! | to arise from the same [source?] Now language, which is a @A143 | 1 | A143: raised footnote number read as punctuation; body punctuation checked in the image |
+| 153 | 11.6 | f | raised ? | question which we have already [raised.] It is for the same @A145 | 1 | A145: raised footnote number read as punctuation; body punctuation checked in the image |
+| 154 | 11.8 | f | ground ? | vessels are buried in the [ground] and lids placed on them, @A146 | 1 | A146: raised footnote number read as punctuation; body punctuation checked in the image |
+| 155 | 11.16 | f | voices ! | while adult men have deep [voices?] Is it because the thin @A149 | 1 | A149: raised footnote number read as punctuation; body punctuation checked in the image |
+| 156 | 11.27 | f | things ! | same time? Sometimes, however, these [things] do not go together, but @A153 | 1 | A153: raised footnote number read as punctuation; body punctuation checked in the image |
+| 157 | 11.27 | f | organ ? | has been perfected before the [organ] by which the voice is @A153 | 1 | A153: raised footnote number read as punctuation; body punctuation checked in the image |
+| 158 | 11.33 | f | day ! | the night than in the [day?] Is it for the reason @A156 | 1 | A156: raised footnote number read as punctuation; body punctuation checked in the image |
+| 159 | 11.33 | f | anaxagoras ? | it for the reason that [Anaxagoras] gives, namely, that in the @A156 | 1 | A156: raised footnote number read as punctuation; body punctuation checked in the image |
+| 160 | 11.34 | f | that ! | wide (just as also is [that] leading to the testicles), and @A157 | 1 | A157: raised footnote number read as punctuation; body punctuation checked in the image |
+| 161 | 11.46 | f | stomach ? | meal but on an empty [stomach.] Now since a person in @A160 | 1 | A160: raised footnote number read as punctuation; body punctuation checked in the image |
+| 162 | 11.49 | f | travels ! | although light is rarer and [travels] farther and quicker than sound? @A161 | 1 | A161: raised footnote number read as punctuation; body punctuation checked in the image |
+| 163 | 11.53 | f | shrilly ? | those who are afraid speak [shrilly,] though a feeling of shame @A162 | 1 | A162: raised footnote number read as punctuation; body punctuation checked in the image |
+| 164 | 11.55 | f | speech ! | apt to become hesitating in [speech?] Is it because he alone @A163 | 1 | A163: raised footnote number read as punctuation; body punctuation checked in the image |
+| 165 | 11.60 | f | speech ! | the cause of hesitancy in [speech?] Are those who hesitate in @A165 | 1 | A165: raised footnote number read as punctuation; body punctuation checked in the image |
+| 166 | 11.60 | f | moment ? | come forth before the proper [moment] of exhalation? Or is the @A165 | 1 | A165: raised footnote number read as punctuation; body punctuation checked in the image |
+| 167 | 11.33 | b | hears | which sees, the mind which [hears’.] But at night when our @A156 | 1 | A156: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 168 | 12.1 | a | 25 | the air in a weak form, [ours: ] as happens in medicinal myrrh? Or @A167 | 1 | A167: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 169 | 12.4 | f | distance ! | perfumes smell sweeter at a [distance,] whereas close at hand they @A169 | 1 | A169: raised footnote number read as punctuation; body punctuation checked in the image |
+| 170 | 12.4 | f | odours ? | the other hand, the mingled [odours] are simultaneously perceptible in the @A169 | 1 | A169: raised footnote number read as punctuation; body punctuation checked in the image |
+| 171 | 12.9 | f | distance ! | less pleasant at a short [distance?] Is it because at a @A170 | 1 | A170: raised footnote number read as punctuation; body punctuation checked in the image |
+| 172 | 12.9 | f | scent ? | flowers when rubbed lose their [scent.] Are scents smoke [or air] @A170 | 1 | A170: raised footnote number read as punctuation; body punctuation checked in the image |
+| 173 | 12.11 | f | heat ! | earthy element and the slow [heat] does not destroy it. Why @A171 | 1 | A171: raised footnote number read as punctuation; body punctuation checked in the image |
+| 174 | 13.4 | a | 2 | to the smell except the panther [ours: ] which is pleasing even to the @A172 | 1 | A172: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 175 | 13.3 | f | odour ! | the flower, mingles with the [odour?] Why is it that no @A172 | 1 | A172: raised footnote number read as punctuation; body punctuation checked in the image |
+| 176 | 13.4 | f | disease ! | unpleasant, as the result of [disease.] Also the exhalations and eructations @A173 | 1 | A173: raised footnote number read as punctuation; body punctuation checked in the image |
+| 177 | 13.6 | f | say ! | of the followers of Heraclitus [say,] vaporization takes place in the @A174 | 1 | A174: raised footnote number read as punctuation; body punctuation checked in the image |
+| 178 | 13.7 | f | change ! | cannot undergo any process of [change.] Why has the armpit a @A175 | 1 | A175: raised footnote number read as punctuation; body punctuation checked in the image |
+| 179 | 13.12 | f | motion ! | odour when they are in [motion?] Is it because they fill @A176 | 1 | A176: raised footnote number read as punctuation; body punctuation checked in the image |
+| 180 | 14.8 | e | ‘powerful | in cold districts have a [powerful] principle of growth in themselves, @A179 | 1 | A179: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 181 | 14.13 | e | air’ | air becomes hotter than dry [air.] Or perhaps the air is @A180 | 1 | A180: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 182 | 14.2 | f | years ! | cold, keeps intact for many [years?] Is it because the extraneous @A177 | 1 | A177: raised footnote number read as punctuation; body punctuation checked in the image |
+| 183 | 14.5 | f | offspring ! | to the birth of female [offspring?] Is it because a large @A178 | 1 | A178: raised footnote number read as punctuation; body punctuation checked in the image |
+| 184 | 14.13 | f | districts ! | more so than in warm [districts?] Is it because of the @A180 | 1 | A180: raised footnote number read as punctuation; body punctuation checked in the image |
+| 185 | 14.15 | f | flood ! | regions having perished in the [Flood,] so that the latter stand @A181 | 1 | A181: raised footnote number read as punctuation; body punctuation checked in the image |
+| 186 | 15.5 | a | a | Θ. When therefore the sun at [ours: Α] falling on Θ makes the shadow @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 187 | 15.5 | a | 4 | falling on Θ makes the shadow [ours: ΘΛ,] the ray must fall on Λ. @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 188 | 15.5 | a | a | ΘΛ, the ray must fall on [ours: Λ.] But when the sun comes to @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 189 | 15.5 | a | b | But when the sun comes to [ours: Β,] the ray from Β will fall @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 190 | 15.5 | a | b | comes to Β, the ray from [ours: Β] will fall within ΘΛ, and similarly @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 191 | 15.5 | a | a | ray from Β will fall within [ours: ΘΛ,] and similarly again when the sun @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 192 | 15.5 | a | ab | line at two points. Since therefore [ours: ΑΒ] is equal to ΒΓ, the angles @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 193 | 15.5 | a | bi | Since therefore ΑΒ is equal to [ours: ΒΓ,] the angles which subtend them at @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 194 | 15.5 | a | 4 | the angles which subtend them at [ours: Δ] will also be equal, for they @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 195 | 15.5 | a | ae | into two equal parts, the line [ours: ΛΕ] will be greater than the line @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 196 | 15.5 | a | ez | will be greater than the line [ours: ΕΖ] within ΛΘ. So too with the @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 197 | 15.9 | a | ab | that from the lower point. Let [ours: ΑΒ] be the gnomon, and Γ and @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 198 | 15.9 | a | 4 | be the gnomon, and Γ and [ours: Δ] two positions of the sun. The @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 199 | 15.9 | a | 4 | ΓΖ, will fall outside the line [ours: ΔΕ;] and the shadow ΒΕ is formed @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 200 | 15.9 | a | be | the line ΔΕ; and the shadow [ours: ΒΕ] is formed when the sun is @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 201 | 15.9 | a | bz | is higher in the heavens, and [ours: ΒΖ] when it is lower, and it @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 202 | 15.10 | a | ad | that from the lower point? Let [ours: ΑΔ] be the gnomon, Β the moon, @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 203 | 15.10 | a | b | point? Let ΑΔ be the gnomon, [ours: Β] the moon, and Γ the sun. @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 204 | 15.10 | a | i | the gnomon, Β the moon, and [ours: Γ] the sun. The ray from the @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 205 | 15.10 | a | 4 z | so that the shadow will be [ours: ΔΖ;] but the ray from the sun @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 206 | 15.10 | a | je | therefore will necessarily be less, viz. [ours: ΔΕ.] Why is it that during eclipses @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 207 | 15.3 | e | number’ | &c., combined with a preceding [number,] and thus a different number @A183 | 1 | A183: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 208 | 15.3 | e | result’ | ten proportions four cubic numbers [result,] from which numbers the Pythagoreans @A183 | 1 | A183: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 209 | 15.1 | f | diameter ! | alone bears the name of [diameter?] Is it because the diameter, @A182 | 1 | A182: raised footnote number read as punctuation; body punctuation checked in the image |
+| 210 | 15.4 | f | seem ! | always similar. This does not [seem] to be so unless one @A184 | 1 | A184: raised footnote number read as punctuation; body punctuation checked in the image |
+| 211 | 15.5 | f | be . | and let the object seen [be] Θ. When therefore the sun @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 212 | 15.5 | f | them ? | ΒΓ, the angles which subtend [them] at Δ will also be @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 213 | 15.6 | f | acone ! | is in the form of [acone,] and the base of a @A186 | 1 | A186: raised footnote number read as punctuation; body punctuation checked in the image |
+| 214 | 15.7 | f | us ! | which was formerly opposite to [us),] so that part of the @A187 | 1 | A187: raised footnote number read as punctuation; body punctuation checked in the image |
+| 215 | 15.8 | f | things ! | flat? Is it because all [things] of which the distance is @A188 | 1 | A188: raised footnote number read as punctuation; body punctuation checked in the image |
+| 216 | 15.9 | f | sun , | Δ two positions of the [sun.] The ray from Γ, the @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 217 | 15.9 | g | sun . | Δ two positions of the [sun.] The ray from Γ, the @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 218 | 15.11 | f | earth ! | in the direction of the [earth?] Is it because, just as, @A189 | 1 | A189: raised footnote number read as punctuation; body punctuation checked in the image |
+| 219 | 15.12 | f | refractor ! | when refracted from a small [refractor.] (So too a halo does @A190 | 1 | A190: raised footnote number read as punctuation; body punctuation checked in the image |
+| 220 | 15.12 | f | weakened ? | nor does the sight ascend [weakened] by passing under the earth. @A190 | 1 | A190: raised footnote number read as punctuation; body punctuation checked in the image |
+| 221 | 15.5 | b | θ | let the object seen be [Θ.] When therefore the sun at @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 222 | 15.5 | b | α | When therefore the sun at [Α] falling on Θ makes the @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 223 | 15.5 | b | θ | sun at Α falling on [Θ] makes the shadow ΘΛ, the @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 224 | 15.5 | b | θλ | on Θ makes the shadow [ΘΛ,] the ray must fall on @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 225 | 15.5 | b | λ | the ray must fall on [Λ.] But when the sun comes @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 226 | 15.5 | b | β | when the sun comes to [Β,] the ray from Β will @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 227 | 15.5 | b | β | to Β, the ray from [Β] will fall within ΘΛ, and @A184 | 1 | A184: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 228 | 15.5 | b | θλ | from Β will fall within [ΘΛ,] and similarly again when the @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 229 | 15.5 | b | γ | when the sun comes to [Γ;] otherwise one straight line will @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 230 | 15.5 | b | αβ | at two points. Since therefore [ΑΒ] is equal to ΒΓ, the @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 231 | 15.5 | b | βγ | therefore ΑΒ is equal to [ΒΓ,] the angles which subtend them @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 232 | 15.5 | b | δ | angles which subtend them at [Δ] will also be equal, for @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 233 | 15.5 | b | δ | angles on this side of [Δ] are equal, so also are @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 234 | 15.5 | b | λε | two equal parts, the line [ΛΕ] will be greater than the @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 235 | 15.5 | b | εζ | be greater than the line [ΕΖ] within ΛΘ. So too with @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 236 | 15.5 | b | λθ | than the line ΕΖ within [ΛΘ.] So too with the other @A185 | 1 | A185: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 237 | 15.9 | b | αβ | from the lower point. Let [ΑΒ] be the gnomon, and Γ @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 238 | 15.9 | b | γ | ΑΒ be the gnomon, and [Γ] and Δ two positions of @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 239 | 15.9 | b | δ | the gnomon, and Γ and [Δ] two positions of the sun. @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 240 | 15.9 | b | δε | will fall outside the line [ΔΕ;] and the shadow ΒΕ is @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 241 | 15.9 | b | βε | line ΔΕ; and the shadow [ΒΕ] is formed when the sun @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 242 | 15.9 | b | βζ | higher in the heavens, and [ΒΖ] when it is lower, and @A188 | 1 | A188: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 243 | 15.10 | b | αδ | from the lower point? Let [ΑΔ] be the gnomon, Β the @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 244 | 15.10 | b | γ | gnomon, Β the moon, and [Γ] the sun. The ray from @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 245 | 15.10 | b | βζ | ray from the moon is [ΒΖ,] so that the shadow will @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 246 | 15.10 | b | δζ | that the shadow will be [ΔΖ;] but the ray from the @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 247 | 15.10 | b | γε | ray from the sun is [ΓΕ,] and its shadow therefore will @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 248 | 15.10 | b | δε | will necessarily be less, viz. [ΔΕ.] Why is it that during @A189 | 1 | A189: Greek labels transcribed from the body; diagram-only labels excluded. The bracketed output is the printed label. |
+| 249 | 16.2 | e | ‘the | necessarily produce a hemispherical form? [The] corresponding hemisphere below is cut @A192 | 1 | A192: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 250 | 16.4 | e | it’ | the fact that, striking against [it] in their course, they revolve @A193 | 1 | A193: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 251 | 16.1 | f | but ! | (there is no continuous shadow [but)] it is cut off by @A192 | 1 | A192: raised footnote number read as punctuation; body punctuation checked in the image |
+| 252 | 16.1 | f | point ? | by the water at that [point.] Is no shadow really formed? @A192 | 1 | A192: raised footnote number read as punctuation; body punctuation checked in the image |
+| 253 | 16.3 | f | you ! | the unweighted side turned towards [you?] Is it because the heavier @A193 | 1 | A193: raised footnote number read as punctuation; body punctuation checked in the image |
+| 254 | 16.3 | f | part ? | same line, while since one [part] travels more quickly than the @A193 | 1 | A193: raised footnote number read as punctuation; body punctuation checked in the image |
+| 255 | 16.4 | f | ground ! | perpendicular is raised above the [ground] and then thrust forward. For @A194 | 1 | A194: raised footnote number read as punctuation; body punctuation checked in the image |
+| 256 | 16.5 | f | line ! | described by the same straight [line,] and when the straight line @A195 | 1 | A195: raised footnote number read as punctuation; body punctuation checked in the image |
+| 257 | 16.5 | f | is ? | the same centre, the result [is] that, since they touch the @A195 | 1 | A195: raised footnote number read as punctuation; body punctuation checked in the image |
+| 258 | 16.6 | f | crooked ! | it is cut obliquely becomes [crooked?] Is it due to the @A196 | 1 | A196: raised footnote number read as punctuation; body punctuation checked in the image |
+| 259 | 16.6 | f | partly ? | is not parallel but is [partly] more and partly less distant @A196 | 1 | A196: raised footnote number read as punctuation; body punctuation checked in the image |
+| 260 | 16.8 | f | other ! | a straight line like the [other] elements. When therefore the water-clock @A197 | 1 | A197: raised footnote number read as punctuation; body punctuation checked in the image |
+| 261 | 16.8 | f | contract ? | first holes; for it cannot [contract] into itself. The fact that @A197 | 1 | A197: raised footnote number read as punctuation; body punctuation checked in the image |
+| 262 | 16.8 | f | movement ! | up and down causes considerable [movement] in the water inside the @A198 | 1 | A198: raised footnote number read as punctuation; body punctuation checked in the image |
+| 263 | 16.8 | f | itself ? | drawn up and being in [itself] continuous, remains in the same @A198 | 1 | A198: raised footnote number read as punctuation; body punctuation checked in the image |
+| 264 | 16.8 | f | it ! | it when it has moved [it,] and to do so for @A199 | 1 | A199: raised footnote number read as punctuation; body punctuation checked in the image |
+| 265 | 16.12 | f | weight ! | that in magnitudes of uneven [weight,] if you set the lighter @A200 | 1 | A200: raised footnote number read as punctuation; body punctuation checked in the image |
+| 266 | 17.1 | f | men ! | side by side with other [men] than by themselves? Is it @A202 | 1 | A202: raised footnote number read as punctuation; body punctuation checked in the image |
+| 267 | 18.8 | d | isit -> is it | no trifling can ever occur? [Is it] because such reasoning is apparent @A207 | 1 | A207: Image has separate body words: is it. Both OCR scans join them. |
+| 268 | 18.1 | f | book ! | awake by taking up a [book?] Is it because in those @A204 | 1 | A204: raised footnote number read as punctuation; body punctuation checked in the image |
+| 269 | 18.3 | f | fables ? | displays men prefer examples and [fables] rather than enthymemes? Is it @A205 | 1 | A205: raised footnote number read as punctuation; body punctuation checked in the image |
+| 270 | 18.5 | f | nature ! | while the philosopher discusses the [nature] of tyranny? Why is it @A206 | 1 | A206: raised footnote number read as punctuation; body punctuation checked in the image |
+| 271 | 18.6 | f | proficiency ? | he may improve his own [proficiency] in it? Now when men @A206 | 1 | A206: raised footnote number read as punctuation; body punctuation checked in the image |
+| 272 | 18.7 | f | rout ! | a standstill. (Similarly during a [rout,] if the leader halts, all @A207 | 1 | A207: raised footnote number read as punctuation; body punctuation checked in the image |
+| 273 | 19.9 | d | ofa -> of a | sings it to the accompaniment [of a] flute or lyre? Yet the @A212 | 1 | A212: Image has separate body words: of a. Both OCR scans join them. |
+| 274 | 19.7 | a | vzze | they left in both and omitted [ours: trite,] or is the truer answer that @A211 | 1 | A211: scan 'vzze' -> print 'trite,', at this one occurrence. |
+| 275 | 19.12 | a | 7 zese | the less; but if one omits [ours: mese,] when one should sound both, the @A212 | 1 | A212: scan '7 zese' -> print 'mese,', at this one occurrence. |
+| 276 | 19.20 | a | ese | natural; for in all good music [ours: mese] occurs frequently, and all good composers @A216 | 1 | A216: scan 'ese' -> print 'mese', at this one occurrence. |
+| 277 | 19.24 | a | zefe | in length. Why, if one strikes [ours: nete] and then stops it down, does @A217 | 1 | A217: scan 'zefe' -> print 'nete', at this one occurrence. |
+| 278 | 19.35 | a | 3 | to mese in the ratio of [ours: 3/2] to 1 (for a fifth is @A220 | 1 | A220: scan '3' -> print '3/2', at this one occurrence. |
+| 279 | 19.37 | a | songs’ | the top notes, and the ‘Orthian [ours: songs’] and high music are hard to @A221 | 1 | A221: scan 'songs’' -> print 'songs’', at this one occurrence. |
+| 280 | 19.37 | a | 2 | carried violently along is carried swiftly. [ours: ] Hence persons in robust health can @A222 | 1 | A222: scan '2' -> print '', at this one occurrence. |
+| 281 | 19.39 | a | zefe | voices are separated in pitch as [ours: nete] is from hypate. Now any concord @A223 | 1 | A223: scan 'zefe' -> print 'nete', at this one occurrence. |
+| 282 | 19.39 | a | hyfate | in pitch as nete is from [ours: hypate.] Now any concord is more pleasing @A223 | 1 | A223: scan 'hyfate' -> print 'hypate.', at this one occurrence. |
+| 283 | 19.39 | a | zefe | nete, for the second stroke which [ours: nete] makes upon the air is Hypate. @A223 | 1 | A223: scan 'zefe' -> print 'nete', at this one occurrence. |
+| 284 | 19.42 | a | hyfaze | the similarity can be taken from [ours: hypate] as being a response to nete.) @A225 | 1 | A225: scan 'hyfaze' -> print 'hypate', at this one occurrence. |
+| 285 | 19.42 | a | zefe | response to a note, and when [ours: nete] ceases a sound? is set in @A225 | 1 | A225: scan 'zefe' -> print 'nete', at this one occurrence. |
+| 286 | 19.42 | a | ze¢e | natural owing to the similarity that [ours: nete] should seem to set Hypate in @A225 | 1 | A225: scan 'ze¢e' -> print 'nete', at this one occurrence. |
+| 287 | 19.42 | a | zefe | in motion. For we know that [ours: nete] is not in motion, because it @A225 | 1 | A225: scan 'zefe' -> print 'nete', at this one occurrence. |
+| 288 | 19.42 | a | zeze | would be nothing extraordinary if, after [ours: nete] is struck when it is very @A225 | 1 | A225: scan 'zeze' -> print 'nete', at this one occurrence. |
+| 289 | 19.47 | a | zefe | strings, leave in Hypate but not [ours: nete?] Or should we say that they @A227 | 1 | A227: scan 'zefe' -> print 'nete?', at this one occurrence. |
+| 290 | 19.47 | a | ese | upper ‘pycnon’; whence came the name [ours: mese,] because it was the end of @A228 | 1 | A228: scan 'ese' -> print 'mese,', at this one occurrence. |
+| 291 | 19.27 | e | ‘this | such and such a sound? [This] movement resembles moral character both @A218 | 1 | A218: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 292 | 19.35 | e | term’ | is as great as that [term] and one third as great @A220 | 1 | A220: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 293 | 19.39 | e | force’ | they are not equal in [force,] and being unequal they make @A223 | 1 | A223: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 294 | 19.43 | e | account’ | and exist, on their own [account,] show up the mistakes of @A226 | 1 | A226: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 295 | 19.4 | g | purpose ] | to it according to one’s [purpose.]] [But what is the first @A210 | 1 | A210: Image closes the square bracket after purpose. |
+| 296 | 19.13 | f | versa ! | the high, but not vice [versa?] Is it because, if possible, @A213 | 1 | A213: raised footnote number read as punctuation; body punctuation checked in the image |
+| 297 | 19.15 | f | mode ! | so they sang in one [mode.] For it is easier for @A214 | 1 | A214: raised footnote number read as punctuation; body punctuation checked in the image |
+| 298 | 19.15 | f | rhythm ? | simple; for there is one [rhythm] and one unit of metre. @A214 | 1 | A214: raised footnote number read as punctuation; body punctuation checked in the image |
+| 299 | 19.17 | f | note ! | same as the other ‘symphonic’ [note,] as are the notes which @A215 | 1 | A215: raised footnote number read as punctuation; body punctuation checked in the image |
+| 300 | 19.17 | f | accord ? | octave apart? For in the [accord] in the octave the deep @A215 | 1 | A215: raised footnote number read as punctuation; body punctuation checked in the image |
+| 301 | 19.20 | f | used ! | when that particular string is [used?] Surely this is only natural; @A216 | 1 | A216: raised footnote number read as punctuation; body punctuation checked in the image |
+| 302 | 19.23 | f | instruments ! | produced? So too with wind [instruments,] the sound produced through the @A217 | 1 | A217: raised footnote number read as punctuation; body punctuation checked in the image |
+| 303 | 19.35 | f | else ? | of air or of something [else,] a sound which is in @A221 | 1 | A221: raised footnote number read as punctuation; body punctuation checked in the image |
+| 304 | 19.37 | f | possession ! | air. Is it because the [possession] of a naturally high voice @A222 | 1 | A222: raised footnote number read as punctuation; body punctuation checked in the image |
+| 305 | 19.39 | f | antiphony ! | has this characteristic. Why is [‘antiphony’] more pleasant than ‘homophony’? Is @A223 | 1 | A223: raised footnote number read as punctuation; body punctuation checked in the image |
+| 306 | 19.39 | f | pleasing ! | in the octave is very [pleasing.] Now ‘magadizing’ is made up @A224 | 1 | A224: raised footnote number read as punctuation; body punctuation checked in the image |
+| 307 | 19.39 | f | notes ? | is made up of contrary [notes,] and for this reason it @A224 | 1 | A224: raised footnote number read as punctuation; body punctuation checked in the image |
+| 308 | 19.41 | f | ratio ! | which are in a proper [ratio] to one another, and sounds @A224 | 1 | A224: raised footnote number read as punctuation; body punctuation checked in the image |
+| 309 | 19.42 | f | respond ! | it down, Hypate seems to [respond?] Is it because ze?ze, as @A225 | 1 | A225: raised footnote number read as punctuation; body punctuation checked in the image |
+| 310 | 19.43 | f | listen ! | in them. Why do we [listen] with greater pleasure to a @A226 | 1 | A226: raised footnote number read as punctuation; body punctuation checked in the image |
+| 311 | 19.44 | f | startingpoint ? | alone forms a kind of [starting-point,] that which lies between the @A227 | 1 | A227: raised footnote number read as punctuation; body punctuation checked in the image |
+| 312 | 19.47 | f | tone ! | and the interval of a [tone?] They treated mese, then, as @A227 | 1 | A227: raised footnote number read as punctuation; body punctuation checked in the image |
+| 313 | 19.47 | f | pycnon ? | lower note of the upper [‘pycnon’;] whence came the name mese, @A228 | 1 | A228: raised footnote number read as punctuation; body punctuation checked in the image |
+| 314 | 19.49 | f | melody ! | lower is more suited to [melody?] Is it because melody is @A229 | 1 | A229: raised footnote number read as punctuation; body punctuation checked in the image |
+| 315 | 19.1 | b | are | are grieving and those who [are] enjoying themselves alike have the @A209 | 1 | A209: A 'areI', B 'arel' -> print 'are', at this one occurrence. |
+| 316 | 19.3 | b | nete | a degree than when singing [nete] and the higher notes, although @A209 | 1 | A209: A 'wefe', B 'mefe' -> print 'nete', at this one occurrence. |
+| 317 | 19.4 | b | hypate | parhypate difficult to sing, but [Hypate] easy, although there is only @A210 | 1 | A210: A 'Lyfaze', B 'Lypaze' -> print 'Hypate', at this one occurrence. |
+| 318 | 19.4 | b | hypate | between them? Is it because [Hypate] is accompanied by relaxation of @A210 | 1 | A210: A 'Aypare', B 'Ayfaze' -> print 'Hypate', at this one occurrence. |
+| 319 | 19.4 | b | paranete | says with this note or [Paranete.] [For one must… with a @A210 | 1 | A210: A 'Aaranete.’', B 'Jaraneze.' -> print 'Paranete.', at this one occurrence. |
+| 320 | 19.7 | b | hypate | scale seven notes, leave in [Hypate] and not nete? Is this @A211 | 1 | A211: A 'Ayfazte', B 'Ayfaze' -> print 'Hypate', at this one occurrence. |
+| 321 | 19.7 | b | nete | leave in Hypate and not [nete?] Is this a false statement, @A211 | 1 | A211: A "zefe?'", B "xefe?'" -> print 'nete?', at this one occurrence. |
+| 322 | 19.7 | b | trite | left in both and omitted [trite,] or is the truer answer @A211 | 1 | A211: A '7 vzZe,', B '/vzze,' -> print 'trite,', at this one occurrence. |
+| 323 | 19.7 | b | hypate | the higher note, so that [Hypate] gives the impression of the @A211 | 1 | A211: A 'Zypate', B 'Aypaze' -> print 'Hypate', at this one occurrence. |
+| 324 | 19.7 | b | nete | the octave above better than [(nete] for the high note needs @A211 | 1 | A211: A '(ze¢e', B '(zefe' -> print '(nete', at this one occurrence. |
+| 325 | 19.12 | b | paranete | tune? For if one omits [Paranete,] when one should sound it @A212 | 1 | A212: A 'Aaranefe,', B 'Zaraneze,' -> print 'Paranete,', at this one occurrence. |
+| 326 | 19.12 | b | mese | one should sound it with [mese,] the tune is given none @A212 | 1 | A212: A 'zzese,', B 'ese,' -> print 'mese,', at this one occurrence. |
+| 327 | 19.12 | b | mese | less; but if one omits [mese,] when one should sound both, @A212 | 1 | A212: A '7 zese,', B '7 zese,' -> print 'mese,', at this one occurrence. |
+| 328 | 19.12 | b | hypate | the greater? So too if [Hypate] is stopped down in the @A212 | 1 | A212: A 'Lyfare', B 'hyZate' -> print 'Hypate', at this one occurrence. |
+| 329 | 19.12 | b | netes | down in the centre, two [netes] are produced. Why is it @A212 | 1 | A212: A 'e/es', B 'zezes' -> print 'netes', at this one occurrence. |
+| 330 | 19.19 | b | mese | they alone are equidistant from [mese?] The presence then of this @A215 | 1 | A215: A 'szese??', B 'wese?"' -> print 'mese?', at this one occurrence. |
+| 331 | 19.20 | b | mese | the other strings, one alters [mese] and uses the instrument, the @A215 | 1 | A215: A 'weese', B 'meese' -> print 'mese', at this one occurrence. |
+| 332 | 19.20 | b | lichanos | piece as well, whereas, if [Lichanos] or any other string is @A216 | 1 | A216: A '“chanos', B 'Zcehanos' -> print 'Lichanos', at this one occurrence. |
+| 333 | 19.20 | b | mese | for in all good music [mese] occurs frequently, and all good @A216 | 1 | A216: A 'ese', B '#ese' -> print 'mese', at this one occurrence. |
+| 334 | 19.23 | b | hypate | in quick singing. Why is [Hypate] double nete? Is it because @A216 | 1 | A216: A 'Zyfaze', B 'Zyfate' -> print 'Hypate', at this one occurrence. |
+| 335 | 19.23 | b | nete | singing. Why is Hypate double [nete?] Is it because in the @A216 | 1 | A216: A 'wefe?*', B 'zefe?*' -> print 'nete?', at this one occurrence. |
+| 336 | 19.23 | b | hypatereed | the extreme end of the [Hypate-reed,] but fill up the nete-reed @A217 | 1 | A217: A 'Aypaze-reed,', B '#yfaze-reed,' -> print 'Hypate-reed,', at this one occurrence. |
+| 337 | 19.23 | b | netereed | Hypate-reed, but fill up the [nete-reed] to the middle. Similarly they @A217 | 1 | A217: A '~e¢e-reed', B 'wefe-reed' -> print 'nete-reed', at this one occurrence. |
+| 338 | 19.23 | b | hypate | of 4 to 3. Further, [Hypate] and nete on triangular stringed @A217 | 1 | A217: A 'Aypazte', B 'Zypate' -> print 'Hypate', at this one occurrence. |
+| 339 | 19.24 | b | nete | length. Why, if one strikes [nete] and then stops it down, @A217 | 1 | A217: A 'zefe*', B '~zefe*' -> print 'nete', at this one occurrence. |
+| 340 | 19.24 | b | hypate | because the vibration produced from [hypate] is very much of the @A217 | 1 | A217: A '“yZaze', B '“yfaze' -> print 'hypate', at this one occurrence. |
+| 341 | 19.24 | b | nete | nature as the sound of [nete,] because it is in accord @A217 | 1 | A217: A 'zefe,', B 'ze¢e,' -> print 'nete,', at this one occurrence. |
+| 342 | 19.32 | b | trite | and then Terpander took away [trite] and added nete, and in @A219 | 1 | A219: A '¢rzze', B '¢vzze' -> print 'trite', at this one occurrence. |
+| 343 | 19.32 | b | nete | took away trite and added [nete,] and in his time it @A219 | 1 | A219: A 'zeZe,', B 'veze,' -> print 'nete,', at this one occurrence. |
+| 344 | 19.35 | b | nete | and as hypate is two, [nete] is four; and so on. @A220 | 1 | A220: A 'ele', B 'nefe' -> print 'nete', at this one occurrence. |
+| 345 | 19.35 | b | nete | four; and so on. But [nete] is to mese in the @A220 | 1 | A220: A 'xefe', B 'xeze' -> print 'nete', at this one occurrence. |
+| 346 | 19.35 | b | 3/2 | mese in the ratio of [3/2] to 1 (for a fifth @A220 | 1 | A220: A '3', B '3' -> print '3/2', at this one occurrence. |
+| 347 | 19.35 | b | 3/2 | is in the ratio of [3/2] to 1 is not contained @A220 | 1 | A220: A '8', B '3' -> print '3/2', at this one occurrence. |
+| 348 | 19.36 | b | mese | if on the other hand [mese] is left alone and one @A221 | 1 | A221: A 'zese', B 'ese' -> print 'mese', at this one occurrence. |
+| 349 | 19.36 | b | mese | is out of tune but [mese] is not altered, naturally the @A221 | 1 | A221: A 'szese', B 'mwese' -> print 'mese', at this one occurrence. |
+| 350 | 19.37 | b | songs | top notes, and the ‘Orthian [songs’] and high music are hard @A221 | 1 | A221: A 'songs’ ἢ', B 'songs’' -> print 'songs’', at this one occurrence. |
+| 351 | 19.39 | b | nete | are separated in pitch as [nete] is from hypate. Now any @A223 | 1 | A223: A 'zefe', B 'zefe' -> print 'nete', at this one occurrence. |
+| 352 | 19.39 | b | hypate | pitch as nete is from [hypate.] Now any concord is more @A223 | 1 | A223: A 'hyfate.', B 'hyfate.' -> print 'hypate.', at this one occurrence. |
+| 353 | 19.39 | b | hypate | singing louder than others. Furthermore, [Hypate] happens to have the same @A223 | 1 | A223: A 'ZyZate', B 'Zypate' -> print 'Hypate', at this one occurrence. |
+| 354 | 19.39 | b | nete | periods in its sounds as [nete,] for the second stroke which @A223 | 1 | A223: A "zefe,''", B "wzeZe,'!" -> print 'nete,', at this one occurrence. |
+| 355 | 19.39 | b | nete | for the second stroke which [nete] makes upon the air is @A223 | 1 | A223: A 'zefe', B 'zefe' -> print 'nete', at this one occurrence. |
+| 356 | 19.39 | b | hypate | makes upon the air is [Hypate.] As, then, these notes, though @A223 | 1 | A223: A 'yfate.', B 'Aypate.' -> print 'Hypate.', at this one occurrence. |
+| 357 | 19.42 | b | nete | it that, if one strikes [nete] and then stops it down, @A225 | 1 | A225: A 'wee', B 'ze¢e' -> print 'nete', at this one occurrence. |
+| 358 | 19.42 | b | hypate | and then stops it down, [Hypate] seems to respond? Is it @A225 | 1 | A225: A '2 ypaze', B 'AyPaze' -> print 'Hypate', at this one occurrence. |
+| 359 | 19.42 | b | hypate | ceases and dies down, becomes [Hypate?] (This can be illustrated by @A225 | 1 | A225: A '/yfate?', B 'Ayfate?' -> print 'Hypate?', at this one occurrence. |
+| 360 | 19.42 | b | hypate | similarity can be taken from [hypate] as being a response to @A225 | 1 | A225: A 'hyfaze', B 'hyfaze' -> print 'hypate', at this one occurrence. |
+| 361 | 19.42 | b | nete | as being a response to [nete.)] And since an echo is @A225 | 1 | A225: A 'zefe.*)', B 'zeze.*)' -> print 'nete.)', at this one occurrence. |
+| 362 | 19.42 | b | nete | to a note, and when [nete] ceases a sound? is set @A225 | 1 | A225: A 'zefe', B 'zefe' -> print 'nete', at this one occurrence. |
+| 363 | 19.42 | b | hypate | same as the note of [Hypate,] it is only natural owing @A225 | 1 | A225: A 'Ayfaze,', B 'AyZaze,' -> print 'Hypate,', at this one occurrence. |
+| 364 | 19.42 | b | nete | owing to the similarity that [nete] should seem to set Hypate @A225 | 1 | A225: A 'ze¢e', B 'ze¢e' -> print 'nete', at this one occurrence. |
+| 365 | 19.42 | b | hypate | nete should seem to set [Hypate] in motion. For we know @A225 | 1 | A225: A 'Lypaze', B 'hyfare' -> print 'Hypate', at this one occurrence. |
+| 366 | 19.42 | b | nete | motion. For we know that [nete] is not in motion, because @A225 | 1 | A225: A 'zefe', B 'zefe' -> print 'nete', at this one occurrence. |
+| 367 | 19.42 | b | hypate | stopped down, and seeing that [hypate] itself is not stopped down @A225 | 1 | A225: A '2 yfaze', B '“yAaze' -> print 'hypate', at this one occurrence. |
+| 368 | 19.42 | b | nete | be nothing extraordinary if, after [nete] is struck when it is @A225 | 1 | A225: A 'zeze', B 'zeze' -> print 'nete', at this one occurrence. |
+| 369 | 19.42 | b | nete | sound. Now the sound of [nete] is alien to the other @A225 | 1 | A225: A 'ze/e', B 'zee' -> print 'nete', at this one occurrence. |
+| 370 | 19.42 | b | hypate | but is the same as [Hypate] in its end. This having @A225 | 1 | A225: A 'Aypate', B 'Aypaze' -> print 'Hypate', at this one occurrence. |
+| 371 | 19.42 | b | hypate | added to the movement of [Hypate] itself, it would not be @A225 | 1 | A225: A '“ypaze', B 'Aypaze' -> print 'Hypate', at this one occurrence. |
+| 372 | 19.42 | b | hypate | to be entirely that of [Hypate;] and it will be louder @A225 | 1 | A225: A 'Zypaze;', B 'Zyfaze;' -> print 'Hypate;', at this one occurrence. |
+| 373 | 19.42 | b | nete | as it were impelled by [nete,] give only a soft sound, @A225 | 1 | A225: A 'vzeze,', B 'xere,' -> print 'nete,', at this one occurrence. |
+| 374 | 19.44 | b | that | space, being also a starting-point [that] will be the true middle. @A227 | 1 | A227: A '/hat', B 'zha¢' -> print 'that', at this one occurrence. |
+| 375 | 19.44 | b | mese | the second tetrachord, the name [mese] (‘middle note’) is amply justified; @A227 | 1 | A227: A 'wese', B 'szese' -> print 'mese', at this one occurrence. |
+| 376 | 19.47 | b | hypate | of seven strings, leave in [Hypate] but not nete? Or should @A227 | 1 | A227: A 'AySaze', B 'hyfaze' -> print 'Hypate', at this one occurrence. |
+| 377 | 19.47 | b | nete | leave in Hypate but not [nete?] Or should we say that @A227 | 1 | A227: A 'zefe?®', B 'zefe?®' -> print 'nete?', at this one occurrence. |
+| 378 | 19.47 | b | nete | say that they omitted not [nete] but what is now called @A227 | 1 | A227: A 'zefe', B 'zeZ/e' -> print 'nete', at this one occurrence. |
+| 379 | 19.47 | b | mese | ‘pycnon’; whence came the name [mese,] because it was the end @A228 | 1 | A228: A 'ese,', B 'ese,' -> print 'mese,', at this one occurrence. |
+| 380 | 20.5 | f | moistening ? | do not require so much [moistening,] while the drier plants must @A230 | 1 | A230: raised footnote number read as punctuation; body punctuation checked in the image |
+| 381 | 20.7 | f | seed ! | all things flourish until their [seed] reaches its prime (for man @A231 | 1 | A231: raised footnote number read as punctuation; body punctuation checked in the image |
+| 382 | 20.7 | f | height ? | age of thirty, sometimes in [height] and sometimes in bulk), but @A231 | 1 | A231: raised footnote number read as punctuation; body punctuation checked in the image |
+| 383 | 20.8 | f | large ! | plants, the roots become very [large?] Is it because the barley-husks, @A232 | 1 | A232: raised footnote number read as punctuation; body punctuation checked in the image |
+| 384 | 20.13 | f | summer ! | an extraordinary size in the [summer?] Is it because the heaping @A234 | 1 | A234: raised footnote number read as punctuation; body punctuation checked in the image |
+| 385 | 20.14 | f | pumpkinplant ! | roots can survive; for the [pumpkinplant] is not a biennial. Plants @A235 | 1 | A235: raised footnote number read as punctuation; body punctuation checked in the image |
+| 386 | 20.14 | f | way ? | biennial. Plants treated in this [way] will bear fruit more quickly @A235 | 1 | A235: raised footnote number read as punctuation; body punctuation checked in the image |
+| 387 | 20.17 | f | seeds ! | than those grown from fresh [seeds?] Is it because, just as @A236 | 1 | A236: raised footnote number read as punctuation; body punctuation checked in the image |
+| 388 | 20.21 | f | which ! | is unconcocted nutriment in them, [which] in winter does not become @A237 | 1 | A237: raised footnote number read as punctuation; body punctuation checked in the image |
+| 389 | 20.22 | f | pupil ? | makes one cover up the [pupil),] whereas marjoram and other pungent @A237 | 1 | A237: raised footnote number read as punctuation; body punctuation checked in the image |
+| 390 | 20.24 | f | which ? | and clusters of grapes, in [which] the small grapes have no @A238 | 1 | A238: raised footnote number read as punctuation; body punctuation checked in the image |
+| 391 | 20.26 | f | onions ! | for example, and garlic and [onions?] Is it because they all @A239 | 1 | A239: raised footnote number read as punctuation; body punctuation checked in the image |
+| 392 | 20.28 | f | away ! | sprout when they are stored [away?] Is it because they are @A240 | 1 | A240: raised footnote number read as punctuation; body punctuation checked in the image |
+| 393 | 20.30 | f | pungent ? | odour; and this is naturally [pungent.] Similarly, all other fruits when @A240 | 1 | A240: raised footnote number read as punctuation; body punctuation checked in the image |
+| 394 | 20.32 | f | melons ! | are stored away. Why do [melons] grow best in marshy plains @A241 | 1 | A241: raised footnote number read as punctuation; body punctuation checked in the image |
+| 395 | 20.34 | f | out ! | the result that it drives [out] the flatulence enclosed within it. @A242 | 1 | A242: raised footnote number read as punctuation; body punctuation checked in the image |
+| 396 | 21.2 | f | barley ? | it to do so? But [barley] is less cohesive, and so @A243 | 1 | A243: raised footnote number read as punctuation; body punctuation checked in the image |
+| 397 | 21.10 | f | does ! | it is heated than barley-cake [does?] Is it because dough contains @A245 | 1 | A245: raised footnote number read as punctuation; body punctuation checked in the image |
+| 398 | 21.12 | f | expands ! | when it is wetted, it [expands.] This juice, therefore, being present @A246 | 1 | A246: raised footnote number read as punctuation; body punctuation checked in the image |
+| 399 | 21.12 | f | thing ? | dough is kneaded the same [thing] happens, as is proved by @A246 | 1 | A246: raised footnote number read as punctuation; body punctuation checked in the image |
+| 400 | 21.12 | f | digestible ? | is boiled it becomes more [digestible.] When, therefore, the bread is @A246 | 1 | A246: raised footnote number read as punctuation; body punctuation checked in the image |
+| 401 | 21.13 | f | them ? | that when one has discharged [them,] though their first nutriment has @A247 | 1 | A247: raised footnote number read as punctuation; body punctuation checked in the image |
+| 402 | 21.14 | f | vessel ! | the desire, just as a [vessel] is filled; for desire is @A248 | 1 | A248: raised footnote number read as punctuation; body punctuation checked in the image |
+| 403 | 21.21 | f | reason ! | holds more both for this [reason] and also because both flour @A250 | 1 | A250: raised footnote number read as punctuation; body punctuation checked in the image |
+| 404 | 21.26 | f | less ? | whether they are more or [less] numerically? Barley-meal then is soft; @A251 | 1 | A251: raised footnote number read as punctuation; body punctuation checked in the image |
+| 405 | 22.2 | e | ‘when | we cease being thirsty only [when] they have received this in @A252 | 1 | A252: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 406 | 22.10 | e | dried’ | that figs when they are [dried] in an oven are harder @A254 | 1 | A254: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 407 | 22.3 | f | them ! | not satiate our desire with [them,] because we still lack nutriment @A253 | 1 | A253: raised footnote number read as punctuation; body punctuation checked in the image |
+| 408 | 23.3 | a | 1 | is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256 | 1 | A256: Footnote and printer signature text, below the body. It is not missing prose. |
+| 409 | 23.3 | a | cp below | is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256 | 1 | A256: Footnote and printer signature text, below the body. It is not missing prose. |
+| 410 | 23.3 | a | chapter 24 | is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256 | 1 | A256: Footnote and printer signature text, below the body. It is not missing prose. |
+| 411 | 23.3 | a | 12 and 28 omitting | is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256 | 1 | A256: Footnote and printer signature text, below the body. It is not missing prose. |
+| 412 | 23.3 | a | 64525 r | is sunk deeper into the water, [ours: ] which offers less resistance. But in @A256 | 1 | A256: Footnote and printer signature text, below the body. It is not missing prose. |
+| 413 | 23.2 | e | ‘this | motion at the same time. [This] effect is not produced in @A256 | 1 | A256: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 414 | 23.6 | e | air’ | and is refracted into the [air,] but is not refracted from @A258 | 1 | A258: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 415 | 23.1 | f | shallow ! | where it is confined and [shallow?] Is it because a small @A256 | 1 | A256: raised footnote number read as punctuation; body punctuation checked in the image |
+| 416 | 23.5 | f | air ! | time follows the rush of [air] into the sea and into @A257 | 1 | A257: raised footnote number read as punctuation; body punctuation checked in the image |
+| 417 | 23.5 | f | against ! | wind. For the currents flowing [against] one another try to thrust @A258 | 1 | A258: raised footnote number read as punctuation; body punctuation checked in the image |
+| 418 | 23.13 | f | nature ? | is of a more corporeal [nature,] and sea water is more @A259 | 1 | A259: raised footnote number read as punctuation; body punctuation checked in the image |
+| 419 | 23.15 | f | heat ! | closely allied is it to [heat;] and sea water possesses both @A260 | 1 | A260: raised footnote number read as punctuation; body punctuation checked in the image |
+| 420 | 23.21 | f | elsewhere ! | salty, but this happens less [elsewhere?] Is it because the water @A261 | 1 | A261: raised footnote number read as punctuation; body punctuation checked in the image |
+| 421 | 23.21 | f | through ? | time the sea also percolates [through] and, because it has had @A261 | 1 | A261: raised footnote number read as punctuation; body punctuation checked in the image |
+| 422 | 23.22 | f | through ? | the latter penetrates, but percolates [through] to a less extent, because @A262 | 1 | A262: raised footnote number read as punctuation; body punctuation checked in the image |
+| 423 | 23.23 | f | it ? | the sea grows blacker beneath [it.] Are there two reasons? Firstly, @A262 | 1 | A262: raised footnote number read as punctuation; body punctuation checked in the image |
+| 424 | 23.23 | f | because ? | blue or black.) And, secondly, [because,] when the sight is at @A262 | 1 | A262: raised footnote number read as punctuation; body punctuation checked in the image |
+| 425 | 23.26 | f | mix ! | as the wine does not [mix] with the water, the salty @A263 | 1 | A263: raised footnote number read as punctuation; body punctuation checked in the image |
+| 426 | 23.32 | f | surface ! | oil which forms on the [surface] of salt water? Why does @A265 | 1 | A265: raised footnote number read as punctuation; body punctuation checked in the image |
+| 427 | 23.37 | f | salty ! | drinkable but afterwards it becomes [salty?] Is it because the water @A266 | 1 | A266: raised footnote number read as punctuation; body punctuation checked in the image |
+| 428 | 23.5 | b | so | are swallowed up and disappear [so] completely that no wreckage even @A257 | 1 | A257: Image prints so; the OCR joins it to the margin column/line number. |
+| 429 | 24.11 | e | ‘that | the moisture and causes hardening? [That] cold, pure and simple produces @A271 | 1 | A271: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 430 | 24.11 | e | simple’ | hardening? That cold, pure and [simple] produces this effect is clear @A271 | 1 | A271: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 431 | 24.3 | f | so ! | wood, whereas the flame does [so?] Is it because the flame, @A268 | 1 | A268: raised footnote number read as punctuation; body punctuation checked in the image |
+| 432 | 24.11 | f | of ! | into being through the action [of] hot waters? Or, while it @A271 | 1 | A271: raised footnote number read as punctuation; body punctuation checked in the image |
+| 433 | 24.11 | f | simple , | hardening? That cold, pure and [simple] produces this effect is clear @A271 | 1 | A271: Image has no comma or quote after simple; the apparent mark is call-out 3. |
+| 434 | 24.14 | f | body ! | it is still upon the [body?] Or, while it has this @A272 | 1 | A272: raised footnote number read as punctuation; body punctuation checked in the image |
+| 435 | 25.16 | a | forerunners’ | For the periodical winds and the [ours: ‘forerunners’] blow less at night. Why is @A279 | 1 | A279: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 436 | 25.8 | e | ‘this | and additional liquid as well. [This] is more especially the case @A276 | 1 | A276: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 437 | 25.8 | e | water’ | for when ashes are sprinkled [water] is attracted to any spot @A277 | 1 | A277: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 438 | 25.10 | e | ‘that | water as to cause waves? [That] it becomes cold is clear @A278 | 1 | A278: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 439 | 25.13 | e | lighter’ | floats, and when it is [lighter] it sinks? Why is it @A279 | 1 | A279: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 440 | 25.17 | e | uncorrupted’ | and closely covered vessels remain [uncorrupted?] Is it because things which @A279 | 1 | A279: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 441 | 25.8 | f | thinner ! | and so the water, being [thinner,] sinks in more and saturates @A277 | 1 | A277: raised footnote number read as punctuation; body punctuation checked in the image |
+| 442 | 25.10 | f | waves ! | upon water as to cause [waves?] That it becomes cold is @A278 | 1 | A278: raised footnote number read as punctuation; body punctuation checked in the image |
+| 443 | 25.16 | b | forerunners | the periodical winds and the [‘forerunners’] blow less at night. Why @A279 | 1 | A279: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 444 | 26.14 | a | cloudwinds’ | itself all at once like the [ours: ‘cloud-winds’,] and therefore quickly dies down again? @A288 | 1 | A288: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 445 | 26.29 | a | clouds’ | it to himself, as Caecias draws [ours: clouds’?] For the other winds simply drive @A293 | 1 | A293: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 446 | 26.30 | a | mornsing | wind blows cold in the early [ours: morning] from rivers but not from the @A293 | 1 | A293: print reads `morn-` / `ing`, with the margin line number 5 before `ing` (leaf 293); both scans read the 5 as S |
+| 447 | 26.1 | e | ‘are | the earth, where, besides, there [are] no clouds... The East wind @A283 | 1 | A283: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 448 | 26.12 | e | blowing’ | it is, these prevent their [blowing.] Or is it because a @A287 | 1 | A287: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 449 | 26.1 | f | caecias ! | Why does the North-East wind [(Caecias)] alone of the winds attract @A282 | 1 | A282: raised footnote number read as punctuation; body punctuation checked in the image |
+| 450 | 26.1 | f | said ? | and falling, as has been [said,] upon the western regions of @A283 | 1 | A283: raised footnote number read as punctuation; body punctuation checked in the image |
+| 451 | 26.2 | f | it ! | moisture which is formed in [it] is quickly dissolved. Also moisture @A284 | 1 | A284: raised footnote number read as punctuation; body punctuation checked in the image |
+| 452 | 26.5 | f | back ! | and of its being thrown [back] is the fact that the @A285 | 1 | A285: raised footnote number read as punctuation; body punctuation checked in the image |
+| 453 | 26.6 | f | cloudwinds ? | it can find. Why do [cloud-winds] stop sooner when rain falls? @A285 | 1 | A285: raised footnote number read as punctuation; body punctuation checked in the image |
+| 454 | 26.12 | f | it ! | air which is nearest to [it] and at this solstice it @A288 | 1 | A288: raised footnote number read as punctuation; body punctuation checked in the image |
+| 455 | 26.19 | f | ending ! | beginning but when it is [ending?] Is it because it collects @A290 | 1 | A290: raised footnote number read as punctuation; body punctuation checked in the image |
+| 456 | 26.23 | f | wind ! | is it a sign of [wind?] Is it because they are @A291 | 1 | A291: raised footnote number read as punctuation; body punctuation checked in the image |
+| 457 | 26.27 | f | eurus ! | wind and the South-East wind [(Eurus),] which are warmer than their @A292 | 1 | A292: raised footnote number read as punctuation; body punctuation checked in the image |
+| 458 | 26.27 | f | brought ! | which is very warm, is [brought] from the land. Or is @A293 | 1 | A293: raised footnote number read as punctuation; body punctuation checked in the image |
+| 459 | 26.30 | f | cold ? | hot liquids cools and becomes [cold.] One would therefore find that @A294 | 1 | A294: Image has a full stop then call-out 2, with no question mark. |
+| 460 | 26.36 | f | kind ? | from a source of some [kind.] It cannot, therefore, rise any @A297 | 1 | A297: raised footnote number read as punctuation; body punctuation checked in the image |
+| 461 | 26.40 | f | landwind ! | is the reflux of a [land-wind.] What is the origin of @A298 | 1 | A298: raised footnote number read as punctuation; body punctuation checked in the image |
+| 462 | 26.48 | f | motion ! | channel and then set in [motion] the adjoining air, and then @A301 | 1 | A301: raised footnote number read as punctuation; body punctuation checked in the image |
+| 463 | 26.48 | f | natural ? | remain still, it is only [natural] that its motion should be @A301 | 1 | A301: raised footnote number read as punctuation; body punctuation checked in the image |
+| 464 | 26.51 | f | blow ! | season at which they do [blow] and with the force with @A302 | 1 | A302: raised footnote number read as punctuation; body punctuation checked in the image |
+| 465 | 26.53 | f | eurus ! | larger when the South-East wind [(Eurus)] blows? Is it because it @A303 | 1 | A303: raised footnote number read as punctuation; body punctuation checked in the image |
+| 466 | 26.54 | f | produces ! | the moisture to itself and [produces] the West wind in our @A304 | 1 | A304: raised footnote number read as punctuation; body punctuation checked in the image |
+| 467 | 26.56 | f | eurus ! | north. Round Lesbos the South-East [(Eurus)] and South winds bring much @A305 | 1 | A305: raised footnote number read as punctuation; body punctuation checked in the image |
+| 468 | 26.56 | f | drive ? | from the open sea and [drive] it against the land. Similar @A305 | 1 | A305: raised footnote number read as punctuation; body punctuation checked in the image |
+| 469 | 26.60 | f | itself ! | night the North wind expends [itself,] but it is less apt @A306 | 1 | A306: raised footnote number read as punctuation; body punctuation checked in the image |
+| 470 | 26.61 | f | webs ? | it that when many spiders’ [webs] are borne through the air, @A306 | 1 | A306: raised footnote number read as punctuation; body punctuation checked in the image |
+| 471 | 26.14 | b | cloudwinds | all at once like the [‘cloud-winds’,] and therefore quickly dies down @A288 | 1 | A288: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 472 | 26.29 | b | clouds | to himself, as Caecias draws [clouds’?] For the other winds simply @A293 | 1 | A293: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 473 | 26.30 | b | morning | blows cold in the early [morning] from rivers but not from @A293 | 1 | A293: the same place: ours reads `morning`, as the print does (leaf 293) |
+| 474 | 27.1 | f | tremble ! | do those who are afraid [tremble?] Is it due to the @A307 | 1 | A307: raised footnote number read as punctuation; body punctuation checked in the image |
+| 475 | 27.3 | f | warmed ? | order that they may be [warmed.] It seems probable that owing @A308 | 1 | A308: raised footnote number read as punctuation; body punctuation checked in the image |
+| 476 | 27.4 | f | less ! | cooling; with the result that [less] heat remains in the region @A309 | 1 | A309: raised footnote number read as punctuation; body punctuation checked in the image |
+| 477 | 27.10 | f | urine ! | and they desire to pass [urine?] Is it because the heat @A311 | 1 | A311: raised footnote number read as punctuation; body punctuation checked in the image |
+| 478 | 27.10 | f | loosened ? | and bladder becoming heated are [loosened] and make these organs ready @A311 | 1 | A311: raised footnote number read as punctuation; body punctuation checked in the image |
+| 479 | 27.10 | f | body ! | the lower parts of the [body,] and some of those which @A312 | 1 | A312: raised footnote number read as punctuation; body punctuation checked in the image |
+| 480 | 27.10 | f | urine ? | garlic, which passes into the [urine.] Now heat coming from the @A312 | 1 | A312: raised footnote number read as punctuation; body punctuation checked in the image |
+| 481 | 28.6 | a | 2 | pleasure it gives is more intense. [ours: ] Further, he who is thirsty needs @A315 | 1 | A315: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 482 | 28.1 | f | siege ! | the tyrant, when during the [siege] he ceased drinking for a @A313 | 1 | A313: raised footnote number read as punctuation; body punctuation checked in the image |
+| 483 | 28.2 | f | taste ! | the senses, namely, touch and [taste?] Is it because of the @A314 | 1 | A314: raised footnote number read as punctuation; body punctuation checked in the image |
+| 484 | 28.6 | f | hunger ! | we endure thirst less than [hunger?] Is it because the former @A315 | 1 | A315: raised footnote number read as punctuation; body punctuation checked in the image |
+| 485 | 29.13 | e | ‘superiority | the plaintiff has established some [superiority.] Similarly, when the votes of @A321 | 1 | A321: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 486 | 29.13 | e | mind’ | sentence and then change their [mind,] it is impossible to take @A321 | 1 | A321: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 487 | 29.2 | f | loan ! | a deposit than of a [loan?] Is it because it is @A317 | 1 | A317: raised footnote number read as punctuation; body punctuation checked in the image |
+| 488 | 29.3 | f | verdict ! | courts the jury give their [verdict] in accordance with the birth @A318 | 1 | A318: raised footnote number read as punctuation; body punctuation checked in the image |
+| 489 | 29.11 | f | greater ! | and so he commits a [greater] injustice? Or is it because @A320 | 1 | A320: raised footnote number read as punctuation; body punctuation checked in the image |
+| 490 | 29.13 | f | property ? | not handing over the disputed [property] to the accuser but allowing @A321 | 1 | A321: raised footnote number read as punctuation; body punctuation checked in the image |
+| 491 | 29.13 | f | lives ! | to do so, if he [lives] so circumspectly as never to @A322 | 1 | A322: raised footnote number read as punctuation; body punctuation checked in the image |
+| 492 | 29.14 | f | double ? | house, he merely pays back [double] the value of what he @A323 | 1 | A323: raised footnote number read as punctuation; body punctuation checked in the image |
+| 493 | 29.14 | f | own ! | his garments next to his [own] when he has stripped himself; @A324 | 1 | A324: raised footnote number read as punctuation; body punctuation checked in the image |
+| 494 | 29.14 | f | where ! | house is in a place [where] it is easy for him @A325 | 1 | A325: raised footnote number read as punctuation; body punctuation checked in the image |
+| 495 | 30.1 | a | 1 | their condition, which is itself natural. [ours: ] When the heat is extinguished suddenly, @A332 | 1 | A332: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 496 | 30.1 | e | ‘bile | stomach are due to black [bile.] Now wine has the quality @A328 | 1 | A328: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 497 | 30.1 | e | pleasure’ | emitting semen find a certain [pleasure] in rubbing their sexual organs @A328 | 1 | A328: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 498 | 30.1 | e | ‘the | to Archelaus, King of Macedonia. [The] force which gives rise to @A331 | 1 | A331: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 499 | 30.8 | e | condition’ | from the Opposite or intermediate [condition,] until he achieves a state @A336 | 1 | A336: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 500 | 30.1 | f | him ? | ancients ‘the sacred disease after [him.] That his temperament was atrabilious @A326 | 1 | A326: raised footnote number read as punctuation; body punctuation checked in the image |
+| 501 | 30.1 | f | childhood ! | who have been epileptic from [childhood,] and very similar to. those @A327 | 1 | A327: raised footnote number read as punctuation; body punctuation checked in the image |
+| 502 | 30.1 | f | people ? | this effect also on some [people] and therefore Homer writes, He @A327 | 1 | A327: raised footnote number read as punctuation; body punctuation checked in the image |
+| 503 | 30.1 | f | persons ! | the condition found in atrabilious [persons.] This condition is obvious in @A329 | 1 | A329: raised footnote number read as punctuation; body punctuation checked in the image |
+| 504 | 30.1 | f | down ! | whom the excessive heat dies [down] to a mean temperature are @A330 | 1 | A330: raised footnote number read as punctuation; body punctuation checked in the image |
+| 505 | 30.1 | f | that ? | state causes great variation, in [that] many of those who are @A330 | 1 | A330: raised footnote number read as punctuation; body punctuation checked in the image |
+| 506 | 30.1 | f | extinguished ? | natural. When the heat is [extinguished] suddenly, most men make away @A332 | 1 | A332: raised footnote number read as punctuation; body punctuation checked in the image |
+| 507 | 30.4 | f | equal ! | it, all other conditions being [equal?] Is it because to know @A333 | 1 | A333: raised footnote number read as punctuation; body punctuation checked in the image |
+| 508 | 30.4 | f | proposition ? | as it were converts the [proposition] and the mind draws a @A333 | 1 | A333: raised footnote number read as punctuation; body punctuation checked in the image |
+| 509 | 30.5 | f | faculty ! | is related similarly to that [faculty,] and conversely, as the instruments @A334 | 1 | A334: raised footnote number read as punctuation; body punctuation checked in the image |
+| 510 | 30.5 | f | which ? | so are the faculties of [which] they are the instruments to @A334 | 1 | A334: raised footnote number read as punctuation; body punctuation checked in the image |
+| 511 | 30.7 | f | actions ? | alone causes us pleasure, whereas [actions] give rise to the pleasure @A335 | 1 | A335: raised footnote number read as punctuation; body punctuation checked in the image |
+| 512 | 30.8 | f | finally ? | a less extreme condition and, [finally,] a condition of a certain @A336 | 1 | A336: raised footnote number read as punctuation; body punctuation checked in the image |
+| 513 | 30.10 | f | character ! | artists generally persons of bad [character?] Is it because they partake @A337 | 1 | A337: raised footnote number read as punctuation; body punctuation checked in the image |
+| 514 | 30.14 | b | ἐπιστήμη | rest hence the word knowledge [(ἐπιστήμη)] seems to be derived from @A338 | 1 | A338: Image prints one word ἐπιστήμη; A splits it as ἐπιστή μὴ. |
+| 515 | 31.7 | a | 2 | make corresponding movements, which is impossible. [ours: ] The distortion of the eyes is @A342 | 1 | A342: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 516 | 31.1 | f | sneezing ! | does rubbing the eye stop [sneezing?] Is it because by this @A340 | 1 | A340: raised footnote number read as punctuation; body punctuation checked in the image |
+| 517 | 31.3 | f | part ? | more sensitive and easily affected [part,] as though it were suffering @A341 | 1 | A341: raised footnote number read as punctuation; body punctuation checked in the image |
+| 518 | 31.7 | f | point ! | not rest on the same [point,] they must be distorted; for @A343 | 1 | A343: raised footnote number read as punctuation; body punctuation checked in the image |
+| 519 | 31.21 | f | because ? | the inner flesh to smart, [because] the latter is the rarest @A347 | 1 | A347: raised footnote number read as punctuation; body punctuation checked in the image |
+| 520 | 31.23 | f | disease ! | tends to get rid of [disease.] For if the excretion is @A348 | 1 | A348: raised footnote number read as punctuation; body punctuation checked in the image |
+| 521 | 31.25 | f | light ! | man cannot discern how the [light] falls on the object seen; @A349 | 1 | A349: raised footnote number read as punctuation; body punctuation checked in the image |
+| 522 | 32.4 | d | isit -> is it | dirt in the ears bitter? [Is it] because sweat is corrupt? It @A352 | 1 | A352: Image has separate body words: is it. Both OCR scans join them. |
+| 523 | 32.3 | a | 3 | round their ears? Is it in [ours: ] order that the sea may not @A351 | 1 | A351: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 524 | 32.1 | f | shame ! | blushing in those who feel [shame?] Is it because extraneous moisture @A351 | 1 | A351: raised footnote number read as punctuation; body punctuation checked in the image |
+| 525 | 32.5 | f | out ? | the breath seems to pass [out;] for it is said that @A352 | 1 | A352: raised footnote number read as punctuation; body punctuation checked in the image |
+| 526 | 33.11 | d | asa -> as a | between midnight and midday regarded [as a] bad thing, but between midday @A358 | 1 | A358: Image has separate body words: as a. Both OCR scans join them. |
+| 527 | 33.2 | a | 7 | rubs the eye, one sneezes less? [ours: ] Is it because what causes the @A355 | 1 | A355: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 528 | 33.1 | f | eructation ! | hiccuping but does not stop [eructation?] Is it because they are @A355 | 1 | A355: raised footnote number read as punctuation; body punctuation checked in the image |
+| 529 | 33.12 | f | breath ! | longer able to raise the [breath] up with ease, and, when @A359 | 1 | A359: raised footnote number read as punctuation; body punctuation checked in the image |
+| 530 | 34.12 | e | ‘then | draw the breath in again. [Then] when we have opened the @A365 | 1 | A365: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 531 | 34.12 | e | without’ | becomes dry. Also we walk [without] giving attention to the manner @A365 | 1 | A365: Image has no quotation mark at this word: OCR paired a call-out or speck with a distant mark. |
+| 532 | 34.1 | f | longlived ! | have spongy teeth are not [long-lived?] Is it because the long-lived @A362 | 1 | A362: raised footnote number read as punctuation; body punctuation checked in the image |
+| 533 | 34.12 | f | breath ! | emit the fire with the [breath.] Now when the breath and @A365 | 1 | A365: raised footnote number read as punctuation; body punctuation checked in the image |
+| 534 | 34.7 | b | mouth | placing the hand near the [mouth.] Or is the air which @A363 | 1 | A363: Image prints mouth; A reads πιο and B mouth.t. |
+| 535 | 35.6 | a | laughs’ | of the body with which one [ours: laughs).] Now that which comes unawares tends @A367 | 1 | A367: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 536 | 35.4 | f | inwards ! | cold and heat are driven [inwards] inversely to the seasons, and @A367 | 1 | A367: raised footnote number read as punctuation; body punctuation checked in the image |
+| 537 | 35.4 | f | seasons ? | driven inwards inversely to the [seasons,] and in the summer the @A367 | 1 | A367: raised footnote number read as punctuation; body punctuation checked in the image |
+| 538 | 35.8 | f | dissolve ? | process they become moist or [dissolve] into breath as the result @A368 | 1 | A368: raised footnote number read as punctuation; body punctuation checked in the image |
+| 539 | 35.6 | b | laughs | the body with which one [laughs).] Now that which comes unawares @A367 | 1 | A367: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 540 | 36.2 | f | fleshy ! | it is far from being [fleshy?] Is it because parts which @A369 | 1 | A369: raised footnote number read as punctuation; body punctuation checked in the image |
+| 541 | 36.2 | f | freely ? | one perspires most readily and [freely] on the forehead, for it @A369 | 1 | A369: raised footnote number read as punctuation; body punctuation checked in the image |
+| 542 | 37.1 | f | excreted ? | little liquid)? For what is [excreted] is more, which accounts for @A370 | 1 | A370: raised footnote number read as punctuation; body punctuation checked in the image |
+| 543 | 37.3 | f | health ? | densified in order to promote [health.] For just as a city @A371 | 1 | A371: raised footnote number read as punctuation; body punctuation checked in the image |
+| 544 | 37.3 | f | which ! | constructed parts of the body, [which] least require to be deprived @A372 | 1 | A372: raised footnote number read as punctuation; body punctuation checked in the image |
+| 545 | 37.3 | f | dried ? | parts which need to be [dried,] for, because they are remote, @A372 | 1 | A372: raised footnote number read as punctuation; body punctuation checked in the image |
+| 546 | 38.7 | a | 7 | while fire does not? Is it [ours: ] because the heat of the sun @A375 | 1 | A375: Raised call-out, margin number, or closing quote read as part of a body token; the bracketed output matches the image. |
+| 547 | 38.1 | f | flesh ! | olive oil, but darkens the [flesh?] Is it because it bleaches @A374 | 1 | A374: raised footnote number read as punctuation; body punctuation checked in the image |
+| 548 | 38.3 | f | form ! | air cools the excrements which [form] and ventilates the body. Further, @A375 | 1 | A375: raised footnote number read as punctuation; body punctuation checked in the image |
+| 549 | 38.9 | f | older ! | darker complexioned as they become [older?] Is it because anything which @A376 | 1 | A376: raised footnote number read as punctuation; body punctuation checked in the image |
