@@ -104,32 +104,38 @@ describe('Reader, chapter-section scheme', () => {
   // its top exactly at the reading area's top (the controls strip's bottom):
   // any of the section before still showing there and the spy cites that one.
   afterEach(() => { vi.restoreAllMocks(); });
-  function layout(targetTop: (el: Element) => number | undefined) {
+  // A fake page: `docTop` is an element's position in the document, scrollY
+  // moves with scrollTo/scrollBy, and the controls strip ends at 275px until
+  // the page scrolls, then sticks at 251px, as it does in the browser.
+  function layout(docTop: (el: Element) => number | undefined) {
+    let y = 0;
+    vi.spyOn(window, 'scrollY', 'get').mockImplementation(() => y);
     vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
-      const bottom = this.classList.contains('reader-controls') ? 251 : 0;
-      const top = targetTop(this) ?? 0;
-      return { top, bottom: bottom || top, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON() {} } as DOMRect;
+      const at = docTop(this);
+      const top = at === undefined ? 0 : at - y;
+      const bottom = this.classList.contains('reader-controls') ? (y > 0 ? 251 : 275) : top;
+      return { top, bottom, left: 0, right: 0, width: 0, height: 0, x: 0, y: top, toJSON() {} } as DOMRect;
     });
-    return vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    vi.spyOn(window, 'scrollTo').mockImplementation(((o: ScrollToOptions) => { y = o.top ?? y; }) as typeof window.scrollTo);
+    vi.spyOn(window, 'scrollBy').mockImplementation(((_x: number, dy: number) => { y += dy; }) as typeof window.scrollBy);
+    return () => y;
   }
 
   it('puts the cited section exactly at the top of the reading area', async () => {
-    const scrollTo = layout(el => (el.id === 'L49a-3' ? 5000 : undefined));
+    const scrollY = layout(el => (el.id === 'L49a-3' ? 5000 : undefined));
     window.history.replaceState(null, '', '/AthPol?loc=49a:3');
     render(Reader, { props: { work: 'AthPol', bookNum: 1, bookData: book('49a', '49', '49a1–7') } });
-    await vi.waitFor(() => expect(scrollTo).toHaveBeenCalled());
-    expect(scrollTo.mock.calls.at(-1)?.[0]).toMatchObject({ top: 5000 - 251 });
+    // Measured once the controls have stuck (251), not at the top of the page (275).
+    await vi.waitFor(() => expect(scrollY()).toBe(5000 - 251));
   });
 
   it('with the Greek hidden, a citation jump opens at the English section tick', async () => {
     // The Greek line exists but is hidden: scrolling it into view goes nowhere.
-    const tick = (el: Element) =>
-      el.classList.contains('bk-num') && el.textContent?.trim() === '3' ? 3000 : undefined;
-    const scrollTo = layout(tick);
+    const scrollY = layout(el =>
+      el.classList.contains('bk-num') && el.textContent?.trim() === '3' ? 3000 : undefined);
     window.history.replaceState(null, '', '/AthPol?loc=49a:3&view=english');
     render(Reader, { props: { work: 'AthPol', bookNum: 1, bookData: book('49a', '49', '49a1–7') } });
-    await vi.waitFor(() => expect(scrollTo).toHaveBeenCalled());
-    expect(scrollTo.mock.calls.at(-1)?.[0]).toMatchObject({ top: 3000 - 251 });
+    await vi.waitFor(() => expect(scrollY()).toBe(3000 - 251));
   });
 });
 

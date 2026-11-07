@@ -502,8 +502,12 @@
   // A chapter-section jump puts the section's top exactly at the reading
   // area's top. A section is taller than the spy's band, so any of the section
   // before left showing there would be what the spy cites (#49a2 for 49.3).
-  function alignSection(el: Element, behavior: ScrollBehavior) {
-    window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - readingTop(), behavior });
+  // The controls strip only sticks once the page has scrolled, so the inset is
+  // measured again after the jump and the difference taken up.
+  function alignSection(el: Element) {
+    window.scrollTo({ top: window.scrollY + el.getBoundingClientRect().top - readingTop(), behavior: 'auto' });
+    const off = el.getBoundingClientRect().top - readingTop();
+    if (Math.abs(off) >= 1) window.scrollBy(0, off);
   }
 
   function setupScrollSpy() {
@@ -558,7 +562,7 @@
             .find((el) => el.textContent?.trim() === String(line))
         : lineEl;
       const el = target ?? document.getElementById(`col-${column}`);
-      if (el) alignSection(el, 'auto');
+      if (el) alignSection(el);
       return;
     }
     if (lineEl && (lineEl as HTMLElement).offsetParent !== null) {
