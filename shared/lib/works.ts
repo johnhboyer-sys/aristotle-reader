@@ -812,6 +812,27 @@ export const WORKS: Work[] = [
     blurb: 'A short spurious work on inferring character from the body.',
   },
   {
+    id: 'Plant',
+    title: 'De Plantis',
+    greekTitle: 'Περὶ φυτῶν',
+    abbr: 'Plant.',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'I. Bekker, Aristotelis Opera (Oxford, 1837), on the lines of Bekker (Berlin, 1831)',
+    // The Greek is not in the TLG export: First1KGreek's text (CC BY-SA 4.0),
+    // laid on the Berlin edition's printed lines (sources/plant-greek/).
+    greekSource: {
+      short: 'Bekker (Oxford, 1837)',
+      full: 'I. Bekker, ed. Aristotelis opera, vol. 6. Oxford: Oxford University Press, 1837; lines as in Bekker, Aristotelis opera, vol. 2, Berlin: Georg Reimer, 1831. Text from Open Greek and Latin First1KGreek, CC BY-SA 4.0.',
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1913)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'A short spurious work on plants, their parts and their growth, in two books.',
+  },
+  {
     id: 'MXG',
     title: 'De Melisso Xenophane Gorgia',
     greekTitle: 'Περὶ Μελίσσου Ξενοφάνους Γοργίου',
@@ -1350,6 +1371,7 @@ export const CATEGORIES: Category[] = [
       { id: 'Col' },
       { id: 'Aud' },
       { id: 'Phgn' },
+      { id: 'Plant' },
       { id: 'Mirab' },
       { id: 'Lin' },
       { id: 'Vent' },

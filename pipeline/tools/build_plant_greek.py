@@ -58,6 +58,12 @@ CORRECTIONS = [
      "822a8-12: the book heading Β. is not text; Berlin prints the stop after οὔ"),
     ("Ἡ χλοάζουσα χλοάζουσα δὲ χροιὰ", "Ἡ χλοάζουσα δὲ χροιὰ",
      "827b17: First1K repeats the word; Berlin prints it once"),
+    ("μεθ’ ῏ον αὐξάνεται", "μεθ’ ὧν αὐξάνεται",
+     "818b19: First1K's breathing and accent stand alone; Berlin prints ὧν"),
+    ("φιτροὺς ἐκ d μιᾶς", "φιτροὺς ἐκ μιᾶς",
+     "819b9: a stray Latin d in First1K; Berlin prints ἐκ μιᾶς"),
+    ("αἷς οὐ συνἀπτεται", "αἷς οὐ συνάπτεται",
+     "817b11: First1K has a breathing for the accent; Berlin prints συνάπτεται"),
 ]
 
 # Printed lines the OCR lost, read off the page image.
