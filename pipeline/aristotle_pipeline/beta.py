@@ -36,6 +36,12 @@ _MARKS = {
 
 _APOSTROPHES = "'’᾽ʼ"  # ', ’, ᾽ (koronis), ʼ
 
+# Signs that are not letters but stand inside a token in Ath. Pol.'s papyrus
+# text, given their Beta Code so every token keeps a key (preflight requires
+# one); such keys match no analysis. The keraia (U+0374, NFD U+02B9) marks a
+# numeral (αʹ = 1), stigma is 6, and dots print a lacuna inside a word.
+_SIGNS = {"ʹ": "#", "ϛ": "#2", ".": "."}
+
 _TWO_ACCENTS = re.compile(r"^(.*[/=].*)[/=]")
 
 
@@ -53,6 +59,9 @@ def to_beta_key(token: str) -> str:
             continue
         if ch in _MARKS:
             out.append(_MARKS[ch])
+            continue
+        if ch in _SIGNS:
+            out.append(_SIGNS[ch])
             continue
         raise ValueError(f"cannot transliterate {ch!r} (U+{ord(ch):04X}) in {token!r}")
     key = "".join(out)

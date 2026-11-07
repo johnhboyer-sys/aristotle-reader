@@ -50,3 +50,16 @@ def test_an_underdot_is_not_part_of_the_key():
     from aristotle_pipeline.beta import to_beta_key
     assert to_beta_key("τ̣ῆς") == to_beta_key("τῆς")
     assert to_beta_key("ἐ̣γχέουσι") == to_beta_key("ἐγχέουσι")
+
+
+def test_numerals_and_lacunae_still_get_a_key():
+    """Preflight requires a key on every token. Ath. Pol.'s papyrus text has
+    Greek numerals (αʹ, ϛʹ: the keraia is Beta Code '#', stigma '#2') and
+    words broken by a lacuna printed as dots (λει..ν). Their keys match no
+    analysis, which is right; but they must exist."""
+    from aristotle_pipeline.beta import to_beta_key
+    assert to_beta_key("αʹ") == "a#"
+    assert to_beta_key("φαʹ") == "fa#"
+    assert to_beta_key("ϛʹ") == "#2#"
+    assert to_beta_key("λει..ν") == "lei..n"
+    assert to_beta_key("δεκάτην.’") == "deka/thn.'"
