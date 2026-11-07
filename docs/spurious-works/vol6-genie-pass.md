@@ -21,12 +21,12 @@ authority.
 | Mech | 41 | 14 | 2 |
 | Lin | 32 | 26 | 17 |
 | Vent | 1 | 1 | 1 |
-| MXG | 10 | 5 | 2 |
+| MXG | 11 | 4 | 2 |
 
 The third column counts allowances. Most are Genie's misreads; a few are
-typography our text does not carry (small capitals, a line-end hyphen). One is
-unsettled: MXG leaf 266, "abovementioned", where "above-" ends the printed
-line, so the print cannot say whether the word has its own hyphen.
+typography our text does not carry (small capitals, a line-end hyphen). MXG
+leaf 266, "abovementioned", could not be settled from the print, where "above-"
+ends the line; John ruled it "above-mentioned" (2026-11-07), now a print read.
 
 What the fixes are:
 
