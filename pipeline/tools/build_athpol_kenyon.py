@@ -5,8 +5,10 @@ the section-start anchors.
 Source: archive.org scan worksofaristotle0010wdro_x8m2, the Athenian
 Constitution at hOCR pages 371-449 (page images n370-n448). Everything is read
 from the local cache in build/athpol-ocr/ -- hocr.html (the scan's hOCR),
-img/ (the page images the tables below were checked against) and pg26095.txt
-(Project Gutenberg #26095, the same translation, used only as a witness). No
+img/ (the page images the tables below were checked against), pg26095.txt
+(Project Gutenberg #26095, the same translation, used only as a witness) and
+genie-x.txt (the Ath. Pol. pages of the Genie OCR of the same volume, copied
+from sources/genie-oxford/, a second witness that also covers the notes). No
 network.
 
 Method:
@@ -27,8 +29,9 @@ Method:
 
 Writes sources/athpol-kenyon/{book-01.html, footnotes.json, anchors.yaml},
 then checks them (parse_book, paragraphs, anchors, the numeral inventory,
-notes, misprints, line-end hyphens, and a word and punctuation comparison with
-Gutenberg in which every difference must be listed in GB_KNOWN or PUNCT_KNOWN).
+notes, misprints, line-end hyphens, a word and punctuation comparison with
+Gutenberg in which every difference must be listed in GB_KNOWN or PUNCT_KNOWN,
+and one of text and notes with Genie, every difference listed in GENIE_KNOWN).
 Run from pipeline/:
   uv run python tools/build_athpol_kenyon.py
 (--dump prints the page analysis, --text the per-page text before READS.)
@@ -48,6 +51,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "build" / "athpol-ocr"
 HOCR = CACHE / "hocr.html"
 GUTENBERG = CACHE / "pg26095.txt"
+GENIE = CACHE / "genie-x.txt"
 OUT = ROOT / "sources" / "athpol-kenyon"
 FIRST_PAGE, LAST_PAGE = 371, 449
 
@@ -594,6 +598,23 @@ def _line_spans(pages: dict, prose: str) -> dict:
     return spans
 
 
+# What the margins are known to disagree with, each checked on the page image.
+# check_margins fails on any difference not listed here and on any entry here
+# that no longer applies.
+# Chapters whose printed numerals differ from the TLG sections: printed list.
+MARGIN_CHAPTERS = {
+    8: [1, 2, 4, 5],         # no "3" printed; TLG 8.3 starts "There were four tribes"
+    15: [1, 2, 3, 4, 5],     # Kenyon's 15.5 "Pisistratus accordingly" is inside TLG 15.4
+    26: [1, 2, 3, 4],        # Kenyon's 26.4 "and two years afterwards" is inside TLG 26.3
+    49: [1, 2, 3, 4, 5],     # Kenyon's 49.5 is inside TLG 49.4
+}
+# Anchors (TLG section starts) not on the line of Kenyon's printed numeral.
+OFF_NUMERAL = {"4.4", "8.5", "9.1", "9.2", "37.2", "40.3", "47.3", "47.4", "47.5",
+               "49.2", "53.2", "56.4"}
+# TLG sections with no printed numeral.
+NO_NUMERAL = {"8.3"}
+
+
 def check_margins(pages: dict, prose: str, starts: dict) -> None:
     labels = [m[2] for m in MARGINS]
     keys = [_section_key(l) for l in labels]
@@ -605,10 +626,14 @@ def check_margins(pages: dict, prose: str, starts: dict) -> None:
     print(f"[margins] {len(MARGINS)} printed section numerals ({src['hocr']} also in the hOCR, {src['img']} read from the image only)")
     print(f"[margins] per chapter 1..69: {inv}")
     print(f"[margins] total {sum(inv)}; TLG sections {sum(tlg)}")
+    differ = {}
     for n in range(1, 70):
         if inv[n - 1] != tlg[n - 1]:
             have = sorted(s for c, s in keys if c == n)
+            differ[n] = have
             print(f"[margins]   ch {n}: printed {inv[n - 1]} {have} vs TLG {tlg[n - 1]}")
+    if differ != MARGIN_CHAPTERS:
+        raise SystemExit(f"margin inventory differs from TLG other than as MARGIN_CHAPTERS says: {differ}")
     # every numeral the OCR itself saw in a margin should be in MARGINS
     seen = {(p, pre) for p, pre, _l, _s in MARGINS}
     stray, examined = [], 0
@@ -624,6 +649,8 @@ def check_margins(pages: dict, prose: str, starts: dict) -> None:
     print(f"[margins] hOCR margin digits examined: {examined}; on a line with no MARGINS entry: {len(stray)}")
     for s in stray:
         print(f"[margins]   {s}")
+    if stray or not examined:
+        raise SystemExit("hOCR margin digits with no MARGINS entry, or none examined")
     spans = _line_spans(pages, prose)
     off = []
     for (page, _i), (label, a, b) in spans.items():
@@ -636,6 +663,10 @@ def check_margins(pages: dict, prose: str, starts: dict) -> None:
     printed = {f"{c}.{s}" for c, s in keys}
     nonum = [k for k, _ in ANCHORS if k not in printed]
     print(f"[margins] TLG sections with no printed numeral: {nonum or 'none'}")
+    if {k.split(" ")[0] for k in off} != OFF_NUMERAL:
+        raise SystemExit(f"anchors off their numeral's line other than OFF_NUMERAL: {off}")
+    if set(nonum) != NO_NUMERAL:
+        raise SystemExit(f"sections with no numeral other than NO_NUMERAL: {nonum}")
 
 
 def check_notes(prose: str, foot: list) -> None:
@@ -750,6 +781,161 @@ def check_punctuation(prose: str) -> None:
         raise SystemExit("punctuation comparison: unexplained differences")
 
 
+_G_HEAD = re.compile(r"^#*\s*(?:ATHENIENSIUM RESPUBLICA|CHAPTER [0-9IVXL]+)\s*$")
+_G_NOTE = re.compile(r"^\s*(?:\$\^\{?(\d+)\}?\$|<sup>(\d+)</sup>|\^(\d+)\^|([¹²³⁴⁵⁶⁷⁸⁹⁰]+))")
+_G_SUP = str.maketrans("¹²³⁴⁵⁶⁷⁸⁹⁰", "1234567890")
+
+
+def genie_pages() -> dict:
+    """{printed page: (body lines, note lines)} from the Genie OCR. Pages are
+    split by `---` lines, each opening with its running head; a `---` segment
+    with no head is the foot of the page before it (a footnote rule), so its
+    lines are notes. Inside a headed segment the notes start at a `***` rule or
+    the first line marked as note 1."""
+    t = GENIE.read_text(encoding="utf-8")
+    t = t[t.index("### ATHENIENSIUM RESPUBLICA\n\n. . ."):]
+    pages = []
+    for seg in re.split(r"(?m)^---$", t):
+        lines = [l for l in seg.split("\n") if l.strip()]
+        if not lines:
+            continue
+        if _G_HEAD.match(lines[0]):
+            body = lines[1:]
+            k = next((i for i, l in enumerate(body) if l.strip() == "***" or ((m := _G_NOTE.match(l))
+                      and "".join(g or "" for g in m.groups()).translate(_G_SUP) == "1")), len(body))
+            pages.append((body[:k], [l for l in body[k:] if l.strip() != "***"]))
+        else:
+            pages[-1][1].extend(lines)
+    if len(pages) != LAST_PAGE - FIRST_PAGE + 1:
+        raise SystemExit(f"Genie: {len(pages)} pages, expected {LAST_PAGE - FIRST_PAGE + 1}")
+    return {FIRST_PAGE + k: p for k, p in enumerate(pages)}
+
+
+def _genie_text(lines: list) -> str:
+    """Genie lines as plain text: signature marks, HTML, Markdown, superscripts
+    (note refs and the margin numerals Genie raises) and bold or italic
+    numerals dropped, and lines holding only a margin numeral; words broken at
+    a line end rejoined."""
+    out = []
+    for l in lines:
+        l = _html.unescape(l.replace("&nbsp;", " ").replace("&emsp;", " "))
+        l = re.sub(r"\$([^$]*\\[^$]*)\$", lambda m: _latex_greek(m.group(1)), l)
+        l = re.sub(r"<sup>[^<]*</sup>|\$[\^_]\{?[^$]*\}?\$|\^\d+\^|[¹²³⁴⁵⁶⁷⁸⁹⁰]+", " ", l)
+        l = re.sub(r"<[^>]+>", " ", l)
+        l = re.sub(r"\*{1,2}\d+\*{1,2}", " ", l)
+        l = re.sub(r"^\s*[#>]+\s*", "", l).replace("*", "").replace("_", "")
+        if _SIG.match(l.strip()) or re.fullmatch(r"\s*(?:\d+\.\d+\s+[A-Z]{1,2}|\d{1,2})\s*", l):
+            continue
+        out.append(l.strip())
+    t = "\n".join(out)
+    return re.sub(r"(?<=[A-Za-z])- *(?:\n *)?(?:\d{1,2} +)?(?!(?:and|or)\b)(?=[a-z])", "", t)
+
+
+_GREEK = dict(zip("alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi o pi rho sigma "
+                  "varsigma tau upsilon phi chi psi omega".split(), "αβγδεζηθικλμνξοπρσςτυφχψω"))
+
+
+def _latex_greek(m: str) -> str:
+    """Genie's few TeX-coded Greek words (mu, acute{eta}) as Greek letters."""
+    m = re.sub(r"\\[a-z]+\{(\\?[a-z]+)\}", r" \1 ", m)
+    return "".join(_GREEK.get(x, "") for x in re.findall(r"\\?([a-z]+)", m))
+
+
+def _close_abbr(text: str) -> str:
+    """'B. C.' or 'i. e.' as one word however spaced."""
+    return re.sub(r"\b([A-Za-z])\. (?=[A-Za-z]\.)", r"\1.", text)
+
+
+def _genie_words(text: str) -> list:
+    """Words as _norm_words leaves them, but keeping Greek letters."""
+    out = []
+    for w in _close_abbr(text).split():
+        w = unicodedata.normalize("NFD", w.lower())
+        w = re.sub(r"[^a-z0-9α-ω]", "", w)
+        if w:
+            out.append(w)
+    return out
+
+
+def check_genie(prose: str, foot: list) -> None:
+    """Words and punctuation of the text and of the notes against the Genie
+    OCR, a second and independent reading of the same scan. A run of one- or
+    two-digit numbers found only in Genie's text, each the number of a section
+    printed in the margin of that page or one beside it (MARGINS), is a margin
+    numeral Genie kept in the line; every other difference must be in
+    GENIE_KNOWN. Punctuation is compared as check_punctuation does, word by
+    word where the words agree."""
+    import difflib
+    gp = genie_pages()
+    numerals = {}       # page: the numbers printed in its margin, from MARGINS
+    for page, _pre, label, _src in MARGINS:
+        numerals.setdefault(page, set()).add(label.split(".")[-1])
+    streams = {"text": (re.sub(r"\[\^\d+\]", "", prose), 0), "notes": ("\n".join(foot), 1)}
+    used, left, counts, margins = set(), [], {}, 0
+
+    def known(key: tuple) -> bool:
+        hit = next((k for k, g in enumerate(GENIE_KNOWN) if k not in used and g[:4] == key), None)
+        if hit is not None:
+            used.add(hit)
+        return hit is not None
+
+    def punct(stream: str, ours: str, theirs: str) -> None:
+        a, b = _punct_tokens(_close_abbr(ours)), _punct_tokens(_close_abbr(theirs))
+        sm = difflib.SequenceMatcher(None, [x[0] for x in a], [x[0] for x in b], autojunk=False)
+        n = 0
+        for tag, i1, i2, j1, j2 in sm.get_opcodes():
+            for k in range(i2 - i1 if tag == "equal" else 0):
+                x, y = a[i1 + k][1], b[j1 + k][1]
+                if re.sub(r"[A-Za-z0-9-]", "", x) != re.sub(r"[A-Za-z0-9-]", "", y):
+                    n += 1
+                    ctx = " ".join(t[0] for t in a[max(0, i1 + k - 2):i1 + k])
+                    if not known((stream + " punct", x, y, ctx)):
+                        left.append((stream + " punct", "", x, y, ctx))
+        counts[stream + " punct"] = n
+
+    for stream, (ours_text, part) in streams.items():
+        a = _genie_words(ours_text)
+        texts = [_genie_text(p[part]) for p in gp.values()]
+        for k in range(1, len(texts)):       # a word broken across the page break
+            m = re.match(r"\s*([a-z]\S*)\s*", texts[k])
+            if m and re.search(r"[A-Za-z]-$", texts[k - 1].rstrip()):
+                texts[k - 1], texts[k] = texts[k - 1].rstrip()[:-1] + m.group(1), texts[k][m.end():]
+        punct(stream, ours_text, "\n".join(texts))
+        b, bpage = [], []
+        for n, t in zip(gp, texts):
+            ws = _genie_words(t)
+            b += ws
+            bpage += [n] * len(ws)
+        bpage.append(LAST_PAGE)
+        ops = [o for o in difflib.SequenceMatcher(None, a, b, autojunk=False).get_opcodes() if o[0] != "equal"]
+        n_ops = 0
+        for tag, i1, i2, j1, j2 in ops:
+            near = set().union(*(numerals.get(n, set()) for n in range(bpage[j1] - 1, bpage[j1] + 2)))
+            if stream == "text" and i1 == i2 and all(w in near for w in b[j1:j2]):
+                margins += j2 - j1
+                continue
+            n_ops += 1
+            ours, theirs, ctx = " ".join(a[i1:i2]), " ".join(b[j1:j2]), " ".join(a[max(0, i1 - 2):i1])
+            if not known((stream, ours, theirs, ctx)):
+                left.append((stream, f"p{bpage[j1]}", ours, theirs, ctx))
+        counts[stream] = (len(a), len(b), n_ops)
+    kinds = {}
+    for k in used:
+        kinds[GENIE_KNOWN[k][4]] = kinds.get(GENIE_KNOWN[k][4], 0) + 1
+    print(f"[genie] text {counts['text'][0]} words here, {counts['text'][1]} in Genie; notes {counts['notes'][0]} here, "
+          f"{counts['notes'][1]} in Genie; {margins} margin numerals Genie keeps in a line; "
+          f"{counts['text'][2] + counts['notes'][2]} word and {counts['text punct'] + counts['notes punct']} punctuation "
+          f"differences, {len(used)} in GENIE_KNOWN, each checked on the image ("
+          + ", ".join(f"{v} {k}" for k, v in sorted(kinds.items())) + ")")
+    for stream, page, ours, theirs, ctx in left:
+        print(f"[genie]   NOT ACCOUNTED FOR: {stream} {page} here [{ours}] Genie [{theirs}] after '{ctx}'")
+    stale = [GENIE_KNOWN[k] for k in range(len(GENIE_KNOWN)) if k not in used]
+    for g in stale:
+        print(f"[genie]   GENIE_KNOWN entry matched nothing: {g}")
+    if left or stale:
+        raise SystemExit("Genie comparison: unexplained differences")
+
+
 def check_hyphens() -> None:
     from collections import Counter
     c = Counter((h[2], h[3]) for h in _HYPHEN_LOG)
@@ -782,6 +968,7 @@ def main() -> None:
     check_hyphens()
     check_gutenberg(prose)
     check_punctuation(prose)
+    check_genie(prose, foot)
 
 
 # ---------------------------------------------------------------- tables
@@ -842,6 +1029,7 @@ READS = [
     (374, 'Pentacosiomedimnus,? two', 'Pentacosiomedimnus,[^3] two', 'img: superscript 3 after comma'),
     (374, 'is}not', 'is not', 'img: speck between words'),
     (374, 'not the case. :', 'not the case.', 'img: no colon (speck)'),
+    (374, 'by lot which', 'by lot, which', "img: comma after 'lot' at the line end; OCR dropped it (Genie 'lot,')"),
     (374, 'ch, 7, 4.', 'ch. 7, 4.', 'img: full stop after ch'),
     # p375
     (375, 'the laws.= Any', 'the laws. Any', "img: a smudge after 'laws.', not a numeral (page has 3 notes, all placed)"),
@@ -1148,7 +1336,7 @@ READS = [
     # p417
     (417, 'parties? making', 'parties[^1] making', 'img: superscript 1'),
     (417, 'Xenaenétus.?', 'Xenaenĕtus.[^2]', 'img: breve e, superscript 2; GB Xenaenetus'),
-    (417, '#1 Or ‘ victorious democracies’ (reading of djpyor xparycarres),', '#1 Or ‘victorious democracies’ (reading of οἱ δῆμοι κρατήσαντες).', 'img: Greek read from the image; full stop'),
+    (417, '#1 Or ‘ victorious democracies’ (reading of djpyor xparycarres),', '#1 Or ‘victorious democracies’ (reading οἱ δῆμοι κρατήσαντες).', "img: Greek read from the image ('of' is the OCR of οἱ); full stop"),
     (417, '#2 2401" BG; OE LE date is not elsewhere definitely recorded,', '#2 401 B.C. The date is not elsewhere definitely recorded.', "img: '² 401 B.C. The date is not elsewhere definitely recorded.'"),
     # p418
     (418, 'Pythodérus', 'Pythodōrus', 'img: macron o; GB Pythodorus'),
@@ -2085,6 +2273,42 @@ GB_KNOWN = [
     ("", "each juror receives two ballots and uses one to record his vote and throws the other away",
      "the defendant", "p449 Gutenberg runs the footnote into the text; here it is note 184"),
     ("", "the end", "the lot", "Gutenberg's closing line"),
+]
+
+# Every difference from the Genie OCR, each judged on the page image:
+# (stream, ours, Genie's, our two words before, kind, why). Streams "text" and
+# "notes" hold words as _genie_words leaves them; "text punct" and "notes
+# punct" tokens as _punct_tokens leaves them. The check fails on any difference
+# not listed here and on any entry here that no longer matches a difference.
+GENIE_KNOWN = [
+    ("text punct", "...[They", "[They", "", "spacing",
+     "p371 img '. . . [They' with spaced dots, which Genie keeps apart from the word; here closed up, as in Gutenberg"),
+    ("notes", "eupatridae", "eupatrid", "all the", "Genie misread",
+     "p372 img 'Eupatridae' in separate letters; Genie 'Eupatridæ'"),
+    ("notes punct", "Medon,", "Medon.", "successor of", "Genie corrects a misprint",
+     "p372 img note 3 'The successor of Medon,' (MISPRINTS); Genie a full stop"),
+    ("notes", "1", "i", "ch 8", "Genie misread",
+     "p396 img old-style figure one in 'ch. 8, 1'; Genie reads it as the letter I"),
+    ("notes", "presumbly", "presumably", "next clause", "Genie corrects a misprint",
+     "p399 img 'presumbly' (MISPRINTS); Genie corrects it"),
+    ("notes", "poloponnesian", "peloponnesian", "of the", "Genie corrects a misprint",
+     "p406 img 'Poloponnesian' (MISPRINTS); Genie corrects it"),
+    ("text", "", "siderable time apparently about six months elapsed between this event and the restoration of the democracy", "for the", "Genie misplaces a note",
+     "p415 img the end of note 103 ('siderable time ... democracy.') heads the page's notes; Genie runs it into the text after 'fund for the'"),
+    ("notes", "considerable time apparently about six months elapsed between this event and the restoration of the democracy", "con", "that a", "Genie misplaces a note",
+     "p414-415 the same, seen from the notes: Genie ends note 103 at 'con-'"),
+    ("notes punct", "parents.Ακτη=", "parents.'Ακτη=", "two citizen", "encoding",
+     "p420 img 'Ἀκτή' with the breathing set before the capital; Genie types the breathing as an apostrophe"),
+    ("text", "", "and in 325 bc they began to build quinqueremes as the latter are not mentioned here we seem to get a lower limit of date for the composition or revision of the treatise the upper limit is fixed by ch 54 7 as 329 bc", "the workable", "Genie misplaces a note",
+     "p425 img the end of note 136 ('and in 325 B.C. ... as 329 B.C.') heads the page's notes; Genie runs it into the text after 'the workable'"),
+    ("notes", "bc and in 325 bc they began to build quinqueremes as the latter are not mentioned here we seem to get a lower limit of date for the composition or revision of the treatise the upper limit is fixed by ch 54 7 as 329", "", "before 330", "Genie misplaces a note",
+     "p424-425 the same, seen from the notes: Genie ends note 136 at '330 B.C.,'"),
+    ("notes punct", "B.C.", "B.C.,", "as 329", "Genie misplaces a note",
+     "p425 a consequence of the misplaced end of note 136: our '329 B.C.' set against Genie's '330 B.C.,'"),
+    ("text", "of", "", "the power", "Genie misread",
+     "p439 img 'have the power of' ending the line before the numeral 59; Genie drops 'of'"),
+    ("text punct", "Poseideon..........", "Poseideon...........", "the month", "Genie misread",
+     "p447 img ten leader dots after 'Poseideon⁴'; Genie eleven"),
 ]
 
 if __name__ == "__main__" and "--dump" in sys.argv:
