@@ -1,7 +1,7 @@
 # Section starts of Kenyon's Athenian Constitution (Oxford 1921) against the
 # TLG 0086.003 sections, written by pipeline/tools/build_athpol_kenyon.py.
 # bekker is "{chapter}a{section}"; at is the section's opening words verbatim.
-- { bekker: "1a1", at: "...[They" }
+- { bekker: "1a1", at: ". . . [They" }
 - { bekker: "2a1", at: "After this event there was contention for a long time" }
 - { bekker: "2a2", at: "Not only was the constitution at this time oligarchical in" }
 - { bekker: "2a3", at: "But the hardest and bitterest part of the constitution in" }
@@ -208,7 +208,7 @@
 - { bekker: "49a2", at: "The roll of the cavalry is drawn up by the" }
 - { bekker: "49a3", at: "Formerly the Council used to decide on the plans for" }
 - { bekker: "49a4", at: "The Council also examines infirm paupers; for there is a" }
-- { bekker: "50a1", at: "There are ten Commissioners for Repairs of Temples, elected by" }
+- { bekker: "50a1", at: "and this ends the list of the functions of that body." }
 - { bekker: "50a2", at: "There are also ten City Commissioners [Astynŏmi], of whom five" }
 - { bekker: "51a1", at: "Market Commissioners [Agoranŏmi] are elected by lot, five for Piraeus," }
 - { bekker: "51a2", at: "Commissioners of Weights and Measures [Metronŏmi] are elected by lot," }
@@ -244,7 +244,7 @@
 - { bekker: "56a5", at: "The Archon also superintends the procession at the Thargelia, and" }
 - { bekker: "56a6", at: "The suits and indictments which come before him, and which" }
 - { bekker: "56a7", at: "The Archon also has the care of orphans and wards" }
-- { bekker: "57a1", at: "The King in the first place superintends the mysteries, in" }
+- { bekker: "57a1", at: "Such are the duties of the Archon." }
 - { bekker: "57a2", at: "Indictments for impiety come before him, or any disputes between" }
 - { bekker: "57a3", at: "Actions for homicide and wounding are heard, if the homicide" }
 - { bekker: "57a4", at: "All these cases, except those which are heard in the" }
@@ -258,7 +258,7 @@
 - { bekker: "59a5", at: "Moreover they bring up certain private suits in cases of" }
 - { bekker: "59a6", at: "They ratify commercial treaties, and bring up the cases which" }
 - { bekker: "59a7", at: "The casting of lots for the jurors is conducted by" }
-- { bekker: "60a1", at: "There are also ten Commissioners of Games [Athlothĕtae], elected by" }
+- { bekker: "60a1", at: "Such are the duties of the nine Archons." }
 - { bekker: "60a2", at: "This oil is collected from the sacred olives. The Archon" }
 - { bekker: "60a3", at: "When, then, the Archon has collected the oil for his" }
 - { bekker: "61a1", at: "All officers connected with military service are elected by open" }

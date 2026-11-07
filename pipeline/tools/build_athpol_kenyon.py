@@ -610,7 +610,7 @@ MARGIN_CHAPTERS = {
 }
 # Anchors (TLG section starts) not on the line of Kenyon's printed numeral.
 OFF_NUMERAL = {"4.4", "8.5", "9.1", "9.2", "37.2", "40.3", "47.3", "47.4", "47.5",
-               "49.2", "53.2", "56.4"}
+               "49.2", "50.1", "53.2", "56.4", "57.1", "60.1"}
 # TLG sections with no printed numeral.
 NO_NUMERAL = {"8.3"}
 
@@ -996,7 +996,7 @@ VERSE = [
 # notes say what the page image shows; 'GB' gives Project Gutenberg #26095.
 READS = [
     # p371
-    (371, '...[They? were', '...[They[^1] were', "img: superscript 1 after 'They'; GB no notes"),
+    (371, '...[They? were', '. . . [They[^1] were', "img: spaced dots '. . . [They', superscript 1 after 'They'; GB no notes"),
     (371, 'expiation 2,', 'expiation[^2],', 'img: superscript 2 before the comma'),
     (371, 'Pelatae', 'Pelătae', 'img: breve on a; GB Pelatae'),
     (371, 'Hectémori,?', 'Hectēmŏri,[^3]', 'img: macron e, breve o, superscript 3; GB Hectemori'),
@@ -1893,7 +1893,7 @@ MARGINS = [
 # Section starts against the TLG 0086.003 sections: (section, opening words
 # verbatim). See the report for where these depart from Kenyon's numerals.
 ANCHORS = [
-    ('1.1', '...[They'),
+    ('1.1', '. . . [They'),
     ('2.1', 'After this event there was contention for a long time'),
     ('2.2', 'Not only was the constitution at this time oligarchical in'),
     ('2.3', 'But the hardest and bitterest part of the constitution in'),
@@ -2100,7 +2100,10 @@ ANCHORS = [
     ('49.2', 'The roll of the cavalry is drawn up by the'),
     ('49.3', 'Formerly the Council used to decide on the plans for'),
     ('49.4', 'The Council also examines infirm paupers; for there is a'),
-    ('50.1', 'There are ten Commissioners for Repairs of Temples, elected by'),
+    # 50.1, 57.1, 60.1: Oppermann opens these chapters with a closing summary
+    # sentence that Kenyon prints at the end of the paragraph before, so the
+    # chapter (and its Part line) starts there, mid-paragraph.
+    ('50.1', 'and this ends the list of the functions of that body.'),
     ('50.2', 'There are also ten City Commissioners [Astynŏmi], of whom five'),
     ('51.1', 'Market Commissioners [Agoranŏmi] are elected by lot, five for Piraeus,'),
     ('51.2', 'Commissioners of Weights and Measures [Metronŏmi] are elected by lot,'),
@@ -2136,7 +2139,7 @@ ANCHORS = [
     ('56.5', 'The Archon also superintends the procession at the Thargelia, and'),
     ('56.6', 'The suits and indictments which come before him, and which'),
     ('56.7', 'The Archon also has the care of orphans and wards'),
-    ('57.1', 'The King in the first place superintends the mysteries, in'),
+    ('57.1', 'Such are the duties of the Archon.'),
     ('57.2', 'Indictments for impiety come before him, or any disputes between'),
     ('57.3', 'Actions for homicide and wounding are heard, if the homicide'),
     ('57.4', 'All these cases, except those which are heard in the'),
@@ -2150,7 +2153,7 @@ ANCHORS = [
     ('59.5', 'Moreover they bring up certain private suits in cases of'),
     ('59.6', 'They ratify commercial treaties, and bring up the cases which'),
     ('59.7', 'The casting of lots for the jurors is conducted by'),
-    ('60.1', 'There are also ten Commissioners of Games [Athlothĕtae], elected by'),
+    ('60.1', 'Such are the duties of the nine Archons.'),
     ('60.2', 'This oil is collected from the sacred olives. The Archon'),
     ('60.3', 'When, then, the Archon has collected the oil for his'),
     ('61.1', 'All officers connected with military service are elected by open'),
@@ -2197,6 +2200,7 @@ ANCHORS = [
 # stands as transcribed: (our token, Gutenberg's token, why), tokens as
 # _punct_tokens leaves them.
 PUNCT_KNOWN = [
+    ("[They", "...[They", "p371 img '. . . [They', spaced dots apart from the word; Gutenberg closes them up"),
     ("Acastus',", "Acastus,'", "p372 img 'Acastus’,'"),
     ("Trittyes[=", "Trittyes", "p379 img '[= Thirds]'"),
     ("Thirds],", "[=Thirds],", "p379 img '[= Thirds]'"),
@@ -2281,8 +2285,6 @@ GB_KNOWN = [
 # punct" tokens as _punct_tokens leaves them. The check fails on any difference
 # not listed here and on any entry here that no longer matches a difference.
 GENIE_KNOWN = [
-    ("text punct", "...[They", "[They", "", "spacing",
-     "p371 img '. . . [They' with spaced dots, which Genie keeps apart from the word; here closed up, as in Gutenberg"),
     ("notes", "eupatridae", "eupatrid", "all the", "Genie misread",
      "p372 img 'Eupatridae' in separate letters; Genie 'Eupatridæ'"),
     ("notes punct", "Medon,", "Medon.", "successor of", "Genie corrects a misprint",
