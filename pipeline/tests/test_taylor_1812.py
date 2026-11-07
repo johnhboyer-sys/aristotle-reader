@@ -101,3 +101,10 @@ def test_hand_placed_int_ticks_sit_on_their_phrase():
         text = prose[int(k.split(":")[1])]
         assert text[a["offset"]:].startswith(a["at"]), (a["citation"], text[a["offset"]:a["offset"] + 40])
         assert a["confidence"] == "confirmed"
+
+
+def test_int_9_printers_doubled_syllable_corrected():
+    # n172 prints "univer-/versals"; the build corrects it (ERRATA), the transcript keeps it.
+    ch9 = _prose("Int")[9]
+    assert "univerversals" not in ch9 and "as universals, that always the one" in ch9
+    assert "univer-" in (ROOT / "pipeline" / "data" / "taylor1812" / "n172.txt").read_text(encoding="utf-8")
