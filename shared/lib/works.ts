@@ -706,8 +706,8 @@ export const WORKS: Work[] = [
       short: 'van Groningen and Wartelle (Les Belles Lettres, 1968)',
       full: 'B. A. van Groningen and A. Wartelle, eds. Aristote. Économique. Paris: Les Belles Lettres, 1968.',
     },
-    authenticity: 'spurious',
-    // Spurious/post-Aristotelian: Book I is possibly by a pupil, Book II by a
+    authenticity: 'dubious',
+    // Dubious (Barnes 1984 marks it *): Book I is possibly by a pupil, Book II by a
     // later Peripatetic. The Greek transmits only Books I–II; the traditional
     // Book III survives solely in medieval Latin and is omitted. Forster
     // (Oxford, 1920, PD) is the sole translation; Bekker gutter interpolated.
@@ -786,7 +786,7 @@ export const WORKS: Work[] = [
       short: 'Bekker (Berlin, 1831)',
       full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
     },
-    authenticity: 'spurious',
+    authenticity: 'dubious',
     translations: [
       { id: 'forster', name: 'E. S. Forster (Oxford, 1927)', short: 'Forster', slot: 'english' },
     ],

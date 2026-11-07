@@ -100,3 +100,12 @@ describe('works registry helpers', () => {
     );
   });
 });
+
+describe('authenticity follows Barnes', () => {
+  // Barnes, Complete Works (Princeton 1984), "Note to the Reader": * = authenticity
+  // seriously doubted (our 'dubious'), ** = spuriousness never seriously contested.
+  // John, 2026-11-06: "Match Barnes".
+  it('marks the single-asterisk works dubious', () => {
+    for (const id of ['Prob', 'Oec']) expect(getWork(id)?.authenticity, id).toBe('dubious');
+  });
+});

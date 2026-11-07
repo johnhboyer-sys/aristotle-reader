@@ -12,7 +12,7 @@ work:
   author: "Aristotle"
   tlg_author: "0086"
   tlg_work: "036"
-  authenticity: spurious
+  authenticity: dubious  # Barnes 1984 marks it * (doubted)
   greek_edition: "I. Bekker, Aristotelis Opera (Berlin, 1831)"
   english_translation: "E. S. Forster (Oxford, 1927)"
 

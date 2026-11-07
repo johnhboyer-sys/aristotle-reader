@@ -41,7 +41,11 @@ CITATION_WORKS: dict[str, str | list[tuple[str, str, str]]] = {
     "032": "Phgn",  # verified against LSJ 2026-08-18
     "034": "Poet",  # verified against LSJ 2026-08-18
     "035": "Pol",  # verified against LSJ 2026-08-18
-    "036": "Prob",  # verified against LSJ 2026-11-06: 1,404 citations, 859a-967b
+    "036": "Prob",  # verified against LSJ 2026-11-06: 1,428 references, 859a-967b
+    "037": [  # verified against LSJ 2026-11-06: De Respiratione, which our Juv holds
+        ("Juv", "470b", "480b"),
+        ("Prob", "966b", "966b"),  # one stray: kataphnixis cites "Pr. 966b36" as 037
+    ],
     "038": "Rhet",  # verified against LSJ 2026-08-18
     "039": "SE",  # verified against LSJ 2026-08-18
     "041": "Sens",  # verified against LSJ 2026-08-18

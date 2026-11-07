@@ -59,6 +59,18 @@ def test_problemata_citations_link_to_the_book():
     )
 
 
+def test_respiration_links_to_juv_and_one_stray_problemata_cite():
+    # LSJ numbers De Respiratione 037; our Juv covers it (467b10-480b30).
+    # One LSJ entry (kataphnixis) cites "Pr. 966b36" under 037 as well.
+    assert render_bibl('n="Perseus:abo:tlg,0086,037:471a:5"') == (
+        '<a class="lsj-bibl" href="/Juv/book/1?loc=471a:5">citation</a>'
+    )
+    assert render_bibl('n="Perseus:abo:tlg,0086,037:966b:36"') == (
+        '<a class="lsj-bibl" href="/Prob/book/38?loc=966b:36">citation</a>'
+    )
+    assert render_bibl('n="Perseus:abo:tlg,0086,037:900a:1"') == '<span class="lsj-bibl">citation</span>'
+
+
 def test_three_digit_columns_sort_numerically_not_lexically():
     # "100a" < "24a" as strings; a string-compare range check would kick
     # column 100a out of APo (71a-100b) and the link would vanish.
