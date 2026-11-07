@@ -169,7 +169,9 @@ describe('parseSectionCitation', () => {
     expect(parseSectionCitation('Pol. 56.6', null, WITH_ATHPOL)).toBeNull();
     expect(parseSectionCitation('Isa 5.6', null, WITH_ATHPOL)).toBeNull();
     expect(parseSectionCitation('Foo 56.6', 'AthPol', WITH_ATHPOL)).toBeNull();
-    expect(parseSectionCitation('Ath. Pol. 56.6', 'AthPol', WORKS)).toBeNull();
+  });
+  it('reads the real registry: AthPol carries the scheme', () => {
+    expect(parseSectionCitation('Ath. Pol. 56.6', null, WORKS)).toEqual({ work: 'AthPol', column: '56a', section: 6 });
   });
   it('leaves every Bekker citation and work name to the other parsers', () => {
     for (const q of ['1103a14', '1103a', '8b20', '775a11a', 'ethics', 'Ath. Pol.', 'Ath. Pol. 56a3', '']) {
