@@ -189,3 +189,22 @@ was SIGTERMed; run stage8 one at a time.
 ### 2026-11-07 07:30 — appendix retitled
 
 John chose the retitle over moving the marked works into Bekker order: the home-page group is now **"Doubtful and Spurious Works"** (`shared/lib/works.ts`). This closes Codex review 9's P2. Shared vitest 648/648, app build 7,080 pages, 0 broken links.
+
+### 2026-11-07 08:25 — Genie OCR landed; paused for a reboot
+
+The six Genie volumes (whole-book .txt + .docx) landed in ~/Downloads at 08:18 and are
+copied to the main checkout's `sources/genie-oxford/` (untracked; *.txt is gitignored).
+Pages are split by `---` lines. Where each work sits (line numbers in the .txt):
+
+| Volume file | Works |
+|---|---|
+| `Oxford Aristotle III 1931.txt` | DM (~3447), Spir (~9396) |
+| `Oxford Aristotle VI 1913 Opuscula.txt` | Col, Aud, Phgn, Plant, Mirab, Mech, Lin, Vent, MXG |
+| `Oxford Aristotle VII 1927 Problemata.txt` | Prob |
+| `Oxford Aristotle IX 1925.txt` | MM (~5619), VV (~8253) |
+| `Oxford Aristotle X 1921.txt` | Oec (~6114), Ath. Pol. / Kenyon (~6960) |
+| `Oxford Aristotle XI 1924.txt` | RhAl (~4670) |
+
+Plan (John's sequence, step 2): one correction session per volume, at most two at once
+(the Mac has 8 GB; memory ran out at 08:19). The Problemata pass runs in the orchestrator
+session. Paused at 08:25 so John can reboot; ath-pol and rhet-alex were asked to checkpoint.
