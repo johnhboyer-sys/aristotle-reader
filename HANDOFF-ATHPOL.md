@@ -4,7 +4,7 @@ Track: add the Athenian Constitution, the first work cited by chapter.section.
 Plan: [`docs/ath-pol-plan.md`](docs/ath-pol-plan.md). Branch `claude/ath-pol-plan-ccd05b`
 (worktree `.claude/worktrees/ath-pol-plan-ccd05b`). Nothing pushed, merged or deployed.
 
-## State (2026-11-07): built and gated, awaiting John's merge call
+## State (2026-11-07): built and gated, John's rulings applied, awaiting his merge call
 
 Everything in the plan is built. John's rulings are in plan section 6. Q2 is "Match Barnes": no badge, last in Division V after the *Poetics*, and the appendix keeps its name.
 
@@ -42,14 +42,23 @@ The scripts are in the notes folder `athpol-gates/` (`fullbuild.sh`, `cmp.py`, `
 - **Suites:** pipeline 3,851; scripts 87; shared 685; app 97; desktop 487 (21 skipped). svelte-check: 0 errors.
 - **Codex GPT-6.1-Sol, medium:** six findings. Five held and are fixed; the U+0323 scoping was not taken, because the byte gate proves no other work changes. A second pass on the fixes made after it found one more (an out-of-range `?loc=49a:8` highlighted 49.7 but scrolled to the chapter start), now fixed; nothing else.
 
-## Open, for John
+## Rulings since (orchestrator for John, 2026-11-07), done
 
-1. The print opens Ath. Pol. with spaced dots ". . . [They"; ours reads "...[They". Should we keep the printer's spacing?
-2. The lemma slug swaps above. Old links to `/lemma/chorion` and `/lemma/antiphon` now open the other word.
-3. The two resume labels ("Resume at" on the landing page, "Continue reading" on home) still print "49a3". They were left so G3 could stay byte-exact; this is a small follow-up.
-4. **Chapter openings.** At 50.1, 57.1 and 60.1, Oppermann opens the chapter with a closing sentence that Kenyon prints at the end of the paragraph before. The anchors follow Kenyon, so that Greek sentence pairs with the previous chapter's English.
-5. **A defect that predates this work, on Bekker works:** `?loc=…&view=english` scrolls to a hidden Greek line and goes nowhere. It's fixed here for chapter-section only, and needs its own follow-up PR.
-6. **De Spiritu (tlg0086043) and tlg0086051** also print `‖` in their exports. Only the section loader drops it.
+- The opening follows the print: ". . . [They" (spaced dots).
+- **Chapter openings:** 50.1, 57.1 and 60.1 open with Kenyon's English for Oppermann's summary sentence, mid-paragraph in Kenyon:
+  - "…; and this ends the list of the functions of that body.";
+  - "Such are the duties of the Archon.";
+  - "Such are the duties of the nine Archons."
+  Each chapter's Part line moves with its .1 anchor, as chapter 43's already did. No pipeline change.
+- The resume labels ("Resume at", "Continue reading") read "49.3", via `resume.citeShown`.
+- **Taken by the orchestrator as follow-ups, not done here:** the lemma slug swaps (chorion and antiphon); `?loc&view=english` on Bekker works; the `‖` in the 043/051 exports.
+
+**Gates after these changes (build at `504a672b21`):**
+- **Other works:** all 41 are byte-identical to G1, and the aggregates show the same 28 explained residues.
+- **What changed since G2:** only AthPol's book and English index, English search shards and ngrams, and in the site only `AthPol/book/1` plus the rebuilt bundles.
+- **Checks:** the LSJ gate passes; preflight, LSJ verify, links (0 broken) and the leak scan pass; stage 2 sections are ok, with 0 key failures.
+- **Browser:** the three chapter openings pair and both resume labels read 49.3, while EN still reads 1103a14.
+- **Codex third pass:** no findings.
 
 ## Kenyon findings worth knowing
 
