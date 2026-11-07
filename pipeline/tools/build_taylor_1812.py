@@ -78,6 +78,10 @@ MARK_MISPRINTS = {("n179", "6"): "5"}
 # necessary to observe ... the ten genera" goes on with Simplicius in note 7 (n79-n80), not
 # with the two-line note on the word *essence* that follows it on n80.
 NOTE_RUNS_ON = {"n81": "7"}
+# Printer's errors corrected in the built text, the transcript kept as printed. Each must occur
+# exactly once in the work's prose. Int n172 (p. 157): "univer-/versals" repeats the syllable
+# across the line break (John, 2026-11-07).
+ERRATA = {"int": [("univerversals", "universals")]}
 
 
 def roman(s: str) -> int:
@@ -326,6 +330,11 @@ def build(work: str, data: Path = DATA) -> tuple[str, dict[str, str]]:
         if "*" in text or "{?" in text:
             raise SystemExit(f"{work} chapter {n}: italic or doubt mark left in the prose")
         parts.append(f"Part {n}\n\n{text}")
+    for printed, meant in ERRATA.get(work, []):
+        hits = [i for i, p in enumerate(parts) if printed in p]
+        if len(hits) != 1 or parts[hits[0]].count(printed) != 1:
+            raise SystemExit(f"{work}: erratum {printed!r} should occur once, not {len(hits)} parts")
+        parts[hits[0]] = parts[hits[0]].replace(printed, meant)
     page = "<HTML><BODY>\nTranslated by Thomas Taylor\n\n" + "\n\n".join(parts) + "\n</BODY></HTML>\n"
     rendered = {i: note_html(n["lines"], f"{work} n{n['leaf']} note [^{n['mark']}]", keep)
                 for i, n in enumerate(notes)}
