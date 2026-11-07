@@ -120,6 +120,16 @@ def test_line_end_hyphens():
         assert kept in text, kept
 
 
+def test_dashes_closed_up_as_printed():
+    # Forster closes up his dashes; three end a printed line (pages n258,
+    # n267, n308 of worksofaristotle0011wrhy) and once read as "— a".
+    text = re.sub(r"\s+", " ", _text())
+    assert "— " not in text and " —" not in text
+    for closed in ("already passed—a favourable", "our expectation—for instance",
+                   "a similar argument—admitting it"):
+        assert text.count(closed) == 1, closed
+
+
 def test_paragraph_openings_and_anchors_fall_on_words():
     # A page-image reading that drops a call-out at a paragraph's head once
     # moved that opening back past the stop (". [Sacrifices", Part 39).

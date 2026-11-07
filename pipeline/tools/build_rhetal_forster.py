@@ -31,7 +31,9 @@ How it works
      vote still goes wrong (a call-out read as a quote, or taking a quote with
      it; Forster's Greek) the page image settles it: PRINT_READS, PRINT_MARGIN.
   4. A word broken at a line end is rejoined; the hyphen stays only where the
-     vocabulary knows the word hyphenated and not solid.
+     vocabulary knows the word hyphenated and not solid. Forster closes up his
+     dashes ("passed—a"), so a row ending in a dash takes the next row's
+     first word with it, as a hyphen does.
   5. Margin numbers are voted the same way and must rise by five within a
      column; a column mark (1421a, 1421b) restarts the count. A number that
      cannot be read or does not fit is skipped and counted, never guessed.
@@ -709,16 +711,20 @@ def assemble(pages: list[list[dict]], heads: list[dict[str, str]]) -> dict:
     row_at: dict[int, tuple[int, int]] = {}  # row -> (part, index of its first whole word)
     part = 1
     broken = False  # the last row ended in a hyphen
+    dash_open = False  # the last row ended in a dash
     for i, r in enumerate(rows):
         if r["chapter"]:
             part = r["chapter"] + 1
             words[part] = []
-            broken = False
+            broken = dash_open = False
         toks = [t["t"] for t in r["toks"]]
         if not toks:
             continue
         w = words[part]
-        if broken and w:
+        if dash_open and w:
+            w[-1] += toks[0]
+            toks = toks[1:]
+        elif broken and w:
             stem = w[-1][:-1]
             core = re.sub(r"[^\w’'-]+$", "", toks[0])
             keep = _keep_hyphen(stem, core)
@@ -729,6 +735,7 @@ def assemble(pages: list[list[dict]], heads: list[dict[str, str]]) -> dict:
         row_at[i] = (part, len(w))
         w.extend(toks)
         broken = bool(w) and w[-1].endswith("-") and len(w[-1]) > 1 and not w[-1].endswith("--")
+        dash_open = bool(w) and w[-1].endswith("—") and len(w[-1]) > 1
     parts = {n: " ".join(ws) for n, ws in words.items()}
 
     def offset(part: int, idx: int) -> int:
