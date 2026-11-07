@@ -1,0 +1,418 @@
+{
+ "1": [
+  {
+   "chapter": "1",
+   "column": "1a",
+   "line": "1",
+   "bekker": "1a1–1"
+  },
+  {
+   "chapter": "2",
+   "column": "2a",
+   "line": "1",
+   "bekker": "2a1–3"
+  },
+  {
+   "chapter": "3",
+   "column": "3a",
+   "line": "1",
+   "bekker": "3a1–6"
+  },
+  {
+   "chapter": "4",
+   "column": "4a",
+   "line": "1",
+   "bekker": "4a1–5"
+  },
+  {
+   "chapter": "5",
+   "column": "5a",
+   "line": "1",
+   "bekker": "5a1–3"
+  },
+  {
+   "chapter": "6",
+   "column": "6a",
+   "line": "1",
+   "bekker": "6a1–4"
+  },
+  {
+   "chapter": "7",
+   "column": "7a",
+   "line": "1",
+   "bekker": "7a1–4"
+  },
+  {
+   "chapter": "8",
+   "column": "8a",
+   "line": "1",
+   "bekker": "8a1–5"
+  },
+  {
+   "chapter": "9",
+   "column": "9a",
+   "line": "1",
+   "bekker": "9a1–2"
+  },
+  {
+   "chapter": "10",
+   "column": "10a",
+   "line": "1",
+   "bekker": "10a1–2"
+  },
+  {
+   "chapter": "11",
+   "column": "11a",
+   "line": "1",
+   "bekker": "11a1–2"
+  },
+  {
+   "chapter": "12",
+   "column": "12a",
+   "line": "1",
+   "bekker": "12a1–5"
+  },
+  {
+   "chapter": "13",
+   "column": "13a",
+   "line": "1",
+   "bekker": "13a1–5"
+  },
+  {
+   "chapter": "14",
+   "column": "14a",
+   "line": "1",
+   "bekker": "14a1–4"
+  },
+  {
+   "chapter": "15",
+   "column": "15a",
+   "line": "1",
+   "bekker": "15a1–4"
+  },
+  {
+   "chapter": "16",
+   "column": "16a",
+   "line": "1",
+   "bekker": "16a1–10"
+  },
+  {
+   "chapter": "17",
+   "column": "17a",
+   "line": "1",
+   "bekker": "17a1–4"
+  },
+  {
+   "chapter": "18",
+   "column": "18a",
+   "line": "1",
+   "bekker": "18a1–6"
+  },
+  {
+   "chapter": "19",
+   "column": "19a",
+   "line": "1",
+   "bekker": "19a1–6"
+  },
+  {
+   "chapter": "20",
+   "column": "20a",
+   "line": "1",
+   "bekker": "20a1–5"
+  },
+  {
+   "chapter": "21",
+   "column": "21a",
+   "line": "1",
+   "bekker": "21a1–6"
+  },
+  {
+   "chapter": "22",
+   "column": "22a",
+   "line": "1",
+   "bekker": "22a1–8"
+  },
+  {
+   "chapter": "23",
+   "column": "23a",
+   "line": "1",
+   "bekker": "23a1–5"
+  },
+  {
+   "chapter": "24",
+   "column": "24a",
+   "line": "1",
+   "bekker": "24a1–3"
+  },
+  {
+   "chapter": "25",
+   "column": "25a",
+   "line": "1",
+   "bekker": "25a1–4"
+  },
+  {
+   "chapter": "26",
+   "column": "26a",
+   "line": "1",
+   "bekker": "26a1–3"
+  },
+  {
+   "chapter": "27",
+   "column": "27a",
+   "line": "1",
+   "bekker": "27a1–5"
+  },
+  {
+   "chapter": "28",
+   "column": "28a",
+   "line": "1",
+   "bekker": "28a1–5"
+  },
+  {
+   "chapter": "29",
+   "column": "29a",
+   "line": "1",
+   "bekker": "29a1–5"
+  },
+  {
+   "chapter": "30",
+   "column": "30a",
+   "line": "1",
+   "bekker": "30a1–6"
+  },
+  {
+   "chapter": "31",
+   "column": "31a",
+   "line": "1",
+   "bekker": "31a1–3"
+  },
+  {
+   "chapter": "32",
+   "column": "32a",
+   "line": "1",
+   "bekker": "32a1–3"
+  },
+  {
+   "chapter": "33",
+   "column": "33a",
+   "line": "1",
+   "bekker": "33a1–2"
+  },
+  {
+   "chapter": "34",
+   "column": "34a",
+   "line": "1",
+   "bekker": "34a1–3"
+  },
+  {
+   "chapter": "35",
+   "column": "35a",
+   "line": "1",
+   "bekker": "35a1–4"
+  },
+  {
+   "chapter": "36",
+   "column": "36a",
+   "line": "1",
+   "bekker": "36a1–2"
+  },
+  {
+   "chapter": "37",
+   "column": "37a",
+   "line": "1",
+   "bekker": "37a1–2"
+  },
+  {
+   "chapter": "38",
+   "column": "38a",
+   "line": "1",
+   "bekker": "38a1–4"
+  },
+  {
+   "chapter": "39",
+   "column": "39a",
+   "line": "1",
+   "bekker": "39a1–6"
+  },
+  {
+   "chapter": "40",
+   "column": "40a",
+   "line": "1",
+   "bekker": "40a1–4"
+  },
+  {
+   "chapter": "41",
+   "column": "41a",
+   "line": "1",
+   "bekker": "41a1–3"
+  },
+  {
+   "chapter": "42",
+   "column": "42a",
+   "line": "1",
+   "bekker": "42a1–5"
+  },
+  {
+   "chapter": "43",
+   "column": "43a",
+   "line": "1",
+   "bekker": "43a1–6"
+  },
+  {
+   "chapter": "44",
+   "column": "44a",
+   "line": "1",
+   "bekker": "44a1–4"
+  },
+  {
+   "chapter": "45",
+   "column": "45a",
+   "line": "1",
+   "bekker": "45a1–4"
+  },
+  {
+   "chapter": "46",
+   "column": "46a",
+   "line": "1",
+   "bekker": "46a1–2"
+  },
+  {
+   "chapter": "47",
+   "column": "47a",
+   "line": "1",
+   "bekker": "47a1–5"
+  },
+  {
+   "chapter": "48",
+   "column": "48a",
+   "line": "1",
+   "bekker": "48a1–5"
+  },
+  {
+   "chapter": "49",
+   "column": "49a",
+   "line": "1",
+   "bekker": "49a1–4"
+  },
+  {
+   "chapter": "50",
+   "column": "50a",
+   "line": "1",
+   "bekker": "50a1–2"
+  },
+  {
+   "chapter": "51",
+   "column": "51a",
+   "line": "1",
+   "bekker": "51a1–4"
+  },
+  {
+   "chapter": "52",
+   "column": "52a",
+   "line": "1",
+   "bekker": "52a1–3"
+  },
+  {
+   "chapter": "53",
+   "column": "53a",
+   "line": "1",
+   "bekker": "53a1–7"
+  },
+  {
+   "chapter": "54",
+   "column": "54a",
+   "line": "1",
+   "bekker": "54a1–8"
+  },
+  {
+   "chapter": "55",
+   "column": "55a",
+   "line": "1",
+   "bekker": "55a1–5"
+  },
+  {
+   "chapter": "56",
+   "column": "56a",
+   "line": "1",
+   "bekker": "56a1–7"
+  },
+  {
+   "chapter": "57",
+   "column": "57a",
+   "line": "1",
+   "bekker": "57a1–4"
+  },
+  {
+   "chapter": "58",
+   "column": "58a",
+   "line": "1",
+   "bekker": "58a1–3"
+  },
+  {
+   "chapter": "59",
+   "column": "59a",
+   "line": "1",
+   "bekker": "59a1–7"
+  },
+  {
+   "chapter": "60",
+   "column": "60a",
+   "line": "1",
+   "bekker": "60a1–3"
+  },
+  {
+   "chapter": "61",
+   "column": "61a",
+   "line": "1",
+   "bekker": "61a1–7"
+  },
+  {
+   "chapter": "62",
+   "column": "62a",
+   "line": "1",
+   "bekker": "62a1–3"
+  },
+  {
+   "chapter": "63",
+   "column": "63a",
+   "line": "1",
+   "bekker": "63a1–5"
+  },
+  {
+   "chapter": "64",
+   "column": "64a",
+   "line": "1",
+   "bekker": "64a1–5"
+  },
+  {
+   "chapter": "65",
+   "column": "65a",
+   "line": "1",
+   "bekker": "65a1–4"
+  },
+  {
+   "chapter": "66",
+   "column": "66a",
+   "line": "1",
+   "bekker": "66a1–3"
+  },
+  {
+   "chapter": "67",
+   "column": "67a",
+   "line": "1",
+   "bekker": "67a1–5"
+  },
+  {
+   "chapter": "68",
+   "column": "68a",
+   "line": "1",
+   "bekker": "68a1–4"
+  },
+  {
+   "chapter": "69",
+   "column": "69a",
+   "line": "1",
+   "bekker": "69a1–2"
+  }
+ ]
+}

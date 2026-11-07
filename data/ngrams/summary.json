@@ -1,44 +1,44 @@
 {
- "works": 41,
+ "works": 47,
  "streams": {
   "form": {
-   "distinct": 2661511,
-   "kept": 173970,
-   "occurrences": 906269,
+   "distinct": 3121153,
+   "kept": 204515,
+   "occurrences": 1064666,
    "shards": 24,
    "by_n": {
-    "2": 75296,
-    "3": 63574,
-    "4": 24830,
-    "5": 10270
+    "2": 87447,
+    "3": 74807,
+    "4": 29652,
+    "5": 12609
    }
   },
   "lemma": {
-   "distinct": 5342555,
-   "kept": 390819,
-   "occurrences": 2152593,
+   "distinct": 6273707,
+   "kept": 462768,
+   "occurrences": 2548147,
    "shards": 24,
    "by_n": {
-    "2": 97357,
-    "3": 155616,
-    "4": 95455,
-    "5": 42391
+    "2": 113423,
+    "3": 183432,
+    "4": 114124,
+    "5": 51789
    }
   },
   "english": {
-   "distinct": 3267478,
-   "kept": 327771,
-   "occurrences": 1965707,
+   "distinct": 3794488,
+   "kept": 389447,
+   "occurrences": 2343559,
    "shards": 26,
    "by_n": {
-    "2": 97686,
-    "3": 124585,
-    "4": 72685,
-    "5": 32815
+    "2": 112691,
+    "3": 147201,
+    "4": 88250,
+    "5": 41305
    }
   }
  },
- "english_works": 41,
- "surface_forms": 45953,
- "surface_forms_ambiguous": 6206
+ "english_works": 47,
+ "surface_forms": 53867,
+ "surface_forms_ambiguous": 7179
 }

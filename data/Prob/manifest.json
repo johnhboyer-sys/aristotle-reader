@@ -1,0 +1,253 @@
+{
+ "work": {
+  "id": "Prob",
+  "title": "Problemata",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "036",
+  "authenticity": "dubious",
+  "greek_edition": "I. Bekker, Aristotelis Opera (Berlin, 1831)",
+  "english_translation": "E. S. Forster (Oxford, 1927)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 16,
+   "first_column": "859a",
+   "last_column": "866b"
+  },
+  {
+   "book": 2,
+   "segments": 9,
+   "first_column": "866b",
+   "last_column": "870b"
+  },
+  {
+   "book": 3,
+   "segments": 11,
+   "first_column": "871a",
+   "last_column": "876a"
+  },
+  {
+   "book": 4,
+   "segments": 10,
+   "first_column": "876a",
+   "last_column": "880b"
+  },
+  {
+   "book": 5,
+   "segments": 11,
+   "first_column": "880b",
+   "last_column": "885b"
+  },
+  {
+   "book": 6,
+   "segments": 2,
+   "first_column": "885b",
+   "last_column": "886a"
+  },
+  {
+   "book": 7,
+   "segments": 4,
+   "first_column": "886a",
+   "last_column": "887b"
+  },
+  {
+   "book": 8,
+   "segments": 5,
+   "first_column": "887b",
+   "last_column": "889b"
+  },
+  {
+   "book": 9,
+   "segments": 4,
+   "first_column": "889b",
+   "last_column": "891a"
+  },
+  {
+   "book": 10,
+   "segments": 16,
+   "first_column": "891a",
+   "last_column": "898b"
+  },
+  {
+   "book": 11,
+   "segments": 16,
+   "first_column": "898b",
+   "last_column": "906a"
+  },
+  {
+   "book": 12,
+   "segments": 4,
+   "first_column": "906a",
+   "last_column": "907b"
+  },
+  {
+   "book": 13,
+   "segments": 4,
+   "first_column": "907b",
+   "last_column": "909a"
+  },
+  {
+   "book": 14,
+   "segments": 4,
+   "first_column": "909a",
+   "last_column": "910b"
+  },
+  {
+   "book": 15,
+   "segments": 6,
+   "first_column": "910b",
+   "last_column": "913a"
+  },
+  {
+   "book": 16,
+   "segments": 6,
+   "first_column": "913a",
+   "last_column": "915b"
+  },
+  {
+   "book": 17,
+   "segments": 2,
+   "first_column": "915b",
+   "last_column": "916a"
+  },
+  {
+   "book": 18,
+   "segments": 3,
+   "first_column": "916b",
+   "last_column": "917b"
+  },
+  {
+   "book": 19,
+   "segments": 12,
+   "first_column": "917b",
+   "last_column": "923a"
+  },
+  {
+   "book": 20,
+   "segments": 9,
+   "first_column": "923a",
+   "last_column": "927a"
+  },
+  {
+   "book": 21,
+   "segments": 7,
+   "first_column": "927a",
+   "last_column": "930a"
+  },
+  {
+   "book": 22,
+   "segments": 3,
+   "first_column": "930a",
+   "last_column": "931a"
+  },
+  {
+   "book": 23,
+   "segments": 11,
+   "first_column": "931a",
+   "last_column": "936a"
+  },
+  {
+   "book": 24,
+   "segments": 4,
+   "first_column": "936a",
+   "last_column": "937b"
+  },
+  {
+   "book": 25,
+   "segments": 6,
+   "first_column": "937b",
+   "last_column": "940a"
+  },
+  {
+   "book": 26,
+   "segments": 16,
+   "first_column": "940a",
+   "last_column": "947b"
+  },
+  {
+   "book": 27,
+   "segments": 4,
+   "first_column": "947b",
+   "last_column": "949a"
+  },
+  {
+   "book": 28,
+   "segments": 3,
+   "first_column": "949a",
+   "last_column": "950a"
+  },
+  {
+   "book": 29,
+   "segments": 7,
+   "first_column": "950a",
+   "last_column": "953a"
+  },
+  {
+   "book": 30,
+   "segments": 9,
+   "first_column": "953a",
+   "last_column": "957a"
+  },
+  {
+   "book": 31,
+   "segments": 7,
+   "first_column": "957a",
+   "last_column": "960a"
+  },
+  {
+   "book": 32,
+   "segments": 4,
+   "first_column": "960a",
+   "last_column": "961b"
+  },
+  {
+   "book": 33,
+   "segments": 5,
+   "first_column": "961b",
+   "last_column": "963b"
+  },
+  {
+   "book": 34,
+   "segments": 3,
+   "first_column": "963b",
+   "last_column": "964b"
+  },
+  {
+   "book": 35,
+   "segments": 2,
+   "first_column": "964b",
+   "last_column": "965a"
+  },
+  {
+   "book": 36,
+   "segments": 1,
+   "first_column": "965b",
+   "last_column": "965b"
+  },
+  {
+   "book": 37,
+   "segments": 3,
+   "first_column": "965b",
+   "last_column": "966b"
+  },
+  {
+   "book": 38,
+   "segments": 3,
+   "first_column": "966b",
+   "last_column": "967b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 11141,
+  "parses_dropped": 315
+ },
+ "lsj": {
+  "lemmata_needed": 5065,
+  "lsj_entries_kept": 4872,
+  "short_defs": 4471,
+  "shards": 24,
+  "lemmata_without_entry": 245
+ }
+}

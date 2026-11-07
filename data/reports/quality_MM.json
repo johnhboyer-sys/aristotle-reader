@@ -1,0 +1,19 @@
+{
+ "checks": {
+  "breathing_position": {
+   "tokens_checked": 23708,
+   "flagged": [
+    {
+     "ref": "1207b23",
+     "surface": "καλοκἀγαθία",
+     "allowed": true,
+     "reason": "crasis"
+    }
+   ],
+   "unexpected": [],
+   "per_10k": 0.4217985490129914,
+   "ok": true
+  }
+ },
+ "ok": true
+}

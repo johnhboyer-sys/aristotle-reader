@@ -1,0 +1,32 @@
+{
+ "work": {
+  "id": "RhetAl",
+  "title": "Rhetorica ad Alexandrum",
+  "author": "Aristotle",
+  "tlg_author": "0547",
+  "tlg_work": "001",
+  "spine_tei": "rhetal-greek/rhetal-bekker-grc.xml",
+  "authenticity": "spurious",
+  "greek_edition": "M. Fuhrmann, Anaximenis Ars Rhetorica (Leipzig, 1966), relined to I. Bekker, Aristotelis Opera (Berlin, 1831)",
+  "english_translation": "E. S. Forster (Oxford, 1924)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 56,
+   "first_column": "1420a",
+   "last_column": "1447b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 4141,
+  "parses_dropped": 101
+ },
+ "lsj": {
+  "lemmata_needed": 2064,
+  "lsj_entries_kept": 1962,
+  "short_defs": 1803,
+  "shards": 24,
+  "lemmata_without_entry": 92
+ }
+}

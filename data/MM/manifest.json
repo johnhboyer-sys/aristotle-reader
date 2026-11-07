@@ -1,0 +1,37 @@
+{
+ "work": {
+  "id": "MM",
+  "title": "Magna Moralia",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "022",
+  "authenticity": "dubious",
+  "greek_edition": "F. Susemihl (Leipzig, 1883), as printed by G. C. Armstrong (Loeb, 1935); lines of I. Bekker, Aristotelis Opera (Berlin, 1831)",
+  "english_translation": "St. G. Stock (Oxford, 1915)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 36,
+   "first_column": "1181a",
+   "last_column": "1198b"
+  },
+  {
+   "book": 2,
+   "segments": 31,
+   "first_column": "1198b",
+   "last_column": "1213b"
+  }
+ ],
+ "analyses": {
+  "token_keys": 3354,
+  "parses_dropped": 72
+ },
+ "lsj": {
+  "lemmata_needed": 1736,
+  "lsj_entries_kept": 1684,
+  "short_defs": 1526,
+  "shards": 24,
+  "lemmata_without_entry": 63
+ }
+}

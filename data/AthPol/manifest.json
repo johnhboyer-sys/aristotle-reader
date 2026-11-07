@@ -1,0 +1,31 @@
+{
+ "work": {
+  "id": "AthPol",
+  "title": "Athenian Constitution",
+  "greekTitle": "Ἀθηναίων πολιτεία",
+  "author": "Aristotle",
+  "tlg_author": "0086",
+  "tlg_work": "003",
+  "greek_edition": "H. Oppermann, Aristotelis Ἀθηναίων πολιτεία (Teubner, Leipzig 1928)",
+  "english_translation": "F. G. Kenyon (Oxford, 1921)"
+ },
+ "books": [
+  {
+   "book": 1,
+   "segments": 69,
+   "first_column": "1a",
+   "last_column": "69a"
+  }
+ ],
+ "analyses": {
+  "token_keys": 4467,
+  "parses_dropped": 135
+ },
+ "lsj": {
+  "lemmata_needed": 2597,
+  "lsj_entries_kept": 2428,
+  "short_defs": 2214,
+  "shards": 24,
+  "lemmata_without_entry": 194
+ }
+}

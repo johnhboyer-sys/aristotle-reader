@@ -1,0 +1,1 @@
+import{r as e,t}from"./resume.19fXLRCG.js";var n=document.getElementById(`lp-resume`);if(n){let r=e(n.dataset.work);if(r){let e=Number(n.dataset.books)||1,i=Math.min(Math.max(1,r.book),e);n.href=`${`/`.replace(/\/$/,``)}/${n.dataset.work}/book/${i}${r.cite?`#${r.cite}`:``}`,n.textContent=r.cite?`Resume at ${t(n.dataset.work,r.cite)}`:e>1?`Resume Book ${i}`:`Resume`,n.hidden=!1}}

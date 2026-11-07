@@ -1,0 +1,58 @@
+{
+ "1": [
+  {
+   "chapter": "1",
+   "column": "481a",
+   "line": "1",
+   "bekker": "481a1–27"
+  },
+  {
+   "chapter": "2",
+   "column": "481a",
+   "line": "28",
+   "bekker": "481a28–482a27"
+  },
+  {
+   "chapter": "3",
+   "column": "482a",
+   "line": "28",
+   "bekker": "482a28–482b13"
+  },
+  {
+   "chapter": "4",
+   "column": "482b",
+   "line": "14",
+   "bekker": "482b14–483a17"
+  },
+  {
+   "chapter": "5",
+   "column": "483a",
+   "line": "18",
+   "bekker": "483a18–484a13"
+  },
+  {
+   "chapter": "6",
+   "column": "484a",
+   "line": "14",
+   "bekker": "484a14–484b8"
+  },
+  {
+   "chapter": "7",
+   "column": "484b",
+   "line": "9",
+   "bekker": "484b9–485a3"
+  },
+  {
+   "chapter": "8",
+   "column": "485a",
+   "line": "4",
+   "bekker": "485a4–27"
+  },
+  {
+   "chapter": "9",
+   "column": "485a",
+   "line": "28",
+   "bekker": "485a28–486b4"
+  }
+ ]
+}
