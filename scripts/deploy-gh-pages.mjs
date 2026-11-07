@@ -220,14 +220,15 @@ export const GATED_SLOT_BASELINE = {
 // their data or cite them anywhere under data/ (an app-only build serves
 // whatever is in build/dist, and gathers lemma pages, bekker.json and the
 // search shards from all of it). To release one, delete the key — and say so in
-// DEPLOY-STATUS.md. Read with a line match, not a YAML parser: the key is one
-// line at the top level.
+// DEPLOY-STATUS.md. Read with a line match, not a YAML parser (no dependency):
+// a top-level `deploy_hold:` line holds the work whatever follows it.
 export function heldWorks(dir = MANIFESTS) {
   const held = {};
   for (const name of readdirSync(dir).sort()) {
     if (!name.endsWith('.yaml') || name.endsWith('-public.yaml')) continue;
-    const m = /^deploy_hold:[ \t]*(?:"([^"\n]*)"|(\S[^\n]*))[ \t]*$/m.exec(readFileSync(path.join(dir, name), 'utf8'));
-    if (m) held[name.slice(0, -'.yaml'.length)] = (m[1] ?? m[2]).trim();
+    // the key alone holds the work; the reason is read when it is on the key's line
+    const m = /^deploy_hold:([^\n]*)$/m.exec(readFileSync(path.join(dir, name), 'utf8'));
+    if (m) held[name.slice(0, -'.yaml'.length)] = m[1].trim().replace(/^"(.*)"$/, '$1') || 'deploy_hold is set in its manifest';
   }
   return held;
 }

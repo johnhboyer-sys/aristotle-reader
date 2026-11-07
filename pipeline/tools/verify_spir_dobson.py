@@ -343,20 +343,25 @@ def partners(a: list[str], b: list[str]) -> dict[int, int]:
     return m
 
 
+MIN_SHARED = 0.8
 MIN_LEAF = 150   # body tokens: the shortest leaf (468, the ending) has 175
 
 
 def coverage(T: list["TTok"], A: list[str]) -> list[str]:
-    """What the readers failed to give: a leaf with (almost) no body text, or
-    an A read much shorter than T's."""
+    """What the readers failed to give: a leaf of T with (almost) no body
+    text, or a leaf's text that A does not have."""
     out = []
     for leaf in LEAVES:
         n = sum(1 for x in T if x.leaf == leaf and x.zone == "body")
         if n < MIN_LEAF:
             out.append(f"T leaf {leaf}: {n} body tokens — the read is incomplete")
-    body = sum(1 for x in T if x.zone == "body")
-    if len(A) < 0.9 * body:
-        out.append(f"A has {len(A)} tokens against T's {body} body tokens — the read is incomplete")
+    # A has no leaves of its own: a leaf of T's text that A barely shares is
+    # one A lost (every leaf shares 97% or more as read on 2026-11-06)
+    pa = partners([x.t for x in T], A)
+    for leaf in LEAVES:
+        body = [j for j, x in enumerate(T) if x.leaf == leaf and x.zone == "body"]
+        if body and sum(j in pa for j in body) < MIN_SHARED * len(body):
+            out.append(f"A shares under {MIN_SHARED:.0%} of T leaf {leaf}'s text — the read is incomplete")
     return out
 
 
@@ -496,6 +501,16 @@ def selftest(text: str, T, A, n: int, seed: int) -> int:
         tally["lost leaf"][1] += hit
         if not hit:
             missed.append(("lost leaf", leaf, f"T without leaf {leaf}"))
+    # a lost leaf in A: cut the span of A that holds a T leaf's text
+    pa = partners([x.t for x in T], A)
+    for leaf in (LEAVES[0], LEAVES[-1], 454):
+        span = [pa[j] for j, x in enumerate(T) if x.leaf == leaf and j in pa]
+        hit = bool(coverage(T, A[:min(span)] + A[max(span) + 1:]))
+        tally.setdefault("lost A leaf", [0, 0])
+        tally["lost A leaf"][0] += 1
+        tally["lost A leaf"][1] += hit
+        if not hit:
+            missed.append(("lost A leaf", leaf, f"A without leaf {leaf}"))
     for kind, (planted, caught) in tally.items():
         print(f"  {kind:15} planted {planted:3}  caught {caught:3}")
     for kind, at, ctx in missed:

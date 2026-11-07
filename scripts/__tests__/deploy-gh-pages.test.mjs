@@ -772,7 +772,12 @@ test('heldWorks reads deploy_hold from the private manifests only', () => {
     writeFileSync(path.join(dir, 'Aaa.yaml'), 'deploy_hold: "not yet: see notes"\nwork:\n  id: Aaa\n');
     writeFileSync(path.join(dir, 'Bbb.yaml'), 'work:\n  id: Bbb\n  # deploy_hold: "a comment is not a hold"\n');
     writeFileSync(path.join(dir, 'Ccc-public.yaml'), 'deploy_hold: "x"\nwork:\n  id: Ccc\n');
-    assert.deepEqual(heldWorks(dir), { Aaa: 'not yet: see notes' });
+    // the reason on the next line is still a hold: the key alone holds
+    writeFileSync(path.join(dir, 'Ddd.yaml'), 'deploy_hold:\n  "held: see notes"\nwork:\n  id: Ddd\n');
+    const held = heldWorks(dir);
+    assert.deepEqual(Object.keys(held), ['Aaa', 'Ddd']);
+    assert.equal(held.Aaa, 'not yet: see notes');
+    assert.ok(held.Ddd);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
