@@ -208,3 +208,27 @@ Pages are split by `---` lines. Where each work sits (line numbers in the .txt):
 Plan (John's sequence, step 2): one correction session per volume, at most two at once
 (the Mac has 8 GB; memory ran out at 08:19). The Problemata pass runs in the orchestrator
 session. Paused at 08:25 so John can reboot; ath-pol and rhet-alex were asked to checkpoint.
+
+### 2026-11-07 — Problemata checked against Genie's read
+
+Genie's whole-volume read (`sources/genie-oxford/Oxford Aristotle VII 1927 Problemata.txt`,
+untracked) diffed word by word against `sources/prob-forster/`, then again with case and
+punctuation kept; every real difference judged on scan A's page image. The diff scripts
+live in the session scratchpad (footnote segments dropped by marker, running heads dropped,
+French spacing joined, `$?^2$` kept as `?`).
+
+Word diff (case and punctuation ignored): 106 ops after cleaning = 74 noise (footnote
+text the filter missed, running heads, call-out marks, diagram labels), 15 Genie gaps,
+5 Genie errors, 12 ours wrong. The case-and-punctuation diff found 13 more punctuation
+errors of ours, 1 case error, 21 capital Hypate/Paranete/Lichanos (print: italic lower case),
+and 6 pairs of Forster's pointed brackets that our text had as parentheses (now ⟨ ⟩).
+57 `PRINT_READS` entries, 73 bound `VERIFY_ALLOW` entries (39 stale ones removed), tests in
+`test_prob_forster_clean.py`.
+
+- Genie gaps (not ours): 941 words from the middle of 23.6 on; 5.23-5.25 replaced by
+  unrelated text about Virgin Galactic (~700 words of ours not checked by Genie).
+- Genie errors: 2.30 stifling, 16.5 traveling, 29.14 henceforth, 26.12 drops "so",
+  26.41 "other other", 10.59 full stop (print has the comma, our entry stands).
+- Genie reads `$?^2$` as the question mark plus note number; read every "?" difference
+  on the leaf, because Genie sometimes drops a printed "?" and sometimes adds none.
+- Not covered: wording both scans and Genie share wrongly; Genie's read of Books 15 and 19 figure labels.
