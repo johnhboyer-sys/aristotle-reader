@@ -35,7 +35,7 @@ The registry is `shared/lib/works.ts`; the divisions below are its `CATEGORIES`.
 
 **V. Rhetoric and Poetics:** Rhetoric, Poetics
 
-**Works of doubted or spurious authorship** (an appendix outside the numbered divisions; each carries its badge from the registry's `authenticity` field — all eleven are marked spurious): De Mundo, De Melisso Xenophane Gorgia, Mechanica, De Coloribus, De Audibilibus, Physiognomonica, De Mirabilibus Auscultationibus, De Lineis Insecabilibus, Ventorum Situs, De Virtutibus et Vitiis, Oeconomica
+**Works of doubted or spurious authorship** (an appendix outside the numbered divisions; each carries its badge from the registry's `authenticity` field, Dubious or Spurious after Barnes's * and **): De Mundo, De Melisso Xenophane Gorgia, Mechanica, Problemata (dubious), De Coloribus, De Audibilibus, Physiognomonica, De Mirabilibus Auscultationibus, De Lineis Insecabilibus, Ventorum Situs, De Virtutibus et Vitiis, Oeconomica (dubious)
 
 **Also carried:** Porphyry's Isagoge — not a home-page division; surfaced as the commentary on the Categories, and readable at `/Isa`.
 

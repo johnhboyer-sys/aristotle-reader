@@ -20,12 +20,14 @@ Supersedes the "authentic works only" line in
 2. **Search filter** — `All / Genuine / Dubious / Spurious` scope row in the search
    "Refine" panel ([`Search.svelte`](../app/src/components/Search.svelte)); reuses the
    existing `selectOnly` mechanism, empty classes render disabled with a `0`.
-3. **First work: Oeconomica** (`Oec`, `spurious`) — imported end-to-end, Opus-verified.
+3. **First work: Oeconomica** (`Oec`, `spurious` then; `dubious` since 2026-11-06) — imported end-to-end, Opus-verified.
 
 `dubious` vs `spurious`: use **`dubious`** only for genuinely contested works (e.g.
 *Magna Moralia*); most opuscula in the corpus are **`spurious`** (transmitted with
-Aristotle but not by him). Oeconomica is `spurious` — its Susemihl edition title
-literally reads *quae feruntur*, "the works attributed to."
+Aristotle but not by him). The labels follow Barnes, *Complete Works* (Princeton 1984):
+his * (authenticity seriously doubted) is `dubious`, his ** (spuriousness never
+seriously contested) is `spurious` (John, 2026-11-06, "Match Barnes"). So Oeconomica,
+Problemata and Magna Moralia are `dubious`; Oeconomica was `spurious` until then.
 
 ## Recipe for the next dubious work (worked example = Oeconomica)
 
