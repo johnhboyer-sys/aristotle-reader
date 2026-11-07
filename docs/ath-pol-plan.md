@@ -1,7 +1,9 @@
 # Athenian Constitution (Ath. Pol.): sources and plan
 
-Status: 2026-11-06. John answered every question (section 6) and said to build it.
-The build is on branch `claude/ath-pol-plan-ccd05b`; HANDOFF-ATHPOL.md holds its state.
+Status: built and gated 2026-11-07 on branch `claude/ath-pol-plan-ccd05b`, not merged.
+John answered every question (section 6). HANDOFF-ATHPOL.md holds the gate results and what is open.
+Kenyon's margins differ from the 299 assumed below: he prints 300 numerals; 15.5, 26.4 and 49.5
+sit inside Oppermann's sections and 8.3 has no numeral (three merges, not one).
 
 The work has no Bekker numbers: the papyrus came to light in 1890, after Bekker.
 It is cited by chapter and section (69 chapters, 299 sections in Kenyon's OCT,

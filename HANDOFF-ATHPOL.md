@@ -2,79 +2,70 @@
 
 Track: add the Athenian Constitution, the first work cited by chapter.section.
 Plan: [`docs/ath-pol-plan.md`](docs/ath-pol-plan.md). Branch `claude/ath-pol-plan-ccd05b`
-(worktree `.claude/worktrees/ath-pol-plan-ccd05b`). No push, no merge, no deploy.
+(worktree `.claude/worktrees/ath-pol-plan-ccd05b`). Nothing pushed, merged or deployed.
 
-## State (2026-11-07, paused for a reboot)
+## State (2026-11-07): built and gated, awaiting John's merge call
 
-Every question is answered (plan section 6). Q2 is "Match Barnes": no authenticity mark and no badge; the work goes last in Division V ("Rhetoric and Poetics"), after the *Poetics*. The appendix keeps its name. John said to build it.
+Everything in the plan is built. John's rulings are in plan section 6. Q2 is "Match Barnes": no badge, last in Division V after the *Poetics*, and the appendix keeps its name.
 
-Commits on the branch, oldest first:
+- **Greek:** TLG 0086.003 (Oppermann 1928), 69 chapters and 298 sections. Each section is one spine line on synthetic column "Na" (`citation.scheme: chapter-section`). The papyrus column mark `‖` is dropped. Underdots, numerals and lacunae get Beta Code keys.
+- **English:** Kenyon, Oxford *Works* vol. X (1921), built by `pipeline/tools/build_athpol_kenyon.py` from the archive.org hOCR. It is checked word by word against Gutenberg 26095 and against the Genie OCR of vol. X, with every difference judged on the page image. It carries 184 footnotes shown as popups and 298 anchors, one per Greek section, each real.
+- **Reader:** displayed cites read "49.3"; anchors, `?loc=49a:3` and `#49a3` keep the synthetic form. Other features:
+  - every section is numbered;
+  - no Bekker jump, column label or chapter span;
+  - a section jump lands exactly at the top of the reading area, on the English tick when the Greek is hidden;
+  - the scroll spy follows sections;
+  - Search shows one English row per section;
+  - ⌘K reads "Ath. Pol. 56.6".
+- **LSJ:** "Arist. Ath." citations (527 in LSJ) link to their sections. The 36 in entries the corpus doesn't emit stay out. "10.7" stays unlinked, because the Greek has no 10.7.
 
-1. `2625c9b07b` pipeline: `citation.scheme: chapter-section` (loader `_parse_sections`, stage 2 `check_sections`, preflight `ordered_citation`, LSJ `_section_href`), `tools/athpol_greek_starts.py`, `tools/athpol_lsj_gate.py`, the check-links exact-line rule, and 25 failing-first tests in `pipeline/tests/test_chapter_section.py`.
-2. `8ca3441d1e` plan: Q2 resolved.
-3. `2b612173f0` reader (site, desktop, ⌘K palette). Every displayed cite goes through `citeLabel`/`citeLabelOf` in `shared/lib/data.ts`; tests in `shared/__tests__/chapter-section.test.ts`, `reader-chapter-section.test.ts`, `desktop/src/__tests__/chapter-section-cite.test.ts`.
-4. `a8b8f27b3b` English: `pipeline/tools/build_athpol_kenyon.py` → `sources/athpol-kenyon/`. Its inputs (hOCR, Gutenberg 26095) are cached in `build/athpol-ocr/` in this worktree, which git ignores. It regenerates byte-identical.
-5. `9388a10396` **WIP, not gated:** `manifests/AthPol.yaml`, LSJ map `"003": "AthPol"`, the `works.ts` entry plus its CATEGORIES V place, and the desktop entry after Poet.
+## Gates (all passing)
 
-## Gates so far
+The scripts are in the notes folder `athpol-gates/` (`fullbuild.sh`, `cmp.py`, `agg.py`, `leakscan.mjs`, `htmldiff.py`).
 
-- **G1 (scheme added, no work using it), passed** at `2625c9b07b` and again at `2b612173f0`, against a baseline built at `b963ae949d`:
-  - `build/dist`: 8,573 files, 0 differ.
-  - `app/dist`: 15,203 files; every HTML page identical with asset hashes masked; only the 9 rebuilt JS/CSS bundles differ.
-  - All build gates green: preflight, LSJ verify, links 0 broken.
-- **G3b (rendered DOM), passed.** Eight pages (EN 1103a14, Phys 244b5, Isa, Cat, Pol, a lemma page, search, home) give identical text in both builds. Seven are identical in the DOM too. On search the only difference is four empty Svelte `<!---->` markers.
-- Front-end suites at `2b612173f0`: shared 682, app 97, desktop 487 (21 skipped), all pass.
-- **AthPol pipeline run alone at the WIP commit:** stage 2 passes. The sections check reads 69 chapters / 301 English / 298 Greek / 298 witnesses / 298 anchors / 3 merges.
+- **G1** (scheme present, no work using it), built at `35f699b443` with the registry, manifest and LSJ entry removed, against baseline `b963ae949d`. Data: 8,573 files, 0 differ. Site: 15,203 files, every HTML page identical with asset hashes masked.
+- **G2** (AthPol added), at `ed34dabd4e`, with the site rebuilt at `355d33c992`:
+  - All 41 other works' data directories are byte-identical to G1.
+  - The corpus-wide files differ only by AthPol's share (`agg.py`). Three kinds of residue are explained:
+    - the lemma display cap for 20 high-count lemmas;
+    - `lemmaBeta` for 2 lemmas;
+    - **two homograph slug swaps:** `/lemma/chorion` ↔ `chorion-2` and `antiphon` ↔ `antiphon-2`, because slugs are assigned by count. That instability predates this work; it's a follow-up.
+  - **LSJ gate:** G5 links 490 citations, exactly the raw LSJ list, plus the 1 declared. G2-LSJ: 308 links undone, after which every old entry equals G1; 403 entries added, 0 dropped.
+  - **HTML (G3c):** besides the lemma pages, only the work switcher on every reader page, the home card (Division V), the home work count (40 → 41), the phrases filter and the attribution page differ.
+  - **G6:** preflight, LSJ verify and the link check (6,816 pages, 0 broken) pass. The leak scan passes: 8,731 files, the positive control found, all four scans OK.
+- **G3b:** rendered DOM text is identical on 8 sample pages (built at the reader commit).
+- **G4:** stage 2 sections check: 69 chapters, 301 English, 298 Greek, 298 witnesses, 298 anchors, 3 merges, ok.
+- **Browser** (G2 site):
+  - The 49.3 jump lands at the reading top, and the hash reads `#49a3` after scrolling.
+  - With English only, 56.4 lands on its tick. Footnotes open.
+  - Phone landscape (812×375) reads well.
+- **Suites:** pipeline 3,851; scripts 87; shared 685; app 97; desktop 487 (21 skipped). svelte-check: 0 errors.
+- **Codex GPT-6.1-Sol, medium:** six findings. Five held and are fixed; the U+0323 scoping was not taken, because the byte gate proves no other work changes. A second pass on the later fixes was run; its outcome is in the final report to the orchestrator.
 
-## Still to do
+## Open, for John
 
-1. **Decide the `‖` glyph.**
-   - Oppermann's export prints the papyrus column break as `‖` (29 in the export, 58 in the built `book-01.json`). No other built work has one.
-   - It becomes a Greek "word" with no analysis, and stage 3 logs it as a transliteration FAIL.
-   - Likely fix: strip it in `_parse_sections` the way `strip_bars` strips `|`, and make `athpol_greek_starts.py` strip it too.
-   - Stage 3 also logs `δʹ` (a numeral mark, U+02B9) and `δεκάτην.’` in verse. Look at those too.
-2. Run the suites: `cd pipeline && uv run --with pytest pytest -q`, `npm run test:scripts`, and vitest in shared, app and desktop. Works tests may want AthPol data files.
-3. **G2:** full rebuild with AthPol, using `fullbuild.sh <label>` (see "Rebuilding the gate rig" below).
-   - Every other work's dist dir must be byte-identical to G1.
-   - Run `tools/athpol_lsj_gate.py --dist <new> --before <G1 dist>`.
-   - `bekker.json` must equal G1 plus 69 AthPol columns.
-   - Ngrams, lemma map and search shards: rebuild with AthPol.yaml moved aside and match G1.
-   - G3c: HTML diffs only in the switcher, home and search lists.
-   - G6: preflight, LSJ verify, links 0 broken, leak check.
-   - Then look at AthPol in the browser: phone landscape, large type, Greek-only, print.
-4. Codex GPT-6.1-Sol, effort medium, findings-only review of `b963ae949d..HEAD`. Fix what holds, then re-run the gates.
-5. Squash or reword the WIP commit, update the plan's status line, then report to the orchestrator.
+1. The print opens Ath. Pol. with spaced dots ". . . [They"; ours reads "...[They". Should we keep the printer's spacing?
+2. The lemma slug swaps above. Old links to `/lemma/chorion` and `/lemma/antiphon` now open the other word.
+3. The two resume labels ("Resume at" on the landing page, "Continue reading" on home) still print "49a3". They were left so G3 could stay byte-exact; this is a small follow-up.
+4. **Chapter openings.** At 50.1, 57.1 and 60.1, Oppermann opens the chapter with a closing sentence that Kenyon prints at the end of the paragraph before. The anchors follow Kenyon, so that Greek sentence pairs with the previous chapter's English.
+5. **A defect that predates this work, on Bekker works:** `?loc=…&view=english` scrolls to a hidden Greek line and goes nowhere. It's fixed here for chapter-section only, and needs its own follow-up PR.
+6. **De Spiritu (tlg0086043) and tlg0086051** also print `‖` in their exports. Only the section loader drops it.
 
-## Rebuilding the gate rig (the reboot wipes /private/tmp)
+## Kenyon findings worth knowing
 
-- The scripts are saved in the session notes folder: `~/Library/Application Support/Claude/side-session-notes/local_212c7db4-c183-4538-8ff7-94a2e058767b/athpol-gates/`.
-  - `fullbuild.sh <label>` does what build-public.mjs does: each manifest's `all` in node localeCompare order, using the `-public` variant when one exists; waits for any other session's stage8; then stage9, preflight, LSJ verify, app build and check-links; snapshots `<label>.dist` and `<label>.app`.
-  - `cmp.py A B [--mask-assets]` hashes two trees.
-- It ran in a detached worktree (`buildwt`, in the scratchpad), so builds never touch this checkout. Recreate it and repoint `ROOT`/`OUT` in the script.
-- `git worktree prune` clears the dead entry.
-- The worktree needs `build/export` rsynced from the main checkout (see memory note on worktree builds).
-- The baseline (`b963ae949d`) and G1 (`2b612173f0`) builds are lost with /tmp. Rebuild them, about 4 minutes each. A build is deterministic: two baseline builds were byte-identical.
-
-## What the English agent found (Kenyon 1921)
-
-- **Margins.** The margin prints 300 numerals. Against Oppermann's 298:
-  - 15.5, 26.4 and 49.5 sit inside the section before. These are the three declared merges.
-  - Chapter 8 prints no "3" (1, 2, 4, 5). The manifest counts Kenyon's numbering, 5, and Oppermann's 8.3 anchor sits at "There were four tribes".
-- **Anchors follow the Greek.** 12 sit off the line of Kenyon's numeral: 4.4, 8.5, 9.1, 9.2, 37.2, 40.3, 47.3–5, 49.2, 53.2, 56.4.
-  - For 50.1, 57.1 and 60.1, Oppermann opens the chapter with a summary sentence that Kenyon prints at the end of the paragraph before. The anchors follow Kenyon's paragraph there, so the chapter's first Greek sentence pairs with the previous chapter's English.
-  - In 47 sections the Greek line data can't fix the clause. Those follow Kenyon's numeral. Worth a look: 4.2, 21.2, 29.3, 31.3, 35.3, 53.6, 67.5.
-- **Anchor phrases.** 30.4's phrase contains a footnote ref (`They[^80] were…`), because no ref-free phrase is unique there. It resolves, since stage 2 counts it real. Six phrases are under 5 words.
+- **Margins.** Kenyon's margin prints 300 numerals; with chapter 8 counted as 5, his numbering has 301 sections. Against Oppermann:
+  - 15.5, 26.4 and 49.5 sit inside the section before; these are the declared merges.
+  - Chapter 8 prints no "3".
+  - 12 anchors sit off their numeral's line because the Greek boundary differs.
+  - All of these are declared in the builder, which fails on anything else.
+- **Fixes the Genie witness made:** two notes, p374 n.10 "by lot, which" and p417 n.109 "(reading οἱ δῆμοι…)".
 - **Suspected misprints, kept as printed:** p372 "Medon,", p392 "the the", p399 "presumbly", p406 "Poloponnesian", p420 "control the while", p426 "Sir. J.", p437 "scare".
-- **Doubtful readings:** p434 "seers", p393 a comma, p425 a faint iota subscript.
-
-## Decided, and why
-
-- No Bekker or section numbers are invented. Numbers come from Kenyon's printed margins (read from the images) and from Oppermann's sections in the TLG export.
-- The URL hash stays `#49a3`; only labels read "49.3". Changing the hash would touch every work's scroll spy and saved positions.
-- The reader agent left two labels raw ("Resume at 49a3" on Landing, "Continue reading" on home). Editing them would change every landing page's HTML bytes and break the G3 gate. They need a follow-up after G2.
 
 ## Facts a builder needs
 
-- `/page/nN` on archive.org = hOCR page index N+1 in `_hocr.html`.
-- LSJ: 527 citations as `tlg,0086,003:C:S`. One, δίδραχμον "10.7", has no such section and stays unlinked (`DECLARED` in the gate).
-- The LSJ shared merge is last-writer-wins, so the G2 byte compare needs a full rebuild.
+- The builder's inputs live in the worktree's `build/athpol-ocr/`, which git ignores: `hocr.html`, `pg26095.txt`, `genie-x.txt` (lines 6960–8374 of `sources/genie-oxford/Oxford Aristotle X 1921.txt` in the main checkout), and `img/`.
+- `/page/nN` on archive.org = hOCR page index N+1.
+- The builder runs `main()` only with no arguments.
+- The LSJ shared merge is last-writer-wins, so a byte compare needs a full rebuild.
+- The site's service worker caches bundles. Unregister it before checking a rebuilt site in the browser.
+- Commit `9388a10396` is titled "WIP … not gated". The commits after it gate it. I didn't reword it, because interactive rebase isn't available here.
