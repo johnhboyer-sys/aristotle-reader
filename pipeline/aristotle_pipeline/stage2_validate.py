@@ -748,6 +748,27 @@ def check_sections(manifest: Manifest, spine: dict, english: dict) -> dict:
                                      "declared": declared.get(chap, 0)})
     report["greek_vs_english"] = greek_vs_english
 
+    # Each merge must name an English section its chapter has (never the
+    # first: nothing precedes it), once, folded into the Greek section that
+    # holds the English section before it. With k earlier merges in the
+    # chapter, English section E-1 is Greek section E-1-k.
+    merge_problems = []
+    seen: set[tuple[int, int]] = set()
+    by_chap: dict[int, list[int]] = defaultdict(list)
+    for m in merges:
+        by_chap[int(m["chapter"])].append(int(m["english"]))
+    for m in merges:
+        chap, e, into = int(m["chapter"]), int(m["english"]), int(m["into"])
+        i = chap - first
+        e_max = english_inv[i] if 0 <= i < len(english_inv) else 0
+        g_max = greek_inv[i] if 0 <= i < len(greek_inv) else 0
+        earlier = sum(1 for x in by_chap[chap] if x < e)
+        if (chap, e) in seen or not (2 <= e <= e_max) or not (1 <= into <= g_max) \
+                or into != e - 1 - earlier:
+            merge_problems.append(dict(m))
+        seen.add((chap, e))
+    report["merge_problems"] = merge_problems
+
     starts = _section_starts(cit)
     texts = {f"{seg['column']}{l['n']}": l["text"] for seg in spine["segments"] for l in seg["lines"]}
     expected_refs = [f"{first + i}a{s}" for i, want in enumerate(greek_inv) for s in range(1, want + 1)]
@@ -775,8 +796,8 @@ def check_sections(manifest: Manifest, spine: dict, english: dict) -> dict:
     report["anchors"] = anchors
     report["anchor_problems"] = anchor_problems
 
-    report["ok"] = not (problems or spine_vs_greek or greek_vs_english or witness_missing
-                        or witness_mismatch or anchor_problems)
+    report["ok"] = not (problems or spine_vs_greek or greek_vs_english or merge_problems
+                        or witness_missing or witness_mismatch or anchor_problems)
     return report
 
 

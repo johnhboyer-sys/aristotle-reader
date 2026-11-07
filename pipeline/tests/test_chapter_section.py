@@ -152,6 +152,7 @@ def test_a_matching_inventory_passes_and_says_what_it_examined():
     assert r["ok"] is True, r
     assert (r["chapters"], r["english_sections"], r["greek_sections"],
             r["anchors"], r["merges"]) == (2, 5, 4, 4, 1)
+    assert r["merge_problems"] == []
 
 
 def test_a_shifted_boundary_fails_the_witness():
@@ -179,6 +180,29 @@ def test_an_undeclared_merge_fails():
     r = _check(_CSManifest(merges=[]))
     assert r["ok"] is False
     assert r["greek_vs_english"] == [{"chapter": 2, "english": 3, "greek": 2, "declared": 0}]
+
+
+@pytest.mark.parametrize("merges", [
+    [{"chapter": 2, "english": 999, "into": 999}],   # no such English section
+    [{"chapter": 2, "english": 3, "into": 1}],       # 2.3 runs on from 2.2, so into 2
+    [{"chapter": 2, "english": 1, "into": 0}],       # a first section follows nothing
+    [{"chapter": 9, "english": 3, "into": 2}],       # no chapter 9
+    [{"chapter": 2, "english": 3, "into": 2}, {"chapter": 2, "english": 3, "into": 2}],
+])
+def test_a_merge_must_name_a_real_section_and_its_neighbour(merges):
+    """Counting merges is not checking them: each must name an English section
+    the chapter has, folded into the Greek section that holds the English
+    section before it, once."""
+    r = _check(_CSManifest(merges=merges))
+    assert r["ok"] is False
+    assert r["merge_problems"], r
+
+
+def test_a_well_formed_merge_in_the_wrong_chapter_fails_the_count():
+    r = _check(_CSManifest(merges=[{"chapter": 1, "english": 2, "into": 1}]))
+    assert r["ok"] is False
+    assert r["merge_problems"] == []
+    assert [g["chapter"] for g in r["greek_vs_english"]] == [1, 2]
 
 
 def test_an_unresolved_anchor_phrase_fails():

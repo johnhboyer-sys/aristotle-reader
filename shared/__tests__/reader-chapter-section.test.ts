@@ -108,6 +108,18 @@ describe('Reader, chapter-section scheme', () => {
     expect(spy.mock.calls[0][0]).toMatchObject({ block: 'start' });
     expect((spy.mock.contexts[0] as Element).id).toBe('L49a-3');
   });
+
+  it('with the Greek hidden, a citation jump opens at the English section tick', async () => {
+    // The Greek line exists but is hidden: scrolling it into view goes nowhere.
+    const spy = vi.spyOn(Element.prototype, 'scrollIntoView');
+    window.history.replaceState(null, '', '/AthPol?loc=49a:3&view=english');
+    render(Reader, { props: { work: 'AthPol', bookNum: 1, bookData: book('49a', '49', '49a1–7') } });
+    await vi.waitFor(() => expect(spy).toHaveBeenCalled());
+    const el = spy.mock.contexts[0] as Element;
+    expect(el.classList.contains('bk-num')).toBe(true);
+    expect(el.textContent?.trim()).toBe('3');
+    expect(spy.mock.calls[0][0]).toMatchObject({ block: 'start' });
+  });
 });
 
 // Arm the scroll spy in English-only view and report what it watches; `fire`

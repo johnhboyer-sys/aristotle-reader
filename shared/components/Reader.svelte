@@ -542,7 +542,10 @@
   function scrollToCitation(column: string, line: number, sub?: string) {
     suppressArmUntil = Date.now() + 800;
     const lineEl = document.getElementById(lineAnchor(column, line, sub));
-    if (lineEl && (lineEl as HTMLElement).offsetParent !== null) {
+    // English only: a chapter-section work's Greek line is hidden, so go
+    // straight to the English section tick.
+    const greekHidden = chapterSection && view === 'english';
+    if (lineEl && !greekHidden && (lineEl as HTMLElement).offsetParent !== null) {
       lineEl.scrollIntoView({ behavior: 'auto', block: jumpBlock });
     } else {
       // Greek hidden: a chapter-section work opens at the English section tick.
@@ -1105,7 +1108,10 @@
             const bestEl = near ? document.getElementById(near) : null;
             if (bestEl) { el = bestEl; targetId = near as string; }
           }
-          if (el) { suppressArmUntil = Date.now() + 1500; el.scrollIntoView({ behavior: 'smooth', block: jumpBlock }); }
+          // With the Greek hidden, a chapter-section jump opens at the English
+          // section tick (scrollToCitation's fallback): the Greek line is hidden.
+          if (el && chapterSection && view === 'english' && locCol && !Number.isNaN(locLine)) scrollToCitation(locCol, locLine);
+          else if (el) { suppressArmUntil = Date.now() + 1500; el.scrollIntoView({ behavior: 'smooth', block: jumpBlock }); }
         } else if (hash) {
           const ref = parseBekker(hash);
           if (ref) {

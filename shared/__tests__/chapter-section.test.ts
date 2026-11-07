@@ -117,3 +117,11 @@ describe('positionsBySection', () => {
     expect(positionsBySection(seg, primary, [])).toEqual([[]]);
   });
 });
+
+describe('the AthPol registry entry', () => {
+  it('flags Kenyon as carrying footnotes, so the reader renders his [^N] markers as notes', () => {
+    const kenyon = getWork('AthPol')?.translations.find(t => t.id === 'kenyon');
+    expect(kenyon?.slot).toBe('english');
+    expect(kenyon?.footnotes).toBe(true);
+  });
+});

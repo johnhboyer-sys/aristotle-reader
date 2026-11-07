@@ -972,7 +972,7 @@ export const WORKS: Work[] = [
     // Translation prints it unmarked (John, 2026-11-06: "Match Barnes").
     citation: { scheme: 'chapter-section' },
     translations: [
-      { id: 'kenyon', name: 'F. G. Kenyon (Oxford, 1921)', short: 'Kenyon', slot: 'english' },
+      { id: 'kenyon', name: 'F. G. Kenyon (Oxford, 1921)', short: 'Kenyon', slot: 'english', footnotes: true },
     ],
     blurb: 'The constitutional history of Athens, and how its offices and courts worked in the 320s BC.',
   },
