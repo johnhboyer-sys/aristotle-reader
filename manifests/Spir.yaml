@@ -6,12 +6,6 @@
 # J. F. Dobson (Oxford, 1914), translated from Jaeger's text, with real Bekker
 # ticks read from his printed margins (sources/spir-dobson/anchors.yaml, built
 # by pipeline/tools/build_spir_dobson.py).
-#
-# Kept out of the public site until John clears it (DEPLOY-STATUS.md, "De
-# Spiritu"). build:public skips a held work, preflight expects it unbuilt, and
-# the deploy refuses its data; the works.ts entry is private. Delete the key to
-# release it.
-deploy_hold: "De Spiritu (Dobson, Oxford 1914): held until John clears it; see DEPLOY-STATUS.md, De Spiritu"
 
 work:
   id: Spir

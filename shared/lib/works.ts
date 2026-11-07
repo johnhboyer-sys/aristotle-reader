@@ -108,30 +108,6 @@ const ACKRILL: TranslationRef[] = SHOW_PRIVATE ? [
 const EE_RACKHAM: TranslationRef[] = SHOW_PRIVATE ? [
   { id: 'rackham', name: 'H. Rackham (Loeb, 1935)', short: 'Rackham', slot: 'secondary', private: true },
 ] : [];
-// De Spiritu is held out of the deploy until John clears Dobson's translation
-// (DEPLOY-STATUS.md, "De Spiritu"; `deploy_hold` in manifests/Spir.yaml).
-// To release it, drop the SHOW_PRIVATE guards here and on its CATEGORIES entry.
-const SPIR: Work[] = SHOW_PRIVATE ? [
-  {
-    id: 'Spir',
-    title: 'De Spiritu',
-    greekTitle: 'Περὶ πνεύματος',
-    abbr: 'Spir.',
-    author: 'Aristotle',
-    books: 1,
-    bookLabels: ['1'],
-    greekEdition: 'W. Jaeger, Ps.-Aristotelis De spiritu libellus (Leipzig, 1913)',
-    greekSource: {
-      short: 'Jaeger (Teubner, 1913)',
-      full: 'W. Jaeger, ed. Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus. Leipzig: Teubner, 1913.',
-    },
-    authenticity: 'spurious',
-    translations: [
-      { id: 'dobson', name: 'J. F. Dobson (Oxford, 1914)', short: 'Dobson', slot: 'english' },
-    ],
-    blurb: 'A short spurious treatise on the inborn breath — how it grows, is fed, and moves the body.',
-  },
-] : [];
 
 // Display order follows the traditional arrangement of the corpus: the Organon
 // (Categories, De Interpretatione, …) first, then De Anima, Metaphysics, the
@@ -892,7 +868,25 @@ export const WORKS: Work[] = [
     ],
     blurb: 'A short spurious work arguing about indivisible lines.',
   },
-  ...SPIR,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SPIR above)
+  {
+    id: 'Spir',
+    title: 'De Spiritu',
+    greekTitle: 'Περὶ πνεύματος',
+    abbr: 'Spir.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'W. Jaeger, Ps.-Aristotelis De spiritu libellus (Leipzig, 1913)',
+    greekSource: {
+      short: 'Jaeger (Teubner, 1913)',
+      full: 'W. Jaeger, ed. Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus. Leipzig: Teubner, 1913.',
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'dobson', name: 'J. F. Dobson (Oxford, 1914)', short: 'Dobson', slot: 'english' },
+    ],
+    blurb: 'A short spurious treatise on the inborn breath — how it grows, is fed, and moves the body.',
+  },
   {
     id: 'Vent',
     title: 'Ventorum Situs',
@@ -1380,7 +1374,7 @@ export const CATEGORIES: Category[] = [
       { id: 'Vent' },
       { id: 'VV' },
       { id: 'Oec' },
-      ...(SHOW_PRIVATE ? [{ id: 'Spir' }] : []),   // held: see SPIR above
+      { id: 'Spir' },
     ],
   },
   // Porphyry's Isagoge (id 'Isa') is intentionally NOT a home division: it's

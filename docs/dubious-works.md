@@ -81,8 +81,8 @@ not from git history.
 
 **Greek cached in the Diogenes/TLG export (`build/export/.../tlg0086NNN.xml`), need PD
 English** (as of 2026-09-07 only Magna Moralia, Problemata and De Spiritu remain unbuilt;
-De Spiritu was built on 2026-11-06 and is held from deploy, see `DEPLOY-STATUS.md`
-"De Spiritu" — Dobson's translation dates from 1914, not the 1931 collected volume;
+De Spiritu was built on 2026-11-06, see `DEPLOY-STATUS.md` "De Spiritu" — Dobson's
+translation dates from 1914, not the 1931 collected volume, so it is public domain;
 the rest of this list shipped in PR #27 above): De Virtutibus et Vitiis (tlg045), Magna Moralia, De Mundo, Mechanica,
 Problemata, De Coloribus, De Audibilibus, Physiognomonica, De Mirabilibus
 Auscultationibus, De Lineis Insecabilibus, De Ventorum Situ, De Melisso Xenophane

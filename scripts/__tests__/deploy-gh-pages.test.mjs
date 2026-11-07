@@ -699,7 +699,7 @@ test('scanSearchShards refuses to pass when it saw no index at all', () => {
   assert.match(r.problems[0], /not running/);
 });
 
-// ---- held works: built locally, never deployed (DEPLOY-STATUS.md) ----------
+// ---- held works: a manifest's deploy_hold keeps a work off the site --------
 
 test('scanHeldWorks refuses any served file of a held work', () => {
   const report = scanHeldWorks(
@@ -762,8 +762,8 @@ test('scanHeldWorks says so when it scanned nothing', () => {
   assert.match(report.problems[0], /not running/);
 });
 
-test('De Spiritu is held, read from its manifest', () => {
-  assert.match(HELD_WORKS.Spir, /DEPLOY-STATUS/);
+test('no work is held today', () => {
+  assert.deepEqual(HELD_WORKS, {});
 });
 
 test('heldWorks reads deploy_hold from the private manifests only', () => {
