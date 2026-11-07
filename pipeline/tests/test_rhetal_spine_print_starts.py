@@ -4,7 +4,9 @@ pipeline/tools/build_rhetal_spine.py places each printed line on Fuhrmann's
 words by fuzzy OCR matching. A second scan of the same pages (archive.org
 b33521311_0002) disagreed with the first by two words or more on 78 lines;
 each was read on the page image, and where the build was wrong the reading is
-in PRINT_STARTS. These pin those readings in the vendored spine.
+in PRINT_STARTS. The 344 lines where they disagreed by one word were read the
+same way (sources/rhetal-greek/bekker-line-reads.json); 50 of them were wrong
+and are in PRINT_STARTS too. These pin those readings in the vendored spine.
 """
 
 from __future__ import annotations
@@ -34,14 +36,15 @@ def _lines() -> dict[str, str]:
 
 def test_every_print_start_opens_its_line():
     starts = _tool().PRINT_STARTS
-    assert len(starts) == 29   # an empty table would pass the loop below
+    assert len(starts) == 79   # an empty table would pass the loop below
     lines = _lines()
     for (col, n), opening in starts.items():
         assert lines[f"{col}{n}"].split()[:len(opening.split())] == opening.split(), (col, n)
 
 
 def test_only_the_printed_blank_rows_are_empty():
-    # 1437a9 was empty: both its words and 1437a10's sat on a10.
+    # 1437a9 was empty: both its words and 1437a10's sat on a10. 1432b10 holds
+    # only the tail of ἐπιχειρή-|σομεν., which stays on b9.
     assert [k for k, v in _lines().items() if not v.strip()] == ["1432b10", "1438b13", "1439b2"]
 
 
@@ -49,3 +52,13 @@ def test_1437a9_and_a10_as_printed():
     lines = _lines()
     assert lines["1437a9"] == "ἢ μέλλειν γενήσεσθαι ἢ μὴ βούλεσθαι τοὺς τὴν αἰτίαν"
     assert lines["1437a10"].startswith("ἐπενεγκόντας λαβεῖν κρίσιν.")
+
+
+def test_every_image_read_line_opening_holds():
+    import json
+    reads = json.loads((ROOT / "sources" / "rhetal-greek" / "bekker-line-reads.json")
+                       .read_text(encoding="utf-8"))["reads"]
+    assert len(reads) == 343   # 344 read; 1431a8 (Fuhrmann's lacuna) left out
+    lines = _lines()
+    for r in reads:
+        assert lines[r["line"]].split()[:1] == ([r["opens"]] if r["opens"] else []), r
