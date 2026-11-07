@@ -67,8 +67,11 @@ export interface Work {
   // Most works are cited by Bekker (column:line). A non-Bekker treatise (e.g.
   // Porphyry's Isagoge) sets scheme:'busse' so the reader drops the per-page
   // reference and the per-line Greek numbers; its section headings come from
-  // chapter-titles.json. Default (omitted) = bekker.
-  citation?: { scheme: 'bekker' | 'busse'; hideLineNumbers?: boolean };
+  // chapter-titles.json. Default (omitted) = bekker. A work cited by
+  // chapter.section (the Athenian Constitution) sets 'chapter-section': chapter
+  // N is the synthetic column "Na", section S its line S, and the reader prints
+  // "49.3" (lib/data citeLabel).
+  citation?: { scheme: 'bekker' | 'busse' | 'chapter-section'; hideLineNumbers?: boolean };
   // Has curated quotation citations (pipeline/data/quotations/<id>.json). The
   // reader asks for quotations.json only when this is set; works.test.ts keeps
   // it in step with the files.

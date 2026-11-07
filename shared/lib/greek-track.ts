@@ -17,6 +17,15 @@
  * every rect, so a test mocks them; mounting the reader would test nothing.
  */
 
+import type { Work } from './works';
+
+/** Whether a work's Greek column takes the measured track. A chapter-section
+ *  work's Greek "line" is a whole section, so its unwrapped width is no
+ *  measure (thousands of px): its column stays bounded and the lines wrap. */
+export function measuresGreekTrack(work: Pick<Work, 'citation'> | null | undefined): boolean {
+  return work?.citation?.scheme !== 'chapter-section';
+}
+
 /** Widest `.greek-line` under `root`, rounded up, or 0 if there was nothing to
  *  measure. 0 means "no measurement happened" — a loading placeholder, or a
  *  view where the Greek column is display:none — and callers must treat it as

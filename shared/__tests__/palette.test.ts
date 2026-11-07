@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { citationTarget, citationTargets, hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
+import { citationTarget, citationTargets, hasGreek, parseCitation, parseSectionCitation, rankLemmata, rankWorks, sectionTarget } from '../lib/palette';
 import type { BekkerRef, LemmaRef } from '../lib/data';
+import { WORKS, type Work } from '../lib/works';
 
 describe('parseCitation', () => {
   it('parses a full citation', () => {
@@ -130,3 +131,81 @@ describe('rankLemmata', () => {
     expect(rankLemmata('ζζζ', lemmata)).toEqual([]);
   });
 });
+
+// The Athenian Constitution is cited by chapter.section. The registry entry
+// lands with its data, so these tests carry their own fixture beside the real
+// works rather than touching WORKS.
+const ATHPOL: Work = {
+  id: 'AthPol', title: 'Athenian Constitution', abbr: 'Ath. Pol.', author: 'Aristotle',
+  books: 1, bookLabels: ['I'], greekEdition: 'Oppermann',
+  greekSource: { short: 'Oppermann', full: 'Oppermann (Teubner, 1928)' },
+  translations: [{ id: 'kenyon', name: 'F. G. Kenyon (Oxford, 1920)', short: 'Kenyon', slot: 'english' }],
+  blurb: '', citation: { scheme: 'chapter-section' },
+};
+const WITH_ATHPOL = [...WORKS, ATHPOL];
+
+describe('parseSectionCitation', () => {
+  it('reads a work prefix by abbreviation or id, dots and spaces ignored', () => {
+    const at = { work: 'AthPol', column: '56a', section: 6 };
+    expect(parseSectionCitation('Ath. Pol. 56.6', null, WITH_ATHPOL)).toEqual(at);
+    expect(parseSectionCitation('athpol 56.6', null, WITH_ATHPOL)).toEqual(at);
+    expect(parseSectionCitation('  ATH.POL.56.6 ', 'EN', WITH_ATHPOL)).toEqual(at);
+    expect(parseSectionCitation('AthPol 56 . 6', null, WITH_ATHPOL)).toEqual(at);
+  });
+  it('reads a bare chapter after a prefix', () => {
+    expect(parseSectionCitation('Ath.Pol. 56', null, WITH_ATHPOL))
+      .toEqual({ work: 'AthPol', column: '56a', section: null });
+  });
+  it('reads a bare chapter.section inside a chapter-section work only', () => {
+    expect(parseSectionCitation('56.6', 'AthPol', WITH_ATHPOL))
+      .toEqual({ work: 'AthPol', column: '56a', section: 6 });
+    expect(parseSectionCitation('56.6', 'EN', WITH_ATHPOL)).toBeNull();
+    expect(parseSectionCitation('56.6', 'Isa', WITH_ATHPOL)).toBeNull();
+    expect(parseSectionCitation('56.6', null, WITH_ATHPOL)).toBeNull();
+    // A bare number is not a citation, even in the work.
+    expect(parseSectionCitation('56', 'AthPol', WITH_ATHPOL)).toBeNull();
+  });
+  it('refuses a prefix that names no chapter-section work', () => {
+    expect(parseSectionCitation('Pol. 56.6', null, WITH_ATHPOL)).toBeNull();
+    expect(parseSectionCitation('Isa 5.6', null, WITH_ATHPOL)).toBeNull();
+    expect(parseSectionCitation('Foo 56.6', 'AthPol', WITH_ATHPOL)).toBeNull();
+    expect(parseSectionCitation('Ath. Pol. 56.6', 'AthPol', WORKS)).toBeNull();
+  });
+  it('leaves every Bekker citation and work name to the other parsers', () => {
+    for (const q of ['1103a14', '1103a', '8b20', '775a11a', 'ethics', 'Ath. Pol.', 'Ath. Pol. 56a3', '']) {
+      expect(parseSectionCitation(q, 'AthPol', WITH_ATHPOL)).toBeNull();
+    }
+  });
+});
+
+describe('sectionTarget', () => {
+  const index: Record<string, BekkerRef[]> = {
+    '56a': [{ work: 'AthPol', book: 1, lo: 1, hi: 7 }],
+    // A chapter number the Categories also uses as a Bekker column.
+    '1a': [
+      { work: 'Cat', book: 1, lo: 1, hi: 25 },
+      { work: 'AthPol', book: 1, lo: 1, hi: 3 },
+    ],
+    '2a': [{ work: 'Cat', book: 1, lo: 1, hi: 39 }],
+  };
+  it('jumps to a section the work has', () => {
+    expect(sectionTarget({ work: 'AthPol', column: '56a', section: 6 }, index))
+      .toEqual({ book: 1, label: 'Go to 56.6', loc: '56a:6' });
+    expect(sectionTarget({ work: 'AthPol', column: '1a', section: 3 }, index))
+      .toEqual({ book: 1, label: 'Go to 1.3', loc: '1a:3' });
+  });
+  it('jumps to a bare chapter by hash', () => {
+    expect(sectionTarget({ work: 'AthPol', column: '56a', section: null }, index))
+      .toEqual({ book: 1, label: 'Go to 56', hash: '56a' });
+  });
+  it('offers no jump to a section out of range', () => {
+    expect(sectionTarget({ work: 'AthPol', column: '56a', section: 8 }, index)).toBeNull();
+    expect(sectionTarget({ work: 'AthPol', column: '56a', section: 0 }, index)).toBeNull();
+    expect(sectionTarget({ work: 'AthPol', column: '1a', section: 4 }, index)).toBeNull();
+  });
+  it('offers no jump to a chapter only another work carries', () => {
+    expect(sectionTarget({ work: 'AthPol', column: '2a', section: 1 }, index)).toBeNull();
+    expect(sectionTarget({ work: 'AthPol', column: '70a', section: null }, index)).toBeNull();
+  });
+});
+

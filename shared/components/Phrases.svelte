@@ -4,6 +4,7 @@
     decodeOffsets,
     fetchEnglishSegments,
     lineRef,
+    citeLabel,
     fetchNgramOccurrences,
     fetchNgramShard,
     fetchSearchOffsets,
@@ -921,7 +922,7 @@
                           {#each group.citations as citation}
                             <li>
                               <a href={citation.href}>
-                                {citation.column}{citation.line ?? ''}
+                                {citeLabel(getWork(group.id), citation.column, citation.line ?? undefined)}
                               </a>
                             </li>
                           {/each}

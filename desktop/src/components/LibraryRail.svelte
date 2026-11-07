@@ -9,7 +9,7 @@
   import { tick } from 'svelte';
   import { CORPUS_GROUPS, dataId, type CorpusEntry } from '../lib/corpus';
   import { getWork, bookLabel, isBookless } from '@shared/lib/works';
-  import { fetchChapters, type ChapterRef } from '@shared/lib/data';
+  import { fetchChapters, isChapterSection, type ChapterRef } from '@shared/lib/data';
   import { columnKey } from '../lib/translation-file';
   import { parseCitation } from '@shared/lib/palette';
 
@@ -185,7 +185,7 @@
                                 on:click={() => onOpenChapter(b, ch.chapter)}
                               >
                                 <span>Ch. {ch.chapter}</span>
-                                <span class="rail-bek">{ch.bekker}</span>
+                                {#if !isChapterSection(meta)}<span class="rail-bek">{ch.bekker}</span>{/if}
                               </button>
                             </li>
                           {/each}
@@ -205,7 +205,7 @@
                         on:click={() => onOpenChapter(1, ch.chapter)}
                       >
                         <span>Ch. {ch.chapter}</span>
-                        <span class="rail-bek">{ch.bekker}</span>
+                        {#if !isChapterSection(meta)}<span class="rail-bek">{ch.bekker}</span>{/if}
                       </button>
                     </li>
                   {/each}

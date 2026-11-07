@@ -1094,6 +1094,15 @@ body {
   .sidenote-rail { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 0.4rem; margin: 0.3rem 0 0.7rem; }
   .sidenote { border-left: none; padding-left: 0; font-style: italic; }
 }
+/* A work cited by chapter.section (the Athenian Constitution): each Greek line
+   is a whole section and wraps in its column (no measured track is set, so
+   Greek-only falls back to the fixed measure). A citation jump aligns a section
+   to the top of the reading area, so it clears the sticky chrome as a segment
+   does; with the Greek hidden the jump lands on the English section tick. */
+.reader-body.chapter-section .greek-line,
+.reader-body.chapter-section .english-col .bk-num {
+  scroll-margin-top: calc(var(--header-h, 92px) + 3.5rem);
+}
 /* Inline diagrams (the Isagoge's Tree of Porphyry): a centered figure rendered
    in the prose flow, responsive on desktop + mobile. */
 .diagram { margin: 1.6rem auto; max-width: 24rem; font-family: var(--font-ui); }
@@ -2788,6 +2797,11 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   .seg-ref { break-after: avoid; }
   .greek-line { break-inside: avoid; }
   .greek-table, .eng-table { break-inside: avoid; }
+  /* A chapter-section Greek line is a whole section: it wraps in a column as
+     wide as the English and may break across pages like prose. */
+  .reader-body.chapter-section.view-both .seg-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .reader-body.chapter-section.view-both .greek-line .line-text { white-space: normal; }
+  .reader-body.chapter-section .greek-line { break-inside: auto; orphans: 2; widows: 2; }
   .overlay-prose { orphans: 3; widows: 3; }
 
   /* The Bekker margin gutter is paint-only (relative prose + absolute markers)

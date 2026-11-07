@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { hitTokens, fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation, anchorCite, citeOfId } from '../lib/data';
+  import { hitTokens, fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation, anchorCite, citeOfId, citeLabelOf, isChapterSection, isNonBekker, tickCite } from '../lib/data';
   import { englishQueryUnits, greekFold } from '../lib/search';
   import { markEnglishHtml, overlayPieces } from '../lib/english-hit';
-  import { measureGreekTrack as measureTrack } from '../lib/greek-track';
+  import { measureGreekTrack as measureTrack, measuresGreekTrack } from '../lib/greek-track';
   import { sanitizeHtml } from '../lib/html';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
@@ -39,6 +39,14 @@
   // titles each section from chapterTitles instead of "Chapter N".
   const busse = workMeta?.citation?.scheme === 'busse';
   const hideLineNums = busse && workMeta?.citation?.hideLineNumbers === true;
+  // A work cited by chapter.section (the Athenian Constitution) rides synthetic
+  // columns too ("49a" is chapter 49), so it shares the Isagoge's hidden column
+  // label, chapter span and Bekker jump (`nonBekker`) — but not its sidenotes,
+  // figures or layout, which stay on `busse`. Each Greek line is a section.
+  const chapterSection = isChapterSection(workMeta);
+  const nonBekker = isNonBekker(workMeta);
+  // A section can be taller than the screen: a jump opens at its top.
+  const jumpBlock: ScrollLogicalPosition = chapterSection ? 'start' : 'center';
   // Analytical sidenotes ({N: text}) for a busse work, floated into a right rail.
   let sidenotesData: Record<string, string> = {};
   if (busse) fetchSidenotes(work).then(d => { sidenotesData = d; }).catch(() => {});
@@ -281,6 +289,9 @@
   // sequencing defect it exists to prevent — measuring before the lines are
   // rendered — can be tested without mounting a reader.
   function measureGreekTrack(): boolean {
+    // A chapter-section work takes no measured track: its sections wrap in the
+    // bounded column global.css / desktop.css give it.
+    if (!measuresGreekTrack(workMeta)) return false;
     const measured = measureTrack(document.querySelector<HTMLElement>('.reader-body'));
     // 0 means nothing was measurable, not a width. Publish it anyway so the
     // var is dropped rather than pinning the column to a stale number, and
@@ -445,6 +456,10 @@
   let resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   function citeOf(el: Element): string | null {
+    // An English section tick (chapter-section, Greek hidden) has no id.
+    if (chapterSection && el.classList.contains('bk-num')) {
+      return tickCite(el.closest('.segment')?.id ?? '', el.textContent ?? '');
+    }
     return citeOfId(el.id);
   }
 
@@ -482,7 +497,10 @@
     spyObserver?.disconnect();
     spyState = new Map();
     const greekVisible = view === 'greek' || view === 'both';
-    const els = Array.from(document.querySelectorAll(greekVisible ? '.greek-line[id]' : '.segment[id]'));
+    // With the Greek hidden a chapter-section work watches its English section
+    // ticks, so the hash stays a section (#49a3), not a chapter (#49a).
+    const els = Array.from(document.querySelectorAll(greekVisible ? '.greek-line[id]'
+      : chapterSection ? '.english-col .bk-num' : '.segment[id]'));
     if (!els.length) return;
     const headerH = Math.round(document.querySelector('.page-header')?.getBoundingClientRect().height ?? 60);
     // The reading area starts below the sticky header AND the sticky controls
@@ -525,9 +543,14 @@
     suppressArmUntil = Date.now() + 800;
     const lineEl = document.getElementById(lineAnchor(column, line, sub));
     if (lineEl && (lineEl as HTMLElement).offsetParent !== null) {
-      lineEl.scrollIntoView({ behavior: 'auto', block: 'center' });
+      lineEl.scrollIntoView({ behavior: 'auto', block: jumpBlock });
     } else {
-      document.getElementById(`col-${column}`)?.scrollIntoView({ behavior: 'auto', block: 'start' });
+      // Greek hidden: a chapter-section work opens at the English section tick.
+      const sectionTick = chapterSection
+        ? [...document.querySelectorAll(`#col-${column} .english-col .bk-num`)]
+            .find((el) => el.textContent?.trim() === String(line))
+        : undefined;
+      (sectionTick ?? document.getElementById(`col-${column}`))?.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
   }
 
@@ -1082,7 +1105,7 @@
             const bestEl = near ? document.getElementById(near) : null;
             if (bestEl) { el = bestEl; targetId = near as string; }
           }
-          if (el) { suppressArmUntil = Date.now() + 1500; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+          if (el) { suppressArmUntil = Date.now() + 1500; el.scrollIntoView({ behavior: 'smooth', block: jumpBlock }); }
         } else if (hash) {
           const ref = parseBekker(hash);
           if (ref) {
@@ -1180,6 +1203,8 @@
   // for non-Bekker works whose synthetic line numbers aren't meaningful.
   function showLineNum(n: number, sub?: string): string {
     if (hideLineNums) return '';
+    // Every section is numbered, as an edition's margin numbers them.
+    if (chapterSection) return lineRef(n, sub);
     // A lettered line always prints its own number: it is the second line
     // called 5 in that column, and an unlabelled one reads as a stray.
     if (sub) return lineRef(n, sub);
@@ -1200,8 +1225,9 @@
     const startLine = nearestGreekLine(range.startContainer);
     const endLine   = nearestGreekLine(range.endContainer);
     if (!startLine && !endLine) return null;
-    const s = startLine ? anchorCite(startLine.id) : null;
-    const f = endLine   ? anchorCite(endLine.id)   : null;
+    const at = (line: HTMLElement) => { const c = anchorCite(line.id); return c && citeLabelOf(workMeta, c); };
+    const s = startLine ? at(startLine) : null;
+    const f = endLine   ? at(endLine)   : null;
     const abbr = workMeta?.abbr ?? '';
     return (s && f && s !== f) ? `(${abbr} ${s}–${f})` : `(${abbr} ${s ?? f})`;
   }
@@ -1311,7 +1337,7 @@
   {#snippet chapterHead(block: Block)}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
       <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},&nbsp;</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter ?? '']}: {chapterTitles[block.chapter ?? '']}{/if}</span>
-      {#if block.bekker && !busse}<span class="chapter-bekker">({block.bekker})</span>{/if}
+      {#if block.bekker && !nonBekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
   {/snippet}
 
@@ -1393,6 +1419,7 @@
 
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:busse={busse}
+    class:chapter-section={chapterSection}
     class:word-open={!!popup}
     style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale};--fs-scale:{fsScale}{greekTrack ? `;--greek-track:${greekTrack}px` : ''}"
     on:copy={handleCopy}>
@@ -1473,7 +1500,7 @@
              reference (the column ref is a marker within the chapter, not a
              heading over it). Mid-column chapter starts render inline below. -->
         {#if leadChapter}{@render chapterHead(leadChapter)}{/if}
-        {#if !busse}
+        {#if !nonBekker}
           <div class="seg-ref">
             {seg.column}
           </div>
