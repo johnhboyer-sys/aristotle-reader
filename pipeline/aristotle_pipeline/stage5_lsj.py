@@ -44,8 +44,11 @@ _CONNECTIVE = re.compile(r"^[\s,;]*(?:(?:or|and)[\s,;]*)?$", re.IGNORECASE)
 _DANGLING_CONNECTIVE = re.compile(r"(?:\s*[,;]\s*)?\b(?:or|and)\s*$", re.IGNORECASE)
 _DANGLING_ARTICLE = re.compile(r"\b(?:an?|the)$", re.IGNORECASE)
 _BIBL_REF = re.compile(
-    r"^Perseus:abo:tlg,0086,(\d{3}):(\d+[ab]):(\d+)$"
+    r"^Perseus:abo:tlg,(0086|0547),(\d{3}):(\d+[ab]):(\d+)$"
 )
+# LSJ shows the Rhetorica ad Alexandrum as "Arist. Rh.Al." but numbers it
+# under Anaximenes (TLG 0547). It is the only work cited outside 0086.
+_OTHER_AUTHOR_WORKS = {("0547", "001"): "RhetAl"}
 _MANIFEST_CACHE: dict[str, Manifest | None] = {}
 
 
@@ -53,8 +56,11 @@ def _bibl_href(value: str | None) -> str | None:
     match = _BIBL_REF.fullmatch(value or "")
     if not match:
         return None
-    tlg_work, column, raw_line = match.groups()
-    work_id = resolve_citation(tlg_work, column)
+    author, tlg_work, column, raw_line = match.groups()
+    if author == "0086":
+        work_id = resolve_citation(tlg_work, column)
+    else:
+        work_id = _OTHER_AUTHOR_WORKS.get((author, tlg_work))
     if not work_id:
         return None
 
