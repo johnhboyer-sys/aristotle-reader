@@ -129,6 +129,14 @@ describe('Reader, chapter-section scheme', () => {
     await vi.waitFor(() => expect(scrollY()).toBe(5000 - 251));
   });
 
+  it('a section the chapter lacks opens at the nearest one it has, the one it marks', async () => {
+    const scrollY = layout(el => (el.id === 'L49a-7' ? 6000 : el.id === 'col-49a' ? 100 : undefined));
+    window.history.replaceState(null, '', '/AthPol?loc=49a:8');
+    const { container } = render(Reader, { props: { work: 'AthPol', bookNum: 1, bookData: book('49a', '49', '49a1–7') } });
+    await vi.waitFor(() => expect(container.querySelector('.greek-line.target')?.id).toBe('L49a-7'));
+    await vi.waitFor(() => expect(scrollY()).toBe(6000 - 251));
+  });
+
   it('with the Greek hidden, a citation jump opens at the English section tick', async () => {
     // The Greek line exists but is hidden: scrolling it into view goes nowhere.
     const scrollY = layout(el =>

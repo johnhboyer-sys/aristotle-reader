@@ -40,7 +40,7 @@ The scripts are in the notes folder `athpol-gates/` (`fullbuild.sh`, `cmp.py`, `
   - With English only, 56.4 lands on its tick. Footnotes open.
   - Phone landscape (812×375) reads well.
 - **Suites:** pipeline 3,851; scripts 87; shared 685; app 97; desktop 487 (21 skipped). svelte-check: 0 errors.
-- **Codex GPT-6.1-Sol, medium:** six findings. Five held and are fixed; the U+0323 scoping was not taken, because the byte gate proves no other work changes. A second pass on the later fixes was run; its outcome is in the final report to the orchestrator.
+- **Codex GPT-6.1-Sol, medium:** six findings. Five held and are fixed; the U+0323 scoping was not taken, because the byte gate proves no other work changes. A second pass on the fixes made after it found one more (an out-of-range `?loc=49a:8` highlighted 49.7 but scrolled to the chapter start), now fixed; nothing else.
 
 ## Open, for John
 

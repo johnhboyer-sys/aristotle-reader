@@ -1125,7 +1125,8 @@
           }
           // A chapter-section jump aligns the section (or, Greek hidden, its
           // English tick) to the reading area's top; see scrollToCitation.
-          if (el && chapterSection && locCol && !Number.isNaN(locLine)) scrollToCitation(locCol, locLine);
+          // The section the nearest-line fallback resolved to, not the one cited.
+          if (el && chapterSection && locCol && !Number.isNaN(locLine)) scrollToCitation(locCol, Number(/-(\d+)$/.exec(el.id)?.[1] ?? locLine));
           else if (el) { suppressArmUntil = Date.now() + 1500; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
         } else if (hash) {
           const ref = parseBekker(hash);
