@@ -25,7 +25,7 @@ def _spine():
     return {"segments": [col("1a"), col("1b")]}
 
 
-def _build(tmp_path, monkeypatch, anchors=ANCHORS, **flags):
+def _build(tmp_path, monkeypatch, anchors=ANCHORS, spine=None, **flags):
     (tmp_path / "tst").mkdir()
     (tmp_path / "tst" / "book-01.html").write_text(PROSE, encoding="utf-8")
     (tmp_path / "tst" / "anchors.yaml").write_text(anchors, encoding="utf-8")
@@ -33,7 +33,8 @@ def _build(tmp_path, monkeypatch, anchors=ANCHORS, **flags):
     cfg = {"id": "tst", "name": "Test", "dir": "tst", "books": 1, "chapter_marker": "part",
            "anchors": "tst/anchors.yaml", **flags}
     chapters = [{"book": 1, "chapter": "1", "column": "1a", "line": 1}]
-    eng = stage1_archive.build_english(SimpleNamespace(work_id="TST"), _spine(), chapters, cfg)
+    eng = stage1_archive.build_english(SimpleNamespace(work_id="TST"), spine or _spine(),
+                                       chapters, cfg)
     return {c["column"]: c for c in eng["chunks"]}
 
 
@@ -62,3 +63,39 @@ def test_anchor_cuts_column_at_its_line_one(tmp_path, monkeypatch):
 def test_a_break_that_cannot_be_placed_raises(tmp_path, monkeypatch, anchors):
     with pytest.raises(ValueError, match="1b1"):
         _build(tmp_path, monkeypatch, anchors=anchors, anchor_cuts=True)
+
+
+# Rh. Al. 1420b opens at line 5, under the last lines of the Rhetoric: the
+# column has no line 1, so its break is the entry marked `cut: true`.
+def _spine_b_from_5():
+    s = _spine()
+    s["segments"][1]["lines"] = [{"n": n, "text": "λόγος"} for n in range(5, 11)]
+    return s
+
+
+def _build_b5(tmp_path, monkeypatch, anchors):
+    return _build(tmp_path, monkeypatch, anchors=anchors, spine=_spine_b_from_5(), anchor_cuts=True)
+
+
+def test_a_column_opening_below_line_one_cuts_at_its_marked_entry(tmp_path, monkeypatch):
+    chunks = _build_b5(tmp_path, monkeypatch,
+                       '- bekker: "1b5"\n  at: "Beta one opens"\n  cut: true\n')
+    assert chunks["1a"]["text"].endswith("Alpha two is short.")
+    assert chunks["1b"]["text"].startswith("Beta one opens the second column.")
+
+
+def test_an_unmarked_entry_below_line_one_does_not_cut(tmp_path, monkeypatch):
+    chunks = _build_b5(tmp_path, monkeypatch, '- bekker: "1b5"\n  at: "Beta one opens"\n')
+    assert not chunks["1b"]["text"].startswith("Beta one opens")
+
+
+# Another work's alignment map may hold a certain anchor on a column's first
+# spine line. Only an anchors-file entry marked `cut: true` may cut there, so
+# build_chunks must cut such a column as main does (Codex, 2026-11-06).
+def test_an_alignment_anchor_below_line_one_does_not_cut():
+    from aristotle_pipeline import stage1_ross
+    prose = {(1, 1): "Alpha one. Beta one. Beta two. Beta three. Beta four."}
+    amap = {"1:1": {"anchors": [{"citation": "1b5", "offset": 11, "confidence": "certain"}]}}
+    chapters = [{"book": 1, "chapter": "1", "column": "1a", "line": 1}]
+    pieces = stage1_ross.build_chunks(_spine_b_from_5(), chapters, prose, amap)
+    assert not pieces["1:1b"][0]["text"].startswith("Beta one.")
