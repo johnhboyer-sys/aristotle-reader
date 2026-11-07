@@ -1094,14 +1094,14 @@
    },
    {
     "citation": "18a15",
-    "offset": 193,
+    "offset": 179,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": null,
     "flags": [
-     "hand-placed 2026-11-07"
+     "hand-placed 2026-11-07, moved by John"
     ],
-    "at": "not every man is white; man is white, man is not white;"
+    "at": "man is white, not every man is white;"
    },
    {
     "citation": "18a16",
