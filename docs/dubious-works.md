@@ -92,17 +92,25 @@ Auscultationibus, De Lineis Insecabilibus, De Ventorum Situ, De Melisso Xenophan
 Gorgia, De Spiritu. (Confirm each `tlg_work` id + Bekker range from the Perseus/TLG
 catalog before writing the manifest.)
 
+**Live since 2026-11-07** (PR #191, `DEPLOY-STATUS.md` 2026-11-07): Problemata
+(`Prob`, dubious), De Spiritu (`Spir`), Magna Moralia (`MM`, dubious), De Plantis
+(`Plant`), Rhetorica ad Alexandrum (`RhetAl`) and the Athenian Constitution (`AthPol`),
+with Problemata, Oeconomica and Magna Moralia labelled dubious after Barnes 1984. Merge
+notes:
+`docs/spurious-works/integration-2026-11-07.md`.
+
 **Magna Moralia** (id `MM`, tlg0086.022, `dubious`) was built on branch
-`claude/add-magna-moralia-94dae5` (2026-11-06), not yet merged. Its TLG text has no
+`claude/add-magna-moralia-94dae5` (2026-11-06) and merged in PR #191. Its TLG text has no
 Bekker numbers, so the Greek is lineated by `sources/mm-bekker/bekker-lines.yaml`, a
 map read from Bekker's own pages (1831, archive.org `aristotelisopera02arisuoft`) by
 `pipeline/tools/mm_bekker_lines.py` and applied by `stage1_relineate`. English: Stock
 (Oxford, 1915), built from Wikisource checked against two scans
 (`tools/build_mm_stock.py`; independent check `tools/check_mm_stock.py`).
 
-**Out of scope:** De Plantis (not in the TLG Aristotle corpus), Rhetorica ad Alexandrum
-(TLG id ambiguous), Athenian Constitution (not Bekker-paginated — breaks the reader's
-citation model, same reason it was excluded before).
+**Formerly out of scope, now live (2026-11-07):** De Plantis (not in the TLG Aristotle
+corpus; First1K Greek on Berlin's printed lines), Rhetorica ad Alexandrum (TLG 0547,
+Anaximenes; Fuhrmann on Bekker's lines), Athenian Constitution (not Bekker-paginated;
+the reader now takes a chapter.section scheme).
 
 ## Environment / gotchas
 
