@@ -102,8 +102,8 @@ def test_the_list_is_read():
     # An empty or misread list would pass every parametrized case below.
     # 3,070 from the sweep; then, found against Genie's OCR and read on the
     # page (2026-11-07): 9 in De Mundo (vol. III), 1 in VV (vol. IX), 12 in
-    # the Oeconomica (vol. X).
-    assert len(CORRECTIONS) == 3092
+    # the Oeconomica (vol. X); and On Dreams 459b27-460a23 set in Beare's Latin.
+    assert len(CORRECTIONS) == 3093
     old = [c for c in CORRECTIONS if not c.get("dir")]
     assert len(old) == 62
     assert {c["work"] for c in old} == {
@@ -156,3 +156,12 @@ def test_the_check_fails_on_an_empty_parse():
     "c", CORRECTIONS, ids=[f"{_dir(c)}-{c['column']}-{i}" for i, c in enumerate(CORRECTIONS)])
 def test_correction_is_in_the_source(c):
     assert _problems(c, _book_text(_dir(c), c["book"])) == []
+
+
+def test_insomn_mirror_passage_is_beares_latin():
+    # Beare prints 459b27-460a23 in Latin; the MIT page had an English version
+    # that is not his. A re-fetch from the archive would bring it back.
+    text = _book_text("insomn-beare", 1)
+    assert "Speculorum enim admodum nitidorum, si forte mulieres menstruae inspexerint" in text
+    assert "et summa tantummodo attingit." in text
+    assert "If a woman chances during her menstrual period" not in text
