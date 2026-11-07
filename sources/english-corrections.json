@@ -36700,6 +36700,18 @@
    "kind": "punctuation",
    "confidence": "print-checked",
    "note": "the print sets the closing quote before the stop: goad’. (then a call-out)"
+  },
+  {
+   "work": "VV",
+   "book": 1,
+   "column": "1251a",
+   "find": "whence Evenus says of it, 'That which",
+   "replace": "whence Evenus says of it 'That which",
+   "source": "theworksofaristo09arisuoft (J. Solomon, Oxford Works vol. IX, 1925), VV c. 1251a35, page image n530",
+   "dir": "dvv-solomon",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "the print has no comma: 'says of it ‘That' (works0009aris the same)"
   }
  ]
 }

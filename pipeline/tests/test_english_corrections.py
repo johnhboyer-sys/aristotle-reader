@@ -100,15 +100,15 @@ def _problems(c: dict, text: str) -> list[str]:
 
 def test_the_list_is_read():
     # An empty or misread list would pass every parametrized case below.
-    # 3,070 from the sweep; then 9 in De Mundo found against Genie's OCR of
-    # Oxford vol. III and read on the page (2026-11-07).
-    assert len(CORRECTIONS) == 3079
+    # 3,070 from the sweep; then, found against Genie's OCR and read on the
+    # page (2026-11-07): 9 in De Mundo (vol. III), 1 in VV (vol. IX).
+    assert len(CORRECTIONS) == 3080
     old = [c for c in CORRECTIONS if not c.get("dir")]
     assert len(old) == 62
     assert {c["work"] for c in old} == {
         "Cael", "DA", "GC", "Lin", "Meta", "Mete", "Phys", "SE", "PA", "Sens"}
     swept = {c["dir"] for c in CORRECTIONS if c.get("dir")}
-    assert len(swept) == 53 and "ostwald" not in swept
+    assert len(swept) == 54 and "ostwald" not in swept
     assert swept <= set(_slots())
     assert all(c["find"] != c["replace"] for c in CORRECTIONS)
 
