@@ -36592,6 +36592,114 @@
    "kind": "missing passage",
    "confidence": "print-checked",
    "note": "the printed table of modal sequences was missing; set as four paragraphs in the print's reading order (1, 3, then 2, 4), as the site gives Edghill's and Taylor's tables. Group 4's 'It may happen not to be' is as printed."
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "391a",
+   "find": "heavenly region and, leaving the earth behind, to spy",
+   "replace": "heavenly region and leaving the earth behind to spy",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 391a9, page image n162",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "commas the print lacks: it has 'region and leaving the earth behind to spy' (1914 fascicle the same)"
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "391a",
+   "find": "have done—telling of",
+   "replace": "have done,—telling of",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 391a20, page image n162",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "the print has a comma before the dash"
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "391a",
+   "find": "limited description—such men",
+   "replace": "limited description,—such men",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 391a21, page image n162",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "the print has a comma before the dash"
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "391a",
+   "find": "Corycian cave, or giving",
+   "replace": "Corycian cave or giving",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 391a21, page image n162",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "a footnote call-out after 'cave', no comma"
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "392a",
+   "find": "other than the four, indestructible",
+   "replace": "other than the four indestructible",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 392a9, page image n164",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "the line ends 'four' with no mark"
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "393b",
+   "find": "island called Phebol, which lies",
+   "replace": "island called Phebol which lies",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 393b16, page image n168",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "a footnote call-out after 'Phebol', no comma"
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "398a",
+   "find": "in all things—rather than",
+   "replace": "in all things,—rather than",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 398a4, page image n178",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "the print has a comma before the dash, at a line end"
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "401a",
+   "find": "sweet fig-trees and olives, as the poet says",
+   "replace": "'sweet fig-trees and olives', as the poet says",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 401a1, page image n185",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "the print quotes the phrase: ‘sweet fig-trees and olives’ (then a call-out), as the poet says"
+  },
+  {
+   "work": "DM",
+   "book": 1,
+   "column": "401a",
+   "find": "blow of God's goad.'",
+   "replace": "blow of God's goad'.",
+   "source": "worksofaristotle03arisuoft (E. S. Forster, Oxford Works vol. III, 1931), DM c. 401a10, page image n185",
+   "dir": "dm-forster",
+   "kind": "punctuation",
+   "confidence": "print-checked",
+   "note": "the print sets the closing quote before the stop: goad’. (then a call-out)"
   }
  ]
 }
