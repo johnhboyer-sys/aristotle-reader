@@ -285,8 +285,10 @@ def extract_chapters_explicit(spine: dict, chapter_list: list[dict]) -> list[dic
     chapter divisions are known exactly (e.g. keyed from a Bekker-stamped
     translation) so no grc TEI text-alignment is needed. Returns the same
     {book, chapter, column, line, wordIndex, bookstart} shape as the grc path.
-    The Greek spine is Bekker-lineated, so each (column, line) is authoritative;
-    a single book (book 1) is assumed for these single-treatise works."""
+    The Greek spine is Bekker-lineated, so each (column, line) is authoritative.
+    An entry may name its `book` (default 1, for single-treatise works) and the
+    `word` of the line it opens on (default 0), for chapters that begin
+    mid-line (Magna Moralia)."""
     cols = {s["column"] for s in spine["segments"]}
     chapters: list[dict] = []
     for entry in chapter_list:
@@ -298,10 +300,16 @@ def extract_chapters_explicit(spine: dict, chapter_list: list[dict]) -> list[dic
         column, line = m.group(1), m.group(2)
         if column not in cols:
             print(f"  chapters: explicit column {column} absent from spine")
+        book = int(entry.get("book", 1))
         chapter = {
-            "book": 1, "chapter": str(entry["n"]), "column": column,
-            "line": line, "wordIndex": 0, "bookstart": not chapters,
+            "book": book, "chapter": str(entry["n"]), "column": column,
+            "line": line, "wordIndex": int(entry.get("word", 0)),
+            "bookstart": all(c["book"] != book for c in chapters),
         }
+        # A `word` is the Greek text's own chapter division, so stage 6 may
+        # claim token precision for it (as for a text-matched grc chapter).
+        if "word" in entry:
+            chapter["wordAnchor"] = True
         # Optional human section title (e.g. "Of Genus and Species" for the
         # Isagoge), surfaced by stage7 as chapter-titles.json and shown by the
         # reader in place of a bare "Chapter N".

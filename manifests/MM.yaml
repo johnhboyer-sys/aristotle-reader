@@ -1,0 +1,108 @@
+# Magna Moralia — pipeline manifest.
+#
+# A dubious ethical treatise in two books (Bekker 1181a24–1213b30). The Greek
+# is the cached TLG export (tlg0086.022: Susemihl's text as printed in the
+# Loeb, 1935), which is divided by book, chapter and section but carries no
+# Bekker numbers. Its Bekker lines come from Bekker's own printed pages
+# (Berlin, 1831): `greek.lineation` names the line map that
+# pipeline/tools/mm_bekker_lines.py reads off the scan, and stage1_relineate
+# splits the TLG text at it. Chapters are TLG's (= Susemihl's) divisions,
+# placed through the same map (`chapters.source: explicit`, with the word of
+# the line each opens on); tests/test_mm_bekker_lines.py keeps the list in
+# step with the map. Primary English = St. George Stock (Oxford, 1915), public
+# domain, archive model; its Bekker ticks are Stock's printed margins.
+
+work:
+  id: MM
+  title: "Magna Moralia"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "022"
+  authenticity: dubious
+  greek_edition: "F. Susemihl (Leipzig, 1883), as printed by G. C. Armstrong (Loeb, 1935); lines of I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "St. G. Stock (Oxford, 1915)"
+
+greek:
+  lineation: "mm-bekker/bekker-lines.yaml"
+
+bekker_range:
+  first_column: "1181a"
+  last_column: "1213b"
+
+chapters:
+  source: explicit
+  # from tools/mm_bekker_lines.py --chapters; tests/test_mm_bekker_lines.py
+  # holds it to the line map. `word` = the TLG word in that Bekker line where
+  # the chapter opens.
+  list:
+    - { book: 1, n: 1, bekker: "1181a24", word: 0 }
+    - { book: 1, n: 2, bekker: "1183b19", word: 0 }
+    - { book: 1, n: 3, bekker: "1184b1", word: 0 }
+    - { book: 1, n: 4, bekker: "1184b22", word: 0 }
+    - { book: 1, n: 5, bekker: "1185b1", word: 1 }
+    - { book: 1, n: 6, bekker: "1185b33", word: 0 }
+    - { book: 1, n: 7, bekker: "1186a9", word: 0 }
+    - { book: 1, n: 8, bekker: "1186a27", word: 6 }
+    - { book: 1, n: 9, bekker: "1186b4", word: 1 }
+    - { book: 1, n: 10, bekker: "1187a29", word: 8 }
+    - { book: 1, n: 11, bekker: "1187b4", word: 2 }
+    - { book: 1, n: 12, bekker: "1187b31", word: 0 }
+    - { book: 1, n: 13, bekker: "1188a16", word: 6 }
+    - { book: 1, n: 14, bekker: "1188a38", word: 0 }
+    - { book: 1, n: 15, bekker: "1188b11", word: 6 }
+    - { book: 1, n: 16, bekker: "1188b25", word: 0 }
+    - { book: 1, n: 17, bekker: "1189a1", word: 0 }
+    - { book: 1, n: 18, bekker: "1189b32", word: 2 }
+    - { book: 1, n: 19, bekker: "1190a28", word: 4 }
+    - { book: 1, n: 20, bekker: "1190b9", word: 0 }
+    - { book: 1, n: 21, bekker: "1191a36", word: 2 }
+    - { book: 1, n: 22, bekker: "1191b23", word: 0 }
+    - { book: 1, n: 23, bekker: "1191b39", word: 0 }
+    - { book: 1, n: 24, bekker: "1192a8", word: 5 }
+    - { book: 1, n: 25, bekker: "1192a21", word: 0 }
+    - { book: 1, n: 26, bekker: "1192a37", word: 0 }
+    - { book: 1, n: 27, bekker: "1192b18", word: 0 }
+    - { book: 1, n: 28, bekker: "1192b30", word: 0 }
+    - { book: 1, n: 29, bekker: "1193a1", word: 0 }
+    - { book: 1, n: 30, bekker: "1193a11", word: 0 }
+    - { book: 1, n: 31, bekker: "1193a20", word: 0 }
+    - { book: 1, n: 32, bekker: "1193a27", word: 5 }
+    - { book: 1, n: 33, bekker: "1193a39", word: 0 }
+    - { book: 1, n: 34, bekker: "1196b4", word: 0 }
+    - { book: 2, n: 1, bekker: "1198b24", word: 0 }
+    - { book: 2, n: 2, bekker: "1198b34", word: 0 }
+    - { book: 2, n: 3, bekker: "1199a4", word: 0 }
+    - { book: 2, n: 4, bekker: "1200a34", word: 8 }
+    - { book: 2, n: 5, bekker: "1200b8", word: 6 }
+    - { book: 2, n: 6, bekker: "1200b20", word: 0 }
+    - { book: 2, n: 7, bekker: "1204a19", word: 0 }
+    - { book: 2, n: 8, bekker: "1206b30", word: 0 }
+    - { book: 2, n: 9, bekker: "1207b19", word: 0 }
+    - { book: 2, n: 10, bekker: "1208a5", word: 0 }
+    - { book: 2, n: 11, bekker: "1208b3", word: 0 }
+    - { book: 2, n: 12, bekker: "1211b18", word: 0 }
+    - { book: 2, n: 13, bekker: "1212a28", word: 0 }
+    - { book: 2, n: 14, bekker: "1212b8", word: 4 }
+    - { book: 2, n: 15, bekker: "1212b24", word: 0 }
+    - { book: 2, n: 16, bekker: "1213b3", word: 0 }
+    - { book: 2, n: 17, bekker: "1213b17", word: 9 }
+
+english:
+  primary:
+    id: stock
+    name: "St. G. Stock (Oxford, 1915)"
+    model: archive
+    dir: "mm-stock"
+    books: 2
+    chapter_marker: part
+    anchors: "mm-stock/anchors.yaml"   # Stock's printed margin numbers
+
+books:
+  - { n: 1, start: "1181a24", end: "1198b20" }
+  - { n: 2, start: "1198b24", end: "1213b30" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

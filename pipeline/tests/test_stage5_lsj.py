@@ -101,7 +101,9 @@ def test_nested_author_title_markup_survives_inside_the_link():
         'n="not-a-citation"',
         'n="Perseus:abo:tlg,0086,010:1094a"',
         'n="Perseus:abo:tlg,0086,010:1094a:line"',
-        'n="Perseus:abo:tlg,0086,022:1181a:1"',
+        # 003 is the Athenian Constitution, which has no Bekker pages and
+        # no place in the reader
+        'n="Perseus:abo:tlg,0086,003:1181a:1"',
     ],
 )
 def test_unresolved_bibls_remain_inert_spans(attributes):
@@ -118,3 +120,32 @@ def test_de_spiritu_links_inside_its_columns_only():
     assert render_bibl('n="Perseus:abo:tlg,0086,043:478a:21"') == (
         '<span class="lsj-bibl">citation</span>'
     )
+
+
+@pytest.mark.parametrize(
+    ("reference", "expected"),
+    [
+        ("Perseus:abo:tlg,0086,022:1192b:30", "/MM/book/1?loc=1192b:30"),
+        ("Perseus:abo:tlg,0086,022:1198b:20", "/MM/book/1?loc=1198b:20"),
+        ("Perseus:abo:tlg,0086,022:1198b:24", "/MM/book/2?loc=1198b:24"),
+        ("Perseus:abo:tlg,0086,022:1213b:3", "/MM/book/2?loc=1213b:3"),
+    ],
+)
+def test_magna_moralia_links_by_book(reference, expected):
+    assert render_bibl(f'n="{reference}"') == (
+        f'<a class="lsj-bibl" href="{expected}">citation</a>'
+    )
+
+
+@pytest.mark.parametrize(
+    "reference",
+    [
+        # LSJ cites EE columns under the MM's number twice; they are not MM
+        "Perseus:abo:tlg,0086,022:1216b:17",
+        "Perseus:abo:tlg,0086,022:1235a:20",
+        "Perseus:abo:tlg,0086,022:1214a:1",
+        "Perseus:abo:tlg,0086,022:1180b:1",
+    ],
+)
+def test_magna_moralia_numbers_outside_its_columns_stay_unlinked(reference):
+    assert render_bibl(f'n="{reference}"') == '<span class="lsj-bibl">citation</span>'

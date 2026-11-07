@@ -219,8 +219,12 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
             continue
         merged.append(line)
     flat = merged
+    return _segments(flat, headings, manifest)
 
-    # Group into per-(book, column) segments, preserving document order.
+
+def _segments(flat: list[dict], headings: list[dict], manifest: Manifest) -> dict:
+    """Group flat Bekker lines into per-(book, column) segments, preserving
+    document order."""
     segments: list[dict] = []
     seg_by_key: dict[tuple, dict] = {}
     unassigned: list[dict] = []
@@ -258,7 +262,15 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
 
 def run(manifest: Manifest) -> Path:
     xml_path = run_export(manifest)
-    spine = parse_spine(xml_path, manifest)
+    # A TLG text that carries no Bekker numbers (Magna Moralia) is lineated by
+    # a map read from Bekker's printed pages; see stage1_relineate.
+    lineation = (manifest.data.get("greek") or {}).get("lineation")
+    if lineation:
+        from .config import SOURCES_DIR
+        from .stage1_relineate import relineate
+        spine = _segments(relineate(xml_path, SOURCES_DIR / lineation), [], manifest)
+    else:
+        spine = parse_spine(xml_path, manifest)
     out = BUILD_DIR / "stage1" / "greek_spine.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(spine, ensure_ascii=False, indent=1), encoding="utf-8")
