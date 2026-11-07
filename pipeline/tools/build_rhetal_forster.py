@@ -613,6 +613,18 @@ PRINT_READS = [
     ("makes the ‘members not only", "makes the ‘members’ not only"),
     ("using ‘irony in the following", "using ‘irony’ in the following"),  # k=45, note 1
     ("‘pretended omission and promise", "‘pretended omission’, and promise"),  # k=50, note 1
+    # Found by diffing against a fourth witness, Genie's OCR of the volume, and
+    # read on the page image (worksofaristotle0011wrhy; archive.org page/n<N>
+    # is hOCR page N+1). All three scans misread these alike.
+    ("contrary case: it is just to punish", "contrary case: ‘As it is just to punish"),  # n248: ‘ Asit
+    ("for along time’", "for a long time’"),  # n268
+    ("Let us new deal", "Let us now deal"),  # n284: a worn o
+    ("top of another!: ‘If", "top of another: ‘If"),  # n259: call-out 1, then the colon
+    ("whether he is poor, For", "whether he is poor. For"),  # n273
+    ("confusion or transposition, The", "confusion or transposition. The"),  # n283
+    ("to good luck, (you must", "to good luck, ⟨you must"),  # n299: Forster's angle
+    ("his earliest years), observing", "his earliest years⟩, observing"),  # brackets, a supplement
+    ("oratory of accusation? and inquiry", "oratory of accusation and inquiry"),  # n301: call-out 1
 ]
 
 

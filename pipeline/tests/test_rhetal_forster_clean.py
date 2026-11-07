@@ -90,6 +90,28 @@ def test_readings_from_the_page_images():
         assert s in text, s
 
 
+def test_readings_found_against_genie():
+    # A diff against Genie's OCR (a fourth witness) found these, which all
+    # three scans misread alike; each was read on the page image. The pair is
+    # (what the print has, what the scans gave).
+    text = re.sub(r"\s+", " ", _text())
+    pairs = [
+        ("contrary case: ‘As it is just to punish", "contrary case: it is just"),
+        ("for a long time’", "for along time"),
+        ("Let us now deal with", "Let us new deal"),
+        ("top of another: ‘If", "another!:"),
+        ("whether he is poor. For such", "poor, For"),
+        ("confusion or transposition. The following", "transposition, The"),
+        ("to good luck, ⟨you must", "luck, (you"),
+        ("his earliest years⟩, observing", "years), observing"),
+        ("oratory of accusation and inquiry", "accusation? and"),
+    ]
+    assert len(pairs) == 9
+    for printed, misread in pairs:
+        assert text.count(printed) == 1, printed
+        assert misread not in text, misread
+
+
 def test_line_end_hyphens():
     text = _text()
     for joined in ("commission", "discreditable peace", "rateable property"):

@@ -26,7 +26,8 @@ Two checks, each against all three scans (hOCR as archive.org serves it):
 
 ACCEPTED lists each place where the scans and our text differ because the
 page image was read (PRINT_READS in the build script), with what the print
-shows. Anything else fails.
+shows. Anything else fails, and so does an entry that accounts for no finding
+(stale) or for more than one (too loose).
 
   --selftest  plants each of PLANTS (a lost word, sentence, line at a page's
               foot and at its head, a changed number word, a stray mark, a
@@ -65,6 +66,17 @@ ACCEPTED = [
     ("word", "'both' in no scan", "k=41: italic 'both', which all three read as 'doth'"),
     ("lost", "['doth'] missing", "the same"),
     ("lost", "['cfop'] missing", "k=64: a one-line footnote, ἀναλογιστέον (CFOP), set close under the text"),
+    # Read on the page image after a diff against Genie's OCR (a fourth
+    # witness) showed all three scans misreading alike; n<N> is archive.org's
+    # page image of worksofaristotle0011wrhy, which shows hOCR page N+1.
+    ("mark", "'another:' marks ':', scans {'!:': 2, \"':'\": 1}: …on the top of another: ‘If",
+     "n259: 'another¹ :', the call-out read as !"),
+    ("mark", "'⟨you' marks '⟨', scans {'¢': 1, '(': 2}: …distinction to good luck, ⟨you must",
+     "n299: Forster's angle bracket, read as ( or ¢"),
+    ("mark", "'years⟩,' marks '⟩,', scans {'),': 3}: …beginning from his earliest years⟩, observing",
+     "n299: the closing angle bracket, read as )"),
+    ("lost", "['new'] missing before …already described. Let us now deal",
+     "n284: 'now', its o worn so that all three read 'new'"),
 ]
 
 
@@ -285,6 +297,13 @@ def unaccepted(report: list) -> list:
     return [r for r in report if not any(r[0] == k and a in r[2] for k, a, _ in ACCEPTED)]
 
 
+def stale_or_loose(report: list) -> list:
+    """Each ACCEPTED entry must account for exactly one finding: one that
+    matches none has gone stale, one that matches more is too loose."""
+    return [(k, a, n) for k, a, _ in ACCEPTED
+            if (n := sum(1 for r in report if r[0] == k and a in r[2])) != 1]
+
+
 # ------------------------------------------------------------- self-test
 
 PLANTS = [  # (name, what our text has, what the planted copy has)
@@ -368,7 +387,10 @@ def main(argv=None) -> int:
           f" scan words; {len(report)} differences, {len(report) - len(bad)} accepted, {len(bad)} not")
     for kind, i, msg in bad:
         print(f"  {kind}: {msg}")
-    return 1 if bad else 0
+    loose = stale_or_loose(report)
+    for kind, a, n in loose:
+        print(f"  ACCEPTED {kind} {a[:60]!r} matches {n} findings, want one")
+    return 1 if bad or loose else 0
 
 
 if __name__ == "__main__":
