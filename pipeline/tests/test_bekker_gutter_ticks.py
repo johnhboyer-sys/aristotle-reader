@@ -86,3 +86,20 @@ def test_a_real_anchor_does_not_displace_another_real_anchor():
     ticks = eng["chunks"][0]["bekker"]
     at5 = [t for t in ticks if t["offset"] == 5]
     assert len(at5) == 1 and at5[0]["n"] == 5 and at5[0]["real"] is True
+
+
+def test_printed_only_draws_no_estimates():
+    # A translation whose every tick is a number the edition prints (De Plantis,
+    # Forster's margin) must not gain an estimated line where the print has
+    # none: Forster numbers 827a8 and 827a12, and no 827a10.
+    eng = _english([(1, 0), (3, 10), (8, 25)])
+    add_bekker_gutter(eng, _spine(), dense=True, printed_only=True)
+    ticks = eng["chunks"][0]["bekker"]
+    assert ticks == [{"n": 1, "offset": 0, "real": True}, {"n": 3, "offset": 10, "real": True},
+                     {"n": 8, "offset": 25, "real": True}]
+
+
+def test_printed_only_off_keeps_the_cadence():
+    eng = _english([(1, 0), (3, 10), (8, 25)])
+    add_bekker_gutter(eng, _spine(), dense=True)
+    assert [t["n"] for t in eng["chunks"][0]["bekker"] if not t["real"]] == [5, 10]

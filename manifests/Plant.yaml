@@ -55,6 +55,7 @@ english:
     chapter_marker: part
     anchors: "plant-forster/anchors.yaml"   # Forster's margin numbers, read from the scans
     anchor_cuts: true                       # its column-label entries place the column breaks
+    printed_ticks_only: true                # a tick only where Forster prints a number (no 827a10)
 
 books:
   - { n: 1, start: "815a10", end: "822a8" }

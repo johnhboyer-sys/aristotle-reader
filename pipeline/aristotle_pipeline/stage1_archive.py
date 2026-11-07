@@ -393,7 +393,8 @@ def build_english(manifest: Manifest, spine: dict, chapters: list[dict],
     }
     # Dense gutter (tick at every resolved anchor line) when the translation is
     # hand-anchored per Bekker segment; otherwise the plain 5-line cadence.
-    add_bekker_gutter(english, spine, dense=bool(cfg.get("anchors")))
+    add_bekker_gutter(english, spine, dense=bool(cfg.get("anchors")),
+                      printed_only=bool(cfg.get("printed_ticks_only")))
     english.pop("_line_ms", None)
     return english
 

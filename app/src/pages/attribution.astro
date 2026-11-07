@@ -3,12 +3,13 @@ import ThemeInit from '../components/ThemeInit.astro';
 import Pwa from '../components/Pwa.astro';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import '@shared/styles/global.css';
-import { WORKS } from '@shared/lib/works';
+import { WORKS, greekSourcesByLicence } from '@shared/lib/works';
 import { jsonLdSafe } from '../lib/jsonld';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // True only in the local/full build (PUBLIC_SHOW_PRIVATE=1), where copyright-
 // encumbered overlays are carried; every production/public build drops them
 // entirely, so the "local only" legend below is suppressed there.
+const greek = greekSourcesByLicence(WORKS);
 const hasPrivate = WORKS.some((w) => w.translations.some((t) => t.private));
 const pageTitle = 'Texts & Licences — Aristotle Reader';
 const metaDescription =
@@ -258,7 +259,7 @@ const jsonLd = {
       edition it follows is listed below.
     </p>
     <ul>
-      {WORKS.map((w) => (
+      {greek.publicDomain.map((w) => (
         <li><strong>{w.title}</strong> — {w.greekSource.full}</li>
       ))}
     </ul>
@@ -267,6 +268,25 @@ const jsonLd = {
       <a href="https://opengreekandlatin.github.io/First1KGreek/">Open Greek and
       Latin First1KGreek</a> edition, aligned onto the Bekker-lineated Greek.
     </p>
+    {greek.licensed.map((g) => (
+      <>
+        <h2>
+          Greek Text
+          <span class="licence-badge cc">{g.licence.name}</span>
+        </h2>
+        <p>
+          These Greek texts are not in the public domain. They are used under the
+          <a href={g.licence.url}>{g.licence.name}</a> licence, lineated to Bekker;
+          a work derived from them must carry the same licence.
+        </p>
+        <ul>
+          {g.works.map((w) => (
+            <li><strong>{w.title}</strong> — {w.greekSource.full}
+              Licence: <a href={g.licence.url}>{g.licence.name}</a>.</li>
+          ))}
+        </ul>
+      </>
+    ))}
 
     <h2>
       Morphological Data

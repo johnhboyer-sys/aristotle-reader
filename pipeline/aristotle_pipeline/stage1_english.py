@@ -162,12 +162,16 @@ def _snap_word(text: str, off: int) -> int:
     return min(cands, key=lambda c: abs(c - off)) if cands else off
 
 
-def add_bekker_gutter(english: dict, spine: dict, dense: bool = False) -> None:
+def add_bekker_gutter(english: dict, spine: dict, dense: bool = False,
+                      printed_only: bool = False) -> None:
     """Attach to each English chunk a `bekker` list of {n, offset, real}: Bekker
     line ticks at the Greek's cadence (line 1, then every 5th line) down the
     English prose. Real anchors are the TEI line milestones (column start + the
     ~line-20 mark); intervening ticks are proportional estimates (real=False),
-    word-snapped. The reader renders them as a left gutter beside the prose."""
+    word-snapped. The reader renders them as a left gutter beside the prose.
+    `printed_only` draws the real anchors and no estimates: for a translation
+    whose anchors are the numbers its edition prints (De Plantis, Forster's
+    margin), an estimate would print a line the edition does not."""
     line_ms = english.get("_line_ms", {})
     greek_by_id = {s["id"]: s["lines"] for s in spine["segments"]}
     for c in english["chunks"]:
@@ -194,6 +198,8 @@ def add_bekker_gutter(english: dict, spine: dict, dense: bool = False) -> None:
         # the milestone-anchored Rackham/TEI works keep their canonical cadence.
         if dense:
             targets = sorted(set(targets) | {n for n in reals if first_line <= n <= last})
+        if printed_only:
+            targets = sorted(n for n in reals if first_line <= n <= last)
         # One tick per char offset. Targets are walked in ascending line order,
         # so an ESTIMATE for an earlier line reaches a given offset before the
         # real anchor that holds it — first-wins therefore dropped hand-keyed and
