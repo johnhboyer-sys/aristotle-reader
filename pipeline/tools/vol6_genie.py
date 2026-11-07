@@ -331,6 +331,17 @@ PRINT_READS: dict[str, list[tuple[str, str, str]]] = {
         ('wind). . . This', 'wind). . . . This', 'leaf 92'),
     ],
     "Mirab": [
+        # Dowdall printed marvels 2, 10 and 12 in Latin; the first build (cf32f2dc2f,
+        # "Codex-cleaned") put a modern English version in their place.
+        ('They say that in Arabia camels do not mate with their mothers; even if anyone forces them, they refuse. They relate that a keeper once, having covered the mother, put her to a stallion; the male completed the mating, it seems, but shortly afterwards killed the keeper with bites.',
+         'In Arabia aiunt camelos non inire matres suas; sed etiamsi quis cogat, nolunt; namque curatorem admissario aliquando destitutum operto matrem submisisse ferunt pullo. Is vero coitum tunc quidem, ut videtur, absolvit; paulo tamen post armentarium morsibus necavit.',
+         'leaf 129: Dowdall prints marvel 2 in Latin'),
+        ('In Syria they say that among the wild asses one leads the herd, and that if any younger male mounts a female, the leader is angry and pursues him until he catches him, and, crouching on his hind legs, tears out his genitals with his mouth.',
+         'In Syria inquiunt inter silvestres asinos unum praeire armento, atque si iunior aliquis pullus feminam conscenderit, ducem indignari, et hunc tantisper persequi, dum comprehendat ac in crura posteriora conquiniscens ore verenda evellat.',
+         'leaf 131: Dowdall prints marvel 10 in Latin'),
+        ('They say that martens have genital organs unlike those of other animals, for, however they may be affected, these are always hard like bone. They assert that the animals are a singular remedy for those troubled by dribbling urine, and are given scraped.',
+         'Viverrae aiunt genitalia esse reliquorum animalium naturae absimilia, dum ipsis, quomodocumque demum affectis, semper sint instar ossium solida. Singulare urinae stillicidio laborantibus remedium esse perhibent rasaque exhiberi.',
+         'leaf 131: Dowdall prints marvel 12 in Latin'),
         ('standing on the branches,', 'standing on the branches.', 'leaf 131'),
         ('approach and tease them,', 'approach and tease them.', 'leaf 141'),
         ('class in their stead,', 'class in their stead.', 'leaf 146'),

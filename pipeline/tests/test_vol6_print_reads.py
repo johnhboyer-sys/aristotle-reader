@@ -83,3 +83,11 @@ def test_mech_figure_labels_as_printed():
 def test_mxg_not_being_keeps_its_hyphen():
     assert "Notbeing" not in _prose("MXG")
 
+
+def test_mirab_latin_as_dowdall_printed_it():
+    text = _prose("Mirab")
+    for latin in ("In Arabia aiunt camelos non inire matres suas",
+                  "In Syria inquiunt inter silvestres asinos", "Viverrae aiunt genitalia"):
+        assert latin in text, latin
+    for english in ("camels do not mate with their mothers", "martens have genital organs"):
+        assert english not in text, english

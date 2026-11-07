@@ -17,7 +17,7 @@ authority.
 | Aud | 2 | 1 | 0 |
 | Phgn | 0 | 2 | 0 |
 | Plant | 3 | 9 | 1 |
-| Mirab | 8 | 4 | 1 |
+| Mirab | 11 | 4 | 1 |
 | Mech | 41 | 14 | 2 |
 | Lin | 32 | 26 | 17 |
 | Vent | 1 | 1 | 1 |
@@ -39,6 +39,9 @@ What the fixes are:
   ⟨too⟩.
 - **MXG**: "Notbeing" for "Not-being" (5), a false paragraph break before
   "limits?", lost "?" and ". . .".
+- **Mirab**: Dowdall printed marvels 2, 10 and 12 in Latin. The first build
+  (`cf32f2dc2f`, "Codex-cleaned") put a modern English version there under his
+  name. The Latin is back, read off leaves 129 and 131.
 
 ## Rulings that are not fixes
 
