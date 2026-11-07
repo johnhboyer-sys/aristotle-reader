@@ -1,8 +1,9 @@
 # Handoff — dubious and spurious works
 
 John's goal (2026-11-06): make the site complete for the dubious and spurious
-Bekker works. Agreed order: **Problemata** (in progress), De Spiritu (build now,
-deploy after 2027-01-01), Rhetorica ad Alexandrum and De Plantis (Greek must come
+Bekker works. Agreed order: **Problemata** (in progress), De Spiritu (deploy hold
+lifted 2026-11-06 at John's ruling: Dobson's 1914 translation is public domain,
+db348d1f6b; the next deploy ships it), Rhetorica ad Alexandrum and De Plantis (Greek must come
 from outside the tlg0086 export), Magna Moralia (needs a Bekker spine; First1KGreek
 has tlg022).
 
