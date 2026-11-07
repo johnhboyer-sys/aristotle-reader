@@ -139,3 +139,20 @@ and 30.1 where scan B lacks them (judged from A's image; low risk). Not done:
 the follow-ups listed under Open (desktop corpus.ts, lsj_citation_map, clean
 test, DEPLOY-STATUS, dubious-works.md, CLAUDE.md list). Nothing pushed or
 merged.
+
+### 2026-11-06 19:00 — follow-ups
+
+- LSJ: `"036": "Prob"` added to `lsj_citation_map.py` (LSJ cites the
+  Problemata 1,404 times as 0086,036, 859a-967b; 34 odd forms fail stage5's
+  pattern and stay plain text). Test in `test_stage5_lsj.py`, failing first.
+- `pipeline/tests/test_prob_forster_clean.py`: Parts, ends, note marks,
+  bracket balance, the round-5 specks, the case fixes.
+- The bracket check found three live losses verify missed: 11.27 "voice]"
+  (the call-out took the ']'; scan A has it), 23.21 "dried up.]" and 26.31
+  "pleasant wind.]" (both scans drop it). Fixed by PRINT_READS from A152,
+  A261, A295; two (g) allowances bound to the images. Verify gap: a mark
+  one scan has and ours lacks is not flagged for brackets.
+- Desktop `corpus.ts`: nothing to do — it lists every spurious work as a
+  `slot`, Mech and `Probl` alike.
+- Left for merge time (four other branches edit the same lines):
+  `docs/dubious-works.md` line 83, CLAUDE.md's handoff list, DEPLOY-STATUS.

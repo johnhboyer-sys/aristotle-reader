@@ -48,6 +48,17 @@ def test_juv_uses_the_lsj_work_number_not_the_manifest_number():
     assert "918" not in CITATION_WORKS
 
 
+def test_problemata_citations_link_to_the_book():
+    # LSJ cites the Problemata ~1,400 times as 0086,036 (859a-967b).
+    assert CITATION_WORKS["036"] == "Prob"
+    assert render_bibl('n="Perseus:abo:tlg,0086,036:955a:20"') == (
+        '<a class="lsj-bibl" href="/Prob/book/30?loc=955a:20">citation</a>'
+    )
+    assert render_bibl('n="Perseus:abo:tlg,0086,036:859a:1"') == (
+        '<a class="lsj-bibl" href="/Prob/book/1?loc=859a:1">citation</a>'
+    )
+
+
 def test_three_digit_columns_sort_numerically_not_lexically():
     # "100a" < "24a" as strings; a string-compare range check would kick
     # column 100a out of APo (71a-100b) and the link would vanish.
