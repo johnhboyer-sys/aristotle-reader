@@ -156,3 +156,32 @@ merged.
   `slot`, Mech and `Probl` alike.
 - Left for merge time (four other branches edit the same lines):
   `docs/dubious-works.md` line 83, CLAUDE.md's handoff list, DEPLOY-STATUS.
+
+### 2026-11-06 19:36 — independent OCR pass requested
+
+All 11 shipped spurious works and the 4 being built rest on one archive.org
+OCR read each. John is having Grok bot run History Genie on the six Oxford
+volumes (VI worksofaristotle0001unse_r3i1; III workstranslatedi03arisuoft;
+IX worksofaristotle0009wdro_l1v5; X worksofaristotle0010wdro_x8m2; XI
+worksofaristotle0000wdro_n4o7; VII worksofaristotle07arisuoft). Output lands
+in ~/Downloads. Genie writes whole-book .docx files, not per-page text, so a
+page glob reports it absent. Next: diff each work's text against Genie's read,
+judge differences on the page images.
+
+### 2026-11-06 20:36 — John's sequence for the rest
+
+1. Genie OCR lands in ~/Downloads (six Oxford volumes, see 19:36 entry).
+2. New sessions run the correction pass per work: diff our English against
+   Genie's read, judge every difference on the page image (the Problemata
+   method: two witnesses, PRINT_READS, bound allowances, planted-defect
+   self-test, cross-family review).
+3. Once each work's English is good, aligned and every gate passes: new
+   sessions confirm the search index, lexicon (LSJ) pages and phrase/ngram
+   indexes are rebuilt to include the new works. `build:public` already
+   rebuilds stage6 search, the shared LSJ and stage8 phrases per work, so
+   this step needs the work branches merged together first (John's call),
+   then proves each index holds every new work (counts per work, not a
+   green exit).
+
+Note: several sessions running stage8 at once crawl (35+ min each) and one
+was SIGTERMed; run stage8 one at a time.
