@@ -1359,14 +1359,14 @@
    },
    {
     "citation": "18b10",
-    "offset": 1781,
+    "offset": 1795,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": null,
     "flags": [
-     "hand-placed 2026-11-07"
+     "hand-placed 2026-11-07, moved by John"
     ],
-    "at": "if a thing is now white, it was true to say before, that it will be white"
+    "at": "now white, it was true to say before, that it will be"
    },
    {
     "citation": "18b11",
