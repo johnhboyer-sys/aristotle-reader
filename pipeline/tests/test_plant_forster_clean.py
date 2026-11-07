@@ -111,8 +111,3 @@ def test_anchors_are_forsters_margin_in_order():
     assert "827a8" in cites and "827a12" in cites and "827a10" not in cites
     # Column labels stand as each column's first Berlin line: 815b opens at 10.
     assert cites[:7] == ["815a10", "815a15", "815a20", "815a25", "815a30", "815a35", "815b10"]
-
-
-def test_ticks_only_where_forster_prints_a_number():
-    # No estimated tick between his numbers (827a10 is not printed).
-    assert _cfg()["english"]["primary"].get("printed_ticks_only") is True
