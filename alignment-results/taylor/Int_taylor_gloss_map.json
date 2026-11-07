@@ -4280,14 +4280,14 @@
    },
    {
     "citation": "23a40",
-    "offset": 1032,
+    "offset": 1020,
     "tier": "five_line",
     "confidence": "confirmed",
     "score": null,
     "flags": [
-     "hand-placed 2026-11-07"
+     "hand-placed 2026-11-07, moved by John"
     ],
-    "at": "There is a certain true opinion of good, that it is good;"
+    "at": "as follows: There is a certain true opinion of good, that"
    },
    {
     "citation": "23b1",
