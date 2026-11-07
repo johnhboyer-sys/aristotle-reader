@@ -123,19 +123,23 @@
     "citation": "16a19",
     "offset": 0,
     "tier": "chapter",
-    "confidence": "certain",
-    "score": 0.4955,
-    "flags": []
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07"
+    ],
+    "at": "A noun, therefore, is a sound significant from compact, without time"
    },
    {
     "citation": "16a20",
-    "offset": 0,
+    "offset": 56,
     "tier": "five_line",
-    "confidence": "reliable",
-    "score": 0.4439,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "name?:Callippus"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "without time, of which no part taken separately is significant."
    },
    {
     "citation": "16a21",
@@ -155,14 +159,14 @@
    },
    {
     "citation": "16a25",
-    "offset": 313,
+    "offset": 366,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3304,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.005",
-     "ratio_outlier:2.12"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "but in the latter, a part wishes, indeed, to be significant"
    },
    {
     "citation": "16a26",
@@ -327,13 +331,14 @@
    },
    {
     "citation": "16b15",
-    "offset": 634,
+    "offset": 834,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.2479,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.034"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "because they are similarly inherent, both in whatever exists, and whatever does not exist"
    },
    {
     "citation": "16b16",
@@ -393,13 +398,14 @@
    },
    {
     "citation": "16b25",
-    "offset": 1635,
+    "offset": 1717,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.1084,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.035"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "without which it is not possible to understand composites."
    }
   ]
  },
@@ -432,13 +438,14 @@
    },
    {
     "citation": "16b30",
-    "offset": 295,
+    "offset": 375,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.5189,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.001"
-    ]
+     "hand-placed 2026-11-07, not sure"
+    ],
+    "at": "But one syllable of the word ανθροπος (i. e. man) is not"
    },
    {
     "citation": "16b31",
@@ -543,13 +550,14 @@
    },
    {
     "citation": "17a15",
-    "offset": 459,
+    "offset": 603,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.2837,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.009"
-    ]
+     "hand-placed 2026-11-07, moved on Codex review"
+    ],
+    "at": "But one enunciative sentence is either that which signifies one thing"
    },
    {
     "citation": "17a16",
@@ -683,21 +691,25 @@
    },
    {
     "citation": "17a40",
-    "offset": 0,
+    "offset": 125,
     "tier": "five_line",
-    "confidence": "reliable",
-    "score": 0.4853,
-    "flags": []
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07"
+    ],
+    "at": "to be predicated of many things, but that particular which is not adapted"
    },
    {
     "citation": "17b1",
-    "offset": 0,
+    "offset": 243,
     "tier": "column",
-    "confidence": "reliable",
-    "score": 0.3893,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "ratio_outlier:4.28"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "but Callias a particular) it is necessary to enunciate that something is inherent"
    },
    {
     "citation": "17b2",
@@ -709,13 +721,14 @@
    },
    {
     "citation": "17b5",
-    "offset": 973,
+    "offset": 585,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3098,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.003"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "But I say, to enunciate universally of that which is universal;"
    },
    {
     "citation": "17b6",
@@ -743,13 +756,14 @@
    },
    {
     "citation": "17b10",
-    "offset": 1000,
+    "offset": 941,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4873,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.020"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "man is white, man is not white. For man being a universal"
    },
    {
     "citation": "17b11",
@@ -825,13 +839,14 @@
    },
    {
     "citation": "17b20",
-    "offset": 1643,
+    "offset": 1679,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.6757,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.000"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "But the affirmation of a universal, and the negation of a universal, are opposed contrarily"
    },
    {
     "citation": "17b21",
@@ -851,13 +866,14 @@
    },
    {
     "citation": "17b25",
-    "offset": 1679,
+    "offset": 2030,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3753,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.004"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "as, not every man is white, and some man is white."
    },
    {
     "citation": "17b26",
@@ -893,14 +909,14 @@
    },
    {
     "citation": "17b30",
-    "offset": 2301,
+    "offset": 2401,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4767,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.022",
-     "name?:Socrates"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "the one is not always true, but the other false[^54]. For at one"
    },
    {
     "citation": "17b31",
@@ -936,13 +952,14 @@
    },
    {
     "citation": "17b35",
-    "offset": 2680,
+    "offset": 2745,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3833,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.041"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "this assertion, man is not white, seems at the same time to signify"
    },
    {
     "citation": "17b36",
@@ -970,13 +987,14 @@
    },
    {
     "citation": "17b40",
-    "offset": 3165,
+    "offset": 3121,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.5189,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.035"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "and also from the same, (i e. subject) viz."
    },
    {
     "citation": "18a1",
@@ -1012,13 +1030,14 @@
    },
    {
     "citation": "18a5",
-    "offset": 3543,
+    "offset": 3598,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4057,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.008"
-    ]
+     "hand-placed 2026-11-07, moved on Codex review"
+    ],
+    "at": "But to this, a certain man is white, the enunciation is opposed"
    },
    {
     "citation": "18a6",
@@ -1075,13 +1094,14 @@
    },
    {
     "citation": "18a15",
-    "offset": 266,
+    "offset": 193,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.7287,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.045"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "not every man is white; man is white, man is not white;"
    },
    {
     "citation": "18a16",
@@ -1178,14 +1198,14 @@
    },
    {
     "citation": "18a30",
-    "offset": 0,
+    "offset": 180,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4347,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.028",
-     "ratio_outlier:2.92"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "and in universals, indeed, as univerversals, that always the one should be true"
    },
    {
     "citation": "18a31",
@@ -1221,13 +1241,14 @@
    },
    {
     "citation": "18a35",
-    "offset": 643,
+    "offset": 570,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3913,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.001"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "it is also necessary that every thing should exist, or should not exist"
    },
    {
     "citation": "18a36",
@@ -1295,13 +1316,14 @@
    },
    {
     "citation": "18b5",
-    "offset": 1231,
+    "offset": 1320,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3814,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.027"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "Nothing, therefore, either is, or is generated (i. e. is becoming to be)"
    },
    {
     "citation": "18b6",
@@ -1337,13 +1359,14 @@
    },
    {
     "citation": "18b10",
-    "offset": 1777,
+    "offset": 1784,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.5822,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.006"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "if a thing is now white, it was true to say before, that it will be white"
    },
    {
     "citation": "18b11",
@@ -1379,13 +1402,14 @@
    },
    {
     "citation": "18b15",
-    "offset": 2450,
+    "offset": 2260,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.2301,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.017"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "It is necessary, therefore, that all things that will be should be generated."
    },
    {
     "citation": "18b16",
@@ -1453,13 +1477,14 @@
    },
    {
     "citation": "18b25",
-    "offset": 2936,
+    "offset": 3111,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3393,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.011"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "For it would be requisite that a naval engagement should neither take place"
    },
    {
     "citation": "18b26",
@@ -1497,11 +1522,12 @@
     "citation": "18b30",
     "offset": 3471,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.2402,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.017"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "that nothing in things generated will be casual, but that all things will be"
    },
    {
     "citation": "18b31",
@@ -1569,13 +1595,14 @@
    },
    {
     "citation": "19a1",
-    "offset": 4242,
+    "offset": 4323,
     "tier": "column",
-    "confidence": "uncertain",
-    "score": 0.3631,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.004"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "nor will it more be or not be for ten thousand years, than for any time whatever"
    },
    {
     "citation": "19a2",
@@ -1603,13 +1630,14 @@
    },
    {
     "citation": "19a5",
-    "offset": 4645,
+    "offset": 4690,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4866,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.043"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "it is not possible that it should not be generated; and with respect to that which is generated"
    },
    {
     "citation": "19a6",
@@ -1645,13 +1673,14 @@
    },
    {
     "citation": "19a10",
-    "offset": 5109,
+    "offset": 5044,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3806,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.016"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "of similarly being and not being, in which both may happen, viz. to be and not to be"
    },
    {
     "citation": "19a11",
@@ -1889,34 +1918,39 @@
     "citation": "19b1",
     "offset": 7603,
     "tier": "column",
-    "confidence": "uncertain",
-    "score": 0.4858,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.002"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "Hence it evidently is not necessary that of every affirmation and negation of opposites"
    }
   ]
  },
  "1:10": {
-  "ross_len": 6210,
+  "ross_len": 6209,
   "anchors": [
-   {
-    "citation": "19b10",
-    "offset": 0,
-    "tier": "five_line",
-    "confidence": "reliable",
-    "score": 0.5028,
-    "flags": [
-     "ratio_outlier:4.48"
-    ]
-   },
    {
     "citation": "19b5",
     "offset": 0,
     "tier": "chapter",
-    "confidence": "certain",
-    "score": 0.3758,
-    "flags": []
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07"
+    ],
+    "at": "Since, however[^78], affirmation signifies something of something[^79], and this"
+   },
+   {
+    "citation": "19b10",
+    "offset": 519,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07, not sure"
+    ],
+    "at": "just as is not well, is not a verb, but an indefinite verb."
    },
    {
     "citation": "19b11",
@@ -1952,13 +1986,14 @@
    },
    {
     "citation": "19b15",
-    "offset": 850,
+    "offset": 856,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4012,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.024"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "the[^83] first affirmation and negation will be, man is, man is not"
    },
    {
     "citation": "19b16",
@@ -2034,13 +2069,14 @@
    },
    {
     "citation": "19b25",
-    "offset": 1587,
+    "offset": 1616,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3671,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.011"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "either is added to the just, or to the non-just; and, therefore[^87] negation also is added"
    },
    {
     "citation": "19b26",
@@ -2116,13 +2152,14 @@
    },
    {
     "citation": "19b35",
-    "offset": 2186,
+    "offset": 2317,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.468,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.003"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "except that it does not similarly happen that those which are diametrically opposed"
    },
    {
     "citation": "19b36",
@@ -2190,13 +2227,14 @@
    },
    {
     "citation": "20a5",
-    "offset": 2916,
+    "offset": 3039,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.2995,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.013"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "when thus posited, as if [the verb] is were added. Thus, for instance, every man is well"
    },
    {
     "citation": "20a6",
@@ -2232,14 +2270,14 @@
    },
    {
     "citation": "20a10",
-    "offset": 3202,
+    "offset": 3370,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3818,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.005",
-     "ratio_outlier:4.07"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "But this is evident from what follows: a man is well, a man is not well"
    },
    {
     "citation": "20a11",
@@ -2275,11 +2313,14 @@
    },
    {
     "citation": "20a15",
-    "offset": 3644,
-    "tier": "line",
-    "confidence": "interpolated",
-    "score": 0.0,
-    "flags": []
+    "offset": 3753,
+    "tier": "five_line",
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07"
+    ],
+    "at": "But because to this [affirmation] every animal is just, the negation is contrary"
    },
    {
     "citation": "20a16",
@@ -2355,17 +2396,18 @@
    },
    {
     "citation": "20a25",
-    "offset": 4504,
+    "offset": 4415,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4059,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.010"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "[that which he denies] is also truly affirmed For instance, is Socrates a wise man?"
    },
    {
     "citation": "20a26",
-    "offset": 4543,
+    "offset": 4542,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2373,7 +2415,7 @@
    },
    {
     "citation": "20a27",
-    "offset": 4592,
+    "offset": 4591,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2381,7 +2423,7 @@
    },
    {
     "citation": "20a28",
-    "offset": 4638,
+    "offset": 4637,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2389,7 +2431,7 @@
    },
    {
     "citation": "20a29",
-    "offset": 4687,
+    "offset": 4686,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2397,17 +2439,18 @@
    },
    {
     "citation": "20a30",
-    "offset": 4735,
+    "offset": 4788,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4339,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.045"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "And this is opposite, but that contrary. But the opposites"
    },
    {
     "citation": "20a31",
-    "offset": 4811,
+    "offset": 4810,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2415,7 +2458,7 @@
    },
    {
     "citation": "20a32",
-    "offset": 4872,
+    "offset": 4871,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2423,7 +2466,7 @@
    },
    {
     "citation": "20a33",
-    "offset": 4943,
+    "offset": 4942,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2431,7 +2474,7 @@
    },
    {
     "citation": "20a34",
-    "offset": 5013,
+    "offset": 5012,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2439,7 +2482,7 @@
    },
    {
     "citation": "20a35",
-    "offset": 5079,
+    "offset": 5078,
     "tier": "five_line",
     "confidence": "reliable",
     "score": 0.4963,
@@ -2447,7 +2490,7 @@
    },
    {
     "citation": "20a36",
-    "offset": 5145,
+    "offset": 5144,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2455,7 +2498,7 @@
    },
    {
     "citation": "20a37",
-    "offset": 5229,
+    "offset": 5228,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2463,7 +2506,7 @@
    },
    {
     "citation": "20a38",
-    "offset": 5305,
+    "offset": 5304,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2471,7 +2514,7 @@
    },
    {
     "citation": "20a39",
-    "offset": 5389,
+    "offset": 5388,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2479,27 +2522,29 @@
    },
    {
     "citation": "20a40",
-    "offset": 5472,
+    "offset": 5415,
     "tier": "five_line",
-    "confidence": "reliable",
-    "score": 0.4735,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "ratio_outlier:0.01"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "is the same with this, no one is just who is not a man."
    },
    {
     "citation": "20b1",
-    "offset": 5472,
+    "offset": 5471,
     "tier": "column",
-    "confidence": "uncertain",
-    "score": 0.513,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.022"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "Nouns and verbs, however, when transposed signify the same thing."
    },
    {
     "citation": "20b2",
-    "offset": 5590,
+    "offset": 5589,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2507,7 +2552,7 @@
    },
    {
     "citation": "20b3",
-    "offset": 5692,
+    "offset": 5691,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
@@ -2515,29 +2560,33 @@
    },
    {
     "citation": "20b4",
-    "offset": 5836,
+    "offset": 5835,
     "tier": "line",
     "confidence": "interpolated",
     "score": 0.0,
     "flags": []
    },
    {
-    "citation": "20b10",
-    "offset": 5996,
+    "citation": "20b5",
+    "offset": 5786,
     "tier": "five_line",
-    "confidence": "reliable",
-    "score": 0.5783,
-    "flags": []
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07"
+    ],
+    "at": "he is not a white man. But of this assertion, he is a man white"
    },
    {
-    "citation": "20b5",
-    "offset": 5996,
+    "citation": "20b10",
+    "offset": 6076,
     "tier": "five_line",
-    "confidence": "reliable",
-    "score": 0.6985,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "ratio_outlier:0.01"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "he is a white man. It is evident, therefore, that a noun and verb"
    }
   ]
  },
@@ -2554,13 +2603,14 @@
    },
    {
     "citation": "20b15",
-    "offset": 0,
+    "offset": 194,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.5697,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.013"
-    ]
+     "hand-placed 2026-11-07, moved on Codex review"
+    ],
+    "at": "But I say one, not if one name is given to many things"
    },
    {
     "citation": "20b16",
@@ -2636,13 +2686,14 @@
    },
    {
     "citation": "20b25",
-    "offset": 726,
+    "offset": 956,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3422,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.003"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "for neither is there one interrogation, not even if it is true."
    },
    {
     "citation": "20b26",
@@ -2678,13 +2729,14 @@
    },
    {
     "citation": "20b30",
-    "offset": 1179,
+    "offset": 1370,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.39,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.034"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "whether this particular thing is a man, or not this particular thing."
    },
    {
     "citation": "20b31",
@@ -2794,11 +2846,12 @@
     "citation": "21a5",
     "offset": 2423,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.2253,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.006"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "It is evident, therefore, that if any one says conjunctions are simply produced"
    },
    {
     "citation": "21a6",
@@ -2834,13 +2887,14 @@
    },
    {
     "citation": "21a10",
-    "offset": 2598,
+    "offset": 2807,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4337,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.034"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "as, for instance, man is white, and a musician. But whiteness"
    },
    {
     "citation": "21a11",
@@ -2876,14 +2930,14 @@
    },
    {
     "citation": "21a15",
-    "offset": 2945,
+    "offset": 3227,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3666,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.016",
-     "ratio_outlier:3.08"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "is he simply a good shoemaker; but [if he is an animal"
    },
    {
     "citation": "21a16",
@@ -2919,13 +2973,14 @@
    },
    {
     "citation": "21a20",
-    "offset": 3604,
+    "offset": 3681,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3187,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.014"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "that a certain man is a man; or that a certain white man is a white man"
    },
    {
     "citation": "21a21",
@@ -3022,13 +3077,14 @@
    },
    {
     "citation": "21a35",
-    "offset": 0,
+    "offset": 61,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3837,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.027"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "the affirmations and negations of that which is possible to be and not possible"
    },
    {
     "citation": "21a36",
@@ -3064,23 +3120,25 @@
    },
    {
     "citation": "21b1",
-    "offset": 331,
+    "offset": 492,
     "tier": "column",
-    "confidence": "reliable",
-    "score": 0.5503,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "ratio_outlier:0.01"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "the negation of this, to be a man, is, not to be a man,"
    },
    {
     "citation": "21b5",
-    "offset": 331,
+    "offset": 754,
     "tier": "five_line",
-    "confidence": "reliable",
-    "score": 0.4307,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "ratio_outlier:3.58"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "true to say that wood is not a white man)—if this be the case"
    },
    {
     "citation": "21b6",
@@ -3156,13 +3214,14 @@
    },
    {
     "citation": "21b15",
-    "offset": 1152,
+    "offset": 1551,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4212,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.001"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "does not always energize; so that negation also pertains to it."
    },
    {
     "citation": "21b16",
@@ -3306,14 +3365,14 @@
    },
    {
     "citation": "21b35",
-    "offset": 3157,
+    "offset": 3105,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.6818,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.000",
-     "name?:Hence"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "Hence, these will appear to follow each other, viz. it is possible to be"
    },
    {
     "citation": "21b36",
@@ -3365,13 +3424,14 @@
    },
    {
     "citation": "22a5",
-    "offset": 3670,
+    "offset": 3825,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.5588,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.020"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "But of this, it is necessary not to be, [the negation] is this, it is not necessary not to be."
    },
    {
     "citation": "22a6",
@@ -3428,13 +3488,14 @@
    },
    {
     "citation": "22a15",
-    "offset": 0,
+    "offset": 71,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3857,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.019"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "The (enunciation), it may happen to be, follows this, it is possible to be,"
    },
    {
     "citation": "22a16",
@@ -3470,13 +3531,14 @@
    },
    {
     "citation": "22a20",
-    "offset": 260,
+    "offset": 415,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.2759,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.011"
-    ]
+     "hand-placed 2026-11-07, not sure"
+    ],
+    "at": "it is necessary not to be, and it is possible to be, follow that,"
    },
    {
     "citation": "22a21",
@@ -3512,13 +3574,14 @@
    },
    {
     "citation": "22a25",
-    "offset": 804,
+    "offset": 783,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.6128,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.000"
-    ]
+     "hand-placed 2026-11-07, not sure"
+    ],
+    "at": "It may happen to be. It is not impossible to be. It is not necessary to be."
    },
    {
     "citation": "22a26",
@@ -3540,11 +3603,12 @@
     "citation": "22a30",
     "offset": 912,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.7006,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.000"
-    ]
+     "hand-placed 2026-11-07, not sure"
+    ],
+    "at": "It is not impossible not to be. It is not necessary not to be."
    },
    {
     "citation": "22a31",
@@ -3630,13 +3694,14 @@
    },
    {
     "citation": "22b5",
-    "offset": 1860,
+    "offset": 2253,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4242,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.000"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "signifies the same thing. For with respect to that which it is impossible should exist"
    },
    {
     "citation": "22b6",
@@ -3672,14 +3737,14 @@
    },
    {
     "citation": "22b10",
-    "offset": 2090,
+    "offset": 2717,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.482,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.048",
-     "ratio_outlier:4.27"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "Or is it impossible that the contradictions of the necessary should be thus arranged?"
    },
    {
     "citation": "22b11",
@@ -3715,13 +3780,14 @@
    },
    {
     "citation": "22b15",
-    "offset": 3073,
+    "offset": 3094,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3676,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.000"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "it is not impossible to be, follows this, it is possible to be, and this again"
    },
    {
     "citation": "22b16",
@@ -3797,13 +3863,14 @@
    },
    {
     "citation": "22b25",
-    "offset": 3993,
+    "offset": 4019,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4582,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.004"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "since it is impossible to be, and it is necessary not to be, follow that;"
    },
    {
     "citation": "22b26",
@@ -3895,13 +3962,14 @@
    },
    {
     "citation": "23a1",
-    "offset": 5311,
+    "offset": 5252,
     "tier": "column",
-    "confidence": "uncertain",
-    "score": 0.3314,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.027"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "are the powers of many things and of such as are contrary."
    },
    {
     "citation": "23a2",
@@ -3931,11 +3999,12 @@
     "citation": "23a5",
     "offset": 5591,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3587,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.035"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "This, however, has been said by us, because not every power is susceptive of contraries,"
    },
    {
     "citation": "23a6",
@@ -3971,13 +4040,14 @@
    },
    {
     "citation": "23a10",
-    "offset": 5896,
+    "offset": 6016,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4849,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.021"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "in energy which is said to be possible. But another thing is said to be possible,"
    },
    {
     "citation": "23a11",
@@ -4013,14 +4083,14 @@
    },
    {
     "citation": "23a15",
-    "offset": 6288,
+    "offset": 6449,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3349,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.004",
-     "ratio_outlier:3.67"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "Hence, that which is thus possible[^102], is not truly asserted of that which is simply necessary[^103];"
    },
    {
     "citation": "23a16",
@@ -4167,13 +4237,14 @@
    },
    {
     "citation": "23a35",
-    "offset": 364,
+    "offset": 615,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.5015,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.020"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "in the affirmations also enunciated by the voice, it is necessary that the like should take place."
    },
    {
     "citation": "23a36",
@@ -4209,21 +4280,25 @@
    },
    {
     "citation": "23a40",
-    "offset": 1010,
+    "offset": 1032,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.5613,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.023"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "There is a certain true opinion of good, that it is good;"
    },
    {
     "citation": "23b1",
-    "offset": 1010,
+    "offset": 1107,
     "tier": "column",
-    "confidence": "reliable",
-    "score": 0.6131,
-    "flags": []
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07"
+    ],
+    "at": "false opinion that it is not good; and there is another opinion, that it is evil."
    },
    {
     "citation": "23b2",
@@ -4251,13 +4326,14 @@
    },
    {
     "citation": "23b5",
-    "offset": 1632,
+    "offset": 1475,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4509,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.038"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "and of evil, that it is evil, there is perhaps the same opinion, and it is true"
    },
    {
     "citation": "23b6",
@@ -4335,11 +4411,12 @@
     "citation": "23b15",
     "offset": 2424,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.3644,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.019"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "If, therefore, good is good and not evil, and the one is essential,"
    },
    {
     "citation": "23b16",
@@ -4415,13 +4492,14 @@
    },
    {
     "citation": "23b25",
-    "offset": 3142,
+    "offset": 3279,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.4674,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.007"
-    ]
+     "hand-placed 2026-11-07, not sure"
+    ],
+    "at": "But the opinion that evil is good is complex; for, perhaps, it is necessary"
    },
    {
     "citation": "23b26",
@@ -4539,17 +4617,23 @@
     "citation": "23b40",
     "offset": 4736,
     "tier": "five_line",
-    "confidence": "reliable",
-    "score": 0.6807,
-    "flags": []
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07, not sure"
+    ],
+    "at": "It remains, therefore, that the contrary to the opinion that what is not good is not good"
    },
    {
     "citation": "24a1",
-    "offset": 4736,
+    "offset": 4814,
     "tier": "column",
-    "confidence": "reliable",
-    "score": 0.7119,
-    "flags": []
+    "confidence": "confirmed",
+    "score": null,
+    "flags": [
+     "hand-placed 2026-11-07"
+    ],
+    "at": "is not good, is the opinion of what is not good that it is good; for this is false."
    },
    {
     "citation": "24a2",
@@ -4577,13 +4661,14 @@
    },
    {
     "citation": "24a5",
-    "offset": 4898,
+    "offset": 5141,
     "tier": "five_line",
-    "confidence": "uncertain",
-    "score": 0.5143,
+    "confidence": "confirmed",
+    "score": null,
     "flags": [
-     "low_margin:0.012"
-    ]
+     "hand-placed 2026-11-07"
+    ],
+    "at": "Thus, for instance, to the opinion which opines that whatever is good is good,"
    },
    {
     "citation": "24a6",

@@ -4,7 +4,10 @@ How sources/cat-taylor/anchors.yaml, sources/int-taylor/anchors.yaml and
 alignment-results/taylor/Int_taylor_gloss_map.json were made on 2026-11-07, OLD_REV = 8c5f2529dd.
 Then by hand: Cat 1a25 -> "cannot exist without that in which it is", 2a35 -> "of the first
 essences, as subjects, or are in them", 3b5 lengthened to be unique; the rest of the report
-checked and kept.
+checked and kept. After the transfer, 77 Int gloss-map ticks were placed by hand against the
+Greek (confidence "confirmed", each carrying the phrase it sits on as `at`): every cadence tick
+the build had only estimated, plus the machine anchors found misplaced or stacked. Re-running
+this script overwrites them; re-apply them from those `at` phrases.
 
 usage (repo root as cwd, pipeline venv): python3 pipeline/tools/transfer_taylor_anchors.py OLD_REV OUT_DIR
 Reads sources/{cat,int}-taylor/book-01.html (new) and OLD_REV's copies (old), the old

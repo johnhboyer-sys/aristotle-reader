@@ -86,3 +86,18 @@ def test_ambiguous_run_on_note_stops_the_build(monkeypatch):
     monkeypatch.setattr(b, "NOTE_RUNS_ON", {})
     with pytest.raises(SystemExit, match="n81: notes run on"):
         b.build("cat", b.DATA)
+
+
+def test_hand_placed_int_ticks_sit_on_their_phrase():
+    # Ticks placed by hand against the Greek carry the phrase they were placed on; a change to
+    # the text that moves them must fail here, not drift silently.
+    gm = json.loads((ROOT / "alignment-results" / "taylor" / "Int_taylor_gloss_map.json")
+                    .read_text(encoding="utf-8"))
+    cfg = yaml.safe_load((ROOT / "manifests" / "Int.yaml").read_text(encoding="utf-8"))
+    prose = {c: t for (_, c), t in stage1_archive._load_prose(cfg["english"]["secondary"]).items()}
+    hand = [(k, a) for k, v in gm.items() for a in v["anchors"] if "at" in a]
+    assert len(hand) >= 66
+    for k, a in hand:
+        text = prose[int(k.split(":")[1])]
+        assert text[a["offset"]:].startswith(a["at"]), (a["citation"], text[a["offset"]:a["offset"] + 40])
+        assert a["confidence"] == "confirmed"
