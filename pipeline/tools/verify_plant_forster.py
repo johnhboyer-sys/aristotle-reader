@@ -44,6 +44,10 @@ SCAN_B = Path("build/plant-ocr/forster/worksofaristotle06arisuoft_hocr.html")
 A_RANGE, B_RANGE = (83, 120), (78, 115)  # book II opens at A 101 / B 96
 COVER = 0.95    # share of each book's words that must find a partner in each scan
 EXCEPTIONS = [  # (kind, our context, detail, reason): one flag each, read off A's page image
+    ('PUNCTUATION', 'the father of plants. But we must suppose',
+     'ours . / scans ? on plants.', 'r3i1 leaf 88 (vol6_genie.py): plants.² — the raised 2 read as ?'),
+    ('PUNCTUATION', 'made by dissimilar parts (just as mud can',
+     'ours none / scans ? on parts', 'r3i1 leaf 91 (vol6_genie.py): parts⁷ — the raised 7 read as ?'),
     ('CHANGED', 'Life is found in animals and plants; but',
      'ours Life / scans lire', 'small-capital opening LIFE (A reads lire)'),
     ('PUNCTUATION', 'Now Anaxagoras and Empedocles say that they are',

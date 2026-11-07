@@ -563,7 +563,7 @@ PRINT_READS = [
     ("generates 7m another,", "generates in another,", "87: italic in"),
     ("in itself Some one", "in itself. Some one", "86: itself.⁴"),
     ("three coverings.. All", "three coverings. All", "91: a speck after the stop"),
-    ("desert wind )....", "desert wind). . .", "92: wind⁵). . .⁶"),
+    ("desert wind )....", "desert wind). . . .", "92: wind⁵). . . .⁶, four stops (vol6_genie.py, r3i1 leaf 92)"),
     ("called vargariaton!; in", "called vargariaton; in", "94: vargariaton¹;"),
     ("have anumber of", "have a number of", "95: word space"),
     ("others in 4otivers.", "others in rivers.", "96: the margin 40 ran into the word"),
@@ -579,6 +579,10 @@ PRINT_READS = [
     ("said. Thesame theory", "said. The same theory", "114: word space"),
     ("ducts Within will", "ducts within will", "116: lower-case w"),
     ("finally bitter, [he reason", "finally bitter. The reason", "120: bitter. The"),
+    # Against History Genie's read of the volume (tools/vol6_genie.py), judged
+    # on the images of archive.org worksofaristotle0001unse_r3i1 (its leaf).
+    ("father of plants?", "father of plants.", "r3i1 leaf 88: plants.², no question mark"),
+    ("dissimilar parts?", "dissimilar parts", "r3i1 leaf 91: parts⁷, no question mark"),
 ]
 
 # Each chapter opens with its first word(s) in small capitals, which the OCR
