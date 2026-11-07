@@ -1,0 +1,32 @@
+=== body
+a grammarian is denominated from grammar, and a valiant man from
+valour[^3].
+CHAPTER II.
+¶OF things which are the subject of discourse, some are enunciated ac-
+cording to connection, but others without connection. Those therefore
+which are enunciated according to connection are such as, the man runs,
+the man is victorious; but those without connection are such as, man,
+ox, runs, conquers[^4]. Of things likewise, some are predicated of a cer-
+tain subject, but are not in any subject. Thus man is predicated of a
+subject, viz. of a certain man, but is not in any subject. But other
+things are indeed in a subject, yet are not predicated of any subject
+By being in a subject, however, I mean that which subsisting in some-
+thing not as a part, cannot exist without that in which it is. Thus a
+certain grammatical art is in a subject, viz. in the soul, but is not pre-
+dicated of any subject; and this white thing is in a subject indeed, viz.
+in a body, (for all colour is in body) but is not predicated of any sub-
+=== notes
+¶[^3] Simplicius informs us that Architas omits this doctrine of names in his treatise *On Universal*
+*Terms,* because the Pythagoreans assert that names are from nature and not from position.
+Hence they reject the words polyonymous and homonymous, as if one name should signify one
+thing according to nature.
+¶[^4] By things which are the subject of discourse, Aristotle means words significant so far as
+they are significant; because the predicaments are neither things nor conceptions, nor words
+simply so far as words, but they are words significant of things, through the media of concep-
+tions, which being disseminated in each genus, procure for, and deliver to us the predicaments.
+Simplicius farther observes, that Architas, in the beginning of his treatise On Universal Terms,
+in the first place discourses about speech, which he considers as subsisting in the reasoning power
+and in voice. He also says that the speech which is in voice is *significant,* but that which is in
+the reasoning power is signified. He likewise defines and unfolds simple, composite, perfect and
+imperfect things; among which it is requisite to admit those which subsist according to con-
+nection and without connection.

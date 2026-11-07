@@ -1,0 +1,38 @@
+=== body
+without a verb there is no affirmation nor negation. For it is, or it will
+be, or it was, or it is becoming to be, and other things of the like kind
+are verbs, [as is evident] from what has been before asserted; since in
+addition to something else they signify time. Hence the[^9] first affir-
+mation and negation will be, man is, man is not; and afterwards, non-
+man is, non-man is not. Again, every man is, every man is not, every
+non-man is, every non-man is not; and there is the same reasoning in
+external times[^1]. But when [the verb] *is* is additionally predicated as
+the[^2] third thing, then the oppositions are said to subsist doubly. I say,
+for instance, a man is just: for here the word *is*, is, I say, composed
+as the third thing in this affirmation, whether it be [called] a noun or
+a verb. Hence, on this account, these will be four, of which two, in-
+deed, will subsist with reference to affirmation and negation, according
+to the order of consecution, as privations, but two will not[^3]. But I
+say that [the verb] *is* either is added to the just, or to the non-just;
+and, therefore[^4] negation also is added. Hence there will be four. We
+shall understand, however, what is said from the underwritten [exam-
+ples]: a man is just; the negation of this is, a man is not just. He is
+=== notes
+[^9] Aristotle very properly places finite before indefinite enunciations, because a finite is prior to,
+and more simple than an indefinite noun.
+¶[^1] That is, in the past and future times, which are without the present time, and, therefore,
+inclose it on each side.
+¶[^2] That is, it is the third thing in the proposition, besides the two terms the subject, (man)
+and that which is predicated (just).
+¶[^3] Those enunciations will be four which have the same attribute, and in a certain respect the
+same subject. I say in a certain respect, because two will have a finite, and two an infinite sub-
+ject; as in the following example: Man is just; man not is just; man is not just; man not is
+not just. Of these, the first opposition is the affirmation and negation of a finite predicate; but
+the second opposition is the affirmation and negation of an indefinite predicate. But when Aris-
+totle says that two of these enunciations will subsist with reference to affirmation and negation,
+according to the order of consecution as privations, his meaning is, that the enunciations, *man*
+*is not just, man not is not just*, are referred to the enunciations, *man is just, man not is just*, as
+privations are referred to habits. For a finite attribute is habit, or is compared to habit, as *just*;
+but an indefinite attribute, as *not just*, is compared to the privation *unjust*.
+¶[^4] Aristotle at present calls *negation*, not an entire enunciation, but these words *not is*. Farther
+on we shall find that he will call the word *not* negation.
