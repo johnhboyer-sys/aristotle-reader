@@ -120,3 +120,22 @@ orchestrator and NOT yet reviewed by Codex. Next: re-run every gate and the
 harness, spot-check PRINT_READS against images, then Codex review. Open for
 John: 19.9 "y a flute"; 23.6-23.12 has no scan-A page image (23.9 "in"
 unchecked); Book 3/19 merges.
+
+### 2026-11-06 18:25 — reviewed and fixed, `fa23728458`; Problemata text done
+
+Orchestrator re-ran every gate on `24dbee48d0`; Codex review 6
+(`codex-review-6.md`) found five items, fixed by hand in `fa23728458`: 3.16
+back to "Wine" (the print capitalises it), `--books` now fails on unused
+allowances (this caught Codex's two missed plants, 10.7 and 23.16), and three
+reason/leaf corrections. Codex check 7 (`codex-review-7.md`): no findings, all
+five fixes confirmed on the images, 5/5 case plants caught.
+
+Gates at `fa23728458`: verify 0/0, selftest 12/12, Opus harness 67/67,
+pipeline PASS, preflight ok, 3,774 tests, 7,080 pages, 0 broken links.
+
+Open for John: Book 3/19 merges (recommend keep); 19.9 "y a flute" (print
+reads "y"); 23.9 "in" has no scan-A image; full stops removed at 1.40, 11.15
+and 30.1 where scan B lacks them (judged from A's image; low risk). Not done:
+the follow-ups listed under Open (desktop corpus.ts, lsj_citation_map, clean
+test, DEPLOY-STATUS, dubious-works.md, CLAUDE.md list). Nothing pushed or
+merged.
