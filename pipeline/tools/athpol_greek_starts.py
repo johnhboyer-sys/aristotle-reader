@@ -36,7 +36,8 @@ def sections(path: Path) -> list[tuple[int, int, list[str]]]:
         for sub in chap.iter("{*}div"):
             if sub.get("type") != "subsection":
                 continue
-            lines = [re.sub(r"\s+", " ", "".join(l.itertext()).replace("|", "")).strip()
+            # "|" and the papyrus column mark "‖" are no part of the Greek.
+            lines = [re.sub(r"\s+", " ", "".join(l.itertext()).replace("|", "").replace("‖", "")).strip()
                      for l in sub.iter("{*}l")]
             out.append((int(chap.get("n")), int(sub.get("n")), lines))
     return out
@@ -50,7 +51,7 @@ def starts(secs) -> dict[str, str]:
         if prev_hyphen:
             words = words[1:]
         got[f"{chap}a{sec}"] = " ".join(words[:WORDS])
-        prev_hyphen = bool(lines) and lines[-1].endswith("-")
+        prev_hyphen = bool(lines) and lines[-1].endswith(("-", "-]"))
     return got
 
 

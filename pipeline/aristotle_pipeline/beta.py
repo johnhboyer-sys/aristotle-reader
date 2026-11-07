@@ -31,6 +31,7 @@ _MARKS = {
     "̈": "+",   # diaeresis
     "̄": "",    # macron: not in analyses keys
     "̆": "",    # breve: not in analyses keys
+    "̣": "",    # dot below: a letter the papyrus shows in part (Ath. Pol.)
 }
 
 _APOSTROPHES = "'’᾽ʼ"  # ', ’, ᾽ (koronis), ʼ

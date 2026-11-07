@@ -293,3 +293,42 @@ def test_a_bekker_work_never_links_a_section_shaped_citation(monkeypatch):
     """EN is cited by Bekker; a chapter-shaped citation of it must stay inert."""
     monkeypatch.setitem(stage5_lsj._MANIFEST_CACHE, "EN", _LsjManifest(scheme="bekker"))
     assert _render("Perseus:abo:tlg,0086,010:3:2").startswith('<span class="lsj-bibl"')
+
+
+# ------------------------------------------- papyrus marks (Oppermann's text)
+
+PAPYRUS = """<TEI><text><body>
+<div type="Section" n="1">
+<div type="subsection" n="1">
+<l n="1">‖ πρὸς τοὺς πέμ‖πουσιν γενομένης ‖ δὲ</l>
+<l n="2">τὰ γραμματεῖα τ[ῷ δη-]</l>
+<l n="3">μοσίῳ. κἄν</l>
+</div>
+</div>
+</body></text></TEI>"""
+
+
+def test_the_papyrus_column_mark_is_dropped(tmp_path):
+    """Oppermann prints the papyrus column break as ‖, inside a word
+    (πέμ‖πουσιν) or between words. It is no part of the Greek: a word it
+    splits is whole again, and it never stands as a token of its own."""
+    text = _spine(tmp_path, PAPYRUS)["segments"][0]["lines"][0]["text"]
+    assert "‖" not in text
+    assert text.startswith("πρὸς τοὺς πέμπουσιν γενομένης δὲ ")
+
+
+def test_a_hyphen_inside_a_closing_bracket_still_rejoins(tmp_path):
+    """48.1 prints τ[ῷ δη-] at a line end, the supplement closing after the
+    hyphen: the word is δη]μοσίῳ, not "δη-]" and "μοσίῳ"."""
+    text = _spine(tmp_path, PAPYRUS)["segments"][0]["lines"][0]["text"]
+    assert "τ[ῷ δη]μοσίῳ. κἄν" in text
+
+
+def test_the_witness_tool_drops_the_mark_too(tmp_path):
+    """The recorded opening words must be what the loader keeps, or a section
+    that opens on ‖ (21.3, 29.2) would fail its witness for the mark alone."""
+    sys.path.insert(0, str(ROOT / "pipeline" / "tools"))
+    import athpol_greek_starts
+    p = tmp_path / "greek.xml"
+    p.write_text(PAPYRUS, encoding="utf-8")
+    assert athpol_greek_starts.starts(athpol_greek_starts.sections(p)) == {"1a1": "πρὸς τοὺς πέμπουσιν"}

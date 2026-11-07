@@ -228,6 +228,18 @@ def _rejoin_hyphens(flat: list[dict]) -> None:
         nxt["text"] = rest
 
 
+def _papyrus_text(text: str) -> str:
+    """Oppermann's Ath. Pol. marks the papyrus column break with "‖", inside a
+    word (πέμ‖πουσιν) or between words; like "|" it is no part of the Greek.
+    A hyphen that a closing supplement bracket follows at the line end
+    (48.1 "τ[ῷ δη-]") is moved after the bracket, so the hyphen rejoin finds it
+    and the word reads δη]μοσίῳ."""
+    text = re.sub(r"\s+", " ", text.replace("‖", "")).strip()
+    if text.endswith("-]"):
+        text = text[:-2] + "]-"
+    return text
+
+
 def _parse_sections(tree, manifest: Manifest) -> dict:
     """citation.scheme: chapter-section (the Athenian Constitution). The export
     nests <div type="Section" n=C> (chapter) > <div type="subsection" n=S>
@@ -247,7 +259,7 @@ def _parse_sections(tree, manifest: Manifest) -> dict:
                 continue
             n = int(sub.get("n"))
             for l in sub.iter("{*}l"):
-                text = _line_text(l, strip_bars=True)
+                text = _papyrus_text(_line_text(l, strip_bars=True))
                 if not (l.get("n") or "").isdigit():
                     headings.append({"column": column, "text": text})
                     continue
