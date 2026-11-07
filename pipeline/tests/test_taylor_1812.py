@@ -9,12 +9,14 @@ by pipeline/tools/build_taylor_1812.py; these checks fail on the old text.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 import yaml
 
 from aristotle_pipeline import stage1_archive
@@ -73,3 +75,14 @@ def test_sources_are_what_the_transcripts_build():
     r = subprocess.run([sys.executable, str(ROOT / "pipeline" / "tools" / "build_taylor_1812.py"),
                         "--check"], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_ambiguous_run_on_note_stops_the_build(monkeypatch):
+    # n80 ends two notes with a stop (one in italics); without NOTE_RUNS_ON naming the note
+    # that n81's notes continue, the build must refuse rather than pick one.
+    spec = importlib.util.spec_from_file_location("b", ROOT / "pipeline" / "tools" / "build_taylor_1812.py")
+    b = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(b)
+    monkeypatch.setattr(b, "NOTE_RUNS_ON", {})
+    with pytest.raises(SystemExit, match="n81: notes run on"):
+        b.build("cat", b.DATA)

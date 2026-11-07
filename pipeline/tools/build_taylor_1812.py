@@ -235,7 +235,8 @@ def build(work: str, data: Path = DATA) -> tuple[str, dict[str, str]]:
         carried = len(avail)
         opened = False
         before = list(dict.fromkeys(touched))
-        unfinished = [i for i in before if not re.search(r"[.?!”)\]]\s*$", notes[i]["lines"][-1])]
+        unfinished = [i for i in before        # no closing stop, italic or a mark after it allowed
+                      if not re.search(r"[.?!”)\]]\*?(\[\^[^\]]+\])?\s*$", notes[i]["lines"][-1])]
         if f"n{leaf}" in NOTE_RUNS_ON:
             current = next(i for i in before if notes[i]["mark"] == NOTE_RUNS_ON[f"n{leaf}"])
         elif len(unfinished) == 1:
