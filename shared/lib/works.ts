@@ -57,7 +57,10 @@ export interface Work {
   // The print edition the TLG text was digitised from, in two lengths: `short`
   // for the reader's bilingual strip, `full` for the Greek-only strip and the
   // Texts & Licences page (both driven off this one field so they can't drift).
-  greekSource: { short: string; full: string };
+  // `licence` is set only for a Greek text under an open licence rather than in
+  // the public domain (De Plantis: First1KGreek, CC BY-SA 4.0); the Texts &
+  // Licences page lists those under their licence, not with the PD editions.
+  greekSource: { short: string; full: string; licence?: GreekLicence };
   translations: TranslationRef[];
   // Which translation the reader shows by default (a translations[].id). When
   // omitted the reader falls back to the primary 'english'-slot translation.
@@ -82,6 +85,11 @@ export interface Work {
   commentaries?: string[];
   /** Authorship status. Absent ⇒ genuine. Drives the homepage/landing badge. */
   authenticity?: 'genuine' | 'dubious' | 'spurious';
+}
+
+export interface GreekLicence {
+  name: string;   // as the badge prints it, e.g. 'CC BY-SA 4.0'
+  url: string;    // the licence deed
 }
 
 export const AUTHENTICITY_LABEL: Record<'dubious' | 'spurious', string> = {
@@ -854,6 +862,28 @@ export const WORKS: Work[] = [
     blurb: 'A short spurious work on inferring character from the body.',
   },
   {
+    id: 'Plant',
+    title: 'De Plantis',
+    greekTitle: 'Περὶ φυτῶν',
+    abbr: 'Plant.',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'I. Bekker, Aristotelis Opera (Oxford, 1837), on the lines of Bekker (Berlin, 1831)',
+    // The Greek is not in the TLG export: First1KGreek's text (CC BY-SA 4.0),
+    // laid on the Berlin edition's printed lines (sources/plant-greek/).
+    greekSource: {
+      short: 'Bekker (Oxford, 1837)',
+      full: 'I. Bekker, ed. Aristotelis opera, vol. 6. Oxford: Oxford University Press, 1837; lines as in Bekker, Aristotelis opera, vol. 2, Berlin: Georg Reimer, 1831. Text from Open Greek and Latin First1KGreek.',
+      licence: { name: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/' },
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1913)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'A short spurious work on plants, their parts and their growth, in two books.',
+  },
+  {
     id: 'MXG',
     title: 'De Melisso Xenophane Gorgia',
     greekTitle: 'Περὶ Μελίσσου Ξενοφάνους Γοργίου',
@@ -1014,6 +1044,23 @@ export const WORKS: Work[] = [
 ];
 
 const BY_ID = new Map(WORKS.map((w) => [w.id, w]));
+
+// The Texts & Licences page's Greek lists: the public-domain editions, and the
+// openly licensed texts grouped by licence, each in registry order.
+export function greekSourcesByLicence(works: Work[]): {
+  publicDomain: Work[];
+  licensed: { licence: GreekLicence; works: Work[] }[];
+} {
+  const licensed: { licence: GreekLicence; works: Work[] }[] = [];
+  for (const w of works) {
+    const l = w.greekSource.licence;
+    if (!l) continue;
+    const group = licensed.find((g) => g.licence.name === l.name && g.licence.url === l.url);
+    if (group) group.works.push(w);
+    else licensed.push({ licence: l, works: [w] });
+  }
+  return { publicDomain: works.filter((w) => !w.greekSource.licence), licensed };
+}
 
 export function getWork(id: string): Work | undefined {
   return BY_ID.get(id);
@@ -1412,6 +1459,7 @@ export const CATEGORIES: Category[] = [
       { id: 'Col' },
       { id: 'Aud' },
       { id: 'Phgn' },
+      { id: 'Plant' },
       { id: 'Mirab' },
       { id: 'Lin' },
       { id: 'Vent' },

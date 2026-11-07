@@ -286,9 +286,9 @@ def extract_chapters_explicit(spine: dict, chapter_list: list[dict]) -> list[dic
     translation) so no grc TEI text-alignment is needed. Returns the same
     {book, chapter, column, line, wordIndex, bookstart} shape as the grc path.
     The Greek spine is Bekker-lineated, so each (column, line) is authoritative.
-    An entry may name its `book` (default 1, for single-treatise works) and the
-    `word` of the line it opens on (default 0), for chapters that begin
-    mid-line (Magna Moralia)."""
+    An entry may name its `book` (default 1, for single-treatise works; the
+    first entry of each book is that book's start) and the `word` of the line
+    it opens on (default 0), for chapters that begin mid-line (Magna Moralia)."""
     cols = {s["column"] for s in spine["segments"]}
     chapters: list[dict] = []
     for entry in chapter_list:

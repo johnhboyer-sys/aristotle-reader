@@ -1,0 +1,29 @@
+# Paragraph openings in OUR text: Forster's first-line indents, read from the
+# page layout by pipeline/tools/build_plant_forster.py.
+# offset = characters into the chapter's prose; at = our own opening words.
+- {book: 1, chapter: 1, offset: 1568, at: "Let us first examine their"}
+- {book: 1, chapter: 1, offset: 3102, at: "These differences of opinion come"}
+- {book: 1, chapter: 1, offset: 4632, at: "What, therefore, is the principle"}
+- {book: 1, chapter: 2, offset: 908, at: "The most important and appropriate"}
+- {book: 1, chapter: 2, offset: 4259, at: "But there are some who"}
+- {book: 1, chapter: 3, offset: 746, at: "Just as in the animal,"}
+- {book: 1, chapter: 3, offset: 3865, at: "We ought, therefore, to treat"}
+- {book: 1, chapter: 4, offset: 1845, at: "Of plants some are trees,"}
+- {book: 1, chapter: 4, offset: 3345, at: "Some plants are indoor plants,"}
+- {book: 1, chapter: 5, offset: 1018, at: "Of the juices which are"}
+- {book: 1, chapter: 6, offset: 194, at: "Some trees come into existence"}
+- {book: 1, chapter: 6, offset: 1444, at: "A tree which has hard"}
+- {book: 1, chapter: 7, offset: 1114, at: "Some trees produce shoots from"}
+- {book: 1, chapter: 7, offset: 2218, at: "After these considerations we ought"}
+- {book: 2, chapter: 1, offset: 3423, at: "We find the same phenomenon"}
+- {book: 2, chapter: 2, offset: 3833, at: "The presence of sand under"}
+- {book: 2, chapter: 3, offset: 1709, at: "Plants ought not to grow"}
+- {book: 2, chapter: 3, offset: 3604, at: "But in warm places, because"}
+- {book: 2, chapter: 4, offset: 3110, at: "Edible products will grow from"}
+- {book: 2, chapter: 6, offset: 2849, at: "[There is also a class"}
+- {book: 2, chapter: 6, offset: 2999, at: "All herbs and all things"}
+- {book: 2, chapter: 7, offset: 2487, at: "Thorns are not characteristic of"}
+- {book: 2, chapter: 8, offset: 1094, at: "The shapes of plants fall"}
+- {book: 2, chapter: 9, offset: 1561, at: "A grey colour will occur"}
+- {book: 2, chapter: 9, offset: 3146, at: "A plant which has thick"}
+- {book: 2, chapter: 10, offset: 2458, at: "Bennut-trees at first when the"}

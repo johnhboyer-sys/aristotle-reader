@@ -1,7 +1,7 @@
 import { readdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import { WORKS, bookLabel, furtherReading, getWork, inPrintHref, isBookless, visibleTranslations, workLanding, workPath } from '../lib/works';
+import { WORKS, bookLabel, furtherReading, getWork, greekSourcesByLicence, inPrintHref, isBookless, visibleTranslations, workLanding, workPath } from '../lib/works';
 
 describe('works registry helpers', () => {
   it('looks up works and normalizes book labels and paths', () => {
@@ -107,5 +107,24 @@ describe('authenticity follows Barnes', () => {
   // John, 2026-11-06: "Match Barnes".
   it('marks the single-asterisk works dubious', () => {
     for (const id of ['Prob', 'Oec']) expect(getWork(id)?.authenticity, id).toBe('dubious');
+  });
+});
+
+describe('Greek text licences on the Texts & Licences page', () => {
+  it('keeps an openly licensed Greek text out of the public-domain list', () => {
+    const { publicDomain, licensed } = greekSourcesByLicence(WORKS);
+    const plant = getWork('Plant')!;
+    expect(plant.greekSource.licence).toEqual({
+      name: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/',
+    });
+    expect(publicDomain).not.toContain(plant);
+    expect(licensed).toEqual([{ licence: plant.greekSource.licence, works: [plant] }]);
+    // Every other work stays where it was, in registry order.
+    expect(publicDomain).toEqual(WORKS.filter((w) => !w.greekSource.licence));
+    expect(publicDomain.length + 1).toBe(WORKS.length);
+  });
+
+  it('says CC BY-SA in the credit only through the field', () => {
+    for (const w of WORKS) expect(w.greekSource.full).not.toMatch(/CC BY|Creative Commons/);
   });
 });

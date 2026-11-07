@@ -15,7 +15,7 @@ from pathlib import Path
 
 from lxml import etree
 
-from .config import BUILD_DIR, Manifest
+from .config import BUILD_DIR, SOURCES_DIR, Manifest
 
 EXPORT_DIR = BUILD_DIR / "export"
 
@@ -260,13 +260,26 @@ def _segments(flat: list[dict], headings: list[dict], manifest: Manifest) -> dic
     }
 
 
+def spine_xml(manifest: Manifest) -> Path:
+    """The verse-mode XML the spine is parsed from. A work whose Greek is not in
+    the TLG export (De Plantis) vendors one under sources/ as `work.greek_lines`,
+    in the same <div type="Bekker-page"><l n=...> shape; every other work runs
+    the Diogenes export."""
+    rel = manifest.data["work"].get("greek_lines")
+    if not rel:
+        return run_export(manifest)
+    path = SOURCES_DIR / rel
+    if not path.exists():
+        raise FileNotFoundError(f"work.greek_lines: {path} is missing")
+    return path
+
+
 def run(manifest: Manifest) -> Path:
-    xml_path = run_export(manifest)
+    xml_path = spine_xml(manifest)
     # A TLG text that carries no Bekker numbers (Magna Moralia) is lineated by
     # a map read from Bekker's printed pages; see stage1_relineate.
     lineation = (manifest.data.get("greek") or {}).get("lineation")
     if lineation:
-        from .config import SOURCES_DIR
         from .stage1_relineate import relineate
         spine = _segments(relineate(xml_path, SOURCES_DIR / lineation), [], manifest)
     else:

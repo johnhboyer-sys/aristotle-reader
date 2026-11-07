@@ -285,7 +285,10 @@ const breadcrumbLd = Astro.site
 
     <h2 class="lp-h">Greek text &amp; translations</h2>
     <p class="credits">
-      <strong>Greek:</strong> {work.greekSource.full}<br />
+      <strong>Greek:</strong> {work.greekSource.full}
+      {work.greekSource.licence && (
+        <> Licence: <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a>.</>
+      )}<br />
       <strong>{translatorNames.length > 1 ? 'Translations' : 'Translation'}:</strong>
       {' '}{editions.map((t) => t.name).join('; ')}.<br />
       Full source and licence details are on the

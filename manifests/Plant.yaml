@@ -1,0 +1,67 @@
+# De Plantis — pipeline manifest.
+#
+# A spurious work on plants in two books (Bekker 815a10-830b4). The Greek is
+# not in the TLG export: the text is First1KGreek tlg0086.tlg039 (Bekker,
+# Oxford 1837; CC BY-SA 4.0), vendored under sources/, laid on the Berlin
+# edition's printed lines by pipeline/tools/build_plant_greek.py. Chapters are
+# Berlin's printed chapter numbers. Primary English = E. S. Forster (Oxford,
+# 1913), public domain, with ticks from his printed margin numbers
+# (pipeline/tools/build_plant_forster.py).
+
+work:
+  id: Plant
+  title: "De Plantis"
+  greekTitle: "Περὶ φυτῶν"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "039"
+  greek_lines: "plant-greek/bekker-lines.xml"
+  authenticity: spurious
+  greek_edition: "I. Bekker, Aristotelis Opera (Oxford, 1837), on the lines of Bekker (Berlin, 1831)"
+  english_translation: "E. S. Forster (Oxford, 1913)"
+
+bekker_range:
+  first_column: "815a"
+  last_column: "830b"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1, bekker: "815a10", book: 1 }
+    - { n: 2, bekker: "816b23", book: 1 }
+    - { n: 3, bekker: "818a4", book: 1 }
+    - { n: 4, bekker: "819a8", book: 1 }
+    - { n: 5, bekker: "820a11", book: 1 }
+    - { n: 6, bekker: "820b26", book: 1 }
+    - { n: 7, bekker: "821a27", book: 1 }
+    - { n: 1, bekker: "822a12", book: 2 }
+    - { n: 2, bekker: "822b32", book: 2 }
+    - { n: 3, bekker: "824b3", book: 2 }
+    - { n: 4, bekker: "825a40", book: 2 }
+    - { n: 5, bekker: "826a20", book: 2 }
+    - { n: 6, bekker: "826a38", book: 2 }
+    - { n: 7, bekker: "827a7", book: 2 }
+    - { n: 8, bekker: "827b17", book: 2 }
+    - { n: 9, bekker: "828a32", book: 2 }
+    - { n: 10, bekker: "829a36", book: 2 }
+
+english:
+  primary:
+    id: forster
+    name: "E. S. Forster (Oxford, 1913)"
+    model: archive
+    dir: "plant-forster"
+    books: 2
+    chapter_marker: part
+    anchors: "plant-forster/anchors.yaml"   # Forster's margin numbers, read from the scans
+    anchor_cuts: true                       # its column-label entries place the column breaks
+
+books:
+  - { n: 1, start: "815a10", end: "822a8" }
+  - { n: 2, start: "822a12", end: "830b4" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
