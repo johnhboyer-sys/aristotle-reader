@@ -140,7 +140,6 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
       W('EE', 'Eudemian Ethics', 'tlg0086.tlg009', { aliases: 'eudemian' }),
       W('Pol', 'Politics', 'tlg0086.tlg035'),
       slot('MM', 'Magna Moralia', 'tlg0086.tlg022', { authenticity: 'disputed' }),
-      slot('AthPol', 'Constitution of the Athenians', 'tlg0086.tlg003'),
       slot('Oec', 'Economics', 'tlg0086.tlg029', { authenticity: 'disputed' }),
       slot('VV', 'On Virtues and Vices', 'tlg0086.tlg045', { authenticity: 'disputed' }),
     ],
@@ -150,6 +149,11 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
     entries: [
       W('Rhet', 'Rhetoric', 'tlg0086.tlg038'),
       W('Poet', 'Poetics', 'tlg0086.tlg034'),
+      // Barnes's place for it: last of the treatises, after the Poetics, unmarked.
+      W('AthPol', 'Athenian Constitution', 'tlg0086.tlg003', {
+        citationScheme: 'chapter',
+        aliases: 'ath pol constitution of the athenians athenaion politeia',
+      }),
     ],
   },
   {

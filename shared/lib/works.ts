@@ -953,6 +953,29 @@ export const WORKS: Work[] = [
     ],
     blurb: 'Aristotle on poetry and tragedy — the founding work of literary theory.',
   },
+  {
+    id: 'AthPol',
+    title: 'Athenian Constitution',
+    greekTitle: 'Ἀθηναίων πολιτεία',
+    abbr: 'Ath. Pol.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Oppermann, Aristotelis Ἀθηναίων πολιτεία (Teubner, 1928)',
+    greekSource: {
+      short: 'Oppermann (Teubner, 1928)',
+      full: 'H. Oppermann, ed. Aristotelis Ἀθηναίων πολιτεία. Leipzig: Teubner, 1928; repr. 1968.',
+    },
+    // Cited by chapter.section, not Bekker: the papyrus came to light in 1890.
+    // Chapter N rides synthetic column "Na", section S line S (plan:
+    // docs/ath-pol-plan.md). No authenticity badge: Barnes's Revised Oxford
+    // Translation prints it unmarked (John, 2026-11-06: "Match Barnes").
+    citation: { scheme: 'chapter-section' },
+    translations: [
+      { id: 'kenyon', name: 'F. G. Kenyon (Oxford, 1921)', short: 'Kenyon', slot: 'english' },
+    ],
+    blurb: 'The constitutional history of Athens, and how its offices and courts worked in the 320s BC.',
+  },
 ];
 
 const BY_ID = new Map(WORKS.map((w) => [w.id, w]));
@@ -1337,6 +1360,7 @@ export const CATEGORIES: Category[] = [
     works: [
       { id: 'Rhet' },
       { id: 'Poet' },
+      { id: 'AthPol' },
     ],
   },
   // Appendix — the doubtful/spurious works transmitted under Aristotle's name but
