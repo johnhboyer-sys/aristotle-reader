@@ -1,0 +1,31 @@
+# Line openings in OUR text where the print sets verse on its own lines.
+# From: E. S. Forster, Oxford Works vol. III (1931), worksofaristotle03arisuoft,
+# read on the page images (2026-11-07). The archive parse breaks a <p> only
+# after a sentence end, so a verse line after ',' or ';' needs an entry here;
+# one after '.' already breaks and has none.
+# offset = characters into the chapter's prose; at = our own opening words.
+- {book: 1, chapter: 6, offset: 1305, at: "Taken his seat in heaven's"}
+- {book: 1, chapter: 6, offset: 1348, at: "and the heavenly body"}
+- {book: 1, chapter: 6, offset: 10702, at: "Whatsoever hath been and is"}
+- {book: 1, chapter: 6, offset: 10758, at: "All alike hath its birth—men,"}
+- {book: 1, chapter: 6, offset: 10816, at: "Beasts of the field and"}
+- {book: 1, chapter: 6, offset: 12046, at: "Unto Olympus' height, where men"}
+- {book: 1, chapter: 6, offset: 12117, at: "Alway safe and secure; no"}
+- {book: 1, chapter: 6, offset: 12176, at: "Nor is it wet with"}
+- {book: 1, chapter: 6, offset: 12242, at: "Ever the air is outspread,"}
+- {book: 1, chapter: 6, offset: 12524, at: "Heaven belongeth to Zeus, wide"}
+- {book: 1, chapter: 6, offset: 15199, at: "And all the town is"}
+- {book: 1, chapter: 6, offset: 15242, at: "And full of cries for"}
+- {book: 1, chapter: 6, offset: 15929, at: "Alder and poplar-tree and cypress"}
+- {book: 1, chapter: 6, offset: 15987, at: "and trees which produce autumn"}
+- {book: 1, chapter: 6, offset: 16062, at: "Pear-trees and pomegranate-trees and apple-trees"}
+- {book: 1, chapter: 6, offset: 16129, at: "and animals,"}
+- {book: 1, chapter: 7, offset: 1177, at: "Zeus of the flashing bolt"}
+- {book: 1, chapter: 7, offset: 1244, at: "Zeus is the head and"}
+- {book: 1, chapter: 7, offset: 1310, at: "Zeus is the stay of"}
+- {book: 1, chapter: 7, offset: 1382, at: "Zeus is male and female"}
+- {book: 1, chapter: 7, offset: 1437, at: "Zeus is the breath of"}
+- {book: 1, chapter: 7, offset: 1496, at: "Zeus is the root of"}
+- {book: 1, chapter: 7, offset: 1566, at: "Zeus of the flashing bolt"}
+- {book: 1, chapter: 7, offset: 1630, at: "Hiding them all away, and"}
+- {book: 1, chapter: 7, offset: 1690, at: "Bringing them back at his"}
