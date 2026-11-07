@@ -3,6 +3,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
+import { HELD_WORKS } from './deploy-gh-pages.mjs';
+
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const MANIFESTS = join(ROOT, 'manifests');
 
@@ -39,6 +41,11 @@ function dataDirProblem(path) {
 const works = readdirSync(MANIFESTS)
   .filter((name) => name.endsWith('.yaml') && !name.endsWith('-public.yaml'))
   .map((name) => name.slice(0, -'.yaml'.length))
+  .filter((work) => {
+    if (!HELD_WORKS[work]) return true;
+    console.log(`Skipping ${work}: ${HELD_WORKS[work]}`);
+    return false;
+  })
   .sort((a, b) => a.localeCompare(b));
 
 const publicWorks = new Set(

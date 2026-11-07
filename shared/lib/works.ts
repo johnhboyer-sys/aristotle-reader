@@ -888,6 +888,25 @@ export const WORKS: Work[] = [
     blurb: 'A short spurious work arguing about indivisible lines.',
   },
   {
+    id: 'Spir',
+    title: 'De Spiritu',
+    greekTitle: 'Περὶ πνεύματος',
+    abbr: 'Spir.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'W. Jaeger, Ps.-Aristotelis De spiritu libellus (Leipzig, 1913)',
+    greekSource: {
+      short: 'Jaeger (Teubner, 1913)',
+      full: 'W. Jaeger, ed. Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus. Leipzig: Teubner, 1913.',
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'dobson', name: 'J. F. Dobson (Oxford, 1914)', short: 'Dobson', slot: 'english', footnotes: true },
+    ],
+    blurb: 'A short spurious treatise on the inborn breath — how it grows, is fed, and moves the body.',
+  },
+  {
     id: 'Vent',
     title: 'Ventorum Situs',
     greekTitle: 'Ἀνέμων θέσεις καὶ προσηγορίαι',
@@ -1375,6 +1394,7 @@ export const CATEGORIES: Category[] = [
       { id: 'Vent' },
       { id: 'VV' },
       { id: 'Oec' },
+      { id: 'Spir' },
     ],
   },
   // Porphyry's Isagoge (id 'Isa') is intentionally NOT a home division: it's

@@ -265,3 +265,36 @@ def test_chapter_bounds_with_no_integer_start_are_reported(tmp_path):
         ("VAL", "search/offsets.json", "chapter '2' has start '0', not a non-negative integer"),
         ("VAL", "search/offsets.json", "chapter '3' has start None, not a non-negative integer"),
     ]
+
+
+def _held_case(tmp_path: Path, hold: bool) -> subprocess.CompletedProcess[str]:
+    """The valid fixture plus a second work, HLD, that has a manifest and no
+    emitted data — what `npm run build:public` leaves for a held work."""
+    import shutil
+
+    case = tmp_path / "case"
+    shutil.copytree(FIXTURES / "valid", case)
+    text = (case / "manifests" / "VAL.yaml").read_text(encoding="utf-8")
+    text = text.replace("id: VAL", "id: HLD", 1)
+    assert "id: HLD" in text
+    if hold:
+        text = 'deploy_hold: "held for the test"\n' + text
+    (case / "manifests" / "HLD.yaml").write_text(text, encoding="utf-8")
+    return subprocess.run(
+        [sys.executable, "-m", "aristotle_pipeline.preflight",
+         str(case / "data"), str(case / "manifests")],
+        cwd=ROOT / "pipeline", text=True, capture_output=True, check=False,
+    )
+
+
+def test_preflight_passes_a_held_work_that_was_not_built(tmp_path):
+    result = _held_case(tmp_path, hold=True)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_preflight_still_wants_an_unheld_work_built(tmp_path):
+    result = _held_case(tmp_path, hold=False)
+
+    assert result.returncode != 0
+    assert "HLD" in result.stdout and "emitted work directory does not exist" in result.stdout

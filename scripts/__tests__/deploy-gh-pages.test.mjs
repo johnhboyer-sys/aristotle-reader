@@ -4,9 +4,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 import {
+  HELD_WORKS,
   KNOWN_BENIGN,
   LEAK_NAMES,
   auditDataDeletions,
@@ -24,6 +27,8 @@ import {
   parseRsyncItemized,
   scanForLeaks,
   scanGatedSlots,
+  scanHeldWorks,
+  heldWorks,
   scanSearchShards,
   scanTranslationIndexes,
   shardName,
@@ -692,4 +697,88 @@ test('scanSearchShards refuses to pass when it saw no index at all', () => {
   const r = scanSearchShards([shardListing()]);
   assert.equal(r.ok, false);
   assert.match(r.problems[0], /not running/);
+});
+
+// ---- held works: a manifest's deploy_hold keeps a work off the site --------
+
+test('scanHeldWorks refuses any served file of a held work', () => {
+  const report = scanHeldWorks(
+    [{ path: 'data/Spir/book-01.json', text: '{}' }, { path: 'data/Mech/book-01.json', text: '{}' }],
+    { held: { Spir: 'why' } },
+  );
+  assert.equal(report.ok, false);
+  assert.equal(report.problems.length, 1);
+  assert.match(report.problems[0], /data\/Spir\/book-01\.json/);
+});
+
+test('scanHeldWorks refuses search shards that carry a held work', () => {
+  const shard = JSON.stringify({ breath: { 'Spir/english': [[1, 2]] } });
+  const report = scanHeldWorks(
+    [{ path: 'data/search-shards/english/br.json', text: shard }],
+    { held: { Spir: 'why' } },
+  );
+  assert.equal(report.ok, false);
+  assert.match(report.problems[0], /search-shards\/english\/br\.json/);
+});
+
+test('scanHeldWorks refuses lemma pages and the Bekker index that cite a held work', () => {
+  const report = scanHeldWorks(
+    [
+      { path: 'data/lemmata/pyknotes.json', text: JSON.stringify({ works: [{ work: 'Spir', n: 3 }] }) },
+      { path: 'data/bekker.json', text: JSON.stringify([['481a', 'Spir']]) },
+    ],
+    { held: { Spir: 'why' } },
+  );
+  assert.equal(report.ok, false);
+  assert.equal(report.problems.length, 2);
+  assert.match(report.problems[0], /lemmata\/pyknotes\.json/);
+  assert.match(report.problems[1], /bekker\.json/);
+});
+
+test('scanHeldWorks refuses a file named for a held work outside its directory', () => {
+  const report = scanHeldWorks(
+    [
+      { path: 'data/reports/quality_Spir.md', text: '# quality' },
+      { path: 'data/reports/quality_Spirit.md', text: '# not held' },
+    ],
+    { held: { Spir: 'why' } },
+  );
+  assert.equal(report.problems.length, 1);
+  assert.match(report.problems[0], /quality_Spir\.md/);
+});
+
+test('scanHeldWorks passes a site without the held work, and says what it looked at', () => {
+  const report = scanHeldWorks(
+    [{ path: 'data/Mech/book-01.json', text: '{"note": "Spirit and Spiritu"}' }],
+    { held: { Spir: 'why' } },
+  );
+  assert.equal(report.ok, true);
+  assert.equal(report.filesScanned, 1);
+});
+
+test('scanHeldWorks says so when it scanned nothing', () => {
+  const report = scanHeldWorks([], { held: { Spir: 'why' } });
+  assert.equal(report.ok, false);
+  assert.match(report.problems[0], /not running/);
+});
+
+test('no work is held today', () => {
+  assert.deepEqual(HELD_WORKS, {});
+});
+
+test('heldWorks reads deploy_hold from the private manifests only', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'held-'));
+  try {
+    writeFileSync(path.join(dir, 'Aaa.yaml'), 'deploy_hold: "not yet: see notes"\nwork:\n  id: Aaa\n');
+    writeFileSync(path.join(dir, 'Bbb.yaml'), 'work:\n  id: Bbb\n  # deploy_hold: "a comment is not a hold"\n');
+    writeFileSync(path.join(dir, 'Ccc-public.yaml'), 'deploy_hold: "x"\nwork:\n  id: Ccc\n');
+    // the reason on the next line is still a hold: the key alone holds
+    writeFileSync(path.join(dir, 'Ddd.yaml'), 'deploy_hold:\n  "held: see notes"\nwork:\n  id: Ddd\n');
+    const held = heldWorks(dir);
+    assert.deepEqual(Object.keys(held), ['Aaa', 'Ddd']);
+    assert.equal(held.Aaa, 'not yet: see notes');
+    assert.ok(held.Ddd);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
