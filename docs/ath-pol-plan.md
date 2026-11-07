@@ -1,6 +1,7 @@
 # Athenian Constitution (Ath. Pol.): sources and plan
 
-Status: plan only, 2026-11-06. Nothing is built. John approves before any code.
+Status: plan only, 2026-11-06. Nothing is built. John answered Q1 and Q3–Q8 the same
+day (section 6). Q2 waits on the findings in section 9, and building waits on his go-ahead.
 
 The work has no Bekker numbers: the papyrus came to light in 1890, after Bekker.
 It is cited by chapter and section (69 chapters, 299 sections in Kenyon's OCT,
@@ -59,7 +60,7 @@ Bell 1891/1912 is an earlier draft of the same translation, with chapters only. 
 Section counts per chapter, OCT against Oppermann: identical in all 69 chapters
 except 49 (5 against 4), so 299 against 298.
 
-**Recommendation: Greek from the Perseus Kenyon OCT.** Its sections are exact, it is
+**John chose TLG (Q1, 2026-11-06); P1 records the cost.** What follows is the original recommendation, kept for the record. **Recommendation: Greek from the Perseus Kenyon OCT.** Its sections are exact, it is
 the edition LSJ's numbering follows, and it is the text Kenyon translated. The cost
 is a small Greek loader of its own (section 3, step P1), because every other work's
 Greek comes from the TLG export. If John prefers to keep TLG as the one Greek source,
@@ -126,7 +127,7 @@ Below, every place the Bekker model shows. "OK" means the synthetic column "Na" 
 | `desktop/src/lib/corpus.ts:42,143` | `citationScheme?: 'bekker' \| 'chapter' \| 'lecture'`; slot `AthPol` (tlg0086.tlg003) | Promote slot to a built entry with `citationScheme: 'chapter'` (already in the union) |
 | `desktop/src/lib/annotations.ts:650,654` | Annotation cite labels; `:654` prints the raw column for English annotations | **Change** (R2) |
 | *Added after the Codex review:* | | |
-| `stage1_greek.py:264-266` (`run`) | Calls `run_export` (Diogenes) before `parse_spine` | **Change**: dispatch on the Greek source in `run`, before the export (P1) |
+| `stage1_greek.py:264-266` (`run`) | Calls `run_export` (Diogenes) before `parse_spine` | Mattered only for a Perseus loader; with TLG (John's Q1) the export runs as usual |
 | `stage1_archive.py:62-64`, `:380` | An anchor ref's line part must be all digits; anchors load only from `english.primary.anchors` | Spell anchors "49a3" and name the anchors file in the manifest (P5) |
 | `app/src/pages/[work]/index.astro:10`, `Landing.astro:34` | Builds a page for every `WORKS` entry and reads its `chapters.json` | The registry entry must land with the data (G1/G2) |
 | `shared/components/WorkSwitcher.svelte` | Lists every `WORKS` entry on every reader page | Other works' pages gain an AthPol option: an intended change (G3) |
@@ -147,12 +148,25 @@ one formatter that prints "49.3" for this scheme and the old string for every ot
 
 ### Pipeline (P)
 
-- **P1. Greek loader.** Dispatch in `stage1_greek.run`, before `run_export`, so the Perseus path never calls Diogenes; a test runs it with no export cache present. `citation.scheme: chapter-section` with `greek.source: perseus_tei` reads `sources/tlg0086.tlg003.perseus-grc2.xml`. It takes each `section`/`subsection` div's text (Perseus notes dropped, stray numerals cleaned) as one spine line, `{column: f"{chapter}a", n: section}`, fragments skipped. The output dict has the same shape as the TLG path. If John picks TLG instead (Q1), the branch reads `Section`/`subsection` divs from the export and joins each subsection's printed lines into one line.
-- **P2. Validation.** In `stage2_validate`, chapter-section takes the a-side column branch but keeps the strict gap check. In `preflight`, chapter-section counts as ordered (`bekker_native` true for it). The manifest pins the section inventory: 69 per-chapter counts (299 in all), read off Kenyon's 1921 margins and checked by hand against the OCT. Stage 2 fails if the spine differs in any chapter, not only in total. The count comes from the printed English, a witness independent of the TEI, so the check does not compare the source with itself.
+- **P1. Greek loader (TLG, John's Q1).** The export runs as for every other work (`run_export` unchanged). In `parse_spine`, `citation.scheme: chapter-section` reads the export's `<div type="Section" n=C>` / `<div type="subsection" n=S>` divs. It rejoins hyphenated words as the Bekker path does, then joins each subsection's printed lines into one spine line `{column: f"{C}a", n: S}`. That gives 69 columns and 298 lines. The Perseus TEI is not used.
+- **What TLG costs, and how Kenyon's English lines up against it.** Measured against the OCT, whose sections Kenyon's margins follow:
+  - **Chapter starts are nearly exact.** Oppermann starts chapters on a fresh line, so 61 of chapters 2–69 begin on the same word. Two begin 3 words early, and five have a differing reading at the edge, so I could not place them.
+  - **Section starts inside a chapter are only line-exact.** Oppermann's subsection marker sits on the printed line where the section begins, so the tail of section S−1 rides into S.
+    - Of 229 such starts, 51 fall on the same word and 150 fall early: median 4 words, mean 4.3, at most 20.
+    - None falls late.
+    - 28 could not be placed, because the readings differ at the boundary.
+  - Beside Kenyon's English section S, then, the Greek line S usually opens with the last few words of S−1. An LSJ link to a word at the very end of a section can land one row below the word. Nothing is interpolated; the Greek is simply cut at Oppermann's line.
+  - **No 49.5.** Oppermann prints the OCT's 49.5 inside 49.4, so the Greek has 298 sections against Kenyon's 299. Kenyon's 49.5 ("The Council also, speaking broadly, co-operates…") gets no anchor of its own: its English runs on inside 49.4, and Kenyon's margin "5" is lost at that spot. The manifest declares that one merge. LSJ never cites 49.5, so no link is lost.
+  - **Ch. 64–69 are fuller in the Greek.** Oppermann prints supplements in the damaged fourth roll (1,750 words against the OCT's 1,280). Kenyon translated his own sparser reconstruction, which his 1921 preface says was "now translated for the first time". So in those chapters the Greek column carries words the English does not render.
+  - **Not ruled out, not planned:** re-cutting Oppermann's lines at the OCT's word boundaries would remove the edge drift. It is a separate step with its own checks, and it is outside this plan unless John asks for it.
+- **P2. Validation.** In `stage2_validate`, chapter-section takes the a-side column branch but keeps the strict gap check. In `preflight`, chapter-section counts as ordered (`bekker_native` true for it). The manifest pins two inventories:
+  - the English one: 69 per-chapter counts, 299 sections, read off Kenyon's 1921 margins;
+  - the Greek one: the same, except chapter 49 has 4, so 298 in all.
+  - Stage 2 fails if the spine differs from the Greek inventory in any chapter, not only in total. The English inventory comes from the printed translation, a witness independent of the TLG text, and the only difference allowed between the two is the declared 49.5 merge.
 - **P3. Manifest `manifests/AthPol.yaml`.** `work.authenticity` (Q2); `citation.scheme: chapter-section`; `bekker_range` 1a–69a; one book; `chapters.source: explicit`, 69 entries `{n: N, bekker: "Na1"}`; `english.primary` archive model, dir `athpol-kenyon`, `chapter_marker: part`.
 - **P4. LSJ.** Add a second pattern in `stage5_lsj._bibl_href` for `tlg,0086,003:(\d+)(?::(\d+))?`, mapping to `/AthPol/book/1?loc={C}a:{S or 1}`. It goes through the same guards as the Bekker branch: `resolve_citation`, `Manifest.for_work` (no manifest, no link) and `book_for_line`. It also returns no link unless the section is in the pinned inventory, so the branch is dead until the map entry and the manifest both exist. Add `"003": "AthPol"` to `CITATION_WORKS`, with a "verified against LSJ" note giving these counts. The 10.7 citation stays an unlinked span (Q6).
-- **P5. English source.** `sources/athpol-kenyon/book-01.html` with `Part N` markers, plus `anchors.yaml` holding 299 `{bekker: "49a3", at: phrase}` entries (compact refs: `stage1_archive` reads only an all-digit line part). There is one entry per section, read from Kenyon's margins, and the manifest names the file in `english.primary.anchors`. Built by a script on the model of `build_spir_dobson.py`:
-  - take the hOCR body text of n370–n448, with footnotes cut by type size and running heads dropped;
+- **P5. English source.** `sources/athpol-kenyon/book-01.html` with `Part N` markers, plus `anchors.yaml` holding 298 `{bekker: "49a3", at: phrase}` entries (compact refs: `stage1_archive` reads only an all-digit line part). There is one entry per Greek section, read from Kenyon's margins (his 49.5 has none; see P1), and the manifest names the file in `english.primary.anchors`. **Kenyon's footnotes are kept as notes** (John's Q3): `footnotes: true`, as on the Isagoge. Built by a script on the model of `build_spir_dobson.py`:
+  - take the hOCR body text of n370–n448, with running heads dropped and footnotes split out by type size into the notes, keyed to their markers;
   - diff it against Gutenberg #26095 and rule each disagreement against the page image;
   - record corrections to the 1921 print in a READS list.
   - Scans go in gitignored `build/athpol-ocr/`.
@@ -176,6 +190,12 @@ one formatter that prints "49.3" for this scheme and the old string for every ot
   - With Greek hidden, the scroll spy watches English section ticks, so English-only reading still saves `#49a3`, not `#49a` (`Reader.svelte:484`).
   - Checked by eye at large type, phone landscape, desktop with rails open and closed, and a section taller than the screen.
 - **R4.** In `ReaderShell.astro` and `Landing.astro`, the same conditionals; the Landing wording reads "chapter and section".
+- **R6. ⌘K palette (John's Q7, in scope).** In `shared/lib/palette.ts`, a new pure parser `parseSectionCitation(q)` reads a work prefix followed by `C.S` or `C`.
+  - The prefix is matched against the `abbr` and `id` of works whose scheme is chapter-section, folded to lower case with dots and spaces dropped, so "Ath. Pol. 56.6", "athpol 56.6" and "Ath.Pol. 56" all work.
+  - It returns `{work, loc: "56a:6"}`, or a hash `56a` for a bare chapter. The target is checked against that work's entries in `bekker.json` (column 56a, lines 1–7), and a section out of range offers no jump.
+  - Inside AthPol, a bare "56.6" jumps too.
+  - `CommandPalette.svelte` tries this parser before the Bekker one (`:76`). A Bekker citation always carries a/b, so "56.6" can never parse as one and no existing input changes meaning.
+  - Tests: every existing case in `palette.test.ts` passes unchanged; the new cases include an out-of-range section and a prefix that matches no work.
 - **R5.** Lands with the manifest, at G2: the `works.ts` entry and `CATEGORIES` placement, and the `AthPol` slot in `desktop/src/lib/corpus.ts` turned into a built entry with `citationScheme: 'chapter'`. Desktop translation imports keep their tag syntax; AthPol imports use synthetic tags (`{49a3}`), documented, not parsed specially.
 
 ### Blast radius
@@ -183,12 +203,12 @@ one formatter that prints "49.3" for this scheme and the old string for every ot
 - Every edit is a branch on `scheme === 'chapter-section'` or a new file.
 - The shared helpers (R2 and the `nonBekker` flag) return the old values for bekker and busse, and unit tests pin that.
 - No other manifest, source, alignment or anchor file changes.
-- Files touched: those named in P1–P5 and R1–R5, plus their tests. Nothing else.
+- Files touched: those named in P1–P5 and R1–R6, plus their tests. Nothing else.
 - Adding a work still changes some things corpus-wide, on purpose. Other works' text and per-work data must not change, but these do:
   - every reader page's work switcher, the home page and the search work list gain AthPol;
   - LSJ entries that cite Ath. Pol. gain links, wherever they are opened;
   - corpus-wide ngram scores and thresholds shift, because the corpus grew;
-  - `bekker.json` gains AthPol's synthetic columns (the palette filters them out).
+  - `bekker.json` gains AthPol's synthetic columns (the Bekker palette filters them out; R6 reads them for AthPol).
 - The gates name each of these changes and allow nothing else.
 
 ### Gates (a check must say what it examined; write the failing case first)
@@ -207,8 +227,13 @@ one formatter that prints "49.3" for this scheme and the old string for every ot
   - (a) Base commit against G1: `app/dist/**/*.html` identical for every route with asset hashes masked. The route count is printed and must equal the base's.
   - (b) Because masking hides changes inside shared JS and CSS, open a fixed sample of rendered reader pages in a browser on both builds and compare their DOM text: two Bekker works, the Isagoge, a lettered-line page (Phys 244b), and a lemma page.
   - (c) G1 against G2: other works' HTML may differ only where the work switcher, home page and search lists add AthPol.
-- **G4. Section spine.** The per-chapter inventory pinned in P2 (69 counts, 299 sections, from Kenyon's print) must equal the Greek spine chapter by chapter. Each of the 299 anchors is found exactly once, in its own chapter, in order, and each section's first Greek words match a recorded boundary witness. The check prints 69/299/299. Planted cases fail it: a shifted boundary, a missing first section, a missing last section, and a bad phrase.
+- **G4. Section spine.** The Greek spine must equal the pinned Greek inventory (P2) chapter by chapter, and the Greek inventory must equal the English one apart from the declared 49.5 merge.
+  - Each of the 298 anchors is found exactly once, in its own chapter, in order.
+  - Each Greek section's first words match a recorded boundary witness taken from the export.
+  - The check prints 69 / 299 English / 298 Greek / 298 anchors / 1 declared merge.
+  - Planted cases fail it: a shifted boundary, a missing first section, a missing last section, an undeclared merge, and a bad phrase.
 - **G5. LSJ.**
+  - LSJ never cites 49.5, so the merge costs no link. Its one 49.4 citation lands on Oppermann's 49.4, which also holds the OCT's 49.5.
   - Enumerate all 527 raw citations in `grc.lsj.xml`, independent of the build. For each, assert it is emitted as a link to `L{C}a-{S}` (526) or is the one declared exception (10.7). Report any citation whose entry was not emitted as a separate count, never as a pass.
   - Then `check-links.mjs` checks the emitted targets **exactly**: no nearest-line snap for AthPol.
   - A planted valid citation left as a span must fail.
@@ -216,23 +241,18 @@ one formatter that prints "49.3" for this scheme and the old string for every ot
 
 ### Home page
 
-The home page groups works into the five numbered divisions plus the "Spurious Works" appendix (`shared/lib/works.ts` `CATEGORIES`). Ath. Pol. is a Bekker-less work of the Aristotelian school whose authorship is disputed. There are two plain homes for it:
+The home page groups works into the five numbered divisions plus the "Spurious Works" appendix (`shared/lib/works.ts` `CATEGORIES`). Placement and label wait on John (Q2); the findings and a recommendation are in section 9.
 
-- (a) the "Spurious Works" appendix with a `dubious` badge;
-- (b) Division IV, Moral and Political Philosophy, after the Politics, with a `dubious` badge.
+## 6. Questions and John's answers (2026-11-06)
 
-John decides the place and the label (Q2).
-
-## 6. Open questions for John
-
-1. **Q1 Greek.** Perseus Kenyon OCT 1920 (recommended: exact sections, Kenyon's own text, CC BY-SA, needs its own loader), or TLG Oppermann 1928 (same loader family as every other work, sections only line-exact, no 49.5, fuller supplements in ch. 64–69)?
-2. **Q2 Place and label.** Spurious appendix or Division IV? `dubious` or `spurious`? (Most now hold it a work of Aristotle's school, not his own hand; the Magna Moralia precedent is `dubious`.)
-3. **Q3 Kenyon's footnotes.** Keep them as notes (the archive model supports `footnotes: true`, as on the Isagoge), or strip them like most Oxford sources?
-4. **Q4 Fragments.** Leave out the four opening fragments (Kenyon 1921 does not translate them), or show them Greek-only?
-5. **Q5 Id and abbreviation.** `AthPol` (the desktop slot's id) with abbreviation "Ath. Pol."? LSJ prints "Ath.".
-6. **Q6 LSJ "Ath. 10.7".** Leave unlinked (recommended), or link to 10.2, where δίδραχμον stands?
-7. **Q7 ⌘K palette.** Out of scope for v1 (it filters to Bekker works). Should "Ath. Pol. 56.6" jump later?
-8. **Q8 Parked: synthetic Bekker long term.** This plan reuses the synthetic-column trick and leaves the citation model alone. The cost is a second scheme of fake columns ("49a" means chapter 49), on top of the Isagoge's, which commentaries would add to. Whether to replace the trick with a real non-Bekker citation type is John's later question, not this plan's.
+1. **Q1 Greek: TLG** (Oppermann 1928), the same loader family as the other works. Its costs, and how Kenyon's sections line up against it, are under P1.
+2. **Q2 Place and label: open.** John asked what the literature says; section 9 answers that, and he decides from it.
+3. **Q3 Kenyon's footnotes: kept** as notes (P5).
+4. **Q4 Fragments:** John asked why Kenyon doesn't translate them; section 10 answers. The plan leaves them out, as before, unless John says otherwise after reading section 10.
+5. **Q5 Id: `AthPol`, shown as "Ath. Pol."**
+6. **Q6 LSJ "Ath. 10.7": left unlinked.**
+7. **Q7 ⌘K palette: in scope for v1** (R6).
+8. **Q8 Parked, unchanged: synthetic Bekker long term.** This plan reuses the synthetic-column trick and leaves the citation model alone. The cost is a second scheme of fake columns ("49a" means chapter 49), on top of the Isagoge's, which commentaries would add to. Whether to replace the trick with a real non-Bekker citation type is John's later question, not this plan's.
 
 ## 7. What I could not verify
 
@@ -247,10 +267,63 @@ Codex returned 18 findings. Its full text is in the side-session notes folder (`
 
 - I checked each one against the code. All 18 held, and every one is folded in above.
 - The biggest fixes:
-  - P1 must dispatch before the Diogenes export.
+  - P1 must dispatch before the Diogenes export (moot once John chose TLG).
   - G1 cannot include the registry entry (Astro would fail on missing data).
   - G3 compared two builds that both carried the new code, so it could never catch a regression in it.
   - G2's undo-the-diff trick cannot work for corpus-wide ngram scores.
   - G4 and G5 needed independent witnesses (Kenyon's printed section inventory; a raw LSJ citation inventory) so they do not compare the source with itself or examine only what was emitted.
 - It also caught a counting error of mine: the OCT has **299** sections in ch. 1–69, not 298. Oppermann has 298, because he lacks 49.5.
 - It found six reader assumptions the first map missed: the Greek track width, print, centred jumps, the English-only scroll spy, chapter-span labels, and English search grouping.
+
+## 9. Q2: what the literature says on authorship
+
+**What I read myself:** Kenyon's introductions, the OCT preface, Aristotle's *Ethics*, the OCT fragments. **What I took from catalogues, publisher pages and reviews**, without reading the books: Wilamowitz, Rhodes 1981, Keaney. Each item says which it is.
+
+- **Aristotle names the collection.** At *NE* X.9, 1181b17 (read in the TLG export) he plans to study "from the collected constitutions" (ἐκ τῶν συνηγμένων πολιτειῶν) what preserves and destroys cities. Ancient lists credit him with 158 *Politeiai*; the count is from Diogenes Laertius 5.27 as reported by secondary sources (I did not read the Greek of D.L.). Ath. Pol. is the one that survives nearly whole, on the British Museum papyrus.
+- **Ancient testimony is all one way.** Every ancient writer who quotes it gives it to Aristotle. The lexicographers in the OCT's fragments cite "Ἀ[ριστοτέλης] ἐν τῇ Ἀθ[ηναίων] πολ[ιτείᾳ]" (Harpocration s.v. τριττύς). The 1911 *Britannica* article adds that no ancient writer questioned it (secondary).
+- **Kenyon (1891; Bell 2nd ed. 1912, Introduction pp. xiv–xvii) leaves authorship open** (read).
+  - Against Aristotle's own hand: so large a survey of constitutions "might easily have been committed by the master to some of his disciples", and competent judges miss Aristotle's compression of thought.
+  - For it: the sober style, the impartial judgments and the unanimous ancient testimony.
+  - His conclusion: if it is not Aristotle's own work, it was at least "composed under his direction and for his use" (p. xvi). He will call it Aristotle's "as being at least the outcome of his inspiration and direction" (p. xix).
+- **Wilamowitz, *Aristoteles und Athen* (1893)** accepted Aristotle's authorship (secondary: Wikipedia and the 1911 *Britannica*; not read).
+- **Rhodes, *A Commentary on the Aristotelian Athenaion Politeia* (Oxford 1981)** is the standard commentary. Its introduction has a section on "the place of the work in the Aristotelian school" (catalogue contents note). I could not read his argument.
+  - His later editions name his view in their titles and blurbs. The Penguin translation (1984) is described as "probably written by a student of Aristotle" (publisher blurb).
+  - His Liverpool edition (2017) is titled *The Athenian Constitution written in the School of Aristotle* (BMCR 2018.07.21).
+  - The Valla edition he co-translated (2016) notes that its language and style differ from those of the genuine works (BMCR 2017.08.11).
+- **Keaney, *The Composition of Aristotle's Athenaion Politeia* (OUP 1992)** defends Aristotle's own authorship on literary grounds, reading the work as a new genre (publisher abstract, Rutgers bio; the BMCR 3 (1992) 361–5 review not read).
+- **Net:** the ancients are unanimous for Aristotle. Modern opinion is split: Wilamowitz and Keaney hold it is his; Rhodes, the standard commentator, gives it to a pupil in his school; Kenyon would not decide. No one argues it was falsely ascribed or written long after Aristotle; the dating (after 329, before 322 BC, Kenyon p. xvi n.) puts it in his lifetime.
+
+**Recommendation**
+
+- **Label `dubious`, not `spurious`.** This repo's rule (`docs/dubious-works.md`): `dubious` is for "genuinely contested works (e.g. Magna Moralia)"; `spurious` is for works "transmitted with Aristotle but not by him". Ath. Pol. is contested, not disowned. At worst it is a pupil's work done under Aristotle's direction for his own research programme.
+- **Place: the appendix, beside the Magna Moralia.** That keeps one rule for the home page: the numbered divisions hold the works taken as Aristotle's own, and every work whose authorship is doubted sits in the appendix with its badge.
+  - The appendix is titled "Spurious Works", which already misdescribes the Magna Moralia (the MM session flagged this). Retitling it "Doubtful and Spurious Works" fixes both. It changes the home page heading for every visitor, so it is John's call.
+  - The case for Division IV instead: the work is the surviving piece of the research the *Politics* draws on (*NE* 1181b17). It would sit after the *Politics* with its `dubious` badge, the badge alone carrying the doubt.
+
+## 10. Q4: why Kenyon does not translate the fragments
+
+**What the fragments are** (Kenyon's OCT 1920, as Perseus encodes it: `frag_1`–`frag_4`, 8 pieces):
+
+- They are later writers' summaries and quotations of the lost opening, which told of Ion and Theseus.
+- frag. 1:
+  - the epitome of Heraclides (Ἐκ τῶν Ἡρακλείδου περὶ πολιτειῶν: Athens first ruled by kings, Ion, Pandion's division of the realm);
+  - Harpocration s.v. Ἀπόλλων πατρῷος;
+  - the scholion on Aristophanes, *Birds* 1537.
+- frag. 2: Plutarch, *Theseus* 25.
+- frag. 3: on the γεννῆται and the old division into farmers and craftsmen:
+  - the scholion on [Plato], *Axiochus* 371d;
+  - the *Lexicon Patmense*;
+  - Harpocration s.v. τριττύς.
+- frag. 4: the Vatican scholion on Euripides, *Hippolytus* 11 (Theseus' death on Scyros).
+
+**Kenyon's own words** (all read in the scans):
+
+- **OCT 1920, Praefatio p. v:** the papyrus's first column is blank, and since the beginning of the work is missing, it was copied from a damaged exemplar: "Prima pagina sine scriptura est; sed, cum initium operis desit, patet papyrum nostram ex archetypo mutilo transcriptam esse."
+- **OCT 1920, Praefatio pp. vi–vii:** he places the fragments *after* the text: "Fragmenta partis in initio libelli deperditae subieci; item epitomen, quam vocant, vel potius citationes quas Heraclides nescio quis hic illic e libro Aristotelico excerpsit." That is: "I have appended the fragments of the part lost at the start of the book; also the so-called epitome, or rather the citations that some Heraclides or other excerpted here and there from Aristotle's book."
+- **OCT 1920, Praefatio p. vii:** his only aim was to set out the text as the London papyrus restored it: "Id tantum mihi proposui ut textum qualem nobis papyrus Londinensis … reddidit simplicem … exponerem."
+- **Bell translation, Introduction** (1891 pp. xvi–xvii; 1912 pp. xix–xx): the part on Ion and Theseus "is still lost to us, for the newly-discovered MS. is imperfect at the beginning … the narrative now commences in the middle of a subject and even in the middle of a sentence." (In 1891 he thought the opening was "never transcribed"; by 1920 he held the scribe copied from an exemplar that had already lost it.)
+- **Oxford 1921 preface** (vol. X, `/page/n364`): this is a translation of "the treatise" on the Oxford text. It says nothing about the fragments.
+
+**Answer:** Kenyon never says in so many words why he leaves them untranslated. His prefaces do show why. He edits and translates the text the papyrus gives, and the fragments are not that text: they are other writers' paraphrases and quotations (Heraclides' summary, lexicon entries, scholia, Plutarch). In his own edition he prints them as an appendix after the text ("subieci"), and he calls even the "epitome" no more than excerpts. So the 1921 translation, which renders his OCT's text, stops where the papyrus stops. This is my reading of his prefaces, not a sentence of his.
+
+**For the site:** the plan still leaves the fragments out (Q4 as first answered). If John wants them, they would be Greek-only testimonia before chapter 1, needing a column outside the 69 and a second Greek source: the TLG export does not have them (its text opens at 1.1, "— —Μύρωνος"), so they would come from the Perseus OCT.
