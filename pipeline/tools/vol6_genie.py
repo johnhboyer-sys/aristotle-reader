@@ -115,16 +115,20 @@ def _math(body: str) -> str:
 
 # Segments with no running head that the footnote-mark rule did not already
 # drop, dropped as notes: each was read and is a footnote (continued from the
-# page before, or one whose opening words also occur in our text) or front matter. A body
+# page before, or one whose opening words also occur in our text) or front
+# matter. Each is pinned by its opening words and a digest of the whole segment. A body
 # page Genie gave no head would be dropped the same way, so verify fails on
 # any such segment not listed here, and on a listed one it no longer sees.
 NOTE_SEGMENTS = {
-    "Plant": ["The argument is that there", "i. e. the earth is", "Casuram is due to a"],
-    "Mirab": ["vi CONTENTS"],
-    "Mech": ["object the fore part has", "852 19. i. e. if", "34. i. e. the force"],
-    "Lin": ["popular view, which regarded Earth,", "968 5 : cf. also",
-            "can only translate this by", "posites of these. For the", "lines from a difference in",
-            "he proposes to read", "we must not regard division"],
+    "Plant": ["The argument is that there…#a982089cdf", "i. e. the earth is…#fb5c4a6765",
+              "Casuram is due to a…#cbc625f064"],
+    "Mirab": ["vi CONTENTS…#17013e5ca5"],
+    "Mech": ["object the fore part has…#2abfbbd8a9", "852 19. i. e. if…#58bdc19cc0",
+             "34. i. e. the force…#91099c3bc2"],
+    "Lin": ["popular view, which regarded Earth,…#42bdd4d25b", "968 5 : cf. also…#50912c4f4d",
+            "can only translate this by…#4112ad68d6", "posites of these. For the…#d4e851771d",
+            "lines from a difference in…#0b3f76499c", "he proposes to read ,…#c5f9a18be1",
+            "we must not regard division…#6df822489d"],
 }
 DROPPED: dict[str, list[str]] = {}
 
@@ -155,7 +159,9 @@ def genie(work: str, path: Path = GENIE_DEFAULT, body_grams: set | None = None) 
         opens_with_head = not re.search(r"[a-z]", _clean_line(seg[0][0]))
         if not opens_with_head:
             if notes_at != 0:            # dropped on the head rule alone: must be pinned
-                DROPPED.setdefault(work, []).append(" ".join(_clean_line(seg[0][0]).split()[:5]))
+                head = " ".join(_clean_line(seg[0][0]).split()[:5])
+                body = " ".join(" ".join(r.split()) for r, _ in seg)
+                DROPPED.setdefault(work, []).append(f"{head}…#{_digest(body)}")
             notes_at = 0
         for raw, ln in seg[:notes_at]:
             s = _clean_line(raw)
@@ -180,12 +186,14 @@ WORDS: set[str] = set()   # our text's lower-case words, set by diff()
 def key(t: str) -> str:
     """Comparison form: a chapter's opening word is set in small capitals, which
     Genie gives as capitals. Case is ignored for an all-capital token only when
-    it spells a word our text uses in lower case, so a figure label (AB, EHB)
-    keeps its case and a label misread in case still shows."""
+    it spells a word of three letters or more that our text uses in lower case,
+    so a figure label (AB, BE, EHB) keeps its case and a label misread in case
+    still shows."""
     u = t.translate(SMALLCAP).translate(LOOKALIKE)
     t = t.translate(LOOKALIKE)
     caps = u != t or (sum(c.isupper() for c in u) > 1 and u.upper() == u)
-    return u.capitalize() if caps and _bare(u) in WORDS else u
+    word = _bare(u)
+    return u.capitalize() if caps and len(word) >= 3 and word in WORDS else u
 
 
 def norm(text: str) -> str:
@@ -225,7 +233,9 @@ def genie_tokens(work: str, path: Path, vocab: set[str], body_grams: set) -> tup
         t = toks[i]
         if t.endswith("-") and not t.endswith("--") and len(t) > 1 and i + 1 < len(toks):
             joined = t[:-1] + toks[i + 1]
-            out.append(joined if _bare(joined) in vocab else t + toks[i + 1])
+            halves = [_bare(t[:-1]), _bare(toks[i + 1])]
+            keep = _bare(joined) not in vocab or all(h in vocab for h in halves)
+            out.append(t + toks[i + 1] if keep else joined)
             ow.append(where[i])
             i += 2
             continue
@@ -269,7 +279,8 @@ BODY_START = {
     "Lin": "ARE there indivisible lines? And,", "Vent": "Boreas (the North Wind). At",
     "MXG": "MELISSUS says that, if anything",
 }
-COVERAGE: dict[str, float] = {}   # share of our words Genie's read partners, per work
+COVERAGE: dict[str, float] = {}
+BODY_FOUND: dict[str, bool] = {}   # share of our words Genie's read partners, per work
 MIN_COVERAGE = 0.97
 
 
@@ -285,6 +296,7 @@ def diff(work: str, path: Path = GENIE_DEFAULT, ctx: int = 6, text: str | None =
     # own first words, pinned here so a loss at our opening still shows
     head = [_bare(x) for x in BODY_START[work].split()]
     starts = [i for i in range(len(gt) - len(head)) if [_bare(x) for x in gt[i:i + len(head)]] == head]
+    BODY_FOUND[work] = bool(starts)
     if starts:
         gt, gw = gt[starts[0]:], gw[starts[0]:]
     sm = difflib.SequenceMatcher(None, [key(x) for x in ot], [key(x) for x in gt], autojunk=False)
@@ -504,6 +516,11 @@ VERIFY_ALLOW: list[tuple[str, str, str, str, str]] = [
     ('Vent', '', 'Boreas', 'BOREAS', 'leaf 255: small capitals at the opening; we give plain case'),
     ('Vent', 'Scylletium. At Dorylaeum in', '', 'Boreas N. N.N.E. Meses N.E. Caecias…#da9721bde6', 'leaf 257: the chart of the winds, a figure, not text'),
     ('MXG', 'in the way mentioned?', 'Gorgias', 'GORGIAS', 'leaf 276: small capitals at the opening; we give plain case'),
+    ('Plant', 'take the form of straight lines.', 'In', 'IN', 'leaf 97: small capitals at the opening; we give plain case'),
+    ('Plant', 'which were formerly hidden.', 'We', 'WE', 'leaf 103: small capitals at the opening; we give plain case'),
+    ('Mirab', 'them, or gives them', 'something', 'some-thing', 'leaf 162: some- ends the line; Genie keeps the break'),
+    ('Mech', 'of connexion. As,', 'therefore,', 'there-fore,', 'leaf 195: there- ends the line; Genie keeps the break'),
+    ('MXG', 'limited, though not by', 'anything', 'any-thing', 'leaf 274: any- ends the line; Genie keeps the break'),
     ('Phgn', 'likeness, but only a resemblance.', 'Moreover,', 'More-over,', 'leaf 54: More- ends the line; Genie keeps the break'),
     ('Plant', 'in the sea than', 'elsewhere,', 'else-where,', 'leaf 106: else- ends the line; Genie keeps the break'),
     ('MXG', 'Being to Being by the', 'abovementioned', 'above-mentioned', 'leaf 266: unsettled: above- ends the line, so the print cannot say whether the word has a hyphen'),
@@ -681,11 +698,13 @@ def verify(works: list[str], path: Path, texts: dict | None = None) -> list[str]
         found = diff(work, path, text=(texts or {}).get(work))
         pinned = NOTE_SEGMENTS.get(work, [])
         for head in DROPPED.get(work, []):
-            if not any(head.startswith(p) for p in pinned):
+            if head not in pinned:
                 findings.append(f"{work}: a segment with no running head was dropped unexamined: {head!r}")
         for p in pinned:
-            if sum(h.startswith(p) for h in DROPPED.get(work, [])) != 1:
-                findings.append(f"{work}: pinned note segment {p!r} seen {sum(h.startswith(p) for h in DROPPED.get(work, []))} times")
+            if DROPPED.get(work, []).count(p) != 1:
+                findings.append(f"{work}: pinned note segment {p!r} seen {DROPPED.get(work, []).count(p)} times")
+        if not BODY_FOUND[work]:
+            findings.append(f"{work}: the print's first words {BODY_START[work]!r} are not in Genie's read")
         if COVERAGE[work] < MIN_COVERAGE:
             findings.append(f"{work}: Genie's read partners only {COVERAGE[work]:.1%} of our words")
         for d in found:
@@ -723,6 +742,7 @@ PLANTS = [
     # Codex review 1's holes, each closed: a label's case, an opening lost, a
     # word lost beside a long allowed footnote
     ("Mech", "Let AB be a lever,", "Let Ab be a lever,", "Ab"),
+    ("Mech", "ΓΔ and BE in the large circle", "ΓΔ and Be in the large circle", "Be"),  # review 2
     ("Col", "SIMPLE colours are the proper colours of the elements, i.e. of fire,", "of fire,", "colours"),
     ("Plant", "moist food and dry food", "moist food dry food", "allowance used 0"),
 ]
