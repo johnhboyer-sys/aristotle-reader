@@ -170,3 +170,11 @@ def test_builder_keeps_one_letter_words_both_scans_have():
     from build_mm_stock import _gap_word
     assert all(_gap_word(w) for w in ("a", "A", "I", "O", "good.", "virtue,"))
     assert not any(_gap_word(w) for w in ("E.", "N.", "1", "§", "x"))
+
+
+def test_readings_found_against_genie():
+    # A diff against Genie's OCR of vol. IX (a fourth witness) found this
+    # full stop, faint on the page (B369) and lost by Wikisource and a scan.
+    flat = _flat()
+    assert flat.count("speak about good fortune. For the majority think") == 1
+    assert "good fortune For" not in flat

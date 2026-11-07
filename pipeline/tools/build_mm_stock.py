@@ -421,6 +421,8 @@ PRINT_READS: list[tuple[int, str, str, str]] = [
     (343, "reason?'.", "reason?'", "B340: no full stop after the closing quote"),
     (352, "steer the ship. In", "steer the ship.' In", "B349: closing quote printed"),
     (350, "What is it? I And", "What is it? And", "B347: the I is Book II's chapter number 1 at the line end"),
+    # Found by a diff against Genie's OCR of vol. IX (a fourth witness), read on the image.
+    (372, "about good fortune For the", "about good fortune. For the", "B369: a faint full stop ends the line"),
 ]
 
 # Units that carry no letters and so cannot be matched against a scan; each
