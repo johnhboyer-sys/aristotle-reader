@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import difflib
+import hashlib
 import html
 import json
 import re
@@ -112,6 +113,22 @@ def _math(body: str) -> str:
     return re.sub(r"[\\{}^_]|mathrm", "", b)
 
 
+# Segments with no running head that the footnote-mark rule did not already
+# drop, dropped as notes: each was read and is a footnote (continued from the
+# page before, or one whose opening words also occur in our text) or front matter. A body
+# page Genie gave no head would be dropped the same way, so verify fails on
+# any such segment not listed here, and on a listed one it no longer sees.
+NOTE_SEGMENTS = {
+    "Plant": ["The argument is that there", "i. e. the earth is", "Casuram is due to a"],
+    "Mirab": ["vi CONTENTS"],
+    "Mech": ["object the fore part has", "852 19. i. e. if", "34. i. e. the force"],
+    "Lin": ["popular view, which regarded Earth,", "968 5 : cf. also",
+            "can only translate this by", "posites of these. For the", "lines from a difference in",
+            "he proposes to read", "we must not regard division"],
+}
+DROPPED: dict[str, list[str]] = {}
+
+
 def genie(work: str, path: Path = GENIE_DEFAULT, body_grams: set | None = None) -> list[tuple[str, int]]:
     """[(text line, genie line number)] of the body, footnotes and heads dropped.
 
@@ -137,6 +154,8 @@ def genie(work: str, path: Path = GENIE_DEFAULT, body_grams: set | None = None) 
         notes_at = next((i for i, (raw, _) in enumerate(seg) if is_note_line(raw, body_grams)), None)
         opens_with_head = not re.search(r"[a-z]", _clean_line(seg[0][0]))
         if not opens_with_head:
+            if notes_at != 0:            # dropped on the head rule alone: must be pinned
+                DROPPED.setdefault(work, []).append(" ".join(_clean_line(seg[0][0]).split()[:5]))
             notes_at = 0
         for raw, ln in seg[:notes_at]:
             s = _clean_line(raw)
@@ -155,12 +174,18 @@ SMALLCAP = str.maketrans(dict(zip("ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀ�
 LOOKALIKE = str.maketrans(dict(zip("ΑΒΕΖΗΙΚΜΝΟΡΤΥΧ", "ABEZHIKMNOPTYX")))
 
 
+WORDS: set[str] = set()   # our text's lower-case words, set by diff()
+
+
 def key(t: str) -> str:
     """Comparison form: a chapter's opening word is set in small capitals, which
-    Genie gives as capitals; case is ignored for an all-capital token only."""
+    Genie gives as capitals. Case is ignored for an all-capital token only when
+    it spells a word our text uses in lower case, so a figure label (AB, EHB)
+    keeps its case and a label misread in case still shows."""
     u = t.translate(SMALLCAP).translate(LOOKALIKE)
     t = t.translate(LOOKALIKE)
-    return u.capitalize() if (u != t or (sum(c.isupper() for c in u) > 1 and u.upper() == u)) else u
+    caps = u != t or (sum(c.isupper() for c in u) > 1 and u.upper() == u)
+    return u.capitalize() if caps and _bare(u) in WORDS else u
 
 
 def norm(text: str) -> str:
@@ -185,11 +210,11 @@ def tokens(text: str) -> list[str]:
 def genie_tokens(work: str, path: Path, vocab: set[str], body_grams: set) -> tuple[list[str], list[int]]:
     toks, where = [], []
     for s, ln in genie(work, path, body_grams):
-        for t in tokens(s):
-            if _margin_number(t):
+        for k, t in enumerate(tokens(s)):
+            if _margin_number(t, k == 0, work):
                 continue
             m = re.fullmatch(r"(\S+-)(\d{1,2})", t)             # mois-5 ture
-            if m and _margin_number(m.group(2)):
+            if m and _margin_number(m.group(2), False, work):
                 t = m.group(1)
             toks.append(t)
             where.append(ln)
@@ -204,42 +229,64 @@ def genie_tokens(work: str, path: Path, vocab: set[str], body_grams: set) -> tup
             ow.append(where[i])
             i += 2
             continue
-        if re.search(r"\w-\w", t) and _bare(t) not in vocab and _bare(t.replace("-", "")) in vocab:
-            t = t.replace("-", "")          # appear-ance: a line-end hyphen kept inside a line
+        halves = _bare(t).split("-")
+        if (re.search(r"\w-\w", t) and _bare(t) not in vocab and _bare(t.replace("-", "")) in vocab
+                and not all(h in vocab for h in halves)):
+            t = t.replace("-", "")          # appear-ance: a line-end hyphen kept inside a line;
+                                            # not-being, whose halves are words, keeps its hyphen
         out.append(t)
         ow.append(where[i])
         i += 1
     return out, ow
 
 
-def _margin_number(t: str) -> bool:
-    """A bare line number (5, 10 ... 40) or Bekker page (791-980) from the margin."""
-    # Our English carries no bare numeral anywhere (checked 2026-11-07), so any
-    # bare numeral in Genie's read is a margin line, Bekker page, chapter or
-    # section number.
-    return bool(re.fullmatch(r"\d{1,3}", t))
+# Joachim (Lin) and Forster's De Plantis number the margin by Bekker line where
+# a sentence or note falls, not every fifth line.
+ANY_LINE_NUMBER = {"Lin", "Plant"}
+
+
+def _margin_number(t: str, line_start: bool = False, work: str = "") -> bool:
+    """A margin figure Genie set into the text: a line number (5, 10 ... 40, or
+    any up to 40 in ANY_LINE_NUMBER works), a Bekker page (791-980), or a
+    chapter or section number opening a line. Any other bare numeral stays,
+    and shows as a difference."""
+    if not re.fullmatch(r"\d{1,3}", t):
+        return False
+    v = int(t)
+    lines = 1 <= v <= 40 if work in ANY_LINE_NUMBER else (5 <= v <= 40 and v % 5 == 0)
+    return line_start or lines or 791 <= v <= 980
 
 
 def _bare(t: str) -> str:
     return re.sub(r"[^\w'-]", "", t).lower()
 
 
+# Each work's first printed words (archive.org worksofaristotle0001unse_r3i1).
+BODY_START = {
+    "Col": "SIMPLE colours are the proper", "Aud": "ALL sounds, whether articulate or",
+    "Phgn": "MENTAL character is not independent", "Plant": "LIFE is found in animals",
+    "Mirab": "MEN say that in Paeonia,", "Mech": "Our wonder is excited, firstly,",
+    "Lin": "ARE there indivisible lines? And,", "Vent": "Boreas (the North Wind). At",
+    "MXG": "MELISSUS says that, if anything",
+}
 COVERAGE: dict[str, float] = {}   # share of our words Genie's read partners, per work
 MIN_COVERAGE = 0.97
 
 
 def diff(work: str, path: Path = GENIE_DEFAULT, ctx: int = 6, text: str | None = None):
     ot = tokens(text if text is not None else "\n".join(ours(work)))
+    WORDS.clear()
+    WORDS.update(_bare(t) for t in ot if t.lower() == t)
     vocab = {_bare(t) for t in ot}
     ok = [key(t) for t in ot]
     grams = {tuple(ok[i:i + 3]) for i in range(len(ok) - 2)}
     gt, gw = genie_tokens(work, path, vocab, grams)
-    # trim Genie's front matter: start at our first five words
-    head = ot[:5]
-    for s in range(len(gt) - 5):
-        if gt[s:s + 5] == head or [_bare(x) for x in gt[s:s + 5]] == [_bare(x) for x in head]:
-            gt, gw = gt[s:], gw[s:]
-            break
+    # trim Genie's front matter (title page, preface, contents) at the print's
+    # own first words, pinned here so a loss at our opening still shows
+    head = [_bare(x) for x in BODY_START[work].split()]
+    starts = [i for i in range(len(gt) - len(head)) if [_bare(x) for x in gt[i:i + len(head)]] == head]
+    if starts:
+        gt, gw = gt[starts[0]:], gw[starts[0]:]
     sm = difflib.SequenceMatcher(None, [key(x) for x in ot], [key(x) for x in gt], autojunk=False)
     COVERAGE[work] = sum(b.size for b in sm.get_matching_blocks()) / max(1, len(ot))
     res = []
@@ -380,12 +427,12 @@ PRINT_READS: dict[str, list[tuple[str, str, str]]] = {
 # entry is (work, our four words before it, ours, genie, reason) and must
 # match exactly one difference
 # in `verify`; an entry that matches none fails, so a stale allowance cannot
-# hide a later change. `genie` ending in "…" matches Genie text that starts so.
+# hide a later change. A long `genie` is given as "opening words…#digest" (sha1 of all of it).
 VERIFY_ALLOW: list[tuple[str, str, str, str, str]] = [
     ('Col', 'by the heat —', 'then', '-then', 'leaf 25: heat—then: the dash is ours; Genie reads -then'),
     ('Aud', 'space to be filled.', 'Furthermore,', 'Furthermore — more,', 'leaf 39: Further- at the page foot, more on the next: Furthermore'),
     ('Phgn', 'eyes under the upper', 'lids', 'lids,', 'leaf 73: lids⁹ ¹⁰, no comma'),
-    ('Plant', 'properly requires moist food', '', 'i.e. life as found in the…', 'leaf 86: Genie set footnote text into the body'),
+    ('Plant', 'properly requires moist food', '', 'i.e. life as found in the…#a75537c37e', 'leaf 86: Genie set footnote text into the body'),
     ('Plant', 'name, are found in', '⟨almost⟩', '\\', 'leaf 94: ⟨almost⟩ printed; Genie reads \\'),
     ('Plant', 'taken into consideration. A', 'plant', 'PLANT', 'leaf 96: small capitals at the opening (A PLANT); we give plain case'),
     ('Plant', 'many other differences. A', 'plant', 'PLANT', 'leaf 101: small capitals at the opening (A PLANT); we give plain case'),
@@ -395,10 +442,10 @@ VERIFY_ALLOW: list[tuple[str, str, str, str, str]] = [
     ('Mirab', 'please and boil it.', '', '^', 'leaf 134: no mark; Genie reads ^'),
     ('Mirab', 'that the stone called', "'marieus' does", "'marieus 'does", 'leaf 135: ‘marieus¹’ does: the quote closes after the note figure'),
     ('Mirab', 'administer this poison to', 'Cleonymus', 'Cleonymus.', 'leaf 141: Cleonymus, no stop (the 5 after it is the margin)'),
-    ('Mirab', 'inhabitants, lest they should', '', 'thus — ὃ φασιν εἶναι δάκρυον…', 'leaf 143: Genie set footnote text into the body (a note continued from leaf 142)'),
+    ('Mirab', 'inhabitants, lest they should', '', 'thus — ὃ φασιν εἶναι δάκρυον…#ee6ad134c0', 'leaf 143: Genie set footnote text into the body (a note continued from leaf 142)'),
     ('Mech', 'the cause of it.', '', 'I', 'leaf 175: the 1 is the margin chapter number; Genie reads I'),
     ('Mech', 'and let the rectangle', 'ΔΨΡΓ', 'AΨPΓ', 'leaf 178: ΔΨΡΓ printed'),
-    ('Mech', 'nothing to prevent the', '', 'fails. Why is this? The answer…', 'leaf 179: Genie set footnote text into the body (a note continued from the page before)'),
+    ('Mech', 'nothing to prevent the', '', 'fails. Why is this? The answer…#88623d0bb7', 'leaf 179: Genie set footnote text into the body (a note continued from the page before)'),
     ('Mech', 'by the smaller. Let', 'ΔZΓ', 'Δ Z Γ', 'leaf 199: the label is set solid; Genie spaces its letters'),
     ('Mech', 'A the common centre,', 'ZI', 'Z I', 'leaf 199: the label is set solid; Genie spaces its letters'),
     ('Mech', 'own motion, equal to', 'ZΛ.', 'Z Λ.', 'leaf 199: the label is set solid; Genie spaces its letters'),
@@ -410,41 +457,41 @@ VERIFY_ALLOW: list[tuple[str, str, str, str, str]] = [
     ('Mech', 'ΖΓ will move along', 'ZΛ;', 'Z Λ;', 'leaf 199: the label is set solid; Genie spaces its letters'),
     ('Mech', 'again becomes perpendicular to', 'ZΛ', 'ZA', 'leaf 200: ZΛ printed (Λ without a bar), as ZA in the line above is A'),
     ('Mech', 'ΒΓ is equal to', 'EH,', 'EΠ,', 'leaf 204: EH printed; Genie reads EΠ'),
-    ('Mech', 'then, he is to', '', '25. i.e. when a line is…', 'leaf 206: Genie set footnote text into the body'),
+    ('Mech', 'then, he is to', '', '25. i.e. when a line is…#3eaf642c6c', 'leaf 206: Genie set footnote text into the body'),
     ('Lin', 'every class of quanta?', '§', 'S', 'leaf 215: § printed; Genie reads S'),
     ('Lin', "is 'big' not 'little'", '⟨or', 'or', 'leaf 215: ⟨or printed; Genie drops the bracket'),
     ('Lin', "'little' ⟨or 'great' not", "'small'⟩.", "'small'.", 'leaf 215: ‘small’⟩. printed; Genie drops the bracket'),
     ('Lin', 'one another; and therefore', '⟨by', '(by', 'leaf 219: ⟨by printed; Genie reads ('),
     ('Lin', 'therefore ⟨by the preceding', 'argument⟩', 'argument)', 'leaf 219: argument⟩ printed; Genie reads )'),
-    ('Lin', 'be rational or irrational.', '', 'consist ultimately of a finite number…', 'leaf 220: Genie set footnote text into the body'),
-    ('Lin', 'suitably applied); and nevertheless', '', "regards the text, I adopt Apelt's…", 'leaf 221: Genie set footnote text into the body'),
+    ('Lin', 'be rational or irrational.', '', 'consist ultimately of a finite number…#f3a16fe37a', 'leaf 220: Genie set footnote text into the body'),
+    ('Lin', 'suitably applied); and nevertheless', '', "regards the text, I adopt Apelt's…#fb320b683d", 'leaf 221: Genie set footnote text into the body'),
     ('Lin', 'the composite magnitude there', 'are', 'arc', 'leaf 222: are printed; Genie reads arc'),
-    ('Lin', 'are infinite in number.', '', 'however, omitted by Z.) Apelt defends…', 'leaf 222: Genie set footnote text into the body'),
-    ('Lin', 'is not infinite admits', '', 'The argument of the whole passage…', 'leaf 223: Genie set footnote text into the body'),
-    ('Lin', 'the arguments of Zeno.', '', "surate', and (ii) that all commensurate…", 'leaf 227: Genie set footnote text into the body'),
-    ('Lin', '— conclusions and assumptions', '', "fact, and therefore — since Zeno's…", 'leaf 228: Genie set footnote text into the body'),
-    ('Lin', 'on the indivisible line.', '', 'are all, quâ infinitesimal, equal: hence…', 'leaf 230: Genie set footnote text into the body'),
+    ('Lin', 'are infinite in number.', '', 'however, omitted by Z.) Apelt defends…#3b4685e823', 'leaf 222: Genie set footnote text into the body'),
+    ('Lin', 'is not infinite admits', '', 'The argument of the whole passage…#1779256ca8', 'leaf 223: Genie set footnote text into the body'),
+    ('Lin', 'the arguments of Zeno.', '', "surate', and (ii) that all commensurate…#49bf58196d", 'leaf 227: Genie set footnote text into the body'),
+    ('Lin', '— conclusions and assumptions', '', "fact, and therefore — since Zeno's…#05df2ac6b6", 'leaf 228: Genie set footnote text into the body'),
+    ('Lin', 'on the indivisible line.', '', 'are all, quâ infinitesimal, equal: hence…#cd6ea5ae3d', 'leaf 230: Genie set footnote text into the body'),
     ('Lin', 'from one angle on', 'to', '', 'leaf 231: on to the diagonal printed; Genie drops to'),
-    ('Lin', '(i.e. the original square', 'constructed', 'constructed) feet long. Let CABD be…', 'leaf 231: Genie set footnote text into the body after constructed'),
+    ('Lin', '(i.e. the original square', 'constructed', 'constructed) feet long. Let CABD be…#39d95c8ea6', 'leaf 231: Genie set footnote text into the body after constructed'),
     ('Lin', 'the indivisible line. For', '⟨suppose', 'suppose', 'leaf 232: ⟨suppose printed; Genie drops the bracket'),
     ('Lin', 'it to be so:', 'then,⟩', 'then,', 'leaf 232: then,⟩ printed; Genie drops the bracket'),
     ('Lin', 'of the diagonal were', '⟨not', 'not', 'leaf 232: ⟨not printed; Genie drops the bracket'),
     ('Lin', 'were ⟨not less than,', 'but⟩', 'but', 'leaf 232: but⟩ printed; Genie drops the bracket'),
-    ('Lin', 'out of two Simples.⟩', '', 'In l. ἀφαιρεθέντος γάρ τοῦ ἴσου,…', 'leaf 233: Genie set footnote text into the body'),
-    ('Lin', "'indivisible' line is divisible.", '', 'stand it. The writer assumes (ἅπασα…', 'leaf 216: Genie set footnote text into the body'),
-    ('Lin', "of the 'indivisible' line.", '', 'it would not be possible to…', 'leaf 235: Genie set footnote text into the body'),
+    ('Lin', 'out of two Simples.⟩', '', 'In l. ἀφαιρεθέντος γάρ τοῦ ἴσου,…#bcb70950ef', 'leaf 233: Genie set footnote text into the body'),
+    ('Lin', "'indivisible' line is divisible.", '', 'stand it. The writer assumes (ἅπασα…#2b8c80b472', 'leaf 216: Genie set footnote text into the body'),
+    ('Lin', "of the 'indivisible' line.", '', 'it would not be possible to…#0639ecbd0c', 'leaf 235: Genie set footnote text into the body'),
     ('Lin', 'and since the opinions', '⟨which', '(which', 'leaf 240: ⟨which printed; Genie reads ('),
     ('Lin', 'they are trying to', 'establish⟩', 'establish)', 'leaf 240: establish⟩ printed; Genie reads )'),
     ('Lin', 'be no indivisible line.', '§', 'S', 'leaf 240: § printed; Genie reads S'),
-    ('Lin', 'divided into unequal parts.', '', 'the planes bounded by those lines…', 'leaf 236: Genie set footnote text into the body'),
-    ('Lin', 'consist of discrete elements.⟩', '', 'In l. τὰ ἄνισα is strange:…', 'leaf 241: Genie set footnote text into the body'),
-    ('Lin', 'a magnitude by composition.', '', 'Of these four alternatives σύνθεσις is…', 'leaf 242: Genie set footnote text into the body'),
+    ('Lin', 'divided into unequal parts.', '', 'the planes bounded by those lines…#ee8496fc74', 'leaf 236: Genie set footnote text into the body'),
+    ('Lin', 'consist of discrete elements.⟩', '', 'In l. τὰ ἄνισα is strange:…#dd6a8efea4', 'leaf 241: Genie set footnote text into the body'),
+    ('Lin', 'a magnitude by composition.', '', 'Of these four alternatives σύνθεσις is…#769dc0585c', 'leaf 242: Genie set footnote text into the body'),
     ('Lin', 'But if the Simples', '⟨when', 'when', 'leaf 243: ⟨when printed; Genie drops the bracket'),
     ('Lin', 'the Simples ⟨when in', 'contact⟩', 'contact', 'leaf 243: contact⟩ printed; Genie drops the bracket'),
     ('Lin', '⟨when in contact⟩ are', '⟨not', 'not', 'leaf 243: ⟨not printed; Genie drops the bracket'),
     ('Lin', "contact⟩ are ⟨not 'one',", 'but⟩', 'but', 'leaf 243: but⟩ printed; Genie drops the bracket'),
-    ('Lin', 'a time of Nows.', '', "in l. οὐδ᾿ ἂν ἄρ' αἱ…", 'leaf 243: Genie set footnote text into the body'),
-    ('Lin', 'one another at K.', '', 'in contact with K whole-with-whole —…', 'leaf 245: Genie set footnote text into the body'),
+    ('Lin', 'a time of Nows.', '', "in l. οὐδ᾿ ἂν ἄρ' αἱ…#57dc758fa0", 'leaf 243: Genie set footnote text into the body'),
+    ('Lin', 'one another at K.', '', 'in contact with K whole-with-whole —…#174ff9eaea', 'leaf 245: Genie set footnote text into the body'),
     ('Lin', 'its being in contact', '⟨with', '(with', 'leaf 247: ⟨with printed; Genie reads ('),
     ('Lin', '⟨with its predecessor or', 'successor⟩,', 'successor),', 'leaf 247: successor⟩, printed; Genie reads )'),
     ('Lin', "be a 'series'. (h)", '†', '', 'leaf 247: † printed; Genie drops it'),
@@ -452,12 +499,18 @@ VERIFY_ALLOW: list[tuple[str, str, str, str, str]] = [
     ('Lin', 'στιγμῇ, [γραμμὴ καὶ ἐπιστήμης', 'NWᵃ,', 'NW,', 'leaf 247: NWᵃ printed; Genie drops the raised a'),
     ('Lin', 'ἐπιστήμης NWᵃ, ἐπιστήμη καὶ', 'γραμμή Zᵃ],', 'γραμμὴ Z],', 'leaf 247: Zᵃ printed; Genie drops the raised a'),
     ('Lin', 'ἀδύνατον τὰ εἰρημένα εἶναι.', '†', '', 'leaf 247: † printed; Genie drops it'),
-    ('Lin', 'determined by comparison with', '', 'to be required by the logic…', 'leaf 251: Genie set footnote text into the body'),
+    ('Lin', 'determined by comparison with', '', 'to be required by the logic…#40840747af', 'leaf 251: Genie set footnote text into the body'),
     ('Lin', "plane will be 'joints'", '⟨too⟩:', '(too):', 'leaf 252: ⟨too⟩ printed; Genie reads ( )'),
-    ('Vent', 'Scylletium. At Dorylaeum in', '', 'Boreas N. N.N.E. Meses N.E. Caecias…', 'leaf 257: the chart of the winds, a figure, not text'),
+    ('Vent', '', 'Boreas', 'BOREAS', 'leaf 255: small capitals at the opening; we give plain case'),
+    ('Vent', 'Scylletium. At Dorylaeum in', '', 'Boreas N. N.N.E. Meses N.E. Caecias…#da9721bde6', 'leaf 257: the chart of the winds, a figure, not text'),
+    ('MXG', 'in the way mentioned?', 'Gorgias', 'GORGIAS', 'leaf 276: small capitals at the opening; we give plain case'),
+    ('Phgn', 'likeness, but only a resemblance.', 'Moreover,', 'More-over,', 'leaf 54: More- ends the line; Genie keeps the break'),
+    ('Plant', 'in the sea than', 'elsewhere,', 'else-where,', 'leaf 106: else- ends the line; Genie keeps the break'),
+    ('MXG', 'Being to Being by the', 'abovementioned', 'above-mentioned', 'leaf 266: unsettled: above- ends the line, so the print cannot say whether the word has a hyphen'),
+    ('MXG', 'that if anything is, it cannot', '', '3', 'leaf 270: the margin chapter number 3'),
     ('MXG', 'were either by way', '', 'of', 'leaf 262: one of at the line break; Genie doubles it'),
-    ('MXG', 'the inability of that', '', 'of Melissus, ἀκίνητον εἶναι τὸ ἕν,…', 'leaf 269: Genie set footnote text into the body'),
-    ('MXG', 'exist in itself, or', '', "ὄντων, τοῦ μὲν ὄντος, τοῦ δ'…", 'leaf 272: Genie set footnote text into the body'),
+    ('MXG', 'the inability of that', '', 'of Melissus, ἀκίνητον εἶναι τὸ ἕν,…#f526e5a0ad', 'leaf 269: Genie set footnote text into the body'),
+    ('MXG', 'exist in itself, or', '', "ὄντων, τοῦ μὲν ὄντος, τοῦ δ'…#114aca39bf", 'leaf 272: Genie set footnote text into the body'),
 ]
 UNSETTLED = "unsettled"         # a reason starting with this is listed in the report
 
@@ -549,6 +602,24 @@ def _prose(work: str) -> dict:
     return stage1_archive._load_prose(cfg["english"]["primary"])
 
 
+def _spans(text: str, sub: str) -> list[int]:
+    out, i = [], text.find(sub)
+    while i >= 0:
+        out.append(i)
+        i = text.find(sub, i + 1)
+    return out
+
+
+def stray(text: str, old: str, new: str) -> list[int]:
+    """Where `old` stands in `text` other than inside a copy of `new`. When the
+    reading only adds to the defect (old inside new: a comma restored) the
+    corrected copies hold it; when it removes (new inside old: a stray mark
+    dropped) every copy of `old` is the defect."""
+    inside = [(j, j + len(new)) for j in _spans(text, new)]
+    return [i for i in _spans(text, old)
+            if not any(a <= i and i + len(old) <= b for a, b in inside)]
+
+
 def apply(works: list[str]) -> None:
     for work in works:
         reads = PRINT_READS.get(work, [])
@@ -557,12 +628,13 @@ def apply(works: list[str]) -> None:
         before = _prose(work)
         files = {p: p.read_text(encoding="utf-8") for p in _source_files(work)}
         for old, new, why in reads:
-            hits = [p for p, t in files.items() for _ in range(t.replace(new, "\x00").count(old))]
-            if any(new in t for t in files.values()) and not hits:
+            hits = [(p, i) for p, t in files.items() for i in stray(t, old, new)]
+            if not hits and any(new in t for t in files.values()):
                 continue                                        # already applied
             if len(hits) != 1:
                 raise ValueError(f"{work} PRINT_READS {old!r} ({why}): found {len(hits)} times")
-            files[hits[0]] = files[hits[0]].replace(old, new, 1)
+            p, i = hits[0]
+            files[p] = files[p][:i] + new + files[p][i + len(old):]
         for p, t in files.items():
             p.write_text(t, encoding="utf-8")
         after = _prose(work)
@@ -576,18 +648,25 @@ def check(works: list[str], texts: dict | None = None) -> list[str]:
     for work in works:
         text = (texts or {}).get(work) or _html_text(work)
         for old, new, why in PRINT_READS.get(work, []):
-            if old in text.replace(new, "\x00"):
+            if stray(text, old, new):
                 bad.append(f"{work}: {old!r} is back ({why})")
             if new not in text:
                 bad.append(f"{work}: {new!r} missing ({why})")
     return bad
 
 
+def _digest(text: str) -> str:
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()[:10]
+
+
 def _allowed(d: dict, a: tuple) -> bool:
     work, before, o, g, _ = a
     if d["work"] != work or d["ours"] != o or not d["before"].endswith(before):
         return False
-    return d["genie"].startswith(g[:-1]) if g.endswith("…") else d["genie"] == g
+    if "…#" in g:                       # a long footnote: its opening words and a digest of all of it
+        head, digest = g.split("…#")
+        return d["genie"].startswith(head) and _digest(d["genie"]) == digest
+    return d["genie"] == g
 
 
 def verify(works: list[str], path: Path, texts: dict | None = None) -> list[str]:
@@ -598,7 +677,15 @@ def verify(works: list[str], path: Path, texts: dict | None = None) -> list[str]
     if not path.is_file():
         return [f"examined nothing: Genie's read is not at {path}"]
     for work in works:
+        DROPPED.pop(work, None)
         found = diff(work, path, text=(texts or {}).get(work))
+        pinned = NOTE_SEGMENTS.get(work, [])
+        for head in DROPPED.get(work, []):
+            if not any(head.startswith(p) for p in pinned):
+                findings.append(f"{work}: a segment with no running head was dropped unexamined: {head!r}")
+        for p in pinned:
+            if sum(h.startswith(p) for h in DROPPED.get(work, [])) != 1:
+                findings.append(f"{work}: pinned note segment {p!r} seen {sum(h.startswith(p) for h in DROPPED.get(work, []))} times")
         if COVERAGE[work] < MIN_COVERAGE:
             findings.append(f"{work}: Genie's read partners only {COVERAGE[work]:.1%} of our words")
         for d in found:
@@ -633,6 +720,11 @@ PLANTS = [
     ("Lin", "But if ⟨per impossibile⟩", "But if (per impossibile)", "impossibile)"),  # bracket lost
     ("Lin", "unit in every class of quanta? § 1.", "unit in every class of quanta? S 1.", "allowance used 0"),
     ("Mech", "Let BΓEΔ be", "Let BΓΔE be", "BΓΔE"),                             # labels transposed
+    # Codex review 1's holes, each closed: a label's case, an opening lost, a
+    # word lost beside a long allowed footnote
+    ("Mech", "Let AB be a lever,", "Let Ab be a lever,", "Ab"),
+    ("Col", "SIMPLE colours are the proper colours of the elements, i.e. of fire,", "of fire,", "colours"),
+    ("Plant", "moist food and dry food", "moist food dry food", "allowance used 0"),
 ]
 
 

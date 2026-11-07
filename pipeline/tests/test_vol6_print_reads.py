@@ -35,10 +35,21 @@ def test_print_reads_hold(work):
     assert v.check([work]) == []
 
 
-def test_check_sees_an_undone_read():
-    old, new, _ = v.PRINT_READS["Lin"][0]
-    undone = v._html_text("Lin").replace(new, old, 1)
-    assert v.check(["Lin"], {"Lin": undone})
+READS = [(w, i) for w, reads in sorted(v.PRINT_READS.items()) for i in range(len(reads))]
+
+
+@pytest.mark.parametrize("work,i", READS, ids=[f"{w}-{i}" for w, i in READS])
+def test_check_sees_each_read_undone(work, i):
+    old, new, _ = v.PRINT_READS[work][i]
+    text = v._html_text(work)
+    assert new in text
+    undone = text.replace(new, old, 1)
+    assert any(repr(old) in b for b in v.check([work], {work: undone}))
+
+
+@pytest.mark.skipif(not v.GENIE_DEFAULT.is_file(), reason="Genie's read lives only in the main checkout")
+def test_verify_against_genie():
+    assert v.verify(v.WORKS, v.GENIE_DEFAULT) == []
 
 
 def test_rulings_are_bound():
