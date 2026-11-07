@@ -238,3 +238,16 @@ def test_stage3_hard_gate_passes_a_clean_work(tmp_path, monkeypatch, capsys):
     )
     assert report["ok"] is True
     assert "stage3-quality:" in capsys.readouterr().out
+
+
+def test_tokenize_skips_jaegers_double_bar():
+    """De Spiritu (Jaeger 1913, TLG 0086.043) marks a break in the sense with a
+    free-standing ‖ (U+2016) between clauses. It is a sign, not a word: it must
+    tokenize to nothing (logged as a siglum), not fail transliteration."""
+    spine = {"work": "Spir", "segments": [{"id": "s1", "book": 1, "column": "483a",
+             "lines": [{"n": 18, "text": "τὴν ἐνέργειαν. ‖ τὸ δὲ πνεῦμα"}]}]}
+    tokens, sigla_log, key_failures = tokenize(spine)
+    assert key_failures == []
+    assert [t["t"] for t in tokens["segments"][0]["lines"][0]["tokens"]] == [
+        "τὴν", "ἐνέργειαν", "τὸ", "δὲ", "πνεῦμα"]
+    assert sigla_log == [{"ref": "483a18", "raw": "‖", "kept": ""}]

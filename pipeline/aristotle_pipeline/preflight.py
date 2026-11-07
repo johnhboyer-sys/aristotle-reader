@@ -31,6 +31,12 @@ def validate(data_dir: Path, manifests_dir: Path) -> list[Problem]:
     manifests = _load_manifests(manifests_dir, problems)
     for manifest in manifests:
         _validate_manifest_schema(manifest, problems)
+    # A manifest with `deploy_hold` names a work kept off the public site; the
+    # public build does not emit it, so its absence is expected. Once built
+    # (locally), it is checked like any other.
+    manifests = [m for m in manifests
+                 if not (m.data.get("deploy_hold") and not (data_dir / m.work_id).exists())]
+    for manifest in manifests:
         _validate_work_data(data_dir, manifest, problems)
     _validate_search_shards(data_dir, manifests, problems)
     _validate_chapter_bounds(data_dir, manifests, problems)

@@ -32,7 +32,9 @@ _PUNCT = ".,·;—()|\"‘«»" + "·;"  # ano teleia, Greek question mark
 # ⌜ ⌞ ⌝ ⌟ (U+231C/231E/231D/231F) are the half/corner brackets the TLG uses to
 # mark editorial supplements and transpositions (e.g. in the Eudemian Ethics);
 # strip like the other seclusion brackets so the bracketed words tokenize.
-_SIGLA = "†*<>[]⎪⟦⟧⌜⌞⌝⌟"
+# ‖ (U+2016) stands between clauses in Jaeger's De Spiritu (TLG 0086.043) to mark
+# a break in the sense; on its own it tokenizes to nothing.
+_SIGLA = "†*<>[]⎪⟦⟧⌜⌞⌝⌟‖"
 
 _STRIP = _PUNCT + _SIGLA
 _APOSTROPHE_END = re.compile(r"['’᾽ʼ]$")

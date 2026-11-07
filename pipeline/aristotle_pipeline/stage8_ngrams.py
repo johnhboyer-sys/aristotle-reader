@@ -141,12 +141,25 @@ def _english_stream(work: str) -> tuple[list[list[str]], list[int], list[dict]]:
     return stream, bounds, segments
 
 
+def _streams(source: Path, dist: Path) -> tuple[list[Path], list[str]]:
+    """The cached per-work streams to merge, and the works skipped. A stream
+    counts only when its work is emitted in dist: build/ngrams outlives a
+    cleaned dist, so a work the public build left out (a held work, manifest
+    `deploy_hold`) or dropped would otherwise reach the phrase index."""
+    files, skipped = [], []
+    for path in sorted(source.glob("*.json")):
+        (files if (dist / path.stem).is_dir() else skipped).append(path)
+    return files, [p.stem for p in skipped]
+
+
 def run() -> Path:
     source = BUILD_DIR / "ngrams"
-    files = sorted(source.glob("*.json"))
+    files, skipped = _streams(source, BUILD_DIR / "dist")
+    if skipped:
+        print(f"stage8: skipping cached streams with no emitted work: {', '.join(skipped)}")
     if not files:
         raise ValueError(
-            "stage8: no per-work streams in build/ngrams — run stage6 for every work first"
+            "stage8: no per-work streams in build/ngrams for a work in build/dist — run stage6 for every work first"
         )
 
     # fold(surface) -> the headwords that surface can belong to. Small (about

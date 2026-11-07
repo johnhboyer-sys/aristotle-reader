@@ -13,6 +13,17 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## De Spiritu — BUILT, HELD from deploy (2026-11-06, branch `claude/add-de-spiritu-9fadd2`)
+
+De Spiritu (`Spir`, Bekker 481a–486b, spurious): Jaeger's Greek (TLG 0086.043; chapters from First1KGreek) beside J. F. Dobson's Oxford translation, with Dobson's 80 printed margin numbers as real ticks.
+It is held out of every deploy until John clears it. The brief that added it said Dobson's translation is US public domain only from 2027-01-01, so on that reading it **may deploy on or after 2027-01-01**.
+That date is the collected Works vol. III (first edition 1931; 1931 + 95 years). But De Spiritu came out first on its own in 1914: Toronto's copy of vol. III binds it with its 1914 title page, and the DLI copy (a 1968 reprint of the 1931 volume) keeps the treatise's own title page, "First edition 1914".
+A 1914 US publication is public domain now (everything published before 1930 is, as of 2026-01-01), and the site already serves Forster's Oeconomica (Oxford, 1920). So the hold may be needless. John decides.
+
+The hold is two switches; release means removing both:
+- `deploy_hold:` at the top of `manifests/Spir.yaml`. `npm run build:public` skips a held work and preflight expects it unbuilt. `npm run deploy` refuses any `data/Spir/` file and any data file that cites `Spir` (lemma pages, `bekker.json`, search shards). A local `uv run python -m aristotle_pipeline all --work Spir` still builds it, and the app build then gathers it into the lemma pages and the Bekker index. So before an app-only deploy, delete `build/dist/Spir` and rerun stage9 and the app build, or the deploy refuses.
+- `shared/lib/works.ts`: the `SPIR` entry and its Spurious Works card exist only under `PUBLIC_SHOW_PRIVATE=1`.
+
 ## 2026-11-04 — DEPLOYED: Sens chapter 7, review follow-ups (PRs #182, #186)
 
 `gh-pages ca680c55 → 669a81af`, source `origin/main` `6388eb22b3` (the #186 merge). John asked whether
