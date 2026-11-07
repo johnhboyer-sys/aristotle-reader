@@ -1,0 +1,39 @@
+=== body
+no man is white, some man is white. But the affirmation of a univer-
+sal, and the negation of a universal, are opposed contrarily; as every
+man is white, no man is white; every man is just, no man is just.
+Hence it is impossible that these should be at one and the same time
+true[^4]. It may sometimes, however, happen, that the opposites to these
+are co-verified in the same thing[^5]; as, not every man is white, and
+some man is white. Of such contradictions, therefore, of universals as
+are universally made, it is necessary that one of them should be true or
+false[^6]; and also such as are of particulars; as, Socrates is white, So-
+crates is not white. But with respect to such contradictions as are of
+universals, indeed, yet are not universally made, the one is not always
+true, but the other false[^7]. For at one and the same time it may be
+truly said, man is white, and man is not white; and man is beautiful,
+and man is not beautiful; for if he is deformed he is not beautiful; and
+if any thing is becoming to be, it is not. This, however, may immedi-
+ately appear to be absurd[^8], because this assertion, *man is not white,*
+seems at the same time to signify the same thing, as no man is white[^9].
+=== notes
+¶[^4] These contraries cannot be at one and the same time true, but they may be at one and the
+same time false; or, the one may be true, but the other false. In necessary matter, however,
+affirmation is true, and negation false; as every man is an animal, no man is an animal. But in
+impossible matter, affirmation is false, and negation true; as, every man is a stone, no man is
+a stone. And in contingent matter, both are false; as, every man is white, no man is white.
+¶[^5] That is, particular sub-contraries, which contradict the universals mutually contrary to each
+other, are co-verified in the same thing. For particular affirmation contradicts universal nega-
+tion, and particular negation, universal affirmation. But they are co-verified in the same thing;
+i. e. in contingent matter, as in the instance adduced by Aristotle. But in necessary matter, af-
+firmation is true, and negation false; as, some man is an animal, not every man is an animal.
+In impossible matter, affirmation is false, but negation true; as, every man is a stone, no man
+is a stone.
+¶[^6] That is, when of contrary assertions, one is universal, but the other particular; as, every
+man is just, not every man is just. No man is just, some man is just.
+¶[^7] For in contingent matter, both are at the same time true, as in the examples adduced by
+Aristotle.
+¶[^8] That is to say, what has been asserted by Aristotle, that indefinites are at one and the same
+time true.
+¶[^9] Indefinite enunciation may seem to be universal, because it has a universal subject; but it is
+not universal, because it wants the universal mark *every,* or *no one.*

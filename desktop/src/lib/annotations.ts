@@ -62,7 +62,8 @@ export const PALETTE: AnnColor[] = ['yellow', 'green', 'pink', 'blue', 'purple',
 
 import { isTauri, errorText, atomicWriteText } from './runtime';
 import { memoAsync } from '@shared/lib/memo';
-import { anchorCite, lineAnchor, lineRef } from '@shared/lib/data';
+import { anchorCite, citeLabel, citeLabelOf, lineAnchor, lineRef } from '@shared/lib/data';
+import { getWork, type Work } from '@shared/lib/works';
 
 interface AnnRead {
   anns: Annotation[];
@@ -246,14 +247,16 @@ const nodeEl = (n: Node): Element | null =>
 // — which is what left hard line breaks / footnote digits in normal copies;
 // see App.svelte's onDocumentCopy).
 
-/** Greek-line citation for a Range, e.g. "(NE 1094a3)" or "(NE 1094a3–1094a5)".
+/** Greek-line citation for a Range, e.g. "(NE 1094a3)" or "(NE 1094a3–1094a5)";
+ * "(Ath. Pol. 49.3)" for a chapter.section work.
  * Returns null off a Greek line (English/mixed selection). */
-export function greekCiteForRange(range: Range, abbr: string): string | null {
+export function greekCiteForRange(range: Range, abbr: string, work?: Pick<Work, 'citation'>): string | null {
   const startLine = nodeEl(range.startContainer)?.closest('.greek-line[id]') ?? null;
   const endLine = nodeEl(range.endContainer)?.closest('.greek-line[id]') ?? null;
   if (!startLine && !endLine) return null;
-  const s = startLine ? anchorCite(startLine.id) : null;
-  const f = endLine ? anchorCite(endLine.id) : null;
+  const at = (line: Element) => { const c = anchorCite(line.id); return c && citeLabelOf(work, c); };
+  const s = startLine ? at(startLine) : null;
+  const f = endLine ? at(endLine) : null;
   return s && f && s !== f ? `(${abbr} ${s}–${f})` : `(${abbr} ${s ?? f})`;
 }
 
@@ -263,11 +266,12 @@ export function greekCiteForRange(range: Range, abbr: string): string | null {
  * a line-level citation would be an alignment estimate the data model
  * deliberately refuses. Falls back to null (→ plain text) if no enclosing
  * segment resolves on either boundary. */
-export function segCiteForRange(range: Range, abbr: string): string | null {
+export function segCiteForRange(range: Range, abbr: string, work?: Pick<Work, 'citation'>): string | null {
   const startSeg = nodeEl(range.startContainer)?.closest('.segment[id^="col-"]') ?? null;
   const endSeg = nodeEl(range.endContainer)?.closest('.segment[id^="col-"]') ?? null;
   if (!startSeg && !endSeg) return null;
-  const colOf = (seg: Element) => seg.id.replace(/^col-/, '');
+  // A chapter.section work's column is its chapter: "(Ath. Pol. 49)".
+  const colOf = (seg: Element) => citeLabel(work, seg.id.replace(/^col-/, ''));
   const s = startSeg ? colOf(startSeg) : null;
   const f = endSeg ? colOf(endSeg) : null;
   return s && f && s !== f ? `(${abbr} ${s}–${f})` : `(${abbr} ${s ?? f})`;
@@ -343,13 +347,13 @@ export async function copySelectionPlain(): Promise<boolean> {
  * line granularity (byte-identical to the site's own floating copy button);
  * English selections cite at column granularity via segCiteForRange; falls
  * back to plain text if neither resolves. */
-export async function copySelectionWithCitation(abbr: string): Promise<boolean> {
+export async function copySelectionWithCitation(abbr: string, work?: Pick<Work, 'citation'>): Promise<boolean> {
   const sel = window.getSelection();
   if (!sel || sel.isCollapsed || sel.rangeCount === 0) return false;
   const range = sel.getRangeAt(0);
   const text = extractCleanText(range);
   if (!text) return false;
-  const cite = greekCiteForRange(range, abbr) ?? segCiteForRange(range, abbr);
+  const cite = greekCiteForRange(range, abbr, work) ?? segCiteForRange(range, abbr, work);
   return writeClipboard(cite ? `${text}\n${cite}` : text);
 }
 
@@ -644,12 +648,14 @@ export function clearPending(): void {
   css.highlights.delete('ann-pending');
 }
 
-/** A short citation label for the panel, e.g. "1097a15–1097b2" or "1097a (Ostwald)". */
+/** A short citation label for the panel, e.g. "1097a15–1097b2" or "1097a (Ostwald)";
+ * "49.3" and "49 (Kenyon)" for a chapter.section work. */
 export function annotationLabel(a: Annotation): string {
+  const work = getWork(a.work);
   if (a.target.kind === 'greek') {
-    const s = `${a.target.start.column}${lineRef(a.target.start.line, a.target.start.sub)}`;
-    const e = `${a.target.end.column}${lineRef(a.target.end.line, a.target.end.sub)}`;
+    const s = citeLabel(work, a.target.start.column, lineRef(a.target.start.line, a.target.start.sub));
+    const e = citeLabel(work, a.target.end.column, lineRef(a.target.end.line, a.target.end.sub));
     return s === e ? s : `${s}–${e}`;
   }
-  return `${a.target.column} (${a.target.translation})`;
+  return `${citeLabel(work, a.target.column)} (${a.target.translation})`;
 }

@@ -119,6 +119,26 @@ test('LSJ shard citations stay base-less and keep the nearest-line contract only
   } finally { rmSync(dist, { recursive: true, force: true }); }
 });
 
+test('a chapter-section work gets no nearest-line snap: an LSJ section citation must land exactly', async () => {
+  // Ath. Pol. 2.3 when chapter 2 has two sections is a wrong section, not a
+  // lineation drift of a line or two; snapping it would pass any section
+  // number in an existing chapter (plan G5).
+  const dist = writeFixture({
+    'AthPol/book/1/index.html': '<div id="col-2a"><span id="L2a-1"></span><span id="L2a-2"></span></div>',
+    'data/lsj/a.json': JSON.stringify({
+      'a)gora/': { head: 'ἀγορά', html: '<a class="lsj-bibl" href="/AthPol/book/1?loc=2a:2">Ath. 2.2</a>' },
+      'a)gw/n': { head: 'ἀγών', html: '<a class="lsj-bibl" href="/AthPol/book/1?loc=2a:3">Ath. 2.3</a>' },
+    }),
+  });
+  try {
+    const r = await checkDist(dist);
+    assert.deepEqual(
+      r.broken.map((b) => [path.basename(b.source), b.href, b.reason]),
+      [['a.json', '/AthPol/book/1?loc=2a:3', 'Bekker target L2a-3 not found']],
+    );
+  } finally { rmSync(dist, { recursive: true, force: true }); }
+});
+
 test('an .lsj-bibl anchor in a page gets the nearest-line contract, but must carry the base', async () => {
   const dist = writeFixture({
     'cites/index.html':

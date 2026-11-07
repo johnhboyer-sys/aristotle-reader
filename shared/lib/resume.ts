@@ -6,6 +6,9 @@
 // join the three keys into a resume point. Storage failures (private mode,
 // SSR) degrade to "no resume", never throw.
 
+import { citeLabelOf } from './data';
+import { getWork } from './works';
+
 const RECENT_KEY = 'reader-recent';
 const MAX_RECENT = 50;
 
@@ -78,4 +81,11 @@ export function lastRead(known?: (work: string) => boolean): ResumePoint | null 
     if (pos) return { work, at, ...pos };
   }
   return null;
+}
+
+// How a saved position reads on a resume button: "49.3" for a work cited by
+// chapter.section (the Athenian Constitution), the saved cite ("1103a14") for
+// any other.
+export function citeShown(work: string, cite: string): string {
+  return citeLabelOf(getWork(work), cite);
 }

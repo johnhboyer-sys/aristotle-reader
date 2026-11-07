@@ -20,12 +20,14 @@ Supersedes the "authentic works only" line in
 2. **Search filter** — `All / Genuine / Dubious / Spurious` scope row in the search
    "Refine" panel ([`Search.svelte`](../app/src/components/Search.svelte)); reuses the
    existing `selectOnly` mechanism, empty classes render disabled with a `0`.
-3. **First work: Oeconomica** (`Oec`, `spurious`) — imported end-to-end, Opus-verified.
+3. **First work: Oeconomica** (`Oec`, `spurious` then; `dubious` since 2026-11-06) — imported end-to-end, Opus-verified.
 
 `dubious` vs `spurious`: use **`dubious`** only for genuinely contested works (e.g.
 *Magna Moralia*); most opuscula in the corpus are **`spurious`** (transmitted with
-Aristotle but not by him). Oeconomica is `spurious` — its Susemihl edition title
-literally reads *quae feruntur*, "the works attributed to."
+Aristotle but not by him). The labels follow Barnes, *Complete Works* (Princeton 1984):
+his * (authenticity seriously doubted) is `dubious`, his ** (spuriousness never
+seriously contested) is `spurious` (John, 2026-11-06, "Match Barnes"). So Oeconomica,
+Problemata and Magna Moralia are `dubious`; Oeconomica was `spurious` until then.
 
 ## Recipe for the next dubious work (worked example = Oeconomica)
 
@@ -74,19 +76,29 @@ De Audibilibus (`Aud`), De Lineis Insecabilibus (`Lin`, Joachim 1908), Ventorum 
 (`Vent`, Forster 1913), De Mirabilibus Auscultationibus (`Mirab`, Dowdall 1909). Each has
 `manifests/<Id>.yaml` with `authenticity: spurious` and a `shared/lib/works.ts` entry —
 11 spurious works in the registry, grouped under "Spurious Works" on the home page (PR #28,
-same deploy). NB `git log --oneline -- manifests/<Id>.yaml` cannot reach these commits:
+same deploy; retitled "Doubtful and Spurious Works" on 2026-11-07, John's call, once
+Problemata and Oeconomica were relabelled dubious after Barnes). NB `git log --oneline -- manifests/<Id>.yaml` cannot reach these commits:
 this clone is shallow and every one of these manifests bottoms out at the boundary
 `040423e` (2026-07-27), so the PR numbers above come from `DEPLOY-STATUS.md` and GitHub,
 not from git history.
 
 **Greek cached in the Diogenes/TLG export (`build/export/.../tlg0086NNN.xml`), need PD
-English** (as of 2026-09-07 only Magna Moralia, Problemata and De Spiritu remain unbuilt —
-De Spiritu's Dobson translation is US-PD 2027-01-01 per PR #27 / `DEPLOY-STATUS.md`
-2026-07-09; the rest of this list shipped in PR #27 above): De Virtutibus et Vitiis (tlg045), Magna Moralia, De Mundo, Mechanica,
+English** (as of 2026-09-07 only Magna Moralia, Problemata and De Spiritu remain unbuilt;
+De Spiritu was built on 2026-11-06, see `DEPLOY-STATUS.md` "De Spiritu" — Dobson's
+translation dates from 1914, not the 1931 collected volume, so it is public domain;
+the rest of this list shipped in PR #27 above): De Virtutibus et Vitiis (tlg045), Magna Moralia, De Mundo, Mechanica,
 Problemata, De Coloribus, De Audibilibus, Physiognomonica, De Mirabilibus
 Auscultationibus, De Lineis Insecabilibus, De Ventorum Situ, De Melisso Xenophane
 Gorgia, De Spiritu. (Confirm each `tlg_work` id + Bekker range from the Perseus/TLG
 catalog before writing the manifest.)
+
+**Magna Moralia** (id `MM`, tlg0086.022, `dubious`) was built on branch
+`claude/add-magna-moralia-94dae5` (2026-11-06), not yet merged. Its TLG text has no
+Bekker numbers, so the Greek is lineated by `sources/mm-bekker/bekker-lines.yaml`, a
+map read from Bekker's own pages (1831, archive.org `aristotelisopera02arisuoft`) by
+`pipeline/tools/mm_bekker_lines.py` and applied by `stage1_relineate`. English: Stock
+(Oxford, 1915), built from Wikisource checked against two scans
+(`tools/build_mm_stock.py`; independent check `tools/check_mm_stock.py`).
 
 **Out of scope:** De Plantis (not in the TLG Aristotle corpus), Rhetorica ad Alexandrum
 (TLG id ambiguous), Athenian Constitution (not Bekker-paginated — breaks the reader's

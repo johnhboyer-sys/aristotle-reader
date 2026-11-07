@@ -23,7 +23,7 @@ milestoned English path (NE-grade) or the First1KGreek + MIT-archive path (DA).
 | 002 | DA | De Anima | 68 | 3 | ✅ built (First1K+MIT path) |
 | 034 | Poet | Poetics | 32 | 1 | ✅ built + registered |
 | 045 | Virt | De virtutibus et vitiis | 6 | 1 | ✅ built + registered as `VV` (spurious) — shipped 2026-07-09, PR #27 (`manifests/VV.yaml`, `shared/lib/works.ts`, `DEPLOY-STATUS.md` 2026-07-09) |
-| 029 | Oec | Oeconomica | 22 | 3 | ✅ built + registered (spurious) — shipped 2026-07-08, PR #21 (`manifests/Oec.yaml`, `shared/lib/works.ts`, `DEPLOY-STATUS.md` 2026-07-08); see `dubious-works.md` |
+| 029 | Oec | Oeconomica | 22 | 3 | ✅ built + registered (spurious; `dubious` since 2026-11-06, per Barnes) — shipped 2026-07-08, PR #21 (`manifests/Oec.yaml`, `shared/lib/works.ts`, `DEPLOY-STATUS.md` 2026-07-08); see `dubious-works.md` |
 | 038 | Rhet | Rhetorica | 133 | 3 | ✅ built + registered (Freese primary + Roberts secondary) — live; `/Rhet` ch-2-1 verified in the 2026-07-10 deploy (`manifests/Rhet.yaml`, `shared/lib/works.ts`, `DEPLOY-STATUS.md`) |
 | 035 | Pol | Politica | 182 | 8 | ✅ built + registered — live; public build serves Jowett + Ellis from `manifests/Pol-public.yaml`, Rackham gated (`shared/lib/works.ts`, `DEPLOY-STATUS.md` 2026-07-09 "Pol/EE/Meta serve Jowett/Solomon/Ross publicly") |
 | 025 | Meta | Metaphysica | 228 | 14 | ✅ built + registered — live; public build serves Ross from `manifests/Meta-public.yaml`, Tredennick gated; `/Meta/book/7/` live-verified 2026-08-22 (`shared/lib/works.ts`, `DEPLOY-STATUS.md`) |
@@ -199,6 +199,8 @@ Ackrill 68/68) via 14 per-chapter alignment subagents.
 - **Taylor ch14 gap:** CLAA's chapter-14 page is a broken duplicate of ch13;
   Taylor's actual ch14 was reconstructed from the 1812 *Organon* scan on
   archive.org (OCR cleaned of commentary/footnotes) — flagged in Int.yaml.
+  Superseded 2026-11-07: both Taylor texts are now his 1812 print with notes,
+  built from the page images by `pipeline/tools/build_taylor_1812.py`.
 - **Inline table rendering (new, reusable):** these chapters have tables.
   - The Greek itself carries the ch13 modal square at 22a24–31, encoded with the
     `⎪` (U+23AA) column divider — added to stage3 sigla; stage7 `_greek_cells`

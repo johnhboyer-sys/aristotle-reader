@@ -14,6 +14,7 @@ import {
 } from '@shared/lib/works';
 import { SUPPORT_URL } from '../lib/support';
 import { sanitizeHtml } from '../lib/html';
+import { isChapterSection } from '@shared/lib/data';
 import { jsonLdSafe } from '../lib/jsonld';
 import { bookSpan as bookSpanLabel, translatorName } from '../lib/nav';
 import '@shared/styles/global.css';
@@ -28,6 +29,9 @@ const work = getWork(workId)!;
 // work.author, not a hardcoded "Aristotle" — the Isagoge is Porphyry's.
 const author = work.author;
 const bookless = isBookless(work);
+// What the reader cites by: Bekker column and line, or (the Athenian
+// Constitution) chapter and section.
+const citationName = isChapterSection(work) ? 'chapter and section' : 'Bekker';
 
 interface ChapterRef { chapter: string; column: string; line: string; bekker: string; }
 const allChapters: Record<string, ChapterRef[]> = JSON.parse(
@@ -64,7 +68,7 @@ const metaDescription =
   `${work.title} by ${author}: the original Greek (${work.greekSource.short})` +
   ` with English translation` +
   (translatorNames.length ? ` (${translatorNames.join(', ')})` : '') +
-  `, table of contents, morphology, and Bekker citation. ${work.blurb}`;
+  `, table of contents, morphology, and ${citationName} citation. ${work.blurb}`;
 const canonical = Astro.site
   ? new URL(`${base}${workPath(workId, 1).replace(/\/book\/1$/, '')}/`, Astro.site).href
   : undefined;
@@ -202,7 +206,7 @@ const breadcrumbLd = Astro.site
       side with {translatorNames.length > 1 ? 'English translations' : 'an English translation'}
       {translatorNames.length ? ` (${translatorNames.join(', ')})` : ''} —
       with click-to-parse morphology, dictionary entries, and exact
-      {work.citation?.scheme === 'busse' ? ' page' : ' Bekker'} citation.
+      {work.citation?.scheme === 'busse' ? ' page' : ` ${citationName}`} citation.
       {bookless ? ` ${totalChapters} chapters.` : ` ${work.books} books, ${totalChapters} chapters.`}
     </p>
 
@@ -285,7 +289,10 @@ const breadcrumbLd = Astro.site
 
     <h2 class="lp-h">Greek text &amp; translations</h2>
     <p class="credits">
-      <strong>Greek:</strong> {work.greekSource.full}<br />
+      <strong>Greek:</strong> {work.greekSource.full}
+      {work.greekSource.licence && (
+        <> Licence: <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a>.</>
+      )}<br />
       <strong>{translatorNames.length > 1 ? 'Translations' : 'Translation'}:</strong>
       {' '}{editions.map((t) => t.name).join('; ')}.<br />
       Full source and licence details are on the
@@ -365,7 +372,7 @@ const breadcrumbLd = Astro.site
   // "Resume" CTA: appears when the reader has a saved position for this work
   // (localStorage — see shared/lib/resume.ts), linking to the remembered
   // book + Bekker citation.
-  import { resumeFor } from '@shared/lib/resume';
+  import { citeShown, resumeFor } from '@shared/lib/resume';
 
   const btn = document.getElementById('lp-resume') as HTMLAnchorElement | null;
   if (btn) {
@@ -375,7 +382,7 @@ const breadcrumbLd = Astro.site
       const book = Math.min(Math.max(1, pos.book), books);
       const base = (import.meta.env.BASE_URL as string).replace(/\/$/, '');
       btn.href = `${base}/${btn.dataset.work}/book/${book}${pos.cite ? `#${pos.cite}` : ''}`;
-      btn.textContent = pos.cite ? `Resume at ${pos.cite}` : (books > 1 ? `Resume Book ${book}` : 'Resume');
+      btn.textContent = pos.cite ? `Resume at ${citeShown(btn.dataset.work!, pos.cite)}` : (books > 1 ? `Resume Book ${book}` : 'Resume');
       btn.hidden = false;
     }
   }

@@ -8,9 +8,8 @@
 # Three translations, all chapter-anchored archive prose with a dense real
 # Bekker gutter from per-segment anchors keyed to Ackrill's Bekker stamps:
 #   primary   = E. M. Edghill (Oxford, 1928) — public domain
-#   secondary = Thomas Taylor (London, 1812) — public domain
-#   The Taylor text is a modernized, edited version (from CLAA), not a
-#   transcription of the 1812 print; who modernized it, and its rights, are unverified.
+#   secondary = Thomas Taylor (London, 1812) — public domain: his own 1812 text
+#               and notes, from the page images (pipeline/tools/build_taylor_1812.py).
 #   third     = J. L. Ackrill (Oxford, 1963) — US-copyright, LOCAL BUILD ONLY.
 # Build Cat-public.yaml (Edghill + Taylor only) for the public deploy so the
 # Ackrill text never enters the published data or search index.
@@ -60,7 +59,7 @@ english:
     anchors: "cat-edghill/anchors.yaml"
   secondary:
     id: taylor
-    name: "Thomas Taylor (1812, modernized)"
+    name: "Thomas Taylor (1812)"
     model: archive
     dir: "cat-taylor"
     books: 1

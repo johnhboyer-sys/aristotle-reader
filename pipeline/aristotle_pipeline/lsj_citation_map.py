@@ -12,6 +12,7 @@ CITATION_WORKS: dict[str, str | list[tuple[str, str, str]]] = {
         ("APo", "71a", "100b"),
     ],
     "002": "DA",  # verified against LSJ 2026-08-18
+    "003": "AthPol",  # verified against LSJ 2026-11-06: cited by chapter.section ("53.2")
     "004": "Aud",  # verified against LSJ 2026-08-18
     "005": "Cael",  # verified against LSJ 2026-08-18
     "006": "Cat",  # verified against LSJ 2026-08-18
@@ -29,6 +30,7 @@ CITATION_WORKS: dict[str, str | list[tuple[str, str, str]]] = {
     "019": "Lin",  # verified against LSJ 2026-08-18
     "020": "Long",  # verified against LSJ 2026-08-18
     "021": "MA",  # verified against LSJ 2026-08-18
+    "022": "MM",  # verified against LSJ 2026-11-06; its two EE columns here (1216b, 1235a) fall outside MM's books and stay unlinked
     "023": "Mech",  # verified against LSJ 2026-08-18
     "024": "Mem",  # verified against LSJ 2026-08-18
     "025": "Meta",  # verified against LSJ 2026-08-18
@@ -41,10 +43,18 @@ CITATION_WORKS: dict[str, str | list[tuple[str, str, str]]] = {
     "032": "Phgn",  # verified against LSJ 2026-08-18
     "034": "Poet",  # verified against LSJ 2026-08-18
     "035": "Pol",  # verified against LSJ 2026-08-18
+    "036": "Prob",  # verified against LSJ 2026-11-06: 1,428 references, 859a-967b
+    "037": [  # verified against LSJ 2026-11-06: De Respiratione, which our Juv holds
+        ("Juv", "470b", "480b"),
+        ("Prob", "966b", "966b"),  # one stray: kataphnixis cites "Pr. 966b36" as 037
+    ],
     "038": "Rhet",  # verified against LSJ 2026-08-18
     "039": "SE",  # verified against LSJ 2026-08-18
     "041": "Sens",  # verified against LSJ 2026-08-18
     "042": "Somn",  # verified against LSJ 2026-08-18
+    "043": [  # verified against LSJ 2026-11-06: 40 "Spir." citations; 478a21 lies outside
+        ("Spir", "481a", "486b"),
+    ],
     "044": "Top",  # verified against LSJ 2026-08-18
     "045": "VV",  # verified against LSJ 2026-08-18
     "046": "Vent",  # verified against LSJ 2026-08-18

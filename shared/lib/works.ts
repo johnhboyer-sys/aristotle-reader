@@ -57,7 +57,10 @@ export interface Work {
   // The print edition the TLG text was digitised from, in two lengths: `short`
   // for the reader's bilingual strip, `full` for the Greek-only strip and the
   // Texts & Licences page (both driven off this one field so they can't drift).
-  greekSource: { short: string; full: string };
+  // `licence` is set only for a Greek text under an open licence rather than in
+  // the public domain (De Plantis: First1KGreek, CC BY-SA 4.0); the Texts &
+  // Licences page lists those under their licence, not with the PD editions.
+  greekSource: { short: string; full: string; licence?: GreekLicence };
   translations: TranslationRef[];
   // Which translation the reader shows by default (a translations[].id). When
   // omitted the reader falls back to the primary 'english'-slot translation.
@@ -67,8 +70,11 @@ export interface Work {
   // Most works are cited by Bekker (column:line). A non-Bekker treatise (e.g.
   // Porphyry's Isagoge) sets scheme:'busse' so the reader drops the per-page
   // reference and the per-line Greek numbers; its section headings come from
-  // chapter-titles.json. Default (omitted) = bekker.
-  citation?: { scheme: 'bekker' | 'busse'; hideLineNumbers?: boolean };
+  // chapter-titles.json. Default (omitted) = bekker. A work cited by
+  // chapter.section (the Athenian Constitution) sets 'chapter-section': chapter
+  // N is the synthetic column "Na", section S its line S, and the reader prints
+  // "49.3" (lib/data citeLabel).
+  citation?: { scheme: 'bekker' | 'busse' | 'chapter-section'; hideLineNumbers?: boolean };
   // Has curated quotation citations (pipeline/data/quotations/<id>.json). The
   // reader asks for quotations.json only when this is set; works.test.ts keeps
   // it in step with the files.
@@ -82,6 +88,11 @@ export interface Work {
   commentaries?: string[];
   /** Authorship status. Absent ⇒ genuine. Drives the homepage/landing badge. */
   authenticity?: 'genuine' | 'dubious' | 'spurious';
+}
+
+export interface GreekLicence {
+  name: string;   // as the badge prints it, e.g. 'CC BY-SA 4.0'
+  url: string;    // the licence deed
 }
 
 export const AUTHENTICITY_LABEL: Record<'dubious' | 'spurious', string> = {
@@ -133,7 +144,7 @@ export const WORKS: Work[] = [
     // keyed to Bekker via Ackrill's per-paragraph stamps.
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
-      { id: 'taylor', name: 'Thomas Taylor (1812, modernized)', short: 'Taylor', slot: 'secondary' },
+      { id: 'taylor', name: 'Thomas Taylor (1812)', short: 'Taylor', slot: 'secondary', footnotes: true },
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
@@ -154,11 +165,11 @@ export const WORKS: Work[] = [
       full: 'L. Minio-Paluello, ed. Aristotelis categoriae et liber de interpretatione. Oxford: Clarendon Press, 1949.',
     },
     // Edghill (1928) + Taylor (1812) public domain; Ackrill (1963) US-copyright,
-    // local build only (same gating as Categories). Taylor ch14 reconstructed
-    // from the 1812 Organon scan (CLAA's ch14 page was a broken duplicate).
+    // local build only (same gating as Categories). Taylor's text and notes are
+    // his 1812 print (pipeline/tools/build_taylor_1812.py).
     translations: [
       { id: 'edghill', name: 'E. M. Edghill (Oxford, 1928)', short: 'Edghill', slot: 'english' },
-      { id: 'taylor', name: 'Thomas Taylor (1812, modernized)', short: 'Taylor', slot: 'secondary' },
+      { id: 'taylor', name: 'Thomas Taylor (1812)', short: 'Taylor', slot: 'secondary', footnotes: true },
       ...ACKRILL,   // present only when PUBLIC_SHOW_PRIVATE=1 (see SHOW_PRIVATE above)
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'overlay' },
     ],
@@ -706,8 +717,8 @@ export const WORKS: Work[] = [
       short: 'van Groningen and Wartelle (Les Belles Lettres, 1968)',
       full: 'B. A. van Groningen and A. Wartelle, eds. Aristote. Économique. Paris: Les Belles Lettres, 1968.',
     },
-    authenticity: 'spurious',
-    // Spurious/post-Aristotelian: Book I is possibly by a pupil, Book II by a
+    authenticity: 'dubious',
+    // Dubious (Barnes 1984 marks it *): Book I is possibly by a pupil, Book II by a
     // later Peripatetic. The Greek transmits only Books I–II; the traditional
     // Book III survives solely in medieval Latin and is omitted. Forster
     // (Oxford, 1920, PD) is the sole translation; Bekker gutter interpolated.
@@ -715,6 +726,29 @@ export const WORKS: Work[] = [
       { id: 'forster', name: 'E. S. Forster (Oxford, 1920)', short: 'Forster', slot: 'english' },
     ],
     blurb: 'A short treatise on household and civic economy — transmitted with Aristotle but not by him.',
+  },
+  {
+    id: 'MM',
+    title: 'Magna Moralia',
+    greekTitle: 'Ἠθικὰ μεγάλα',
+    abbr: 'MM',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'F. Susemihl, Aristotelis quae feruntur Magna moralia (Teubner, 1883)',
+    greekSource: {
+      short: 'Susemihl (Teubner, 1883)',
+      full: 'F. Susemihl, ed. Aristotelis quae feruntur Magna moralia. Leipzig: Teubner, 1883; text as printed by G. C. Armstrong (Loeb, 1935). Lines as in I. Bekker, ed. Aristotelis opera, vol. II. Berlin: Georg Reimer, 1831.',
+    },
+    authenticity: 'dubious',
+    // Contested: some hold it Aristotle's earliest ethics, most a Peripatetic
+    // digest of the Nicomachean and Eudemian Ethics. TLG's text carries no
+    // Bekker numbers; the spine's lines come from Bekker's printed pages (see
+    // pipeline/aristotle_pipeline/stage1_relineate.py).
+    translations: [
+      { id: 'stock', name: 'St. G. Stock (Oxford, 1915)', short: 'Stock', slot: 'english' },
+    ],
+    blurb: 'An ethics in two books over the ground of the Nicomachean and Eudemian Ethics; whether Aristotle wrote it is disputed.',
   },
   {
     id: 'VV',
@@ -774,6 +808,25 @@ export const WORKS: Work[] = [
     blurb: 'The earliest surviving treatise on mechanics — a preface and thirty-five problems — is spurious.',
   },
   {
+    id: 'Prob',
+    title: 'Problemata',
+    greekTitle: 'Προβλήματα',
+    abbr: 'Prob.',
+    author: 'Aristotle',
+    books: 38,
+    bookLabels: Array.from({ length: 38 }, (_, i) => String(i + 1)),
+    greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
+    greekSource: {
+      short: 'Bekker (Berlin, 1831)',
+      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+    },
+    authenticity: 'dubious',
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1927)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'Nearly nine hundred questions of natural science, each asked as “Why…?” and answered with a conjecture, gathered into thirty-eight books.',
+  },
+  {
     id: 'Col',
     title: 'De Coloribus',
     greekTitle: 'Περὶ χρωμάτων',
@@ -810,6 +863,28 @@ export const WORKS: Work[] = [
       { id: 'loveday_forster', name: 'T. Loveday and E. S. Forster (Oxford, 1913)', short: 'Loveday & Forster', slot: 'english' },
     ],
     blurb: 'A short spurious work on inferring character from the body.',
+  },
+  {
+    id: 'Plant',
+    title: 'De Plantis',
+    greekTitle: 'Περὶ φυτῶν',
+    abbr: 'Plant.',
+    author: 'Aristotle',
+    books: 2,
+    bookLabels: ROMAN.slice(0, 2),
+    greekEdition: 'I. Bekker, Aristotelis Opera (Oxford, 1837), on the lines of Bekker (Berlin, 1831)',
+    // The Greek is not in the TLG export: First1KGreek's text (CC BY-SA 4.0),
+    // laid on the Berlin edition's printed lines (sources/plant-greek/).
+    greekSource: {
+      short: 'Bekker (Oxford, 1837)',
+      full: 'I. Bekker, ed. Aristotelis opera, vol. 6. Oxford: Oxford University Press, 1837; lines as in Bekker, Aristotelis opera, vol. 2, Berlin: Georg Reimer, 1831. Text from Open Greek and Latin First1KGreek.',
+      licence: { name: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/' },
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1913)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'A short spurious work on plants, their parts and their growth, in two books.',
   },
   {
     id: 'MXG',
@@ -867,6 +942,25 @@ export const WORKS: Work[] = [
       { id: 'joachim', name: 'H. H. Joachim (Oxford, 1908)', short: 'Joachim', slot: 'english' },
     ],
     blurb: 'A short spurious work arguing about indivisible lines.',
+  },
+  {
+    id: 'Spir',
+    title: 'De Spiritu',
+    greekTitle: 'Περὶ πνεύματος',
+    abbr: 'Spir.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'W. Jaeger, Ps.-Aristotelis De spiritu libellus (Leipzig, 1913)',
+    greekSource: {
+      short: 'Jaeger (Teubner, 1913)',
+      full: 'W. Jaeger, ed. Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus. Leipzig: Teubner, 1913.',
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'dobson', name: 'J. F. Dobson (Oxford, 1914)', short: 'Dobson', slot: 'english', footnotes: true },
+    ],
+    blurb: 'A short spurious treatise on the inborn breath — how it grows, is fed, and moves the body.',
   },
   {
     id: 'Vent',
@@ -929,6 +1023,27 @@ export const WORKS: Work[] = [
     blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
   },
   {
+    id: 'RhetAl',
+    title: 'Rhetorica ad Alexandrum',
+    greekTitle: 'Ῥητορικὴ πρὸς Ἀλέξανδρον',
+    abbr: 'Rh. Al.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    // Fuhrmann's words on Bekker's printed lines (sources/rhetal-greek): every
+    // Bekker number is read from Bekker's page, none interpolated.
+    greekEdition: 'Fuhrmann, Anaximenis Ars Rhetorica (Teubner, 1966), on Bekker’s lines',
+    greekSource: {
+      short: 'Fuhrmann (Teubner, 1966)',
+      full: 'M. Fuhrmann, ed. Anaximenis ars rhetorica quae vulgo fertur Aristotelis ad Alexandrum. Leipzig: Teubner, 1966. Lines and numbers from I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+    },
+    authenticity: 'spurious',
+    translations: [
+      { id: 'forster', name: 'E. S. Forster (Oxford, 1924)', short: 'Forster', slot: 'english' },
+    ],
+    blurb: 'A handbook of rhetoric in thirty-eight chapters, prefaced by a letter to Alexander; usually given to Anaximenes.',
+  },
+  {
     id: 'Poet',
     title: 'Poetics',
     greekTitle: 'Περὶ ποιητικῆς',
@@ -950,9 +1065,49 @@ export const WORKS: Work[] = [
     ],
     blurb: 'Aristotle on poetry and tragedy — the founding work of literary theory.',
   },
+  {
+    id: 'AthPol',
+    title: 'Athenian Constitution',
+    greekTitle: 'Ἀθηναίων πολιτεία',
+    abbr: 'Ath. Pol.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Oppermann, Aristotelis Ἀθηναίων πολιτεία (Teubner, 1928)',
+    greekSource: {
+      short: 'Oppermann (Teubner, 1928)',
+      full: 'H. Oppermann, ed. Aristotelis Ἀθηναίων πολιτεία. Leipzig: Teubner, 1928; repr. 1968.',
+    },
+    // Cited by chapter.section, not Bekker: the papyrus came to light in 1890.
+    // Chapter N rides synthetic column "Na", section S line S (plan:
+    // docs/ath-pol-plan.md). No authenticity badge: Barnes's Revised Oxford
+    // Translation prints it unmarked (John, 2026-11-06: "Match Barnes").
+    citation: { scheme: 'chapter-section' },
+    translations: [
+      { id: 'kenyon', name: 'F. G. Kenyon (Oxford, 1921)', short: 'Kenyon', slot: 'english', footnotes: true },
+    ],
+    blurb: 'The constitutional history of Athens, and how its offices and courts worked in the 320s BC.',
+  },
 ];
 
 const BY_ID = new Map(WORKS.map((w) => [w.id, w]));
+
+// The Texts & Licences page's Greek lists: the public-domain editions, and the
+// openly licensed texts grouped by licence, each in registry order.
+export function greekSourcesByLicence(works: Work[]): {
+  publicDomain: Work[];
+  licensed: { licence: GreekLicence; works: Work[] }[];
+} {
+  const licensed: { licence: GreekLicence; works: Work[] }[] = [];
+  for (const w of works) {
+    const l = w.greekSource.licence;
+    if (!l) continue;
+    const group = licensed.find((g) => g.licence.name === l.name && g.licence.url === l.url);
+    if (group) group.works.push(w);
+    else licensed.push({ licence: l, works: [w] });
+  }
+  return { publicDomain: works.filter((w) => !w.greekSource.licence), licensed };
+}
 
 export function getWork(id: string): Work | undefined {
   return BY_ID.get(id);
@@ -1334,27 +1489,33 @@ export const CATEGORIES: Category[] = [
     works: [
       { id: 'Rhet' },
       { id: 'Poet' },
+      { id: 'AthPol' },
     ],
   },
-  // Appendix — the doubtful/spurious works transmitted under Aristotle's name but
-  // judged not to be by him. Grouped OUTSIDE the numbered divisions (no numeral);
-  // each card still carries its Dubious/Spurious badge.
+  // Appendix — the works transmitted under Aristotle's name whose authenticity is
+  // doubted or denied (Barnes 1984: * or **). Grouped OUTSIDE the numbered divisions
+  // (no numeral); each card still carries its Dubious/Spurious badge.
   {
     numeral: '',
-    title: 'Spurious Works',
+    title: 'Doubtful and Spurious Works',
     appendix: true,
     works: [
       { id: 'DM' },
       { id: 'MXG' },
       { id: 'Mech' },
+      { id: 'Prob' },
       { id: 'Col' },
       { id: 'Aud' },
       { id: 'Phgn' },
+      { id: 'Plant' },
       { id: 'Mirab' },
       { id: 'Lin' },
       { id: 'Vent' },
+      { id: 'MM' },
       { id: 'VV' },
       { id: 'Oec' },
+      { id: 'Spir' },
+      { id: 'RhetAl' },
     ],
   },
   // Porphyry's Isagoge (id 'Isa') is intentionally NOT a home division: it's

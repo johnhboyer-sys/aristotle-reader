@@ -1,0 +1,48 @@
+# De Spiritu — pipeline manifest.
+#
+# A spurious treatise on the breath (Bekker 481a1–486b4). Greek spine from the
+# cached TLG export (tlg0086.043, Jaeger's Teubner text, 1913); its nine
+# chapters from First1KGreek's TEI of the same edition. Primary English =
+# J. F. Dobson (Oxford, 1914), translated from Jaeger's text, with real Bekker
+# ticks read from his printed margins (sources/spir-dobson/anchors.yaml, built
+# by pipeline/tools/build_spir_dobson.py).
+
+work:
+  id: Spir
+  title: "De Spiritu"
+  greekTitle: "Περὶ πνεύματος"
+  author: "Aristotle"
+  tlg_author: "0086"
+  tlg_work: "043"
+  authenticity: spurious
+  greek_edition: "W. Jaeger, Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus (Leipzig, 1913)"
+  english_translation: "J. F. Dobson (Oxford, 1914)"
+
+bekker_range:
+  first_column: "481a"
+  last_column: "486b"
+
+chapters:
+  source: grc_tei
+  grc_tei: "tlg0086.tlg043.1st1K-grc1.xml"
+  chapter_subtype: chapter
+
+english:
+  primary:
+    id: dobson
+    name: "J. F. Dobson (Oxford, 1914)"
+    model: archive
+    dir: "spir-dobson"
+    books: 1
+    chapter_marker: part
+    anchors: "spir-dobson/anchors.yaml"   # Dobson's margin numbers, read from the scan
+    anchor_cuts: true                     # its {column}1 entries place the column breaks
+
+books:
+  - { n: 1, start: "481a1", end: "486b4" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

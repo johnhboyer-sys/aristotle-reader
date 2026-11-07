@@ -39,8 +39,9 @@ _TAG = re.compile(r"<[^>]+>")
 _MW_TRANSCLUSION = re.compile(r'[\s",\[\]]*\{"template":.*?>\s*', re.S)
 # A line ends a sentence (so a following blank line is a real paragraph break,
 # not a soft-wrap) if it ends with terminal punctuation, allowing a trailing
-# closing quote/paren/bracket.
-_ENDS_SENT = re.compile(r"[.?!:][\"'’”)\]]?\s*$")
+# closing quote/paren/bracket, and any footnote markers after it
+# ("receptacle.[^2]", "passage.[^39]]").
+_ENDS_SENT = re.compile(r"[.?!:](?:\[\^[\w.*†]+\])*[\"'’”)\]]?(?:\[\^[\w.*†]+\])*\s*$")
 def _ends_sentence(line: str) -> bool:
     return bool(_ENDS_SENT.search(line))
 _ROSS_DIR = SOURCES_DIR / "ross"
@@ -525,8 +526,13 @@ def build_chunks(spine: dict, chapters: list[dict],
             if i == len(segs) - 1:
                 cuts.append(len(text))
                 continue
-            nxt_col = segs[i + 1][1]
+            nxt_col, nxt_lns = segs[i + 1][1], segs[i + 1][2]
+            # a column's start anchor is its line 1, or, where the column opens
+            # lower, an anchors-file entry marked `cut: true` (Rh. Al. 1420b5)
             a = anchors.get(f"{nxt_col}1")
+            if not a and nxt_lns:
+                low = anchors.get(f"{nxt_col}{nxt_lns[0]}")
+                a = low if low and low.get("cut") is True else None
             cut = a["offset"] if a else None
             if cut is None or not (cuts[-1] < cut < len(text)):
                 cut = _snap(text, round(len(text) * cum / total), cuts[-1])

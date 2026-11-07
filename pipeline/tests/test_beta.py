@@ -42,3 +42,24 @@ def test_lookup_variants_preserves_homograph_digits_in_existing_keys():
 def test_to_beta_key_rejects_digits_in_surface_tokens():
     with pytest.raises(ValueError, match="cannot transliterate"):
         to_beta_key("τις1")
+
+
+def test_an_underdot_is_not_part_of_the_key():
+    """A dot below marks a letter the papyrus shows only in part (Ath. Pol.,
+    Oppermann). The word is the same word: τ̣ῆς keys as τῆς."""
+    from aristotle_pipeline.beta import to_beta_key
+    assert to_beta_key("τ̣ῆς") == to_beta_key("τῆς")
+    assert to_beta_key("ἐ̣γχέουσι") == to_beta_key("ἐγχέουσι")
+
+
+def test_numerals_and_lacunae_still_get_a_key():
+    """Preflight requires a key on every token. Ath. Pol.'s papyrus text has
+    Greek numerals (αʹ, ϛʹ: the keraia is Beta Code '#', stigma '#2') and
+    words broken by a lacuna printed as dots (λει..ν). Their keys match no
+    analysis, which is right; but they must exist."""
+    from aristotle_pipeline.beta import to_beta_key
+    assert to_beta_key("αʹ") == "a#"
+    assert to_beta_key("φαʹ") == "fa#"
+    assert to_beta_key("ϛʹ") == "#2#"
+    assert to_beta_key("λει..ν") == "lei..n"
+    assert to_beta_key("δεκάτην.’") == "deka/thn.'"

@@ -94,3 +94,21 @@ class TestEnglishStream:
         assert stream == [["aristotle's"], ["first"], ["change"], ["isn't"], ["the"], ["last"]]
         assert bounds == [0]
         assert segments == [{"book": 1, "column": "244b", "base": 0, "words": 6}]
+
+
+class TestWhichStreams:
+    def test_a_cached_stream_without_an_emitted_work_is_skipped(self, tmp_path):
+        """build/ngrams outlives build/dist: `npm run build:public` cleans the
+        dist and skips a held work (manifest `deploy_hold`), but that work's
+        cached stream from a local build is still there. Its phrases must not
+        reach the shared phrase index."""
+        from aristotle_pipeline import stage8_ngrams
+
+        source, dist = tmp_path / "ngrams", tmp_path / "dist"
+        source.mkdir()
+        for w in ("AAA", "HLD"):
+            (source / f"{w}.json").write_text("{}", encoding="utf-8")
+        (dist / "AAA").mkdir(parents=True)
+        files, skipped = stage8_ngrams._streams(source, dist)
+        assert [p.stem for p in files] == ["AAA"]
+        assert skipped == ["HLD"]

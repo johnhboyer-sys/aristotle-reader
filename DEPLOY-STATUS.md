@@ -13,6 +13,17 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## De Spiritu — BUILT, not yet deployed (2026-11-06, branch `claude/add-de-spiritu-9fadd2`)
+
+De Spiritu (`Spir`, Bekker 481a–486b, spurious): Jaeger's Greek (TLG 0086.043; chapters from First1KGreek) beside J. F. Dobson's Oxford translation, with Dobson's 80 printed margin numbers as real ticks.
+Public domain: Dobson's De Spiritu came out on its own in 1914 (Toronto's copy of Works vol. III binds it with its 1914 title page; the DLI copy, a 1968 reprint of the 1931 volume, keeps "First edition 1914"). An earlier note here and in `docs/dubious-works.md` gave 2027-01-01, which is the 1931 collected volume plus 95 years. John, 2026-11-06: treat it as public domain. It ships with the next `npm run build:public` and deploy.
+
+Dobson's 66 footnotes ride along as popups (`sources/spir-dobson/footnotes.json`; text in `pipeline/tools/spir_dobson_notes.json`, read from the page images by Opus and Grok and settled on the image where they differed). About 36 give the Greek Dobson or W. D. Ross read where it differs from Jaeger's text beside it. One misprinted citation is corrected at build (463 n.2, *de Caelo* 239b 30 → 293b 30).
+
+**Also changes the Isagoge.** The archive parser (`stage1_ross._ENDS_SENT`) did not count a line ending `.[^N]` as the end of a sentence, so a paragraph ending in a note mark ran into the next. The fix restores 9 of Owen's paragraph breaks (17 → 26), and De Spiritu keeps all 72 of Dobson's. The next deploy will carry `Isa/` data for that.
+
+The branch also adds a general hold for any future work: a top-level `deploy_hold:` line in a manifest makes `build:public` skip the work, preflight expect it unbuilt, stage 8 leave out its cached phrases, and `npm run deploy` refuse any file of it or citing it. No manifest carries one now.
+
 ## 2026-11-04 — DEPLOYED: Sens chapter 7, review follow-ups (PRs #182, #186)
 
 `gh-pages ca680c55 → 669a81af`, source `origin/main` `6388eb22b3` (the #186 merge). John asked whether

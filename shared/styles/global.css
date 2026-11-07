@@ -2788,6 +2788,11 @@ body.toc-open .toc-sidebar { transform: translateX(0); }
   .seg-ref { break-after: avoid; }
   .greek-line { break-inside: avoid; }
   .greek-table, .eng-table { break-inside: avoid; }
+  /* A chapter-section Greek line is a whole section: it wraps in a column as
+     wide as the English and may break across pages like prose. */
+  .reader-body.chapter-section.view-both .seg-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .reader-body.chapter-section.view-both .greek-line .line-text { white-space: normal; }
+  .reader-body.chapter-section .greek-line { break-inside: auto; orphans: 2; widows: 2; }
   .overlay-prose { orphans: 3; widows: 3; }
 
   /* The Bekker margin gutter is paint-only (relative prose + absolute markers)

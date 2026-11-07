@@ -250,19 +250,26 @@ def build_overlay(spine: dict, chapters: list[dict], cfg: dict,
 
 
 def _column_starts(rel: str, prose: dict[tuple[int, int], str]) -> tuple[dict, list]:
-    """The `{column}1` entries of an anchors file as the align-map build_chunks
+    """The `{column}1` (and `cut: true`) entries of an anchors file as the align-map build_chunks
     cuts on ({"book:chapter": {"anchors": [...]}}): each phrase is located in the
     chapter prose, so a column's English begins where its first Bekker line does
     instead of at a proportional estimate. Also returns (book, column, pattern,
     citation) per break, for build_english to confirm each one took. A phrase that is not
     in the prose exactly once raises: a break must not quietly fall back to the
-    proportional cut."""
+    proportional cut.
+
+    A column that opens below line 1 (Rh. Al. 1420b5, De Plantis 815b10) has no
+    `{column}1` entry; its break is the entry marked `cut: true`, which keeps its
+    own citation and the flag build_chunks looks for. An unmarked entry there
+    only places a tick."""
     entries = yaml.safe_load((SOURCES_DIR / rel).read_text(encoding="utf-8")) or []
     amap: dict[str, dict] = {}
     breaks, bad = [], []
     for e in entries:
         m = _BEKKER.match(str(e["bekker"]).strip())
-        if not m or m.group(2) != "1":
+        # line 1, or an entry marked `cut: true`: the first line of a column
+        # that opens below line 1 (Rh. Al. 1420b5, under the end of the Rhetoric)
+        if not m or (m.group(2) != "1" and e.get("cut") is not True):
             continue
         pattern = r"\s+".join(re.escape(w) for w in e["at"].split())
         hits = [(key, h.start()) for key, text in prose.items()
@@ -272,7 +279,8 @@ def _column_starts(rel: str, prose: dict[tuple[int, int], str]) -> tuple[dict, l
             continue
         (book, chap), off = hits[0]
         amap.setdefault(f"{book}:{chap}", {"anchors": []})["anchors"].append(
-            {"citation": m.group(0), "offset": off, "confidence": "certain"})
+            {"citation": m.group(0), "offset": off, "confidence": "certain",
+             "cut": e.get("cut") is True})
         breaks.append((book, m.group(1), pattern, m.group(0)))
     if bad:
         raise ValueError(f"anchor cuts: {rel}: phrase not found exactly once: {bad}")

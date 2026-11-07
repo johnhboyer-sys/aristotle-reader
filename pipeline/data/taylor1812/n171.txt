@@ -1,0 +1,31 @@
+=== body
+It neither, however, necessarily signifies the same thing, nor at the same
+time[^1]. But it is evident, that there is one negation of one affirmation;
+for it is necessary that the same thing (i. e. the attribute) should deny
+the negation which affirmation affirmed; and also from the same, (i e.
+subject) viz. either from some particular, or some universal, either as
+universal[^2], or as not universal[^3]. I say, as, for instance, Socrates is
+white, Socrates is not white. But if there is something else from the
+same, or the same thing from something else[^4], that [enunciation] will
+not be opposite, but different from it[^5]. To this [enunciation], however,
+every man is white, the enunciation, not every man is white, [is op-
+posed]. But to this, a certain man is white, the enunciation is opposed,
+no man is white. And to this, man is white, the enunciation is opposed,
+man is not white. And thus we have shown that one affirmation is con-
+tradictorily opposed to one negation, and also what these are. We
+have likewise shown that there are other contraries, and what they are;
+and that not every contradiction is true or false, and why it is not, and
+when it is true or false.
+CHAPTER VIII.
+¶THE affirmation, however, and also the negation is one, which signi-
+fies one thing of one, either universal, if it is as universal, or similarly,
+if it is not. For instance, every man is white, not every man is white;
+man is white, man is not white; no man is white, some man is white;
+=== notes
+¶[^1] It is not necessary that universal and indefinite enunciation should be at one and the same
+time true; nor is it also necessary that they should be at one and the same time false. But it is
+possible that the universal may be false, and the indefinite true; as, every man runs, a man runs.
+[^2] That is, the universal mark being added *every,* or *no one.*
+[^3] That is, indefinitely.
+[^4] That is, if negation differs from affirmation in the attribute, or the subject.
+[^5] As, the man runs, the horse does not run, are not opposite, but different enunciations.

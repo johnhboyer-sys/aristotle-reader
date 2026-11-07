@@ -7,6 +7,10 @@ import { fileURLToPath } from 'node:url';
 // The site base: app/astro.config.mjs `base` without its trailing slash. The
 // site is served at the root of aristotle.johnhboyer.com, so it is empty.
 export const BASE = '';
+
+// Works cited by chapter.section (citation.scheme: chapter-section in their
+// manifests): their LSJ links get no nearest-line snap (see checkTarget).
+export const EXACT_LINE_WORKS = new Set(['AthPol']);
 const MAX_ID_CACHE = 6000;
 const MAX_REPORTS = 200;
 
@@ -176,7 +180,13 @@ export async function checkDist(dist, { base = BASE } = {}) {
           // by a line or two; the reader snaps a missing line to the nearest
           // line in the column. Mirror that contract: the column must exist,
           // the exact line need not.
-          const colOk = nearestLineOk && ids
+          // A chapter-section work (synthetic column "Na" = chapter N, line =
+          // section) is cited by section, not by a lineation that can drift:
+          // a missing section is a wrong citation, so it gets no snap.
+          const rooted = decodePath(parts.pathname);
+          const rel = base && rooted.startsWith(`${base}/`) ? rooted.slice(base.length) : rooted;
+          const sectionCited = EXACT_LINE_WORKS.has(rel.split('/')[1] ?? '');
+          const colOk = nearestLineOk && !sectionCited && ids
             && (ids.has(`col-${match[1]}`)
               || [...ids].some((id) => id.startsWith(`L${match[1]}-`)));
           if (!colOk) {

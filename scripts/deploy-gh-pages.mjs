@@ -214,6 +214,54 @@ export const GATED_SLOT_BASELINE = {
   Meta: [],
   Pol: ['ross'],
 };
+// Works built and kept locally but never deployed: a manifest whose top-level
+// `deploy_hold:` gives the reason. scripts/build-public.mjs skips them and
+// preflight expects them unbuilt; this refuses a deploy that would serve any of
+// their data or cite them anywhere under data/ (an app-only build serves
+// whatever is in build/dist, and gathers lemma pages, bekker.json and the
+// search shards from all of it). To release one, delete the key — and say so in
+// DEPLOY-STATUS.md. Read with a line match, not a YAML parser (no dependency):
+// a top-level `deploy_hold:` line holds the work whatever follows it.
+export function heldWorks(dir = MANIFESTS) {
+  const held = {};
+  for (const name of readdirSync(dir).sort()) {
+    if (!name.endsWith('.yaml') || name.endsWith('-public.yaml')) continue;
+    // the key alone holds the work; the reason is read when it is on the key's line
+    const m = /^deploy_hold:([^\n]*)$/m.exec(readFileSync(path.join(dir, name), 'utf8'));
+    if (m) held[name.slice(0, -'.yaml'.length)] = m[1].trim().replace(/^"(.*)"$/, '$1') || 'deploy_hold is set in its manifest';
+  }
+  return held;
+}
+export const HELD_WORKS = heldWorks();
+
+export function scanHeldWorks(files, { held = HELD_WORKS } = {}) {
+  const problems = [];
+  // A held work's id as a JSON string, or as the "<work>/<slot>" source the
+  // search shards key by. That is how the shards, the lemma pages and
+  // bekker.json cite a work, which the app build gathers from every work in
+  // build/dist; a corpus without the work carries neither form.
+  const needles = Object.keys(held).map((w) => [w, `"${w}"`, `"${w}/`]);
+  let filesScanned = 0;
+  for (const { path: filePath, text } of files) {
+    filesScanned++;
+    const own = /^data\/([^/]+)\//.exec(filePath);
+    if (own && held[own[1]]) {
+      problems.push(`${filePath} belongs to a held work: ${held[own[1]]}`);
+      continue;
+    }
+    // a file named for it elsewhere (reports/quality_<Work>.md)
+    const named = Object.keys(held).find((w) => new RegExp(`(^|[^A-Za-z])${w}([^A-Za-z]|$)`).test(path.posix.basename(filePath)));
+    if (named) {
+      problems.push(`${filePath} is named for ${named}, a held work: ${held[named]}`);
+      continue;
+    }
+    const hit = needles.find(([, a, b]) => text.includes(a) || text.includes(b));
+    if (hit) problems.push(`${filePath} cites ${hit[0]}, a held work — rebuild without it (delete build/dist/${hit[0]}, then the app build; stage9 for the shards): ${held[hit[0]]}`);
+  }
+  if (filesScanned === 0) problems.unshift('no data file was scanned — the held-works check is not running.');
+  return { ok: problems.length === 0, filesScanned, problems };
+}
+
 const TRANSLATION_SLOTS = ['ross', 'secondary', 'third', 'overlays'];
 // A translation's English search index (search/english-<slot>.json) is that
 // translation in another shape — each word with its position is enough to set
@@ -771,6 +819,12 @@ async function main() {
   const sourceBranch = git(['rev-parse', '--abbrev-ref', 'HEAD']);
   const dirty = git(['status', '--porcelain', '--untracked-files=no']);
   console.log(`  source: ${sourceSha} (${sourceBranch})${dirty ? ' — WORKING TREE HAS UNCOMMITTED CHANGES' : ''}`);
+  // build-lemmata appends a slug for every new lemma page. Shipped but not
+  // committed, the next build from a clean checkout hands those keys other
+  // slugs, and /lemma/<slug> links already out open a different word.
+  if (git(['status', '--porcelain', '--', 'sources/lemma-slugs.json'])) {
+    fail('sources/lemma-slugs.json has uncommitted changes — the build issued new lemma slugs. Commit the record first; its slugs are live addresses.');
+  }
   if (sourceBranch !== 'main') console.log(`  note: deploying from ${sourceBranch}, not main — valid only if origin/main has not moved since the fork (see DEPLOY-STATUS.md 2026-09-01).`);
   const remote = options.remote ?? git(['remote', 'get-url', 'origin']);
   console.log(`  remote: ${remote}`);
@@ -880,6 +934,15 @@ async function main() {
     if (!slots.ok) {
       for (const problem of slots.problems) console.log(`  !! ${problem}`);
       fail('gated translation slots did not pass.');
+    }
+
+    heading('Held works: none of their data is served');
+    const heldScan = scanHeldWorks(readAll(walk(dataDir, () => true, clone)));   // every file: reports are .md too
+    console.log(`  held: ${Object.keys(HELD_WORKS).join(', ') || '(none)'}; data files scanned: ${heldScan.filesScanned}`);
+    if (!heldScan.ok) {
+      for (const problem of heldScan.problems.slice(0, 10)) console.log(`  !! ${problem}`);
+      if (heldScan.problems.length > 10) console.log(`  !! … and ${heldScan.problems.length - 10} more`);
+      fail('a held work would be deployed.');
     }
 
     heading('Search indexes: every served translation can be searched');

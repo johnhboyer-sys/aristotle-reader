@@ -1,0 +1,39 @@
+=== body
+not heating; nor such other things as always energize. Yet some things
+among those which possess irrational powers can at one and the same
+time receive opposites. This, however, has been said by us, because
+not every power is susceptive of contraries, not even such as are predi-
+cated according to the same species. But some powers are homony-
+mous; for the possible is not simply predicated: but one thing is said
+to be possible, because it is true, as being in energy. Thus, it is pos-
+sible for a man to walk, because he walks; and, in short, a thing is
+possible to be, because that is now in energy which is said to be possible.
+But another thing is said to be possible, because it can be in energy.
+Thus, it is possible for a man to walk because he has the power of walk-
+ing. And *this* power alone exists in moveable natures; but *that* in such
+as are immoveable. But with respect to both it is true to say, that it
+is possible to walk, or to be, and that a man now walks and energizes,
+and that he has the power of walking. Hence, that which is thus pos-
+sible[^9], is not truly asserted of that which is simply necessary[^1]; but the
+other is truly asserted. Hence too, the universal follows that which is
+in a part; and to be able to be, though not all ability of this kind, fol-
+lows that which exists from necessity. And perhaps, indeed, the ne-
+cessary and the not necessary are the principle of the existence, or non-
+existence of all things; and it is necessary to consider of other things
+as consequent to these[^2]. From what has been said, therefore, it is evi-
+=== notes
+[^9] That is, so that it is not in energy.
+¶[^1] The possible thus assumed, is not truly asserted of that which is simply necessary, but is
+truly asserted of that which is necessary from hypothesis; because it will be necessary that a thing
+should be when it will be, though it will not necessarily be.
+[^2] The order here is as follows:
+1	3
+It is necessary to be.	It is not necessary to be.
+It is not possible not to be.	It is possible not to be.
+It may not happen not to be.	It may happen not to be.
+It is impossible not to be.	It is impossible not to be.
+2	4
+It is necessary not to be.	It is not necessary not to be.
+It is not possible to be.	It is possible to be.
+It may not happen to be.	It may happen to be.
+It is impossible to be.	It is not impossible to be.

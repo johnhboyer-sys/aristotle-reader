@@ -6,7 +6,7 @@
 
 import { WORKS, getWork, type Work } from './works';
 import { greekFold } from './search';
-import { lineRef, parseBekker, type BekkerRef, type LemmaRef } from './data';
+import { citeLabel, isChapterSection, lineRef, parseBekker, type BekkerRef, type LemmaRef } from './data';
 
 // "1103a14" (column+line), a lettered line "775a11a", or a bare column
 // "1103a" — tolerant of spaces/case. One- and two-digit columns are citations
@@ -61,6 +61,51 @@ export function citationTargets(
     .map(({ e }) => ({ work: e.work, book: e.book }));
 }
 
+// A chapter.section citation (the Athenian Constitution): a work prefix, matched
+// against the abbr and id of chapter-section works with case, dots and spaces
+// folded away ("Ath. Pol. 56.6", "athpol 56.6", "Ath.Pol. 56"), then `C.S` or a
+// bare `C`. Inside such a work a bare `C.S` cites it too. Chapter C is the
+// synthetic column "Ca". A Bekker citation always carries a/b, so nothing this
+// reads could have parsed as one.
+export interface SectionCite { work: string; column: string; section: number | null }
+
+export function parseSectionCitation(
+  q: string,
+  currentWork: string | null,
+  works: readonly Work[] = WORKS,
+): SectionCite | null {
+  const m = q.trim().match(/^(.*?)(\d+)(?:\s*\.\s*(\d+))?$/);
+  if (!m) return null;
+  const fold = (s: string) => s.toLowerCase().replace(/[.\s]/g, '');
+  const prefix = fold(m[1]);
+  const sectioned = works.filter((w) => isChapterSection(w));
+  const work = prefix
+    ? sectioned.find((w) => fold(w.abbr) === prefix || fold(w.id) === prefix)
+    : m[3] != null ? sectioned.find((w) => w.id === currentWork) : undefined;
+  if (!work) return null;
+  return { work: work.id, column: `${Number(m[2])}a`, section: m[3] != null ? Number(m[3]) : null };
+}
+
+const SECTIONED = { citation: { scheme: 'chapter-section' as const } };
+
+// The jump for a parsed chapter.section citation, checked against the work's
+// own entries in the corpus Bekker index: a chapter or section the work does
+// not have offers no jump.
+export function sectionTarget(
+  cite: SectionCite,
+  index: Record<string, BekkerRef[]>,
+): { book: number; label: string; loc?: string; hash?: string } | null {
+  const entries = (index[cite.column] ?? []).filter((e) => e.work === cite.work);
+  if (cite.section == null) {
+    return entries.length
+      ? { book: entries[0].book, label: `Go to ${citeLabel(SECTIONED, cite.column)}`, hash: cite.column }
+      : null;
+  }
+  const s = cite.section;
+  const e = entries.find((x) => x.lo <= s && s <= x.hi);
+  if (!e) return null;
+  return { book: e.book, label: `Go to ${citeLabel(SECTIONED, cite.column, String(s))}`, loc: `${cite.column}:${s}` };
+}
 export function hasGreek(q: string): boolean {
   return /[Ͱ-Ͽἀ-῿]/.test(q);
 }

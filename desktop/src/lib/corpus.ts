@@ -95,7 +95,7 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
       slot('Probl', 'Problems', 'tlg0086.tlg036', { authenticity: 'disputed' }),
       slot('Col', 'On Colors', 'tlg0086.tlg007', { authenticity: 'spurious' }),
       slot('Aud', 'On Things Heard', 'tlg0086.tlg004', { authenticity: 'spurious' }),
-      slot('Physiogn', 'Physiognomonics', 'tlg0086.tlg032', { authenticity: 'disputed' }),
+      slot('Physiogn', 'Physiognomonics', 'tlg0086.tlg032', { authenticity: 'spurious' }),
       slot('Plant', 'On Plants', 'tlg0086.tlg051x02', { authenticity: 'spurious' }),
       slot('Mirab', 'On Marvellous Things Heard', 'tlg0086.tlg027', { authenticity: 'spurious' }),
     ],
@@ -112,7 +112,7 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
       W('Long', 'On Length and Shortness of Life', 'tlg0086.tlg020'),
       W('Juv', 'On Youth, Old Age, Life and Death', 'tlg0086.tlg018'),
       slot('Resp', 'On Respiration', 'tlg0086.tlg037'),
-      slot('Spir', 'On Breath', 'tlg0086.tlg043', { authenticity: 'disputed' }),
+      slot('Spir', 'On Breath', 'tlg0086.tlg043', { authenticity: 'spurious' }),
     ],
   },
   {
@@ -140,16 +140,25 @@ export const CORPUS_GROUPS: CorpusGroup[] = [
       W('EE', 'Eudemian Ethics', 'tlg0086.tlg009', { aliases: 'eudemian' }),
       W('Pol', 'Politics', 'tlg0086.tlg035'),
       slot('MM', 'Magna Moralia', 'tlg0086.tlg022', { authenticity: 'disputed' }),
-      slot('AthPol', 'Constitution of the Athenians', 'tlg0086.tlg003'),
       slot('Oec', 'Economics', 'tlg0086.tlg029', { authenticity: 'disputed' }),
-      slot('VV', 'On Virtues and Vices', 'tlg0086.tlg045', { authenticity: 'disputed' }),
+      slot('VV', 'On Virtues and Vices', 'tlg0086.tlg045', { authenticity: 'spurious' }),
     ],
   },
   {
     label: 'Rhetoric & Poetics',
     entries: [
       W('Rhet', 'Rhetoric', 'tlg0086.tlg038'),
+      // TLG files it under Anaximenes (0547), to whom it is usually given.
+      slot('RhetAl', 'Rhetoric to Alexander', 'tlg0547.tlg001', {
+        authenticity: 'spurious',
+        aliases: 'rhetorica ad alexandrum anaximenes',
+      }),
       W('Poet', 'Poetics', 'tlg0086.tlg034'),
+      // Barnes's place for it: last of the treatises, after the Poetics, unmarked.
+      W('AthPol', 'Athenian Constitution', 'tlg0086.tlg003', {
+        citationScheme: 'chapter',
+        aliases: 'ath pol constitution of the athenians athenaion politeia',
+      }),
     ],
   },
   {

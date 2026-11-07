@@ -1,0 +1,110 @@
+"""Taylor's Categories and On Interpretation are his own 1812 print, not the modernised text.
+
+Until 2026-11-07 sources/cat-taylor and int-taylor held a reworked edition ("CLAA", modernizer
+unknown) under Taylor's name: essence became Substance, a Latin/Greek list of the categories was
+added to Cat. 4, Int. 2 lost Taylor's gloss on καλὸς ἵππος, Int. 5 lost words, and his notes were
+dropped. The text is now built from page images of the 1812 volume (archive.org works00taylgoog)
+by pipeline/tools/build_taylor_1812.py; these checks fail on the old text.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import re
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+import yaml
+
+from aristotle_pipeline import stage1_archive
+
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def _prose(work: str) -> dict[int, str]:
+    cfg = yaml.safe_load((ROOT / "manifests" / f"{work}.yaml").read_text(encoding="utf-8"))
+    return {c: re.sub(r"\s+", " ", t) for (_, c), t in
+            stage1_archive._load_prose(cfg["english"]["secondary"]).items()}
+
+
+def _notes(d: str) -> dict[str, str]:
+    return json.loads((ROOT / "sources" / d / "footnotes.json").read_text(encoding="utf-8"))
+
+
+def test_cat_1_says_essence():
+    ch1 = _prose("Cat")[1]
+    assert ch1.startswith("Things are said to be homonymous of which the name alone is common, "
+                          "but the definition of essence according to the name is different")
+    assert "Substance" not in ch1
+
+
+def test_cat_4_has_no_latin_list():
+    ch4 = _prose("Cat")[4]
+    assert "substantiam" not in ch4 and "οὐσία" not in ch4
+    assert ch4.startswith("Of the things which are enunciated without any connection, each of them "
+                          "either signifies essence, or a quantity")
+
+
+def test_int_2_kalos_ippos():
+    assert "kalos ippos (i. e. a beautiful horse)" in _prose("Int")[2]
+
+
+def test_int_5_or_not():
+    # The old text: "either when he is interrogated by someone or speaks from himself".
+    assert "interrogated by any one or not, but that he speaks from" in _prose("Int")[5]
+
+
+def test_chapters_are_taylors():
+    assert sorted(_prose("Cat")) == list(range(1, 16))
+    assert sorted(_prose("Int")) == list(range(1, 15))
+
+
+def test_notes_pair_with_markers():
+    for work, d in (("Cat", "cat-taylor"), ("Int", "int-taylor")):
+        text = " ".join(_prose(work).values())
+        cited = re.findall(r"\[\^(\d+)\]", text)
+        notes = _notes(d)
+        assert cited == [str(i) for i in range(1, len(notes) + 1)], work
+        assert all(v.startswith("<p>") and v.strip() for v in notes.values()), work
+
+
+def test_sources_are_what_the_transcripts_build():
+    r = subprocess.run([sys.executable, str(ROOT / "pipeline" / "tools" / "build_taylor_1812.py"),
+                        "--check"], capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+
+
+def test_ambiguous_run_on_note_stops_the_build(monkeypatch):
+    # n80 ends two notes with a stop (one in italics); without NOTE_RUNS_ON naming the note
+    # that n81's notes continue, the build must refuse rather than pick one.
+    spec = importlib.util.spec_from_file_location("b", ROOT / "pipeline" / "tools" / "build_taylor_1812.py")
+    b = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(b)
+    monkeypatch.setattr(b, "NOTE_RUNS_ON", {})
+    with pytest.raises(SystemExit, match="n81: notes run on"):
+        b.build("cat", b.DATA)
+
+
+def test_hand_placed_int_ticks_sit_on_their_phrase():
+    # Ticks placed by hand against the Greek carry the phrase they were placed on; a change to
+    # the text that moves them must fail here, not drift silently.
+    gm = json.loads((ROOT / "alignment-results" / "taylor" / "Int_taylor_gloss_map.json")
+                    .read_text(encoding="utf-8"))
+    cfg = yaml.safe_load((ROOT / "manifests" / "Int.yaml").read_text(encoding="utf-8"))
+    prose = {c: t for (_, c), t in stage1_archive._load_prose(cfg["english"]["secondary"]).items()}
+    hand = [(k, a) for k, v in gm.items() for a in v["anchors"] if "at" in a]
+    assert len(hand) >= 66
+    for k, a in hand:
+        text = prose[int(k.split(":")[1])]
+        assert text[a["offset"]:].startswith(a["at"]), (a["citation"], text[a["offset"]:a["offset"] + 40])
+        assert a["confidence"] == "confirmed"
+
+
+def test_int_9_printers_doubled_syllable_corrected():
+    # n172 prints "univer-/versals"; the build corrects it (ERRATA), the transcript keeps it.
+    ch9 = _prose("Int")[9]
+    assert "univerversals" not in ch9 and "as universals, that always the one" in ch9
+    assert "univer-" in (ROOT / "pipeline" / "data" / "taylor1812" / "n172.txt").read_text(encoding="utf-8")

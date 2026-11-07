@@ -15,6 +15,7 @@ import ThemeInit from './ThemeInit.astro';
 import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { getWork, bookLabel, isBookless, workPath, workLanding } from '@shared/lib/works';
+import { isChapterSection, isNonBekker } from '@shared/lib/data';
 import { SUPPORT_URL } from '../lib/support';
 import { jsonLdSafe } from '../lib/jsonld';
 import { chapterHref as chapterHrefFor, translatorName as translatorPerson } from '../lib/nav';
@@ -30,9 +31,12 @@ const work = getWork(workId)!;
 // screen readers.
 const author = work.author;
 const bookless = isBookless(work);
-// Non-Bekker works (e.g. the Isagoge) have no Bekker lines, so the "Go to
-// Bekker line" jump doesn't apply.
-const busse = work.citation?.scheme === 'busse';
+// Non-Bekker works (the Isagoge's Busse pages, the Athenian Constitution's
+// chapter.section) have no Bekker lines, so the "Go to Bekker line" jump doesn't
+// apply, nor does a chapter's Bekker span. A chapter-section work's span is its
+// chapter number, which the outline already prints.
+const nonBekker = isNonBekker(work);
+const chapterSection = isChapterSection(work);
 const label = bookLabel(work, n);
 
 interface ChapterRef { chapter: string; column: string; line: string; bekker: string; }
@@ -109,7 +113,7 @@ const metaDescription =
   ` (${work.greekSource.short}) side by side with` +
   (translatorName ? ` ${translatorName}'s` : ' an') +
   ` English translation, with click-to-parse morphology, dictionary entries,` +
-  ` and Bekker citation.`;
+  (chapterSection ? ` and chapter and section citation.` : ` and Bekker citation.`);
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Book',
@@ -266,7 +270,7 @@ const intro =
       </div>
     </div>
     <div class="nav-panel" id="nav-panel">
-      {!busse && <BekkerJump work={workId} inputId="bekker-input-nav" client:load />}
+      {!nonBekker && <BekkerJump work={workId} inputId="bekker-input-nav" client:load />}
       {!bookless && (
         <nav class="book-nav" aria-label="Books">
           <span class="book-nav-label">Books</span>
@@ -299,7 +303,7 @@ const intro =
             {chapters.map((c) => (
               <a href={`#ch-${n}-${c.chapter}`} title={
                 (chapterTitles[String(n)]?.[c.chapter] ?? `Chapter ${c.chapter}`)
-                + (work.citation?.scheme === 'busse' ? '' : ` · ${c.bekker}`)
+                + (nonBekker ? '' : ` · ${c.bekker}`)
               }>{c.chapter}</a>
             ))}
           </span>
@@ -320,7 +324,7 @@ const intro =
       <button type="button" class="toc-close" aria-label="Close contents">×</button>
     </div>
     <div class="toc-actions toc-actions-top">
-      {!busse && <BekkerJump work={workId} inputId="bekker-input-toc" client:load />}
+      {!nonBekker && <BekkerJump work={workId} inputId="bekker-input-toc" client:load />}
       <a class="toc-action" href={`${base}/search`}>
         <span class="toc-action-name">Search</span>
         <span class="toc-action-hint">Greek &amp; English</span>
@@ -342,7 +346,7 @@ const intro =
                   {chapterTitles['1']?.[c.chapter] && (
                     <span class="toc-ch-title">{chapterTitles['1'][c.chapter]}</span>
                   )}
-                  <span class="toc-ch-bekker">{c.bekker}</span>
+                  {!chapterSection && <span class="toc-ch-bekker">{c.bekker}</span>}
                 </span>
               </a>
             </li>
@@ -365,7 +369,7 @@ const intro =
                         {chapterTitles[String(b.book)]?.[c.chapter] && (
                           <span class="toc-ch-title">{chapterTitles[String(b.book)][c.chapter]}</span>
                         )}
-                        <span class="toc-ch-bekker">{c.bekker}</span>
+                        {!chapterSection && <span class="toc-ch-bekker">{c.bekker}</span>}
                       </span>
                     </a>
                   </li>

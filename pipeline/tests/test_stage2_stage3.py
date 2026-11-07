@@ -238,3 +238,67 @@ def test_stage3_hard_gate_passes_a_clean_work(tmp_path, monkeypatch, capsys):
     )
     assert report["ok"] is True
     assert "stage3-quality:" in capsys.readouterr().out
+
+
+def _one_line_spine(text):
+    return {"work": "T", "segments": [
+        {"id": "1a", "book": 1, "column": "1a", "lines": [{"n": 1, "text": text}]}]}
+
+
+def test_numerals_and_editorial_refs_are_text_not_tokens():
+    # Problemata: book heads numbered with stigma (Κϛ), numerals marked with
+    # the keraia (βʹ), and Bekker's cross-reference "(p. 941b 4—23.)". None is
+    # a word; the line text keeps them, but they get no lookup token.
+    tokens, _, key_failures = tokenize(
+        _one_line_spine("Κϛ. ΟΣΑ βʹ, γʹ, δὲ—χρόνος. (p. 941b 4—23.)"))
+    assert key_failures == []
+    assert [t["t"] for t in tokens["segments"][0]["lines"][0]["tokens"]] == [
+        "ΟΣΑ", "δὲ", "χρόνος"]
+
+
+def test_a_damaged_fragment_with_a_numeral_mark_stays_a_token():
+    # Athenaion Politeia 2763: "φ[αʹ" is a broken word, not a numeral, and
+    # "λόγοςʹ" holds more than a numeral's letters. Neither is skipped as a
+    # numeral: each stays a token, keyed with the keraia's Beta Code '#' (Ath.
+    # Pol.'s papyrus signs, beta._SIGNS), a key that matches no analysis. The
+    # bare numeral beside them is no token. (Before the keraia had a key these
+    # were key failures; preflight now needs every token keyed.)
+    tokens, _, key_failures = tokenize(_one_line_spine("ἐστὶ φ[αʹ ὅταν λόγοςʹ βʹ"))
+    assert key_failures == []
+    got = [(t["t"], t["k"]) for t in tokens["segments"][0]["lines"][0]["tokens"]]
+    assert ("φαʹ", "fa#") in got
+    assert ("λόγοςʹ", "lo/gos#") in got
+    assert [t for t, _ in got] == ["ἐστὶ", "φαʹ", "ὅταν", "λόγοςʹ"]
+
+
+def test_numeral_marked_tokens_are_counted_but_bare_numerals_are_not():
+    from aristotle_pipeline.stage3_tokenize import numeral_marked_words
+    tokens, _, _ = tokenize(_one_line_spine("ἐστὶ φ[αʹ ὅταν [βʹ] βʹ λόγοςʹ"))
+    assert [(m["ref"], m["t"]) for m in numeral_marked_words(tokens)] == [
+        ("1a1", "φαʹ"), ("1a1", "βʹ"), ("1a1", "λόγοςʹ")]
+
+
+def test_a_stray_latin_letter_beside_a_keraia_still_fails():
+    # The keraia's key does not open the door to other letters.
+    _, _, key_failures = tokenize(_one_line_spine("λόγoςʹ"))
+    assert [f["token"] for f in key_failures] == ["λόγoςʹ"]
+
+
+def test_an_unknown_letter_inside_a_word_still_fails():
+    # The skip is narrow: a Greek word with a stray Latin letter is a key
+    # failure, not silently dropped.
+    _, _, key_failures = tokenize(_one_line_spine("λόγoς quae feruntur"))
+    assert [f["token"] for f in key_failures] == ["λόγoς", "quae", "feruntur"]
+
+
+def test_tokenize_skips_jaegers_double_bar():
+    """De Spiritu (Jaeger 1913, TLG 0086.043) marks a break in the sense with a
+    free-standing ‖ (U+2016) between clauses. It is a sign, not a word: it must
+    tokenize to nothing (logged as a siglum), not fail transliteration."""
+    spine = {"work": "Spir", "segments": [{"id": "s1", "book": 1, "column": "483a",
+             "lines": [{"n": 18, "text": "τὴν ἐνέργειαν. ‖ τὸ δὲ πνεῦμα"}]}]}
+    tokens, sigla_log, key_failures = tokenize(spine)
+    assert key_failures == []
+    assert [t["t"] for t in tokens["segments"][0]["lines"][0]["tokens"]] == [
+        "τὴν", "ἐνέργειαν", "τὸ", "δὲ", "πνεῦμα"]
+    assert sigla_log == [{"ref": "483a18", "raw": "‖", "kept": ""}]

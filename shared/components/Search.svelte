@@ -23,7 +23,7 @@
     pool,
     loadOffsets,
   } from '../lib/search';
-  import { englishPlace, positionsByChapter } from '../lib/english-hit';
+  import { englishPlace, positionsByChapter, positionsBySection } from '../lib/english-hit';
   import { engHitCount, hitCount, paginate } from '../lib/search-pages';
   import {
     fetchBook,
@@ -32,6 +32,8 @@
     fetchLemmaGlosses,
     lineAtPosition,
     lineRef,
+    citeLabel,
+    isChapterSection,
     type Segment,
     type ChapterRef,
     type LemmaCandidate,
@@ -938,12 +940,17 @@
                 .map(([cat, vals]) => `${cat} ${vals.join(' or ')}`)
                 .join(' · ')
             : undefined;
-          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: `${seg.column}${lineRef(line, sub)}`, html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, sub, undefined, kept), oneOf });
+          add(r.work, r.meta.book, ch, { lang: 'grk', column: seg.column, line, ref: citeLabel(getWork(r.work), seg.column, lineRef(line, sub)), html: greekKwic(seg, [pos]), jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, sub, undefined, kept), oneOf });
         }
       }
       if (r.engMatch) {
         const ts = translationsOf(r.work);
         const several = ts.length > 1;
+        // A chapter-section work (one real tick per section) gets one row per
+        // section, cited "49.3"; every other work one row per chapter, cited by
+        // its column.
+        const work = getWork(r.work);
+        const bySection = isChapterSection(work);
         // A work the registry does not list still has its one translation.
         const hits: EngHit[] = r.engHits ?? [{ translation: ts[0]?.id ?? 'english', positions: [] }];
         // Rows sharing a chapter share an instance; a column that holds the
@@ -955,14 +962,15 @@
             ?? { id: hit.translation, slot: 'english' as const, short: hit.translation, name: hit.translation };
           // One translation's words in a column can fall in two chapters;
           // each chapter shows and counts its own.
-          for (const positions of positionsByChapter(seg, t, hit.positions)) {
+          for (const positions of (bySection ? positionsBySection : positionsByChapter)(seg, t, hit.positions)) {
             const place = englishPlace(seg, t, positions, ctx.engTerms, ctx.engPhrase, ctx.engForms);
             if (!place) continue;
             const ch = (place.chapter !== null ? lookup.named(place.chapter) : undefined)
               ?? lookup.at(seg.column, place.chapter !== null ? place.line : seg.greek[0]?.n ?? place.line);
             if (!onPage(r, ch.chapter)) continue;
-            const slot = byChapter.get(ch.chapter)
-              ?? byChapter.set(ch.chapter, { ch, line: place.line, rows: [] }).get(ch.chapter)!;
+            const key = bySection ? `${ch.chapter}:${place.line}` : ch.chapter;
+            const slot = byChapter.get(key)
+              ?? byChapter.set(key, { ch, line: place.line, rows: [] }).get(key)!;
             const hits = engHitCount({ ...hit, positions });
             // Two runs that land in one chapter stay one row, its first snippet.
             const same = slot.rows.find(row => row.translation === t.id);
@@ -979,7 +987,7 @@
           }
         }
         for (const { ch, line, rows } of byChapter.values()) {
-          add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: seg.column, html: rows[0].html, jumpUrl: rows[0].jumpUrl, rows });
+          add(r.work, r.meta.book, ch, { lang: 'eng', column: seg.column, line, ref: bySection ? citeLabel(work, seg.column, String(line)) : seg.column, html: rows[0].html, jumpUrl: rows[0].jumpUrl, rows });
         }
       }
     }
@@ -1924,7 +1932,7 @@
             <button class="group-head" on:click={() => toggle(g.key)} aria-expanded={expanded.has(g.key)}>
               <span class="caret">{expanded.has(g.key) ? '▾' : '▸'}</span>
               <span class="group-label">Chapter {g.chapter}</span>
-              <span class="group-bekker">{g.bekker}</span>
+              {#if !isChapterSection(getWork(g.work))}<span class="group-bekker">{g.bekker}</span>{/if}
               <span class="group-count">{groupHits(g)} {groupHits(g) === 1 ? 'instance' : 'instances'}</span>
             </button>
 

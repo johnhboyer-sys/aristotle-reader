@@ -1,0 +1,101 @@
+# Rhetorica ad Alexandrum — pipeline manifest.
+#
+# A spurious treatise on rhetoric (Bekker 1420a5–1447b7), usually ascribed to
+# Anaximenes of Lampsacus. Bekker prints it between the Rhetoric and the
+# Poetics: 1420 opens with the last four lines of the Rhetoric across both
+# columns (the work starts at a5 and b5), and 1447 closes it in lines 1–7 of
+# both columns (the Poetics starts at 1447a8).
+#
+# Greek: TLG 0547.001 (M. Fuhrmann, Teubner 1966) carries no Bekker numbers, so
+# pipeline/tools/build_rhetal_spine.py relines Fuhrmann's words to the printed
+# lines of Bekker's Berlin edition (vol. 2, 1831; archive.org b2uoft hOCR) and
+# vendors the result as sources/rhetal-greek/rhetal-bekker-grc.xml
+# (`spine_tei`). Every Bekker number there is read from Bekker's page; none is
+# interpolated. The raw Diogenes export is not in the repo.
+#
+# Chapters: Bekker's numbering, 1–39 — chapter 1 is the Letter to Alexander,
+# chapter n+1 is Forster's (and Fuhrmann's) Chapter n; the titles carry
+# Forster's numbers. Starts and words are Fuhrmann's chapter divisions placed
+# on the relined spine (`word`: the chapter opens at that word of its line).
+#
+# English: E. S. Forster (Oxford, The Works of Aristotle vol. XI, 1924), public
+# domain; built by pipeline/tools/build_rhetal_forster.py from three scans of
+# the same sheets, with Bekker ticks read from Forster's printed margin.
+
+work:
+  id: RhetAl
+  title: "Rhetorica ad Alexandrum"
+  author: "Aristotle"
+  tlg_author: "0547"
+  tlg_work: "001"
+  spine_tei: "rhetal-greek/rhetal-bekker-grc.xml"
+  authenticity: spurious
+  greek_edition: "M. Fuhrmann, Anaximenis Ars Rhetorica (Leipzig, 1966), relined to I. Bekker, Aristotelis Opera (Berlin, 1831)"
+  english_translation: "E. S. Forster (Oxford, 1924)"
+
+bekker_range:
+  first_column: "1420a"
+  last_column: "1447b"
+
+chapters:
+  source: explicit
+  list:
+    - { n: 1, bekker: "1420a5", word: 0, title: "Letter to Alexander" }   # Letter: Ἐπέστειλάς μοι, ὅτι πολλάκις πολλοὺς
+    - { n: 2, bekker: "1421b7", word: 0, title: "Chapter 1" }   # Fuhrmann 1: Τρία γένη τῶν πολιτικῶν εἰσι
+    - { n: 3, bekker: "1423a13", word: 0, title: "Chapter 2" }   # Fuhrmann 2: Πάλιν δὲ διορισώμεθα, καὶ περὶ
+    - { n: 4, bekker: "1425b36", word: 0, title: "Chapter 3" }   # Fuhrmann 3: Συλλήβδην μὲν οὖν ἐστιν ἐγκωμιαστικὸν
+    - { n: 5, bekker: "1426b22", word: 0, title: "Chapter 4" }   # Fuhrmann 4: Διέλθωμεν δὲ πάλιν τούτοις ὁμοιοτρόπως
+    - { n: 6, bekker: "1427b12", word: 0, title: "Chapter 5" }   # Fuhrmann 5: Ἐν κεφαλαίῳ μὲν οὖν εἰπεῖν,
+    - { n: 7, bekker: "1427b39", word: 0, title: "Chapter 6" }   # Fuhrmann 6: Πρῶτον μὲν οὖν καὶ τὸ
+    - { n: 8, bekker: "1428a11", word: 5, title: "Chapter 7" }   # Fuhrmann 7: Περὶ μὲν οὖν τῶν δικαίων
+    - { n: 9, bekker: "1429a21", word: 0, title: "Chapter 8" }   # Fuhrmann 8: Παραδείγματα δ' ἐστὶ πράξεις ὅμοιαι
+    - { n: 10, bekker: "1430a14", word: 0, title: "Chapter 9" }   # Fuhrmann 9: Τεκμήρια δέ ἐστιν, †ὅσ' ἂν
+    - { n: 11, bekker: "1430a23", word: 0, title: "Chapter 10" }   # Fuhrmann 10: Ἐνθυμήματα δέ ἐστιν οὐ μόνον
+    - { n: 12, bekker: "1430a40", word: 0, title: "Chapter 11" }   # Fuhrmann 11: Γνώμη δέ ἐστι μὲν ὡς
+    - { n: 13, bekker: "1430b30", word: 0, title: "Chapter 12" }   # Fuhrmann 12: Σημεῖον δέ ἐστιν ἄλλο ἄλλου,
+    - { n: 14, bekker: "1431a6", word: 0, title: "Chapter 13" }   # Fuhrmann 13: Ἔλεγχος δέ ἐστι μέν, ὃ
+    - { n: 15, bekker: "1431a24", word: 0, title: "Chapter 14" }   # Fuhrmann 14: Τὸ μὲν τοίνυν εἰκὸς τοῦ
+    - { n: 16, bekker: "1431b20", word: 0, title: "Chapter 15" }   # Fuhrmann 15: Μαρτυρία δέ ἐστιν ὁμολογία συνειδότος
+    - { n: 17, bekker: "1432a12", word: 0, title: "Chapter 16" }   # Fuhrmann 16: Βάσανος δέ ἐστι μὲν ὁμολογία
+    - { n: 18, bekker: "1432a33", word: 0, title: "Chapter 17" }   # Fuhrmann 17: Ὅρκος δέ ἐστιν μετὰ θείας
+    - { n: 19, bekker: "1432b11", word: 0, title: "Chapter 18" }   # Fuhrmann 18: Προκατάληψις μὲν οὖν ἐστι, δι'
+    - { n: 20, bekker: "1433b17", word: 0, title: "Chapter 19" }   # Fuhrmann 19: Αἰτήματα δέ ἐστιν ἐν τοῖς
+    - { n: 21, bekker: "1433b29", word: 0, title: "Chapter 20" }   # Fuhrmann 20: Παλιλλογία δέ ἐστι μὲν σύντομος
+    - { n: 22, bekker: "1434a17", word: 0, title: "Chapter 21" }   # Fuhrmann 21: Εἰρωνεία δέ ἐστι λέγειν τι
+    - { n: 23, bekker: "1434a33", word: 0, title: "Chapter 22" }   # Fuhrmann 22: Ὅθεν δὲ ἔστιν ἀστεῖα λέγειν
+    - { n: 24, bekker: "1434b33", word: 0, title: "Chapter 23" }   # Fuhrmann 23: Πρῶτον μὲν οὖν τρόποι ὀνομάτων
+    - { n: 25, bekker: "1435a4", word: 0, title: "Chapter 24" }   # Fuhrmann 24: Πρῶτον μὲν οὖν εἰς δύο
+    - { n: 26, bekker: "1435a32", word: 0, title: "Chapter 25" }   # Fuhrmann 25: Πρῶτον μὲν οὖν ὀνόμαζε τοῖς
+    - { n: 27, bekker: "1435b25", word: 0, title: "Chapter 26" }   # Fuhrmann 26: Περὶ δὲ ἀντιθέτων καὶ παρισώσεων
+    - { n: 28, bekker: "1435b39", word: 0, title: "Chapter 27" }   # Fuhrmann 27: Παρίσωσις δέ ἐστι μέν, ὅταν
+    - { n: 29, bekker: "1436a5", word: 0, title: "Chapter 28" }   # Fuhrmann 28: Παρομοίωσις δέ ἐστιν ἡ μείζων
+    - { n: 30, bekker: "1436a33", word: 0, title: "Chapter 29" }   # Fuhrmann 29: Ἔστι δὲ προοίμιον καθόλου μὲν
+    - { n: 31, bekker: "1438a3", word: 0, title: "Chapter 30" }   # Fuhrmann 30: Μετὰ δὲ τοῦτο ἀναγκαῖον ἡμᾶς
+    - { n: 32, bekker: "1438b14", word: 0, title: "Chapter 31" }   # Fuhrmann 31: Τάξομεν δὲ αὐτὰς διὰ τριῶν
+    - { n: 33, bekker: "1438b29", word: 0, title: "Chapter 32" }   # Fuhrmann 32: Μετὰ δὲ ταύτας ἐστὶ βεβαίωσις,
+    - { n: 34, bekker: "1439b3", word: 0, title: "Chapter 33" }   # Fuhrmann 33: Αὕτη δέ ἐστι, δι' ἧς
+    - { n: 35, bekker: "1439b15", word: 0, title: "Chapter 34" }   # Fuhrmann 34: Ἐὰν δὲ ἐπὶ τὸ βοηθεῖν
+    - { n: 36, bekker: "1440b5", word: 0, title: "Chapter 35" }   # Fuhrmann 35: Τὸ δὲ ἐγκωμιαστικὸν καὶ τὸ
+    - { n: 37, bekker: "1441b30", word: 0, title: "Chapter 36" }   # Fuhrmann 36: Λοιπὸν δέ ἐστιν ἡμῖν εἶδος
+    - { n: 38, bekker: "1445a30", word: 0, title: "Chapter 37" }   # Fuhrmann 37: Τὸ δ' ἐξεταστικὸν εἶδος αὐτὸ
+    - { n: 39, bekker: "1445b24", word: 0, title: "Chapter 38" }   # Fuhrmann 38: Δεῖ δὲ καὶ λέγοντας καὶ
+
+english:
+  primary:
+    id: forster
+    name: "E. S. Forster (Oxford, 1924)"
+    model: archive
+    dir: "rhetal-forster"
+    books: 1
+    chapter_marker: part
+    anchors: "rhetal-forster/anchors.yaml"   # Forster's margin numbers, read from three scans
+    anchor_cuts: true                        # its column-start entries place the column breaks
+
+books:
+  - { n: 1, start: "1420a5", end: "1447b7" }
+
+sources:
+  tlg_dir_env: "TLG_DIR"
+  tlg_dir_default: "../TLG Files/TLG"
+  diogenes_server: "/Applications/Diogenes.app/Contents/server"
+  diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"

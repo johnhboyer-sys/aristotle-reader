@@ -32,10 +32,29 @@ _PUNCT = ".,·;—()|\"‘«»" + "·;"  # ano teleia, Greek question mark
 # ⌜ ⌞ ⌝ ⌟ (U+231C/231E/231D/231F) are the half/corner brackets the TLG uses to
 # mark editorial supplements and transpositions (e.g. in the Eudemian Ethics);
 # strip like the other seclusion brackets so the bracketed words tokenize.
-_SIGLA = "†*<>[]⎪⟦⟧⌜⌞⌝⌟"
+# ‖ (U+2016) stands between clauses in Jaeger's De Spiritu (TLG 0086.043) to mark
+# a break in the sense; on its own it tokenizes to nothing.
+# { } are Fuhrmann's deletion braces in the Rhetorica ad Alexandrum (TLG 0547).
+_SIGLA = "†*<>[]⎪⟦⟧⌜⌞⌝⌟‖{}"
 
 _STRIP = _PUNCT + _SIGLA
 _APOSTROPHE_END = re.compile(r"['’᾽ʼ]$")
+# Not words: Greek numerals (βʹ with the keraia; book heads numbered with
+# stigma, Κϛ, in the Problemata) and the parts of Bekker's page
+# cross-reference "(p. 941b 4—23.)". The line text keeps them; they get no
+# lookup token. Anything else that will not transliterate — a Latin word, or a
+# damaged fragment such as "φ[αʹ" — is still a key failure.
+_NUMERAL_MARKS = "ʹʹϛϚ"  # ʹ ʹ ϛ Ϛ
+_NUMERAL = re.compile(r"[α-ωΑ-ΩϛϚ]{1,3}[ʹʹ]?")
+_BEKKER_REF_PART = re.compile(r"p|\d+[ab]?")
+
+
+def _not_a_word(token: str, had_sigla: bool) -> bool:
+    if had_sigla:
+        return False
+    if any(ch in _NUMERAL_MARKS for ch in token):
+        return bool(_NUMERAL.fullmatch(token))
+    return bool(_BEKKER_REF_PART.fullmatch(token))
 
 
 def _clean(raw: str) -> tuple[str, bool]:
@@ -69,7 +88,7 @@ def tokenize(spine: dict) -> tuple[dict, list[dict], list[dict]]:
                 token, had_sigla = _clean(raw)
                 if had_sigla:
                     sigla_log.append({"ref": ref, "raw": raw, "kept": token})
-                if not token:
+                if not token or _not_a_word(token, had_sigla):
                     continue
                 entry = {"t": token, "o": m.start()}
                 try:
@@ -89,6 +108,19 @@ def tokenize(spine: dict) -> tuple[dict, list[dict], list[dict]]:
         sigla_log,
         key_failures,
     )
+
+
+def numeral_marked_words(tokens: dict) -> list[dict]:
+    """Tokens keyed with the numeral mark '#' (beta._SIGNS). A whole numeral
+    with no sigla is never a token (_not_a_word), so these are the rest: a
+    damaged fragment such as "φ[αʹ", a word with a stray keraia, or a numeral
+    inside brackets. Their key matches no analysis, so the reader shows them
+    unmatched, not flagged; stage 3 counts them so they stay visible."""
+    return [
+        {"ref": f"{seg['column']}{line['n']}{line.get('sub', '')}", "t": tok["t"], "k": tok["k"]}
+        for seg in tokens["segments"] for line in seg["lines"] for tok in line["tokens"]
+        if "#" in tok.get("k", "")
+    ]
 
 
 def _quality_tokens(tokens: dict) -> list[dict]:
@@ -132,6 +164,13 @@ def run(manifest: Manifest) -> Path:
     (out_dir / "key_failures.json").write_text(
         json.dumps(key_failures, ensure_ascii=False, indent=1), encoding="utf-8"
     )
+    marked = numeral_marked_words(tokens)
+    (out_dir / "numeral_marked_words.json").write_text(
+        json.dumps(marked, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    print(f"stage3: {spine['work']}: {len(marked)} token(s) keyed with the numeral mark '#' "
+          f"(not a bare numeral)" + (f": {', '.join(m['ref'] + ' ' + m['t'] for m in marked[:12])}"
+                                         + (' …' if len(marked) > 12 else '') if marked else ""))
     quality_report = check_breathing(
         _quality_tokens(tokens),
         manifest.data.get("illegal_breathing_allow", []),

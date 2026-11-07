@@ -563,11 +563,17 @@ def run(manifest: Manifest) -> Path:
         # Primary (archive) translation footnotes, vendored beside its HTML as
         # sources/<dir>/footnotes.json ({N: html}); its prose carries [^N]
         # markers (e.g. the Isagoge's Owen). Emitted to the same footnotes.json.
-        prim = (manifest.data.get("english") or {}).get("primary") or {}
-        if prim.get("dir"):
-            src = SOURCES_DIR / prim["dir"] / "footnotes.json"
-            if src.exists():
-                shutil.copy(src, out_dir / "footnotes.json")
+        # A secondary translation's notes ship the same way (Taylor's, in Cat
+        # and Int). The reader keeps one footnotes.json per work, so two slots
+        # with notes would collide on their numbers: that raises.
+        eng = manifest.data.get("english") or {}
+        found = [SOURCES_DIR / c["dir"] / "footnotes.json"
+                 for c in (eng.get("primary") or {}, eng.get("secondary") or {})
+                 if c.get("dir") and (SOURCES_DIR / c["dir"] / "footnotes.json").exists()]
+        if len(found) > 1:
+            raise ValueError(f"{manifest.work_id}: footnotes in two slots: {found}")
+        if found:
+            shutil.copy(found[0], out_dir / "footnotes.json")
     # A third translation may also head every chapter with a title of its own
     # (Ostwald: "(e) Theoretical wisdom"), keyed {transId: {book: {chapter: …}}}
     # — the reader shows it over that translation's column, not in the shared

@@ -76,7 +76,10 @@ ported yet). `cargo check` passes (which also validates the capability file).
   the Python engine — `node scripts/parity.mjs EN` compares both on identical
   inputs (116 chapters, 4,886 anchors, zero mismatches; `Cat` likewise).
   `translation-file.ts` implements the {b.c}/{1094a}/{20} tag format with
-  scanned (never trusted) density detection.
+  scanned (never trusted) density detection. The Athenian Constitution is
+  cited by chapter.section on synthetic columns (chapter 49 = column 49a,
+  section = line), so tag its sections `{49a3}`: a `{49.3}` tag reads as
+  book 49, chapter 3.
 - **Import flow** (step 6): dialog + drag-and-drop, metadata form with the
   restrictive-default license question, hunspell dehyphenation with the
   tap-through review queue (en_US data vendored under `src/assets/dict-en/`),

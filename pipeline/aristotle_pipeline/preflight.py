@@ -31,6 +31,12 @@ def validate(data_dir: Path, manifests_dir: Path) -> list[Problem]:
     manifests = _load_manifests(manifests_dir, problems)
     for manifest in manifests:
         _validate_manifest_schema(manifest, problems)
+    # A manifest with `deploy_hold` names a work kept off the public site; the
+    # public build does not emit it, so its absence is expected. Once built
+    # (locally), it is checked like any other.
+    manifests = [m for m in manifests
+                 if not (m.data.get("deploy_hold") and not (data_dir / m.work_id).exists())]
+    for manifest in manifests:
         _validate_work_data(data_dir, manifest, problems)
     _validate_search_shards(data_dir, manifests, problems)
     _validate_chapter_bounds(data_dir, manifests, problems)
@@ -199,9 +205,8 @@ def _validate_work_data(data_dir: Path, manifest: WorkManifest, problems: list[P
     # synthetic column/line numbers that do not obey Bekker ordering/anchoring
     # semantics, so the Bekker-specific structural checks are skipped for them
     # (schema, file existence, JSON validity, columns, analyses, and public
-    # gating still run).
-    scheme = (manifest.data.get("citation") or {}).get("scheme")
-    bekker_native = scheme in (None, "", "bekker")
+    # gating still run). See ordered_citation for chapter-section.
+    bekker_native = ordered_citation((manifest.data.get("citation") or {}).get("scheme"))
 
     # Manifests declare known, verified irregularities in the TLG line numbering
     # (`expected_line_gaps`: within `column`, after line `after` the sequence
@@ -223,6 +228,15 @@ def _validate_work_data(data_dir: Path, manifest: WorkManifest, problems: list[P
     _validate_footnotes(manifest, work_dir, loaded, problems)
     _validate_translation_indexes(manifest, work_dir, loaded, problems)
     _validate_public_gating(manifest, loaded, problems)
+
+
+def ordered_citation(scheme: str | None) -> bool:
+    """Whether a work's column:line numbers order and anchor the Bekker way, so
+    preflight's order and anchor checks apply. A chapter-section work (the
+    Athenian Constitution: chapter N is synthetic column "Na", section S is
+    line S) does: its columns ascend with the chapters and every section is a
+    line. Busse's synthetic pages (the Isagoge) do not."""
+    return scheme in (None, "", "bekker", "chapter-section")
 
 
 def _validate_translation_indexes(manifest: WorkManifest, work_dir: Path, loaded: dict[str, Any],
