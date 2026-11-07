@@ -110,6 +110,19 @@ def tokenize(spine: dict) -> tuple[dict, list[dict], list[dict]]:
     )
 
 
+def numeral_marked_words(tokens: dict) -> list[dict]:
+    """Tokens keyed with the numeral mark '#' (beta._SIGNS). A whole numeral
+    with no sigla is never a token (_not_a_word), so these are the rest: a
+    damaged fragment such as "φ[αʹ", a word with a stray keraia, or a numeral
+    inside brackets. Their key matches no analysis, so the reader shows them
+    unmatched, not flagged; stage 3 counts them so they stay visible."""
+    return [
+        {"ref": f"{seg['column']}{line['n']}{line.get('sub', '')}", "t": tok["t"], "k": tok["k"]}
+        for seg in tokens["segments"] for line in seg["lines"] for tok in line["tokens"]
+        if "#" in tok.get("k", "")
+    ]
+
+
 def _quality_tokens(tokens: dict) -> list[dict]:
     records = []
     for seg in tokens["segments"]:
@@ -151,6 +164,13 @@ def run(manifest: Manifest) -> Path:
     (out_dir / "key_failures.json").write_text(
         json.dumps(key_failures, ensure_ascii=False, indent=1), encoding="utf-8"
     )
+    marked = numeral_marked_words(tokens)
+    (out_dir / "numeral_marked_words.json").write_text(
+        json.dumps(marked, ensure_ascii=False, indent=1), encoding="utf-8"
+    )
+    print(f"stage3: {spine['work']}: {len(marked)} token(s) keyed with the numeral mark '#' "
+          f"(not a bare numeral)" + (f": {', '.join(m['ref'] + ' ' + m['t'] for m in marked[:12])}"
+                                         + (' …' if len(marked) > 12 else '') if marked else ""))
     quality_report = check_breathing(
         _quality_tokens(tokens),
         manifest.data.get("illegal_breathing_allow", []),

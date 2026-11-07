@@ -115,6 +115,38 @@ export function positionsByChapter(
   return [...by.values()];
 }
 
+/** positionsByChapter, split again at each tick: for a chapter-section work,
+ * where every section opens with a real tick, each section is credited with
+ * its own hits and gets its own row. */
+export function positionsBySection(
+  seg: Segment,
+  t: Pick<TranslationRef, 'id' | 'slot'>,
+  positions: number[],
+): number[][] {
+  const pieces = piecesOf(seg, t);
+  const words: { piece: number; start: number }[] = [];
+  pieces.forEach((p, i) => { for (const w of englishWords(p.text)) words.push({ piece: i, start: w.start }); });
+  const byChapter = positionsByChapter(seg, t, positions);
+  if (!positions.length || !positions.every(p => p < words.length)) return byChapter;
+  const tickAt = (p: number) => {
+    const { piece, start } = words[p];
+    const ticks = pieces[piece].bekker ?? [];
+    let i = -1;
+    while (i + 1 < ticks.length && ticks[i + 1].offset <= start) i++;
+    return `${piece}:${i}`;
+  };
+  return byChapter.flatMap(group => {
+    const out: number[][] = [];
+    let key = '';
+    for (const p of group) {
+      const k = tickAt(p);
+      if (k !== key || !out.length) { out.push([]); key = k; }
+      out[out.length - 1].push(p);
+    }
+    return out;
+  });
+}
+
 function matchedWords(
   words: { word: string; piece: number }[],
   positions: number[],

@@ -5,7 +5,7 @@
   // the Bonitz section stubbed exactly as on the site (digitisation pending —
   // the stub is honest, not filler). Citation chips jump into the reader via
   // the same ?hlg=&loc= contract the site's search uses.
-  import { fetchLsjShard, lsjShard, lineRef } from '@shared/lib/data';
+  import { citeLabel, fetchLsjShard, isChapterSection, lsjShard, lineRef } from '@shared/lib/data';
   import { renderLsjEntry } from '@shared/lib/html';
   import { getWork, bookLabel, isBookless } from '@shared/lib/works';
 
@@ -135,11 +135,11 @@
                       <div class="fb-chapter">
                         <div class="fb-ch-head">
                           <span class="fb-ch-label">Chapter {ch.chapter}</span>
-                          {#if ch.bekker}<span class="fb-ch-bekker">{ch.bekker}</span>{/if}
+                          {#if ch.bekker && !isChapterSection(getWork(w.work))}<span class="fb-ch-bekker">{ch.bekker}</span>{/if}
                         </div>
                         <ul class="fb-citelist">
                           {#each ch.instances as inst}
-                            <li><button on:click={() => onJumpTo(w.work, bk.book, inst[0], inst[1], inst[2], inst[3])}>{inst[0]}{lineRef(inst[1], inst[3])}</button></li>
+                            <li><button on:click={() => onJumpTo(w.work, bk.book, inst[0], inst[1], inst[2], inst[3])}>{citeLabel(getWork(w.work), inst[0], lineRef(inst[1], inst[3]))}</button></li>
                           {/each}
                         </ul>
                       </div>
@@ -157,11 +157,11 @@
                         <div class="fb-chapter">
                           <div class="fb-ch-head">
                             <span class="fb-ch-label">Chapter {ch.chapter}</span>
-                            {#if ch.bekker}<span class="fb-ch-bekker">{ch.bekker}</span>{/if}
+                            {#if ch.bekker && !isChapterSection(getWork(w.work))}<span class="fb-ch-bekker">{ch.bekker}</span>{/if}
                           </div>
                           <ul class="fb-citelist">
                             {#each ch.instances as inst}
-                              <li><button on:click={() => onJumpTo(w.work, bk.book, inst[0], inst[1], inst[2], inst[3])}>{inst[0]}{lineRef(inst[1], inst[3])}</button></li>
+                              <li><button on:click={() => onJumpTo(w.work, bk.book, inst[0], inst[1], inst[2], inst[3])}>{citeLabel(getWork(w.work), inst[0], lineRef(inst[1], inst[3]))}</button></li>
                             {/each}
                           </ul>
                         </div>

@@ -19,7 +19,7 @@ from pathlib import Path
 from lxml import etree
 
 from .config import BUILD_DIR, Manifest
-from .lsj_citation_map import resolve_citation
+from .lsj_citation_map import CITATION_WORKS, resolve_citation
 
 # Letter-class spans keep the CSS in charge of presentation.
 _TAG_MAP = {
@@ -49,13 +49,59 @@ _BIBL_REF = re.compile(
 # LSJ shows the Rhetorica ad Alexandrum as "Arist. Rh.Al." but numbers it
 # under Anaximenes (TLG 0547). It is the only work cited outside 0086.
 _OTHER_AUTHOR_WORKS = {("0547", "001"): "RhetAl"}
+# A chapter.section citation (the Athenian Constitution, tlg,0086,003:49:4, or
+# chapter-only tlg,0086,003:12). It can never match _BIBL_REF, which requires
+# the a/b of a Bekker column, so no existing citation changes meaning.
+_SECTION_REF = re.compile(
+    r"^Perseus:abo:tlg,0086,(\d{3}):(\d+)(?::(\d+))?$"
+)
 _MANIFEST_CACHE: dict[str, Manifest | None] = {}
+
+
+def _manifest(work_id: str) -> Manifest | None:
+    if work_id not in _MANIFEST_CACHE:
+        try:
+            _MANIFEST_CACHE[work_id] = Manifest.for_work(work_id)
+        except OSError:
+            _MANIFEST_CACHE[work_id] = None
+    return _MANIFEST_CACHE[work_id]
+
+
+def _section_href(value: str | None) -> str | None:
+    """Link a chapter.section citation onto the work's synthetic line
+    (chapter C = column "Ca", section S = line S; chapter-only = section 1).
+    Through the same guards as a Bekker link, plus two of its own: the work's
+    manifest must declare citation.scheme chapter-section, and the section must
+    be in its pinned Greek inventory, so a citation of a section the Greek does
+    not have (LSJ's "Ath. 10.7") stays an inert span."""
+    match = _SECTION_REF.fullmatch(value or "")
+    if not match:
+        return None
+    tlg_work, raw_chap, raw_sec = match.groups()
+    work_id = CITATION_WORKS.get(tlg_work)
+    if not isinstance(work_id, str):
+        return None
+    manifest = _manifest(work_id)
+    if manifest is None:
+        return None
+    cit = manifest.data.get("citation") or {}
+    if cit.get("scheme") != "chapter-section":
+        return None
+    inventory = cit.get("greek_sections") or []
+    chap, sec = int(raw_chap), int(raw_sec or 1)
+    if not (1 <= chap <= len(inventory) and 1 <= sec <= inventory[chap - 1]):
+        return None
+    column = f"{chap}a"
+    book = manifest.book_for_line(column, sec)
+    if book is None:
+        return None
+    return f"/{work_id}/book/{book}?loc={column}:{sec}"
 
 
 def _bibl_href(value: str | None) -> str | None:
     match = _BIBL_REF.fullmatch(value or "")
     if not match:
-        return None
+        return _section_href(value)
     author, tlg_work, column, raw_line = match.groups()
     if author == "0086":
         work_id = resolve_citation(tlg_work, column)
@@ -64,12 +110,7 @@ def _bibl_href(value: str | None) -> str | None:
     if not work_id:
         return None
 
-    if work_id not in _MANIFEST_CACHE:
-        try:
-            _MANIFEST_CACHE[work_id] = Manifest.for_work(work_id)
-        except OSError:
-            _MANIFEST_CACHE[work_id] = None
-    manifest = _MANIFEST_CACHE[work_id]
+    manifest = _manifest(work_id)
     if manifest is None:
         return None
     line = int(raw_line)

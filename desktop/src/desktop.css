@@ -46,6 +46,12 @@ html, body { margin: 0; }
   .dt-shell.dt-no-rails .reader-body.view-both:not(.trans-compare):not(.word-open) .seg-row {
     grid-template-columns: var(--greek-track, max-content) minmax(0, 1fr);
   }
+  /* A chapter-section work (the Athenian Constitution) has no measured track:
+     each Greek line is a whole section, so max-content would run it thousands
+     of px wide. Its Greek column takes the English measure and wraps. */
+  .dt-shell.dt-no-rails .reader-body.chapter-section.view-both:not(.trans-compare):not(.word-open) .seg-row {
+    grid-template-columns: minmax(0, calc(35rem * var(--colw-scale, 1) * var(--fs-scale, 1))) minmax(0, 1fr);
+  }
   /* English matches the Greek column's width (the unwrapped Bekker lines
      run ~35rem at default type size) — the two columns read as equal
      halves of an opening, not prose stretched to fill the extra page.

@@ -3,8 +3,16 @@
 // up in markup the page cannot be rendered to check here, and a wrong one is
 // silent: a bar of zero width, a book heading that says "1" instead of "Α", a
 // deep link that lands at the top of the book instead of on the line.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildWorksView, freqBarPct, instanceHref, instanceLabel, type WorkInstances } from '../lib/lemma-view';
+
+// The Athenian Constitution is cited by chapter.section. Its registry entry
+// lands with its data, so it is served here beside the real works.
+vi.mock('@shared/lib/works', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@shared/lib/works')>();
+  const ATHPOL = { ...actual.getWork('Cat')!, id: 'AthPol', abbr: 'Ath. Pol.', citation: { scheme: 'chapter-section' as const } };
+  return { ...actual, getWork: (id: string) => (id === 'AthPol' ? ATHPOL : actual.getWork(id)) };
+});
 
 const chapter = (n: number) => ({
   chapter: '1',
@@ -58,19 +66,28 @@ describe('instanceHref', () => {
 // link it replaced.
 describe('instanceLabel', () => {
   it('prints the letter the link navigates to', () => {
-    expect(instanceLabel(['775a', 11, 'gunaixin', 'a'])).toBe('775a11a');
-    expect(instanceLabel(['775a', 11, 'x', 'c'])).toBe('775a11c');
+    expect(instanceLabel('GA', ['775a', 11, 'gunaixin', 'a'])).toBe('775a11a');
+    expect(instanceLabel('GA', ['775a', 11, 'x', 'c'])).toBe('775a11c');
   });
 
   it('prints a plain line unchanged', () => {
-    expect(instanceLabel(['1094a', 5, 'x'])).toBe('1094a5');
+    expect(instanceLabel('EN', ['1094a', 5, 'x'])).toBe('1094a5');
+  });
+
+  it('keeps the Isagoge\'s Busse page form', () => {
+    expect(instanceLabel('Isa', ['1a', 5, 'x'])).toBe('1a5');
+  });
+
+  it('prints chapter.section for a chapter-section work, linking the synthetic column', () => {
+    expect(instanceLabel('AthPol', ['49a', 3, 'x'])).toBe('49.3');
+    expect(instanceHref('', 'AthPol', 1, ['49a', 3, 'x'])).toBe('/AthPol/book/1?hlg=x&loc=49a:3');
   });
 
   it('agrees with the href for the same instance', () => {
     const inst = ['775a', 11, 'x', 'b'] as const;
     const href = instanceHref('', 'GA', 4, [...inst]);
     expect(href).toContain(`loc=775a:11b`);
-    expect(instanceLabel([...inst])).toBe('775a11b');
+    expect(instanceLabel('GA', [...inst])).toBe('775a11b');
   });
 
   // workPath clamps to the work's real book range, so a stale book number for a

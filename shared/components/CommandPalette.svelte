@@ -1,9 +1,9 @@
 <script lang="ts">
   import { tick } from 'svelte';
-  import { fetchBekkerIndex, fetchLemmata, type LemmaRef } from '../lib/data';
+  import { citeLabelOf, fetchBekkerIndex, fetchLemmata, type LemmaRef } from '../lib/data';
   import { workPath, getWork } from '../lib/works';
   import { resumeFor } from '../lib/resume';
-  import { citationTarget, citationTargets, hasGreek, parseCitation, rankLemmata, rankWorks } from '../lib/palette';
+  import { citationTarget, citationTargets, hasGreek, parseCitation, parseSectionCitation, rankLemmata, rankWorks, sectionTarget } from '../lib/palette';
 
   // The work currently open in the reader (enables Bekker-citation jumps);
   // null on pages with no work context (home, landings).
@@ -71,6 +71,26 @@
     const trimmed = q.trim();
     if (!trimmed) { items = []; selected = 0; return; }
 
+    // 0. A chapter.section citation ("Ath. Pol. 56.6"; a bare "56.6" inside
+    //    that work) jumps to the section, if the work has it. It can never
+    //    also be a Bekker citation, which always carries a or b.
+    const section = parseSectionCitation(trimmed, work);
+    if (section) {
+      const index = await fetchBekkerIndex().catch(() => ({}));
+      if (mySeq !== seq) return;
+      const target = sectionTarget(section, index);
+      if (target) {
+        out.push({
+          kind: 'bekker',
+          label: target.label,
+          detail: getWork(section.work)?.title ?? section.work,
+          href: target.loc != null
+            ? `${base}${workPath(section.work, target.book)}?loc=${target.loc}`
+            : `${base}${workPath(section.work, target.book)}#${target.hash}`,
+        });
+      }
+    }
+
     // 1. A Bekker citation jumps straight to the passage, in whichever work
     //    carries it — the work being read first when it owns the column.
     const cite = parseCitation(trimmed);
@@ -98,7 +118,7 @@
       out.push({
         kind: 'work',
         label: w.title,
-        detail: pos?.cite ? `resumes at ${pos.cite}` : w.blurb,
+        detail: pos?.cite ? `resumes at ${citeLabelOf(w, pos.cite)}` : w.blurb,
         href: `${base}${workPath(w.id, book)}${pos?.cite ? `#${pos.cite}` : ''}`,
       });
     }
@@ -119,7 +139,7 @@
 
     // 4. Offer the full corpus search — except for a citation that resolved,
     //    where searching the text for a line number finds nothing.
-    if (!(cite && out.some((i) => i.kind === 'bekker'))) out.push({
+    if (!((cite || section) && out.some((i) => i.kind === 'bekker'))) out.push({
       kind: 'search',
       label: `Search the corpus for “${trimmed}”`,
       detail: 'Greek & English · all works',

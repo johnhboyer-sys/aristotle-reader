@@ -70,8 +70,11 @@ export interface Work {
   // Most works are cited by Bekker (column:line). A non-Bekker treatise (e.g.
   // Porphyry's Isagoge) sets scheme:'busse' so the reader drops the per-page
   // reference and the per-line Greek numbers; its section headings come from
-  // chapter-titles.json. Default (omitted) = bekker.
-  citation?: { scheme: 'bekker' | 'busse'; hideLineNumbers?: boolean };
+  // chapter-titles.json. Default (omitted) = bekker. A work cited by
+  // chapter.section (the Athenian Constitution) sets 'chapter-section': chapter
+  // N is the synthetic column "Na", section S its line S, and the reader prints
+  // "49.3" (lib/data citeLabel).
+  citation?: { scheme: 'bekker' | 'busse' | 'chapter-section'; hideLineNumbers?: boolean };
   // Has curated quotation citations (pipeline/data/quotations/<id>.json). The
   // reader asks for quotations.json only when this is set; works.test.ts keeps
   // it in step with the files.
@@ -1062,6 +1065,29 @@ export const WORKS: Work[] = [
     ],
     blurb: 'Aristotle on poetry and tragedy — the founding work of literary theory.',
   },
+  {
+    id: 'AthPol',
+    title: 'Athenian Constitution',
+    greekTitle: 'Ἀθηναίων πολιτεία',
+    abbr: 'Ath. Pol.',
+    author: 'Aristotle',
+    books: 1,
+    bookLabels: ['1'],
+    greekEdition: 'Oppermann, Aristotelis Ἀθηναίων πολιτεία (Teubner, 1928)',
+    greekSource: {
+      short: 'Oppermann (Teubner, 1928)',
+      full: 'H. Oppermann, ed. Aristotelis Ἀθηναίων πολιτεία. Leipzig: Teubner, 1928; repr. 1968.',
+    },
+    // Cited by chapter.section, not Bekker: the papyrus came to light in 1890.
+    // Chapter N rides synthetic column "Na", section S line S (plan:
+    // docs/ath-pol-plan.md). No authenticity badge: Barnes's Revised Oxford
+    // Translation prints it unmarked (John, 2026-11-06: "Match Barnes").
+    citation: { scheme: 'chapter-section' },
+    translations: [
+      { id: 'kenyon', name: 'F. G. Kenyon (Oxford, 1921)', short: 'Kenyon', slot: 'english', footnotes: true },
+    ],
+    blurb: 'The constitutional history of Athens, and how its offices and courts worked in the 320s BC.',
+  },
 ];
 
 const BY_ID = new Map(WORKS.map((w) => [w.id, w]));
@@ -1463,6 +1489,7 @@ export const CATEGORIES: Category[] = [
     works: [
       { id: 'Rhet' },
       { id: 'Poet' },
+      { id: 'AthPol' },
     ],
   },
   // Appendix — the works transmitted under Aristotle's name whose authenticity is

@@ -256,12 +256,32 @@ def test_numerals_and_editorial_refs_are_text_not_tokens():
         "ΟΣΑ", "δὲ", "χρόνος"]
 
 
-def test_a_damaged_fragment_with_a_numeral_mark_still_fails():
-    # Athenaion Politeia 2763: "φ[αʹ" is a broken word, not a numeral. A
-    # token that carried sigla, or holds more than a numeral's letters, stays
-    # a key failure.
-    _, _, key_failures = tokenize(_one_line_spine("ἐστὶ φ[αʹ ὅταν λόγοςʹ"))
-    assert [f["token"] for f in key_failures] == ["φαʹ", "λόγοςʹ"]
+def test_a_damaged_fragment_with_a_numeral_mark_stays_a_token():
+    # Athenaion Politeia 2763: "φ[αʹ" is a broken word, not a numeral, and
+    # "λόγοςʹ" holds more than a numeral's letters. Neither is skipped as a
+    # numeral: each stays a token, keyed with the keraia's Beta Code '#' (Ath.
+    # Pol.'s papyrus signs, beta._SIGNS), a key that matches no analysis. The
+    # bare numeral beside them is no token. (Before the keraia had a key these
+    # were key failures; preflight now needs every token keyed.)
+    tokens, _, key_failures = tokenize(_one_line_spine("ἐστὶ φ[αʹ ὅταν λόγοςʹ βʹ"))
+    assert key_failures == []
+    got = [(t["t"], t["k"]) for t in tokens["segments"][0]["lines"][0]["tokens"]]
+    assert ("φαʹ", "fa#") in got
+    assert ("λόγοςʹ", "lo/gos#") in got
+    assert [t for t, _ in got] == ["ἐστὶ", "φαʹ", "ὅταν", "λόγοςʹ"]
+
+
+def test_numeral_marked_tokens_are_counted_but_bare_numerals_are_not():
+    from aristotle_pipeline.stage3_tokenize import numeral_marked_words
+    tokens, _, _ = tokenize(_one_line_spine("ἐστὶ φ[αʹ ὅταν [βʹ] βʹ λόγοςʹ"))
+    assert [(m["ref"], m["t"]) for m in numeral_marked_words(tokens)] == [
+        ("1a1", "φαʹ"), ("1a1", "βʹ"), ("1a1", "λόγοςʹ")]
+
+
+def test_a_stray_latin_letter_beside_a_keraia_still_fails():
+    # The keraia's key does not open the door to other letters.
+    _, _, key_failures = tokenize(_one_line_spine("λόγoςʹ"))
+    assert [f["token"] for f in key_failures] == ["λόγoςʹ"]
 
 
 def test_an_unknown_letter_inside_a_word_still_fails():

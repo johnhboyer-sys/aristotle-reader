@@ -11,7 +11,8 @@ import { readFileSync } from 'node:fs';
 import ThemeInit from './ThemeInit.astro';
 import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
-import { workLanding } from '@shared/lib/works';
+import { getWork, workLanding } from '@shared/lib/works';
+import { isChapterSection } from '@shared/lib/data';
 import { jsonLdSafe } from '../lib/jsonld';
 import { buildWorksView, instanceHref, instanceLabel, type Instance, type WorkInstances } from '../lib/lemma-view';
 import '@shared/styles/global.css';
@@ -241,11 +242,11 @@ const breadcrumb = Astro.site ? {
                       <div class="fb-chapter">
                         <div class="fb-ch-head">
                           <span class="fb-ch-label">Chapter {ch.chapter}</span>
-                          {ch.bekker && <span class="fb-ch-bekker">{ch.bekker}</span>}
+                          {ch.bekker && !isChapterSection(getWork(w.work)) && <span class="fb-ch-bekker">{ch.bekker}</span>}
                         </div>
                         <ul class="fb-citelist">
                           {ch.instances.map((inst) => (
-                            <li><a href={instHref(w.work, bk.book, inst)}>{instanceLabel(inst)}</a></li>
+                            <li><a href={instHref(w.work, bk.book, inst)}>{instanceLabel(w.work, inst)}</a></li>
                           ))}
                         </ul>
                       </div>
@@ -263,11 +264,11 @@ const breadcrumb = Astro.site ? {
                         <div class="fb-chapter">
                           <div class="fb-ch-head">
                             <span class="fb-ch-label">Chapter {ch.chapter}</span>
-                            {ch.bekker && <span class="fb-ch-bekker">{ch.bekker}</span>}
+                            {ch.bekker && !isChapterSection(getWork(w.work)) && <span class="fb-ch-bekker">{ch.bekker}</span>}
                           </div>
                           <ul class="fb-citelist">
                             {ch.instances.map((inst) => (
-                              <li><a href={instHref(w.work, bk.book, inst)}>{instanceLabel(inst)}</a></li>
+                              <li><a href={instHref(w.work, bk.book, inst)}>{instanceLabel(w.work, inst)}</a></li>
                             ))}
                           </ul>
                         </div>

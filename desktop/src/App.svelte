@@ -6,7 +6,7 @@
   // Reader needs no desktop-specific changes.
   import Reader from '@shared/components/Reader.svelte';
   import { getWork, bookLabel, visibleTranslations } from '@shared/lib/works';
-  import { invalidateBookCache, lineRef } from '@shared/lib/data';
+  import { citeLabelOf, invalidateBookCache, isNonBekker, lineRef } from '@shared/lib/data';
   import { parseCitation } from '@shared/lib/palette';
   import { entryByDataId } from './lib/corpus';
   import { isTauri, errorText, type DataLayerInfo } from './lib/runtime';
@@ -50,6 +50,8 @@
 
   $: meta = getWork(workId);
   $: busse = meta?.citation?.scheme === 'busse';
+  // No Bekker jump for the Isagoge's pages or a chapter.section work.
+  $: nonBekker = isNonBekker(meta);
   $: titleSuffix = meta && meta.books > 1 ? ` · Book ${bookLabel(meta, bookNum)}` : '';
 
   // Optional curated chapter titles ({book: {chapter: title}}) — the website
@@ -783,7 +785,7 @@
     showToast(ok ? 'Copied' : 'Could not access the clipboard');
   }
   async function ctxCopyCite() {
-    const ok = await copySelectionWithCitation(meta?.abbr ?? '');
+    const ok = await copySelectionWithCitation(meta?.abbr ?? '', meta);
     closeCtx();
     showToast(ok ? 'Copied with citation' : 'Could not access the clipboard');
   }
@@ -826,7 +828,7 @@
     const range = sel.getRangeAt(0);
     const text = extractCleanText(range);
     if (!text) return;
-    const cite = citeCopyEnabled() ? greekCiteForRange(range, meta?.abbr ?? '') : null;
+    const cite = citeCopyEnabled() ? greekCiteForRange(range, meta?.abbr ?? '', meta) : null;
     const payload = cite ? `${text}\n${cite}` : text;
     e.clipboardData?.setData('text/plain', payload);
     e.preventDefault();
@@ -920,7 +922,8 @@
     const authorAbbr = entry?.author && entry.author !== 'aristotle'
       ? `${entry.author.slice(0, 5)}.`   // e.g. Porphyry → Porph.
       : 'Arist.';
-    let cite = `${authorAbbr} ${meta.abbr} ${busse ? `p. ${hash.replace(/^p/, '')}` : hash}`;
+    // A chapter.section work's hash ("49a3") reads "49.3": Arist. Ath. Pol. 49.3.
+    let cite = `${authorAbbr} ${meta.abbr} ${busse ? `p. ${hash.replace(/^p/, '')}` : citeLabelOf(meta, hash)}`;
     // Name the translation unless the reader is in Greek-only view.
     try {
       const view = localStorage.getItem('reader-view');
@@ -1067,7 +1070,7 @@
       </button>
       <h1>{meta?.title ?? workId}{titleSuffix}</h1>
       <span class="dt-spacer"></span>
-      {#if !busse}
+      {#if !nonBekker}
         <BekkerJump work={workId} onJump={onBekkerJump} />
       {/if}
       <button class="dt-cite" on:click={() => (searchOpen = true)} title="Search the corpus (⇧⌘K)">

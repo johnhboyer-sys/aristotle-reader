@@ -12,6 +12,7 @@ CITATION_WORKS: dict[str, str | list[tuple[str, str, str]]] = {
         ("APo", "71a", "100b"),
     ],
     "002": "DA",  # verified against LSJ 2026-08-18
+    "003": "AthPol",  # verified against LSJ 2026-11-06: cited by chapter.section ("53.2")
     "004": "Aud",  # verified against LSJ 2026-08-18
     "005": "Cael",  # verified against LSJ 2026-08-18
     "006": "Cat",  # verified against LSJ 2026-08-18
