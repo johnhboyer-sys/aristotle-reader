@@ -45,6 +45,9 @@ CITATION_WORKS: dict[str, str | list[tuple[str, str, str]]] = {
     "039": "SE",  # verified against LSJ 2026-08-18
     "041": "Sens",  # verified against LSJ 2026-08-18
     "042": "Somn",  # verified against LSJ 2026-08-18
+    "043": [  # verified against LSJ 2026-11-06: 40 "Spir." citations; 478a21 lies outside
+        ("Spir", "481a", "486b"),
+    ],
     "044": "Top",  # verified against LSJ 2026-08-18
     "045": "VV",  # verified against LSJ 2026-08-18
     "046": "Vent",  # verified against LSJ 2026-08-18

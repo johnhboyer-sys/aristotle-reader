@@ -83,3 +83,15 @@ def test_nested_author_title_markup_survives_inside_the_link():
 )
 def test_unresolved_bibls_remain_inert_spans(attributes):
     assert render_bibl(attributes) == '<span class="lsj-bibl">citation</span>'
+
+
+def test_de_spiritu_links_inside_its_columns_only():
+    # LSJ's "Arist. Spir." is Perseus work 043: 40 citations, all titled
+    # Spir. (checked 2026-11-06). s.v. ἀνατέμνω it cites 478a21, a column
+    # De Spiritu (481a-486b) does not have; that one stays plain text.
+    assert render_bibl('n="Perseus:abo:tlg,0086,043:483b:16"') == (
+        '<a class="lsj-bibl" href="/Spir/book/1?loc=483b:16">citation</a>'
+    )
+    assert render_bibl('n="Perseus:abo:tlg,0086,043:478a:21"') == (
+        '<span class="lsj-bibl">citation</span>'
+    )
