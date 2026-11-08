@@ -35,7 +35,7 @@
 .dir-b .b-links a:hover, .dir-b .b-links a.on { color: var(--red-ink); }
 .dir-b .b-ib { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 34px; padding: 0 8px; border: 0; background: none; color: var(--mid); font: 500 15px/1 var(--sans); }
 .dir-b .b-ib:hover { color: var(--red-ink); }
-.dir-b .b-tag { font: 500 13px/1 var(--sans); color: var(--mid); margin-left: 10px; text-transform: lowercase; }
+.dir-b .b-tag { font: 600 13px/1 var(--sans); color: var(--red-ink); margin-left: 10px; text-transform: lowercase; }
 
 /* The poster: the photograph across the page, the title over it. A desktop
    shows the wide cut of the photograph and a phone the tall one, each
@@ -55,19 +55,48 @@
 /* The photographs in black and white. Dark mode takes a little light out of
    them so the page around them stays dark. */
 .dir-b.dark .b-po img { filter: brightness(.86); }
+/* Plates in place of photographs: the print whole, in black ink, its white
+   paper dropped into the page's; in dark mode the lines print light. */
+/* John, 5 Nov, on On the Heavens: "the image works well on mobile, but not
+   on desktop." On a phone the plate spans the page; a desktop now does the
+   same, the poster as tall as the plate at full width. */
+.dir-b .b-po.pl { background: var(--bg); height: auto; aspect-ratio: 1280 / 914; }
+.dir-b .b-po.pl img { object-fit: contain; mix-blend-mode: multiply; }
+.dir-b.dark .b-po.pl img { filter: invert(1) brightness(.86); mix-blend-mode: screen; }
+.dir-b.dark .b-po.pl.dp-paper img { filter: sepia(.45) brightness(.76) contrast(1.06); mix-blend-mode: normal; }
+/* The mask is inline on every plate img; only dark mode with the outline uses it. */
+.dir-b:not(.dark) .b-po.pl img, .dir-b .b-po.pl:not(.dp-outline) img { -webkit-mask-image: none !important; mask-image: none !important; }
+.dir-b.dark .b-po.pl.dp-outline img { -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.dir-b.dark .b-po.pl.dp-outline.tp-side img { -webkit-mask-position: right center; mask-position: right center; }
+.dir-b.dark .b-po.pl.dp-outline.tp-side.pl-l img { -webkit-mask-position: left center; mask-position: left center; }
+/* Title places (the Title place switch, or a plate's own). Top and foot set
+   the title in one half of the plate; above sets it on the paper over the
+   plate; beside gives it a column at the left and moves the plate right. */
+.dir-b .b-po.tp-top .b-po-t { bottom: auto; height: 430px; justify-content: flex-start; }
+.dir-b .b-po.tp-foot .b-po-t { top: auto; height: 430px; justify-content: flex-end; }
+.dir-b .b-po.pl.tp-band { aspect-ratio: auto; display: flex; flex-direction: column; }
+.dir-b .b-po.tp-band .b-po-t { position: static; order: -1; padding: 30px 72px 26px; }
+.dir-b .b-po.tp-band img { position: static; height: auto; aspect-ratio: 1280 / 914; }
+.dir-b .b-po.pl.tp-side { aspect-ratio: 1440 / 652; }
+.dir-b .b-po.pl.tp-side.no-pl { aspect-ratio: auto; height: 360px; }
+/* John, 6 Nov, on the Categories: "we need some more margin between title
+   and image." The title column is 72 + 470px; the plate starts 56px past it,
+   at every desktop width. */
+.dir-b .b-po.tp-side img { left: 598px; width: calc(100% - 598px); object-position: right center; }
+.dir-b .b-po.tp-side .b-po-t { right: auto; width: 470px; }
+/* John, 5 Nov, on Huot's bust: "Image on left". A plate whose record says
+   left: true sits at the left, the title in a column at the right. */
+.dir-b .b-po.tp-side.pl-l img { left: 0; width: calc(100% - 598px); object-position: left center; }
+.dir-b .b-po.tp-side.pl-l .b-po-t { left: auto; right: 72px; }
 
 /* A type poster: the poster's capitals with no photograph, set to the
    column it stands in. */
 .dir-b .b-tp { margin: 0; font: 600 110px/.86 var(--sans); font-family: var(--gface); font-weight: var(--gw); text-transform: uppercase; color: var(--red); overflow: hidden; }
 .dir-b .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .dir-b .b-hero-cr { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin: 12px 72px 0; font: 400 15px/1.45 var(--sans); color: var(--mid); }
-.dir-b .b-hero-cr > span:first-child { font: italic 400 15.5px/1.45 var(--read); color: var(--ink); }
 .dir-b .b-hero-cr a { color: var(--red-ink); }
 .dir-b .b-next { margin-left: auto; border: 1px solid var(--line); background: none; padding: 6px 10px; color: var(--ink); font: 500 13.5px/1 var(--sans); }
 .dir-b .b-next:hover { border-color: var(--ink); }
-.dir-b .b-cr { display: flex; flex-wrap: wrap; gap: 2px 10px; margin: 12px 72px 0; font: 400 14.5px/1.45 var(--sans); color: var(--mid); max-width: 1100px; }
-.dir-b .b-cr-c { font: italic 400 15.5px/1.45 var(--read); color: var(--ink); }
-.dir-b .b-cr a { color: var(--red-ink); }
 
 /* Home after the poster */
 .dir-b .b-intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 72px; align-items: end; padding: 54px 72px 60px; }
@@ -82,6 +111,14 @@
 .dir-b .b-dh { margin: 0; font: 600 56px/.88 var(--sans); font-family: var(--tface); font-weight: var(--tw); text-transform: uppercase; letter-spacing: -.005em; color: var(--red); text-wrap: balance; }
 .dir-b .b-sub { font: italic 400 18px/1.3 var(--read); color: var(--mid); margin: 18px 0 4px; }
 .dir-b .b-sub:first-child { margin-top: 0; }
+/* John, 6 Nov, on "Major Works on Nature": "This is too quiet." The Subheads
+   switch: capitals in the title face, in ink or red, or a ruled red label;
+   As before keeps the grey italic. */
+/* Then, on Ruled label: "Go with this". It is the default. */
+.dir-b .b-sub.sub-caps, .dir-b .b-sub.sub-red { font: 600 30px/.95 var(--sans); font-family: var(--tface); font-weight: var(--tw); text-transform: uppercase; color: var(--ink); margin: 40px 0 12px; }
+.dir-b .b-sub.sub-red { color: var(--red); }
+.dir-b .b-sub.sub-label { font: 600 14px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--red); margin: 38px 0 6px; padding-bottom: 8px; border-bottom: 2px solid var(--red); }
+.dir-b .b-sub[class*="sub-"]:first-child { margin-top: 0; }
 .dir-b .b-works { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
 .dir-b .b-works a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; padding: 10px 0; border-bottom: 1px solid var(--line2); color: var(--ink); }
 .dir-b .b-wt { font-size: 20px; line-height: 1.25; }
@@ -185,7 +222,11 @@
 .dir-b .b-cht { font: 400 28px/1.2 var(--read); margin: 0 0 6px; text-wrap: balance; }
 .dir-b .b-chb { font: 500 13.5px/1 var(--sans); color: var(--faint); margin: 0; }
 .dir-b .b-row { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); column-gap: 64px; max-width: calc(1240px * var(--cw)); }
-.dir-b [data-view="both"] .b-row { grid-template-columns: max-content repeat(calc(var(--n) - 1), minmax(0, 1fr)); }
+.dir-b [data-view="both"] .b-row { grid-template-columns: var(--gw, max-content) repeat(calc(var(--n) - 1), minmax(0, 1fr)); }
+.dir-b [data-gfont="gentium"] .b-gc { font-family: "Gentium Book Plus", var(--read); }
+.dir-b [data-gfont="didot"] .b-gc { font-family: "GFS Didot", var(--read); }
+.dir-b .b-gf button { min-height: 40px; }
+.dir-b .b-gf button span { opacity: .7; }
 .dir-b [data-view="greek"] .b-row, .dir-b [data-view="english"] .b-row:not([style*="--n:2"]) { max-width: calc(720px * var(--cw)); }
 .dir-b .b-gc, .dir-b .b-ec { font-size: calc(19.5px * var(--fs)); line-height: calc(1.72 * var(--lh)); }
 .dir-b .b-gl { position: relative; }
@@ -289,6 +330,8 @@
 .dir-b .b-sch h3 b { font: 650 18px/1 var(--sans); font-style: normal; color: var(--red-ink); margin-right: 8px; }
 .dir-b .b-hit { display: grid; grid-template-columns: 90px minmax(0, 1fr); column-gap: 18px; padding: 8px 0; border-bottom: 1px solid var(--line2); max-width: 1080px; }
 .dir-b .b-hr { font: 500 13.5px/2 var(--sans); color: var(--faint); }
+.dir-b .b-hr b { font-weight: 650; margin-right: .4em; color: var(--ink); white-space: nowrap; }
+.dir-b .b-hr { white-space: nowrap; }
 .dir-b .b-hg { font-size: 20px; line-height: 1.55; }
 .dir-b .b-hg .tok.hit { color: var(--red-ink); box-shadow: inset 0 -2px 0 var(--red); }
 .dir-b .b-he { grid-column: 2; margin: 3px 0 0; font-size: 17px; line-height: 1.5; color: var(--mid); }
@@ -296,7 +339,9 @@
 
 /* Lexicon */
 .dir-b .b-lx { padding: 30px 72px 44px; }
-.dir-b .b-wp { margin: -.06em 0 .04em; font: 400 240px/1.34 var(--read); letter-spacing: -.01em; color: var(--red); white-space: nowrap; }
+.dir-b .b-wp.hw-didot { font-family: "GFS Didot", var(--read); }
+.dir-b .b-wp.hw-literata { font-family: var(--read); }
+.dir-b .b-wp { margin: -.06em 0 .04em; font: 400 150px/1.34 "Gentium Book Plus", var(--read); letter-spacing: -.01em; color: var(--red); white-space: nowrap; }
 .dir-b .b-lx-h { padding-top: 16px; border-top: 2px solid var(--ink); }
 .dir-b .b-lx-gl { font: italic 400 30px/1.3 var(--read); color: var(--ink); margin: 0; }
 .dir-b .b-lx-n { display: flex; flex-wrap: wrap; gap: 20px 60px; margin: 30px 0 0; }
@@ -319,18 +364,33 @@
   .dir-b .b-links { gap: 14px; font-size: 14.5px; }
   .dir-b .b-x-s { display: none; }
   .dir-b .b-po { height: 488px; }
+  .dir-b .b-po.pl { height: 488px; aspect-ratio: auto; }
   .dir-b .b-po-t { left: 18px; right: 18px; top: 18px; bottom: 16px; font-size: 48px; }
+  /* On a phone the plate sits in the middle of the poster, paper above and
+     below it: top and foot set the title on the plate's own top or foot. */
+  .dir-b .b-po.tp-top .b-po-t { top: 84px; height: 170px; }
+  .dir-b .b-po.tp-foot .b-po-t { bottom: 84px; height: 170px; }
+  .dir-b .b-po.pl.tp-band, .dir-b .b-po.pl.tp-side { height: auto; aspect-ratio: auto; display: flex; flex-direction: column; }
+  .dir-b .b-po.tp-band .b-po-t, .dir-b .b-po.tp-side .b-po-t { position: static; order: -1; width: auto; padding: 18px 18px 26px; }  /* John, 8 Nov: a little more space between title and plate */
+  .dir-b .b-po.tp-band img, .dir-b .b-po.tp-side img, .dir-b .b-po.tp-side.pl-l img { position: static; left: 0; width: 100%; height: auto; aspect-ratio: 640 / 558; }
   .dir-b .b-tp { font-size: 52px; }
   .dir-b .b-hero-cr { margin: 10px 18px 0; font-size: 13.5px; }
-  .dir-b .b-hero-cr > span:first-child { font-size: 14.5px; }
   .dir-b .b-next { margin-left: 0; }
-  .dir-b .b-cr { margin: 10px 18px 0; font-size: 13.5px; }
-  .dir-b .b-cr-c { font-size: 14.5px; }
   .dir-b .b-intro { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 30px 18px 36px; }
   .dir-b .b-lead { font-size: 19px; }
   .dir-b .b-search input { font-size: 18px; }
   .dir-b .b-div { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 22px 18px 26px; }
   .dir-b .b-dh { font-size: 36px; }
+  .dir-b .b-sub.sub-caps, .dir-b .b-sub.sub-red { font-size: 24px; margin-top: 28px; }
+  .dir-b .b-sub.sub-label { margin-top: 26px; }
+  /* Phone home: the title under the bust, or beside it in a column. */
+  .dir-b .b-po.pl.tp-side.hp-p-below .b-po-t { order: 1; padding: 10px 18px 0; }
+  .dir-b .b-po.pl.tp-side.hp-p-side { flex-direction: row; align-items: center; }
+  .dir-b .b-po.pl.tp-side.hp-p-side img { flex: none; width: 46cqw; height: 48.8cqw; margin-left: 0; aspect-ratio: auto; object-fit: cover; object-position: center; }
+  /* John, 8 Nov: the bust centred left of the title at its old size, and its paper never under the title:
+     the box ends 20px before the title and trims blank paper from the cut's sides (cover, not contain). */
+  .dir-b.dark .b-po.pl.dp-outline.tp-side.hp-p-side img { -webkit-mask-size: cover; mask-size: cover; -webkit-mask-position: center; mask-position: center; }
+  .dir-b .b-po.pl.tp-side.hp-p-side .b-po-t { order: 1; flex: 1; padding: 0 18px 0 20px; }  /* John, 8 Nov: more space left of the title; the bust moves left, the title holds its place */
   .dir-b .b-works { grid-template-columns: minmax(0, 1fr); }
   .dir-b .b-wt { font-size: 18.5px; }
   .dir-b .b-wg { font-size: 15px; }
@@ -402,31 +462,30 @@
   .dir-b .b-he { grid-column: 1; }
   .dir-b .b-hg { font-size: 18px; }
   .dir-b .b-lx { padding: 18px 18px 30px; }
-  .dir-b .b-wp { font-size: 96px; }
+  .dir-b .b-wp { font-size: 72px; }
   .dir-b .b-lx-gl { font-size: 21px; }
   .dir-b .b-lx-n { gap: 16px 30px; }
   .dir-b .b-lx-n dd { font-size: 36px; }
   .dir-b .b-bw { grid-template-columns: minmax(0, 1fr); }
 
-  /* Both, on a phone: Greek and English side by side, each keeping its own
-     Bekker numbers: the Greek's in the left margin (a column's label above
-     its first line), the English's in the right margin. Compare stacks the
-     second translation under the first, beside the Greek. */
+  /* Both, on a phone: each passage stacked, the Greek full width and its
+     English under it, at the phone reading size. Two columns here meant
+     15px type and three words a line; the vision-impaired reader on a
+     phone needs the size, so the second column goes, not the type.
+     Compare stacks the second translation under the first. */
   .dir-b [data-view="both"] .b-text { padding-left: 30px; padding-right: 22px; }
-  .dir-b [data-view="both"] .b-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 14px; row-gap: 0; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--line2); }
-  .dir-b [data-view="both"] .b-gc { grid-row: 1 / span 2; }
-  .dir-b [data-view="both"] .b-gc { font-size: calc(15px * var(--fs)); line-height: calc(1.58 * var(--lh)); }
-  .dir-b [data-view="both"] .b-ec { font-size: calc(15px * var(--fs)); line-height: calc(1.58 * var(--lh)); border: 0; padding: 0; }
-  .dir-b [data-view="both"] .b-ec + .b-ec { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line2); }
-  .dir-b [data-view="both"] .b-row[style*="--n:3"] .b-ec::before { content: attr(data-t); display: block; text-transform: capitalize; font-size: 11px; line-height: 1.4; color: var(--faint); margin-bottom: 2px; }
+  .dir-b [data-view="both"] .b-row { grid-template-columns: minmax(0, 1fr); row-gap: 10px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px solid var(--line2); }
+  .dir-b [data-view="both"] .b-gc { grid-row: auto; }
+  .dir-b [data-view="both"] .b-ec { border: 0; padding: 0; color: var(--mid); }
+  .dir-b [data-view="both"] .b-ec + .b-ec { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line2); }
+  .dir-b [data-view="both"] .b-row[style*="--n:3"] .b-ec::before { content: attr(data-t); display: block; text-transform: capitalize; font-size: 13px; line-height: 1.4; color: var(--faint); margin-bottom: 2px; }
   .dir-b [data-view="both"] .b-ec p { text-indent: .9em; }
   .dir-b [data-view="both"] .b-ec p.cont, .dir-b [data-view="both"] .b-ec p:first-child { text-indent: 0; }
-  .dir-b [data-view="both"] .b-ln { left: -28px; width: 22px; font-size: 10px; }
+  .dir-b [data-view="both"] .b-ln { left: -28px; width: 22px; font-size: 12px; }
   .dir-b [data-view="both"] .b-gl:has(.b-ln.col) { margin-top: 1.3em; }
   .dir-b [data-view="both"] .b-ln.col { top: -1.25em; left: 0; width: auto; text-align: left; text-indent: 0; white-space: nowrap; }
-  .dir-b [data-view="both"] .b-ec .bk { left: auto; right: -20px; width: 18px; text-align: left; font-size: 10px; }
-  .dir-b [data-view="english"] .b-row[style*="--n:2"] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 14px; }
-  .dir-b [data-view="english"] .b-row[style*="--n:2"] .b-ec { font-size: calc(15px * var(--fs)); }
+  .dir-b [data-view="both"] .b-ec .bk { left: auto; right: -20px; width: 18px; text-align: left; font-size: 12px; }
+  .dir-b [data-view="english"] .b-row[style*="--n:2"] { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
 }
 
 /* Round seven: header rows share one baseline (John: "No uneven stuff").
@@ -435,3 +494,37 @@
 .dir-b .b-ib::before { content: "\200b"; }
 .dir-b .b-links .b-ib { margin-left: -8px; }
 .dir-b .b-rh .b-seg { margin-right: 10px; }
+
+/* The site menu on a phone: a search icon and a menu that drops down under
+   the bar with every section. On a desktop the links show as before. */
+.dir-b .b-only-s { display: none; }
+.dir-b .b-sm summary { list-style: none; }
+.dir-b .b-sm summary::-webkit-details-marker { display: none; }
+.dir-b .b-sm summary::before { content: "\200b"; }
+@container mock (max-width: 700px) {
+  .dir-b .b-nav { position: relative; }
+  .dir-b .b-links > a { display: none; }
+  .dir-b .b-links { gap: 2px; }
+  .dir-b .b-links .b-ib { margin-left: 0; }
+  .dir-b .b-only-s { display: inline-flex; }
+  .dir-b .b-sm summary { display: inline-flex; align-items: center; justify-content: center; min-width: 40px; height: 40px; color: var(--mid); cursor: pointer; }
+  .dir-b .b-sm[open] summary { color: var(--red-ink); }
+  .dir-b .b-sm-p { position: absolute; top: 100%; left: 0; right: 0; z-index: 40; display: flex; flex-direction: column; padding: 4px 18px 10px; background: var(--paper); border-top: 1px solid var(--line); border-bottom: 1px solid var(--ink); box-shadow: 0 14px 30px rgba(0, 0, 0, .12); }
+  .dir-b .b-links .b-sm-p a { display: block; padding: 13px 0; border: 0; border-bottom: 1px solid var(--line); color: var(--mid); font-size: 18px; line-height: 1.2; }
+  .dir-b .b-links .b-sm-p a:last-child { border-bottom: 0; }
+  .dir-b .b-links .b-sm-p a[aria-current] { color: var(--red-ink); }
+}
+
+/* Picture credits: every photograph's record, by work. */
+.dir-b .b-pc { padding: 40px 72px 56px; max-width: 1100px; }
+.dir-b .b-pc-h { font: 650 48px/1 var(--sans); text-transform: uppercase; color: var(--red-ink); margin: 0 0 32px; }
+.dir-b .b-pc .b-h2 { margin-top: 32px; }
+.dir-b .b-pc-l { list-style: none; margin: 0; padding: 0; }
+.dir-b .b-pc-l li { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 4px 24px; padding: 12px 0; border-bottom: 1px solid var(--line); font: 400 15px/1.45 var(--sans); color: var(--mid); }
+.dir-b .b-pc-l li > a { color: var(--ink); font-weight: 500; }
+.dir-b .b-pc-l span a { color: var(--red-ink); }
+@container mock (max-width: 700px) {
+  .dir-b .b-pc { padding: 24px 18px 40px; }
+  .dir-b .b-pc-h { font-size: 34px; margin-bottom: 20px; }
+  .dir-b .b-pc-l li { grid-template-columns: minmax(0, 1fr); font-size: 14.5px; }
+}
