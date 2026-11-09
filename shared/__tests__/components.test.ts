@@ -987,3 +987,35 @@ describe('Reader.svelte', () => {
     expect(container.querySelectorAll('.overlay-chapter-title-spacer').length).toBe(0);
   });
 });
+
+
+it('B rereads the settled viewport on mount before opening Aa', async () => {
+  const width = vi.spyOn(window, 'innerWidth', 'get').mockReturnValueOnce(980).mockReturnValue(844);
+  render(Reader, { props: { work: 'EN', bookNum: 1, bookData: fixtureBook, b: true } });
+  // The first read belongs to script init; mount must read the settled width.
+  expect(width.mock.calls.length).toBeGreaterThanOrEqual(2);
+  await fireEvent(window, new CustomEvent('toggle-settings'));
+  expect(screen.queryByRole('group', { name: 'Word panel' })).toBeNull();
+});
+
+it('B refreshes the viewport whenever Aa or the translation picker opens', async () => {
+  const width = vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1440);
+  const picker = document.createElement('button');
+  picker.dataset.readerPicker = '';
+  document.body.append(picker);
+  try {
+    render(Reader, { props: { work: 'EN', bookNum: 1, bookData: fixtureBook, b: true } });
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    expect(screen.getByRole('group', { name: 'Word panel' })).toBeTruthy();
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    width.mockReturnValue(844);
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    expect(screen.queryByRole('group', { name: 'Word panel' })).toBeNull();
+    width.mockReturnValue(390);
+    width.mockClear();
+    await fireEvent.click(picker);
+    // Placement reads innerWidth once for this button; opening also refreshes vw.
+    expect(width.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByRole('group', { name: 'Text and view settings' })).toBeNull();
+  } finally { picker.remove(); }
+});

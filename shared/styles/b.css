@@ -472,8 +472,8 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
   .dir-b:where(.pg-home, .pg-work) .b-wt { font-size: 18.5px; }
   .dir-b:where(.pg-home, .pg-work) .b-wg { font-size: 15px; }
   .dir-b:where(.pg-home, .pg-work) .b-we { font-size: 12.5px; }
-  .dir-b:where(.pg-home, .pg-work) .b-foot { padding: 22px 18px 30px; }
-  .dir-b:where(.pg-home, .pg-work) .b-foot span { margin-left: 0; flex-basis: 100%; }
+  .dir-b:where(.pg-home, .pg-work, .pg-lexicon) .b-foot { padding: 22px 18px 30px; }
+  .dir-b:where(.pg-home, .pg-work, .pg-lexicon) .b-foot span { margin-left: 0; flex-basis: 100%; }
   .dir-b:where(.pg-home, .pg-work) .b-crumb { margin: 4px 18px 12px; }
   .dir-b:where(.pg-home, .pg-work) .b-wk { padding: 22px 18px 32px; }
   .dir-b:where(.pg-home, .pg-work) .b-po-below { padding: 24px 18px 0; }
@@ -482,9 +482,9 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
   .dir-b:where(.pg-home, .pg-work) .b-btn { height: 42px; padding: 0 14px; font-size: 14px; }
   .dir-b:where(.pg-home, .pg-work) .b-btn.pri { flex: 1 0 100%; justify-content: center; }
   .dir-b:where(.pg-home, .pg-work) .b-facts { grid-template-columns: 72px minmax(0, 1fr); font-size: 15.5px; }
-  .dir-b:where(.pg-home, .pg-work) .b-sec { padding: 0 18px 36px; }
-  .dir-b:where(.pg-home, .pg-work) .b-h2 { font-size: 24px; }
-  .dir-b:where(.pg-home, .pg-work) .b-two { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .dir-b:where(.pg-home, .pg-work, .pg-lexicon) .b-sec { padding: 0 18px 36px; }
+  .dir-b:where(.pg-home, .pg-work, .pg-lexicon) .b-h2 { font-size: 24px; }
+  .dir-b:where(.pg-home, .pg-work, .pg-lexicon) .b-two { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .dir-b:where(.pg-home, .pg-work) .b-chs { columns: 1; }
   .dir-b:where(.pg-home, .pg-work) .b-cb { display: none; }
   .dir-b:where(.pg-home, .pg-work) .b-chs a { grid-template-columns: 26px minmax(0, 1fr); }
@@ -715,3 +715,25 @@ body.home { margin: 0; padding: 0; max-width: none; }
 
 /* Help text stays at full contrast throughout opening and closing. */
 .frame.dir-b .b-search-page :is(.help-backdrop,.help-modal) { animation: none; }
+
+/* Lexicon: D23 work searches; D24 directory. D1 grows Nearby rows to fit 40px controls. */
+.dir-b.pg-lexicon .b-bw a { min-height: 40px; }
+.dir-b.pg-lexicon .b-bw a > span { min-width: 0; overflow-wrap: anywhere; }
+.dir-b.pg-lexicon .b-near a { display: inline-flex; align-items: center; min-height: 40px; min-width: 40px; }
+.dir-b.pg-lexicon .b-ostwald { font: 400 17px/1.55 var(--read); }
+.dir-b.pg-lexicon .b-ostwald > p { margin: 0 0 26px; }
+.dir-b.pg-lexicon .b-ostwald .b-cite { font: 500 13px/1.5 var(--sans); color: var(--mid); }
+/* Add 20.5px to the 19.5px line; matching margins keep the text in place. */
+.dir-b.pg-lexicon .b-cite a { display: inline-block; min-height: 40px; min-width: 40px; padding: 10.25px 0; margin: -10.25px 0; color: var(--red-ink); }
+.dir-b.pg-lexicon .lxi-body { padding: 30px 72px 44px; font-family: var(--read); }
+.dir-b.pg-lexicon .lxi-h1 { margin-bottom: 30px; }
+.dir-b.pg-lexicon .lxi-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-bottom: 26px; font: 500 14px/1.4 var(--sans); }
+.dir-b.pg-lexicon .lxi-filter input { min-height: 40px; width: min(100%, 460px); border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 8px 12px; font: 400 18px/1.4 var(--sans); }
+.dir-b.pg-lexicon .lxi-filter input::placeholder { color: var(--mid); opacity: 1; }
+.dir-b.pg-lexicon .lxi-grid { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 0 48px; }
+.dir-b.pg-lexicon .lxi-grid a { display: flex; min-height: 40px; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line2); }
+.dir-b.pg-lexicon .lxi-gk { font: 400 20px/1.4 "Gentium Book Plus", var(--read); }
+.dir-b.pg-lexicon .lxi-n { font: 500 13px/1.5 var(--sans); color: var(--red-ink); }
+@media (max-width: 960px) {
+  .dir-b.pg-lexicon .lxi-body { padding: 18px 18px 30px; }
+}

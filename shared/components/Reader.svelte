@@ -420,7 +420,7 @@
     };
   }
   function togglePicker() {
-    if (!pickerOpen) { placeMenu('[data-reader-picker]'); closeSettings(); }
+    if (!pickerOpen) { vw = window.innerWidth; placeMenu('[data-reader-picker]'); closeSettings(); }
     pickerOpen = !pickerOpen;
   }
   // Translation choice in B's picker: one to read, and maybe one beside it.
@@ -568,7 +568,7 @@
     window.dispatchEvent(new CustomEvent('settings-state', { detail: { open: false } }));
   }
   function openSettings() {
-    if (b) { placeMenu('[data-aa]'); pickerOpen = false; }
+    if (b) { vw = window.innerWidth; placeMenu('[data-aa]'); pickerOpen = false; }
     settingsOpen = true;
     window.dispatchEvent(new CustomEvent('settings-state', { detail: { open: true } }));
   }
@@ -1321,6 +1321,8 @@
     const savedCite = (() => { try { return localStorage.getItem(CITE_KEY); } catch { return null; } })();
     if (savedCite !== null) citeCopy = savedCite === 'true';
     if (b) {
+      // Mobile emulation can settle after the script's first width read.
+      vw = window.innerWidth;
       const savedGf = (() => { try { return localStorage.getItem(GFONT_KEY); } catch { return null; } })();
       if (savedGf === 'gentium' || savedGf === 'didot') setGFont(savedGf);
       wpOver = (() => { try { return localStorage.getItem(WP_KEY) === 'over'; } catch { return false; } })();

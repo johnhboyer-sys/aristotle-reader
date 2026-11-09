@@ -34,7 +34,7 @@ const only = flag('--only') || flag('--prove');
 const prove = flag('--prove');
 let proofCase = 'default';
 const stage = Number(flag('--stage') || 1);
-if (![1,2,3,4].includes(stage)) throw Error('Stage must be 1, 2, 3 or 4');
+if (![1,2,3,4,5].includes(stage)) throw Error('Stage must be 1, 2, 3, 4 or 5');
 const app = fileURLToPath(new URL('../', import.meta.url));
 const dist = join(app, 'dist');
 const ts = createRequire(import.meta.url)('typescript');
@@ -42,8 +42,40 @@ const registrySource = readFileSync(new URL('../../shared/lib/works.ts', import.
 const registryJS = ts.transpileModule(registrySource, {compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}}).outputText;
 const registry = await import('data:text/javascript;base64,'+Buffer.from(registryJS).toString('base64'));
 const workIds = registry.WORKS.map(w=>w.id);
+// Load the production TypeScript helpers, including their imports, without a
+// second hand-written decoder or glossary matcher in the gate.
+const sourceModules = new Map();
+async function loadSource(file) {
+    file = resolve(file);
+    if (sourceModules.has(file)) return sourceModules.get(file);
+    let source = readFileSync(file, 'utf8').replaceAll('import.meta.env.PUBLIC_SHOW_PRIVATE', "'0'").replaceAll('import.meta.env.BASE_URL', "'/'");
+    source = source.replace(/import (\w+) from ['"]([^'"]+\?raw)['"];?/g, (_, name, path) =>
+        `const ${name} = ${JSON.stringify(readFileSync(resolve(file, '..', path.replace(/\?raw$/, '')), 'utf8'))};`);
+    let js = ts.transpileModule(source, {compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext,removeComments:true}}).outputText;
+    for (const m of [...js.matchAll(/from ['"]([^'"]+)['"]/g)]) {
+        const target = m[1].startsWith('@shared/') ? resolve(app, '../shared', m[1].slice(8)) : resolve(file, '..', m[1]);
+        const url = await loadSource(target + '.ts');
+        js = js.replace(m[0], `from '${url}'`);
+    }
+    const url = 'data:text/javascript;base64,' + Buffer.from(js).toString('base64');
+    sourceModules.set(file, url);
+    return url;
+}
+const lemmaManifest = JSON.parse(readFileSync(join(app, 'public/data/lemmata.json'), 'utf8'));
+const lemmaIndex = JSON.parse(readFileSync(join(app, 'public/data/lemmata/_index.json'), 'utf8'));
+const lemmaHeads = lemmaIndex.map(e => ({...lemmaManifest[e.key], key:e.key}));
+const longestLemma = lemmaHeads.reduce((a,b) => [...a.head].length >= [...b.head].length ? a : b);
+const arete = lemmaHeads.find(e => e.head === 'ἀρετή');
+assertLemmaData();
+function assertLemmaData() { if (!arete || lemmaHeads.length < 20) throw Error('Missing lemma gate data'); }
+const LEMMA = `/lemma/${arete.slug}/`;
+const lemmaSample = [...new Map([arete, longestLemma, ...lemmaHeads].map(e => [e.slug,e])).values()].slice(0,20);
+const lemmaHelpers = await import(await loadSource(join(app, 'src/lib/lemma-view.ts')));
+const searchUrl = await import(await loadSource(join(app, '../shared/lib/search-url.ts')));
+const searchHelpers = await import(await loadSource(join(app, '../shared/lib/search.ts')));
+const glossary = await import(await loadSource(join(app, '../shared/lib/glossary.ts')));
 const publicPages = stage >= 2 ? ['/','/Cat/','/picture-credits/'] : ['/'];
-const accessPages = stage >= 2 ? [...publicPages,'/EN/',...(stage >= 3 ? ['/EN/book/1'] : []),...(stage >= 4 ? ['/search?q=ἀρετή'] : [])] : ['/'];
+const accessPages = stage >= 2 ? [...publicPages,'/EN/',...(stage >= 3 ? ['/EN/book/1'] : []),...(stage >= 4 ? ['/search?q=ἀρετή'] : []),...(stage >= 5 ? [LEMMA,'/lemma/'] : [])] : ['/'];
 // Stage 3: the reader.
 const READER = '/EN/book/1';
 const SEARCH = '/search?q=ἀρετή';
@@ -120,6 +152,7 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
         await page.waitForFunction(() => document.querySelector('.b-po-t')?.dataset.set);
     if (stage >= 4 && path.startsWith('/search?')) await searchReady(page);
     else await settleFonts(page);
+    if (stage >= 5 && await page.locator('.b-wp').count()) await page.waitForFunction(() => document.querySelector('.b-wp')?.dataset.fitted === 'true');
     return page;
 }
 async function searchReady(page) {
@@ -317,6 +350,14 @@ const gates = {
                 assert(color==='rgb(226, 56, 46)',`search .b-sr-big color=${color}`);n++;
             }finally{await close(p);}
         }
+        if(stage>=5) {
+            const p=await open('D1440','light',LEMMA);
+            try {
+                if(prove&&proofCase==='lemma') await style(p,'.dir-b .b-wp{font-family:serif!important}');
+                const family=await p.locator('.b-wp').evaluate(el=>getComputedStyle(el).fontFamily);
+                assert(/^['"]?Gentium Book Plus/.test(family),`lemma .b-wp font-family=${family}`);n++;
+            } finally {await close(p);}
+        }
         return n;
     },
     'R-C2' : async () => {
@@ -341,7 +382,7 @@ const gates = {
     },
     'R-F1': async () => {
         let n=0;
-        for(const path of (stage>=3?[...publicPages,READER,...(stage>=4?[SEARCH]:[])]:publicPages)){
+        for(const path of (stage>=3?[...publicPages,READER,...(stage>=4?[SEARCH]:[]),...(stage>=5?[LEMMA,'/lemma/']:[])]:publicPages)){
         const p = await open('D1440','light',path);
         try {
             if (prove)
@@ -663,7 +704,7 @@ const gates = {
     },
     'R-A1': async () => {
         if (stage < 3) console.log('R-A1 footnotes: not applicable to home');
-        let n = 0, marks = 0;
+        let n = 0, marks = 0, exempt = 0;
         for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size,'light',path);
             try {
@@ -678,7 +719,12 @@ const gates = {
                 for await (const state of accessStates(p, size)) {
                     // Running text is exempt: Greek word tokens, and links and
                     // footnote marks inside the reading text (checked below).
-                    const got = await p.locator(state.root).locator(controls).evaluateAll(readControlBoxes);
+                    // LemmaPage.astro's grammata script contract forbids styling
+                    // inside the mount; its controls belong to the widget.
+                    exempt += await p.locator(state.root).locator(controls).evaluateAll(els =>
+                        els.filter(el => el.closest('.grammata-mount')).length);
+                    const got = await p.locator(state.root).locator(controls)
+                        .and(p.locator(':not(.grammata-mount *)')).evaluateAll(readControlBoxes);
                     assert(got.length > 0, `${size} ${state.name} examined=0 controls`);
                     for (const control of got) {
                         assert(control.w >= 39.99 && control.h >= 39.99, `${size} ${control.tag} ${control.text} ${control.w}×${control.h} state=${state.name}`);
@@ -702,6 +748,7 @@ const gates = {
                 }
             } finally { await close(p); }
         }
+        console.log(`R-A1 exempt in .grammata-mount=${exempt}`);
         if (stage >= 3) console.log(`R-A1 footnote marks examined=${marks}`);
         return n + marks;
     },
@@ -906,8 +953,12 @@ const gates = {
                     bad.push(`${f}: ${s}`);
             }
         }
-        // Lemma pages are stage 5's; say how many violations lie elsewhere.
-        if (stage >= 3) console.log(`R-E1 violations outside /lemma/=${bad.filter(f => !f.includes('/dist/lemma/')).length} of ${bad.length}`);
+        if (stage >= 5) {
+            const lemmaFiles = files.filter(f=>f.includes('/dist/lemma/'));
+            assert(lemmaFiles.length>0,'examined=0 lemma pages');
+            console.log(`R-E1 lemma pages examined=${lemmaFiles.length} violations=${bad.filter(f=>f.includes('/dist/lemma/')).length}`);
+        }
+        if (stage >= 3 && stage < 5) console.log(`R-E1 violations outside /lemma/=${bad.filter(f => !f.includes('/dist/lemma/')).length} of ${bad.length}`);
         assert(!bad.length, `examined=${prove && (stage===1||proofCase==='copy') ? inputs.length : files.length} violations=${bad.length}; ` + bad.slice(0, 12).join('; '));
         for(const path of publicPages){
         const p = await open('D1440','light',path);
@@ -920,7 +971,7 @@ const gates = {
         let n = 0;
         const fails = [];
         for (const size of (stage>=4 ? ['D1440','S844','P390'] : ['D1440', 'P390']))
-            for (const path of (stage>=2?['/','/Cat/','/EN/book/1','/picture-credits/',...(stage>=4?[SEARCH]:[])]:['/','/Cat/','/EN/book/1'])) {
+            for (const path of (stage>=2?['/','/Cat/','/EN/book/1','/picture-credits/',...(stage>=4?[SEARCH]:[]),...(stage>=5?[LEMMA,'/lemma/']:[])]:['/','/Cat/','/EN/book/1'])) {
                 const p = await open(size, 'light', path, false, true);
                 if (prove && (proofCase!=='search-toast'||path===SEARCH))
                     // A real first-visit toast sits in view (fixed), as the old .reader-tip did.
@@ -1609,7 +1660,7 @@ if (stage >= 3) Object.assign(gates, {
     await p.locator('.b-aa').waitFor();
     const row = await p.locator('.b-aa [aria-label="Word panel"]').count();
     await p.keyboard.press('Escape');
-    if (size !== 'P390') assert(row === 0, `${size} Aa has a Word panel row`);
+    if (size !== 'P390') assert(row === 0, `${size} Aa has a Word panel row (innerWidth=${await p.evaluate(() => innerWidth)})`);
     await openWord(p);
     const g = await p.evaluate(() => ({side: document.querySelector('.b-side').getBoundingClientRect(), head: document.querySelector('.b-rh').getBoundingClientRect().bottom, h: innerHeight}));
     if (size === 'P390') {
@@ -1945,6 +1996,87 @@ if(stage>=4) Object.assign(gates, {
         }return n;
     },
 });
+if (stage >= 5) Object.assign(gates, {
+    'R-L1': async () => {
+        let n=0;
+        for (const e of lemmaSample) for (const size of ['D1440','P390']) {
+            const p=await open(size,'light',`/lemma/${e.slug}/`);
+            try {
+                if(prove) await style(p,'.dir-b .b-wp{font-size:200px!important}');
+                const got=await p.locator('.b-wp').evaluate(el=>({family:getComputedStyle(el).fontFamily,size:parseFloat(getComputedStyle(el).fontSize),width:el.clientWidth,scroll:el.scrollWidth,text:el.textContent}));
+                assert(/^['"]?Gentium Book Plus/.test(got.family),`headword family=${got.family}`);
+                assert(got.size>=24&&got.size<=(size==='P390'?80:150),`headword size=${got.size} cap=${size==='P390'?80:150}`);
+                assert(got.scroll<=got.width,`headword overflow scroll=${got.scroll} width=${got.width}`);
+                assert(got.text===e.head,`headword changed: ${got.text}`);n++;
+            }finally{await close(p);}
+        }
+        return n;
+    },
+    'R-L2': async () => {
+        let n=0;
+        for(const e of lemmaSample) for(const size of ['D1440','P390']) {
+            const p=await open(size,'light',`/lemma/${e.slug}/`);
+            try {
+                if(prove&&proofCase==='empty-section')await p.locator('.b-bw').evaluate(el=>el.replaceChildren());
+                if(prove&&proofCase==='dead-nearby')await p.locator('.b-near a').first().evaluate(el=>el.setAttribute('href','/lemma/missing-stage-five/'));
+                const heads=await p.locator('h2.b-h2').evaluateAll(els=>els.map(el=>({title:el.textContent.trim(),content:!!el.nextElementSibling?.textContent.trim()})));
+                assert(heads.length>0,'examined=0 lemma headings');
+                for(const h of heads) {
+                    assert(h.content,`empty lemma section: ${h.title}`);
+                    assert(!h.title.includes('Key passages'),`Key passages heading`);n++;
+                }
+                assert(!(await p.locator('main').innerText()).includes('will appear here'),'lemma stub will appear here');
+                const links=await p.locator('.b-near a').evaluateAll(els=>els.map(el=>el.getAttribute('href')));
+                assert(links.length===18,`Nearby links=${links.length}`);
+                for(const href of links) {
+                    const path=decodeURIComponent(new URL(href,BASE).pathname).replace(/^\//,'');
+                    assert(existsSync(join(dist,path,'index.html')),`dead Nearby link: ${href}`);n++;
+                }
+            }finally{await close(p);}
+        }
+        return n;
+    },
+    'R-L3': async () => {
+        const mapping=lemmaHelpers.mapGlossary(glossary.GLOSSARY_BODIES,lemmaHeads);
+        assert(mapping.matched.length===50,`expected 50 Ostwald mappings, got ${mapping.matched.length}`);
+        const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});
+        const doc=window.document;
+        const glossaryDoc=doc.createElement('div');glossaryDoc.innerHTML=readFileSync(join(dist,'EN/glossary/index.html'),'utf8');
+        const text=html=>{const el=doc.createElement('div');el.innerHTML=html;return el.textContent.replace(/\s+/g,' ').trim();};
+        let n=0;
+        try {for(const match of mapping.matched) {
+            doc.body.innerHTML=readFileSync(join(dist,'lemma',match.lemma.slug,'index.html'),'utf8');
+            if(prove&&n===0) doc.querySelector('.b-cite a')?.remove();
+            assert([...doc.querySelectorAll('h2.b-h2')].some(h=>h.textContent==='Ostwald'),`missing Ostwald heading: ${match.form}`);
+            for(const body of lemmaHelpers.resolveGlossaryBody(match.entry,glossary.GLOSSARY_BODIES)) {
+                const block=[...doc.querySelectorAll('[data-glossary]')].find(el=>el.getAttribute('data-glossary')===body.slug);
+                assert(block&&text(block.querySelector('p')?.innerHTML??'')===text(body.bodyHtml),`Ostwald body mismatch: ${match.form}`);
+                assert(block.querySelector(`.b-cite a[href="/EN/glossary/#${body.slug}"]`),`missing Ostwald citation: ${match.form} #${body.slug}`);
+                assert(glossaryDoc.querySelector(`[id="${body.slug}"]`),`missing glossary anchor: ${body.slug}`);
+            }
+            n++;
+        }} finally {window.close();}
+        console.log(`R-L3 matched=${n} unmatched=${JSON.stringify(mapping.unmatched)} ambiguous=${JSON.stringify(mapping.ambiguous)}`);
+        return n;
+    },
+    'R-L4': async () => {
+        let n=0;
+        for(const e of lemmaSample) {
+            const p=await open('D1440','light',`/lemma/${e.slug}/`);
+            try {
+                if(prove)await p.locator('.b-bw a').first().evaluate(el=>el.setAttribute('href','#'));
+                const rows=await p.locator('.b-bw li').evaluateAll(els=>els.map(el=>({work:el.dataset.work,href:el.querySelector('a')?.getAttribute('href')})));
+                const data=JSON.parse(readFileSync(join(app,'public/data/lemmata',e.slug+'.json'),'utf8'));
+                assert(rows.length===data.byWork.length&&rows.length>0,`examined=${rows.length} By work rows`);
+                for(const [i,row] of rows.entries()) {
+                    const url=new URL(row.href,BASE), decoded=searchUrl.decodeSearchUrl(url.searchParams,workIds);
+                    assert(url.pathname==='/search'&&decoded.lemmas.length===1&&decoded.lemmas[0]===searchHelpers.greekFold(e.key)&&decoded.works.length===1&&decoded.works[0]===data.byWork[i].work&&row.work===data.byWork[i].work&&!decoded.workFilter&&!decoded.combo&&!decoded.grk&&!decoded.eng,`invalid By work search: ${row.href}`);n++;
+                }
+            }finally{await close(p);}
+        }
+        return n;
+    },
+});
 const stageThreeProofs = {
     ...stageTwoProofs,
     'R-C1': {'home': /home title color=rgb\(0, 0, 0\)/, 'reader': /reader \.b-rh height=/},
@@ -1974,13 +2106,21 @@ const stageFourProofs = {
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},
     'R-E2': {'reader-tip':/unsolicited overlay:.*reader-tip/,'search-toast':/search\?q=ἀρετή D1440 unsolicited overlay:.*reader-tip/},
 };
+const stageFiveProofs = {
+    ...stageFourProofs,
+    'R-C1': {...stageFourProofs['R-C1'],lemma:/lemma \.b-wp font-family=serif/},
+    'R-L1': {'oversize':/headword size=200 cap=150/},
+    'R-L2': {'empty-section':/empty lemma section: By work/,'dead-nearby':/dead Nearby link:/},
+    'R-L3': {'citation':/missing Ostwald citation:/},
+    'R-L4': {'hash-link':/invalid By work search: #/},
+};
 if (only && !gates[only]) throw Error(`Unknown gate ${only}`);
 let failed = 0;
 let proofFailed = false;
 try {
     for (const [id, run] of Object.entries(gates)) {
         if (only && only !== id) continue;
-        const variants = stage >= 4 && stageFourProofs[id] ? stageFourProofs[id] : stage >= 3 && stageThreeProofs[id] ? stageThreeProofs[id] : stage >= 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
+        const variants = stage >= 5 && stageFiveProofs[id] ? stageFiveProofs[id] : stage >= 4 && stageFourProofs[id] ? stageFourProofs[id] : stage >= 3 && stageThreeProofs[id] ? stageThreeProofs[id] : stage >= 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
         const cases = prove && variants ? Object.keys(variants) : ['default'];
         for (const variant of cases) {
             proofCase = variant;

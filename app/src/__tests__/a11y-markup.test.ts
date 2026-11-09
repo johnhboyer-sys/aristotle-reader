@@ -40,9 +40,9 @@ describe('titles, headwords and reading text never truncate', () => {
   // class without revisiting this rule fails loudly rather than passing vacuously.
   const NAMED: [string, string][] = [
     ['b-wt', '../shared/styles/b.css'],           // redesigned home work titles ship in B's global CSS
-    ['fb-name', 'src/components/LemmaPage.astro'], // a work title in frequency-by-work
-    ['lx-head-gk', 'src/components/LemmaPage.astro'], // the lemma headword
-    ['lxi-gk', 'src/pages/lemma/index.astro'],     // a headword in the lexicon grid
+    ['b-bw', '../shared/styles/b.css'], // D23 work-search rows
+    ['b-wp', '../shared/styles/b.css'], // R-L1 fits this one-line headword to its width
+    ['lxi-gk', '../shared/styles/b.css'],     // a headword in the lexicon grid
     ['b-po-t', '../shared/styles/b.css'],  // the work title on its landing page
   ];
 
@@ -54,18 +54,19 @@ describe('titles, headwords and reading text never truncate', () => {
       expect(rules.length, `no rule styles .${cls} — was it renamed?`).toBeGreaterThan(0);
       for (const [sel, decls] of rules) {
         expect(decls, sel).not.toMatch(/text-overflow/);
-        expect(decls, sel).not.toMatch(/white-space:\s*nowrap/);
+        if (cls !== 'b-wp') expect(decls, sel).not.toMatch(/white-space:\s*nowrap/);
+        expect(decls, sel).not.toMatch(/overflow:\s*hidden/);
       }
     });
   }
 
-  it('never truncates a work title with an ellipsis (frequency-by-work rows)', () => {
-    const fbName = rule(src('LemmaPage.astro'), '.fb-name');
+  it('never truncates a work title with an ellipsis (By work search rows)', () => {
+    const fbName = rule(read('../shared/styles/b.css'), '.b-bw a > span');
     // "De Generatione et Corruptione" is wider than the 12rem name column on a
     // phone; nowrap + hidden + ellipsis cut it to "De Generatione et…".
     expect(fbName).not.toMatch(/text-overflow/);
     expect(fbName).not.toMatch(/white-space:\s*nowrap/);
-    // The row is a grid, so a two-line title just makes its row taller.
+    // A wrapped title makes the flex row taller.
     expect(fbName).toMatch(/overflow-wrap:\s*anywhere/);
   });
 });

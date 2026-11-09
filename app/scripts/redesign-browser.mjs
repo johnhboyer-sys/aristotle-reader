@@ -83,7 +83,7 @@ export function readControlBoxes(els) {
         && !el.matches('.tok') && !el.closest('.b-gc,.b-ec,.b-cht')).map(el => {
         const rect = el.getBoundingClientRect();
         let w = rect.width, h = rect.height;
-        if (el.matches('.b-he > span a,.b-sr-l a,.b-sr-l button')) {
+        if (el.matches('.b-he > span a,.b-sr-l a,.b-sr-l button,.pg-lexicon .b-near a,.pg-lexicon .b-cite a')) {
             el.scrollIntoView({block:'center'});
             const box = el.getBoundingClientRect(), after = getComputedStyle(el, '::after');
             if (after.content !== 'none' && after.position === 'absolute') {
