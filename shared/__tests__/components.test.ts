@@ -131,6 +131,92 @@ describe('Search.svelte', () => {
   });
 });
 
+describe('Search.svelte "Match accents exactly"', () => {
+  // The fixture's only Greek hit is the token λόγος at position 0. The search
+  // itself is mocked, so these exercise the accent post-filter alone: does the
+  // hit survive it? Each case waits for the same settle point, and the positive
+  // cases prove that point comes after the snippets render, so an absent <mark>
+  // in the negative cases means "filtered", not "not drawn yet".
+  // An unused mockResolvedValueOnce outlives clearAllMocks, so a case that
+  // failed before fetchBook ran would hand its swapped book to the next test.
+  afterEach(async () => {
+    const { fetchBook } = await import('../lib/data');
+    vi.mocked(fetchBook).mockReset().mockResolvedValue(fixtureBook);
+  });
+
+  // `token` swaps the word at position 0 for one surface form.
+  async function marksFor(url: string, token?: string): Promise<string[]> {
+    const { fetchBook } = await import('../lib/data');
+    if (token) {
+      const book = structuredClone(fixtureBook);
+      book.segments[0].greek[0] = { n: 1, text: token, tokens: [{ t: token, o: 0, k: 'x' }] };
+      vi.mocked(fetchBook).mockResolvedValueOnce(book);
+    }
+    window.history.replaceState(null, '', url);
+    const { container } = render(Search);
+    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('before accent filtering'));
+    await vi.waitFor(() => expect(fetchBook).toHaveBeenCalled());
+    await new Promise((r) => setTimeout(r, 50));
+    // A chapter with more than one instance starts folded.
+    for (const head of container.querySelectorAll('button.group-head[aria-expanded="false"]')) {
+      await fireEvent.click(head);
+    }
+    return [...container.querySelectorAll('mark')].map((m) => m.textContent ?? '');
+  }
+
+  it('keeps a hit typed in Greek with the same accent', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent('λόγος')}&acc=1`)).toEqual(['λόγος']);
+  });
+
+  it('drops a hit typed in Greek with a different accent', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent('λὸγος')}&acc=1`)).toEqual([]);
+  });
+
+  it('keeps a hit typed in Beta Code with the same accent', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent('lo/gos')}&acc=1`)).toEqual(['λόγος']);
+  });
+
+  it('keeps a hit typed in Beta Code with a trailing wildcard', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent('lo/g*')}&acc=1`)).toEqual(['λόγος']);
+  });
+
+  it('keeps a hit typed in Beta Code with a one-letter wildcard', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent('lo/g?s')}&acc=1`)).toEqual(['λόγος']);
+  });
+
+  it('keeps a hit typed in Beta Code behind a leading capital marker', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent('*lo/gos')}&acc=1`)).toEqual(['λόγος']);
+  });
+
+  it('drops a hit typed in Beta Code with a different accent', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent('lo\\gos')}&acc=1`)).toEqual([]);
+  });
+
+  it('drops a hit typed in Beta Code with no accent', async () => {
+    expect(await marksFor('/search?g=logos&acc=1')).toEqual([]);
+  });
+
+  // The text stores elision mostly as ' (U+0027) and in a few works as
+  // ’ (U+2019); a reader may type either, or paste U+02BC. The index folds all
+  // three alike, so the accent filter must too.
+  it.each([
+    ["typed '", "δ'", 'δ’'],
+    ['pasted ’', 'δ’', "δ'"],
+    ['pasted ʼ', 'δʼ', "δ'"],
+    ["typed ' in Beta Code", "d'", 'δ’'],
+  ])('keeps an elided word %s against the other mark', async (_label, query, token) => {
+    expect(await marksFor(`/search?g=${encodeURIComponent(query)}&acc=1`, token)).toEqual([token]);
+  });
+
+  it('keeps an elided word typed with the same mark (control for the swapped token)', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent('δ’')}&acc=1`, 'δ’')).toEqual(['δ’']);
+  });
+
+  it('still drops an elided word with the wrong letter', async () => {
+    expect(await marksFor(`/search?g=${encodeURIComponent("τ'")}&acc=1`, 'δ’')).toEqual([]);
+  });
+});
+
 describe('Search.svelte in the address bar', () => {
   const at = (url: string) => window.history.replaceState(null, '', url);
   // Greek and English each have an "Any form" / "Only as I typed it" pair, so

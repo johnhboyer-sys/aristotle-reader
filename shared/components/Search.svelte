@@ -23,6 +23,7 @@
     pool,
     loadOffsets,
   } from '../lib/search';
+  import { betaQueryToGreek } from '../lib/betacode';
   import { englishPlace, positionsByChapter, positionsBySection } from '../lib/english-hit';
   import { engHitCount, hitCount, paginate } from '../lib/search-pages';
   import {
@@ -341,8 +342,10 @@
   // semantics, stated on the control: a query typed WITHOUT accents then only
   // matches genuinely unaccented tokens.
   let accentSensitive = false;
-  // NFC + lowercase + final-sigma normalisation, diacritics KEPT.
-  const accentNorm = (s: string) => s.normalize('NFC').toLowerCase().replace(/ς/g, 'σ');
+  // NFC + lowercase + final-sigma normalisation, diacritics KEPT. The elision
+  // mark folds as greekFold folds it: the text stores ' and, in a few works, ’.
+  const accentNorm = (s: string) =>
+    s.normalize('NFC').toLowerCase().replace(/ς/g, 'σ').replace(/[’ʼ]/g, "'");
   // This filter compares ACCENTED tokens, so it cannot reuse the engine's
   // fold-form matcher — but it has to honour the same wildcard syntax, or a `?`
   // or mid-word `*` query with accents on would find its hits in the index and
@@ -1165,8 +1168,10 @@
         engTerms: comboActive ? [] : englishQueryUnits(engQuery).flat(),
         // A picked lemma is a fold key, not the reader's spelling, so there is
         // no typed accent pattern to post-filter against.
+        // Beta Code is converted first: the filter compares against Greek
+        // tokens, and "lo/gos" as typed equals none of them.
         grkAccentTerms: !comboActive && !soloLemmaActive && accentSensitive
-          ? grkQuery.trim().split(/\s+/).filter(Boolean).map(accentNorm)
+          ? grkQuery.trim().split(/\s+/).filter(Boolean).map(t => accentNorm(betaQueryToGreek(t)))
           : [],
         engPhrase: engMode === 'phrase',
         engForms,
