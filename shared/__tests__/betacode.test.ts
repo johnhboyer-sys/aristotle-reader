@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { betaToGreek } from '../lib/betacode';
+import { betaQueryToGreek, betaToGreek } from '../lib/betacode';
 
 describe('betaToGreek', () => {
   it.each([
@@ -83,5 +83,29 @@ describe('betaToGreek', () => {
 
   it('leaves strings without Beta Code letters untouched', () => {
     expect(betaToGreek('λόγος 123 !?')).toBe('λόγος 123 !?');
+  });
+});
+
+describe('betaQueryToGreek', () => {
+  it.each([
+    ['a plain Beta Code word', 'lo/gos', 'λόγος'],
+    ['a trailing any-run wildcard', 'lo/g*', 'λόγ*'],
+    ['a wildcard inside the word', 'lo*os', 'λο*ος'],
+    ['a one-letter wildcard', 'lo/g?s', 'λόγ?ς'],
+    ['a leading capital marker', '*lo/gos', 'Λόγος'],
+    ['a capital with its breathing', '*)aristote/lhs', 'Ἀριστοτέλης'],
+    ['a capital and a trailing wildcard', '*)aristot*', 'Ἀριστοτ*'],
+    ['a final sigma before a wildcard', 'logos*', 'λογος*'],
+    // The main search strips every leading * and ignores digits; so must this.
+    ['a doubled capital marker', '**)/a', 'Ἄ'],
+    ['a homograph digit', '*a1', 'Α'],
+    ['a digit after a wildcard', 'lo/g*1', 'λόγ*'],
+  ])('converts %s', (_label, input, expected) => {
+    expect(betaQueryToGreek(input)).toBe(expected);
+  });
+
+  it('leaves a term already in Greek untouched, wildcards included', () => {
+    expect(betaQueryToGreek('λόγ*')).toBe('λόγ*');
+    expect(betaQueryToGreek('*λόγος')).toBe('*λόγος');
   });
 });
