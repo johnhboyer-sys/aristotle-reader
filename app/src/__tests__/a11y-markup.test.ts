@@ -39,7 +39,7 @@ describe('titles, headwords and reading text never truncate', () => {
   // class → the file whose <style> owns it. Listed by hand so that renaming a
   // class without revisiting this rule fails loudly rather than passing vacuously.
   const NAMED: [string, string][] = [
-    ['work-name', 'src/pages/index.astro'],        // a work title on the home grid
+    ['b-wt', '../shared/styles/b.css'],           // redesigned home work titles ship in B's global CSS
     ['fb-name', 'src/components/LemmaPage.astro'], // a work title in frequency-by-work
     ['lx-head-gk', 'src/components/LemmaPage.astro'], // the lemma headword
     ['lxi-gk', 'src/pages/lemma/index.astro'],     // a headword in the lexicon grid

@@ -1,0 +1,94 @@
+import { test, expect } from 'vitest';
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import { WORKS, CATEGORIES } from '@shared/lib/works';
+const root = resolve(import.meta.dirname, '../..');
+const json = (p: string) => JSON.parse(readFileSync(resolve(root, p), 'utf8'));
+const manifest = () => existsSync(resolve(root, 'src/data/plates.json')) ? json('src/data/plates.json') : {};
+const count = (id: string, n: number) => { console.log(`${id} examined=${n}`); expect(n).toBeGreaterThan(0); };
+test('R-P1 source hashes, JPEG dimensions, ids, no masks', () => {
+    const files = ['desk', 'phone'].flatMap(b => existsSync(resolve(root, `public/plates/${b}`)) ? readdirSync(resolve(root, `public/plates/${b}`)).map(f => `${b}/${f}`) : []);
+    count('R-P1', files.length);
+    expect(files).toHaveLength(96);
+    const scan = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap(d => d.isDirectory() ? [d.name, ...scan(resolve(dir, d.name))] : []);
+    expect(scan(resolve(root, 'public/plates'))).not.toContain('mask');
+    const hashes = json('scripts/fixtures/plate-sha256.json');
+    for (const band of ['desk', 'phone'])
+        expect(files.filter(f => f.startsWith(band + '/')).map(f => f.split('/')[1].replace('.jpg', '')).sort()).toEqual(Object.keys(manifest()).sort());
+    for (const f of files) {
+        expect(f).not.toMatch(/mask/);
+        const b = readFileSync(resolve(root, 'public/plates', f));
+        expect(createHash('sha256').update(b).digest('hex'), f).toBe(hashes[f]);
+        expect(b.readUInt16BE(0)).toBe(0xffd8);
+        let size: number[] = [];
+        for (let p = 2; p < b.length;) {
+            if (b[p++] !== 255)
+                throw Error(`Invalid JPEG ${f}`);
+            const marker = b[p++], len = b.readUInt16BE(p);
+            if ([0xc0, 0xc1, 0xc2].includes(marker)) {
+                size = [b.readUInt16BE(p + 5), b.readUInt16BE(p + 3)];
+                break;
+            }
+            p += len;
+        }
+        expect(size, f).toEqual(f.startsWith('desk/') ? [1280, 914] : [640, 558]);
+    }
+});
+test('R-P2 manifest schema and ids', () => {
+    const m = manifest();
+    count('R-P2', Object.keys(m).length);
+    expect(Object.keys(m).sort()).toEqual(['home', ...WORKS.map(w => w.id)].sort());
+    expect(Object.keys(m)).toHaveLength(48);
+    for (const [id, p] of Object.entries(m) as [
+        string,
+        any
+    ][]) {
+        expect(p.place, id).toBe(id === 'home' ? 'left' : 'right');
+        for (const k of ['alt', 'who', 'what', 'when', 'how', 'where', 'lic', 'url'])
+            expect(p, id).toHaveProperty(k);
+        expect(p.url, id).toMatch(/^https?:\/\//);
+        for (const k of ['pick', 'desk', 'phone'])
+            expect(p, id).not.toHaveProperty(k);
+    }
+});
+test('R-P3 credit keys and EN exact credit', () => {
+    const m = manifest();
+    count('R-P3', Object.keys(m).length);
+    console.log(`R-P3 null=${Object.values(m).filter((p: any) => p.credit === null).length}`);
+    for (const p of Object.values(m)) {
+        expect(p).toHaveProperty('credit');
+        expect(p).toHaveProperty('creditChecked');
+    }
+    expect(m.EN.credit).toBe('Gift of Mrs. Carroll G. Ross, 1945');
+});
+test('R-K2 AthPol follows Pol in IV', () => { count('R-K2', CATEGORIES.length); expect(CATEGORIES.find(c => c.numeral === 'IV')!.works!.map(w => w.id)).toEqual(['EN', 'EE', 'Pol', 'AthPol']); expect(CATEGORIES.find(c => c.numeral === 'V')!.works!.map(w => w.id)).toEqual(['Rhet', 'Poet']); });
+test('R-K3 source blurbs omit book counts; exact MM and Prob', () => {
+    const source = readFileSync(resolve(root, '../shared/lib/works.ts'), 'utf8');
+    const blurbs = [...source.matchAll(/blurb: '((?:\\.|[^'\\])*)'/g)].map(m => m[1]);
+    count('R-K3', blurbs.length);
+    expect(blurbs.filter(b => /\b(in|into)\s+[a-z-]+\s+books?\b/i.test(b))).toEqual([]);
+    for (const b of blurbs)
+        expect(b).not.toMatch(/(?: —|,)\.$/);
+    expect(WORKS.find(w => w.id === 'MM')!.blurb).toBe('An ethics over the ground of the Nicomachean and Eudemian Ethics; whether Aristotle wrote it is disputed.');
+    expect(WORKS.find(w => w.id === 'Prob')!.blurb).toBe('Nearly nine hundred questions of natural science, each asked as “Why…?” and answered with a conjecture.');
+});
+test('R-K5 appendix wording throughout sources', () => {
+    count('R-K5', CATEGORIES.length);
+    expect(CATEGORIES.find(c => c.appendix)!.title).toBe('Dubious and spurious works');
+    let n = 0;
+    const walk = (dir: string) => { for (const d of readdirSync(dir, { withFileTypes: true })) {
+        if (['node_modules', 'dist', 'public', '__tests__', '.git'].includes(d.name))
+            continue;
+        const p = resolve(dir, d.name);
+        if (d.isDirectory())
+            walk(p);
+        else if (/\.(ts|svelte|astro|css|mjs)$/.test(p)) {
+            n++;
+            expect(readFileSync(p, 'utf8'), p).not.toMatch(/doubtful and spurious|doubted and spurious/i);
+        }
+    } };
+    walk(resolve(root, 'src'));
+    walk(resolve(root, '../shared'));
+    count('R-K5 files', n);
+});

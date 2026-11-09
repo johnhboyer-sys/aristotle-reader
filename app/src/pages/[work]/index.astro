@@ -5,6 +5,7 @@
 import Landing from '../../components/Landing.astro';
 import { WORKS } from '@shared/lib/works';
 import '@shared/styles/global.css';
+import '@shared/styles/b.css';
 
 export function getStaticPaths() {
   return WORKS.map((w) => ({ params: { work: w.id } }));

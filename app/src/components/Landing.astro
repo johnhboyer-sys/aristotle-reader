@@ -18,6 +18,7 @@ import { isChapterSection } from '@shared/lib/data';
 import { jsonLdSafe } from '../lib/jsonld';
 import { bookSpan as bookSpanLabel, translatorName } from '../lib/nav';
 import '@shared/styles/global.css';
+import '@shared/styles/b.css';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
 
 interface Props { workId: string; }
@@ -214,7 +215,7 @@ const breadcrumbLd = Astro.site
       <a class="lp-btn primary" href={primary ? readHref(`?trans=${primary.id}`) : readHref()}>
         Start reading →
       </a>
-      <a class="lp-btn resume-btn" id="lp-resume" href="#" hidden
+      <a class="lp-btn resume-btn" id="lp-resume" href={`${base}${workPath(workId, 1)}`} hidden
          data-work={workId} data-books={work.books}>Resume</a>
       <a class="lp-btn" href={readHref('?view=greek')}>Greek only</a>
       {editions.length > 1 && <a class="lp-btn" href={readHref('?trans=compare')}>Compare translations</a>}

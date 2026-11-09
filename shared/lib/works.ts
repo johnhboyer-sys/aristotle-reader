@@ -213,7 +213,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'hardie', name: 'R. P. Hardie and R. K. Gaye (Oxford, 1930)', short: 'Hardie & Gaye', slot: 'english' },
     ],
-    blurb: 'Aristotle on nature, change, place, time, and the prime mover, in eight books.',
+    blurb: 'Aristotle on nature, change, place, time, and the prime mover.',
   },
   {
     id: 'Cael',
@@ -231,7 +231,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'stocks', name: 'J. L. Stocks (Oxford, 1922)', short: 'Stocks', slot: 'english' },
     ],
-    blurb: 'Aristotle on the cosmos, the elements, and the eternity of the heavens, in four books.',
+    blurb: 'Aristotle on the cosmos, the elements, and the eternity of the heavens.',
   },
   {
     id: 'GC',
@@ -249,7 +249,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'joachim', name: 'H. H. Joachim (Oxford, 1922)', short: 'Joachim', slot: 'english' },
     ],
-    blurb: 'Aristotle on coming-to-be, passing-away, mixture, and the elements, in two books.',
+    blurb: 'Aristotle on coming-to-be, passing-away, mixture, and the elements.',
   },
   {
     id: 'Mete',
@@ -267,7 +267,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'webster', name: 'E. W. Webster (Oxford, 1923)', short: 'Webster', slot: 'english' },
     ],
-    blurb: 'Aristotle on the phenomena of the upper air and the earth — weather, comets, rivers, and the sea, in four books.',
+    blurb: 'Aristotle on the phenomena of the upper air and the earth — weather, comets, rivers, and the sea.',
   },
   {
     id: 'DA',
@@ -288,7 +288,7 @@ export const WORKS: Work[] = [
       { id: 'smith', name: 'J. A. Smith (Oxford, 1931)', short: 'Smith', slot: 'english' },
       { id: 'wallace', name: 'Edwin Wallace (Cambridge, 1882)', short: 'Wallace', slot: 'secondary' },
     ],
-    blurb: 'Aristotle on the soul, perception, and intellect, in three books.',
+    blurb: 'Aristotle on the soul, perception, and intellect.',
   },
   // The Parva Naturalia — Aristotle's short treatises on psycho-physical
   // topics. All single-book (bookless) works whose TLG Greek comes from Ross's
@@ -440,7 +440,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'thompson', name: 'D’Arcy Wentworth Thompson (Oxford, 1910)', short: 'Thompson', slot: 'english' },
     ],
-    blurb: 'Aristotle’s great survey of animal life — anatomy, reproduction, habits, and behaviour — in nine books.',
+    blurb: 'Aristotle’s great survey of animal life — anatomy, reproduction, habits, and behaviour.',
   },
   {
     id: 'PA',
@@ -458,7 +458,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'ogle', name: 'William Ogle (Oxford, 1912)', short: 'Ogle', slot: 'english' },
     ],
-    blurb: 'Aristotle’s study of the causes and functions of animal parts — the foundational work of his biology — in four books.',
+    blurb: 'Aristotle’s study of the causes and functions of animal parts — the foundational work of his biology.',
   },
   {
     id: 'MA',
@@ -512,7 +512,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'platt', name: 'Arthur Platt (Oxford, 1910)', short: 'Platt', slot: 'english' },
     ],
-    blurb: 'Aristotle on animal reproduction — the sexes, semen, heredity, and the formation of the embryo — in five books.',
+    blurb: 'Aristotle on animal reproduction — the sexes, semen, heredity, and the formation of the embryo.',
   },
   {
     id: 'Meta',
@@ -535,7 +535,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'ross', name: 'W. D. Ross (Oxford, 1928)', short: 'Ross', slot: 'english' },
     ],
-    blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
+    blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover.',
     quotations: true,
   },
   {
@@ -555,7 +555,7 @@ export const WORKS: Work[] = [
       { id: 'jenkinson', name: 'A. J. Jenkinson (Oxford, 1928)', short: 'Jenkinson', slot: 'english' },
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'secondary' },
     ],
-    blurb: 'Aristotle’s theory of the syllogism and deductive inference, in two books.',
+    blurb: 'Aristotle’s theory of the syllogism and deductive inference.',
   },
   {
     id: 'APo',
@@ -578,7 +578,7 @@ export const WORKS: Work[] = [
       { id: 'bouchier', name: 'E. S. Bouchier (Blackwell, 1901)', short: 'Bouchier', slot: 'secondary' },
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'third' },
     ],
-    blurb: 'Aristotle on demonstration, scientific knowledge, and first principles, in two books.',
+    blurb: 'Aristotle on demonstration, scientific knowledge, and first principles.',
   },
   {
     id: 'Top',
@@ -597,7 +597,7 @@ export const WORKS: Work[] = [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'secondary' },
     ],
-    blurb: 'Aristotle’s manual of dialectical argument and the topoi, in eight books.',
+    blurb: 'Aristotle’s manual of dialectical argument and the topoi.',
   },
   {
     id: 'SE',
@@ -644,7 +644,7 @@ export const WORKS: Work[] = [
     ],
     // The modern, Bekker-keyed Ostwald is the default English on first load.
     defaultTranslation: 'ostwald',
-    blurb: 'Aristotle’s central work of moral philosophy, in ten books.',
+    blurb: 'Aristotle’s central work of moral philosophy.',
   },
   {
     id: 'EE',
@@ -702,7 +702,7 @@ export const WORKS: Work[] = [
       { id: 'jowett', name: 'Benjamin Jowett, rev. W. D. Ross (Oxford, 1921)', short: 'Jowett', slot: 'english' },
       { id: 'ellis', name: 'William Ellis (1776; rev. 1912)', short: 'Ellis', slot: 'secondary' },
     ],
-    blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
+    blurb: 'Aristotle on the city, citizenship, constitutions, and the best life.',
   },
   {
     id: 'Oec',
@@ -748,7 +748,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'stock', name: 'St. G. Stock (Oxford, 1915)', short: 'Stock', slot: 'english' },
     ],
-    blurb: 'An ethics in two books over the ground of the Nicomachean and Eudemian Ethics; whether Aristotle wrote it is disputed.',
+    blurb: 'An ethics over the ground of the Nicomachean and Eudemian Ethics; whether Aristotle wrote it is disputed.',
   },
   {
     id: 'VV',
@@ -824,7 +824,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'forster', name: 'E. S. Forster (Oxford, 1927)', short: 'Forster', slot: 'english' },
     ],
-    blurb: 'Nearly nine hundred questions of natural science, each asked as “Why…?” and answered with a conjecture, gathered into thirty-eight books.',
+    blurb: 'Nearly nine hundred questions of natural science, each asked as “Why…?” and answered with a conjecture.',
   },
   {
     id: 'Col',
@@ -884,7 +884,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'forster', name: 'E. S. Forster (Oxford, 1913)', short: 'Forster', slot: 'english' },
     ],
-    blurb: 'A short spurious work on plants, their parts and their growth, in two books.',
+    blurb: 'A short spurious work on plants, their parts and their growth.',
   },
   {
     id: 'MXG',
@@ -1020,7 +1020,7 @@ export const WORKS: Work[] = [
       { id: 'freese', name: 'J. H. Freese (Loeb, 1926)', short: 'Freese', slot: 'english' },
       { id: 'roberts', name: 'W. Rhys Roberts (Oxford, 1924)', short: 'Roberts', slot: 'secondary' },
     ],
-    blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
+    blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator.',
   },
   {
     id: 'RhetAl',
@@ -1481,6 +1481,7 @@ export const CATEGORIES: Category[] = [
       { id: 'EN' },
       { id: 'EE' },
       { id: 'Pol' },
+      { id: 'AthPol' },
     ],
   },
   {
@@ -1489,7 +1490,6 @@ export const CATEGORIES: Category[] = [
     works: [
       { id: 'Rhet' },
       { id: 'Poet' },
-      { id: 'AthPol' },
     ],
   },
   // Appendix — the works transmitted under Aristotle's name whose authenticity is
@@ -1497,7 +1497,7 @@ export const CATEGORIES: Category[] = [
   // (no numeral); each card still carries its Dubious/Spurious badge.
   {
     numeral: '',
-    title: 'Doubtful and Spurious Works',
+    title: 'Dubious and spurious works',
     appendix: true,
     works: [
       { id: 'DM' },
@@ -1559,3 +1559,13 @@ export const WORK_ORDER: Map<string, number> = (() => {
   for (const w of WORKS) if (!order.includes(w.id)) order.push(w.id);
   return new Map(order.map((id, i) => [id, i]));
 })();
+
+// Shared display names for the home list, work crumbs and picture credits.
+export const DIVISION_NAMES: Record<string, string> = {
+  'Logic (Organon)': 'Logic',
+  'Natural Philosophy': 'Natural philosophy',
+  Metaphysics: 'Metaphysics',
+  'Moral and Political Philosophy': 'Ethics and politics',
+  'Rhetoric and Poetics': 'Rhetoric and poetics',
+  'Dubious and spurious works': 'Dubious and spurious works',
+};

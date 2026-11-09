@@ -1,22 +1,12 @@
 <script lang="ts">
-  // A small "?" button for the reader header that opens a Help modal explaining
-  // the reader's features, plus a one-time tip (first reader visit only) that
-  // surfaces the otherwise-invisible click-a-word-to-parse feature.
-  //
-  // The button renders inline in the header; the modal and tip are position:fixed
-  // overlays, so where this component sits in the DOM doesn't affect layout.
+  // The reader Help control opens its modal on request.
   import { onMount, onDestroy, tick } from 'svelte';
 
-  const SEEN_KEY = 'ar-help-seen';
 
   let showHelp = false;
-  let showTip = false;
   let helpModal: HTMLDivElement;
   let helpTrigger: HTMLElement | null = null;
 
-  function markSeen() {
-    try { localStorage.setItem(SEEN_KEY, '1'); } catch {}
-  }
 
   async function openHelp(e?: Event) {
     helpTrigger = e?.currentTarget instanceof HTMLElement
@@ -25,8 +15,6 @@
         ? document.activeElement
         : null;
     showHelp = true;
-    showTip = false;
-    markSeen();
     await tick();
     helpModal?.focus();
   }
@@ -36,10 +24,6 @@
     helpTrigger = null;
   }
 
-  function dismissTip() {
-    showTip = false;
-    markSeen();
-  }
 
   function onKeydown(e: KeyboardEvent) {
     if (!showHelp) return;
@@ -74,9 +58,6 @@
     // The Contents sidebar (mobile) opens this same modal via a custom event,
     // since its own "?" trigger is hidden on mobile.
     window.addEventListener('open-help', openHelp);
-    let seen = false;
-    try { seen = !!localStorage.getItem(SEEN_KEY); } catch {}
-    if (!seen) showTip = true;
   });
   onDestroy(() => {
     if (typeof window !== 'undefined') {
@@ -95,15 +76,6 @@
   title="How to use this reader"
 >?</button>
 
-{#if showTip}
-  <div class="reader-tip" role="status">
-    <span class="tip-text">💡 Click on any Greek word to parse it and see its definition(s)!</span>
-    <span class="tip-actions">
-      <button type="button" class="tip-more" on:click={openHelp}>More tips →</button>
-      <button type="button" class="tip-got" on:click={dismissTip}>Got it</button>
-    </span>
-  </div>
-{/if}
 
 {#if showHelp}
   <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
@@ -182,62 +154,10 @@
     color: var(--accent);
   }
   /* The mobile header (title + Contents/Menu) is already tight; the "?" is
-     desktop-only. Mobile discovery is carried by the first-visit tip below. */
+     desktop-only. Contents also opens Help. */
   @media (max-width: 680px) {
     .help-trigger { display: none; }
   }
-
-  /* First-visit tip — a small dismissible toast at the bottom of the viewport. */
-  .reader-tip {
-    position: fixed;
-    left: 50%;
-    bottom: 1.25rem;
-    transform: translateX(-50%);
-    /* Rise gently into view rather than snapping in. One-shot entrance ⇒
-       keyframe; the X-centring is preserved by animating from a lower Y. */
-    animation: tip-in 0.24s cubic-bezier(0.2, 0, 0, 1);
-    z-index: 60;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-    max-width: min(34rem, calc(100vw - 2rem));
-    padding: 0.7rem 1rem;
-    background: var(--popup-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: var(--popup-shadow);
-    font-family: var(--font-ui);
-    font-size: 0.9rem;
-    color: var(--text);
-  }
-  .tip-text { line-height: 1.4; }
-  .tip-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
-  .tip-more {
-    background: none;
-    border: none;
-    font: inherit;
-    color: var(--accent);
-    cursor: pointer;
-    padding: 0.2rem 0.2rem;
-  }
-  .tip-more:hover { text-decoration: underline; }
-  .tip-got {
-    font: inherit;
-    cursor: pointer;
-    padding: 0.3rem 0.7rem;
-    border: 1px solid var(--accent);
-    border-radius: 4px;
-    background: var(--accent);
-    color: var(--on-accent);
-  }
-  .tip-got:hover { filter: brightness(1.08); }
 
   /* Modal — adapted from the "How to type Greek" modal in Search.svelte so the
      two help surfaces look identical (those styles are component-scoped there). */
@@ -265,10 +185,6 @@
     /* Soft rise + fade as it opens (one-shot ⇒ keyframe). */
     animation: modal-in 0.2s cubic-bezier(0.2, 0, 0, 1);
   }
-  @keyframes tip-in {
-    from { opacity: 0; transform: translate(-50%, 12px); }
-    to   { opacity: 1; transform: translate(-50%, 0); }
-  }
   @keyframes backdrop-in {
     from { opacity: 0; }
     to   { opacity: 1; }
@@ -278,7 +194,7 @@
     to   { opacity: 1; transform: translateY(0); }
   }
   @media (prefers-reduced-motion: reduce) {
-    .reader-tip, .help-backdrop, .help-modal { animation: none; }
+    .help-backdrop, .help-modal { animation: none; }
   }
   .help-head {
     display: flex;

@@ -1,0 +1,772 @@
+{
+  "works": {
+    "Cat": {
+      "desktop": {
+        "lines": [
+          "CATEGORIES"
+        ],
+        "set": "92"
+      },
+      "phone": {
+        "lines": [
+          "CATEGORIES"
+        ],
+        "set": "69"
+      }
+    },
+    "Int": {
+      "desktop": {
+        "lines": [
+          "DE",
+          "INTERPRETATIONE"
+        ],
+        "set": "63,63"
+      },
+      "phone": {
+        "lines": [
+          "DE",
+          "INTERPRETATIONE"
+        ],
+        "set": "48,48"
+      }
+    },
+    "Isa": {
+      "desktop": {
+        "lines": [
+          "ISAGOGE"
+        ],
+        "set": "130"
+      },
+      "phone": {
+        "lines": [
+          "ISAGOGE"
+        ],
+        "set": "98"
+      }
+    },
+    "Phys": {
+      "desktop": {
+        "lines": [
+          "PHYSICS"
+        ],
+        "set": "129"
+      },
+      "phone": {
+        "lines": [
+          "PHYSICS"
+        ],
+        "set": "97"
+      }
+    },
+    "Cael": {
+      "desktop": {
+        "lines": [
+          "ON THE",
+          "HEAVENS"
+        ],
+        "set": "127,127"
+      },
+      "phone": {
+        "lines": [
+          "ON THE",
+          "HEAVENS"
+        ],
+        "set": "96,96"
+      }
+    },
+    "GC": {
+      "desktop": {
+        "lines": [
+          "ON",
+          "GENERATION",
+          "AND",
+          "CORRUPTION"
+        ],
+        "set": "85,85,85,85"
+      },
+      "phone": {
+        "lines": [
+          "ON GENERATION",
+          "AND",
+          "CORRUPTION"
+        ],
+        "set": "53,53,53"
+      }
+    },
+    "Mete": {
+      "desktop": {
+        "lines": [
+          "METEOROLOGY"
+        ],
+        "set": "78"
+      },
+      "phone": {
+        "lines": [
+          "METEOROLOGY"
+        ],
+        "set": "59"
+      }
+    },
+    "DA": {
+      "desktop": {
+        "lines": [
+          "DE",
+          "ANIMA"
+        ],
+        "set": "173,173"
+      },
+      "phone": {
+        "lines": [
+          "DE",
+          "ANIMA"
+        ],
+        "set": "109,109"
+      }
+    },
+    "Sens": {
+      "desktop": {
+        "lines": [
+          "SENSE AND",
+          "SENSIBILIA"
+        ],
+        "set": "101,101"
+      },
+      "phone": {
+        "lines": [
+          "SENSE AND",
+          "SENSIBILIA"
+        ],
+        "set": "76,76"
+      }
+    },
+    "Mem": {
+      "desktop": {
+        "lines": [
+          "ON",
+          "MEMORY"
+        ],
+        "set": "131,131"
+      },
+      "phone": {
+        "lines": [
+          "ON",
+          "MEMORY"
+        ],
+        "set": "99,99"
+      }
+    },
+    "Somn": {
+      "desktop": {
+        "lines": [
+          "ON",
+          "SLEEP"
+        ],
+        "set": "190,190"
+      },
+      "phone": {
+        "lines": [
+          "ON",
+          "SLEEP"
+        ],
+        "set": "109,109"
+      }
+    },
+    "Insomn": {
+      "desktop": {
+        "lines": [
+          "ON",
+          "DREAMS"
+        ],
+        "set": "136,136"
+      },
+      "phone": {
+        "lines": [
+          "ON",
+          "DREAMS"
+        ],
+        "set": "102,102"
+      }
+    },
+    "DivSomn": {
+      "desktop": {
+        "lines": [
+          "ON",
+          "DIVINATION",
+          "IN SLEEP"
+        ],
+        "set": "98,98,98"
+      },
+      "phone": {
+        "lines": [
+          "ON",
+          "DIVINATION",
+          "IN SLEEP"
+        ],
+        "set": "73,73,73"
+      }
+    },
+    "Long": {
+      "desktop": {
+        "lines": [
+          "ON LENGTH",
+          "AND",
+          "SHORTNESS",
+          "OF LIFE"
+        ],
+        "set": "97,97,97,97"
+      },
+      "phone": {
+        "lines": [
+          "ON LENGTH AND",
+          "SHORTNESS",
+          "OF LIFE"
+        ],
+        "set": "54,54,54"
+      }
+    },
+    "Juv": {
+      "desktop": {
+        "lines": [
+          "ON YOUTH,",
+          "OLD AGE,",
+          "LIFE AND",
+          "DEATH, AND",
+          "RESPIRATION"
+        ],
+        "set": "84,84,84,84,84"
+      },
+      "phone": {
+        "lines": [
+          "ON YOUTH, OLD",
+          "AGE, LIFE AND",
+          "DEATH, AND",
+          "RESPIRATION"
+        ],
+        "set": "54,54,54,54"
+      }
+    },
+    "HA": {
+      "desktop": {
+        "lines": [
+          "HISTORY",
+          "OF",
+          "ANIMALS"
+        ],
+        "set": "127,127,127"
+      },
+      "phone": {
+        "lines": [
+          "HISTORY OF",
+          "ANIMALS"
+        ],
+        "set": "72,72"
+      }
+    },
+    "PA": {
+      "desktop": {
+        "lines": [
+          "PARTS",
+          "OF",
+          "ANIMALS"
+        ],
+        "set": "127,127,127"
+      },
+      "phone": {
+        "lines": [
+          "PARTS OF",
+          "ANIMALS"
+        ],
+        "set": "89,89"
+      }
+    },
+    "MA": {
+      "desktop": {
+        "lines": [
+          "MOVEMENT",
+          "OF",
+          "ANIMALS"
+        ],
+        "set": "104,104,104"
+      },
+      "phone": {
+        "lines": [
+          "MOVEMENT",
+          "OF ANIMALS"
+        ],
+        "set": "71,71"
+      }
+    },
+    "IA": {
+      "desktop": {
+        "lines": [
+          "PROGRESSION",
+          "OF ANIMALS"
+        ],
+        "set": "79,79"
+      },
+      "phone": {
+        "lines": [
+          "PROGRESSION",
+          "OF ANIMALS"
+        ],
+        "set": "59,59"
+      }
+    },
+    "GA": {
+      "desktop": {
+        "lines": [
+          "GENERATION",
+          "OF ANIMALS"
+        ],
+        "set": "91,91"
+      },
+      "phone": {
+        "lines": [
+          "GENERATION",
+          "OF ANIMALS"
+        ],
+        "set": "69,69"
+      }
+    },
+    "Meta": {
+      "desktop": {
+        "lines": [
+          "METAPHYSICS"
+        ],
+        "set": "81"
+      },
+      "phone": {
+        "lines": [
+          "METAPHYSICS"
+        ],
+        "set": "61"
+      }
+    },
+    "APr": {
+      "desktop": {
+        "lines": [
+          "PRIOR",
+          "ANALYTICS"
+        ],
+        "set": "106,106"
+      },
+      "phone": {
+        "lines": [
+          "PRIOR",
+          "ANALYTICS"
+        ],
+        "set": "80,80"
+      }
+    },
+    "APo": {
+      "desktop": {
+        "lines": [
+          "POSTERIOR",
+          "ANALYTICS"
+        ],
+        "set": "99,99"
+      },
+      "phone": {
+        "lines": [
+          "POSTERIOR",
+          "ANALYTICS"
+        ],
+        "set": "74,74"
+      }
+    },
+    "Top": {
+      "desktop": {
+        "lines": [
+          "TOPICS"
+        ],
+        "set": "155"
+      },
+      "phone": {
+        "lines": [
+          "TOPICS"
+        ],
+        "set": "117"
+      }
+    },
+    "SE": {
+      "desktop": {
+        "lines": [
+          "SOPHISTICAL",
+          "REFUTATIONS"
+        ],
+        "set": "85,85"
+      },
+      "phone": {
+        "lines": [
+          "SOPHISTICAL",
+          "REFUTATIONS"
+        ],
+        "set": "64,64"
+      }
+    },
+    "EN": {
+      "desktop": {
+        "lines": [
+          "NICOMACHEAN",
+          "ETHICS"
+        ],
+        "set": "77,77"
+      },
+      "phone": {
+        "lines": [
+          "NICOMACHEAN",
+          "ETHICS"
+        ],
+        "set": "58,58"
+      }
+    },
+    "EE": {
+      "desktop": {
+        "lines": [
+          "EUDEMIAN",
+          "ETHICS"
+        ],
+        "set": "110,110"
+      },
+      "phone": {
+        "lines": [
+          "EUDEMIAN",
+          "ETHICS"
+        ],
+        "set": "83,83"
+      }
+    },
+    "Pol": {
+      "desktop": {
+        "lines": [
+          "POLITICS"
+        ],
+        "set": "123"
+      },
+      "phone": {
+        "lines": [
+          "POLITICS"
+        ],
+        "set": "93"
+      }
+    },
+    "Oec": {
+      "desktop": {
+        "lines": [
+          "OECONOMICA"
+        ],
+        "set": "84"
+      },
+      "phone": {
+        "lines": [
+          "OECONOMICA"
+        ],
+        "set": "63"
+      }
+    },
+    "MM": {
+      "desktop": {
+        "lines": [
+          "MAGNA",
+          "MORALIA"
+        ],
+        "set": "123,123"
+      },
+      "phone": {
+        "lines": [
+          "MAGNA",
+          "MORALIA"
+        ],
+        "set": "93,93"
+      }
+    },
+    "VV": {
+      "desktop": {
+        "lines": [
+          "DE",
+          "VIRTUTIBUS",
+          "ET VITIIS"
+        ],
+        "set": "94,94,94"
+      },
+      "phone": {
+        "lines": [
+          "DE",
+          "VIRTUTIBUS",
+          "ET VITIIS"
+        ],
+        "set": "71,71,71"
+      }
+    },
+    "DM": {
+      "desktop": {
+        "lines": [
+          "DE",
+          "MUNDO"
+        ],
+        "set": "153,153"
+      },
+      "phone": {
+        "lines": [
+          "DE",
+          "MUNDO"
+        ],
+        "set": "109,109"
+      }
+    },
+    "Mech": {
+      "desktop": {
+        "lines": [
+          "MECHANICA"
+        ],
+        "set": "95"
+      },
+      "phone": {
+        "lines": [
+          "MECHANICA"
+        ],
+        "set": "71"
+      }
+    },
+    "Prob": {
+      "desktop": {
+        "lines": [
+          "PROBLEMATA"
+        ],
+        "set": "85"
+      },
+      "phone": {
+        "lines": [
+          "PROBLEMATA"
+        ],
+        "set": "64"
+      }
+    },
+    "Col": {
+      "desktop": {
+        "lines": [
+          "DE",
+          "COLORIBUS"
+        ],
+        "set": "97,97"
+      },
+      "phone": {
+        "lines": [
+          "DE",
+          "COLORIBUS"
+        ],
+        "set": "73,73"
+      }
+    },
+    "Phgn": {
+      "desktop": {
+        "lines": [
+          "PHYSIOGNOMONICA"
+        ],
+        "set": "57"
+      },
+      "phone": {
+        "lines": [
+          "PHYSIOGNOMONICA"
+        ],
+        "set": "43"
+      }
+    },
+    "Plant": {
+      "desktop": {
+        "lines": [
+          "DE",
+          "PLANTIS"
+        ],
+        "set": "136,136"
+      },
+      "phone": {
+        "lines": [
+          "DE",
+          "PLANTIS"
+        ],
+        "set": "102,102"
+      }
+    },
+    "MXG": {
+      "desktop": {
+        "lines": [
+          "DE MELISSO",
+          "XENOPHANE",
+          "GORGIA"
+        ],
+        "set": "95,95,95"
+      },
+      "phone": {
+        "lines": [
+          "DE MELISSO",
+          "XENOPHANE",
+          "GORGIA"
+        ],
+        "set": "71,71,71"
+      }
+    },
+    "Aud": {
+      "desktop": {
+        "lines": [
+          "DE",
+          "AUDIBILIBUS"
+        ],
+        "set": "86,86"
+      },
+      "phone": {
+        "lines": [
+          "DE",
+          "AUDIBILIBUS"
+        ],
+        "set": "65,65"
+      }
+    },
+    "Lin": {
+      "desktop": {
+        "lines": [
+          "DE LINEIS",
+          "INSECABILIBUS"
+        ],
+        "set": "73,73"
+      },
+      "phone": {
+        "lines": [
+          "DE LINEIS",
+          "INSECABILIBUS"
+        ],
+        "set": "55,55"
+      }
+    },
+    "Spir": {
+      "desktop": {
+        "lines": [
+          "DE",
+          "SPIRITU"
+        ],
+        "set": "139,139"
+      },
+      "phone": {
+        "lines": [
+          "DE",
+          "SPIRITU"
+        ],
+        "set": "104,104"
+      }
+    },
+    "Vent": {
+      "desktop": {
+        "lines": [
+          "VENTORUM",
+          "SITUS"
+        ],
+        "set": "104,104"
+      },
+      "phone": {
+        "lines": [
+          "VENTORUM",
+          "SITUS"
+        ],
+        "set": "78,78"
+      }
+    },
+    "Mirab": {
+      "desktop": {
+        "lines": [
+          "DE MIRABILIBUS",
+          "AUSCULTATIONIBUS"
+        ],
+        "set": "57,57"
+      },
+      "phone": {
+        "lines": [
+          "DE MIRABILIBUS",
+          "AUSCULTATIONIBUS"
+        ],
+        "set": "43,43"
+      }
+    },
+    "Rhet": {
+      "desktop": {
+        "lines": [
+          "RHETORIC"
+        ],
+        "set": "111"
+      },
+      "phone": {
+        "lines": [
+          "RHETORIC"
+        ],
+        "set": "84"
+      }
+    },
+    "RhetAl": {
+      "desktop": {
+        "lines": [
+          "RHETORICA",
+          "AD",
+          "ALEXANDRUM"
+        ],
+        "set": "83,83,83"
+      },
+      "phone": {
+        "lines": [
+          "RHETORICA",
+          "AD",
+          "ALEXANDRUM"
+        ],
+        "set": "62,62,62"
+      }
+    },
+    "Poet": {
+      "desktop": {
+        "lines": [
+          "POETICS"
+        ],
+        "set": "134"
+      },
+      "phone": {
+        "lines": [
+          "POETICS"
+        ],
+        "set": "101"
+      }
+    },
+    "AthPol": {
+      "desktop": {
+        "lines": [
+          "ATHENIAN",
+          "CONSTITUTION"
+        ],
+        "set": "78,78"
+      },
+      "phone": {
+        "lines": [
+          "ATHENIAN",
+          "CONSTITUTION"
+        ],
+        "set": "58,58"
+      }
+    }
+  },
+  "home": {
+    "desktop": {
+      "lines": [
+        "THE",
+        "COMPLETE",
+        "WORKS OF",
+        "ARISTOTLE"
+      ],
+      "set": "106,106,106,106"
+    },
+    "phone": {
+      "lines": [
+        "THE",
+        "COMPLETE",
+        "WORKS OF",
+        "ARISTOTLE"
+      ],
+      "set": "38,38,38,38"
+    }
+  }
+}
