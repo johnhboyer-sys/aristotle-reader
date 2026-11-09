@@ -6,12 +6,14 @@ import ts from 'typescript';
 const current = readFileSync(resolve(import.meta.dirname, '../../../shared/components/Search.svelte'), 'utf8');
 // Frozen from stage 3 (e5494dadad), which was HEAD when search work began.
 // Hashes keep the check valid after committing stage 4 and in shallow checkouts.
+// doSearch: stage 3 plus main's Beta Code accent fix (PR #194, ec0bf17610),
+// and nothing else; checked at the merge.
 const baseline = {
   "main": "9c501ff9895aaa226782ccbf6f963aa9007a26e8d0150beeac5b279e54450939",
   "style": "82266d494a045aca78396e936abbc64ba798b3b766ccf9ec9542095efb8a5349",
   "showResults": "67291214a27294f5e75c2d8afe738d9d6ca36321092611520b56c878f708061c",
   "currentSearch": "f65ee1c2690f2eb61630b9dbce01075538e1162b7fc7cf36c1d7b582aa2ebffc",
-  "doSearch": "fe73b0524fd593496c81d94bd1dd38a6a7d5a676582df01bd982e770ef0531a0"
+  "doSearch": "cf4574fbbcfc8f2430ac7711ea3417280624833956f9e795078a52bfb9312a74"
 };
 const hash = (text: string) => createHash('sha256').update(text).digest('hex');
 it('keeps the stage 3 desktop main and scoped styles byte for byte', () => {

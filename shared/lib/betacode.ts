@@ -96,3 +96,22 @@ export function betaToGreek(input: string): string {
   }
   return out.join('');
 }
+
+// One search term typed in Beta Code → Greek, keeping the search wildcards.
+// In a search box `*` is a Beta Code capital marker only at the start of a
+// word ("*lo/gos"); anywhere else it is the any-run wildcard, as `?` is the
+// one-letter one. betaToGreek alone would read a later `*` as a capital marker
+// and drop it, so the wildcards are cut out first and each piece converted on
+// its own. A term with no Latin letters is already Greek and is left alone.
+// As in the main search (compilePattern, greekFold), every leading * is the
+// capital marker and digits are dropped: no Greek token holds one.
+export function betaQueryToGreek(term: string): string {
+  if (!/[a-zA-Z]/.test(term)) return term;
+  const input = term.replace(/[0-9]/g, '');
+  const cap = /^\*+[)(+/\\=|]*[a-zA-Z]/.exec(input);
+  const head = cap ? betaToGreek('*' + cap[0].replace(/^\*+/, '')) : '';
+  const rest = cap ? input.slice(cap[0].length) : input;
+  return head + rest.split(/([*?])/)
+    .map((piece) => (piece === '*' || piece === '?' ? piece : betaToGreek(piece)))
+    .join('');
+}
