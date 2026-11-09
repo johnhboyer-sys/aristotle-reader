@@ -16,7 +16,7 @@
   export let place = '';
   export let onStep: ((d: number) => void) | null = null;
 
-  let dialogEl: HTMLDivElement;
+  let dialogEl: HTMLElement;
   let previousFocus: HTMLElement | null = null;
   let analyses: Analysis[] = [];
   let lsj: LsjEntry[] = [];

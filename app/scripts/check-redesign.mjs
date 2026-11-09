@@ -1,3 +1,4 @@
+import { expandSearch, settleFonts, readSearchRefs, searchRefOnOneLine, searchRefBeforeColumn, readControlBoxes } from './redesign-browser.mjs';
 import { Window } from 'happy-dom';
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -28,12 +29,12 @@ if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
 // Stage 1 checks run against Astro's built output. Later stages add gate functions here.
 const args = process.argv.slice(2);
 const flag = name => args.includes(name) ? args[args.indexOf(name) + 1] : undefined;
-const BASE = flag('--base') || 'http://localhost:4329';
+const BASE = flag('--base') || 'http://127.0.0.1:4329';
 const only = flag('--only') || flag('--prove');
 const prove = flag('--prove');
 let proofCase = 'default';
 const stage = Number(flag('--stage') || 1);
-if (![1,2,3].includes(stage)) throw Error('Stage must be 1, 2 or 3');
+if (![1,2,3,4].includes(stage)) throw Error('Stage must be 1, 2, 3 or 4');
 const app = fileURLToPath(new URL('../', import.meta.url));
 const dist = join(app, 'dist');
 const ts = createRequire(import.meta.url)('typescript');
@@ -42,9 +43,10 @@ const registryJS = ts.transpileModule(registrySource, {compilerOptions:{module:t
 const registry = await import('data:text/javascript;base64,'+Buffer.from(registryJS).toString('base64'));
 const workIds = registry.WORKS.map(w=>w.id);
 const publicPages = stage >= 2 ? ['/','/Cat/','/picture-credits/'] : ['/'];
-const accessPages = stage >= 2 ? [...publicPages,'/EN/',...(stage >= 3 ? ['/EN/book/1'] : [])] : ['/'];
+const accessPages = stage >= 2 ? [...publicPages,'/EN/',...(stage >= 3 ? ['/EN/book/1'] : []),...(stage >= 4 ? ['/search?q=ἀρετή'] : [])] : ['/'];
 // Stage 3: the reader.
 const READER = '/EN/book/1';
+const SEARCH = '/search?q=ἀρετή';
 const plates = JSON.parse(readFileSync(new URL('../src/data/plates.json',import.meta.url),'utf8'));
 const chaptersOf = id => JSON.parse(readFileSync(join(app,'public/data',id,'chapters.json'),'utf8'));
 const divisionName = id => {
@@ -53,11 +55,27 @@ const divisionName = id => {
 };
 
 const walk = (dir, ext) => readdirSync(dir, { withFileTypes: true }).flatMap(d => d.isDirectory() ? walk(join(dir, d.name), ext) : ext.test(d.name) ? [join(dir, d.name)] : []);
+let gateContext = {path: 'source files', size: 'n/a', theme: 'n/a'};
+let gatePage = null;
+const failureMessage = msg => {
+    if (msg.startsWith('[page=')) return msg;
+    let {path, size, theme} = gateContext;
+    if (gatePage) {
+        // These getters also work after close(), when a gate's finally has run.
+        const viewport = gatePage.viewportSize();
+        if (viewport) size = Object.entries(sizes).find(([, [w,h]]) => w === viewport.width && h === viewport.height)?.[0] || `${viewport.width}×${viewport.height}`;
+        const url = new URL(gatePage.url());
+        if (/^https?:$/.test(url.protocol)) path = url.pathname + url.search;
+    }
+    return `[page=${path} size=${size} theme=${theme}] ${msg}`;
+};
 const assert = (ok, msg) => { if (!ok)
-    throw Error(msg); };
+    throw Error(failureMessage(msg)); };
 const sizes = { D1440: [1440, 900], D1920: [1920, 1080], G1440: [1440, 1400], D1280: [1280, 800], D961: [961, 800], S844: [844, 390], S960: [960, 540], P390: [390, 844], P360: [360, 780], W1200: [1200, 800], W900: [900, 800] };
 let browser;
 async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false, stubPosterResize = false) {
+    gateContext = {path, size, theme};
+    gatePage = null;
     browser ||= await resolvePlaywright().chromium.launch();
     const [width, height] = sizes[size];
     const touch = /^[SP]/.test(size);
@@ -79,23 +97,34 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
         }
     }, { theme, seed, fresh, stubPosterResize });
     const page = await context.newPage();
+    gatePage = page;
     page.fontFileRequests = [];
     page.fontSheetReads = [];
+    page.fontFailures = [];
+    page.on('requestfailed', request => {
+        if (['font','stylesheet'].includes(request.resourceType())) page.fontFailures.push(`${request.url()}: ${request.failure()?.errorText}`);
+    });
     page.on('request', request => {
         if (request.resourceType() === 'font') page.fontFileRequests.push(request.url());
     });
     page.on('response', response => {
+        if (['font','stylesheet'].includes(response.request().resourceType()) && response.status() >= 400) page.fontFailures.push(`${response.url()}: HTTP ${response.status()}`);
         if (response.request().resourceType() === 'stylesheet') {
             page.fontSheetReads.push(response.text().then(text => ({url: response.url(), text})).catch(() => ({url: response.url(), text: ''})));
         }
     });
     await page.goto(BASE + path, { waitUntil: 'networkidle' });
-    await page.evaluate(() => document.fonts.ready);
     // Wait for the title fitter only where there is a poster, so the gates can
     // also run against the old design (the failing-first runs).
     if (await page.locator('.b-po-t').count())
         await page.waitForFunction(() => document.querySelector('.b-po-t')?.dataset.set);
+    if (stage >= 4 && path.startsWith('/search?')) await searchReady(page);
+    else await settleFonts(page);
     return page;
+}
+async function searchReady(page) {
+    await page.waitForFunction(() => document.querySelector('.b-search-page')?.dataset.searchBusy === 'false' && !!document.querySelector('.b-sr-big'), null, {timeout: 120000});
+    await settleFonts(page);
 }
 const close = page => page.context().close();
 const style = (page, css) => page.addStyleTag({ content: css });
@@ -146,8 +175,41 @@ async function* readerStates(page, size) {
     await page.keyboard.press('Escape');
 }
 async function* accessStates(page, size) {
+    for await (const state of accessStatesInner(page, size)) {
+        await settleFonts(page);
+        yield state;
+    }
+}
+async function* accessStatesInner(page, size) {
     if (await page.locator('.b-rh').count()) { yield* readerStates(page, size); return; }
     yield {name: 'closed', root: '.dir-b'};
+    if (await page.locator('.b-search-page').count()) {
+        await expandSearch(page);
+        yield {name:'search-hits',root:'.dir-b'};
+        await page.locator('.b-options-toggle').click();
+        yield {name:'search-options',root:'.dir-b'};
+        await page.locator('.works-trigger').click();
+        yield {name:'search-works',root:'.dir-b'};
+        await page.locator('.works-trigger').click();
+        await page.locator('.advanced-trigger').click();
+        yield {name:'search-advanced',root:'.dir-b'};
+        await page.locator('.lemma-panel > summary').click();
+        yield {name:'search-lemma',root:'.dir-b'};
+        await page.locator('.lemma-panel > summary').click();
+        await page.locator('.combo-panel > summary').click();
+        yield {name:'search-combo',root:'.dir-b'};
+        await page.getByLabel('Kind for term 2',{exact:true}).selectOption('grammatical');
+        yield {name:'search-grammar',root:'.dir-b'};
+        await page.locator('.combo-proximity select').selectOption('line');
+        yield {name:'search-window-disabled',root:'.dir-b'};
+        await page.locator('.combo-proximity select').selectOption('words');
+        await page.locator('.combo-panel > summary').click();
+        await page.locator('.advanced-trigger').click();
+        await page.locator('.b-search-options .help-btn:visible').click();
+        yield {name:'search-help',root:'.help-modal'};
+        await page.keyboard.press('Escape');
+        await page.locator('.b-options-toggle').click();
+    }
     if (await page.locator('.b-bk').count()) {
         await page.locator('[data-books-open]').click();
         yield {name:'books-open',root:'.dir-b'};
@@ -233,7 +295,7 @@ const gates = {
         for(const path of publicPages){
             const p=await open('D1440','light',path);
             try{
-                if(prove&&proofCase!=='reader')await style(p,'.dir-b .b-po-t{color:black!important}');
+                if(prove&&(proofCase==='home'||proofCase==='default'))await style(p,'.dir-b .b-po-t{color:black!important}');
                 const selector=path==='/picture-credits/'?'.b-pc-h':'.b-po-t';
                 const color=await p.locator(selector).evaluate(el=>getComputedStyle(el).color);
                 assert(color===(path==='/picture-credits/'?'rgb(180, 36, 25)':'rgb(226, 56, 46)'),`${path==='/'?'home':path} title color=${color}`);n++;
@@ -247,9 +309,17 @@ const gates = {
                 assert(height==='60px',`reader .b-rh height=${height}`);n++;
             }finally{await close(p);}
         }
+        if(stage>=4){
+            const p=await open('D1440','light',SEARCH);
+            try {
+                if(prove&&proofCase==='search')await style(p,'.dir-b .b-sr-big{color:black!important}');
+                const color=await p.locator('.b-sr-big').evaluate(el=>getComputedStyle(el).color);
+                assert(color==='rgb(226, 56, 46)',`search .b-sr-big color=${color}`);n++;
+            }finally{await close(p);}
+        }
         return n;
     },
-    'R-C2': async () => {
+    'R-C2' : async () => {
         const files = walk(join(dist, '_astro'), /\.(css|js)$/);
         const samples = ['index.html', 'Cat/index.html', 'EN/book/1/index.html', 'search/index.html'];
         const lemma = walk(join(dist, 'lemma'), /\.html$/).find(f => f !== join(dist, 'lemma/index.html'));
@@ -271,7 +341,7 @@ const gates = {
     },
     'R-F1': async () => {
         let n=0;
-        for(const path of (stage>=3?[...publicPages,READER]:publicPages)){
+        for(const path of (stage>=3?[...publicPages,READER,...(stage>=4?[SEARCH]:[])]:publicPages)){
         const p = await open('D1440','light',path);
         try {
             if (prove)
@@ -289,8 +359,11 @@ const gates = {
             for (const family of families) assert(allowed.includes(family), `screen font ${family}`);
             assert(links.length === 1, `screen font links=${links.length}`);
             for (const family of allowed) assert(families.includes(family), `missing font ${family}`);
-            const loaded = await p.evaluate(() => [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/^['"]|['"]$/g, '')));
-            assert(loaded.length > 0, 'examined=0 loaded font families');
+            await settleFonts(p);
+            const fontState = await p.evaluate(() => ({status: document.fonts.status, faces: [...document.fonts].map(f => ({family: f.family.replace(/^['"]|['"]$/g, ''), status: f.status}))}));
+            const loaded = fontState.faces.filter(f => f.status === 'loaded').map(f => f.family);
+            console.log(`R-F1 ${path} D1440 status=${fontState.status} registered=${fontState.faces.length} loaded=${JSON.stringify([...new Set(loaded)])} failures=${JSON.stringify(p.fontFailures)}`);
+            assert(loaded.length > 0, `examined=0 loaded font families; fonts=${JSON.stringify(fontState)} failures=${JSON.stringify(p.fontFailures)}`);
             for (const family of loaded) assert(allowed.includes(family), `loaded screen font ${family}`);
             const fileFamilies = new Map();
             for (const sheet of await Promise.all(p.fontSheetReads)) {
@@ -594,13 +667,18 @@ const gates = {
         for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size,'light',path);
             try {
-                if (prove && proofCase !== 'fn-hit')
+                if (prove && !['fn-hit','search-target','search-link-no-after','search-link-no-pointer'].includes(proofCase))
                     await style(p, '.dir-b [data-theme-toggle]{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
                 if (prove && proofCase === 'fn-hit' && path === READER) await style(p, '.dir-b .fn-marker::after{content:none!important}');
+                if(prove&&proofCase==='search-target'&&path===SEARCH)await style(p,'.dir-b [data-search-language=Greek]{min-width:34px!important;min-height:34px!important;width:34px!important;height:34px!important;padding:0!important}');
+                if (prove && path === SEARCH && proofCase === 'search-link-no-after')
+                    await style(p, '.b-he > span a::after,.b-sr-l a::after,.b-sr-l button::after{content:none!important}');
+                if (prove && path === SEARCH && proofCase === 'search-link-no-pointer')
+                    await style(p, '.b-he > span a::after,.b-sr-l a::after,.b-sr-l button::after{content:""!important;width:40px!important;height:40px!important;pointer-events:none!important}');
                 for await (const state of accessStates(p, size)) {
                     // Running text is exempt: Greek word tokens, and links and
                     // footnote marks inside the reading text (checked below).
-                    const got = await p.locator(state.root).locator(controls).evaluateAll(els => els.filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && !el.matches('.tok') && !el.closest('.b-gc,.b-ec,.b-cht')).map(el => ({tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0,65), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height})));
+                    const got = await p.locator(state.root).locator(controls).evaluateAll(readControlBoxes);
                     assert(got.length > 0, `${size} ${state.name} examined=0 controls`);
                     for (const control of got) {
                         assert(control.w >= 39.99 && control.h >= 39.99, `${size} ${control.tag} ${control.text} ${control.w}×${control.h} state=${state.name}`);
@@ -634,6 +712,7 @@ const gates = {
             try {
                 if (prove && (proofCase === 'search' || proofCase === 'default'))
                     await style(p, '.dir-b .b-search input:focus-visible{outline:none!important;box-shadow:none!important}');
+                if(prove&&proofCase==='search-query'&&path===SEARCH)await style(p,'.dir-b .b-sq-f input:focus-visible{outline:none!important;box-shadow:none!important}');
                 if (prove && proofCase === 'panel-ring' && path === READER) await style(p, '.dir-b .b-side:focus-visible{outline:none!important}');
                 if (prove && proofCase === 'help-ring' && path === READER) await style(p, '.dir-b .help-modal:focus-visible{outline:none!important}');
                 if (prove && proofCase === 'reader-token' && path === READER) await style(p, '.dir-b .tok:focus-visible{outline:none!important}');
@@ -700,7 +779,8 @@ const gates = {
         for (const theme of ['light', 'dark']) for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size, theme,path);
             try {
-                if (prove && proofCase !== 'reader-ln') await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
+                if (prove && !['reader-ln','search-small-red'].includes(proofCase)) await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
+                if(prove&&proofCase==='search-small-red'&&path===SEARCH)await style(p,'.dir-b .b-sq-o .b-options-toggle{color:var(--red)!important}');
                 if (prove && proofCase === 'reader-ln' && path === READER) await style(p, '.dir-b .b-ln{color:#c8c8c8!important}');
                 for await (const state of accessStates(p, size)) {
                     const result = await p.evaluate(root => {
@@ -744,7 +824,7 @@ const gates = {
                     assert(result.length > 0, `${size}/${theme} ${state.name} examined=0 text elements`);
                     for (const g of result) {
                         n++;
-                        if (g.ratio+.001 < g.min) failures.push(`${theme} ${g.element} "${g.text}" ratio=${g.ratio.toFixed(3)} expected>=${g.min} color=${g.color} opacity=${g.opacity} viewport=${size} state=${state.name}`);
+                        if (g.ratio+.001 < g.min) failures.push(`${path} ${theme} ${g.element} "${g.text}" ratio=${g.ratio.toFixed(3)} expected>=${g.min} color=${g.color} opacity=${g.opacity} viewport=${size} state=${state.name}`);
                     }
                 }
             } finally { await close(p); }
@@ -800,6 +880,20 @@ const gates = {
             }}finally{window.close();}
             console.log(`R-E1 reader states and sampled pages examined=${readerExamined}`);
         }
+        if(stage>=4) for(const size of ['D1440','S844','P390']) {
+            const p=await open(size,'light',SEARCH);
+            try {
+                for await(const state of accessStates(p,size)) {
+                    if(prove&&proofCase==='search-copy'&&state.name==='closed')await p.locator('.b-sq').evaluate(el=>el.insertAdjacentHTML('beforeend','<p>In this mockup</p>'));
+                    const text=await p.locator(state.root).innerText();
+                    const hit=forbidden.filter(f=>text.includes(f));
+                    assert(!hit.length,`${SEARCH} ${size} ${state.name} explainer text: ${hit.join(', ')}`);
+                    const empty=await p.locator(state.root).locator('.b-sg h2,.b-sch h3').evaluateAll(heads=>heads.filter(h=>!h.textContent.trim()||(!h.querySelector('[aria-expanded="false"]')&&!h.nextElementSibling?.textContent.trim())).map(h=>h.textContent));
+                    assert(!empty.length,`${SEARCH} ${size} empty headings: ${empty.join(', ')}`);
+                    readerExamined++;
+                }
+            }finally{await close(p);}
+        }
         let bad = [];
         const inputs = prove && (stage===1||proofCase==='copy') ? forbidden.map(s => ['HTML fixture ' + s, `<p>${s}</p>`]) : files.map(f => [f, null]);
         for (const [f, source] of inputs) {
@@ -825,18 +919,18 @@ const gates = {
     'R-E2': async () => {
         let n = 0;
         const fails = [];
-        for (const size of ['D1440', 'P390'])
-            for (const path of (stage>=2?['/','/Cat/','/EN/book/1','/picture-credits/']:['/','/Cat/','/EN/book/1'])) {
+        for (const size of (stage>=4 ? ['D1440','S844','P390'] : ['D1440', 'P390']))
+            for (const path of (stage>=2?['/','/Cat/','/EN/book/1','/picture-credits/',...(stage>=4?[SEARCH]:[])]:['/','/Cat/','/EN/book/1'])) {
                 const p = await open(size, 'light', path, false, true);
-                if (prove)
+                if (prove && (proofCase!=='search-toast'||path===SEARCH))
                     // A real first-visit toast sits in view (fixed), as the old .reader-tip did.
                     await p.evaluate(() => { const el = document.createElement('div'); el.className = 'reader-tip'; el.role = 'status'; el.textContent = 'First visit tip'; el.style.cssText = 'position:fixed;left:16px;bottom:16px;padding:12px;background:#fff'; document.body.append(el); });
                 await p.waitForTimeout(3000);
                 const bad = await p.evaluate(() => {
                     const visible = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth && getComputedStyle(el).visibility !== 'hidden'; };
-                    const alerts = [...document.querySelectorAll('[role="status"],[role="alert"],[role="dialog"],[aria-live],.reader-tip')].filter(el => visible(el) && el.textContent.trim());
+                    const alerts = [...document.querySelectorAll('[role="status"],[role="alert"],[role="dialog"],[aria-live],.reader-tip')].filter(el => visible(el) && getComputedStyle(el).clip !== 'rect(0px, 0px, 0px, 0px)' && el.textContent.trim());
                     // These are the existing reader header, its contents bar and the site's nav.
-                    const allow = ['.page-header', '.simple-header', '.reader-controls', '.b-nav', '.b-rh'];
+                    const allow = ['.page-header', '.simple-header', '.reader-controls', '.b-nav', '.b-rh', '.pg-search .b-sr-w']; // Search's required sticky work index is page content.
                     const fixed = [...document.querySelectorAll('body *')].filter(el => visible(el) && ['fixed', 'sticky'].includes(getComputedStyle(el).position) && !allow.some(s => el.matches(s)));
                     return [...alerts, ...fixed].map(el => el.tagName + '.' + el.className + ' ' + el.textContent.replace(/\s+/g, ' ').trim().slice(0, 70));
                 });
@@ -1101,6 +1195,7 @@ if(stage>=2) Object.assign(gates, {
 async function readerReady(page) {
     await page.waitForFunction(() => document.querySelector('.reader-body .tok[tabindex="0"]') || document.querySelector('.reader-body[data-view="english"]'), null, {timeout: 10000});
     await page.waitForTimeout(150);
+    await settleFonts(page);
 }
 async function openReader(size, path = READER, theme = 'light') {
     const page = await open(size, theme, path);
@@ -1113,12 +1208,14 @@ async function setView(page, view) {
     await page.evaluate(v => document.querySelector(`[data-reader-view="${v}"]`).click(), view);
     await page.waitForFunction(v => document.querySelector('.reader-body')?.dataset.view === v, view);
     await page.waitForTimeout(100);
+    await settleFonts(page);
 }
 async function openWord(page, near = 'first') {
     const tok = near === 'first' ? page.locator('.b-gc .tok >> visible=true').first() : page.locator(near);
     await tok.click();
     await page.locator('.b-side').waitFor({timeout: 3000});
     await page.waitForTimeout(500);
+    await settleFonts(page);
 }
 // The Greek column B's formula gives (R-R5), from an unwrapped measurement of
 // the lines taken here, not the reader's own published value.
@@ -1638,8 +1735,6 @@ if (stage >= 3) Object.assign(gates, {
  },
 });
 
-if (only && !gates[only])
-    throw Error(`Unknown gate ${only}`);
 // A proof is valid only when its own mutation causes the named assertion.
 const proofMessages = {
     'R-W1': /AthPol crumb=Works \/ Rhetoric and poetics/,
@@ -1683,6 +1778,173 @@ const sidewaysProofs = {
     'desktop-poster': /S844 home gap=/,
     'two-columns': /S844 .*works grid has more than one column/,
 };
+// Parse real Svelte CSS, so selectors inside :global(), @media, and @container
+// count, while comments and declaration strings cannot trigger this gate.
+function bStyleSelectors(source, filename) {
+    const {parse} = createRequire(import.meta.url)('svelte/compiler');
+    const css = parse(source, {filename, modern:true}).css;
+    const found=[];
+    const visit = node => {
+        if (!node || typeof node !== 'object') return;
+        if(node.type==='ClassSelector' && (node.name==='dir-b'||node.name==='frame'||node.name.startsWith('b-')))found.push('.'+node.name);
+        for(const value of Object.values(node)) if(Array.isArray(value))value.forEach(visit);else if(value&&typeof value==='object')visit(value);
+    };
+    visit(css);return {found, styleBlocks: css ? 1 : 0};
+}
+if(stage>=4) Object.assign(gates, {
+    'R-C1-static': async()=>{
+        const files=[...walk(join(app,'src'),/\.svelte$/),...walk(fileURLToPath(new URL('../../shared/components/',import.meta.url)),/\.svelte$/)];
+        assert(files.length>0,'examined=0 Svelte files');
+        const bad=[];
+        let styleBlocks=0;
+        for(const [i,file] of files.entries()) {
+            let source=readFileSync(file,'utf8');
+            if(prove&&proofCase==='no-styles')source=source.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi,'');
+            if(prove&&proofCase!=='no-styles'&&i===0) source=source.includes('<style') ? source.replace(/(<style[^>]*>)/,'$1\n:global(.dir-b .b-rh){height:60px}\n') : source+'\n<style>:global(.dir-b .b-rh){height:60px}</style>';
+            const {found,styleBlocks: blocks}=bStyleSelectors(source,file);
+            styleBlocks+=blocks;
+            console.log(`R-C1-static examined ${file}`);
+            if(found.length)bad.push(`${file}: ${found.join(', ')}`);
+        }
+        console.log(`R-C1-static style blocks examined=${styleBlocks}`);
+        assert(styleBlocks>0,'examined=0 Svelte style blocks');
+        assert(!bad.length,`B selectors in Svelte style: ${bad.join('; ')}`);
+        return files.length;
+    },
+    'R-S1': async()=>{
+        let n=0;
+        // This query reaches XXXVIII.10 967b20, wider than the kit's 90px track.
+        for(const size of ['D1920','D1440','P390']) {
+            const p=await open(size,'light','/search?q=κριθὰς&w=Prob');
+            try {
+                await expandSearch(p);
+                const hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                assert(hits.some(h=>h.text==='XXXVIII.10 967b20'),`${size} Problemata sample missed XXXVIII.10 967b20`);
+                for(const h of hits) {
+                    assert(searchRefOnOneLine(h),`${size} hit ref wraps: ${h.text}`);
+                    assert(searchRefBeforeColumn(h),`${size} hit ref overlaps column: ${h.text} right=${h.refRight} column-left=${h.columnLeft}`);
+                    n++;
+                }
+                const layout=await p.locator('.b-sg[data-result-work="Prob"]').evaluate(group=>({
+                    width:group.getBoundingClientRect().width,
+                    hits:[...group.querySelectorAll('.b-hit')].map(hit=>{
+                        const ref=hit.querySelector('.b-hr').getBoundingClientRect();
+                        const greek=hit.querySelector('.b-hg').getBoundingClientRect();
+                        const box=hit.getBoundingClientRect();
+                        return {left:greek.left,gap:greek.left-ref.right,width:box.width,right:greek.right,hitRight:box.right};
+                    }),
+                }));
+                assert(layout.hits.length>1,`${size} Problemata examined<2 hits`);
+                for(const h of layout.hits) {
+                    assert(h.width<=1080.5&&h.right<=h.hitRight+.5,`${size} hit content exceeds 1080px cap: ${JSON.stringify(h)}`);
+                    if(size!=='P390') {
+                        assert(Math.abs(h.gap-18)<.5,`${size} Problemata gap=${h.gap}`);
+                        assert(Math.abs(h.left-layout.hits[0].left)<.5,`${size} Problemata Greek columns differ`);
+                    }
+                }
+                if(size==='D1920')assert(layout.width>1080&&layout.hits.every(h=>Math.abs(h.width-1080)<.5),`${size} 1080px cap not exercised: ${JSON.stringify(layout)}`);
+                console.log(`R-S1 ${size} Problemata query=κριθὰς refs=${hits.length}`);
+            } finally {await close(p);}
+        }
+        for(const size of ['D1440','P390']) {
+            const p=await open(size,'light',SEARCH);
+            try {
+                const color=await p.locator('.b-sr-big').evaluate(el=>getComputedStyle(el).color);
+                assert(color==='rgb(226, 56, 46)',`${size} search count color=${color}`);n++;
+                const layout=await p.locator('.b-sr-w').evaluate(el=>({position:getComputedStyle(el).position,direction:getComputedStyle(el).flexDirection,overflow:getComputedStyle(el).overflowX}));
+                assert(size==='P390' ? layout.direction==='row'&&['auto','scroll'].includes(layout.overflow) : layout.position==='sticky',`${size} work index layout=${JSON.stringify(layout)}`);n++;
+                if(prove&&proofCase==='hash-link')await p.locator('.b-sq-o a').first().evaluate(el=>el.setAttribute('href','#'));
+                const hashes=await p.locator('a[href="#"]').count();
+                assert(hashes===0,`${size} search href="#" count=${hashes}`);n++;
+                // Every page and every collapsed group, not only the first visible hit.
+                const status=await p.locator('.pager-status').count() ? await p.locator('.pager-status').first().textContent() : '';
+                const pageCount=Number(status.match(/of (\d+)/)?.[1]||1);
+                let refs=0, wrappedRefInjected=false, overlapRefInjected=false;
+                const invalidRefs=[];
+                for(let pageIdx=0;pageIdx<pageCount;pageIdx++) {
+                    await expandSearch(p);
+                    let hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                    if(prove&&proofCase==='overlap-ref'&&!overlapRefInjected&&size==='D1440') {
+                        // Keep nowrap and the 18px gap; shrink only the ref track.
+                        const target=hits.find(h=>h.visible&&h.lines===1&&h.textWidth>78);
+                        if(target) {
+                            await p.locator('.b-hit').nth(target.index).evaluate(el=>{
+                                el.style.gridTemplateColumns='60px minmax(0,1fr)';
+                            });
+                            await settleFonts(p);
+                            hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                            overlapRefInjected=true;
+                        }
+                    }
+                    if(prove&&proofCase==='wrapped-ref'&&!wrappedRefInjected) {
+                        // Early Categories refs can fit inside 60px. Keep the exact
+                        // mutation, but choose a measured ref that exceeds its width.
+                        const target=hits.find(h=>h.visible&&h.lines===1&&h.textWidth>60&&/\s/.test(h.text));
+                        if(target) {
+                            await p.locator('.b-hit .b-hr').nth(target.index).evaluate(el=>{
+                                el.dataset.wrapProof='true';
+                                el.style.cssText='display:block;white-space:normal;width:60px;min-width:0;min-height:0;height:auto';
+                            });
+                            await settleFonts(p);
+                            hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                            assert(hits.filter(h=>h.proof).length===1,`${size} wrapped-ref proof lost its target before measurement`);
+                            wrappedRefInjected=true;
+                        }
+                    }
+                    assert(hits.length>0,`${size} page ${pageIdx+1} examined=0 hit refs`);
+                    for(const h of hits) {
+                        if(h.scheme==='bekker'&&!(h.lang==='eng'?/^[IVXLC]+\.\d+ \d{1,4}[ab]$/:/^[IVXLC]+\.\d+ \d{1,4}[ab]\d{1,2}$/).test(h.text))invalidRefs.push(h.text);
+                        assert(searchRefOnOneLine(h),`${size} hit ref wraps: ${h.text} lines=${h.lines} height=${h.height} line-height=${h.lineHeight} visible=${h.visible} proof=${h.proof}`);
+                        assert(searchRefBeforeColumn(h),`${size} hit ref overlaps column: ${h.text} right=${h.refRight} column-left=${h.columnLeft}`);
+                        refs++;
+                    }
+                    if(pageIdx+1<pageCount){await p.locator('.pager').first().getByRole('button',{name:'Next ›'}).click();await searchReady(p);}
+                }
+                if(prove&&proofCase==='overlap-ref'&&size==='D1440')assert(overlapRefInjected,`${size} overlap-ref proof examined=0 refs wider than 78px`);
+                if(prove&&proofCase==='wrapped-ref')assert(wrappedRefInjected,`${size} wrapped-ref proof examined=0 refs wider than 60px`);
+                console.log(`R-S1 ${size} pages=${pageCount} refs=${refs}`);n+=refs;
+                const before=await p.locator('.b-sg').evaluateAll(els=>els.map(el=>el.dataset.resultWork).join(','));
+                const filters=p.locator('[data-work-filter]');
+                assert(await filters.count()>1,`${size} examined<2 work filters`);
+                // Pick a work absent on this page, when possible, to prove content changes.
+                const ids=await filters.evaluateAll(els=>els.map(el=>el.dataset.workFilter));
+                const target=ids.find(id=>!before.split(',').includes(id))||ids[ids.length-1];
+                const filter=p.locator(`[data-work-filter="${target}"]`);
+                if(prove&&proofCase==='dead-filter')await filter.evaluate(el=>el.addEventListener('click',e=>e.stopImmediatePropagation(),true));
+                await filter.click();await searchReady(p);
+                const after=await p.locator('.b-sg').evaluateAll(els=>els.map(el=>el.dataset.resultWork).join(','));
+                assert(before!==after&&after.split(',').every(id=>id===target),`${size} work filter did not change hits: before=${before} after=${after}`);n++;
+                const greekQuery=await p.getByRole('searchbox',{name:'Search Greek',exact:true}).inputValue();
+                let englishQuery='';
+                for(const language of ['English','Both','Greek','English','Both']) {
+                    const button=p.locator(`[data-search-language="${language}"]`);
+                    if(prove&&proofCase==='dead-language'&&language==='English')await button.evaluate(el=>el.addEventListener('click',e=>e.stopImmediatePropagation(),true));
+                    await button.click();
+                    await p.waitForFunction(()=>document.querySelector('.b-search-page')?.dataset.searchBusy==='false');
+                    const mode=await p.locator('.b-search-page').getAttribute('data-query-mode');
+                    assert(mode===language&&await button.getAttribute('aria-pressed')==='true',`${size} language ${language} did not change live query mode: ${mode}`);
+                    if(language==='English') {
+                        const input=p.getByRole('searchbox',{name:'Search English',exact:true});
+                        if(prove&&proofCase==='copy-language')await input.fill(greekQuery);
+                        assert(await input.inputValue()===englishQuery,`${size} language English copied a query across languages or lost its own query`);
+                        if(!englishQuery) {
+                            englishQuery='virtue';await input.fill(englishQuery);
+                            await p.locator('.b-sq-f button[type=submit]').first().click();
+                        }
+                    } else {
+                        assert(await p.getByRole('searchbox',{name:'Search Greek',exact:true}).inputValue()===greekQuery,`${size} language ${language} lost its Greek query`);
+                        if(language==='Both')assert(await p.getByRole('searchbox',{name:'Search English',exact:true}).inputValue()===englishQuery,`${size} language Both lost its English query`);
+                    }
+                    await searchReady(p);
+                    const url=new URL(p.url());
+                    const valid=language==='English' ? url.searchParams.get('e')===englishQuery&&!url.searchParams.has('g') : language==='Greek' ? url.searchParams.get('g')===greekQuery&&!url.searchParams.has('e') : url.searchParams.get('g')===greekQuery&&url.searchParams.get('e')===englishQuery;
+                    assert(valid,`${size} language ${language} did not change live query mode: ${mode} ${url.search}`);n++;
+                }
+                assert(!invalidRefs.length,`${size} Bekker ref format: ${invalidRefs.slice(0,12).join('; ')}`);
+            }finally{await close(p);}
+        }return n;
+    },
+});
 const stageThreeProofs = {
     ...stageTwoProofs,
     'R-C1': {'home': /home title color=rgb\(0, 0, 0\)/, 'reader': /reader \.b-rh height=/},
@@ -1701,31 +1963,46 @@ const stageThreeProofs = {
     'R-R10': {'bold-hit': /Greek elements bold or italic/},
     'R-A4': {'no-tabindex': /Tab from the head never reached a Greek word/, 'escape-layers': /Escape with Contents open closed the word panel too/, 'escape-help': /Escape with Help open closed the word panel too/, 'escape-note': /Escape with a footnote open closed the word panel too/},
 };
+const stageFourProofs = {
+    ...stageThreeProofs,
+    'R-C1': {...stageThreeProofs['R-C1'],search:/search \.b-sr-big color=rgb\(0, 0, 0\)/},
+    'R-C1-static': {'svelte-style':/B selectors in Svelte style:.*\.dir-b, \.b-rh/, 'no-styles':/examined=0 Svelte style blocks/},
+    'R-S1': {'overlap-ref':/D1440 hit ref overlaps column:/,'wrapped-ref':/D1440 hit ref wraps:/,'dead-filter':/D1440 work filter did not change hits:/,'dead-language':/D1440 language English did not change live query mode:/,'copy-language':/D1440 language English copied a query across languages/,'hash-link':/D1440 search href="#" count=1/},
+    'R-A1': {...stageThreeProofs['R-A1'],'search-target':/D1440 BUTTON Greek 34×34/,'search-link-no-after':/D1440 (A|BUTTON) [^×]+ [0-9.]+×[0-9.]+ state=/,'search-link-no-pointer':/D1440 (A|BUTTON) [^×]+ [0-9.]+×[0-9.]+ state=/},
+    'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <input.*aria-label="Search Greek"/},
+    'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.b-options-toggle.*"More options" ratio=.*color=rgb\(226, 56, 46\)/},
+    'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},
+    'R-E2': {'reader-tip':/unsolicited overlay:.*reader-tip/,'search-toast':/search\?q=ἀρετή D1440 unsolicited overlay:.*reader-tip/},
+};
+if (only && !gates[only]) throw Error(`Unknown gate ${only}`);
 let failed = 0;
 let proofFailed = false;
 try {
     for (const [id, run] of Object.entries(gates)) {
         if (only && only !== id) continue;
-        const variants = stage >= 3 && stageThreeProofs[id] ? stageThreeProofs[id] : stage >= 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
+        const variants = stage >= 4 && stageFourProofs[id] ? stageFourProofs[id] : stage >= 3 && stageThreeProofs[id] ? stageThreeProofs[id] : stage >= 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
         const cases = prove && variants ? Object.keys(variants) : ['default'];
         for (const variant of cases) {
             proofCase = variant;
+            gateContext = {path: 'source files', size: 'n/a', theme: 'n/a'};
+            gatePage = null;
             const expected = variants ? variants[variant] : proofMessages[id];
             try {
                 const n = await run();
                 assert(n > 0, 'examined=0');
                 if (prove) {
                     proofFailed = true;
-                    console.error(`FAIL ${id} proof=${variant}: mutation was not caught`);
+                    console.error(`FAIL ${id} ${failureMessage(`proof=${variant}: mutation was not caught`)}`);
                 } else console.log(`PASS ${id} examined=${n}`);
             } catch (e) {
+                e.message = failureMessage(e.message);
                 failed++;
                 if (prove) {
                     if (expected && expected.test(e.message)) {
                         console.log(`PROVE-CAUGHT ${id} case=${variant} expected=${expected}`);
                     } else {
                         proofFailed = true;
-                        console.error(`PROVE-FAILED ${id} case=${variant}: unrelated failure; expected ${expected}`);
+                        console.error(`PROVE-FAILED ${id} ${failureMessage(`case=${variant}: unrelated failure; expected ${expected}`)}`);
                     }
                 }
                 console.error(`FAIL ${id} ${e.message.split('\n')[0]}${e.message.includes('Permission denied (1100)') ? ' — sandbox: bootstrap_check_in Permission denied (1100)' : ''}`);
