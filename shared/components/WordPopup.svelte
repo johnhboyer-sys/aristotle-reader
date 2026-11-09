@@ -241,7 +241,7 @@
   function onKey(e: KeyboardEvent) {
     // B: Escape closes an open menu or the contents first, not the panel too.
     // The shell marks an Escape it consumed (Contents, Book menu).
-    if (e.defaultPrevented) return;
+    if (b && e.defaultPrevented) return;
     if (b && document.querySelector('.b-aa, .b-pk, .b-toc:not([hidden]), .b-bkm[open]')) return;
     if (e.key === 'Escape') onClose();
   }

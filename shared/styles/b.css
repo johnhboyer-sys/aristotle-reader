@@ -309,7 +309,7 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-ec .bk-num.approx { font-style: italic; opacity: 1; }
 .dir-b .b-row[style*="--n:1"] .b-ec .bk-num { left: -60px; width: 48px; }
 .dir-b .b-text.busse .bk-num { display: none; }
-.dir-b .b-ec .eng-table { font-size: .85em; }
+.dir-b .b-ec .eng-table { font-size: 1em; display: block; max-width: 100%; overflow-x: auto; }
 
 /* Footnote marks keep the kit's look and spacing; a transparent ::after
    gives each a 40px target (R-A1). */

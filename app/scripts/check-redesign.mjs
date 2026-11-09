@@ -1,4 +1,4 @@
-import { expandSearch, settleFonts, readSearchRefs, searchRefOnOneLine, searchRefBeforeColumn, readControlBoxes } from './redesign-browser.mjs';
+import { expandSearch, settleFonts, readSearchRefs, searchRefOnOneLine, searchRefBeforeColumn, readControlBoxes, measureGreekLines, readReadingSizes, searchRefFormat, rawGlossaryBodies, readReaderOverlaps, readFootnoteTargets } from './redesign-browser.mjs';
 import { Window } from 'happy-dom';
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -42,8 +42,8 @@ const registrySource = readFileSync(new URL('../../shared/lib/works.ts', import.
 const registryJS = ts.transpileModule(registrySource, {compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}}).outputText;
 const registry = await import('data:text/javascript;base64,'+Buffer.from(registryJS).toString('base64'));
 const workIds = registry.WORKS.map(w=>w.id);
-// Load the production TypeScript helpers, including their imports, without a
-// second hand-written decoder or glossary matcher in the gate.
+// Load production helpers for mappings and URL parsing. Expected glossary
+// body text comes from a separate raw Markdown reading below.
 const sourceModules = new Map();
 async function loadSource(file) {
     file = resolve(file);
@@ -154,6 +154,10 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
     else await settleFonts(page);
     if (stage >= 5 && await page.locator('.b-wp').count()) await page.waitForFunction(() => document.querySelector('.b-wp')?.dataset.fitted === 'true');
     return page;
+}
+async function checkSearchHashes(page, label) {
+    const count = await page.locator('a[href="#"]').count();
+    assert(count === 0, `${label} search href="#" count=${count}`);
 }
 async function searchReady(page) {
     await page.waitForFunction(() => document.querySelector('.b-search-page')?.dataset.searchBusy === 'false' && !!document.querySelector('.b-sr-big'), null, {timeout: 120000});
@@ -358,10 +362,39 @@ const gates = {
                 assert(/^['"]?Gentium Book Plus/.test(family),`lemma .b-wp font-family=${family}`);n++;
             } finally {await close(p);}
         }
+        const remaining = ['/404.html','/attribution/','/phrases/','/support/','/desktop/','/advanced/','/EN/glossary/', ...(stage >= 5 ? ['/lemma/'] : [])];
+        for (const path of remaining) {
+            const p = await open('D1440', 'light', path);
+            try {
+                if (prove && proofCase === 'aux-css' && path === '/404.html')
+                    await p.evaluate(() => { for (const sheet of document.styleSheets) sheet.disabled = true; });
+                const sentinel = await p.evaluate(() => {
+                    const flatten = rules => [...rules].flatMap(r => [r, ...(r.cssRules ? flatten(r.cssRules) : [])]);
+                    const sheets = [...document.styleSheets].filter(sheet => {
+                        try { return flatten(sheet.cssRules).some(r => r.cssText.includes('--greek-w')); } catch { return false; }
+                    });
+                    // Older page kinds have no B frame. A temporary frame tests
+                    // a real B rule in the loaded sheet and its computed token.
+                    const probe = document.createElement('div'); probe.className = 'frame dir-b'; document.body.append(probe);
+                    try {
+                        const matches = sheets.some(sheet => !sheet.disabled && flatten(sheet.cssRules).some(r =>
+                            r.selectorText && probe.matches(r.selectorText) && r.style?.getPropertyValue('--red')));
+                        return {sheets: sheets.length, matches, red: getComputedStyle(probe).getPropertyValue('--red').trim()};
+                    } finally { probe.remove(); }
+                });
+                assert(sentinel.sheets > 0 && sentinel.matches && sentinel.red === '#e2382e', `${path} B CSS sentinel missing: ${JSON.stringify(sentinel)}`);
+                n++;
+            } finally { await close(p); }
+        }
         return n;
     },
     'R-C2' : async () => {
-        const files = walk(join(dist, '_astro'), /\.(css|js)$/);
+        let files = walk(join(dist, '_astro'), /\.(css|js)$/);
+        if (prove && proofCase === 'no-css') files = files.filter(f => !f.endsWith('.css'));
+        if (prove && proofCase === 'no-js') files = files.filter(f => !f.endsWith('.js'));
+        const cssCount = files.filter(f => f.endsWith('.css')).length, jsCount = files.filter(f => f.endsWith('.js')).length;
+        console.log(`R-C2 built CSS files=${cssCount} JS files=${jsCount}`);
+        assert(cssCount > 0 && jsCount > 0, `R-C2 missing built assets: CSS files=${cssCount} JS files=${jsCount}`);
         const samples = ['index.html', 'Cat/index.html', 'EN/book/1/index.html', 'search/index.html'];
         const lemma = walk(join(dist, 'lemma'), /\.html$/).find(f => f !== join(dist, 'lemma/index.html'));
         assert(lemma, 'no built lemma sample');
@@ -375,7 +408,7 @@ const gates = {
             inputs.push([file + ' inline style/script', inline]);
             inputs.push([file + ' style attributes', attributes(html)]);
         }
-        if (prove) inputs.push(['injected fixture style attribute', attributes('<p style="width:var(--gw, max-content)">fixture</p>')]);
+        if (prove && !['no-css','no-js'].includes(proofCase)) inputs.push(['injected fixture style attribute', attributes('<p style="width:var(--gw, max-content)">fixture</p>')]);
         const bad = inputs.filter(([,text]) => /--gw\b/.test(text)).map(([file]) => file);
         assert(!bad.length, `legacy width token: ${bad.join(', ')}`);
         return inputs.length;
@@ -708,17 +741,41 @@ const gates = {
         for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size,'light',path);
             try {
-                if (prove && !['fn-hit','search-target','search-link-no-after','search-link-no-pointer'].includes(proofCase))
+                if (prove && !['fn-hit','chapter-fn','late-fn','reading-button','search-target','search-link-no-after','search-link-no-pointer'].includes(proofCase))
                     await style(p, '.dir-b [data-theme-toggle]{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
                 if (prove && proofCase === 'fn-hit' && path === READER) await style(p, '.dir-b .fn-marker::after{content:none!important}');
                 if(prove&&proofCase==='search-target'&&path===SEARCH)await style(p,'.dir-b [data-search-language=Greek]{min-width:34px!important;min-height:34px!important;width:34px!important;height:34px!important;padding:0!important}');
-                if (prove && path === SEARCH && proofCase === 'search-link-no-after')
-                    await style(p, '.b-he > span a::after,.b-sr-l a::after,.b-sr-l button::after{content:none!important}');
-                if (prove && path === SEARCH && proofCase === 'search-link-no-pointer')
-                    await style(p, '.b-he > span a::after,.b-sr-l a::after,.b-sr-l button::after{content:""!important;width:40px!important;height:40px!important;pointer-events:none!important}');
+                if (prove && path === READER) {
+                    if (proofCase === 'reading-button') await p.locator('.b-ec').first().evaluate(el => el.insertAdjacentHTML('afterbegin','<button style="width:20px;height:20px;min-width:0;min-height:0;padding:0">Gate reading button</button>'));
+                    if (['chapter-fn','late-fn'].includes(proofCase)) {
+                        if (proofCase === 'chapter-fn') await p.evaluate(() => {
+                            let title = document.querySelector('.b-cht');
+                            if (!title) { title = document.createElement('p'); title.className = 'b-cht'; document.querySelector('.b-text').append(title); }
+                            const mark = document.querySelector('.b-ec .fn-marker').cloneNode(true);
+                            mark.removeAttribute('id'); title.append(mark);
+                        });
+                        const target = proofCase === 'chapter-fn' ? p.locator('.b-cht .fn-marker').last() : p.locator('.b-ec .fn-marker').last();
+                        assert(await target.count() > 0, `R-A1 ${proofCase} proof has no target`);
+                        await target.evaluate(el => el.classList.add('gate-miss'));
+                        await style(p, '.gate-miss.fn-marker::after{content:none!important}');
+                    }
+                }
+                let linkMutated = false;
                 for await (const state of accessStates(p, size)) {
-                    // Running text is exempt: Greek word tokens, and links and
-                    // footnote marks inside the reading text (checked below).
+                    if (prove && path === SEARCH && proofCase.startsWith('search-link-no-') && !linkMutated) {
+                        const baseline = await p.locator(state.root).locator(controls).and(p.locator(':not(.grammata-mount *)')).evaluateAll(readControlBoxes);
+                        const small = baseline.filter(c => c.w < 39.99 || c.h < 39.99);
+                        assert(!small.length, `R-A1 search link proof baseline has undersized controls: ${JSON.stringify(small)}`);
+                        const links = p.locator('.b-sr-l a').filter({hasText: 'Lexicon'});
+                        assert(await links.count() > 0, 'R-A1 search link proof has no Lexicon link');
+                        await links.first().evaluate(el => el.classList.add('gate-search-link'));
+                        await style(p, proofCase === 'search-link-no-after'
+                            ? '.gate-search-link::after{content:none!important}'
+                            : '.gate-search-link::after{pointer-events:none!important}');
+                        linkMutated = true;
+                    }
+                    // Exempt tokens and running-text links; footnote marks get
+                    // their own hit test below, including chapter-title marks.
                     // LemmaPage.astro's grammata script contract forbids styling
                     // inside the mount; its controls belong to the widget.
                     exempt += await p.locator(state.root).locator(controls).evaluateAll(els =>
@@ -733,7 +790,7 @@ const gates = {
                 }
                 if (path === READER) {
                     // Each footnote mark answers 18px left, right, above and below its centre.
-                    const ids = await p.locator('.b-ec .fn-marker').evaluateAll(els => els.filter(el => el.getClientRects().length).slice(0, 16).map((el, i) => (el.dataset.gate = String(i))));
+                    const ids = await p.locator('.b-gc .fn-marker,.b-ec .fn-marker,.b-cht .fn-marker').evaluateAll(readFootnoteTargets);
                     assert(ids.length > 0, `${path} ${size} examined=0 footnote marks`);
                     for (const i of ids) {
                         const miss = await p.evaluate(i => {
@@ -913,18 +970,23 @@ const gates = {
             const readers=files.filter(f=>/\/book\/\d+\/index\.html$/.test(f)).sort();
             const sample=readers.filter((_,i)=>i%Math.max(1,Math.floor(readers.length/20))===0).slice(0,20);
             assert(sample.length===20,`examined=${sample.length} sampled reader pages`);
-            const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});
-            try{for(const f of sample){
-                // The page's headings outside the text: its book head and contents
-                // (a reader page carries the whole book; parse only those parts).
-                const html=readFileSync(f,'utf8');
-                window.document.body.innerHTML=`<div class="b-text">${html.match(/<header class="b-bookh"[\s\S]*?<\/header>/)?.[0]??''}</div>${html.match(/<aside class="b-toc"[\s\S]*?<\/aside>/)?.[0]??''}`;
-                const heads=[...window.document.querySelectorAll('.b-text h1,.b-text h2,.b-text h3,.b-toc h2')];
-                assert(heads.length>0,`${f} examined=0 reader headings`);
-                const empty=heads.filter(h=>h.nextElementSibling&&!h.nextElementSibling.textContent.trim()).map(h=>h.textContent);
-                assert(!empty.length,`${f} empty headings: ${empty.join(', ')}`);
-                readerExamined++;
-            }}finally{window.close();}
+            for(const f of sample){
+                const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});
+                try {
+                    // Keep the full rendered body; island props duplicate the book
+                    // as JSON and are not content or headings.
+                    window.document.body.innerHTML=readFileSync(f,'utf8').replace(/<astro-island\b[^>]*>/g, '<astro-island>');
+                    if (prove && proofCase === 'reader-tail-heading' && f === sample[0])
+                        window.document.querySelector('.b-text').insertAdjacentHTML('beforeend','<h2>Gate tail heading</h2>');
+                    if (prove && proofCase === 'reader-empty-chapter' && f === sample[0])
+                        window.document.querySelector('.b-chh').insertAdjacentHTML('beforeend','<h3>Gate empty chapter</h3>');
+                    const heads=[...window.document.querySelectorAll('.b-text h1,.b-text h2,.b-text h3,.b-text h4,.b-text h5,.b-text h6,.b-text .b-cht,.b-text section > header,.b-text .b-chh,.b-toc h2')];
+                    assert(heads.length>0,`${f} examined=0 reader headings`);
+                    const empty=heads.filter(h=>!h.nextElementSibling?.textContent.trim()).map(h=>h.textContent);
+                    assert(!empty.length,`${f} empty headings: ${empty.join(', ')}`);
+                    readerExamined++;
+                } finally { await window.happyDOM.close(); }
+            }
             console.log(`R-E1 reader states and sampled pages examined=${readerExamined}`);
         }
         if(stage>=4) for(const size of ['D1440','S844','P390']) {
@@ -1270,13 +1332,10 @@ async function openWord(page, near = 'first') {
 }
 // The Greek column B's formula gives (R-R5), from an unwrapped measurement of
 // the lines taken here, not the reader's own published value.
-const greekFormula = page => page.evaluate(() => {
+const greekFormula = async page => {
+    const measured = await page.locator('.reader-body .b-gc .b-lt').evaluateAll(measureGreekLines);
+    return page.evaluate(({w, changed, lines}) => {
     const body = document.querySelector('.reader-body');
-    body.classList.add('gw-measure');
-    let w = 0;
-    for (const g of body.querySelectorAll('.b-gc .b-lt')) w = Math.max(w, g.offsetWidth);
-    body.classList.remove('gw-measure');
-    w = Math.ceil(w);
     const row = [...body.querySelectorAll('.b-row')].find(r => r.querySelector('.b-ec') && r.querySelector('.b-gc .b-lt'));
     const gc = row.querySelector('.b-gc'), ec = row.querySelector('.b-ec');
     const n = [...row.children].filter(c => getComputedStyle(c).display !== 'none').length;
@@ -1284,30 +1343,19 @@ const greekFormula = page => page.evaluate(() => {
     const u = parseFloat(getComputedStyle(ec).fontSize);
     const avail = row.clientWidth - gap * (n - 1), emin = (n > 2 ? 18 : 26) * u * (n - 1), gmin = Math.min(w, 20 * u);
     const expected = Math.floor(avail >= w + emin ? w : avail - emin >= gmin ? avail - emin : avail * gmin / (gmin + emin));
-    return {w, n, gap, u, avail, expected, actual: gc.offsetWidth, gcol: body.style.getPropertyValue('--gcol'), greekW: body.style.getPropertyValue('--greek-w')};
-});
-// English line boxes over Greek word boxes, row by row, in the first rows.
-const overlaps = page => page.evaluate(() => {
-    let boxes = 0, hits = [];
-    const rows = [...document.querySelectorAll('.reader-body .b-row')].slice(0, 40);
-    for (const row of rows) {
-        const g = [...row.querySelectorAll('.b-gc .tok')].flatMap(t => [...t.getClientRects()]);
-        const e = [];
-        for (const ec of row.querySelectorAll('.b-ec')) {
-            const walker = document.createTreeWalker(ec, NodeFilter.SHOW_TEXT);
-            let node;
-            while ((node = walker.nextNode())) {
-                if (!node.textContent.trim() || node.parentElement.closest('.bk-num,.fn-marker')) continue;
-                const range = document.createRange(); range.selectNodeContents(node);
-                e.push(...range.getClientRects());
-            }
-        }
-        boxes += g.length + e.length;
-        for (const a of e) for (const b of g)
-            if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > .5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > .5) hits.push(Math.round(a.left) + ',' + Math.round(a.top));
-    }
-    return {boxes, hits: hits.length, at: hits.slice(0, 3)};
-});
+    return {w, changed, lines, n, gap, u, avail, expected, actual: gc.offsetWidth, gcol: body.style.getPropertyValue('--gcol'), greekW: body.style.getPropertyValue('--greek-w')};
+    }, measured);
+};
+async function checkReadingSizes(page, label) {
+    const sizes = await page.locator('.reader-body .b-gc,.reader-body .b-ec').evaluateAll(readReadingSizes);
+    assert(sizes.length > 0, `${label} examined=0 reading text descendants`);
+    const min = sizes[0];
+    console.log(`R-R5 ${label} smallest reading text=${min.size}px selector=${min.selector} examined=${sizes.length}`);
+    assert(min.size >= 18, `${label} reading text under 18px: ${min.selector} ${min.size}px`);
+}
+// English line boxes over Greek word boxes, across the whole book.
+const overlaps = page => page.locator('.reader-body .b-row').evaluateAll(readReaderOverlaps);
+
 // The work whose Greek has the longest Bekker lines (by characters), for R-R5.
 const longLineWork = (() => {
     let best = null;
@@ -1497,7 +1545,7 @@ if (stage >= 3) Object.assign(gates, {
  'R-R5': async () => {
   const long = longLineWork;
   console.log(`R-R5 long-line work: ${long.id} (${registry.getWork(long.id).title}, ${long.max} characters)`);
-  let n = 0, boxes = 0;
+  let n = 0, boxes = 0, rows = 0, unwrapped = 0;
   for (const id of ['EN', long.id]) for (const trans of ['', 'compare']) {
    if (trans && registry.visibleTranslations(registry.getWork(id)).length < 2) { console.log(`R-R5 ${id} has one translation: no Compare`); continue; }
    for (const size of ['D1440', 'D1280', 'W1200', 'D961', 'S844']) for (const panel of [false, true]) {
@@ -1520,21 +1568,55 @@ if (stage >= 3) Object.assign(gates, {
       assert(Math.abs(ln.ink - 45.27) <= 1, `EN ${size} first Bekker margin number "${ln.text}" ink starts at x${ln.ink.toFixed(2)}, column kit x45.27`);
      }
      if (panel) await openWord(p);
+     if (prove && ['no-nowrap','narrow-column','late-overlap','small-descendant','nothing-unwrapped'].includes(proofCase)) {
+      if (proofCase === 'no-nowrap') {
+       const before = await greekFormula(p);
+       await p.evaluate(() => {
+       const remove = rules => { for (let i = rules.length - 1; i >= 0; i--) {
+        const rule = rules[i];
+        if (rule.selectorText?.includes('.gw-measure') && rule.style?.whiteSpace === 'nowrap') rule.style.removeProperty('white-space');
+        if (rule.cssRules) remove(rule.cssRules);
+       }};
+       for (const sheet of document.styleSheets) { try { remove(sheet.cssRules); } catch {} }
+       });
+       const after = await greekFormula(p);
+       assert(before.w === after.w, `R-R5 nowrap removal changed independent measurement: ${before.w} → ${after.w}`);
+       console.log(`R-R5 removed site nowrap rule: independent width=${after.w}`);
+      }
+      if (['no-nowrap','narrow-column'].includes(proofCase)) await style(p, '.reader-body .b-row{grid-template-columns:80px minmax(0,1fr)!important}');
+      if (proofCase === 'late-overlap') {
+       await p.evaluate(() => {
+        const last = document.querySelector('.b-row:last-of-type') || [...document.querySelectorAll('.b-row')].at(-1);
+        while (document.querySelectorAll('.b-row').length < 41) last.parentElement.append(last.cloneNode(true));
+       });
+       await p.locator('.b-row').last().evaluate(row => {
+       const ec = row.querySelector('.b-ec'), gc = row.querySelector('.b-gc');
+       ec.style.cssText += `;position:relative;left:${gc.getBoundingClientRect().left - ec.getBoundingClientRect().left}px`;
+       });
+      }
+      if (proofCase === 'nothing-unwrapped') await style(p, '.b-lt,.b-lt *{white-space:nowrap!important}');
+      if (proofCase === 'small-descendant') await p.locator('.b-ec').first().evaluate(el => el.insertAdjacentHTML('beforeend','<span class="gate-small" style="font-size:12px">Gate text</span>'));
+     }
      const f = await greekFormula(p);
      const label = `${id} ${size}${trans ? ' Compare' : ''}${panel ? ' panel open' : ''}`;
      assert(f.w > 0, `${label} examined=0 Greek lines`);
+     if (f.actual < f.w - 1) assert(f.changed > 0, `${label} examined nothing unwrapped`);
      assert(Math.abs(f.actual - f.expected) <= 1, `${label} Greek column width=${f.actual} expected ${f.expected} (w=${f.w} n=${f.n} gap=${f.gap} u=${f.u} avail=${f.avail})`);
+     unwrapped += f.changed;
+     console.log(`R-R5 ${label} unwrapped lines=${f.lines} differing=${f.changed} width=${f.w}`);
      const o = await overlaps(p);
+     rows += o.rows;
+     console.log(`R-R5 ${label} rows examined=${o.rows}`);
      assert(o.boxes > 0, `${label} examined=0 boxes`);
      assert(o.hits === 0, `${label} ${o.hits} English line boxes overlap Greek words (at ${o.at.join(' ')})`);
      boxes += o.boxes;
-     const small = await p.evaluate(() => [...document.querySelectorAll('.reader-body .b-gc, .reader-body .b-ec')].filter(e => e.getClientRects().length && parseFloat(getComputedStyle(e).fontSize) < 18).length);
-     assert(small === 0, `${label} ${small} reading columns under 18px`);
+     await checkReadingSizes(p, label);
      n++;
     } finally { await close(p); }
    }
   }
-  console.log(`R-R5 boxes examined=${boxes}`);
+  assert(unwrapped > 0, 'R-R5 examined nothing unwrapped');
+  console.log(`R-R5 boxes examined=${boxes} rows examined=${rows}`);
   // A phone sets the reading text at the kit's phone size, measured in the
   // kit (kit-t/index.html#b-reader, 390px pane): 18px on a 30.96px line. The
   // sizes above never reach a phone, which is how 14.4px passed.
@@ -1547,6 +1629,7 @@ if (stage >= 3) Object.assign(gates, {
      if (prove && proofCase === 'phone-shrink') await style(p, '.reader-body.view-both .greek-col,.reader-body.view-both .english-col{font-size:.9rem!important;line-height:1.6!important}');
      for (const view of ['both', 'greek', 'english']) {
       await setView(p, view);
+      await checkReadingSizes(p, `${id} ${size} ${view}`);
       const cols = await p.evaluate(() => [...document.querySelectorAll('.reader-body .b-gc, .reader-body .b-ec')].filter(e => e.getClientRects().length).map(e => ({cls: e.className, size: parseFloat(getComputedStyle(e).fontSize), line: parseFloat(getComputedStyle(e).lineHeight)})));
       const label = `${id} ${size}${trans ? ' Compare' : ''} ${view}`;
       assert(cols.length > 0, `${label} examined=0 reading columns`);
@@ -1555,6 +1638,50 @@ if (stage >= 3) Object.assign(gates, {
       n++;
      }
     } finally { await close(p); }
+   }
+  }
+  for (const size of ['D1440', 'P390']) {
+   const label = `${READER} ${size} eng-table fixture`;
+   const p = await openReader(size, READER);
+   const fixture = p.locator('.b-ec [data-eng-table-fixture]');
+   try {
+    await setView(p, 'both');
+    await p.locator('.b-ec').first().evaluate(el => {
+     const table = document.createElement('table');
+     table.className = 'eng-table';
+     table.dataset.engTableFixture = '';
+     table.innerHTML = '<tbody><tr><td>fixture cell text</td><td>' + 'fixturewide'.repeat(16) + '</td></tr></tbody>';
+     el.append(table);
+    });
+    const count = await fixture.count();
+    console.log(`R-R5 ${READER} ${size} eng-table fixture examined=${count}`);
+    assert(count === 1, `${label} examined=${count} English table fixtures`);
+    if (prove && proofCase === 'small-table') await style(p, '.dir-b .b-ec .eng-table{font-size:.85em!important}');
+    if (prove && proofCase === 'table-overflow' && size === 'P390') {
+     // The phone reader also clips outer overflow. Disable that guard so the
+     // page-width check can observe a table that loses its own scroll box.
+     await style(p, '.dir-b .b-ec .eng-table{display:table!important;max-width:none!important}.dir-b .b-text{overflow-x:visible!important}');
+    }
+    await checkReadingSizes(p, label);
+    const page = await p.evaluate(() => ({width: document.documentElement.scrollWidth, viewport: innerWidth}));
+    assert(page.width <= page.viewport, `${label} horizontal page overflow: ${page.width} > ${page.viewport}`);
+    const layout = await fixture.evaluate(el => ({
+     display: getComputedStyle(el).display,
+     overflow: getComputedStyle(el).overflowX,
+     width: el.getBoundingClientRect().width,
+     columnWidth: el.closest('.b-ec').clientWidth,
+     scrollWidth: el.scrollWidth,
+     clientWidth: el.clientWidth,
+     rows: [...el.querySelectorAll('tr')].map(row => getComputedStyle(row).display),
+    }));
+    assert(layout.display === 'block' && layout.overflow === 'auto' && layout.width <= layout.columnWidth,
+     `${label} table does not contain horizontal scrolling: ${JSON.stringify(layout)}`);
+    assert(layout.rows.length > 0 && layout.rows.every(display => display === 'table-row'), `${label} table rows lost table layout`);
+    if (size === 'P390') assert(layout.scrollWidth > layout.clientWidth, `${label} fixture did not exceed the column`);
+    n++;
+   } finally {
+    await fixture.evaluateAll(els => els.forEach(el => el.remove()));
+    await close(p);
    }
   }
   return n;
@@ -1606,12 +1733,22 @@ if (stage >= 3) Object.assign(gates, {
    const p = await openReader(size, READER + (trans ? `?trans=${trans}` : ''));
    try {
     await setView(p, 'both');
-    if (prove && trans) await style(p, '.dir-b .b-text.word-open.trans-compare{padding-right:72px!important}');
+    if (prove && proofCase !== 'late-panel' && trans) await style(p, '.dir-b .b-text.word-open.trans-compare{padding-right:72px!important}');
     const pad = () => p.locator('.reader-body').evaluate(el => { const s = getComputedStyle(el); return `${s.paddingLeft} ${s.paddingRight}`; });
     const closed = await pad();
     await openWord(p);
     const label = `${size}${trans ? ' Compare' : ''}`;
-    const under = await p.evaluate(() => {
+    const under = {lines: 0, boxes: 0, gap: Infinity, steps: 0};
+    const end = await p.evaluate(() => Math.max(0, document.documentElement.scrollHeight - innerHeight));
+    const step = await p.evaluate(() => Math.max(1, innerHeight - document.querySelector('.b-rh').offsetHeight - 40));
+    if (prove && proofCase === 'late-panel') await p.locator('.b-ec').last().evaluate(el => {
+     const side = document.querySelector('.b-side').getBoundingClientRect();
+     el.style.cssText += `;position:relative;left:${side.left - el.getBoundingClientRect().left + 10}px`;
+    });
+    for (let y = 0; ; y = Math.min(end, y + step)) {
+     await p.evaluate(y => window.scrollTo(0, y), y);
+     await p.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+     const sample = await p.evaluate(() => {
      const side = document.querySelector('.b-side').getBoundingClientRect();
      let lines = 0, boxes = 0;
      for (const ec of document.querySelectorAll('.reader-body .b-ec')) {
@@ -1623,16 +1760,20 @@ if (stage >= 3) Object.assign(gates, {
        for (const r of range.getClientRects()) {
         if (r.bottom < 0 || r.top > innerHeight) continue;
         boxes++;
-        if (r.right > side.left + .5) lines++;
+        if (r.right > side.left + .5 && r.left < side.right && r.bottom > side.top && r.top < side.bottom) lines++;
        }
       }
      }
      return {lines, boxes, gap: parseFloat(getComputedStyle(document.querySelector('.reader-body .b-row')).columnGap)};
     });
+     under.lines += sample.lines; under.boxes += sample.boxes; under.gap = Math.min(under.gap, sample.gap); under.steps++;
+     if (y === end) break;
+    }
+    console.log(`R-R7 ${label} scroll steps=${under.steps} English boxes examined=${under.boxes} under panel=${under.lines}`);
     assert(under.boxes > 0, `${label} examined=0 English line boxes`);
     assert(under.lines === 0, `${label} ${under.lines} English line boxes under the panel`);
     assert(under.gap >= 56, `${label} column gap ${under.gap}px with the panel open`);
-    await p.evaluate(() => window.scrollBy(0, 2000));
+    await p.evaluate(() => window.scrollTo(0, 2000));
     await p.waitForTimeout(150);
     const place = await p.evaluate(() => ({side: document.querySelector('.b-side').getBoundingClientRect(), head: document.querySelector('.b-rh').getBoundingClientRect().bottom, h: innerHeight}));
     assert(Math.abs(place.side.top - place.head) <= 1 && Math.abs(place.side.bottom - place.h) <= 1 && Math.abs(place.side.width - 400) <= 1, `${label} panel top=${place.side.top} head=${place.head} bottom=${place.side.bottom}/${place.h} width=${place.side.width}`);
@@ -1869,6 +2010,7 @@ if(stage>=4) Object.assign(gates, {
             const p=await open(size,'light','/search?q=κριθὰς&w=Prob');
             try {
                 await expandSearch(p);
+                await checkSearchHashes(p, `${size} Problemata`);
                 const hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
                 assert(hits.some(h=>h.text==='XXXVIII.10 967b20'),`${size} Problemata sample missed XXXVIII.10 967b20`);
                 for(const h of hits) {
@@ -1905,8 +2047,6 @@ if(stage>=4) Object.assign(gates, {
                 const layout=await p.locator('.b-sr-w').evaluate(el=>({position:getComputedStyle(el).position,direction:getComputedStyle(el).flexDirection,overflow:getComputedStyle(el).overflowX}));
                 assert(size==='P390' ? layout.direction==='row'&&['auto','scroll'].includes(layout.overflow) : layout.position==='sticky',`${size} work index layout=${JSON.stringify(layout)}`);n++;
                 if(prove&&proofCase==='hash-link')await p.locator('.b-sq-o a').first().evaluate(el=>el.setAttribute('href','#'));
-                const hashes=await p.locator('a[href="#"]').count();
-                assert(hashes===0,`${size} search href="#" count=${hashes}`);n++;
                 // Every page and every collapsed group, not only the first visible hit.
                 const status=await p.locator('.pager-status').count() ? await p.locator('.pager-status').first().textContent() : '';
                 const pageCount=Number(status.match(/of (\d+)/)?.[1]||1);
@@ -1914,6 +2054,8 @@ if(stage>=4) Object.assign(gates, {
                 const invalidRefs=[];
                 for(let pageIdx=0;pageIdx<pageCount;pageIdx++) {
                     await expandSearch(p);
+                    if (prove && proofCase === 'late-hash' && pageIdx === 1) await p.locator('.b-hr').first().evaluate(el => el.setAttribute('href','#'));
+                    await checkSearchHashes(p, `${size} page ${pageIdx+1}`);
                     let hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
                     if(prove&&proofCase==='overlap-ref'&&!overlapRefInjected&&size==='D1440') {
                         // Keep nowrap and the 18px gap; shrink only the ref track.
@@ -1944,15 +2086,15 @@ if(stage>=4) Object.assign(gates, {
                     }
                     assert(hits.length>0,`${size} page ${pageIdx+1} examined=0 hit refs`);
                     for(const h of hits) {
-                        if(h.scheme==='bekker'&&!(h.lang==='eng'?/^[IVXLC]+\.\d+ \d{1,4}[ab]$/:/^[IVXLC]+\.\d+ \d{1,4}[ab]\d{1,2}$/).test(h.text))invalidRefs.push(h.text);
+                        if(h.scheme !== (registry.getWork(h.work)?.citation?.scheme || 'bekker') || !searchRefFormat(h))invalidRefs.push(`${h.scheme}: ${h.text}`);
                         assert(searchRefOnOneLine(h),`${size} hit ref wraps: ${h.text} lines=${h.lines} height=${h.height} line-height=${h.lineHeight} visible=${h.visible} proof=${h.proof}`);
                         assert(searchRefBeforeColumn(h),`${size} hit ref overlaps column: ${h.text} right=${h.refRight} column-left=${h.columnLeft}`);
                         refs++;
                     }
                     if(pageIdx+1<pageCount){await p.locator('.pager').first().getByRole('button',{name:'Next ›'}).click();await searchReady(p);}
                 }
-                if(prove&&proofCase==='overlap-ref'&&size==='D1440')assert(overlapRefInjected,`${size} overlap-ref proof examined=0 refs wider than 78px`);
-                if(prove&&proofCase==='wrapped-ref')assert(wrappedRefInjected,`${size} wrapped-ref proof examined=0 refs wider than 60px`);
+                if(prove&&proofCase==='overlap-ref'&&size==='D1440')assert(overlapRefInjected,`${size} overlap-ref proof has no ref wide enough to mutate (>78px)`);
+                if(prove&&proofCase==='wrapped-ref')assert(wrappedRefInjected,`${size} wrapped-ref proof has no ref wide enough to mutate (>60px)`);
                 console.log(`R-S1 ${size} pages=${pageCount} refs=${refs}`);n+=refs;
                 const before=await p.locator('.b-sg').evaluateAll(els=>els.map(el=>el.dataset.resultWork).join(','));
                 const filters=p.locator('[data-work-filter]');
@@ -1963,6 +2105,7 @@ if(stage>=4) Object.assign(gates, {
                 const filter=p.locator(`[data-work-filter="${target}"]`);
                 if(prove&&proofCase==='dead-filter')await filter.evaluate(el=>el.addEventListener('click',e=>e.stopImmediatePropagation(),true));
                 await filter.click();await searchReady(p);
+                await checkSearchHashes(p, `${size} filtered`);
                 const after=await p.locator('.b-sg').evaluateAll(els=>els.map(el=>el.dataset.resultWork).join(','));
                 assert(before!==after&&after.split(',').every(id=>id===target),`${size} work filter did not change hits: before=${before} after=${after}`);n++;
                 const greekQuery=await p.getByRole('searchbox',{name:'Search Greek',exact:true}).inputValue();
@@ -1972,6 +2115,7 @@ if(stage>=4) Object.assign(gates, {
                     if(prove&&proofCase==='dead-language'&&language==='English')await button.evaluate(el=>el.addEventListener('click',e=>e.stopImmediatePropagation(),true));
                     await button.click();
                     await p.waitForFunction(()=>document.querySelector('.b-search-page')?.dataset.searchBusy==='false');
+                    await checkSearchHashes(p, `${size} ${language} switched`);
                     const mode=await p.locator('.b-search-page').getAttribute('data-query-mode');
                     assert(mode===language&&await button.getAttribute('aria-pressed')==='true',`${size} language ${language} did not change live query mode: ${mode}`);
                     if(language==='English') {
@@ -1987,13 +2131,42 @@ if(stage>=4) Object.assign(gates, {
                         if(language==='Both')assert(await p.getByRole('searchbox',{name:'Search English',exact:true}).inputValue()===englishQuery,`${size} language Both lost its English query`);
                     }
                     await searchReady(p);
+                    await checkSearchHashes(p, `${size} ${language}`);
                     const url=new URL(p.url());
                     const valid=language==='English' ? url.searchParams.get('e')===englishQuery&&!url.searchParams.has('g') : language==='Greek' ? url.searchParams.get('g')===greekQuery&&!url.searchParams.has('e') : url.searchParams.get('g')===greekQuery&&url.searchParams.get('e')===englishQuery;
                     assert(valid,`${size} language ${language} did not change live query mode: ${mode} ${url.search}`);n++;
                 }
-                assert(!invalidRefs.length,`${size} Bekker ref format: ${invalidRefs.slice(0,12).join('; ')}`);
+                assert(!invalidRefs.length,`${size} citation ref format: ${invalidRefs.slice(0,12).join('; ')}`);
             }finally{await close(p);}
-        }return n;
+        }
+        const schemes = new Set();
+        for (const work of registry.WORKS.filter(w => w.citation && w.citation.scheme !== 'bekker')) {
+            for (const language of ['grk','eng']) {
+                const query = language === 'grk' ? (work.id === 'Isa' ? 'γένος' : 'πολιτεία') : (work.id === 'Isa' ? 'genus' : 'constitution');
+                const p = await open('D1440','light',`/search?${language === 'grk' ? 'g' : 'e'}=${encodeURIComponent(query)}&w=${work.id}`);
+                try {
+                    const status = await p.locator('.pager-status').count() ? await p.locator('.pager-status').first().textContent() : '';
+                    const pages = Number(status.match(/of (\d+)/)?.[1] || 1);
+                    for (let i=0; i<pages; i++) {
+                        await expandSearch(p);
+                        await checkSearchHashes(p, `D1440 ${work.id} ${language} page ${i+1}`);
+                        if (prove && proofCase === 'non-bekker-ref') await p.locator('.b-hr').first().evaluate(el => el.textContent = 'I.1 wrong');
+                        const hits = await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                        assert(hits.length > 0, `${work.id} ${language} examined=0 non-Bekker refs`);
+                        for (const h of hits) {
+                            assert(h.scheme === work.citation.scheme && searchRefFormat(h), `${work.id} ${language} non-Bekker ref format: ${h.text}`);
+                            assert(searchRefOnOneLine(h), `D1440 hit ref wraps: ${h.text}`);
+                            assert(searchRefBeforeColumn(h), `D1440 hit ref overlaps column: ${h.text}`);
+                            schemes.add(h.scheme); n++;
+                        }
+                        if(i+1<pages) { await p.locator('.pager').first().getByRole('button',{name:'Next ›'}).click(); await searchReady(p); }
+                    }
+                } finally { await close(p); }
+            }
+        }
+        console.log(`R-S1 non-Bekker schemes covered=${[...schemes].join(', ')}`);
+        assert(schemes.has('busse') && schemes.has('chapter-section'), 'R-S1 missing non-Bekker scheme coverage');
+        return n;
     },
 });
 if (stage >= 5) Object.assign(gates, {
@@ -2046,11 +2219,14 @@ if (stage >= 5) Object.assign(gates, {
         let n=0;
         try {for(const match of mapping.matched) {
             doc.body.innerHTML=readFileSync(join(dist,'lemma',match.lemma.slug,'index.html'),'utf8');
-            if(prove&&n===0) doc.querySelector('.b-cite a')?.remove();
+            if(prove&&n===0) {
+                if (proofCase === 'body') doc.querySelector('[data-glossary] p').textContent = 'Wrong glossary body';
+                else doc.querySelector('.b-cite a')?.remove();
+            }
             assert([...doc.querySelectorAll('h2.b-h2')].some(h=>h.textContent==='Ostwald'),`missing Ostwald heading: ${match.form}`);
-            for(const body of lemmaHelpers.resolveGlossaryBody(match.entry,glossary.GLOSSARY_BODIES)) {
+            for(const body of rawGlossaryBodies(readFileSync(join(app,'../shared/glossary/EN.md'),'utf8'),match.entry.slug)) {
                 const block=[...doc.querySelectorAll('[data-glossary]')].find(el=>el.getAttribute('data-glossary')===body.slug);
-                assert(block&&text(block.querySelector('p')?.innerHTML??'')===text(body.bodyHtml),`Ostwald body mismatch: ${match.form}`);
+                assert(block&&text(block.querySelector('p')?.innerHTML??'')===body.text,`Ostwald body mismatch: ${match.form}`);
                 assert(block.querySelector(`.b-cite a[href="/EN/glossary/#${body.slug}"]`),`missing Ostwald citation: ${match.form} #${body.slug}`);
                 assert(glossaryDoc.querySelector(`[id="${body.slug}"]`),`missing glossary anchor: ${body.slug}`);
             }
@@ -2077,20 +2253,22 @@ if (stage >= 5) Object.assign(gates, {
         return n;
     },
 });
+const assetProofs = {'no-css': /R-C2 missing built assets: CSS files=0 JS files=\d+/, 'no-js': /R-C2 missing built assets: CSS files=\d+ JS files=0/, 'legacy': /legacy width token:/};
 const stageThreeProofs = {
+    'R-C2': assetProofs,
     ...stageTwoProofs,
-    'R-C1': {'home': /home title color=rgb\(0, 0, 0\)/, 'reader': /reader \.b-rh height=/},
-    'R-A1': {'theme-toggle': /D1440 BUTTON.*34×34/, 'fn-hit': /\/EN\/book\/1 D1440 footnote mark \d+ misses its 40px hit area/},
+    'R-C1': {'aux-css': /404\.html B CSS sentinel missing:/, 'home': /home title color=rgb\(0, 0, 0\)/, 'reader': /reader \.b-rh height=/},
+    'R-A1': {'reading-button': /D1440 BUTTON Gate reading button /, 'chapter-fn': /D1440 footnote mark \d+ misses its 40px hit area/, 'late-fn': /D1440 footnote mark \d+ misses its 40px hit area/, 'theme-toggle': /D1440 BUTTON.*34×34/, 'fn-hit': /\/EN\/book\/1 D1440 footnote mark \d+ misses its 40px hit area/},
     'R-A2': {'search': /focus missing .*b-search|focus missing .*name="q"/, 'reader-token': /focus missing <span class="tok/, 'panel-ring': /D1440 word panel opened by keyboard: no focus ring/, 'help-ring': /D1440 Help opened by keyboard: no focus ring/},
     'R-A3': {'sub-label': /light H3\.b-sub sub-label .*ratio=.*color=rgb\(226, 56, 46\)/, 'reader-ln': /light SPAN\.line-num b-ln/},
-    'R-E1': {...stageTwoProofs['R-E1'], 'reader-copy': /\/EN\/book\/1 D1440 panel-open explainer text: No analysis/},
+    'R-E1': {...stageTwoProofs['R-E1'], 'reader-tail-heading': /empty headings: Gate tail heading/, 'reader-empty-chapter': /empty headings: Gate empty chapter/, 'reader-copy': /\/EN\/book\/1 D1440 panel-open explainer text: No analysis/},
     'R-R1': {'head': /EN D1440 greek reader chrome labels a Greek edition: Greek: Bywater, 1894/, 'print': /EN printed footer lacks "Greek text: /, 'print-chrome': /EN printed page shows screen furniture: \.b-side/, 'print-grid': /EN print grid: gap=64px/, 'print-book': /EN printed page drops the book label "[^"]*Book I"/i, 'print-margin': /EN printed body margin=8px/},
     'R-R2': {'kit-wrap': /EN S844 reader head breaks into two rows/, 'pad-overflow': /EN S844 reader head runs \d+\.\dpx into its right padding/},
     'R-R3': {'i-book-i': /EN contents book head "I Book I"/},
     'R-R4': {'stack-s844': /S844 English below Greek: row stacks/},
-    'R-R5': {'ln-margin': /EN D1440 first Bekker margin number "1094a" ink starts at x4[7-9]/, 'round-eight':/EN W1200 panel open Greek column width=/, 'phone-shrink': /EN P390 both phone reading text below the kit's 18\/30\.96px: greek-col 14\.4\/23\.04px/},
+    'R-R5': {'nothing-unwrapped': /examined nothing unwrapped/, 'no-nowrap': /EN D1440 Greek column width=80 expected/, 'narrow-column': /EN D1440 Greek column width=80 expected/, 'late-overlap': /EN D1440 \d+ English line boxes overlap Greek words/, 'small-descendant': /EN D1440 reading text under 18px: .*span\.gate-small 12px/, 'small-table': /\/EN\/book\/1 D1440 eng-table fixture reading text under 18px: .*table\.eng-table.*td /, 'table-overflow': /\/EN\/book\/1 P390 eng-table fixture horizontal page overflow:/, 'ln-margin': /EN D1440 first Bekker margin number "1094a" ink starts at x4[7-9]/, 'round-eight':/EN W1200 panel open Greek column width=/, 'phone-shrink': /EN P390 both reading text under 18px:/},
     'R-R6': {'no-rerun': /panel open did not change --gcol/},
-    'R-R7': {'round-eight-compare': /D1440 Compare \d+ English line boxes under the panel/},
+    'R-R7': {'late-panel': /D1440 \d+ English line boxes under the panel/, 'round-eight-compare': /D1440 Compare \d+ English line boxes under the panel/},
     'R-R8': {'bottom-sheet': /S844 panel anchored to the bottom/},
     'R-R10': {'bold-hit': /Greek elements bold or italic/},
     'R-A4': {'no-tabindex': /Tab from the head never reached a Greek word/, 'escape-layers': /Escape with Contents open closed the word panel too/, 'escape-help': /Escape with Help open closed the word panel too/, 'escape-note': /Escape with a footnote open closed the word panel too/},
@@ -2099,8 +2277,8 @@ const stageFourProofs = {
     ...stageThreeProofs,
     'R-C1': {...stageThreeProofs['R-C1'],search:/search \.b-sr-big color=rgb\(0, 0, 0\)/},
     'R-C1-static': {'svelte-style':/B selectors in Svelte style:.*\.dir-b, \.b-rh/, 'no-styles':/examined=0 Svelte style blocks/},
-    'R-S1': {'overlap-ref':/D1440 hit ref overlaps column:/,'wrapped-ref':/D1440 hit ref wraps:/,'dead-filter':/D1440 work filter did not change hits:/,'dead-language':/D1440 language English did not change live query mode:/,'copy-language':/D1440 language English copied a query across languages/,'hash-link':/D1440 search href="#" count=1/},
-    'R-A1': {...stageThreeProofs['R-A1'],'search-target':/D1440 BUTTON Greek 34×34/,'search-link-no-after':/D1440 (A|BUTTON) [^×]+ [0-9.]+×[0-9.]+ state=/,'search-link-no-pointer':/D1440 (A|BUTTON) [^×]+ [0-9.]+×[0-9.]+ state=/},
+    'R-S1': {'overlap-ref':/D1440 hit ref overlaps column:/,'wrapped-ref':/D1440 hit ref wraps:/,'dead-filter':/D1440 work filter did not change hits:/,'dead-language':/D1440 language English did not change live query mode:/,'copy-language':/D1440 language English copied a query across languages/,'hash-link':/D1440 page 1 search href="#" count=1/,'non-bekker-ref':/non-Bekker ref format: I\.1 wrong/,'late-hash':/D1440 page 2 search href="#" count=1/},
+    'R-A1': {...stageThreeProofs['R-A1'],'search-target':/D1440 BUTTON Greek 34×34/,'search-link-no-after':/D1440 A Lexicon [0-9.]+×[0-9.]+ state=/,'search-link-no-pointer':/D1440 A Lexicon [0-9.]+×[0-9.]+ state=/},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <input.*aria-label="Search Greek"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.b-options-toggle.*"More options" ratio=.*color=rgb\(226, 56, 46\)/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},
@@ -2111,7 +2289,7 @@ const stageFiveProofs = {
     'R-C1': {...stageFourProofs['R-C1'],lemma:/lemma \.b-wp font-family=serif/},
     'R-L1': {'oversize':/headword size=200 cap=150/},
     'R-L2': {'empty-section':/empty lemma section: By work/,'dead-nearby':/dead Nearby link:/},
-    'R-L3': {'citation':/missing Ostwald citation:/},
+    'R-L3': {'body': /Ostwald body mismatch:/, 'citation':/missing Ostwald citation:/},
     'R-L4': {'hash-link':/invalid By work search: #/},
 };
 if (only && !gates[only]) throw Error(`Unknown gate ${only}`);
@@ -2120,7 +2298,7 @@ let proofFailed = false;
 try {
     for (const [id, run] of Object.entries(gates)) {
         if (only && only !== id) continue;
-        const variants = stage >= 5 && stageFiveProofs[id] ? stageFiveProofs[id] : stage >= 4 && stageFourProofs[id] ? stageFourProofs[id] : stage >= 3 && stageThreeProofs[id] ? stageThreeProofs[id] : stage >= 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
+        const variants = id === 'R-C2' ? assetProofs : stage >= 5 && stageFiveProofs[id] ? stageFiveProofs[id] : stage >= 4 && stageFourProofs[id] ? stageFourProofs[id] : stage >= 3 && stageThreeProofs[id] ? stageThreeProofs[id] : stage >= 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
         const cases = prove && variants ? Object.keys(variants) : ['default'];
         for (const variant of cases) {
             proofCase = variant;

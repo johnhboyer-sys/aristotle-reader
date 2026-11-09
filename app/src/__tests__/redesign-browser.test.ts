@@ -161,3 +161,114 @@ it('adds half the pseudo size when left and top name its untransformed corner', 
   expect(readControlBoxes([el])[0].h).toBe(40);
   expect(points).toEqual([[111,207],[149,207],[130,188],[130,226]]);
 });
+
+it('exempts only tokens and running-text links, and checks other reading controls', async () => {
+  const {readControlBoxes} = await import('../../scripts/redesign-browser.mjs');
+  const root = document.createElement('div');
+  root.innerHTML = '<div class="b-gc"><span class="tok" role="button">word</span><a href="/">text link</a><button>Greek button</button><input aria-label="Greek input"><span role="button">Greek role</span></div><div class="b-ec"><button>English button</button></div><div class="b-cht"><button class="fn-marker">1</button><button>Title button</button></div><button class="fn-marker">Outside mark</button>';
+  const controls = [...root.querySelectorAll('a,button,input,[role="button"]')];
+  for (const el of controls) {
+    Object.defineProperty(el, 'getClientRects', {value: () => [{}]});
+    Object.defineProperty(el, 'getBoundingClientRect', {value: () => ({width: 20, height: 20})});
+  }
+  vi.stubGlobal('getComputedStyle', () => ({visibility: 'visible'}));
+  const got = readControlBoxes(controls);
+  expect(got.map((c: {text: string}) => c.text)).toEqual(['Greek button','Greek input','Greek role','English button','Title button','Outside mark']);
+  expect(got.every((c: {w: number; h: number}) => c.w === 20 && c.h === 20)).toBe(true);
+});
+
+it('measures nowrap itself, including tokens, and restores every inline style', async () => {
+  const {measureGreekLines} = await import('../../scripts/redesign-browser.mjs');
+  const line = document.createElement('span');
+  line.innerHTML = '<span style="white-space:pre-wrap;color:red">Greek token</span>';
+  line.setAttribute('style', 'color:blue');
+  const token = line.firstElementChild as HTMLElement;
+  Object.defineProperty(line, 'offsetWidth', {get: () => line.style.whiteSpace === 'nowrap' && token.style.whiteSpace === 'nowrap' ? 340 : 120});
+  const before = [line.getAttribute('style'), token.getAttribute('style')];
+  expect(measureGreekLines([line])).toEqual({w: 340, changed: 1, lines: 1});
+  expect([line.getAttribute('style'), token.getAttribute('style')]).toEqual(before);
+  line.removeAttribute('style');
+  measureGreekLines([line]);
+  expect(line.hasAttribute('style')).toBe(false);
+});
+
+it('restores measure styles even when reading layout throws', async () => {
+  const {measureGreekLines} = await import('../../scripts/redesign-browser.mjs');
+  const line = document.createElement('span');
+  let reads = 0;
+  Object.defineProperty(line, 'offsetWidth', {get: () => { if (++reads === 2) throw Error('layout failed'); return 100; }});
+  expect(() => measureGreekLines([line])).toThrow('layout failed');
+  expect(line.hasAttribute('style')).toBe(false);
+});
+
+it('reads every direct-text descendant size, including tables, but skips note marks and numbers', async () => {
+  const {readReadingSizes} = await import('../../scripts/redesign-browser.mjs');
+  const root = document.createElement('div');
+  root.className = 'b-ec';
+  root.innerHTML = 'Root text <span><i class="small">small text</i></span><table class="eng-table"><tbody><tr><td>table text</td></tr></tbody></table><span class="fn-marker"><b>1</b></span><span class="line-num">12</span>';
+  for (const el of [root, ...root.querySelectorAll('*')]) Object.defineProperty(el, 'getClientRects', {value: () => [{}]});
+  vi.stubGlobal('getComputedStyle', (el: Element) => ({visibility: 'visible', fontSize: el.closest('.eng-table') ? '15.3px' : el.matches('.small') ? '17px' : '18px'}));
+  expect(readReadingSizes([root])).toEqual([
+    {selector: 'div.b-ec > table.eng-table > tbody > tr > td', size: 15.3}, {selector: 'div.b-ec > span > i.small', size: 17}, {selector: 'div.b-ec', size: 18},
+  ]);
+});
+
+it('checks citation forms for Bekker, Busse, and chapter.section in both languages', async () => {
+  const {searchRefFormat} = await import('../../scripts/redesign-browser.mjs');
+  for (const [scheme, lang, text] of [
+    ['bekker','grk','I.1 1a1'], ['bekker','eng','I.1 1094a'],
+    ['busse','grk','I.2 12a3'], ['busse','eng','I.2 12a'],
+    ['chapter-section','grk','I.49 49.3'], ['chapter-section','eng','I.49 49.3'],
+  ]) expect(searchRefFormat({scheme,lang,text})).toBe(true);
+  for (const [scheme, lang, text] of [
+    ['bekker','eng','I.1 1094a1'], ['chapter-section','grk','I.49 49a3'],
+    ['busse','grk','I.2 wrong'], ['busse','grk',''], ['busse','grk','I.2\n12a3'],
+    ['unknown','grk','I.2 12a3'],
+  ]) expect(searchRefFormat({scheme,lang,text})).toBe(false);
+});
+
+it('reads glossary bodies from raw Markdown and follows See-only entries independently', async () => {
+  const {rawGlossaryBodies} = await import('../../scripts/redesign-browser.mjs');
+  const md = '*akōn, akousion* (ἄκων): See *hekōn*.\n\n*hekōn* (ἑκών): Has *choice* and <span style="font-variant:small-caps">will</span>.\n\n*other* (x): See *akousion* and *hekōn*.';
+  expect(rawGlossaryBodies(md, 'akon')).toEqual([{slug:'hekon',text:'Has choice and will.'}]);
+  expect(rawGlossaryBodies(md, 'other')).toHaveLength(2);
+  expect(() => rawGlossaryBodies(md, 'missing')).toThrow('Raw glossary entry missing');
+  expect(() => rawGlossaryBodies('*a* (x): See *b*.\n*b* (y): See *a*.', 'a')).toThrow('Raw glossary cycle');
+});
+
+it('keeps all visible footnote targets, including chapter titles and marks after sixteen', async () => {
+  const {readFootnoteTargets} = await import('../../scripts/redesign-browser.mjs');
+  const root = document.createElement('div');
+  root.innerHTML = '<p class="b-cht"><button class="fn-marker">Title</button></p><div class="b-ec">' + '<button class="fn-marker">Note</button>'.repeat(24) + '</div>';
+  const marks = [...root.querySelectorAll('.fn-marker')];
+  marks.forEach(el => Object.defineProperty(el, 'getClientRects', {value: () => [{}]}));
+  vi.stubGlobal('getComputedStyle', () => ({visibility: 'visible'}));
+  const targets = readFootnoteTargets(marks);
+  expect(targets).toHaveLength(25);
+  expect((marks[0] as HTMLElement).dataset.gate).toBe('0');
+  expect((marks[24] as HTMLElement).dataset.gate).toBe('24');
+});
+
+it('scrolls and checks all rows and catches an overlap after row forty', async () => {
+  const {readReaderOverlaps} = await import('../../scripts/redesign-browser.mjs');
+  const greek = {left: 0, right: 100, top: 0, bottom: 20};
+  const scrolls: number[] = [];
+  const rows = Array.from({length: 45}, (_, index) => ({
+    scrollIntoView: () => scrolls.push(index),
+    querySelectorAll: (selector: string) => selector.includes('.tok')
+      ? [{getClientRects: () => [greek]}] : [{index}],
+  }));
+  vi.stubGlobal('document', {
+    createTreeWalker: (ec: {index: number}) => {
+      let read = false;
+      return {nextNode: () => read ? null : (read = true, {index: ec.index, textContent:'English', parentElement:{closest: () => null}})};
+    },
+    createRange: () => {
+      let index = 0;
+      return {selectNodeContents: (node: {index: number}) => {index = node.index;},
+        getClientRects: () => [{...greek, left: index === 44 ? 90 : 110, right: 200}]};
+    },
+  });
+  expect(readReaderOverlaps(rows)).toMatchObject({rows:45,boxes:90,hits:1});
+  expect(scrolls).toEqual(Array.from({length:45}, (_, i) => i));
+});

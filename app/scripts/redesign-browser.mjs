@@ -36,7 +36,9 @@ export async function expandSearch(page, cap = 1000) {
 // Pass this self-contained function to Playwright's evaluateAll as well as tests.
 export function readSearchRefs(hits) {
     return hits.map((hit, index) => {
-        const ref = hit.querySelector('.b-hr'), css = getComputedStyle(ref);
+        const ref = hit.querySelector('.b-hr');
+        if (!ref) return {index, scheme: hit.dataset.citationScheme, text: '', visible: false, lines: 0};
+        const css = getComputedStyle(ref);
         // Element ranges include inline <b> boxes as well as glyph boxes.
         // Read text nodes only, so split weights cannot invent an extra line.
         const walker = document.createTreeWalker(ref, 4 /* SHOW_TEXT */);
@@ -58,7 +60,7 @@ export function readSearchRefs(hits) {
         const refRight = Math.max(ref.getBoundingClientRect?.().right ?? 0, ...rects.map(r => r.right));
         return {
             sideBySide, refRight, columnLeft: column?.getBoundingClientRect?.().left ?? NaN,
-            index, scheme: hit.dataset.citationScheme, lang: hit.dataset.hitLanguage, text: ref.textContent.trim(),
+            index, work: hit.closest?.('[data-result-work]')?.dataset.resultWork, scheme: hit.dataset.citationScheme, lang: hit.dataset.hitLanguage, text: ref.textContent.trim(),
             height: ref.offsetHeight, lineHeight: parseFloat(css.lineHeight), lines: lines.length,
             textWidth: rects.length ? Math.max(...rects.map(r => r.right)) - Math.min(...rects.map(r => r.left)) : 0,
             visible: ref.isConnected && ref.getClientRects().length > 0 && rects.length > 0,
@@ -80,7 +82,8 @@ export function searchRefBeforeColumn(ref) {
 // translate, and probe 19px from its centre rather than its top-left corner.
 export function readControlBoxes(els) {
     return els.filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'
-        && !el.matches('.tok') && !el.closest('.b-gc,.b-ec,.b-cht')).map(el => {
+        && !el.matches('.tok')
+        && !(el.closest('.b-gc,.b-ec,.b-cht') && el.matches('a,.fn-marker'))).map(el => {
         const rect = el.getBoundingClientRect();
         let w = rect.width, h = rect.height;
         if (el.matches('.b-he > span a,.b-sr-l a,.b-sr-l button,.pg-lexicon .b-near a,.pg-lexicon .b-cite a')) {
@@ -100,4 +103,103 @@ export function readControlBoxes(els) {
         }
         return {tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0,65), w, h};
     });
+}
+
+// Self-contained: inline nowrap overrides the page even if its measure rule is missing.
+export function measureGreekLines(lines) {
+    let w = 0, changed = 0;
+    for (const line of lines) {
+        const wrapped = line.offsetWidth;
+        const elements = [line, ...line.querySelectorAll('*')];
+        const saved = elements.map(el => el.getAttribute('style'));
+        try {
+            // Tokens can set pre-wrap themselves; override those too.
+            elements.forEach(el => el.style.setProperty('white-space', 'nowrap', 'important'));
+            const width = line.offsetWidth;
+            w = Math.max(w, width);
+            if (Math.abs(width - wrapped) > 1) changed++;
+        } finally {
+            elements.forEach((el, i) => {
+                if (saved[i] === null) el.removeAttribute('style');
+                else el.setAttribute('style', saved[i]);
+            });
+        }
+    }
+    return {w: Math.ceil(w), changed, lines: lines.length};
+}
+
+export function readReadingSizes(roots) {
+    const text = [...new Set(roots.flatMap(root => [root, ...root.querySelectorAll('*')]))]
+        .filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden'
+            && !el.closest('.fn-marker,.line-num,.b-ln,.bk-num')
+            && [...el.childNodes].some(n => n.nodeType === 3 && n.textContent.trim()));
+    return text.map(el => {
+        const path = [];
+        for (let node = el; node; node = node.parentElement) {
+            path.unshift(node.tagName.toLowerCase() + [...node.classList].map(c => '.' + c).join(''));
+            if (roots.includes(node)) break;
+        }
+        return {size: parseFloat(getComputedStyle(el).fontSize), selector: path.join(' > ')};
+    }).sort((a, b) => a.size - b.size);
+}
+
+export function searchRefFormat(ref) {
+    // John's rulings: Bekker pages start at 1; English hits cite the column,
+    // as the live Search page did. Keep both exceptions to the brief's regex.
+    const prefix = /^[IVXLC]+\.\d+ /;
+    if (!prefix.test(ref.text) || /[\r\n]/.test(ref.text)) return false;
+    const locator = ref.text.replace(prefix, '');
+    if (ref.scheme === 'chapter-section') return /^\d+\.\d+[a-z]?$/.test(locator);
+    if (ref.scheme === 'bekker')
+        return (ref.lang === 'eng' ? /^\d{1,4}[ab]$/ : /^\d{1,4}[ab]\d{1,2}$/).test(locator);
+    if (ref.scheme === 'busse')
+        return (ref.lang === 'eng' ? /^\d+[ab]$/ : /^\d+[ab]\d+[a-z]?$/).test(locator);
+    return false;
+}
+
+// Read Markdown separately from the site's glossary renderer and body resolver.
+export function rawGlossaryBodies(markdown, slug) {
+    const fold = text => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const entries = markdown.split('\n').flatMap(line => {
+        const head = line.match(/^\*([^*]+)\* /), split = line.indexOf('): ');
+        if (!head || split < 0) return [];
+        const terms = head[1].split(',').map(t => fold(t.trim()));
+        return [{slug: terms[0], terms, body: line.slice(split + 3)}];
+    });
+    const resolve = (key, seen = []) => {
+        if (seen.includes(key)) throw Error(`Raw glossary cycle: ${key}`);
+        const entry = entries.find(e => e.terms.includes(key));
+        if (!entry) throw Error(`Raw glossary entry missing: ${key}`);
+        if (/^See \*.+\*\.$/.test(entry.body))
+            return [...entry.body.matchAll(/\*([^*]+)\*/g)].flatMap(([, term]) => resolve(fold(term), [...seen, key]));
+        return [{slug: entry.slug, text: entry.body.replace(/<[^>]+>/g, '').replace(/\*/g, '').replace(/\s+/g, ' ').trim()}];
+    };
+    return resolve(slug);
+}
+
+export function readReaderOverlaps(rows) {
+    let boxes = 0, hits = [];
+    for (const row of rows) {
+        row.scrollIntoView({block: 'center'});
+        const g = [...row.querySelectorAll('.b-gc .tok')].flatMap(t => [...t.getClientRects()]);
+        const e = [];
+        for (const ec of row.querySelectorAll('.b-ec')) {
+            const walker = document.createTreeWalker(ec, NodeFilter.SHOW_TEXT);
+            let node;
+            while ((node = walker.nextNode())) {
+                if (!node.textContent.trim() || node.parentElement.closest('.bk-num,.fn-marker')) continue;
+                const range = document.createRange(); range.selectNodeContents(node);
+                e.push(...range.getClientRects());
+            }
+        }
+        boxes += g.length + e.length;
+        for (const a of e) for (const b of g)
+            if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > .5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > .5) hits.push(Math.round(a.left) + ',' + Math.round(a.top));
+    }
+    return {rows: rows.length, boxes, hits: hits.length, at: hits.slice(0, 3)};
+}
+
+export function readFootnoteTargets(els) {
+    return els.filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden')
+        .map((el, i) => (el.dataset.gate = String(i)));
 }
