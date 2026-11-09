@@ -54,3 +54,11 @@ export function measureGreekTrack(root: HTMLElement | null): number {
   // Round up — a fractional track leaves a sub-pixel wrap on the widest line.
   return max > 0 ? Math.ceil(max) : 0;
 }
+
+/** B's whole-line / remaining-space / proportional-floor rule (R-R5). */
+export function greekColumnWidth(w: number, u: number, n: number, gap: number, rowWidth: number): number {
+  const avail = Math.max(0, rowWidth - gap * (n - 1));
+  const emin = (n > 2 ? 18 : 26) * u * (n - 1);
+  const gmin = Math.min(w, 20 * u);
+  return Math.floor(avail >= w + emin ? w : avail - emin >= gmin ? avail - emin : avail * gmin / (gmin + emin));
+}

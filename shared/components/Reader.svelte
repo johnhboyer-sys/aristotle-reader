@@ -4,7 +4,7 @@
   import { hitTokens, fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation, anchorCite, citeOfId, citeLabelOf, isChapterSection, isNonBekker, tickCite } from '../lib/data';
   import { englishQueryUnits, greekFold } from '../lib/search';
   import { markEnglishHtml, overlayPieces } from '../lib/english-hit';
-  import { measureGreekTrack as measureTrack, measuresGreekTrack } from '../lib/greek-track';
+  import { measureGreekTrack as measureTrack, measuresGreekTrack, greekColumnWidth } from '../lib/greek-track';
   import { sanitizeHtml } from '../lib/html';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
@@ -31,6 +31,11 @@
   // column rather than in the shared chapter heading. A title may carry the
   // footnote reference its heading bore.
   export let transTitles: Record<string, Record<string, string>> = {};
+  // The site's B design (ReaderShell.astro passes it). B draws its own chrome:
+  // the head lives in the shell, and the reader fills the book head, the Aa
+  // and translation menus and the word panel in B's markup. The desktop app
+  // leaves it off and keeps the settings sidebar and controls strip.
+  export let b = false;
 
   const workMeta = getWork(work);
   // Non-Bekker works (e.g. Porphyry's Isagoge) are cited by Busse page, not a
@@ -287,6 +292,7 @@
   // sequencing defect it exists to prevent — measuring before the lines are
   // rendered — can be tested without mounting a reader.
   function measureGreekTrack(): boolean {
+    if (b) { evenGreek(); return true; }
     // A chapter-section work takes no measured track: its sections wrap in the
     // bounded column global.css / desktop.css give it.
     if (!measuresGreekTrack(workMeta)) return false;
@@ -298,6 +304,260 @@
     return measured > 0;
   }
   let colScale = 1.0;
+
+  // ── B: the Greek column (R-R5, R-R6) ────────────────────────────────────
+  // One width for the whole book: the widest Greek line, measured unwrapped
+  // (`gw-measure`), published as --greek-w. In Both view beside the English
+  // the column is then --gcol: whole lines while the English keeps 26em (18em
+  // each in Compare), else what the English leaves down to 20em, else a share
+  // in proportion to those floors (greekColumnWidth). Narrower than its lines,
+  // the Greek wraps with a hanging indent and keeps its numbers.
+  function evenGreek() {
+    if (!b || typeof document === 'undefined') return;
+    const body = document.querySelector<HTMLElement>('.reader-body');
+    if (!body) return;
+    body.style.removeProperty('--gcol');
+    // Sections (chapter-section) and Busse's prose flow take no line width.
+    if (!measuresGreekTrack(workMeta) || busse) { body.style.removeProperty('--greek-w'); return; }
+    body.classList.add('gw-measure');
+    let w = 0;
+    try {
+      // offsetWidth, not getBoundingClientRect: layout px, whatever the scale.
+      for (const g of body.querySelectorAll<HTMLElement>('.b-gc .b-lt')) w = Math.max(w, g.offsetWidth);
+    } finally {
+      body.classList.remove('gw-measure');
+    }
+    if (!w) return;   // Greek hidden: keep the last width
+    w = Math.ceil(w);
+    body.style.setProperty('--greek-w', `${w}px`);
+    if (view !== 'both' || window.innerWidth <= 700) return;
+    const row = body.querySelector<HTMLElement>('.b-row');
+    const ec = row?.querySelector<HTMLElement>('.b-ec');
+    if (!row || !ec) return;
+    const n = [...row.children].filter((c) => getComputedStyle(c).display !== 'none').length;
+    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+    const u = parseFloat(getComputedStyle(ec).fontSize);
+    body.style.setProperty('--gcol', `${greekColumnWidth(w, u, n, gap, row.clientWidth)}px`);
+  }
+  // The arguments are the reactive dependencies that call it; unused here.
+  function scheduleEven(..._deps: unknown[]) {
+    if (!b || typeof window === 'undefined') return;
+    // After the DOM reflects the change; synchronous within the frame, so the
+    // word the reader clicked can be pinned across the reflow.
+    tick().then(() => {
+      evenGreek();
+      // The Greek's one tab stop follows it back into view.
+      if (!document.querySelector('.reader-body .b-gc .tok[tabindex="0"]')) rove(visibleToks()[0] ?? null);
+    });
+  }
+  // Wire the shell's head (B) to the reader's state.
+  let unHead: (() => void) | null = null;
+  function bHead() {
+    const onClick = (e: MouseEvent) => {
+      const t = e.target as HTMLElement | null;
+      const v = t?.closest<HTMLElement>('[data-reader-view]')?.dataset.readerView;
+      if (v === 'greek' || v === 'both' || v === 'english') { setView(v); return; }
+      if (t?.closest('[data-reader-picker]')) { togglePicker(); return; }
+      // A click outside an open menu (and outside its own button) closes it.
+      if (t?.closest('.b-menu, [data-aa]')) return;
+      if (pickerOpen) pickerOpen = false;
+      if (settingsOpen) closeSettings();
+    };
+    const onClose = () => { pickerOpen = false; };
+    const onResize = () => { vw = window.innerWidth; if (pickerOpen) placeMenu('[data-reader-picker]'); if (settingsOpen) placeMenu('[data-aa]'); };
+    document.addEventListener('click', onClick);
+    window.addEventListener('close-settings', onClose);
+    window.addEventListener('resize', onResize);
+    unHead = () => {
+      document.removeEventListener('click', onClick);
+      window.removeEventListener('close-settings', onClose);
+      window.removeEventListener('resize', onResize);
+    };
+  }
+  // The reader's Greek face (R-R10). GFS Didot's file loads only when picked.
+  type GFont = 'literata' | 'gentium' | 'didot';
+  const GFONTS: [GFont, string, string][] = [
+    ['literata', 'Literata', 'Literata'],
+    ['gentium', 'Gentium', '"Gentium Book Plus"'],
+    ['didot', 'Didot', '"GFS Didot"'],
+  ];
+  const GFONT_KEY = 'reader-gfont';
+  let gfont: GFont = 'literata';
+  function loadDidot() {
+    if (document.querySelector('link[data-gfs-didot]')) return;
+    const l = document.createElement('link');
+    l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=GFS+Didot&display=swap';
+    l.dataset.gfsDidot = '';
+    document.head.append(l);
+  }
+  function setGFont(f: GFont) {
+    gfont = f;
+    try { if (f === 'literata') localStorage.removeItem(GFONT_KEY); else localStorage.setItem(GFONT_KEY, f); } catch {}
+    if (f === 'didot') loadDidot();
+    const fam = GFONTS.find((g) => g[0] === f)![2];
+    document.fonts?.load(`19px ${fam}`, 'αβγ').then(() => scheduleEven()).catch(() => {});
+  }
+  // The word panel on a desktop (R-R7): beside the text, which keeps the
+  // English in view ('push', the default), or over it ('over').
+  const WP_KEY = 'reader-word-panel';
+  let wpOver = false;
+  function setWp(over: boolean) {
+    wpOver = over;
+    try { if (over) localStorage.setItem(WP_KEY, 'over'); else localStorage.removeItem(WP_KEY); } catch {}
+  }
+  // The width bands B's menus follow: upright phone ≤700, sideways 701–960.
+  let vw = typeof window === 'undefined' ? 1440 : window.innerWidth;
+  // B's menus: Aa (settingsOpen) and the translation picker.
+  let pickerOpen = false;
+  let menuAt = { top: 68, right: 12 };
+  function placeMenu(sel: string) {
+    const head = document.querySelector('.b-rh')?.getBoundingClientRect();
+    const btn = document.querySelector(sel)?.getBoundingClientRect();
+    menuAt = {
+      top: Math.round((head?.bottom ?? 60) + 8),
+      right: Math.max(12, Math.round(window.innerWidth - (btn?.right ?? window.innerWidth - 12))),
+    };
+  }
+  function togglePicker() {
+    if (!pickerOpen) { placeMenu('[data-reader-picker]'); closeSettings(); }
+    pickerOpen = !pickerOpen;
+  }
+  // Translation choice in B's picker: one to read, and maybe one beside it.
+  // On the live state, a pair is trans='compare' with compareLeft/Right.
+  $: primaryId = trans === 'compare' ? compareLeft : trans;
+  $: besideId = trans === 'compare' ? compareRight : '';
+  function pickPrimary(id: string) {
+    if (trans === 'compare') {
+      if (id === compareRight) compareRight = compareLeft;
+      compareLeft = id;
+      saveCompare();
+      setTrans('compare');
+    } else setTrans(id);
+  }
+  function pickBeside(id: string) {
+    if (!id) { setTrans(primaryId); return; }
+    compareLeft = primaryId;
+    compareRight = id;
+    saveCompare();
+    setTrans('compare');
+  }
+  // "Martin Ostwald (Bobbs-Merrill, 1962)" → who, and publisher with year.
+  const whoOf = (name: string) => /^(.*?)\s*\(/.exec(name)?.[1] ?? name;
+  const pubOf = (name: string) => /\((.*)\)\s*$/.exec(name)?.[1] ?? '';
+  // The book head's English line: who, year — both when two are shown.
+  $: englishLine = view === 'greek' ? '' : (trans === 'compare' ? [compareLeft, compareRight] : [trans])
+    .map((id) => transById(id)).filter(Boolean)
+    .map((t) => [whoOf(t!.name), yearOf(t!.name)].filter(Boolean).join(', ')).join(' and ');
+  // The Greek book letter beside the Greek title: from the book's own label
+  // (Roman, Arabic, or already Greek, as the Metaphysics' are).
+  const GREEK_NUM = ['', 'Α', 'Β', 'Γ', 'Δ', 'Ε', 'Ζ', 'Η', 'Θ', 'Ι', 'Κ', 'Λ', 'Μ', 'Ν', 'Ξ', 'Ο', 'Π', 'Ρ', 'Σ', 'Τ', 'Υ'];
+  function greekBookLetter(label: string): string {
+    if (/[Ͱ-Ͽ]/.test(label)) return label;
+    let n = Number(label);
+    if (!Number.isInteger(n)) {
+      const R: Record<string, number> = { I: 1, V: 5, X: 10, L: 50 };
+      n = 0;
+      for (let i = 0; i < label.length; i++) {
+        const v = R[label[i]] ?? NaN, next = R[label[i + 1]] ?? 0;
+        n += v < next ? -v : v;
+      }
+    }
+    return GREEK_NUM[n] ?? '';
+  }
+  // A chapter head's title: the work's own (chapter-titles.json), else the
+  // shown translation's (Ostwald heads his chapters), else the default one's.
+  // Arguments, not scope: a legacy-mode template re-runs a call only when
+  // something named in it changes.
+  function chapterTitleB(ch: string | null, shown: string, v: View): { text: string; fn: string } {
+    if (!ch) return { text: '', fn: '' };
+    if (chapterTitles[ch]) return { text: chapterTitles[ch], fn: '' };
+    const own = v !== 'greek' ? importChapterTitle(shown, ch) : '';
+    if (own) return { text: own, fn: fnTransIds.has(shown) ? shown : '' };
+    return { text: titleText(defaultTrans ? importChapterTitle(defaultTrans, ch) : ''), fn: '' };
+  }
+  // B's line numbers: a segment opens on its column ("1094a", red), line 1
+  // reads as the column; other lines as the live reader numbers them.
+  function lineLabel(column: string, line: RLine, first: boolean): string {
+    if (line.cont) return '';
+    if (!b || nonBekker) return showLineNum(line.n, line.sub);
+    if (first || (line.n === 1 && !line.sub)) return `${column}${line.n === 1 && !line.sub ? '' : lineRef(line.n, line.sub)}`;
+    return showLineNum(line.n, line.sub);
+  }
+  // Keyboard word lookup (R-A4): one tab stop into the Greek (roving
+  // tabindex), arrows step a word, Enter or Space opens the panel on it.
+  function visibleToks(): HTMLElement[] {
+    return [...document.querySelectorAll<HTMLElement>('.reader-body .b-gc .tok')]
+      .filter((t) => t.offsetParent !== null);
+  }
+  function rove(el: HTMLElement | null, focus = false) {
+    if (!el) return;
+    document.querySelectorAll<HTMLElement>('.reader-body .tok[tabindex="0"]').forEach((t) => { if (t !== el) t.tabIndex = -1; });
+    el.tabIndex = 0;
+    if (focus) el.focus();
+  }
+  function onTextKey(e: KeyboardEvent) {
+    if (!b) return;
+    const tok = (e.target as HTMLElement | null)?.closest?.<HTMLElement>('.tok');
+    if (!tok) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      const toks = visibleToks();
+      const i = toks.indexOf(tok) + (e.key === 'ArrowRight' ? 1 : -1);
+      if (i < 0 || i >= toks.length) return;
+      e.preventDefault();
+      rove(toks[i], true);
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      tok.click();
+    }
+  }
+  // "← Previous word" / "Next word →" in the panel.
+  function stepWord(d: number) {
+    const toks = visibleToks();
+    const cur = document.querySelector<HTMLElement>('.reader-body .tok.active');
+    const next = toks[(cur ? toks.indexOf(cur) : -1) + d];
+    if (!next) return;
+    next.click();
+    rove(next);
+    next.scrollIntoView({ block: 'nearest' });
+  }
+  // Where the open word stands: "Book I, chapter 1 · 1094a1".
+  function wordPlace(el: HTMLElement): string {
+    const line = el.closest('.greek-line, tr[id]') as HTMLElement | null;
+    const c = line ? anchorCite(line.id.replace(/-c$/, '')) : null;
+    const cite = c ? citeLabelOf(workMeta, c) : '';
+    const ch = (el.closest('.seg-row') as HTMLElement | null)?.dataset.chapter ?? '';
+    const where = ch ? (bookLabel ? `${bookLabel}, chapter ${ch}` : `Chapter ${ch}`) : bookLabel;
+    return [where, cite].filter(Boolean).join(' · ');
+  }
+  let popupPlace = '';
+  // The head's live parts (the shell draws the head; the reader owns the state).
+  function syncHead(v: View, tr: string, l: string, r: string, aa: boolean, pk: boolean, ctx: { n: string; title: string }) {
+    if (!b || typeof document === 'undefined') return;
+    document.querySelectorAll<HTMLElement>('[data-reader-view]').forEach((btn) =>
+      btn.setAttribute('aria-pressed', String(btn.dataset.readerView === v)));
+    const picker = document.querySelector<HTMLElement>('[data-reader-picker]');
+    if (picker) {
+      const p = transById(tr === 'compare' ? l : tr);
+      const q = tr === 'compare' ? transById(r) : null;
+      const label = picker.querySelector('[data-label]');
+      if (label) label.textContent = `${p?.short ?? ''}${q ? ` and ${q.short}` : ''}`;
+      picker.setAttribute('aria-expanded', String(pk));
+    }
+    document.querySelector('[data-aa]')?.setAttribute('aria-expanded', String(aa));
+    const ctxEl = document.querySelector<HTMLElement>('[data-reader-context]');
+    if (ctxEl) {
+      const nEl = ctxEl.querySelector('[data-ctx-n]'), tEl = ctxEl.querySelector('[data-ctx-title]');
+      if (nEl) nEl.textContent = ctx.n ? `Chapter ${ctx.n}` : '';
+      if (tEl) tEl.textContent = ctx.title;
+      window.dispatchEvent(new CustomEvent('reader-head-fit'));
+    }
+  }
+  let ctxB = { n: '', title: '' };
+  let mounted = false;
+  $: if (mounted) syncHead(view, trans, compareLeft, compareRight, settingsOpen, pickerOpen, ctxB);
+  $: if (mounted) scheduleEven(view, trans, compareLeft, compareRight, fsScale, colScale, gfont, !!popup, wpOver, vw);
+
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
   $: fsEng   = (FS_ENG_BASE   * fsScale).toFixed(3);
   $: lhGreek = (LH_GREEK_BASE * lhScale).toFixed(3);
@@ -308,6 +568,7 @@
     window.dispatchEvent(new CustomEvent('settings-state', { detail: { open: false } }));
   }
   function openSettings() {
+    if (b) { placeMenu('[data-aa]'); pickerOpen = false; }
     settingsOpen = true;
     window.dispatchEvent(new CustomEvent('settings-state', { detail: { open: true } }));
   }
@@ -320,6 +581,7 @@
       localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY);
       localStorage.removeItem(COLW_KEY); localStorage.removeItem(CITE_KEY);
     } catch {}
+    if (b) { setGFont('literata'); setWp(false); }
   }
 
   // ── Citation shown in the controls strip ─────────────────────────────────
@@ -477,6 +739,20 @@
   let liveChapter = '';
   let ctxRaf = 0;
   function updateChapterContext() {
+    if (b) {
+      // The head shows the chapter whose head last passed under it (the
+      // first chapter before any has).
+      const line = (document.querySelector('.b-rh')?.getBoundingClientRect().bottom ?? 60) + 12;
+      const heads = [...document.querySelectorAll<HTMLElement>('.reader-body .chapter-head')];
+      let at = heads[0];
+      for (const h of heads) {
+        if (h.getBoundingClientRect().top <= line) at = h;
+        else break;
+      }
+      const next = { n: at?.dataset.chapter ?? '', title: at?.dataset.title ?? '' };
+      if (next.n !== ctxB.n || next.title !== ctxB.title) ctxB = next;
+      return;
+    }
     const strip = document.querySelector('.reader-controls');
     const boundary = (strip?.getBoundingClientRect().bottom ?? 100) + 12;
     let label = '';
@@ -494,6 +770,7 @@
   // The reading area starts below the sticky header AND the sticky controls
   // strip pinned beneath it, so the spy's detection band begins at the strip's bottom.
   function readingTop(): number {
+    if (b) return Math.round(document.querySelector('.b-rh')?.getBoundingClientRect().bottom ?? 60);
     const headerH = Math.round(document.querySelector('.page-header')?.getBoundingClientRect().height ?? 60);
     const ctrlBottom = document.querySelector('.reader-controls')?.getBoundingClientRect().bottom ?? 0;
     return Math.max(headerH, Math.round(ctrlBottom));
@@ -576,6 +853,7 @@
   let _onCloseSettings: () => void;
 
   onDestroy(() => {
+    unHead?.();
     spyObserver?.disconnect();
     if (typeof window !== 'undefined') {
       window.removeEventListener('scroll', onScrollArm);
@@ -994,7 +1272,10 @@
   function onFootnoteOut(e: MouseEvent) {
     if ((e.target as HTMLElement | null)?.closest?.('.fn-marker')) scheduleFnClose();
   }
+  // Closing a note hands focus back to its mark; that focus must not reopen it.
+  let fnRefocus = false;
   function onFootnoteFocus(e: FocusEvent) {
+    if (fnRefocus) return;
     const marker = (e.target as HTMLElement | null)?.closest?.('.fn-marker');
     if (marker) showFootnote(marker);
   }
@@ -1009,7 +1290,10 @@
     e.stopPropagation();
     showFootnote(marker, true);
   }
-  function closeFootnote() { cancelFnClose(); fnPinned = false; footnote = null; }
+  function closeFootnote() {
+    cancelFnClose(); fnPinned = false; footnote = null;
+    fnRefocus = true; setTimeout(() => { fnRefocus = false; }, 0);
+  }
   // Click anywhere outside the marker/popup dismisses a pinned note; same
   // for the Bekker-numbers info popover.
   function onDocPointerDown(e: MouseEvent) {
@@ -1036,6 +1320,12 @@
     if (savedColw) { const v = parseFloat(savedColw); if (!isNaN(v)) colScale = v; }
     const savedCite = (() => { try { return localStorage.getItem(CITE_KEY); } catch { return null; } })();
     if (savedCite !== null) citeCopy = savedCite === 'true';
+    if (b) {
+      const savedGf = (() => { try { return localStorage.getItem(GFONT_KEY); } catch { return null; } })();
+      if (savedGf === 'gentium' || savedGf === 'didot') setGFont(savedGf);
+      wpOver = (() => { try { return localStorage.getItem(WP_KEY) === 'over'; } catch { return false; } })();
+      bHead();
+    }
 
     // Settings sidebar events (dispatched by ReaderShell.astro and Escape handler).
     _onToggleSettings = () => { settingsOpen ? closeSettings() : openSettings(); };
@@ -1074,8 +1364,9 @@
       if (saved === 'greek' || saved === 'english' || saved === 'both') view = saved;
       // No saved choice: a phone defaults to English only (the bilingual columns
       // are cramped on a narrow screen); desktop stays bilingual. The toggle —
-      // and any saved choice — overrides this on either.
-      else if (window.matchMedia('(max-width: 680px)').matches) view = 'english';
+      // and any saved choice — overrides this on either. B stacks each passage
+      // on a phone at full reading size, so Both stays its default there.
+      else if (!b && window.matchMedia('(max-width: 680px)').matches) view = 'english';
     }
     const validTrans = new Set([...translations.map(t => t.id), ...(canCompare ? ['compare'] : [])]);
     const savedTrans = (() => { try { return localStorage.getItem(TRANS_KEY); } catch { return null; } })();
@@ -1156,6 +1447,10 @@
         document.addEventListener('mouseup', checkCopyBtn);
         document.addEventListener('selectionchange', onSelectionChange);
         updateChapterContext();
+        if (b) {
+          mounted = true;
+          rove(visibleToks()[0] ?? null);
+        }
       }, 0);
     }
   });
@@ -1182,7 +1477,7 @@
   // The line currently at the top of the reading area — the fallback anchor to
   // keep fixed when the sidebar closes after the clicked word has scrolled away.
   function topAnchor(): HTMLElement | null {
-    const ctrlBottom = document.querySelector('.reader-controls')?.getBoundingClientRect().bottom ?? 0;
+    const ctrlBottom = b ? readingTop() : document.querySelector('.reader-controls')?.getBoundingClientRect().bottom ?? 0;
     const inset = ctrlBottom + 8;
     const greekVisible = view === 'greek' || view === 'both';
     const els = document.querySelectorAll<HTMLElement>(greekVisible ? '.greek-line[id]' : '.segment[id]');
@@ -1211,14 +1506,21 @@
     const rect = el.getBoundingClientRect();
     // Only the first open reflows the body (adds .word-open); switching words
     // while the sidebar is already open changes nothing about the layout.
-    if (!popup) { pinnedTok = el; pinAcrossReflow(el); }
+    // B at the top of the page keeps the page top still, as the kit does: the
+    // book head stays where it was and the word moves with the reflow.
+    if (!popup) { pinnedTok = el; if (!b || window.scrollY > 0) pinAcrossReflow(el); }
+    if (b) { popupPlace = wordPlace(el); rove(el); }
     popup = { token, anchor: { x: rect.left, y: rect.bottom } };
   }
 
   function closePopup() {
     if (popup) pinAcrossReflow(pinnedTok && inViewport(pinnedTok) ? pinnedTok : topAnchor());
+    const word = b ? document.querySelector<HTMLElement>('.reader-body .tok.active') : null;
     popup = null;
     pinnedTok = null;
+    // Escape returns focus to the word the panel was showing (R-A4), after
+    // the panel has handed focus back to where it opened.
+    if (word) tick().then(() => word.focus({ preventScroll: true }));
   }
 
   // Show line number only for multiples of 5 (and line 1). Suppressed entirely
@@ -1354,13 +1656,26 @@
         class="tok"
         class:active={popup?.token === part.tok}
         class:hit={isHit(part.tok, hitSet, hlGrkFolds)}
+        role={b ? 'button' : undefined}
+        tabindex={b ? -1 : undefined}
         on:click={(e) => handleTokenClick(e, part.tok)}
       >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
+    {#if b}
+      {@const title = chapterTitleB(block.chapter, trans === 'compare' ? compareLeft : trans, view)}
+      <div class="chapter-head b-chh" id="ch-{bookNum}-{block.chapter}" data-chapter={block.chapter} data-title={titleText(title.text)}>
+        <span class="b-chn">{block.chapter}</span>
+        <div>
+          {#if title.text}<p class="b-cht">{#if title.fn}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(title.text, title.fn, engMarks)}{:else}{title.text}{/if}</p>{/if}
+          <p class="b-chb">Chapter {block.chapter}{#if block.bekker && !nonBekker}{' · '}{block.bekker}{/if}</p>
+        </div>
+      </div>
+    {:else}
     <div class="chapter-head" id="ch-{bookNum}-{block.chapter}">
       <span class="chapter-label">{#if bookLabel}<span class="chapter-book">{bookLabel},&nbsp;</span>{/if}Chapter {block.chapter}{#if chapterTitles[block.chapter ?? '']}: {chapterTitles[block.chapter ?? '']}{/if}</span>
       {#if block.bekker && !nonBekker}<span class="chapter-bekker">({block.bekker})</span>{/if}
     </div>
+    {/if}
   {/snippet}
 
   <!-- One English column for a translation: the primary's flow (block.flow) or
@@ -1371,7 +1686,8 @@
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
-      {@const chTitle = importChapterTitle(transId, block.chapter)}
+      <!-- B heads the chapter with the title instead (chapterTitleB). -->
+      {@const chTitle = b ? '' : importChapterTitle(transId, block.chapter)}
       <!-- An imported translation's chapter-opening title: a SIBLING before
            .overlay-prose, not its first child — (a) inside .overlay-prose it pushed
            the English prose one line below the Greek (John's review of
@@ -1400,13 +1716,13 @@
         >
           {#each attachTicks(flow, new Set((block.otables[transId] ?? []).map(t => t.n))) as part}
             {#if part.text === '\n'}
-              <br class="para-br" />
+              <svelte:element this={b ? 'span' : 'br'} class="para-br" />
             {:else if part.text !== null}
               <span class="bk-seg"
                 >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
                   >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId, engMarks)}</span>
             {:else if part.para}
-              <br class="para-br" />
+              <svelte:element this={b ? 'span' : 'br'} class="para-br" />
             {:else}
               <span class="bk-num" class:approx={!part.real}>{part.n}</span>
               {#each (block.otables[transId] ?? []).filter(t => t.n === part.n) as tbl}
@@ -1423,13 +1739,13 @@
         <div class="overlay-prose">
           {#each attachTicks(flow) as part}
             {#if part.text === '\n'}
-              <br class="para-br" />
+              <svelte:element this={b ? 'span' : 'br'} class="para-br" />
             {:else if part.text !== null}
               <span class="bk-seg"
                 >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
                   >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text, engMarks)}</span>
             {:else if part.para}
-              <br class="para-br" />
+              <svelte:element this={b ? 'span' : 'br'} class="para-br" />
             {:else}
               <span class="bk-num" class:approx={!part.real}>{part.n}</span>
             {/if}
@@ -1440,11 +1756,43 @@
   {/snippet}
 
   <div class="reader-body view-{view} trans-{trans}" role="main"
+    class:b-text={b}
+    class:wp-over={b && wpOver}
+    data-body={b ? '' : undefined}
+    data-view={b ? view : undefined}
+    data-gfont={b ? gfont : undefined}
+    on:keydown={onTextKey}
     class:busse={busse}
     class:chapter-section={chapterSection}
     class:word-open={!!popup}
-    style="--fs-greek:{fsGreek}rem;--fs-english:{fsEng}rem;--lh-greek:{lhGreek};--lh-english:{lhEng};--colw-scale:{colScale};--fs-scale:{fsScale}{greekTrack ? `;--greek-track:${greekTrack}px` : ''}"
+    style={b ? `--fs:${fsScale};--lh:${lhScale};--cw:${colScale}` : `--fs-greek:${fsGreek}rem;--fs-english:${fsEng}rem;--lh-greek:${lhGreek};--lh-english:${lhEng};--colw-scale:${colScale};--fs-scale:${fsScale}${greekTrack ? `;--greek-track:${greekTrack}px` : ''}`}
     on:copy={handleCopy}>
+    <!-- Print-only masthead (hidden on screen): author eyebrow, work title with
+         its Greek title alongside, and the source citation. It leads the
+         printed page, above B's book head. -->
+    <div class="print-head" aria-hidden="true">
+      <div class="print-eyebrow">{workMeta?.author ?? 'Aristotle'}</div>
+      <div class="print-titleline">
+        <span class="print-title">{workMeta?.title ?? ''}</span>
+        {#if workMeta?.greekTitle}<span class="print-title-gk">{workMeta.greekTitle}</span>{/if}
+      </div>
+      {#if printCite}<div class="print-cite">{printCite}</div>{/if}
+    </div>
+    {#if b}
+      <!-- The book head: the work, the book, the Greek title and the English
+           translators. Never the Greek edition (R-R1); print keeps it. -->
+      <header class="b-bookh">
+        {#if workMeta && workMeta.books > 1}
+          <p class="b-bk-k">{workMeta.title}</p>
+          <h1 class="b-bk-t"><span class="sr-only">{workMeta.title}, </span>{bookLabel}</h1>
+        {:else}
+          <h1 class="b-bk-t">{workMeta?.title ?? ''}</h1>
+        {/if}
+        {#if workMeta?.greekTitle || englishLine}
+          <p class="b-bk-s">{#if workMeta?.greekTitle}<span lang="grc">{workMeta.greekTitle}{#if workMeta.books > 1}{' '}{greekBookLetter(workBookLabel(workMeta, bookNum))}{/if}</span>{/if}{#if workMeta?.greekTitle && englishLine}{' · '}{/if}{#if englishLine}English: {englishLine}{/if}</p>
+        {/if}
+      </header>
+    {:else}
     <div class="reader-controls">
       {#if liveChapter}
         <span class="rc-context">{liveChapter}</span>
@@ -1483,17 +1831,8 @@
         </div>
       </div>
     </div>
-    <!-- Print-only masthead (hidden on screen): author eyebrow, work title with
-         its Greek title alongside, and the source citation. -->
-    <div class="print-head" aria-hidden="true">
-      <div class="print-eyebrow">{workMeta?.author ?? 'Aristotle'}</div>
-      <div class="print-titleline">
-        <span class="print-title">{workMeta?.title ?? ''}</span>
-        {#if workMeta?.greekTitle}<span class="print-title-gk">{workMeta.greekTitle}</span>{/if}
-      </div>
-      {#if printCite}<div class="print-cite">{printCite}</div>{/if}
-    </div>
-    {#if hasApproxTicks && !busse}
+    {/if}
+    {#if hasApproxTicks && !busse && !b}
       <!-- The estimate disclaimer stays one click away, not a paragraph of
            front matter: the honesty lives in the ticks themselves (upright vs
            italic grey); this explains the convention on demand. -->
@@ -1522,7 +1861,7 @@
              reference (the column ref is a marker within the chapter, not a
              heading over it). Mid-column chapter starts render inline below. -->
         {#if leadChapter}{@render chapterHead(leadChapter)}{/if}
-        {#if !nonBekker}
+        {#if !nonBekker && !b}
           <div class="seg-ref">
             {seg.column}
           </div>
@@ -1541,20 +1880,20 @@
                in greek-only view (no title shown → no gap). -->
           {@const leftTransId = trans === 'compare' ? compareLeft : trans}
           {@const leftFlow = leftTransId === engSlot?.id ? block.flow : (block.oflows[leftTransId] ?? [])}
-          {@const leftTitle = view !== 'greek' && leftFlow.length ? importChapterTitle(leftTransId, block.chapter) : ''}
+          {@const leftTitle = !b && view !== 'greek' && leftFlow.length ? importChapterTitle(leftTransId, block.chapter) : ''}
           {@const rightFlow = trans === 'compare' ? (compareRight === engSlot?.id ? block.flow : (block.oflows[compareRight] ?? [])) : []}
-          {@const rightTitle = trans === 'compare' && view !== 'greek' && rightFlow.length ? importChapterTitle(compareRight, block.chapter) : ''}
+          {@const rightTitle = !b && trans === 'compare' && view !== 'greek' && rightFlow.length ? importChapterTitle(compareRight, block.chapter) : ''}
           <!-- The Greek column answers to whichever column has a title; either
                is one line high there (width:0 + nowrap — see the class). -->
           {@const greekSpacerTitle = leftTitle || rightTitle}
           {#if block.chapter && !(bi === 0 && leadChapter)}
             {@render chapterHead(block)}
           {/if}
-          <div class="seg-row" data-chapter={block.currentChapter}>
+          <div class="seg-row" class:b-row={b} data-chapter={block.currentChapter} style={b ? `--n:${view === 'greek' ? 1 : (view === 'both' ? 1 : 0) + (trans === 'compare' ? 2 : 1)}` : undefined}>
             <!-- Greek column -->
-            <div class="greek-col" lang="grc">
+            <div class="greek-col" class:b-gc={b} lang="grc">
               {#if greekSpacerTitle}<div class="overlay-chapter-title overlay-chapter-title-spacer" aria-hidden="true">{titleText(greekSpacerTitle)}</div>{/if}
-              {#each greekItems(block.lines) as item}
+              {#each greekItems(block.lines) as item, li}
                 {#if item.table}
                   <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->
                   <table class="greek-table"><tbody>
@@ -1568,8 +1907,9 @@
                     {/each}
                   </tbody></table>
                 {:else}
-                  <div class="greek-line" id={item.line.cont ? `${lineAnchor(seg.column, item.line.n, item.line.sub)}-c` : lineAnchor(seg.column, item.line.n, item.line.sub)} class:target={!item.line.cont && targetId === lineAnchor(seg.column, item.line.n, item.line.sub)} class:cont={item.line.cont}>
-                    <span class="line-num">{item.line.cont ? '' : showLineNum(item.line.n, item.line.sub)}</span>
+                  {@const num = lineLabel(seg.column, item.line, bi === 0 && li === 0)}
+                  <div class="greek-line" id={item.line.cont ? `${lineAnchor(seg.column, item.line.n, item.line.sub)}-c` : lineAnchor(seg.column, item.line.n, item.line.sub)} class:target={!item.line.cont && targetId === lineAnchor(seg.column, item.line.n, item.line.sub)} class:cont={item.line.cont} class:b-gl={b}>
+                    <span class="line-num" class:b-ln={b} class:col={b && !nonBekker && num.startsWith(seg.column)}>{num}</span>
                     <!-- The siglum sits in the margin at the gutter's edge; when the
                          line also carries a Bekker number, it slides left of it —
                          the number never yields its slot. -->
@@ -1584,7 +1924,7 @@
                         {/each}
                       </span>
                     {/if}
-                    <span class="line-text" lang="grc">{@render greekToks(lineParts(item.line))}</span>
+                    <span class="line-text" class:b-lt={b} lang="grc">{@render greekToks(lineParts(item.line))}</span>
                   </div>
                 {/if}
               {/each}
@@ -1593,7 +1933,7 @@
             <!-- English column: the selected translation (single view), or the
                  left compare column. Prose laid out beside its Bekker-line
                  gutter — real anchors full weight, estimates lighter/italic. -->
-            <div class="english-col" data-trans={trans === 'compare' ? compareLeft : trans}>
+            <div class="english-col" class:b-ec={b} data-trans={trans === 'compare' ? compareLeft : trans} data-t={b && trans === 'compare' ? transById(compareLeft)?.short : undefined}>
               {#if trans === 'compare'}<div class="col-label">{transById(compareLeft)?.short ?? 'English'}</div>{/if}
               <!-- No title of its own, but the right column has one: take the
                    gap at this column's own width so it wraps to the same
@@ -1615,7 +1955,7 @@
             <!-- Right compare column: the second chosen translation beside the
                  first (hidden in Greek-only). -->
             {#if trans === 'compare' && view !== 'greek'}
-              <div class="overlay-col" data-trans={compareRight}>
+              <div class="overlay-col" class:b-ec={b} data-trans={compareRight} data-t={b ? transById(compareRight)?.short : undefined}>
                 <div class="col-label">{transById(compareRight)?.short ?? ''}</div>
                 <!-- Same counterweight the other way: Ross carries no titles,
                      so Ostwald's heading would otherwise leave Ross's line 1
@@ -1642,6 +1982,71 @@
   </div>
 {/if}
 
+{#snippet transList()}
+  <ul class="b-pick">
+    {#each translations as t (t.id)}
+      <li><button type="button" aria-pressed={primaryId === t.id} on:click={() => pickPrimary(t.id)}><span>{whoOf(t.name)}</span>{#if pubOf(t.name)}<small>{pubOf(t.name)}</small>{/if}</button></li>
+    {/each}
+  </ul>
+  {#if canCompare}
+    <p class="b-mk">Beside it</p>
+    <p class="b-cmps">{#each translations.filter((t) => t.id !== primaryId) as t (t.id)}<button type="button" aria-pressed={besideId === t.id} on:click={() => pickBeside(t.id)}>{t.short}</button>{/each}<button type="button" aria-pressed={!besideId} on:click={() => pickBeside('')}>None</button></p>
+  {/if}
+{/snippet}
+
+{#if b}
+  {#if pickerOpen && translations.length > 1}
+    <div class="b-menu b-pk" style="top:{menuAt.top}px;right:{menuAt.right}px" role="group" aria-label="Translation">
+      <p class="b-mk">Translation</p>
+      {@render transList()}
+    </div>
+  {/if}
+  {#if settingsOpen}
+    <div class="b-menu b-aa" style={vw <= 700 ? `top:${menuAt.top}px;left:12px;right:12px` : `top:${menuAt.top}px;right:${menuAt.right}px`} role="group" aria-label="Text and view settings">
+      <div class="b-seg wide" role="group" aria-label="Reading view">
+        {#each ['greek', 'both', 'english'] as v}
+          <button type="button" aria-pressed={view === v} on:click={() => setView(v as View)}>{v[0].toUpperCase() + v.slice(1)}</button>
+        {/each}
+      </div>
+      <p class="b-mk">Greek font</p>
+      <div class="b-seg wide b-gf" role="group" aria-label="Greek font">
+        {#each GFONTS as [id, label, fam] (id)}
+          <button type="button" aria-pressed={gfont === id} style="font-family:{fam}" on:click={() => setGFont(id)}>{label} <span lang="grc">αβγ</span></button>
+        {/each}
+      </div>
+      {#if vw <= 700 && translations.length > 1}
+        <p class="b-mk">Translation</p>
+        {@render transList()}
+      {/if}
+      <label class="b-sl"><span>Text size</span><output>{Math.round(fsScale * 100)}%</output><input type="range" min="0.75" max="1.4" step="0.05" bind:value={fsScale} on:change={saveFs} /></label>
+      <label class="b-sl"><span>Line spacing</span><output>{Math.round(lhScale * 100)}%</output><input type="range" min="0.8" max="1.4" step="0.05" bind:value={lhScale} on:change={saveLh} /></label>
+      {#if vw > 700}
+        <label class="b-sl"><span>Column width</span><output>{Math.round(colScale * 100)}%</output><input type="range" min="0.75" max="1.3" step="0.05" bind:value={colScale} on:change={saveColw} /></label>
+      {/if}
+      {#if vw >= 961}
+        <p class="b-mk">Word panel</p>
+        <div class="b-seg wide b-gf" role="group" aria-label="Word panel">
+          <button type="button" aria-pressed={!wpOver} on:click={() => setWp(false)}>Keep English visible</button>
+          <button type="button" aria-pressed={wpOver} on:click={() => setWp(true)}>Over text</button>
+        </div>
+      {/if}
+      <label class="b-chk"><input type="checkbox" bind:checked={citeCopy} on:change={saveCiteCopy} /><span>Add the citation when I copy Greek</span></label>
+      <p class="b-aa-f">
+        <button type="button" aria-expanded={chaptersInBook.length > 1 ? printMenuOpen : undefined} on:click={() => { if (chaptersInBook.length > 1) printMenuOpen = !printMenuOpen; else printReader(); }}>Print</button>
+        <button type="button" on:click={() => { closeSettings(); window.dispatchEvent(new CustomEvent('open-help')); }}>Help</button>
+        <button type="button" on:click={resetSettings}>Reset</button>
+      </p>
+      {#if printMenuOpen && chaptersInBook.length > 1}
+        <ul class="b-prn">
+          <li><button type="button" on:click={() => { printMenuOpen = false; closeSettings(); printReader(); }}>{bookLabel || 'All chapters'}</button></li>
+          {#each chaptersInBook as ch}
+            <li><button type="button" on:click={() => { printMenuOpen = false; closeSettings(); printSingleChapter(ch); }}>Chapter {ch}</button></li>
+          {/each}
+        </ul>
+      {/if}
+    </div>
+  {/if}
+{:else}
 <aside class="settings-sidebar" class:open={settingsOpen} aria-label="Reader settings" aria-hidden={!settingsOpen} inert={!settingsOpen}>
   <div class="settings-head">
     <span class="settings-title">Settings</span>
@@ -1782,10 +2187,14 @@
   <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
   <div class="settings-backdrop" on:click={closeSettings} transition:fade={{ duration: 180 }}></div>
 {/if}
+{/if}
 
 {#if popup}
   <WordPopup
     {work}
+    {b}
+    place={popupPlace}
+    onStep={stepWord}
     token={popup.token}
     anchor={popup.anchor}
     onClose={closePopup}
@@ -1799,6 +2208,8 @@
     {work}
     n={footnote.n}
     transId={footnote.transId}
+    {b}
+    label={b ? `${transById(footnote.transId)?.short ?? ''}’s note` : ''}
     anchor={footnote.anchor}
     onClose={closeFootnote}
     onHoverIn={cancelFnClose}

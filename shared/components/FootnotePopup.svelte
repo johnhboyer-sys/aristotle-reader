@@ -15,6 +15,9 @@
   // move from the `[^N]` marker into the popup without it disappearing.
   export let onHoverIn: () => void = () => {};
   export let onHoverOut: () => void = () => {};
+  // The site's B note (Reader passes b): "Ostwald’s note 4".
+  export let b = false;
+  export let label = '';
 
   let html = '';
   let loading = true;
@@ -37,7 +40,7 @@
 
   // Keep the popup inside the viewport (anchored below the marker).
   function clampedPos(x: number, y: number) {
-    const W = 440, H = 360, vw = window.innerWidth, vh = window.innerHeight;
+    const W = b ? (window.innerWidth <= 700 ? 340 : 380) : 440, H = 360, vw = window.innerWidth, vh = window.innerHeight;
     return {
       left: Math.max(8, Math.min(x, vw - W - 16)) + 'px',
       top:  Math.min(y + 8, vh - H - 16) + 'px',
@@ -98,7 +101,13 @@
   }
 
   function onKey(e: KeyboardEvent) {
-    if (e.key === 'Escape') onClose();
+    if (!b && e.key === 'Escape') onClose();
+  }
+  // The site's B note: capture phase, so the note spends Escape before the
+  // word panel's own window listener (registered first) sees it: one Escape,
+  // one layer. The desktop app keeps onKey above.
+  function onKeyB(e: KeyboardEvent) {
+    if (b && e.key === 'Escape') { e.preventDefault(); onClose(); }
   }
 
   function focusableEls(): HTMLElement[] {
@@ -138,8 +147,33 @@
   });
 </script>
 
-<svelte:window on:keydown={onKey} />
+<svelte:window on:keydown={onKey} on:keydown|capture={onKeyB} />
 
+{#if b}
+<div
+  class="b-note footnote-popup"
+  bind:this={dialogEl}
+  style="left:{pos.left};top:{pos.top}"
+  role="dialog"
+  aria-label="{label} {display}"
+  aria-modal="true"
+  tabindex="-1"
+  on:mouseenter={onHoverIn}
+  on:mouseleave={onHoverOut}
+  on:focus={onHoverIn}
+  on:blur={onHoverOut}
+  on:keydown={onDialogKey}
+>
+  <p class="b-note-k">{label} {display}</p>
+  {#if error}
+    <p class="b-err">Note not available</p>
+  {:else if !loading}
+    <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+    <div class="footnote-text">{@html sanitizeHtml(html)}</div>
+  {/if}
+  <button type="button" class="b-x" on:click={onClose} aria-label="Close"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button>
+</div>
+{:else}
 <div
   class="popup footnote-popup"
   bind:this={dialogEl}
@@ -170,3 +204,4 @@
     {/if}
   </div>
 </div>
+{/if}

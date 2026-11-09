@@ -33,7 +33,7 @@ const only = flag('--only') || flag('--prove');
 const prove = flag('--prove');
 let proofCase = 'default';
 const stage = Number(flag('--stage') || 1);
-if (![1,2].includes(stage)) throw Error('Stage must be 1 or 2');
+if (![1,2,3].includes(stage)) throw Error('Stage must be 1, 2 or 3');
 const app = fileURLToPath(new URL('../', import.meta.url));
 const dist = join(app, 'dist');
 const ts = createRequire(import.meta.url)('typescript');
@@ -41,8 +41,10 @@ const registrySource = readFileSync(new URL('../../shared/lib/works.ts', import.
 const registryJS = ts.transpileModule(registrySource, {compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}}).outputText;
 const registry = await import('data:text/javascript;base64,'+Buffer.from(registryJS).toString('base64'));
 const workIds = registry.WORKS.map(w=>w.id);
-const publicPages = stage === 2 ? ['/','/Cat/','/picture-credits/'] : ['/'];
-const accessPages = stage === 2 ? [...publicPages,'/EN/'] : ['/'];
+const publicPages = stage >= 2 ? ['/','/Cat/','/picture-credits/'] : ['/'];
+const accessPages = stage >= 2 ? [...publicPages,'/EN/',...(stage >= 3 ? ['/EN/book/1'] : [])] : ['/'];
+// Stage 3: the reader.
+const READER = '/EN/book/1';
 const plates = JSON.parse(readFileSync(new URL('../src/data/plates.json',import.meta.url),'utf8'));
 const chaptersOf = id => JSON.parse(readFileSync(join(app,'public/data',id,'chapters.json'),'utf8'));
 const divisionName = id => {
@@ -53,7 +55,7 @@ const divisionName = id => {
 const walk = (dir, ext) => readdirSync(dir, { withFileTypes: true }).flatMap(d => d.isDirectory() ? walk(join(dir, d.name), ext) : ext.test(d.name) ? [join(dir, d.name)] : []);
 const assert = (ok, msg) => { if (!ok)
     throw Error(msg); };
-const sizes = { D1440: [1440, 900], D1920: [1920, 1080], G1440: [1440, 1400], D1280: [1280, 800], D961: [961, 800], S844: [844, 390], S960: [960, 540], P390: [390, 844], P360: [360, 780] };
+const sizes = { D1440: [1440, 900], D1920: [1920, 1080], G1440: [1440, 1400], D1280: [1280, 800], D961: [961, 800], S844: [844, 390], S960: [960, 540], P390: [390, 844], P360: [360, 780], W1200: [1200, 800], W900: [900, 800] };
 let browser;
 async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false, stubPosterResize = false) {
     browser ||= await resolvePlaywright().chromium.launch();
@@ -120,7 +122,31 @@ async function geometry(page) {
     });
 }
 const controls = 'a[href],button,summary,input,select,textarea,[role="button"],[tabindex="0"]';
+// The reader page: its menus and panels open in turn. Their roots are not
+// modal (focus may leave them); `modal: false` lets the focus walk stop there.
+async function* readerStates(page, size) {
+    yield {name: 'closed', root: '.dir-b'};
+    await page.locator('[data-toc-toggle]').click();
+    assert(await page.locator('#toc-sidebar').isVisible(), `${size} contents did not open`);
+    yield {name: 'contents-open', root: '#toc-sidebar', modal: false};
+    await page.keyboard.press('Escape');
+    await page.locator('[data-aa]').click();
+    await page.locator('.b-aa').waitFor({timeout: 3000});
+    yield {name: 'aa-open', root: '.b-aa', modal: false};
+    await page.keyboard.press('Escape');
+    if (await page.locator('[data-reader-picker]').isVisible()) {
+        await page.locator('[data-reader-picker]').click();
+        await page.locator('.b-pk').waitFor({timeout: 3000});
+        yield {name: 'picker-open', root: '.b-pk', modal: false};
+        await page.keyboard.press('Escape');
+    }
+    await page.locator('.b-gc .tok >> visible=true').first().click();
+    await page.locator('.b-side').waitFor({timeout: 3000});
+    yield {name: 'panel-open', root: '.b-side', modal: false};
+    await page.keyboard.press('Escape');
+}
 async function* accessStates(page, size) {
+    if (await page.locator('.b-rh').count()) { yield* readerStates(page, size); return; }
     yield {name: 'closed', root: '.dir-b'};
     if (await page.locator('.b-bk').count()) {
         await page.locator('[data-books-open]').click();
@@ -207,12 +233,21 @@ const gates = {
         for(const path of publicPages){
             const p=await open('D1440','light',path);
             try{
-                if(prove)await style(p,'.dir-b .b-po-t{color:black!important}');
+                if(prove&&proofCase!=='reader')await style(p,'.dir-b .b-po-t{color:black!important}');
                 const selector=path==='/picture-credits/'?'.b-pc-h':'.b-po-t';
                 const color=await p.locator(selector).evaluate(el=>getComputedStyle(el).color);
                 assert(color===(path==='/picture-credits/'?'rgb(180, 36, 25)':'rgb(226, 56, 46)'),`${path==='/'?'home':path} title color=${color}`);n++;
             }finally{await close(p);}
-        }return n;
+        }
+        if(stage>=3){
+            const p=await open('D1440','light',READER);
+            try{
+                if(prove&&proofCase==='reader')await style(p,'.dir-b .b-rh{height:auto!important}');
+                const height=await p.locator('.b-rh').evaluate(el=>getComputedStyle(el).height);
+                assert(height==='60px',`reader .b-rh height=${height}`);n++;
+            }finally{await close(p);}
+        }
+        return n;
     },
     'R-C2': async () => {
         const files = walk(join(dist, '_astro'), /\.(css|js)$/);
@@ -236,13 +271,18 @@ const gates = {
     },
     'R-F1': async () => {
         let n=0;
-        for(const path of publicPages){
+        for(const path of (stage>=3?[...publicPages,READER]:publicPages)){
         const p = await open('D1440','light',path);
         try {
             if (prove)
                 await p.evaluate(() => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Anton'; document.head.append(l); });
             const links = await p.locator('link[rel="stylesheet"]:not([media="print"])').evaluateAll(els => els.map(l => l.href).filter(h => h.includes('fonts.googleapis.com')));
-            const requested = await p.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).filter(n => n.includes('fonts.googleapis.com')));
+            // The reader's print masthead fonts (media="print") are not screen fonts;
+            // the loaded-font check below still fails them if they reach the screen.
+            const requested = await p.evaluate(() => {
+                const print = new Set([...document.querySelectorAll('link[rel="stylesheet"][media="print"]')].map(l => l.href));
+                return performance.getEntriesByType('resource').map(r => r.name).filter(n => n.includes('fonts.googleapis.com') && !print.has(n));
+            });
             const urls = [...new Set([...links, ...requested])];
             const families = urls.flatMap(u => new URL(u).searchParams.getAll('family').map(f => f.split(':')[0]));
             const allowed = ['Oswald', 'Sofia Sans', 'Literata', 'Gentium Book Plus'];
@@ -285,7 +325,7 @@ const gates = {
     },
     'R-P4': async () => {
         let n = 0;
-        for(const path of (stage===2?['/',...workIds.map(id=>`/${id}/`)]:['/'])) for (const size of ['D1440', 'P390'])
+        for(const path of (stage>=2?['/',...workIds.map(id=>`/${id}/`)]:['/'])) for (const size of ['D1440', 'P390'])
             for (const theme of ['light', 'dark']) {
                 const p = await open(size, theme,path);
                 if (prove && theme === 'dark')
@@ -301,12 +341,12 @@ const gates = {
                     n++;
                 }
             }
-        assert(n===(stage===2?192:4),`plate count=${n}`);
+        assert(n===(stage>=2?192:4),`plate count=${n}`);
         return n;
     },
     'R-T3': async () => {
         let n = 0;
-        for(const path of (stage===2?['/','/Cat/','/EN/']:['/'])) for (const theme of ['light', 'dark']) for (const size of ['D1440', 'D1280', 'D961']) {
+        for(const path of (stage>=2?['/','/Cat/','/EN/']:['/'])) for (const theme of ['light', 'dark']) for (const size of ['D1440', 'D1280', 'D961']) {
             const p = await open(size, theme,path);
             try {
                 if (prove && proofCase !== 'work-plate') await style(p, '.dir-b .b-po.tp-side.pl-l img{width:calc(100% - 586px)!important}');
@@ -325,7 +365,7 @@ const gates = {
     },
     'R-T4': async () => {
         let n = 0;
-        for(const path of (stage===2?['/','/Cat/','/EN/','/Int/','/AthPol/']:['/'])) for (const size of ['P390', 'P360'])
+        for(const path of (stage>=2?['/','/Cat/','/EN/','/Int/','/AthPol/']:['/'])) for (const size of ['P390', 'P360'])
             for (const theme of ['light', 'dark']) {
                 const p = await open(size, theme,path);
                 if (prove)
@@ -434,7 +474,7 @@ const gates = {
                 await close(p);
             }
         }
-        if(stage===2)for(const size of ['S844','S960'])for(const id of ['Cat','EN','Int','AthPol']){
+        if(stage>=2)for(const size of ['S844','S960'])for(const id of ['Cat','EN','Int','AthPol']){
             const p=await open(size,'light',`/${id}/`);
             try{
                 if(prove&&proofCase==='wide-title'&&id==='Cat'&&size==='S844'){
@@ -549,32 +589,54 @@ const gates = {
         }return examined;
     },
     'R-A1': async () => {
-        console.log('R-A1 footnotes: not applicable to home');
-        let n = 0;
+        if (stage < 3) console.log('R-A1 footnotes: not applicable to home');
+        let n = 0, marks = 0;
         for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size,'light',path);
             try {
-                if (prove)
+                if (prove && proofCase !== 'fn-hit')
                     await style(p, '.dir-b [data-theme-toggle]{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
+                if (prove && proofCase === 'fn-hit' && path === READER) await style(p, '.dir-b .fn-marker::after{content:none!important}');
                 for await (const state of accessStates(p, size)) {
-                    const got = await p.locator(state.root).locator(controls).evaluateAll(els => els.filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden').map(el => ({tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0,65), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height})));
+                    // Running text is exempt: Greek word tokens, and links and
+                    // footnote marks inside the reading text (checked below).
+                    const got = await p.locator(state.root).locator(controls).evaluateAll(els => els.filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' && !el.matches('.tok') && !el.closest('.b-gc,.b-ec,.b-cht')).map(el => ({tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0,65), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height})));
                     assert(got.length > 0, `${size} ${state.name} examined=0 controls`);
                     for (const control of got) {
                         assert(control.w >= 39.99 && control.h >= 39.99, `${size} ${control.tag} ${control.text} ${control.w}×${control.h} state=${state.name}`);
                         n++;
                     }
                 }
+                if (path === READER) {
+                    // Each footnote mark answers 18px left, right, above and below its centre.
+                    const ids = await p.locator('.b-ec .fn-marker').evaluateAll(els => els.filter(el => el.getClientRects().length).slice(0, 16).map((el, i) => (el.dataset.gate = String(i))));
+                    assert(ids.length > 0, `${path} ${size} examined=0 footnote marks`);
+                    for (const i of ids) {
+                        const miss = await p.evaluate(i => {
+                            const el = document.querySelector(`[data-gate="${i}"]`);
+                            el.scrollIntoView({block: 'center'});
+                            const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+                            return [[-18, 0], [18, 0], [0, -18], [0, 18]].filter(([dx, dy]) => document.elementFromPoint(x + dx, y + dy)?.closest('.fn-marker') !== el).map(d => d.join(','));
+                        }, i);
+                        assert(!miss.length, `${path} ${size} footnote mark ${i} misses its 40px hit area at ${miss.join(' ')}`);
+                        marks++;
+                    }
+                }
             } finally { await close(p); }
         }
-        return n;
+        if (stage >= 3) console.log(`R-A1 footnote marks examined=${marks}`);
+        return n + marks;
     },
     'R-A2': async () => {
         let n = 0;
         for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size,'light',path);
             try {
-                if (prove)
+                if (prove && (proofCase === 'search' || proofCase === 'default'))
                     await style(p, '.dir-b .b-search input:focus-visible{outline:none!important;box-shadow:none!important}');
+                if (prove && proofCase === 'panel-ring' && path === READER) await style(p, '.dir-b .b-side:focus-visible{outline:none!important}');
+                if (prove && proofCase === 'help-ring' && path === READER) await style(p, '.dir-b .help-modal:focus-visible{outline:none!important}');
+                if (prove && proofCase === 'reader-token' && path === READER) await style(p, '.dir-b .tok:focus-visible{outline:none!important}');
                 for await (const state of accessStates(p, size)) {
                     // Start each walk at its root, including the modal's native focus trap.
                     await p.locator(state.root).evaluate(el => {
@@ -582,7 +644,7 @@ const gates = {
                         el.tabIndex = -1; el.focus();
                         if (old === null) el.removeAttribute('tabindex'); else el.setAttribute('tabindex', old);
                     });
-                    const count = await p.locator(state.root).locator(controls).count();
+                    const count = await p.locator(state.root).locator(controls).evaluateAll(els => els.filter(el => !el.matches('.tok')).length + 1);
                     const seen = new Set();
                     for (let i = 0; i < count + 5; i++) {
                         await p.keyboard.press('Tab');
@@ -592,7 +654,8 @@ const gates = {
                             const css = getComputedStyle(el);
                             return {key: [...document.querySelectorAll(controls)].indexOf(el), html: el.outerHTML.slice(0,200), inside: document.querySelector(root).contains(el), outline: css.outlineStyle, width: parseFloat(css.outlineWidth), shadow: css.boxShadow};
                         }, {controls, root: state.root});
-                        if (!got) continue;
+                        if (!got) { if (seen.size) break; continue; }
+                        if (!got.inside && state.modal === false && seen.size) break;
                         assert(got.inside, `${size} ${state.name} focus left its root: ${got.html}`);
                         if (seen.has(got.key)) break;
                         seen.add(got.key);
@@ -600,6 +663,32 @@ const gates = {
                         n++;
                     }
                     assert(seen.size > 0, `${size} ${state.name} examined=0 focused controls`);
+                }
+                if (path === READER) {
+                    // The word panel and Help take focus when opened; opened
+                    // by keyboard, each shows that it has it.
+                    const ring = (sel) => p.evaluate(sel => {
+                        const el = document.activeElement;
+                        if (!el?.matches(sel)) return `focus on ${el?.outerHTML.slice(0, 80)}`;
+                        const css = getComputedStyle(el);
+                        return (css.outlineStyle !== 'none' && parseFloat(css.outlineWidth) >= 2) || css.boxShadow !== 'none' ? '' : 'no focus ring';
+                    }, sel);
+                    await p.locator('.b-gc .tok[tabindex="0"]').focus();
+                    await p.keyboard.press('Enter');
+                    await p.locator('.b-side').waitFor({timeout: 3000});
+                    await p.waitForFunction(() => document.activeElement?.matches('.b-side'), null, {timeout: 3000}).catch(() => {});
+                    const panel = await ring('.b-side');
+                    assert(!panel, `${size} word panel opened by keyboard: ${panel}`);
+                    await p.keyboard.press('Escape');
+                    await p.locator('[data-toc-toggle]').focus();
+                    await p.keyboard.press('Enter');
+                    await p.locator('[data-reader-help]').focus();
+                    await p.keyboard.press('Enter');
+                    await p.locator('.help-modal').waitFor({timeout: 3000});
+                    const help = await ring('.help-modal');
+                    assert(!help, `${size} Help opened by keyboard: ${help}`);
+                    await p.keyboard.press('Escape');
+                    n += 2;
                 }
             } finally { await close(p); }
         }
@@ -611,7 +700,8 @@ const gates = {
         for (const theme of ['light', 'dark']) for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size, theme,path);
             try {
-                if (prove) await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
+                if (prove && proofCase !== 'reader-ln') await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
+                if (prove && proofCase === 'reader-ln' && path === READER) await style(p, '.dir-b .b-ln{color:#c8c8c8!important}');
                 for await (const state of accessStates(p, size)) {
                     const result = await p.evaluate(root => {
                         const rgb = s => {
@@ -664,7 +754,7 @@ const gates = {
     },
     'R-E1': async () => {
         const files = walk(dist, /\.html$/);
-        if(stage===2){
+        if(stage>=2){
             const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});
             try{for(const path of [...workIds.map(id=>`/${id}/`),'/picture-credits/']){
                 window.document.body.innerHTML=readFileSync(join(dist,path.slice(1),'index.html'),'utf8');
@@ -677,6 +767,39 @@ const gates = {
             }}finally{window.close();}
         }
         const forbidden = ['In this mockup', 'No analysis', 'will appear here', 'keeps its own Bekker', 'Tap any Greek word', 'Click any Greek word'];
+        let readerExamined = 0;
+        if(stage>=3){
+            // The reader as drawn, its panels open in turn (R-E1 in the reader).
+            for(const size of ['D1440','P390']){
+                const p=await open(size,'light',READER);
+                try{
+                    for await(const state of readerStates(p,size)){
+                        if(prove&&proofCase==='reader-copy'&&state.name==='panel-open')await p.locator('.b-side-b').evaluate(el=>el.insertAdjacentHTML('afterbegin','<p>No analysis for this form.</p>'));
+                        const text=await p.locator(state.root).innerText();
+                        const hit=forbidden.filter(f=>text.includes(f));
+                        assert(!hit.length,`${READER} ${size} ${state.name} explainer text: ${hit.join(', ')}`);
+                        readerExamined++;
+                    }
+                }finally{await close(p);}
+            }
+            // 20 sampled reader pages: no heading stands over an empty section.
+            const readers=files.filter(f=>/\/book\/\d+\/index\.html$/.test(f)).sort();
+            const sample=readers.filter((_,i)=>i%Math.max(1,Math.floor(readers.length/20))===0).slice(0,20);
+            assert(sample.length===20,`examined=${sample.length} sampled reader pages`);
+            const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});
+            try{for(const f of sample){
+                // The page's headings outside the text: its book head and contents
+                // (a reader page carries the whole book; parse only those parts).
+                const html=readFileSync(f,'utf8');
+                window.document.body.innerHTML=`<div class="b-text">${html.match(/<header class="b-bookh"[\s\S]*?<\/header>/)?.[0]??''}</div>${html.match(/<aside class="b-toc"[\s\S]*?<\/aside>/)?.[0]??''}`;
+                const heads=[...window.document.querySelectorAll('.b-text h1,.b-text h2,.b-text h3,.b-toc h2')];
+                assert(heads.length>0,`${f} examined=0 reader headings`);
+                const empty=heads.filter(h=>h.nextElementSibling&&!h.nextElementSibling.textContent.trim()).map(h=>h.textContent);
+                assert(!empty.length,`${f} empty headings: ${empty.join(', ')}`);
+                readerExamined++;
+            }}finally{window.close();}
+            console.log(`R-E1 reader states and sampled pages examined=${readerExamined}`);
+        }
         let bad = [];
         const inputs = prove && (stage===1||proofCase==='copy') ? forbidden.map(s => ['HTML fixture ' + s, `<p>${s}</p>`]) : files.map(f => [f, null]);
         for (const [f, source] of inputs) {
@@ -689,6 +812,8 @@ const gates = {
                     bad.push(`${f}: ${s}`);
             }
         }
+        // Lemma pages are stage 5's; say how many violations lie elsewhere.
+        if (stage >= 3) console.log(`R-E1 violations outside /lemma/=${bad.filter(f => !f.includes('/dist/lemma/')).length} of ${bad.length}`);
         assert(!bad.length, `examined=${prove && (stage===1||proofCase==='copy') ? inputs.length : files.length} violations=${bad.length}; ` + bad.slice(0, 12).join('; '));
         for(const path of publicPages){
         const p = await open('D1440','light',path);
@@ -701,7 +826,7 @@ const gates = {
         let n = 0;
         const fails = [];
         for (const size of ['D1440', 'P390'])
-            for (const path of (stage===2?['/','/Cat/','/EN/book/1','/picture-credits/']:['/','/Cat/','/EN/book/1'])) {
+            for (const path of (stage>=2?['/','/Cat/','/EN/book/1','/picture-credits/']:['/','/Cat/','/EN/book/1'])) {
                 const p = await open(size, 'light', path, false, true);
                 if (prove)
                     // A real first-visit toast sits in view (fixed), as the old .reader-tip did.
@@ -711,7 +836,7 @@ const gates = {
                     const visible = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth && getComputedStyle(el).visibility !== 'hidden'; };
                     const alerts = [...document.querySelectorAll('[role="status"],[role="alert"],[role="dialog"],[aria-live],.reader-tip')].filter(el => visible(el) && el.textContent.trim());
                     // These are the existing reader header, its contents bar and the site's nav.
-                    const allow = ['.page-header', '.simple-header', '.reader-controls', '.b-nav'];
+                    const allow = ['.page-header', '.simple-header', '.reader-controls', '.b-nav', '.b-rh'];
                     const fixed = [...document.querySelectorAll('body *')].filter(el => visible(el) && ['fixed', 'sticky'].includes(getComputedStyle(el).position) && !allow.some(s => el.matches(s)));
                     return [...alerts, ...fixed].map(el => el.tagName + '.' + el.className + ' ' + el.textContent.replace(/\s+/g, ' ').trim().slice(0, 70));
                 });
@@ -723,7 +848,7 @@ const gates = {
         return n;
     }
 };
-if(stage===2) Object.assign(gates, {
+if(stage>=2) Object.assign(gates, {
  'R-W1': async()=>{
   let n=0;
   for(const id of workIds){
@@ -740,6 +865,7 @@ if(stage===2) Object.assign(gates, {
     assert(crumb===(literalCrumbs[id]||`Works / ${divisionName(id)}`),`${id} crumb=${crumb}`);
     if(prove&&proofCase==='peters-year'&&id==='EN')await p.locator('[data-english-entry]').filter({hasText:'F. H. Peters'}).evaluate(el=>el.textContent='F. H. Peters, Kegan Paul, rev. ed. 1893');
     if(prove&&proofCase==='ellis-year'&&id==='Pol')await p.locator('[data-english-entry]').filter({hasText:'William Ellis'}).evaluate(el=>el.textContent='William Ellis, 1776; rev., 1912');
+    if(prove&&proofCase==='no-english'&&id==='Cat')await p.locator('[data-english-entry]').evaluateAll(els=>els.forEach(el=>el.remove()));
     const english=await p.locator('[data-english-entry]').allTextContents();
     assert(english.length>0,`${id} examined=0 English facts`);
     for(const text of english)assert(/^[^,()]+(, [^,()]+)*$/.test(text),`${id} English facts form: ${text}`);
@@ -784,7 +910,7 @@ if(stage===2) Object.assign(gates, {
     n++;
    }finally{await close(p);}
    const phone=await open('P390','light',`/${id}/`);
-   try{const height=await phone.locator('.b-crumb').evaluate(el=>el.offsetHeight);assert(height<=16,`${id} P390 crumb height=${height}`);n++;}finally{await close(phone);}
+   try{if(prove&&proofCase==='crumb-height-phone'&&id==='Cat')await style(phone,'.dir-b .b-crumb a{display:inline-flex!important;min-height:40px!important}');const height=await phone.locator('.b-crumb').evaluate(el=>el.offsetHeight);assert(height<=16,`${id} P390 crumb height=${height}`);n++;}finally{await close(phone);}
   }return n;
  },
  'R-W1-bekker':async()=>{
@@ -969,6 +1095,549 @@ if(stage===2) Object.assign(gates, {
  },
 });
 
+// ── Stage 3: the reader (§4.7 R-R1–R-R10, R-A4) ─────────────────────────
+// Wait until the reader island has mounted: the Greek's one tab stop exists
+// (or the Greek is hidden), and the head shows the reader's state.
+async function readerReady(page) {
+    await page.waitForFunction(() => document.querySelector('.reader-body .tok[tabindex="0"]') || document.querySelector('.reader-body[data-view="english"]'), null, {timeout: 10000});
+    await page.waitForTimeout(150);
+}
+async function openReader(size, path = READER, theme = 'light') {
+    const page = await open(size, theme, path);
+    await readerReady(page);
+    return page;
+}
+// Click a reader view in place (the head's buttons are hidden on a phone; the
+// click still drives the reader).
+async function setView(page, view) {
+    await page.evaluate(v => document.querySelector(`[data-reader-view="${v}"]`).click(), view);
+    await page.waitForFunction(v => document.querySelector('.reader-body')?.dataset.view === v, view);
+    await page.waitForTimeout(100);
+}
+async function openWord(page, near = 'first') {
+    const tok = near === 'first' ? page.locator('.b-gc .tok >> visible=true').first() : page.locator(near);
+    await tok.click();
+    await page.locator('.b-side').waitFor({timeout: 3000});
+    await page.waitForTimeout(500);
+}
+// The Greek column B's formula gives (R-R5), from an unwrapped measurement of
+// the lines taken here, not the reader's own published value.
+const greekFormula = page => page.evaluate(() => {
+    const body = document.querySelector('.reader-body');
+    body.classList.add('gw-measure');
+    let w = 0;
+    for (const g of body.querySelectorAll('.b-gc .b-lt')) w = Math.max(w, g.offsetWidth);
+    body.classList.remove('gw-measure');
+    w = Math.ceil(w);
+    const row = [...body.querySelectorAll('.b-row')].find(r => r.querySelector('.b-ec') && r.querySelector('.b-gc .b-lt'));
+    const gc = row.querySelector('.b-gc'), ec = row.querySelector('.b-ec');
+    const n = [...row.children].filter(c => getComputedStyle(c).display !== 'none').length;
+    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+    const u = parseFloat(getComputedStyle(ec).fontSize);
+    const avail = row.clientWidth - gap * (n - 1), emin = (n > 2 ? 18 : 26) * u * (n - 1), gmin = Math.min(w, 20 * u);
+    const expected = Math.floor(avail >= w + emin ? w : avail - emin >= gmin ? avail - emin : avail * gmin / (gmin + emin));
+    return {w, n, gap, u, avail, expected, actual: gc.offsetWidth, gcol: body.style.getPropertyValue('--gcol'), greekW: body.style.getPropertyValue('--greek-w')};
+});
+// English line boxes over Greek word boxes, row by row, in the first rows.
+const overlaps = page => page.evaluate(() => {
+    let boxes = 0, hits = [];
+    const rows = [...document.querySelectorAll('.reader-body .b-row')].slice(0, 40);
+    for (const row of rows) {
+        const g = [...row.querySelectorAll('.b-gc .tok')].flatMap(t => [...t.getClientRects()]);
+        const e = [];
+        for (const ec of row.querySelectorAll('.b-ec')) {
+            const walker = document.createTreeWalker(ec, NodeFilter.SHOW_TEXT);
+            let node;
+            while ((node = walker.nextNode())) {
+                if (!node.textContent.trim() || node.parentElement.closest('.bk-num,.fn-marker')) continue;
+                const range = document.createRange(); range.selectNodeContents(node);
+                e.push(...range.getClientRects());
+            }
+        }
+        boxes += g.length + e.length;
+        for (const a of e) for (const b of g)
+            if (Math.min(a.right, b.right) - Math.max(a.left, b.left) > .5 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > .5) hits.push(Math.round(a.left) + ',' + Math.round(a.top));
+    }
+    return {boxes, hits: hits.length, at: hits.slice(0, 3)};
+});
+// The work whose Greek has the longest Bekker lines (by characters), for R-R5.
+const longLineWork = (() => {
+    let best = null;
+    for (const w of registry.WORKS) {
+        if ((w.citation?.scheme || 'bekker') !== 'bekker') continue;
+        const file = join(app, 'public/data', w.id, 'book-01.json');
+        if (!existsSync(file)) continue;
+        const data = JSON.parse(readFileSync(file, 'utf8'));
+        const max = Math.max(0, ...data.segments.flatMap(s => s.greek.map(l => l.text.length)));
+        if (!best || max > best.max) best = {id: w.id, max};
+    }
+    return best;
+})();
+
+if (stage >= 3) Object.assign(gates, {
+ 'R-R1': async () => {
+  let n = 0;
+  for (const id of workIds) {
+   const work = registry.getWork(id), {short, full} = work.greekSource;
+   for (const size of ['D1440', 'P390']) {
+    const p = await openReader(size, `/${id}/book/1`);
+    try {
+     if (prove && proofCase === 'head' && id === 'EN') await p.locator('.b-rh').evaluate(el => el.insertAdjacentHTML('beforeend', '<span>Greek: Bywater, 1894</span>'));
+     for (const view of ['greek', 'both', 'english']) {
+      await setView(p, view);
+      const chrome = await p.evaluate(() => {
+       const out = [];
+       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+       let node;
+       while ((node = walker.nextNode())) {
+        const el = node.parentElement;
+        if (!node.textContent.trim() || el.closest('script,style,[hidden],.b-gc,.b-ec,.footnote-popup,.b-note')) continue;
+        if (!el.getClientRects().length || getComputedStyle(el).visibility === 'hidden') continue;
+        out.push(node.textContent);
+       }
+       return out.join(' ').replace(/\s+/g, ' ');
+      });
+      assert(chrome.length > 0, `${id} ${size} ${view} examined=0 chrome text`);
+      for (const bad of [short, full]) assert(!chrome.includes(bad), `${id} ${size} ${view} reader chrome names the Greek edition: ${bad}`);
+      assert(!/\bGreek:\s/.test(chrome), `${id} ${size} ${view} reader chrome labels a Greek edition: ${chrome.match(/Greek:\s.{0,30}/)?.[0]}`);
+      n++;
+     }
+     if (size === 'D1440') {
+      await setView(p, 'both');
+      if (prove && proofCase === 'print' && id === 'EN') await p.locator('.print-cite').evaluate(el => el.remove());
+      if (prove && proofCase === 'print-book' && id === 'EN') await style(p, '@media print{.dir-b .b-bookh{display:none!important}}');
+      if (prove && proofCase === 'print-margin' && id === 'EN') await style(p, '@media print{body{margin:8px!important}}');
+      const shownText = el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden' ? el.innerText.trim() : '';
+      const screenBook = await p.locator('.b-bk-t').evaluate(shownText);
+      await p.emulateMedia({media: 'print'});
+      const printed = await p.locator('.print-head').evaluate(el => getComputedStyle(el).display !== 'none' ? el.innerText : '');
+      const printedBook = await p.locator('.b-bk-t').evaluate(shownText);
+      const bodyMargin = await p.evaluate(() => getComputedStyle(document.body).margin);
+      await p.emulateMedia({media: 'screen'});
+      assert(printed.includes(`Greek text: ${full}`), `${id} printed footer lacks "Greek text: ${full.slice(0, 40)}…"`);
+      // The book head prints (the masthead names only the work).
+      assert(screenBook, `${id} examined=0 book label on screen`);
+      assert(printedBook.toLowerCase() === screenBook.toLowerCase(), `${id} printed page drops the book label "${screenBook}" (printed "${printedBook}")`);
+      // Before stage 3 the reset left the printed body no margin; @page sets it.
+      assert(bodyMargin === '0px', `${id} printed body margin=${bodyMargin}`);
+      n++;
+      // Print hides the screen furniture (open here, so the check has
+      // something to hide) and the text takes global.css's print grid.
+      if (prove && id === 'EN' && proofCase === 'print-chrome') await style(p, '@media print{.dir-b .b-side{display:flex!important}}');
+      if (prove && id === 'EN' && proofCase === 'print-grid') await style(p, '@media print{.dir-b .b-text[data-view="both"] .b-row{column-gap:64px!important}}');
+      const printCheck = async (open) => {
+       for (const s of open) assert(await p.locator(s).first().isVisible(), `${id} ${s} did not open before the print check`);
+       await p.emulateMedia({media: 'print'});
+       const got = await p.evaluate(() => {
+        const shown = ['.b-rh', '.b-toc', '.b-side', '.b-note'].filter(s => [...document.querySelectorAll(s)].some(el => getComputedStyle(el).display !== 'none'));
+        const body = document.querySelector('.reader-body');
+        const row = [...body.querySelectorAll('.b-row')].find(r => r.querySelector('.b-gc .b-lt') && r.querySelector('.b-ec'));
+        const css = el => getComputedStyle(el);
+        return {shown, row: !!row, grid: row ? `gap=${css(row).columnGap} padding=${css(body).paddingLeft}/${css(body).paddingRight} greek=${css(row.querySelector('.b-gc')).fontSize} english=${css(row.querySelector('.b-ec')).fontSize}` : ''};
+       });
+       await p.emulateMedia({media: 'screen'});
+       assert(!got.shown.length, `${id} printed page shows screen furniture: ${got.shown.join(' ')}`);
+       assert(got.row, `${id} print examined=0 Greek/English rows`);
+       // global.css @media print: .seg-row gap .6rem, .reader-body padding 0, Greek 12px, English 15px.
+       assert(got.grid === 'gap=9.6px padding=0px/0px greek=12px english=15px', `${id} print grid: ${got.grid}`);
+       n++;
+      };
+      await openWord(p);
+      await p.locator('[data-toc-toggle]').click();
+      await printCheck(['.b-rh', '#toc-sidebar', '.b-side']);
+      const mark = p.locator('.b-ec .fn-marker >> visible=true').first();
+      if (await mark.count()) {
+       await p.keyboard.press('Escape');
+       await mark.click();
+       await p.locator('.b-note').waitFor({timeout: 3000});
+       await printCheck(['.b-note']);
+      }
+     }
+    } finally { await close(p); }
+   }
+  }
+  console.log(`R-R1 works×views×sizes examined=${n}`);
+  return n;
+ },
+ 'R-R2': async () => {
+  const longest = registry.WORKS.reduce((a, w) => w.title.length > a.title.length ? w : a, registry.WORKS[0]);
+  const widths = [];
+  for (let w = 701; w <= 1440; w += 40) widths.push(w);
+  let n = 0;
+  for (const id of ['EN', longest.id]) {
+   const cases = [...['D961', 'S844', 'S960', 'P390', 'P360'].map(s => [s, null]), ...widths.map(w => ['W900', w])];
+   for (const [size, width] of cases) {
+    const p = await openReader(size, `/${id}/book/1`);
+    try {
+     if (width) { await p.setViewportSize({width, height: 800}); await p.waitForTimeout(150); }
+     // The long name back (the cut the old fitter missed): the row then runs into its padding.
+     if (prove && proofCase === 'pad-overflow' && id === 'EN' && size === 'S844') await style(p, '.dir-b .b-rh.cut-name .b-rh-w .full{display:inline!important}.dir-b .b-rh.cut-name .b-rh-w .short{display:none!important}');
+     if (prove && proofCase === 'kit-wrap' && id === 'EN' && size === 'S844') await style(p, '.dir-b .b-rh{flex-wrap:wrap!important}.dir-b .b-rh.cut-title .b-rh-ch i,.dir-b .b-rh.cut-name .b-rh-w .full,.dir-b .b-rh.cut-ch .b-rh-ch{display:inline!important}.dir-b .b-rh.cut-name .b-rh-w .short{display:none!important}');
+     const g = await p.locator('.b-rh').evaluate(head => {
+      const kids = [...head.children].filter(c => c.getClientRects().length && getComputedStyle(c).display !== 'none' && c.getBoundingClientRect().height > 0);
+      const tops = kids.map(c => c.getBoundingClientRect().top);
+      // scrollWidth misses items that only eat into the head's right padding.
+      const end = head.getBoundingClientRect().right - parseFloat(getComputedStyle(head).paddingRight);
+      const past = Math.max(...kids.map(c => c.getBoundingClientRect().right)) - end;
+      return {kids: kids.length, spread: Math.max(...tops) - Math.min(...tops), sh: head.scrollHeight, ch: head.clientHeight, sw: head.scrollWidth, cw: head.clientWidth, h: head.offsetHeight, vw: innerWidth, past, page: document.documentElement.scrollWidth, cvw: document.documentElement.clientWidth};
+     });
+     const label = `${id} ${width ? width + 'px' : size}`;
+     assert(g.kids > 3, `${label} examined=${g.kids} head children`);
+     assert(g.spread < 10 && g.sh <= g.ch, `${label} reader head breaks into two rows (tops spread ${g.spread.toFixed(1)}px, scrollHeight ${g.sh} > ${g.ch})`);
+     assert(g.sw <= g.cw + 1, `${label} reader head overflows its row (${g.sw} > ${g.cw})`);
+     assert(g.past <= 0.5, `${label} reader head runs ${g.past.toFixed(1)}px into its right padding`);
+     assert(g.page <= g.cvw, `${label} page wider than the window (${g.page} > ${g.cvw})`);
+     assert(g.h === (g.vw <= 700 ? 54 : 60), `${label} reader head height=${g.h}`);
+     n++;
+    } finally { await close(p); }
+   }
+  }
+  return n;
+ },
+ 'R-R3': async () => {
+  const window = new Window({settings: {disableCSSFileLoading: true, disableJavaScriptFileLoading: true, disableJavaScriptEvaluation: true}});
+  let n = 0;
+  try {
+   for (const id of workIds.filter(id => registry.getWork(id).books > 1)) {
+    const work = registry.getWork(id);
+    // A reader page carries the whole book; parse only its contents panel.
+    window.document.body.innerHTML = readFileSync(join(dist, id, 'book/1/index.html'), 'utf8').match(/<aside class="b-toc"[\s\S]*?<\/aside>/)?.[0] ?? '';
+    if (prove && id === 'EN') window.document.querySelector('.b-toc .toc-book-label').textContent = 'I Book I';
+    const heads = [...window.document.querySelectorAll('.b-toc .toc-book-label')].map(h => h.textContent.trim());
+    assert(heads.length === work.books, `${id} examined=${heads.length} contents book heads, expected ${work.books}`);
+    heads.forEach((h, i) => { assert(h === `Book ${work.bookLabels[i]}` && /^Book \S+$/.test(h), `${id} contents book head "${h}"`); n++; });
+   }
+  } finally { window.close(); }
+  for (const id of ['EN', 'Meta']) for (const theme of ['light', 'dark']) {
+   const p = await openReader('D1440', `/${id}/book/1`, theme);
+   try {
+    await p.locator('[data-toc-toggle]').click();
+    const colors = await p.locator('.b-toc-c a > span:first-child').evaluateAll(els => els.filter(e => e.getClientRects().length).map(e => ({c: getComputedStyle(e).color, fs: parseFloat(getComputedStyle(e).fontSize)})));
+    assert(colors.length > 0, `${id} examined=0 contents chapter numbers`);
+    const want = theme === 'dark' ? 'rgb(255, 123, 112)' : 'rgb(180, 36, 25)';
+    for (const c of colors) { assert(c.fs < 24 && c.c === want, `${id} ${theme} contents chapter number color=${c.c} size=${c.fs}`); n++; }
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ 'R-R4': async () => {
+  let n = 0;
+  for (const trans of ['', 'compare']) for (const size of ['D1440', 'D961', 'S844', 'S960', 'P390']) {
+   const p = await openReader(size, READER + (trans ? `?trans=${trans}` : ''));
+   try {
+    await setView(p, 'both');
+    if (prove && size === 'S844' && !trans) { await style(p, '.dir-b .b-text[data-view="both"] .b-row{grid-template-columns:minmax(0,1fr)!important}'); await p.waitForTimeout(100); }
+    const rows = await p.evaluate(() => [...document.querySelectorAll('.reader-body .b-row')].map(r => {
+     const g = r.querySelector('.b-gc').getBoundingClientRect();
+     return {g: g.top, gb: g.bottom, cols: getComputedStyle(r).gridTemplateColumns.split(' ').length, e: [...r.querySelectorAll('.b-ec')].filter(e => e.getClientRects().length).map(e => e.getBoundingClientRect().top)};
+    }));
+    const label = `${size}${trans ? ' Compare' : ''}`;
+    assert(rows.length > 0, `${label} examined=0 rows`);
+    for (const r of rows) {
+     assert(r.e.length === (trans ? 2 : 1), `${label} row has ${r.e.length} English cells`);
+     for (const e of r.e) {
+      if (size === 'P390') assert(e >= r.gb - 1, `${label} English cell is not below its Greek`);
+      else assert(Math.abs(e - r.g) <= 2, `${label} English below Greek: row stacks (Greek top ${r.g.toFixed(0)}, English top ${e.toFixed(0)})`);
+     }
+     if (size !== 'P390') assert(r.cols === (trans ? 3 : 2), `${label} row has ${r.cols} columns`);
+     n++;
+    }
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ 'R-R5': async () => {
+  const long = longLineWork;
+  console.log(`R-R5 long-line work: ${long.id} (${registry.getWork(long.id).title}, ${long.max} characters)`);
+  let n = 0, boxes = 0;
+  for (const id of ['EN', long.id]) for (const trans of ['', 'compare']) {
+   if (trans && registry.visibleTranslations(registry.getWork(id)).length < 2) { console.log(`R-R5 ${id} has one translation: no Compare`); continue; }
+   for (const size of ['D1440', 'D1280', 'W1200', 'D961', 'S844']) for (const panel of [false, true]) {
+    const p = await openReader(size, `/${id}/book/1` + (trans ? `?trans=${trans}` : ''));
+    try {
+     await setView(p, 'both');
+     if (prove && proofCase === 'round-eight' && size === 'W1200' && panel) await style(p, '.dir-b .b-text[data-view="both"] .b-row{grid-template-columns:var(--greek-w,max-content) repeat(calc(var(--n) - 1),minmax(0,1fr))!important}');
+     if (id === 'EN' && !trans && !panel && (size === 'D1440' || size === 'S844')) {
+      // The first red Bekker number hangs with the Greek line's indent, as in
+      // the column kit (colw kit-t, B "fb", Both): its ink starts at x45.27 at
+      // both 1440×900 and 844×390, the Greek at x108.
+      if (prove && proofCase === 'ln-margin' && size === 'D1440') await style(p, '.dir-b .b-ln{text-indent:0!important}');
+      const ln = await p.evaluate(() => {
+       const el = document.querySelector('.reader-body .b-ln.col');
+       if (!el) return null;
+       const r = document.createRange(); r.selectNodeContents(el);
+       return {ink: r.getBoundingClientRect().left, text: el.textContent};
+      });
+      assert(ln && ln.text, `EN ${size} examined=0 red Bekker margin numbers`);
+      assert(Math.abs(ln.ink - 45.27) <= 1, `EN ${size} first Bekker margin number "${ln.text}" ink starts at x${ln.ink.toFixed(2)}, column kit x45.27`);
+     }
+     if (panel) await openWord(p);
+     const f = await greekFormula(p);
+     const label = `${id} ${size}${trans ? ' Compare' : ''}${panel ? ' panel open' : ''}`;
+     assert(f.w > 0, `${label} examined=0 Greek lines`);
+     assert(Math.abs(f.actual - f.expected) <= 1, `${label} Greek column width=${f.actual} expected ${f.expected} (w=${f.w} n=${f.n} gap=${f.gap} u=${f.u} avail=${f.avail})`);
+     const o = await overlaps(p);
+     assert(o.boxes > 0, `${label} examined=0 boxes`);
+     assert(o.hits === 0, `${label} ${o.hits} English line boxes overlap Greek words (at ${o.at.join(' ')})`);
+     boxes += o.boxes;
+     const small = await p.evaluate(() => [...document.querySelectorAll('.reader-body .b-gc, .reader-body .b-ec')].filter(e => e.getClientRects().length && parseFloat(getComputedStyle(e).fontSize) < 18).length);
+     assert(small === 0, `${label} ${small} reading columns under 18px`);
+     n++;
+    } finally { await close(p); }
+   }
+  }
+  console.log(`R-R5 boxes examined=${boxes}`);
+  // A phone sets the reading text at the kit's phone size, measured in the
+  // kit (kit-t/index.html#b-reader, 390px pane): 18px on a 30.96px line. The
+  // sizes above never reach a phone, which is how 14.4px passed.
+  const KIT_PHONE = {size: 18, line: 30.96};
+  for (const id of ['EN', long.id]) for (const trans of ['', 'compare']) {
+   if (trans && registry.visibleTranslations(registry.getWork(id)).length < 2) continue;
+   for (const size of ['P390', 'P360']) {
+    const p = await openReader(size, `/${id}/book/1` + (trans ? `?trans=${trans}` : ''));
+    try {
+     if (prove && proofCase === 'phone-shrink') await style(p, '.reader-body.view-both .greek-col,.reader-body.view-both .english-col{font-size:.9rem!important;line-height:1.6!important}');
+     for (const view of ['both', 'greek', 'english']) {
+      await setView(p, view);
+      const cols = await p.evaluate(() => [...document.querySelectorAll('.reader-body .b-gc, .reader-body .b-ec')].filter(e => e.getClientRects().length).map(e => ({cls: e.className, size: parseFloat(getComputedStyle(e).fontSize), line: parseFloat(getComputedStyle(e).lineHeight)})));
+      const label = `${id} ${size}${trans ? ' Compare' : ''} ${view}`;
+      assert(cols.length > 0, `${label} examined=0 reading columns`);
+      const small = cols.filter(c => c.size < KIT_PHONE.size - .01 || c.line < KIT_PHONE.line - .01);
+      assert(!small.length, `${label} phone reading text below the kit's ${KIT_PHONE.size}/${KIT_PHONE.line}px: ${small[0]?.cls.split(' ')[0]} ${small[0]?.size}/${small[0]?.line}px`);
+      n++;
+     }
+    } finally { await close(p); }
+   }
+  }
+  return n;
+ },
+ 'R-R6': async () => {
+  const p = await openReader('D1440');
+  try {
+   const gcol = () => p.evaluate(() => document.querySelector('.reader-body').style.getPropertyValue('--gcol'));
+   const greekW = () => p.evaluate(() => document.querySelector('.reader-body').style.getPropertyValue('--greek-w'));
+   const before = await gcol();
+   assert(before, 'examined=0: no --gcol at D1440');
+   await p.evaluate(() => window.scrollTo(0, 1500));
+   await p.waitForTimeout(200);
+   const target = await p.evaluate(() => {
+    const toks = [...document.querySelectorAll('.b-gc .tok')];
+    const t = toks.find(t => { const r = t.getBoundingClientRect(); return r.top > innerHeight * .45 && r.top < innerHeight * .7; });
+    t.dataset.gate = 'word';
+    return t.getBoundingClientRect().top;
+   });
+   if (prove) await p.evaluate(v => {
+    // Drop the rerun on panel open: hold --gcol at its closed value.
+    const body = document.querySelector('.reader-body');
+    new MutationObserver(() => { if (body.style.getPropertyValue('--gcol') !== v) body.style.setProperty('--gcol', v); }).observe(body, {attributes: true, attributeFilter: ['style']});
+   }, before);
+   await openWord(p, '[data-gate="word"]');
+   const open = await gcol();
+   const moved = await p.evaluate(() => document.querySelector('[data-gate="word"]').getBoundingClientRect().top);
+   assert(open !== before, `panel open did not change --gcol (${before})`);
+   assert(Math.abs(moved - target) < 4, `the clicked word moved ${(moved - target).toFixed(1)}px on panel open`);
+   const w0 = await greekW();
+   await p.locator('[data-aa]').click();
+   await p.locator('.b-aa button', {hasText: 'Didot'}).click();
+   await p.waitForFunction(w => document.querySelector('.reader-body').style.getPropertyValue('--greek-w') !== w, w0, {timeout: 8000}).catch(() => {});
+   const w1 = await greekW();
+   assert(w1 !== w0, `GFS Didot did not change --greek-w (${w0})`);
+   await p.locator('[data-aa]').click();
+   const g1 = await gcol();
+   await p.setViewportSize({width: 961, height: 800});
+   await p.waitForFunction(g => document.querySelector('.reader-body').style.getPropertyValue('--gcol') !== g, g1, {timeout: 3000}).catch(() => {});
+   const g2 = await gcol();
+   assert(g2 !== g1, `resize to D961 did not change --gcol (${g1})`);
+   console.log(`R-R6 --gcol ${before} → ${open} (panel) → ${g2} (961); --greek-w ${w0} → ${w1} (Didot); word moved ${(moved - target).toFixed(1)}px`);
+   return 4;
+  } finally { await close(p); }
+ },
+ 'R-R7': async () => {
+  let n = 0;
+  for (const size of ['D1440', 'D1280']) for (const trans of ['', 'compare']) {
+   const p = await openReader(size, READER + (trans ? `?trans=${trans}` : ''));
+   try {
+    await setView(p, 'both');
+    if (prove && trans) await style(p, '.dir-b .b-text.word-open.trans-compare{padding-right:72px!important}');
+    const pad = () => p.locator('.reader-body').evaluate(el => { const s = getComputedStyle(el); return `${s.paddingLeft} ${s.paddingRight}`; });
+    const closed = await pad();
+    await openWord(p);
+    const label = `${size}${trans ? ' Compare' : ''}`;
+    const under = await p.evaluate(() => {
+     const side = document.querySelector('.b-side').getBoundingClientRect();
+     let lines = 0, boxes = 0;
+     for (const ec of document.querySelectorAll('.reader-body .b-ec')) {
+      const walker = document.createTreeWalker(ec, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+       if (!node.textContent.trim()) continue;
+       const range = document.createRange(); range.selectNodeContents(node);
+       for (const r of range.getClientRects()) {
+        if (r.bottom < 0 || r.top > innerHeight) continue;
+        boxes++;
+        if (r.right > side.left + .5) lines++;
+       }
+      }
+     }
+     return {lines, boxes, gap: parseFloat(getComputedStyle(document.querySelector('.reader-body .b-row')).columnGap)};
+    });
+    assert(under.boxes > 0, `${label} examined=0 English line boxes`);
+    assert(under.lines === 0, `${label} ${under.lines} English line boxes under the panel`);
+    assert(under.gap >= 56, `${label} column gap ${under.gap}px with the panel open`);
+    await p.evaluate(() => window.scrollBy(0, 2000));
+    await p.waitForTimeout(150);
+    const place = await p.evaluate(() => ({side: document.querySelector('.b-side').getBoundingClientRect(), head: document.querySelector('.b-rh').getBoundingClientRect().bottom, h: innerHeight}));
+    assert(Math.abs(place.side.top - place.head) <= 1 && Math.abs(place.side.bottom - place.h) <= 1 && Math.abs(place.side.width - 400) <= 1, `${label} panel top=${place.side.top} head=${place.head} bottom=${place.side.bottom}/${place.h} width=${place.side.width}`);
+    // Over text: the text does not move.
+    await p.locator('[data-aa]').click();
+    await p.locator('.b-aa button', {hasText: 'Over text'}).click();
+    await p.locator('[data-aa]').click();
+    assert(await p.locator('.b-side').count() === 1, `${label} the panel closed with Aa`);
+    await p.waitForTimeout(150);
+    assert(await pad() === closed, `${label} Over text moved the text: ${await pad()} vs closed ${closed}`);
+    n += 3;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ 'R-R8': async () => {
+  let n = 0;
+  for (const size of ['S844', 'S960', 'W900', 'P390']) {
+   const p = await openReader(size);
+   try {
+    if (prove && size === 'S844') await style(p, '.dir-b .b-side{top:auto!important;height:60%!important}');
+    const pad = () => p.locator('.reader-body').evaluate(el => { const s = getComputedStyle(el); return `${s.paddingLeft} ${s.paddingRight}`; });
+    const closed = await pad();
+    await p.locator('[data-aa]').click();
+    await p.locator('.b-aa').waitFor();
+    const row = await p.locator('.b-aa [aria-label="Word panel"]').count();
+    await p.keyboard.press('Escape');
+    if (size !== 'P390') assert(row === 0, `${size} Aa has a Word panel row`);
+    await openWord(p);
+    const g = await p.evaluate(() => ({side: document.querySelector('.b-side').getBoundingClientRect(), head: document.querySelector('.b-rh').getBoundingClientRect().bottom, h: innerHeight}));
+    if (size === 'P390') {
+     assert(Math.abs(g.side.bottom - g.h) <= 1 && g.side.top > g.head + 10, `P390 panel is not a bottom sheet (top=${g.side.top} bottom=${g.side.bottom}/${g.h})`);
+    } else {
+     assert(await pad() === closed, `${size} panel pushed the text: ${await pad()} vs closed ${closed}`);
+     assert(Math.abs(g.side.top - g.head) <= 1, `${size} panel anchored to the bottom (top=${g.side.top}, head=${g.head})`);
+    }
+    n++;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ 'R-R10': async () => {
+  let n = 0;
+  const didot = p => p.requests.filter(u => /gfsdidot|GFS\+Didot/i.test(u));
+  const p = await openReader('D1440', READER + '?hlg=' + encodeURIComponent('ἀγαθόν'));
+  try {
+   p.requests = [];
+   p.on('request', r => p.requests.push(r.url()));
+   await p.waitForTimeout(300);
+   assert(didot(p).length === 0 && !(await p.evaluate(() => performance.getEntriesByType('resource').some(r => /gfsdidot|GFS\+Didot/i.test(r.name)))), 'GFS Didot requested on a fresh load');
+   if (prove) await style(p, '.dir-b .b-gc .tok.hit{font-weight:700!important}');
+   const greek = await p.evaluate(() => [...document.querySelectorAll('.reader-body .b-gc, .reader-body .b-gc *')].map(e => { const s = getComputedStyle(e); return {w: Number(s.fontWeight), st: s.fontStyle, c: e.className}; }));
+   const hits = await p.locator('.b-gc .tok.hit').count();
+   assert(greek.length > 0 && hits > 0, `examined=${greek.length} Greek elements, ${hits} hits`);
+   const heavy = greek.filter(g => g.w > 400 || g.st !== 'normal');
+   assert(!heavy.length, `${heavy.length} Greek elements bold or italic, e.g. ${JSON.stringify(heavy[0])}`);
+   n += greek.length;
+   await p.locator('[data-aa]').click();
+   const aa = p.locator('.b-aa');
+   const text = await aa.textContent();
+   for (const want of ['Greek font', 'Text size', 'Line spacing', 'Column width', 'Word panel', 'Keep English visible', 'Over text', 'Add the citation when I copy Greek', 'Print', 'Reset'])
+    assert(text.includes(want), `Aa lacks "${want}"`);
+   assert(await aa.locator('[aria-label="Reading view"] button').count() === 3, 'Aa lacks the three views');
+   const faces = await aa.locator('[aria-label="Greek font"] button').allInnerTexts();
+   assert(faces.length === 3 && /^Literata/.test(faces[0]) && /^Gentium/.test(faces[1]) && /Didot/.test(faces[2]), `Aa Greek fonts ${faces}`);
+   assert(await aa.locator('[aria-label="Greek font"] button').first().getAttribute('aria-pressed') === 'true', 'Literata is not the default');
+   await aa.locator('button', {hasText: 'Didot'}).click();
+   await p.waitForTimeout(1500);
+   assert(didot(p).length >= 1, 'picking GFS Didot requested no font');
+   assert(await p.locator('.reader-body').getAttribute('data-gfont') === 'didot', 'Didot not applied');
+   await aa.locator('button', {hasText: 'Reset'}).click();
+   await p.waitForTimeout(200);
+   const face = await p.locator('.reader-body .b-gc').first().evaluate(e => getComputedStyle(e).fontFamily);
+   assert(await p.locator('.reader-body').getAttribute('data-gfont') === 'literata' && /^"?Literata/.test(face), `Reset left the Greek in ${face}`);
+   n += 4;
+  } finally { await close(p); }
+  const phone = await openReader('P390');
+  try {
+   await phone.locator('[data-aa]').click();
+   const text = await phone.locator(".b-aa").textContent();
+   assert(!text.includes('Column width') && !text.includes('Word panel') && text.includes('Translation'), 'P390 Aa rows: column width or word panel shown, or translations missing');
+   n++;
+  } finally { await close(phone); }
+  return n;
+ },
+ 'R-A4': async () => {
+  const p = await openReader('D1440');
+  try {
+   if (prove && proofCase === 'no-tabindex') await p.evaluate(() => document.querySelectorAll('.tok').forEach(t => t.removeAttribute('tabindex')));
+   // Hides the shell's preventDefault from the panel: Escape then closes both.
+   if (prove && proofCase === 'escape-layers') await p.evaluate(() => window.addEventListener('keydown', e => Object.defineProperty(e, 'defaultPrevented', {get: () => false}), true));
+   const stops = await p.evaluate(() => ({greek: [...document.querySelectorAll('.b-gc .b-lt [tabindex="0"], .b-gc .b-lt a[href], .b-gc .b-lt button')].filter(e => e.getClientRects().length).length, tokens: document.querySelectorAll('.b-gc .tok').length, roles: document.querySelectorAll('.b-gc .tok:not([role="button"])').length}));
+   assert(stops.tokens > 0 && stops.roles === 0, `examined=${stops.tokens} tokens; ${stops.roles} without role=button`);
+   await p.locator('[data-theme-toggle]').focus();
+   let reached = null;
+   for (let i = 0; i < 12 && reached === null; i++) {
+    await p.keyboard.press('Tab');
+    reached = await p.evaluate(() => document.activeElement?.matches('.b-gc .tok') ? [...document.querySelectorAll('.b-gc .tok')].indexOf(document.activeElement) : null);
+   }
+   assert(reached !== null, 'Tab from the head never reached a Greek word');
+   assert(stops.greek === 1, `the Greek text adds ${stops.greek} tab stops, expected 1`);
+   await p.keyboard.press('ArrowRight');
+   await p.keyboard.press('ArrowRight');
+   const at = await p.evaluate(() => { const t = document.activeElement; const toks = [...document.querySelectorAll('.b-gc .tok')].filter(e => e.offsetParent); return {i: toks.indexOf(t), text: t.textContent, ring: getComputedStyle(t).outlineStyle !== 'none' && parseFloat(getComputedStyle(t).outlineWidth) >= 2}; });
+   assert(at.i === reached + 2, `ArrowRight twice moved to word ${at.i}, expected ${reached + 2}`);
+   assert(at.ring, 'the focused word shows no focus ring');
+   await p.keyboard.press('Enter');
+   await p.locator('.b-side').waitFor({timeout: 3000});
+   assert(await p.locator('.b-side .b-w').innerText() === at.text, 'Enter opened the panel on another word');
+   await p.keyboard.press('Escape');
+   await p.waitForTimeout(300);
+   assert(await p.locator('.b-side').count() === 0, 'Escape left the panel open');
+   const back = await p.evaluate(() => document.activeElement?.textContent);
+   assert(back === at.text && await p.evaluate(() => document.activeElement?.matches('.tok')), `Escape returned focus to ${back}`);
+   // One Escape closes only the top layer: Contents over the open panel.
+   await p.keyboard.press('Enter');
+   await p.locator('.b-side').waitFor({timeout: 3000});
+   await p.locator('[data-toc-toggle]').click();
+   assert(await p.locator('#toc-sidebar').isVisible(), 'Contents did not open over the word panel');
+   await p.keyboard.press('Escape');
+   await p.waitForTimeout(300);
+   const layers = await p.evaluate(() => ({toc: !document.getElementById('toc-sidebar').hidden, panel: !!document.querySelector('.b-side'), focus: document.activeElement?.matches('[data-toc-toggle]')}));
+   assert(!layers.toc, 'Escape left Contents open over the word panel');
+   assert(layers.panel, 'Escape with Contents open closed the word panel too');
+   assert(layers.focus, 'Escape with Contents open did not return focus to the Contents toggle');
+   // Help over the open panel. Opened by its event: a click outside the
+   // panel would close the panel first.
+   const hideSpent = () => p.evaluate(() => window.addEventListener('keydown', e => Object.defineProperty(e, 'defaultPrevented', {get: () => false}), true));
+   if (prove && proofCase === 'escape-help') await hideSpent();
+   await p.evaluate(() => window.dispatchEvent(new CustomEvent('open-help')));
+   await p.locator('.help-modal').waitFor({timeout: 3000});
+   await p.keyboard.press('Escape');
+   await p.waitForTimeout(300);
+   const help = await p.evaluate(() => ({help: !!document.querySelector('.help-modal'), panel: !!document.querySelector('.b-side')}));
+   assert(!help.help, 'Escape left Help open over the word panel');
+   assert(help.panel, 'Escape with Help open closed the word panel too');
+   // A footnote over the open panel, opened from the keyboard for the same reason.
+   const mark = p.locator('.b-ec .fn-marker >> visible=true').first();
+   assert(await mark.count(), 'examined=0 footnote marks for the Escape check');
+   if (prove && proofCase === 'escape-note') await hideSpent();
+   await mark.focus();
+   await p.locator('.b-note').waitFor({timeout: 3000});
+   await p.waitForTimeout(150);
+   await p.keyboard.press('Escape');
+   await p.waitForTimeout(300);
+   const note = await p.evaluate(() => ({note: !!document.querySelector('.b-note'), panel: !!document.querySelector('.b-side')}));
+   assert(!note.note, 'Escape left the footnote open over the word panel');
+   assert(note.panel, 'Escape with a footnote open closed the word panel too');
+   return 12;
+  } finally { await close(p); }
+ },
+});
+
 if (only && !gates[only])
     throw Error(`Unknown gate ${only}`);
 // A proof is valid only when its own mutation causes the named assertion.
@@ -997,7 +1666,7 @@ const proofMessages = {
     'R-E2': /unsolicited overlay:.*reader-tip/,
 };
 const stageTwoProofs = {
-    'R-W1': {'crumb': /AthPol crumb=Works \/ Rhetoric and poetics/, 'english-facts': /Cat English facts form: W\. D\. Ross \(Oxford, 1908\)/, 'missing-glossary': /EN English facts glossary link missing or invalid/, 'crumb-height': /Cat D1440 crumb height=/, 'peters-year': /EN Peters facts must contain rev\. ed\., 1893/, 'ellis-year': /Pol Ellis facts must contain 1776; rev\. 1912/},
+    'R-W1': {'crumb': /AthPol crumb=Works \/ Rhetoric and poetics/, 'english-facts': /Cat English facts form: W\. D\. Ross \(Oxford, 1908\)/, 'missing-glossary': /EN English facts glossary link missing or invalid/, 'crumb-height': /Cat D1440 crumb height=/, 'crumb-height-phone': /Cat P390 crumb height=/, 'no-english': /Cat examined=0 English facts/, 'peters-year': /EN Peters facts must contain rev\. ed\., 1893/, 'ellis-year': /Pol Ellis facts must contain 1776; rev\. 1912/},
     'R-T3': {'home-plate': /D1440 \/ gap=.*expected 56/, 'work-plate': /D1440 \/Cat\/ rendered plate geometry/},
     'R-T2': {'cap': /Cat D1440 Start reading bottom=/, 'scroll-budget': /Cat D1440 scroll changed poster height/, 'crop': /Cat D1440 object-fit=cover expected contain/},
     'R-K1': {'record': /EN Record href=#/, 'punctuation': /home credits doubled full stop/, 'licence': /home credits licence must be in parentheses/, 'licence-stop': /home credits stop before licence/},
@@ -1014,12 +1683,30 @@ const sidewaysProofs = {
     'desktop-poster': /S844 home gap=/,
     'two-columns': /S844 .*works grid has more than one column/,
 };
+const stageThreeProofs = {
+    ...stageTwoProofs,
+    'R-C1': {'home': /home title color=rgb\(0, 0, 0\)/, 'reader': /reader \.b-rh height=/},
+    'R-A1': {'theme-toggle': /D1440 BUTTON.*34×34/, 'fn-hit': /\/EN\/book\/1 D1440 footnote mark \d+ misses its 40px hit area/},
+    'R-A2': {'search': /focus missing .*b-search|focus missing .*name="q"/, 'reader-token': /focus missing <span class="tok/, 'panel-ring': /D1440 word panel opened by keyboard: no focus ring/, 'help-ring': /D1440 Help opened by keyboard: no focus ring/},
+    'R-A3': {'sub-label': /light H3\.b-sub sub-label .*ratio=.*color=rgb\(226, 56, 46\)/, 'reader-ln': /light SPAN\.line-num b-ln/},
+    'R-E1': {...stageTwoProofs['R-E1'], 'reader-copy': /\/EN\/book\/1 D1440 panel-open explainer text: No analysis/},
+    'R-R1': {'head': /EN D1440 greek reader chrome labels a Greek edition: Greek: Bywater, 1894/, 'print': /EN printed footer lacks "Greek text: /, 'print-chrome': /EN printed page shows screen furniture: \.b-side/, 'print-grid': /EN print grid: gap=64px/, 'print-book': /EN printed page drops the book label "[^"]*Book I"/i, 'print-margin': /EN printed body margin=8px/},
+    'R-R2': {'kit-wrap': /EN S844 reader head breaks into two rows/, 'pad-overflow': /EN S844 reader head runs \d+\.\dpx into its right padding/},
+    'R-R3': {'i-book-i': /EN contents book head "I Book I"/},
+    'R-R4': {'stack-s844': /S844 English below Greek: row stacks/},
+    'R-R5': {'ln-margin': /EN D1440 first Bekker margin number "1094a" ink starts at x4[7-9]/, 'round-eight':/EN W1200 panel open Greek column width=/, 'phone-shrink': /EN P390 both phone reading text below the kit's 18\/30\.96px: greek-col 14\.4\/23\.04px/},
+    'R-R6': {'no-rerun': /panel open did not change --gcol/},
+    'R-R7': {'round-eight-compare': /D1440 Compare \d+ English line boxes under the panel/},
+    'R-R8': {'bottom-sheet': /S844 panel anchored to the bottom/},
+    'R-R10': {'bold-hit': /Greek elements bold or italic/},
+    'R-A4': {'no-tabindex': /Tab from the head never reached a Greek word/, 'escape-layers': /Escape with Contents open closed the word panel too/, 'escape-help': /Escape with Help open closed the word panel too/, 'escape-note': /Escape with a footnote open closed the word panel too/},
+};
 let failed = 0;
 let proofFailed = false;
 try {
     for (const [id, run] of Object.entries(gates)) {
         if (only && only !== id) continue;
-        const variants = stage === 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
+        const variants = stage >= 3 && stageThreeProofs[id] ? stageThreeProofs[id] : stage >= 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
         const cases = prove && variants ? Object.keys(variants) : ['default'];
         for (const variant of cases) {
             proofCase = variant;

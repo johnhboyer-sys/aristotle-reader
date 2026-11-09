@@ -10,6 +10,11 @@
   export let token: { t: string; k: string };
   export const anchor: { x: number; y: number } = { x: 0, y: 0 };
   export let onClose: () => void;
+  // The site's B word panel (Reader passes b): the same content in B's
+  // .b-side / .b-card frame, with the word's place and word stepping.
+  export let b = false;
+  export let place = '';
+  export let onStep: ((d: number) => void) | null = null;
 
   let dialogEl: HTMLDivElement;
   let previousFocus: HTMLElement | null = null;
@@ -234,6 +239,10 @@
   }
 
   function onKey(e: KeyboardEvent) {
+    // B: Escape closes an open menu or the contents first, not the panel too.
+    // The shell marks an Escape it consumed (Contents, Book menu).
+    if (e.defaultPrevented) return;
+    if (b && document.querySelector('.b-aa, .b-pk, .b-toc:not([hidden]), .b-bkm[open]')) return;
     if (e.key === 'Escape') onClose();
   }
 
@@ -250,7 +259,9 @@
   // a footnote click closes the word panel.
   function onOutsideClick(e: MouseEvent) {
     const t = e.target as HTMLElement | null;
-    if (!t || t.closest('.word-sidebar') || t.closest('.tok')) return;
+    if (!t || t.closest('.word-sidebar, .b-side') || t.closest('.tok')) return;
+    // B: the head and its menus (Aa, the translations) leave the panel open.
+    if (b && t.closest('.b-rh, .b-menu')) return;
     onClose();
   }
 
@@ -274,6 +285,62 @@
      tell assistive tech the background is unavailable while pointer users
      interact with it freely (Sol adversarial-review catch, 2026-07-29).
      Escape still closes; focus returns to the opener. -->
+{#if b}
+<aside
+  class="b-side"
+  bind:this={dialogEl}
+  role="dialog"
+  aria-label="Word: {token.t}"
+  tabindex="-1"
+>
+  <div class="b-side-h">
+    <p class="b-w" lang="grc">{token.t}</p>
+    {#if place}<p class="b-loc">{place}</p>{/if}
+    <button type="button" class="b-x" on:click={onClose} aria-label="Close"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.5" fill="none"/></svg></button>
+  </div>
+  <div class="b-side-b">
+    <!-- An unanalysed form shows the word and its place only (R-E1). -->
+    {#if error}
+      <p class="b-err">Lookup failed</p>
+    {:else if !loading}
+      {#each cards as card (card.id)}
+        <section class="b-card">
+          <p class="b-lem" lang="grc">{card.head}{#if card.hom}<small lang="en">{card.hom}</small>{/if}</p>
+          {#if card.gloss}<p class="b-gls">{card.gloss}</p>{/if}
+          {#if card.rows.some((r) => r.text)}
+            <ul class="b-prs">{#each card.rows as row}<li>{row.text}{#if row.dialect}{' '}<em>{row.dialect}</em>{/if}</li>{/each}</ul>
+          {/if}
+          {#if card.ref?.distinctiveness_label}<p class="b-dist">{card.ref.distinctiveness_label}</p>{/if}
+          <p class="b-card-f">
+            {#if card.lsjKey || !useLocalLexicon}
+              <button
+                type="button"
+                aria-expanded={openId === card.id}
+                on:click={(e) => toggleCard(card, (e.currentTarget as HTMLElement)
+                  .closest('.b-card')?.querySelector('.grammata-mount') as HTMLElement)}
+              >{openId === card.id ? 'Hide' : 'Show'} the LSJ entry</button>
+            {/if}
+            {#if card.ref}<a href={`${base}/lemma/${card.ref.slug}/`}>{card.ref.count.toLocaleString()} times in Aristotle</a>{/if}
+          </p>
+          <div class="card-entry" hidden={openId !== card.id}>
+            {#if useLocalLexicon}
+              {#if card.lsjKey && lsj.find(e => e.key === card.lsjKey)}
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                {@html renderLsjEntry(lsj.find(e => e.key === card.lsjKey)!.html, { base })}
+              {/if}
+            {:else}
+              <div class="grammata-mount"></div>
+            {/if}
+          </div>
+        </section>
+      {/each}
+    {/if}
+    {#if onStep}
+      <p class="b-keys"><button type="button" on:click={() => onStep?.(-1)}>← Previous word</button><button type="button" on:click={() => onStep?.(1)}>Next word →</button></p>
+    {/if}
+  </div>
+</aside>
+{:else}
 <div
   class="word-sidebar"
   bind:this={dialogEl}
@@ -344,3 +411,4 @@
     {/if}
   </div>
 </div>
+{/if}

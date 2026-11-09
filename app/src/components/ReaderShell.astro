@@ -10,13 +10,12 @@ import Reader from '@shared/components/Reader.svelte';
 import BekkerJump from '@shared/components/BekkerJump.svelte';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
 import HelpButton from './HelpButton.svelte';
-import WorkSwitcher from './WorkSwitcher.svelte';
+import BFonts from './BFonts.astro';
 import ThemeInit from './ThemeInit.astro';
 import Pwa from './Pwa.astro';
 import ThemeToggle from './ThemeToggle.astro';
-import { getWork, bookLabel, isBookless, workPath, workLanding } from '@shared/lib/works';
+import { getWork, bookLabel, isBookless, workPath, workLanding, visibleTranslations } from '@shared/lib/works';
 import { isChapterSection, isNonBekker } from '@shared/lib/data';
-import { SUPPORT_URL } from '../lib/support';
 import { jsonLdSafe } from '../lib/jsonld';
 import { chapterHref as chapterHrefFor, translatorName as translatorPerson } from '../lib/nav';
 
@@ -81,6 +80,22 @@ const outline = Array.from({ length: work.books }, (_, i) => {
   return { book: b, label: bookLabel(work, b), chapters: allChapters[String(b)] ?? [] };
 });
 const chapterHref = (b: number, chapter: string) => chapterHrefFor(base, workId, n, b, chapter);
+// The translations on offer and the one that opens first (the picker's label).
+const editions = visibleTranslations(work);
+const primaryEdition = editions.find((t) => t.id === work.defaultTranslation)
+  ?? editions.find((t) => t.slot === 'english') ?? editions[0];
+// The head's short work name, for a row too narrow for the full one.
+const shortName = workId === 'EN' ? 'Ethics' : work.abbr;
+// A chapter's title in the contents: the work's own, else the opening
+// translation's (Ostwald titles his chapters), else its Bekker span.
+const noMarks = (s: string) => s.replace(/\[\^[^\]]*\]/g, '').trim();
+const tocTitle = (book: number, c: ChapterRef) => noMarks(
+  chapterTitles[String(book)]?.[c.chapter]
+  || transTitles[primaryEdition?.id ?? '']?.[String(book)]?.[c.chapter]
+  || (nonBekker ? '' : c.bekker));
+const firstTitle = chapters[0] ? noMarks(
+  chapterTitles[String(n)]?.[chapters[0].chapter]
+  || transTitles[primaryEdition?.id ?? '']?.[String(n)]?.[chapters[0].chapter] || '') : '';
 // The visible tab title + og:title. Front-loads the work name (what people
 // search) and appends the parallel-text long-tail phrasing ("greek english
 // translation") that these deep book pages can realistically rank for, since
@@ -147,14 +162,11 @@ const breadcrumbLd = Astro.site
       ],
     }
   : null;
-const h1Text =
-  `${author}, ${work.title}${bookSuffix} — Greek text with English translation`;
 // A short topical paragraph (the curated one-line blurb, framed with the Greek
 // source and translator) so the page carries real descriptive prose for search
 // snippets and screen readers, distinct from the dense parallel-text body.
 const intro =
   `${work.title}${bookSuffix} by ${author}, in the original Greek` +
-  ` (${work.greekSource.short})` +
   (translatorName ? `, with the English translation of ${translatorName}` : '') +
   `. ${work.blurb}`;
 ---
@@ -185,305 +197,162 @@ const intro =
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <BFonts />
   <!-- Display faces used only by the print masthead; media="print" defers the
        fetch so it never costs the on-screen reader. -->
   <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" media="print" />
-  <style>
-    /* Off-screen until focused, then a solid panel over the header. Not
-       `.sr-only`: that clips the element even when focused. */
-    .skip-to-text {
-      position: absolute;
-      left: 0.5rem;
-      top: -3rem;
-      z-index: 100;
-      font-family: var(--font-ui);
-      font-size: 1rem;
-      padding: 0.6rem 1rem;
-      color: var(--text);
-      background: var(--page-bg);
-      border: 2px solid var(--accent);
-      border-radius: 6px;
-      text-decoration: none;
-      transition: top 0.12s ease;
-    }
-    .skip-to-text:focus { top: 0.5rem; }
-    #reading-text:focus { outline: none; }
-  </style>
 </head>
 <body data-work={workId} data-book={n} data-books={work.books} data-base={base}>
-  <!-- Bypass blocks (WCAG 2.4.1): the header carries ~8 controls before the
-       text, and the drawer's outline is only kept out of the tab order by
-       `inert`. This is the first focusable element on the page and is visible
-       only while focused; it targets the anchor placed just above the Reader
-       island at the foot of this file. -->
+<div class="frame dir-b pg-reader">
+<div class="b-rd">
+  <!-- Bypass blocks (WCAG 2.4.1): visible only while focused, the first stop
+       on the page; it targets the anchor just above the Reader island. -->
   <a class="skip-to-text" href="#reading-text">Skip to the text</a>
-  <!-- Semantic page heading + topical intro for search engines and screen
-       readers. Visually hidden because the visible title is the work-switcher
-       control; this gives the document a real, descriptive <h1> and a prose
-       summary without altering the design. -->
-  <header class="sr-only">
-    <h1>{h1Text}</h1>
-    <p>{intro}</p>
-  </header>
-  <header class="page-header">
-    <div class="header-bar">
-      <!-- aria-label, not the visible text alone: .toc-toggle-text is
-           display:none on every phone (global.css, the ≤680px and the
-           landscape blocks), which would leave this button with no
-           accessible name at all — the icon span is aria-hidden. -->
-      <button type="button" class="toc-toggle" aria-label="Contents" aria-expanded="false" aria-controls="toc-sidebar">
-        <span class="toc-toggle-icon" aria-hidden="true">☰</span><span class="toc-toggle-text">Contents</span>
-      </button>
-      <div class="header-title">
-        <a class="home-link" href={`${base}/`} aria-label="All works">Home</a>
-        <span class="title-sep">›</span>
-        <WorkSwitcher work={workId} client:load />
-      </div>
-      <div class="bar-actions">
-        <a class="header-support" href={SUPPORT_URL} target="_blank" rel="noopener" title="Support the site" aria-label="Support the site">
-          <span class="hsup-heart" aria-hidden="true">♥</span>
-          <span class="hsup-text">Support</span>
-        </a>
-        <a class="header-search" href={`${base}/search`} aria-label="Search Greek &amp; English">
-          <svg class="hs-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="6.8" cy="6.8" r="4.6"/><line x1="10.4" y1="10.4" x2="14" y2="14"/></svg>
-          <span class="hs-text">Search</span>
-          <kbd class="hs-kbd" aria-hidden="true">⌘K</kbd>
-        </a>
-        <a class="header-search header-lexicon" href={`${base}/lemma/`} aria-label="Greek Lexicon">
-          <svg class="hs-icon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"><path d="M8 3.6C6.6 2.6 4.2 2.6 2.6 3.1v9C4.2 11.6 6.6 11.6 8 12.6M8 3.6C9.4 2.6 11.8 2.6 13.4 3.1v9C11.8 11.6 9.4 11.6 8 12.6M8 3.6v9"/></svg>
-          <span class="hs-text">Lexicon</span>
-        </a>
-        <button type="button" class="settings-toggle" aria-label="Reader settings" aria-expanded="false">
-          <svg class="settings-icon" width="18" height="14" viewBox="0 0 18 14" aria-hidden="true" fill="currentColor" stroke="none">
-            <rect x="1" y="0" width="16" height="1.5" rx="0.75"/>
-            <circle cx="5.5" cy="0.75" r="2.5"/>
-            <rect x="1" y="6.25" width="16" height="1.5" rx="0.75"/>
-            <circle cx="12.5" cy="7" r="2.5"/>
-            <rect x="1" y="12.5" width="16" height="1.5" rx="0.75"/>
-            <circle cx="7.5" cy="13.25" r="2.5"/>
-          </svg>
-          <span class="settings-text">Settings</span>
-        </button>
-        <HelpButton client:load />
-        <ThemeToggle />
-      </div>
-    </div>
-    <div class="nav-panel" id="nav-panel">
-      {!nonBekker && <BekkerJump work={workId} inputId="bekker-input-nav" client:load />}
-      {!bookless && (
-        <nav class="book-nav" aria-label="Books">
-          <span class="book-nav-label">Books</span>
-          {Array.from({ length: work.books }, (_, i) => (
-            <>
-              <a
-                href={`${base}${workPath(workId, i + 1)}`}
-                class={i + 1 === n ? 'current' : ''}
-                aria-current={i + 1 === n ? 'page' : undefined}
-              >
-                {bookLabel(work, i + 1)}
-              </a>
-              {work.missingBooks && work.missingBooks.after === i + 1 && (
-                <a
-                  class="book-nav-missing"
-                  href={`${base}${workPath(work.missingBooks.linkWork, work.missingBooks.linkBook)}`}
-                  title={`${work.missingBooks.label}: ${work.missingBooks.note} → ${work.missingBooks.linkLabel}`}
-                >
-                  {work.missingBooks.label}&nbsp;→
-                </a>
-              )}
-            </>
-          ))}
-        </nav>
-      )}
-      {chapters.length > 0 && (
-        <nav class="chapter-nav" aria-label={bookless ? 'Chapters' : `Book ${label} chapters`}>
-          <span class="chapter-nav-label">{bookless ? 'Chapters' : `Book ${label} · Chapters`}</span>
-          <span class="chapter-list">
-            {chapters.map((c) => (
-              <a href={`#ch-${n}-${c.chapter}`} title={
-                (chapterTitles[String(n)]?.[c.chapter] ?? `Chapter ${c.chapter}`)
-                + (nonBekker ? '' : ` · ${c.bekker}`)
-              }>{c.chapter}</a>
+  <!-- A topical intro for search engines and screen readers; the visible
+       heading is the book head the reader draws. -->
+  <p class="sr-only">{intro}</p>
+  <header class="b-rh">
+    <button type="button" class="b-ib" data-toc-toggle aria-label="Contents" aria-expanded="false" aria-controls="toc-sidebar"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 4.5h12M2 8h12M2 11.5h12" stroke="currentColor" stroke-width="1.4"/></svg></button>
+    <a class="b-rh-w" href={`${base}${workLanding(workId)}`}><span class="full">{work.title}</span><span class="short">{shortName}</span></a>
+    {!bookless && (
+      <details class="b-bkm">
+        <summary class="b-rh-b">Book {label} <svg viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></summary>
+        <div class="b-menu">
+          <ul class="b-bm">
+            {outline.map((b) => (
+              <>
+                <li><a href={`${base}${workPath(workId, b.book)}`} aria-current={b.book === n ? 'page' : undefined}><span>Book {b.label}</span><small>{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</small></a></li>
+                {work.missingBooks && work.missingBooks.after === b.book && (
+                  <li><a class="b-bm-gap" href={`${base}${workPath(work.missingBooks.linkWork, work.missingBooks.linkBook)}`}>Books {work.missingBooks.label} → {work.missingBooks.linkLabel}</a></li>
+                )}
+              </>
             ))}
-          </span>
-        </nav>
-      )}
-    </div>
+          </ul>
+        </div>
+      </details>
+    )}
+    <span class="b-rh-ch" data-reader-context><span data-ctx-n>{chapters[0] ? `Chapter ${chapters[0].chapter}` : ''}</span><i data-ctx-title>{firstTitle}</i></span>
+    <span class="b-sp"></span>
+    <span class="b-seg hide-s" role="group" aria-label="Reading view">
+      {['greek', 'both', 'english'].map((v) => <button type="button" data-reader-view={v} aria-pressed={v === 'both' ? 'true' : 'false'}>{v[0].toUpperCase() + v.slice(1)}</button>)}
+    </span>
+    {editions.length > 1 && (
+      <button type="button" class="b-rh-b hide-s" data-reader-picker aria-expanded="false" aria-haspopup="true"><span data-label>{primaryEdition?.short}</span> <svg viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></button>
+    )}
+    <a class="b-ib" href={`${base}/search`} aria-label="Search"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.4"/></svg></a>
+    <button type="button" class="b-ib b-aab" data-aa aria-label="Text and view settings" aria-expanded="false">Aa</button>
+    <ThemeToggle bMoon />
   </header>
 
-  <div class="toc-backdrop" id="toc-backdrop" hidden></div>
-  <!-- Closed, the drawer is translated off-screen and aria-hidden, but its
-       links and inputs would still be tab stops: a keyboard user tabbing from
-       the header vanished into ~50 invisible links before reaching the text.
-       `inert` removes it from focus and hit-testing while closed; setToc()
-       below toggles it with aria-hidden. -->
-  <aside class="toc-sidebar" id="toc-sidebar" aria-label={`${work.title} — table of contents`} aria-hidden="true" inert>
-    <div class="toc-head">
-      <a class="toc-home" href={`${base}/`}>‹ All works</a>
-      <button type="button" class="toc-close" aria-label="Close contents">×</button>
-    </div>
-    <div class="toc-actions toc-actions-top">
-      {!nonBekker && <BekkerJump work={workId} inputId="bekker-input-toc" client:load />}
-      <a class="toc-action" href={`${base}/search`}>
-        <span class="toc-action-name">Search</span>
-        <span class="toc-action-hint">Greek &amp; English</span>
-      </a>
-      <a class="toc-action" href={`${base}/lemma/`}>
-        <span class="toc-action-name">Greek Lexicon</span>
-        <span class="toc-action-hint">Word frequency &amp; concordance</span>
-      </a>
-    </div>
-    <div class="toc-work-head"><span class="toc-work">{work.title}</span></div>
-    <nav class="toc-outline">
+  <!-- Closed, the drawer is hidden and inert, so none of its links is a tab
+       stop; setToc() below opens it. -->
+  <aside class="b-toc" id="toc-sidebar" aria-label={`${work.title}: contents`} hidden inert>
+    <div class="b-toc-h"><a href={`${base}/`}>All works</a><button type="button" class="b-x" data-toc-close aria-label="Close contents"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.4"/></svg></button></div>
+    <p class="b-toc-w">{work.title}</p>
+    {!nonBekker && <div class="b-toc-go"><BekkerJump work={workId} inputId="bekker-input-toc" alwaysOpen client:load /></div>}
+    <nav class="toc-outline" aria-label="Books and chapters">
       {bookless ? (
-        <ul class="toc-flat">
-          {outline[0].chapters.map((c) => (
-            <li>
-              <a href={chapterHref(1, c.chapter)} data-ch={`ch-1-${c.chapter}`}>
-                <span class="toc-ch-n">{c.chapter}</span>
-                <span class="toc-ch-body">
-                  {chapterTitles['1']?.[c.chapter] && (
-                    <span class="toc-ch-title">{chapterTitles['1'][c.chapter]}</span>
-                  )}
-                  {!chapterSection && <span class="toc-ch-bekker">{c.bekker}</span>}
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        outline.map((b) => (
-          <>
-            <details class="toc-book" open={b.book === n}>
-              <summary>
-                <span class="toc-book-label">Book {b.label}</span>
-                <span class="toc-book-count">{b.chapters.length} ch.</span>
-              </summary>
-              <ul>
-                {b.chapters.map((c) => (
-                  <li>
-                    <a href={chapterHref(b.book, c.chapter)} data-ch={`ch-${b.book}-${c.chapter}`}>
-                      <span class="toc-ch-n">{c.chapter}</span>
-                      <span class="toc-ch-body">
-                        {chapterTitles[String(b.book)]?.[c.chapter] && (
-                          <span class="toc-ch-title">{chapterTitles[String(b.book)][c.chapter]}</span>
-                        )}
-                        {!chapterSection && <span class="toc-ch-bekker">{c.bekker}</span>}
-                      </span>
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </details>
-            {work.missingBooks && work.missingBooks.after === b.book && (
-              <div class="toc-missing">
-                <span class="toc-missing-label">Books {work.missingBooks.label}</span>
-                <span class="toc-missing-note">{work.missingBooks.note}</span>
-                <a href={`${base}${workPath(work.missingBooks.linkWork, work.missingBooks.linkBook)}`}>
-                  {work.missingBooks.linkLabel} →
-                </a>
-              </div>
-            )}
-          </>
-        ))
-      )}
+        <ol class="b-toc-c">{outline[0].chapters.map((c) => <li><a href={chapterHref(1, c.chapter)} data-ch={`ch-1-${c.chapter}`}><span>{c.chapter}</span><span>{tocTitle(1, c)}</span></a></li>)}</ol>
+      ) : outline.map((b) => (
+        <>
+          <details class="b-toc-b" open={b.book === n}>
+            <summary class="b-toc-bh"><span class="toc-book-label">Book {b.label}</span><small>{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</small></summary>
+            <ol class="b-toc-c">{b.chapters.map((c) => <li><a href={chapterHref(b.book, c.chapter)} data-ch={`ch-${b.book}-${c.chapter}`}><span>{c.chapter}</span><span>{tocTitle(b.book, c)}</span></a></li>)}</ol>
+          </details>
+          {work.missingBooks && work.missingBooks.after === b.book && (
+            <p class="b-toc-gap"><a href={`${base}${workPath(work.missingBooks.linkWork, work.missingBooks.linkBook)}`}>Books {work.missingBooks.label} → {work.missingBooks.linkLabel}</a></p>
+          )}
+        </>
+      ))}
     </nav>
-    <div class="toc-actions toc-actions-bottom">
-      <a class="toc-action" href={`${base}/attribution`}>
-        <span class="toc-action-name">Texts &amp; Licences</span>
-      </a>
-      <button type="button" class="toc-action toc-help">
-        <span class="toc-action-name">Help</span>
-        <span class="toc-action-hint">How to use this reader</span>
-      </button>
-    </div>
+    <p class="b-toc-links"><a href={`${base}/lemma/`}>Lexicon</a><a href={`${base}/attribution`}>Texts &amp; licences</a><a href={`${base}/support`}>Support</a><button type="button" data-reader-help>Help</button></p>
   </aside>
 
-  <script>
-    // Contents sidebar (full-work outline) drawer. On mobile this is the single
-    // navigation hub (the old Menu dropdown is gone); on desktop the nav panel is
-    // always visible (CSS) and the sidebar holds just the outline.
-    const header = document.querySelector('.page-header');
-    const tocToggle = header?.querySelector('.toc-toggle');
-    const sidebar = document.getElementById('toc-sidebar');
-    const backdrop = document.getElementById('toc-backdrop');
-    const setToc = (open: boolean) => {
-      document.body.classList.toggle('toc-open', open);
-      sidebar?.setAttribute('aria-hidden', String(!open));
-      if (sidebar) sidebar.inert = !open;
-      tocToggle?.setAttribute('aria-expanded', String(open));
-      if (backdrop) backdrop.hidden = !open;
-    };
-    tocToggle?.addEventListener('click', () =>
-      setToc(!document.body.classList.contains('toc-open')));
-    backdrop?.addEventListener('click', () => setToc(false));
-    sidebar?.querySelector('.toc-close')?.addEventListener('click', () => setToc(false));
-
-    // Settings sidebar toggle. Communicates with Reader.svelte (a Svelte island)
-    // via CustomEvents on window; the island owns the open/closed state and the
-    // panel markup so translation state can live in one place.
-    const settingsToggle = header?.querySelector('.settings-toggle');
-    settingsToggle?.addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent('toggle-settings'));
-    });
-    // Keep aria-expanded in sync when Reader.svelte reports a state change.
-    window.addEventListener('settings-state', (e) => {
-      const open = (e as CustomEvent<{ open: boolean }>).detail.open;
-      settingsToggle?.setAttribute('aria-expanded', String(open));
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key !== 'Escape') return;
-      if (document.body.classList.contains('toc-open')) { setToc(false); return; }
-      window.dispatchEvent(new CustomEvent('close-settings'));
-    });
-
-    // [ / ] step to the previous/next book. Ignored while typing or with
-    // modifiers held (bracket characters occur in search/palette inputs).
-    document.addEventListener('keydown', (e) => {
-      if (e.key !== '[' && e.key !== ']') return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-      const cur = Number(document.body.dataset.book);
-      const max = Number(document.body.dataset.books);
-      const next = e.key === ']' ? cur + 1 : cur - 1;
-      if (!Number.isFinite(next) || next < 1 || next > max) return;
-      window.location.href = `${document.body.dataset.base}/${document.body.dataset.work}/book/${next}`;
-    });
-    // Clicking a chapter that's on this page (a #hash link) just scrolls — close
-    // the drawer so the reader is visible. Cross-book links navigate away anyway.
-    sidebar?.querySelectorAll<HTMLAnchorElement>('.toc-outline a').forEach((a) => {
-      if (a.getAttribute('href')?.startsWith('#')) a.addEventListener('click', () => setToc(false));
-    });
-    // The sidebar "Help" entry opens the shared Help modal (HelpButton listens for
-    // this event) and closes the drawer so the modal isn't hidden behind it.
-    sidebar?.querySelector('.toc-help')?.addEventListener('click', () => {
-      setToc(false);
-      window.dispatchEvent(new CustomEvent('open-help'));
-    });
-
-    // Publish the header's height as --header-h so the reader's sticky controls
-    // strip can pin directly beneath it. The header is two rows on desktop and
-    // its height shifts with viewport width and work switches, so re-measure.
-    const setHeaderH = () => {
-      if (header) document.documentElement.style.setProperty(
-        '--header-h', `${Math.round(header.getBoundingClientRect().height)}px`);
-    };
-    setHeaderH();
-    if (header && 'ResizeObserver' in window) new ResizeObserver(setHeaderH).observe(header);
-    window.addEventListener('resize', setHeaderH);
-    window.addEventListener('load', setHeaderH);
-    // Web fonts swap in after first paint and reflow the header height.
-    if (document.fonts?.ready) document.fonts.ready.then(setHeaderH);
-  </script>
-
+  <HelpButton client:load />
   <CommandPalette work={workId} client:load />
   <!-- The skip link's target. The Reader island owns .reader-body (role=main)
-       and is a shared component, so the anchor sits just outside it: an empty
-       inline span takes no space and moves nothing. -->
+       and is a shared component, so the anchor sits just outside it. -->
   <span id="reading-text" tabindex="-1"></span>
-  <Reader work={workId} bookNum={n} bookData={bookData} chapterTitles={chapterTitles[String(n)] ?? {}} transTitles={bookTransTitles} client:load />
+  <Reader work={workId} bookNum={n} bookData={bookData} chapterTitles={chapterTitles[String(n)] ?? {}} transTitles={bookTransTitles} b client:load />
+</div>
+</div>
+
+<script>
+  // Contents drawer, the Book menu, Help, and the head's one-row fit. The
+  // reader island owns the view, translation and Aa state (Reader.svelte).
+  const head = document.querySelector<HTMLElement>('.b-rh')!;
+  const toc = document.getElementById('toc-sidebar') as HTMLElement;
+  const tocToggle = head.querySelector<HTMLElement>("[data-toc-toggle]")!;
+  const bookMenu = head.querySelector<HTMLDetailsElement>('.b-bkm');
+  const setToc = (open: boolean) => {
+    toc.hidden = !open;
+    toc.inert = !open;
+    tocToggle.setAttribute('aria-expanded', String(open));
+    if (open) toc.querySelector<HTMLElement>('a, button')?.focus();
+  };
+  tocToggle.addEventListener('click', () => setToc(toc.hidden));
+  toc.querySelector("[data-toc-close]")?.addEventListener('click', () => { setToc(false); tocToggle.focus(); });
+  // A chapter of this book is a #hash link: it scrolls, so the drawer closes.
+  toc.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', () => setToc(false)));
+  document.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    if (!toc.hidden && !toc.contains(t) && !tocToggle.contains(t)) setToc(false);
+    if (bookMenu?.open && !bookMenu.contains(t)) bookMenu.open = false;
+  });
+  bookMenu?.addEventListener('toggle', () => {
+    if (!bookMenu.open) return;
+    const r = bookMenu.querySelector('summary')!.getBoundingClientRect();
+    bookMenu.style.setProperty('--bkm-left', `${Math.max(12, Math.round(r.left))}px`);
+  });
+  head.querySelector("[data-aa]")!.addEventListener('click', () => {
+    window.dispatchEvent(new CustomEvent('toggle-settings'));
+  });
+  document.querySelectorAll('[data-reader-help]').forEach((b) => b.addEventListener('click', () => {
+    setToc(false);
+    window.dispatchEvent(new CustomEvent('open-help'));
+  }));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      // preventDefault marks the key as spent: the word panel stays open.
+      if (!toc.hidden) { e.preventDefault(); setToc(false); tocToggle.focus(); return; }
+      if (bookMenu?.open) { e.preventDefault(); bookMenu.open = false; bookMenu.querySelector('summary')?.focus(); return; }
+      window.dispatchEvent(new CustomEvent('close-settings'));
+      return;
+    }
+    // [ / ] step to the previous/next book. Ignored while typing or with
+    // modifiers held (bracket characters occur in search/palette inputs).
+    if (e.key !== '[' && e.key !== ']') return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target as HTMLElement | null;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+    const cur = Number(document.body.dataset.book);
+    const max = Number(document.body.dataset.books);
+    const next = e.key === ']' ? cur + 1 : cur - 1;
+    if (!Number.isFinite(next) || next < 1 || next > max) return;
+    window.location.href = `${document.body.dataset.base}/${document.body.dataset.work}/book/${next}`;
+  });
+
+  // One row at every width (R-R2): with the row unwrapped, cut furniture in
+  // order until it fits — the chapter's title, then the long work name, then
+  // the chapter. Never the type or a target.
+  const CUTS = ['cut-title', 'cut-name', 'cut-ch'];
+  // The row overflows when its last item passes the head's right padding
+  // (scrollWidth misses items that only eat into the padding).
+  const overflows = () => {
+    const end = head.getBoundingClientRect().right - parseFloat(getComputedStyle(head).paddingRight);
+    return [...head.children].some((c) => c.getBoundingClientRect().right > end + 0.5);
+  };
+  const fit = () => {
+    head.classList.remove(...CUTS);
+    for (const cut of CUTS) {
+      if (!overflows()) break;
+      head.classList.add(cut);
+    }
+  };
+  fit();
+  new ResizeObserver(fit).observe(head);
+  window.addEventListener('reader-head-fit', fit);
+  document.fonts?.ready.then(fit);
+</script>
 </body>
 </html>

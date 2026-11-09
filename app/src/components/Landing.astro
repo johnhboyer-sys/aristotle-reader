@@ -186,7 +186,7 @@ const breadcrumbLd = Astro.site
           {outline.map(b => {
             const rows = <ol class="b-chs">{b.chapters.map(c => <li><a href={chapterLink(b.book,c.chapter)} data-book={b.book} data-chapter={c.chapter}><span class="b-cn">{c.chapter}</span><span class="b-ct">{chapterTitle(b.book,c.chapter)}</span><span class="b-cb">{usesBekker ? c.bekker : ''}</span></a></li>)}</ol>;
             return work.books > 1 ? <>
-              <details class="b-bk" data-book={b.book}><summary><span class="b-bkn" lang={/[α-ωΑ-Ω]/.test(b.label) ? 'grc' : 'en'}><span class="b-bkw">Book </span>{b.label}</span><span class="b-bkf">{titles[String(b.book)]?.[b.chapters[0]?.chapter] ? chapterTitle(b.book,b.chapters[0].chapter) : <span class="b-bks2">{usesBekker ? bookSpan(b.chapters).split(' · ').at(-1) : ''}</span>}</span><span class="b-bkc">{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</span></summary>{rows}</details>
+              <details class="b-bk" data-book={b.book}><summary><span class="b-bkn" lang={/[α-ωΑ-Ω]/.test(b.label) ? 'grc' : 'en'}><span class="b-bkw">Book </span>{b.label}</span><span class="b-bkf">{titles[String(b.book)]?.[b.chapters[0]?.chapter] ? chapterTitle(b.book,b.chapters[0].chapter) : <span class="b-bks2">{usesBekker ? bookSpan(b.chapters).split(' · ')[1] ?? '' : ''}</span>}</span><span class="b-bkc">{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</span></summary>{rows}</details>
             </> : rows;
           })}
           </div>
