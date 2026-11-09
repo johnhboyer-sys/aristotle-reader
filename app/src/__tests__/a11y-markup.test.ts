@@ -43,7 +43,7 @@ describe('titles, headwords and reading text never truncate', () => {
     ['fb-name', 'src/components/LemmaPage.astro'], // a work title in frequency-by-work
     ['lx-head-gk', 'src/components/LemmaPage.astro'], // the lemma headword
     ['lxi-gk', 'src/pages/lemma/index.astro'],     // a headword in the lexicon grid
-    ['lp-title', 'src/components/Landing.astro'],  // the work title on its landing page
+    ['b-po-t', '../shared/styles/b.css'],  // the work title on its landing page
   ];
 
   for (const [cls, file] of NAMED) {

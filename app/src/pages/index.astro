@@ -9,7 +9,8 @@ import BFonts from '../components/BFonts.astro';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
 import ThemeInit from '../components/ThemeInit.astro';
 import Pwa from '../components/Pwa.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
+import BNav from '../components/BNav.astro';
+import BFoot from '../components/BFoot.astro';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
@@ -33,7 +34,6 @@ const extent = (w: Work) => {
   const n = Object.values(chapters).reduce((sum, book) => sum + book.length, 0);
   return `${w.books > 1 ? `${w.books} books, ` : ''}${n} chapter${n === 1 ? '' : 's'}`;
 };
-const navLinks = [['/', 'Works'], ['/search', 'Search'], ['/lemma/', 'Lexicon'], ['/phrases', 'Phrases'], ['/support', 'Support']];
 
 // Structured data: identify the site (WebSite) and enumerate every built work as
 // an ItemList of CreativeWorks linking to its landing page. This tells Google the
@@ -105,15 +105,7 @@ const structuredData = Astro.site
   <CommandPalette client:load />
   <div class="frame dir-b pg-home">
     <div class="b-page">
-      <header class="b-nav">
-        <a class="b-brand" href={`${base}/`}>Aristotle Reader</a>
-        <nav class="b-links" aria-label="Site">
-          {navLinks.map(([href, label]) => <a href={`${base}${href}`} class={href === '/' ? 'on' : ''}>{label}</a>)}
-          <ThemeToggle bMoon />
-          <a class="b-ib b-only-s" href={`${base}/search`} aria-label="Search"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.4"/></svg></a>
-          <details class="b-sm b-only-s"><summary aria-label="Menu"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 4.5h12M2 8h12M2 11.5h12" stroke="currentColor" stroke-width="1.4"/></svg></summary><div class="b-sm-p">{navLinks.map(([href,label]) => <a href={`${base}${href}`} aria-current={href === '/' ? 'page' : undefined}>{label}</a>)}</div></details>
-        </nav>
-      </header>
+      <BNav />
       <main>
         <section class="b-po hero pl dp-paper tp-side pl-l hp-p-side" data-tp="side" data-ts="1" aria-label="The complete works of Aristotle">
           <picture><source media="(max-width: 960px)" srcset={`${base}/plates/phone/home.jpg`} width="640" height="558"/><img src={`${base}/plates/desk/home.jpg`} width="1280" height="914" alt={plates.home.alt} decoding="async"/></picture>
@@ -140,22 +132,7 @@ const structuredData = Astro.site
           </>)}</div>
         </section>)}
       </main>
-      <footer class="b-foot">
-        <p>Also <a href="https://plato.johnhboyer.com/">The Plato Reader</a><a href="https://homer.johnhboyer.com/">The Homer Reader</a><a href="https://greekdrama.johnhboyer.com/">The Greek Drama Reader</a><a href="https://grammata.pages.dev/">Grammata</a></p>
-        <p><a href={`${base}/attribution`}>Texts &amp; licences</a><a href={`${base}/picture-credits/`}>Picture credits</a><a href={`${base}/support`}>Support</a><a href={`${base}/desktop`}>Desktop app</a><a href="mailto:jhboyer@loyno.edu?subject=Aristotle%20Reader%3A%20Bug%20Report" data-feedback-open>Report an error</a><a href={`${base}/game/`}>Play a game</a><span>Site by John H. Boyer</span></p>
-      </footer>
-      <dialog class="b-feedback" id="feedback-modal" aria-labelledby="fb-title">
-        <form id="feedback-form">
-          <h2 id="fb-title">Request a Feature / Report an Error</h2>
-          <fieldset class="fb-type"><legend class="sr-only">Type of feedback</legend>
-            <label><input type="radio" name="fb-type" value="feature" checked /> Feature request</label>
-            <label><input type="radio" name="fb-type" value="bug" /> Bug / error report</label>
-          </fieldset>
-          <label class="sr-only" for="fb-message">Describe the feature or error</label>
-          <textarea id="fb-message" placeholder="Describe the feature or error…" required autofocus></textarea>
-          <div class="fb-actions"><button type="button" id="fb-cancel" class="b-btn">Cancel</button><button type="submit" class="b-btn pri">Send</button></div>
-        </form>
-      </dialog>
+      <BFoot />
     </div>
   </div>
   <script is:inline>
@@ -219,30 +196,6 @@ const structuredData = Astro.site
       } catch { /* The book remains useful when chapter data is unavailable. */ }
     }
     void resume();
-    const modal = document.getElementById('feedback-modal') as HTMLDialogElement;
-    const message = document.getElementById('fb-message') as HTMLTextAreaElement;
-    let trigger: HTMLElement | null = null;
-    for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-feedback-open]')) {
-      link.addEventListener('click', e => {
-        e.preventDefault(); trigger = link; message.value = '';
-        modal.querySelector<HTMLInputElement>('input[name="fb-type"][value="bug"]')!.checked = true;
-        modal.showModal(); message.focus();
-      });
-    }
-    modal.addEventListener('close', () => { trigger?.focus(); trigger = null; });
-    modal.addEventListener('click', e => { if (e.target === modal) {
-      const box = modal.getBoundingClientRect();
-      if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) modal.close();
-    }});
-    document.getElementById('fb-cancel')!.addEventListener('click', () => modal.close());
-    document.getElementById('feedback-form')!.addEventListener('submit', e => {
-      e.preventDefault();
-      const body = message.value.trim(); if (!body) return;
-      const type = modal.querySelector<HTMLInputElement>('input[name="fb-type"]:checked')!.value;
-      const subject = type === 'feature' ? 'Aristotle Reader: Feature Request' : 'Aristotle Reader: Bug Report';
-      window.location.href = `mailto:jhboyer@loyno.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      modal.close();
-    });
   </script>
 </body>
 </html>

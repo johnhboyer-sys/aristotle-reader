@@ -31,14 +31,28 @@ const BASE = flag('--base') || 'http://localhost:4329';
 const only = flag('--only') || flag('--prove');
 const prove = flag('--prove');
 let proofCase = 'default';
-if (flag('--stage') && flag('--stage') !== '1')
-    throw Error('Only stage 1 is implemented');
+const stage = Number(flag('--stage') || 1);
+if (![1,2].includes(stage)) throw Error('Stage must be 1 or 2');
 const app = fileURLToPath(new URL('../', import.meta.url));
 const dist = join(app, 'dist');
+const ts = createRequire(import.meta.url)('typescript');
+const registrySource = readFileSync(new URL('../../shared/lib/works.ts', import.meta.url), 'utf8').replaceAll('import.meta.env.PUBLIC_SHOW_PRIVATE', "'0'");
+const registryJS = ts.transpileModule(registrySource, {compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}}).outputText;
+const registry = await import('data:text/javascript;base64,'+Buffer.from(registryJS).toString('base64'));
+const workIds = registry.WORKS.map(w=>w.id);
+const publicPages = stage === 2 ? ['/','/Cat/','/picture-credits/'] : ['/'];
+const accessPages = stage === 2 ? [...publicPages,'/EN/'] : ['/'];
+const plates = JSON.parse(readFileSync(new URL('../src/data/plates.json',import.meta.url),'utf8'));
+const chaptersOf = id => JSON.parse(readFileSync(join(app,'public/data',id,'chapters.json'),'utf8'));
+const divisionName = id => {
+ const category = registry.CATEGORIES.find(c=>[...(c.works||[]),...(c.subcategories||[]).flatMap(g=>g.works)].some(w=>w.id===id));
+ return category ? registry.DIVISION_NAMES[category.title] : 'Commentary';
+};
+
 const walk = (dir, ext) => readdirSync(dir, { withFileTypes: true }).flatMap(d => d.isDirectory() ? walk(join(dir, d.name), ext) : ext.test(d.name) ? [join(dir, d.name)] : []);
 const assert = (ok, msg) => { if (!ok)
     throw Error(msg); };
-const sizes = { D1440: [1440, 900], D1280: [1280, 800], D961: [961, 800], S844: [844, 390], S960: [960, 540], P390: [390, 844], P360: [360, 780] };
+const sizes = { D1440: [1440, 900], D1920: [1920, 1080], G1440: [1440, 1400], D1280: [1280, 800], D961: [961, 800], S844: [844, 390], S960: [960, 540], P390: [390, 844], P360: [360, 780] };
 let browser;
 async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false, stubPosterResize = false) {
     browser ||= await resolvePlaywright().chromium.launch();
@@ -55,9 +69,10 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
         }
         if (!fresh) localStorage.setItem('ne-theme', theme);
         if (seed) {
-            localStorage.setItem('reader-recent', JSON.stringify({ EN: Date.now() }));
-            localStorage.setItem('reader-book-EN', '1');
-            localStorage.setItem('reader-loc-EN', '1095b30');
+            const saved = typeof seed === 'object' ? seed : {work:'EN',book:1,cite:'1095b30'};
+            localStorage.setItem('reader-recent',JSON.stringify({[saved.work]:Date.now()}));
+            localStorage.setItem(`reader-book-${saved.work}`,String(saved.book));
+            if(saved.cite)localStorage.setItem(`reader-loc-${saved.work}`,saved.cite);
         }
     }, { theme, seed, fresh, stubPosterResize });
     const page = await context.newPage();
@@ -84,16 +99,23 @@ const style = (page, css) => page.addStyleTag({ content: css });
 async function geometry(page) {
     return page.evaluate(() => {
         const title = document.querySelector('.b-po-t'), img = document.querySelector('.b-po img'), po = document.querySelector('.b-po');
-        const t = title.getBoundingClientRect(), i = img.getBoundingClientRect(), p = po.getBoundingClientRect();
+        const t = title.getBoundingClientRect(), image = img.getBoundingClientRect(), p = po.getBoundingClientRect();
+        const isWork = po.classList.contains('work');
+        const i = isWork && matchMedia('(min-width: 961px)').matches ? po.querySelector('picture').getBoundingClientRect() : image;
         // Measure the title's content edge: B puts the 20px gap inside its box.
         const paddingLeft = parseFloat(getComputedStyle(title).paddingLeft);
         const contentWidth = title.clientWidth - paddingLeft - parseFloat(getComputedStyle(title).paddingRight);
-        return { gap: t.left + paddingLeft - i.right, width: title.clientWidth, right: p.right - t.right, fit: getComputedStyle(img).objectFit, position: getComputedStyle(img).objectPosition, phone: img.currentSrc.includes('/plates/phone/'), overflow: [...title.querySelectorAll('.ln')].filter(l => l.scrollWidth > contentWidth + 1).map(l => l.textContent), plateLeft: i.left, titleTop: t.top, plateTop: i.top };
+        return { gap: isWork && matchMedia('(min-width: 961px)').matches ? i.left-t.right : t.left+paddingLeft-i.right, titleLeft:t.left, titleBottom:t.bottom, imageTop:image.top, width: title.clientWidth, right: p.right - t.right, fit: getComputedStyle(img).objectFit, position: getComputedStyle(img).objectPosition, phone: img.currentSrc.includes('/plates/phone/'), overflow: [...title.querySelectorAll('.ln')].filter(l => l.scrollWidth > contentWidth + 1).map(l => l.textContent), plateLeft: i.left, titleTop: t.top, plateTop: i.top };
     });
 }
 const controls = 'a[href],button,summary,input,select,textarea,[role="button"],[tabindex="0"]';
 async function* accessStates(page, size) {
     yield {name: 'closed', root: '.dir-b'};
+    if (await page.locator('.b-bk').count()) {
+        await page.locator('[data-books-open]').click();
+        yield {name:'books-open',root:'.dir-b'};
+        await page.locator('[data-books-close]').click();
+    }
     if (size === 'P390' || size === 'S844') {
         const menu = page.locator('.b-sm summary');
         await menu.click();
@@ -168,16 +190,18 @@ const gates = {
         return examined;
     },
     'R-C1': async () => {
-        const css = walk(join(dist, '_astro'), /\.css$/);
-        assert(css.length, 'no built CSS');
-        assert(css.some(f => readFileSync(f, 'utf8').includes('--greek-w')), '--greek-w absent from built CSS');
-        const p = await open();
-        if (prove)
-            await style(p, '.dir-b .b-po-t{color:black!important}');
-        const color = await p.locator('.b-po-t').evaluate(el => getComputedStyle(el).color);
-        await close(p);
-        assert(color === 'rgb(226, 56, 46)', `home title color=${color}`);
-        return css.length + 1;
+        const css = walk(join(dist,'_astro'),/\.css$/);
+        assert(css.length && css.some(f=>readFileSync(f,'utf8').includes('--greek-w')),'--greek-w absent from built CSS');
+        let n=css.length;
+        for(const path of publicPages){
+            const p=await open('D1440','light',path);
+            try{
+                if(prove)await style(p,'.dir-b .b-po-t{color:black!important}');
+                const selector=path==='/picture-credits/'?'.b-pc-h':'.b-po-t';
+                const color=await p.locator(selector).evaluate(el=>getComputedStyle(el).color);
+                assert(color===(path==='/picture-credits/'?'rgb(180, 36, 25)':'rgb(226, 56, 46)'),`${path==='/'?'home':path} title color=${color}`);n++;
+            }finally{await close(p);}
+        }return n;
     },
     'R-C2': async () => {
         const files = walk(join(dist, '_astro'), /\.(css|js)$/);
@@ -200,7 +224,9 @@ const gates = {
         return inputs.length;
     },
     'R-F1': async () => {
-        const p = await open();
+        let n=0;
+        for(const path of publicPages){
+        const p = await open('D1440','light',path);
         try {
             if (prove)
                 await p.evaluate(() => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Anton'; document.head.append(l); });
@@ -230,8 +256,9 @@ const gates = {
                 assert(family, `unmapped font-file request ${url}`);
                 assert(allowed.includes(family), `font-file request family ${family}: ${url}`);
             }
-            return families.length + loaded.length + p.fontFileRequests.length;
+            n += families.length + loaded.length + p.fontFileRequests.length;
         } finally { await close(p); }
+        }return n;
     },
     'R-F2': async () => {
         let n = 0;
@@ -247,13 +274,14 @@ const gates = {
     },
     'R-P4': async () => {
         let n = 0;
-        for (const size of ['D1440', 'P390'])
+        for(const path of (stage===2?['/',...workIds.map(id=>`/${id}/`)]:['/'])) for (const size of ['D1440', 'P390'])
             for (const theme of ['light', 'dark']) {
-                const p = await open(size, theme);
+                const p = await open(size, theme,path);
                 if (prove && theme === 'dark')
                     await style(p, '.dir-b .b-po.pl img{filter:invert(1)!important}');
                 const got = await p.locator('.b-po img').evaluateAll(els => els.map(el => { const s = getComputedStyle(el); return { mask: s.maskImage, blend: s.mixBlendMode, filter: s.filter, loaded: el.complete && el.naturalWidth > 0 }; }));
                 await close(p);
+                assert(got.length===1,`${path} ${size} examined=${got.length} plates, expected 1`);
                 for (const s of got) {
                     assert(s.loaded, `${size}/${theme} image failed to load`);
                     assert(s.mask === 'none', `${size}/${theme} mask=${s.mask}`);
@@ -262,17 +290,18 @@ const gates = {
                     n++;
                 }
             }
+        assert(n===(stage===2?192:4),`plate count=${n}`);
         return n;
     },
     'R-T3': async () => {
         let n = 0;
-        for (const theme of ['light', 'dark']) for (const size of ['D1440', 'D1280', 'D961']) {
-            const p = await open(size, theme);
+        for(const path of (stage===2?['/','/Cat/','/EN/']:['/'])) for (const theme of ['light', 'dark']) for (const size of ['D1440', 'D1280', 'D961']) {
+            const p = await open(size, theme,path);
             try {
                 if (prove) await style(p, '.dir-b .b-po.tp-side.pl-l img{width:calc(100% - 586px)!important}');
                 const g = await geometry(p);
                 assert(Math.abs(g.gap - 56) <= 1, `${size} home gap=${g.gap}, expected 56`);
-                assert(g.width === 470 && Math.abs(g.right - 72) <= 1 && g.plateLeft === 0, `${size} home geometry ${JSON.stringify(g)}`);
+                assert(g.width === 470 && (path==='/' ? Math.abs(g.right - 72)<=1 && g.plateLeft===0 : Math.abs(g.titleLeft-72)<=1 && Math.abs(g.plateLeft-598)<=1), `${size} home geometry ${JSON.stringify(g)}`);
                 const opacity = await p.locator('.b-po-t').evaluate(el => ({value: Number(getComputedStyle(el).opacity), token: Number(getComputedStyle(el).getPropertyValue('--po-op'))}));
                 const expected = theme === 'dark' ? .86 : .82;
                 assert(Math.abs(opacity.value - expected) < .001 && Math.abs(opacity.value - opacity.token) < .001, `${size}/${theme} title opacity=${opacity.value} --po-op=${opacity.token} expected=${expected}`);
@@ -283,16 +312,18 @@ const gates = {
     },
     'R-T4': async () => {
         let n = 0;
-        for (const size of ['P390', 'P360'])
+        for(const path of (stage===2?['/','/Cat/','/EN/','/Int/','/AthPol/']:['/'])) for (const size of ['P390', 'P360'])
             for (const theme of ['light', 'dark']) {
-                const p = await open(size, theme);
+                const p = await open(size, theme,path);
                 if (prove)
                     await style(p, '.dir-b .b-po.pl.tp-side.hp-p-side img{object-fit:contain!important}');
                 const g = await geometry(p);
                 await close(p);
+                if(path==='/'){
                 assert(Math.abs(g.gap - 20) <= 1, `${size}/${theme} home gap=${g.gap}`);
                 assert(g.fit === 'cover', `${size}/${theme} object-fit=${g.fit}`);
                 assert(g.position === '50% 50%', `${size}/${theme} object-position=${g.position}`);
+                }else{assert(g.titleBottom<=g.imageTop+1,`${path} ${size} title overlaps plate`);assert(g.phone,`${path} ${size} desktop plate loaded`);}
                 n++;
             }
         return n;
@@ -390,6 +421,10 @@ const gates = {
                 await close(p);
             }
         }
+        if(stage===2)for(const size of ['S844','S960'])for(const id of ['Cat','EN','Int','AthPol']){
+            const p=await open(size,'light',`/${id}/`);
+            try{const g=await geometry(p);assert(g.titleBottom<=g.imageTop+1,`${id} ${size} title overlaps plate`);assert(g.phone,`${id} ${size} desktop plate loaded`);assert(!g.overflow.length,`${id} ${size} title overflow: ${g.overflow}`);n++;}finally{await close(p);}
+        }
         return n;
     },
     'R-H1': async () => {
@@ -464,7 +499,9 @@ const gates = {
             if (/href\s*=\s*["']#["']|data-noop\b/.test(html))
                 bad.push(f);
         assert(!bad.length, `placeholder links in ${bad.slice(0, 10).join(', ')}`);
-        const p = await open();
+        let examined=files.length;
+        for(const path of publicPages){
+        const p = await open('D1440','light',path);
         const links = await p.locator('.b-foot a').evaluateAll(els => els.map(a => [a.textContent, new URL(a.href).href]));
         const expected = [['The Plato Reader', 'https://plato.johnhboyer.com/'], ['The Homer Reader', 'https://homer.johnhboyer.com/'], ['The Greek Drama Reader', 'https://greekdrama.johnhboyer.com/'], ['Grammata', 'https://grammata.pages.dev/'], ['Texts & licences', BASE + '/attribution'], ['Picture credits', BASE + '/picture-credits/'], ['Support', BASE + '/support'], ['Desktop app', BASE + '/desktop'], ['Report an error', 'mailto:jhboyer@loyno.edu?subject=Aristotle%20Reader%3A%20Bug%20Report'], ['Play a game', BASE + '/game/']];
         assert(JSON.stringify(links) === JSON.stringify(expected), `footer destinations ${JSON.stringify(links)}`);
@@ -480,13 +517,14 @@ const gates = {
             assert(response.ok(), `${label} ${href} HTTP ${response.status()}`);
         }
         await close(p);
-        return files.length + links.length;
+        examined+=links.length;
+        }return examined;
     },
     'R-A1': async () => {
         console.log('R-A1 footnotes: not applicable to home');
         let n = 0;
-        for (const size of ['D1440', 'S844', 'P390']) {
-            const p = await open(size);
+        for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
+            const p = await open(size,'light',path);
             try {
                 if (prove)
                     await style(p, '.dir-b [data-theme-toggle]{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
@@ -504,8 +542,8 @@ const gates = {
     },
     'R-A2': async () => {
         let n = 0;
-        for (const size of ['D1440', 'S844', 'P390']) {
-            const p = await open(size);
+        for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
+            const p = await open(size,'light',path);
             try {
                 if (prove)
                     await style(p, '.dir-b .b-search input:focus-visible{outline:none!important;box-shadow:none!important}');
@@ -542,8 +580,8 @@ const gates = {
     'R-A3': async () => {
         let n = 0;
         const failures = [];
-        for (const theme of ['light', 'dark']) for (const size of ['D1440', 'S844', 'P390']) {
-            const p = await open(size, theme);
+        for (const theme of ['light', 'dark']) for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
+            const p = await open(size, theme,path);
             try {
                 if (prove) await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
                 for await (const state of accessStates(p, size)) {
@@ -612,17 +650,18 @@ const gates = {
             }
         }
         assert(!bad.length, `examined=${prove ? inputs.length : files.length} violations=${bad.length}; ` + bad.slice(0, 12).join('; '));
-        const p = await open();
-        const empty = await p.locator('.b-div h2,.b-div h3').evaluateAll(els => els.filter(el => !el.nextElementSibling?.textContent.trim()).map(el => el.textContent));
+        for(const path of publicPages){
+        const p = await open('D1440','light',path);
+        const empty = await p.locator('.b-div h2,.b-div h3,[data-section] > h2,.b-pc h2').evaluateAll(els => els.filter(el => !el.nextElementSibling?.textContent.trim()).map(el => el.textContent));
         await close(p);
         assert(!empty.length, `empty home divisions ${empty}`);
-        return files.length;
+        }return files.length;
     },
     'R-E2': async () => {
         let n = 0;
         const fails = [];
         for (const size of ['D1440', 'P390'])
-            for (const path of ['/', '/Cat/', '/EN/book/1']) {
+            for (const path of (stage===2?['/','/Cat/','/EN/book/1','/picture-credits/']:['/','/Cat/','/EN/book/1'])) {
                 const p = await open(size, 'light', path, false, true);
                 if (prove)
                     // A real first-visit toast sits in view (fixed), as the old .reader-tip did.
@@ -644,10 +683,191 @@ const gates = {
         return n;
     }
 };
+if(stage===2) Object.assign(gates, {
+ 'R-W1': async()=>{
+  let n=0;
+  for(const id of workIds){
+   const p=await open('D1440','light',`/${id}/`);
+   try{
+    if(prove&&id==='AthPol')await p.locator('.b-crumb span').evaluate(el=>el.textContent='Rhetoric and poetics');
+    const work=registry.getWork(id);
+    const crumb=(await p.locator('.b-crumb').textContent()).replace(/\s+/g,' ').trim();
+    assert(crumb===`Works / ${divisionName(id)}`,`${id} crumb=${crumb}`);
+    const sections=[['print',registry.furtherReading(id).length>0],['resources',registry.resourcesFor(id).length>0],['commentary',id==='Cat']];
+    for(const [section,wanted]of sections)assert(await p.locator(`[data-section="${section}"]`).count()===(wanted?1:0),`${id} ${section} presence mismatch`);
+    const selectors=['.b-nav','.b-crumb','.b-po',...(work.greekTitle?['.b-wk-gt']:[]),'.b-wk-blurb','.b-ctas','[data-section="facts"]','[data-section="books"]',...sections.filter(([,yes])=>yes).map(([section])=>`[data-section="${section}"]`),'[data-section="sources"]','.b-foot'];
+    const order=await p.evaluate(selectors=>{
+     const els=selectors.map(selector=>document.querySelector(selector));
+     return els.every((el,i)=>el&&(!i||Boolean(els[i-1].compareDocumentPosition(el)&Node.DOCUMENT_POSITION_FOLLOWING)));
+    },selectors);
+    assert(order,`${id} sections out of order`);
+    assert(await p.locator('.b-po-t').getAttribute('data-title')===work.title,`${id} title mismatch`);
+    assert((await p.locator('.b-wk-blurb').textContent()).startsWith(work.blurb),`${id} blurb mismatch`);
+    assert(await p.locator('.support-card').count()===0,`${id} old support card remains`);
+    assert(await p.locator('[data-section="sources"] a[href="/attribution"]').count()===1,`${id} Sources link absent`);
+    if(id==='Cat')assert(await p.locator('[data-section="commentary"] a').getAttribute('href')==='/Isa','Cat commentary must link to Isa');
+    if(id==='EN')assert(await p.locator('a[href="/EN/glossary"]').count()===1,'EN glossary link was lost');
+    for(const resource of registry.resourcesFor(id)){
+     const section=p.locator('[data-section="resources"]');
+     const text=await section.textContent();
+     const links=await section.locator('a').evaluateAll(els=>els.map(a=>a.href));
+     assert(links.includes(resource.url)&&links.includes(resource.authorUrl)&&text.includes(resource.label)&&text.includes(resource.blurb)&&text.includes(resource.authorName),`${id} live resource content/link was lost`);
+     if(resource.exercises)assert(text.includes(resource.exercises),`${id} resource exercises were lost`);
+    }
+    const heading=await p.locator('[data-section="books"] > h2').textContent();
+    assert(heading===(work.books>1?'Books and chapters':'Chapters'),`${id} books heading=${heading}`);
+    const totals=Object.values(chaptersOf(id)).reduce((sum,chapters)=>sum+chapters.length,0);
+    const extent=`${work.books>1?`${work.books} books, `:''}${totals} chapter${totals===1?'':'s'}`;
+    assert((await p.locator('.b-facts dd').last().textContent())===extent,`${id} extent mismatch`);
+    const titlePath=join(app,'public/data',id,'third-titles.json');
+    const source=existsSync(titlePath)?JSON.parse(readFileSync(titlePath,'utf8')):{};
+    const primary=registry.visibleTranslations(work).find(t=>t.id===work.defaultTranslation)||registry.visibleTranslations(work).find(t=>t.slot==='english')||registry.visibleTranslations(work)[0];
+    const named=primary?.id==='ostwald'&&Object.values(source.ostwald||{}).some(chapters=>Object.keys(chapters).length);
+    assert(await p.locator('.b-note3').count()===(named?1:0),`${id} chapter-title source note mismatch`);
+    n++;
+   }finally{await close(p);}
+  }return n;
+ },
+ 'R-W2':async()=>{
+  let n=0;
+  for(const id of workIds){
+   const p=await open('D1440','light',`/${id}/`);
+   try{
+    if(prove&&id==='Cat')await p.locator('[data-start]').evaluate(el=>el.href='/EN/book/1');
+    const work=registry.getWork(id), editions=registry.visibleTranslations(work);
+    const primary=editions.find(t=>t.id===work.defaultTranslation)||editions.find(t=>t.slot==='english')||editions[0];
+    const href=await p.locator('[data-start]').getAttribute('href');
+    const target=new URL(href,BASE);
+    assert(target.pathname===`/${id}/book/1`,`${id} Start reading target=${target.pathname}`);
+    assert(target.searchParams.get('trans')===(primary?.id||null),`${id} default translation mismatch`);
+    const greek=await p.locator('[data-greek]').getAttribute('href');
+    assert(new URL(greek,BASE).pathname===`/${id}/book/1`&&new URL(greek,BASE).searchParams.get('view')==='greek',`${id} Greek-only target mismatch`);
+    assert(await p.locator('[data-compare]').count()===(editions.length>=2?1:0),`${id} Compare presence mismatch`);
+    if(editions.length>=2){const compare=new URL(await p.locator('[data-compare]').getAttribute('href'),BASE);assert(compare.pathname===`/${id}/book/1`&&compare.searchParams.get('trans')==='compare',`${id} Compare target mismatch`);}
+    assert(await p.locator('[data-resume]').count()===0,`${id} resume with empty storage`);
+    await p.goto(target.href,{waitUntil:'networkidle'});
+    assert(await p.locator('body').getAttribute('data-work')===id,`${id} Start reading opened wrong reader`);
+    if(primary)await p.waitForSelector(`.reader-body.trans-${primary.id}`);
+    await p.goto(new URL(greek,BASE).href,{waitUntil:'networkidle'});
+    assert(await p.locator('body').getAttribute('data-work')===id&&new URL(p.url()).searchParams.get('view')==='greek',`${id} Greek reader route failed`);
+    await p.waitForSelector('.reader-body.view-greek');
+    n++;
+   }finally{await close(p);}
+   const chapter=chaptersOf(id)['1'][0];
+   const saved=await open('D1440','light',`/${id}/`,{work:id,book:1,cite:chapter.column+chapter.line});
+   try{
+    const link=saved.locator('[data-resume]');
+    const work=registry.getWork(id);
+    const expected=`Resume at ${work.books>1?`Book ${work.bookLabels[0]}, `:''}chapter ${chapter.chapter}`;
+    assert(await link.textContent()===expected,`${id} resume label=${await link.textContent()}`);
+    assert(new URL(await link.getAttribute('href'),BASE).pathname===`/${id}/book/1`,`${id} saved link points elsewhere`);
+    n++;
+   }finally{await close(saved);}
+  }
+  const foreign=await open('D1440','light','/Cat/',true);
+  try{assert(await foreign.locator('[data-resume]').count()===0,'Cat rendered EN saved place');n++;}finally{await close(foreign);}
+  return n;
+ },
+ 'R-W3':async()=>{
+  let n=0;
+  for(const id of workIds){
+   const p=await open('D1440','light',`/${id}/`);
+   try{
+    if(prove&&id==='Cat')await p.locator('.b-chs a').first().evaluate(el=>el.hash='#ch-1-999');
+    const work=registry.getWork(id), chapters=chaptersOf(id);
+    assert(await p.locator('.b-bk[open]').count()===0,`${id} books open initially`);
+    assert(await p.locator('.b-bk').count()===(work.books>1?work.books:0),`${id} book count mismatch`);
+    if(work.books>1){
+     const labels=await p.locator('.b-bkn').allTextContents();
+     assert(JSON.stringify(labels)===JSON.stringify(work.bookLabels.map(label=>'Book '+label)),`${id} Book labels=${labels}`);
+     const red=await p.locator('.b-bkn').evaluateAll(els=>els.every(el=>getComputedStyle(el).color==='rgb(226, 56, 46)'));
+     assert(red,`${id} book numbers are not red`);
+     await p.locator('[data-books-open]').click();assert(await p.locator('.b-bk[open]').count()===work.books,`${id} Open all books failed`);
+     await p.locator('[data-books-close]').click();assert(await p.locator('.b-bk[open]').count()===0,`${id} Close all failed`);
+    }
+    const links=await p.locator('.b-chs a').evaluateAll(els=>els.map(a=>({href:a.href,book:a.dataset.book,chapter:a.dataset.chapter})));
+    const expected=Object.entries(chapters).flatMap(([book,cs])=>cs.map(c=>({book,chapter:c.chapter})));
+    assert(links.length===expected.length&&links.length>0,`${id} examined=${links.length} chapter links expected ${expected.length}`);
+    const htmls=new Map();
+    for(let i=0;i<links.length;i++){
+     const link=links[i], target=new URL(link.href), chapter=expected[i];
+     assert(target.pathname===`/${id}/book/${chapter.book}`&&target.hash===`#ch-${chapter.book}-${chapter.chapter}`,`${id} wrong chapter target: ${target.pathname}${target.hash} expected book ${chapter.book} chapter ${chapter.chapter}`);
+     if(['EN','Meta','AthPol','Isa'].includes(id)){
+      if(!htmls.has(target.pathname)){const response=await p.request.get(BASE+target.pathname);assert(response.ok(),`${id} chapter reader HTTP ${response.status()}`);htmls.set(target.pathname,await response.text());}
+      assert(htmls.get(target.pathname).includes(`id="${target.hash.slice(1)}"`),`${id} chapter anchor ${target.hash} is absent from reader`);
+     }n++;
+    }
+   }finally{await close(p);}
+  }return n;
+ },
+ 'R-K1':async()=>{
+  const p=await open('D1440','light','/picture-credits/');
+  try{
+   if(prove)await p.locator('[data-plate="EN"] [data-record]').evaluate(el=>el.href='#');
+   const ids=['home',...registry.CATEGORIES.flatMap(c=>[...(c.works||[]).map(w=>w.id),...(c.subcategories||[]).flatMap(g=>g.works.map(w=>w.id)),...(c.numeral==='I'?['Isa']:[])])];
+   const got=await p.locator('[data-plate]').evaluateAll(els=>els.map(el=>el.dataset.plate));
+   assert(got.length===48&&JSON.stringify(got)===JSON.stringify(ids),`credits row order/count ${got.length}`);
+   let credits=0;
+   for(const id of ids){
+    const row=p.locator(`[data-plate="${id}"]`), data=plates[id];
+    const record=await row.locator('[data-record]').getAttribute('href');
+    assert(record===data.url,`${id} Record href=${record} expected=${data.url}`);
+    for(const field of ['who','what','when','how','where'])assert(await row.locator(`[data-credit-part="${field}"]`).textContent()===data[field],`${id} ${field} mismatch`);
+    assert(await row.locator('[data-licence]').textContent()===data.lic,`${id} licence mismatch`);
+    assert(await row.locator('[data-holder-credit]').count()===(data.credit===null?0:1),`${id} holder credit presence mismatch`);
+    if(data.credit!==null){assert(await row.locator('[data-holder-credit]').textContent()===data.credit,`${id} holder credit mismatch`);credits++;}
+    assert(await row.locator(':scope > a').getAttribute('href')===(id==='home'?'/':`/${id}`),`${id} work link mismatch`);
+   }
+   assert(credits===Object.values(plates).filter(p=>p.credit!==null).length,`holder credit count=${credits}`);
+   return got.length;
+  }finally{await close(p);}
+ },
+ 'R-T1':async()=>{
+  const golden=JSON.parse(readFileSync(join(app,'scripts/fixtures/poster-golden.json'),'utf8')).works;
+  if(prove){const lines=golden.Cat.desktop.lines;lines.splice(0,1,lines[0].slice(0,3),lines[0].slice(3));}
+  let n=0;
+  for(const id of ['Cat',...workIds.filter(id=>id!=='Cat')])for(const [size,kind] of [['G1440','desktop'],['P390','phone']]){
+   const p=await open(size,'light',`/${id}/`);
+   try{
+    const actual=await p.locator('.b-po-t').evaluate(el=>({lines:[...el.querySelectorAll('.ln')].map(l=>l.textContent),set:el.dataset.set}));
+    const expected=golden[id][kind];
+    assert(actual.lines.length>0&&JSON.stringify(actual.lines)===JSON.stringify(expected.lines),`${id} ${size} poster lines=${JSON.stringify(actual.lines)} expected=${JSON.stringify(expected.lines)}`);
+    const sizes=actual.set.split(',').map(Number), target=expected.set.split(',').map(Number);
+    assert(sizes.length===target.length&&sizes.every((v,i)=>Math.abs(v-target[i])<=1),`${id} ${size} poster sizes=${actual.set} expected=${expected.set}`);n++;
+   }finally{await close(p);}
+  }assert(n===94,`poster golden count=${n}`);return n;
+ },
+ 'R-T2':async()=>{
+  let n=0;
+  for(const id of ['Cat',...workIds.filter(id=>id!=='Cat')])for(const size of ['D1440','D1280','D1920','P390','S844']){
+   const p=await open(size,'light',`/${id}/`);
+   try{
+    if(prove&&id==='Cat'&&size==='D1440')await style(p,'.dir-b.pg-work .b-po.work{height:calc(100vw * 652 / 1440)!important}');
+    const box=await p.evaluate(()=>{
+     const poster=document.querySelector('.b-po.work').getBoundingClientRect(), start=document.querySelector('[data-start]').getBoundingClientRect(), img=document.querySelector('.b-po img').getBoundingClientRect(), title=document.querySelector('.b-po-t');
+     return {height:innerHeight,bottom:start.bottom,posterHeight:poster.height,navHeight:document.querySelector('.b-nav').offsetHeight,titleHeight:title.clientHeight,ratio:img.width/img.height,phone:matchMedia('(max-width:960px)').matches};
+    });
+    if(size==='S844')assert(box.posterHeight<=box.height-box.navHeight+1,`${id} ${size} poster height=${box.posterHeight} exceeds viewport minus nav`);
+    else assert(box.bottom<=box.height-16+1,`${id} ${size} Start reading bottom=${box.bottom} viewport=${box.height}`);
+    const expected=box.phone?640/558:1280/914;
+    assert(Math.abs(box.ratio/expected-1)<=.01,`${id} ${size} plate ratio=${box.ratio} expected ${expected}`);
+    if(!box.phone)assert(Math.abs(box.titleHeight-(box.posterHeight-56))<=1,`${id} ${size} title height=${box.titleHeight} poster=${box.posterHeight}`);
+    n++;
+   }finally{await close(p);}
+  }assert(n===235,`poster cap count=${n}`);return n;
+ },
+});
+
 if (only && !gates[only])
     throw Error(`Unknown gate ${only}`);
 // A proof is valid only when its own mutation causes the named assertion.
 const proofMessages = {
+    'R-W1': /AthPol crumb=Works \/ Rhetoric and poetics/,
+    'R-W2': /Cat Start reading target=\/EN\/book\/1/,
+    'R-W3': /Cat wrong chapter target:/,
+    'R-K1': /EN Record href=#/,
+    'R-T1': /Cat G1440 poster lines=/,
+    'R-T2': /Cat D1440 Start reading bottom=/,
     'R-C1': /home title color=rgb\(0, 0, 0\)/,
     'R-C2': /legacy width token:.*injected fixture/,
     'R-F1': /screen font Anton/,

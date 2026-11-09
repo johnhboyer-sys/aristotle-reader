@@ -1,0 +1,46 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+      <footer class="b-foot">
+        <p>Also <a href="https://plato.johnhboyer.com/">The Plato Reader</a><a href="https://homer.johnhboyer.com/">The Homer Reader</a><a href="https://greekdrama.johnhboyer.com/">The Greek Drama Reader</a><a href="https://grammata.pages.dev/">Grammata</a></p>
+        <p><a href={`${base}/attribution`}>Texts &amp; licences</a><a href={`${base}/picture-credits/`}>Picture credits</a><a href={`${base}/support`}>Support</a><a href={`${base}/desktop`}>Desktop app</a><a href="mailto:jhboyer@loyno.edu?subject=Aristotle%20Reader%3A%20Bug%20Report" data-feedback-open>Report an error</a><a href={`${base}/game/`}>Play a game</a><span>Site by John H. Boyer</span></p>
+      </footer>
+      <dialog class="b-feedback" id="feedback-modal" aria-labelledby="fb-title">
+        <form id="feedback-form">
+          <h2 id="fb-title">Request a Feature / Report an Error</h2>
+          <fieldset class="fb-type"><legend class="sr-only">Type of feedback</legend>
+            <label><input type="radio" name="fb-type" value="feature" checked /> Feature request</label>
+            <label><input type="radio" name="fb-type" value="bug" /> Bug / error report</label>
+          </fieldset>
+          <label class="sr-only" for="fb-message">Describe the feature or error</label>
+          <textarea id="fb-message" placeholder="Describe the feature or error…" required autofocus></textarea>
+          <div class="fb-actions"><button type="button" id="fb-cancel" class="b-btn">Cancel</button><button type="submit" class="b-btn pri">Send</button></div>
+        </form>
+      </dialog>
+
+<script>
+    const modal = document.getElementById('feedback-modal') as HTMLDialogElement;
+    const message = document.getElementById('fb-message') as HTMLTextAreaElement;
+    let trigger: HTMLElement | null = null;
+    for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-feedback-open]')) {
+      link.addEventListener('click', e => {
+        e.preventDefault(); trigger = link; message.value = '';
+        modal.querySelector<HTMLInputElement>('input[name="fb-type"][value="bug"]')!.checked = true;
+        modal.showModal(); message.focus();
+      });
+    }
+    modal.addEventListener('close', () => { trigger?.focus(); trigger = null; });
+    modal.addEventListener('click', e => { if (e.target === modal) {
+      const box = modal.getBoundingClientRect();
+      if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) modal.close();
+    }});
+    document.getElementById('fb-cancel')!.addEventListener('click', () => modal.close());
+    document.getElementById('feedback-form')!.addEventListener('submit', e => {
+      e.preventDefault();
+      const body = message.value.trim(); if (!body) return;
+      const type = modal.querySelector<HTMLInputElement>('input[name="fb-type"]:checked')!.value;
+      const subject = type === 'feature' ? 'Aristotle Reader: Feature Request' : 'Aristotle Reader: Bug Report';
+      window.location.href = `mailto:jhboyer@loyno.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      modal.close();
+    });
+</script>

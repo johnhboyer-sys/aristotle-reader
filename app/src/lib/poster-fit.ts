@@ -167,7 +167,7 @@ export function fitPoster(el: HTMLElement) {
     const home = poster.classList.contains('hp-p-side');
     const style = getComputedStyle(el);
     const W = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-    const H = phone ? (home ? 300 : 210) : el.clientHeight;
+    const H = phone ? (home ? 300 : Number(poster.dataset.titleHeight || 210)) : el.clientHeight;
     const box = { W, H };
     const cv = document.createElement('canvas').getContext('2d')!;
     cv.font = '700 100px Oswald';
@@ -197,14 +197,43 @@ export function fitPoster(el: HTMLElement) {
     el.dataset.fitRevision = String(Number(el.dataset.fitRevision || 0) + 1);
     document.documentElement.classList.remove('poster-fitting');
 }
+// All work-poster cap arithmetic lives here, after the fonts and intro settle.
+function fitWorkPoster(el: HTMLElement) {
+    const poster = el.closest<HTMLElement>('.b-po')!;
+    const phone = matchMedia('(max-width: 960px)').matches;
+    const sideways = phone && matchMedia('(min-width: 701px)').matches;
+    const naturalHeight = poster.clientWidth * 652 / 1440;
+    poster.style.setProperty('--poster-height', `${naturalHeight}px`);
+    poster.style.setProperty('--plate-height', `${poster.clientWidth * 558 / 640}px`);
+    delete poster.dataset.titleHeight;
+    fitPoster(el);
+    const start = document.querySelector<HTMLElement>('[data-start]')!;
+    const nav = document.querySelector<HTMLElement>('.b-nav')!;
+    const rect = poster.getBoundingClientRect();
+    const tail = start.getBoundingClientRect().bottom - rect.bottom;
+    const budget = Math.max(1, sideways ? innerHeight - nav.offsetHeight : innerHeight - rect.top - tail - 16);
+    if (phone) {
+        if (el.offsetHeight >= budget) {
+            poster.dataset.titleHeight = String(Math.max(14, (budget - 44) * .6));
+            fitPoster(el);
+        }
+        // Never enlarge a plate beyond its full-width natural cut.
+        const height = Math.min(poster.clientWidth * 558 / 640, Math.max(1, budget - el.offsetHeight));
+        poster.style.setProperty('--plate-height', `${height}px`);
+    } else {
+        poster.style.setProperty('--poster-height', `${Math.min(naturalHeight, Math.max(56, budget))}px`);
+        fitPoster(el);
+    }
+}
 export async function initPosters() {
     const titles = [...document.querySelectorAll<HTMLElement>('[data-fit="poster"]')];
     try {
         await document.fonts.load('700 100px Oswald');
         await document.fonts.ready;
-        const refit = () => titles.forEach(fitPoster);
+        const refit = () => titles.forEach(el => el.closest('.pg-work') ? fitWorkPoster(el) : fitPoster(el));
         refit();
         document.fonts.addEventListener('loadingdone', refit);
+        if (titles.some(el => el.closest('.pg-work'))) window.addEventListener('resize', refit);
         const band = matchMedia('(max-width: 960px)');
         band.addEventListener('change', refit);
         for (const el of titles) {
@@ -212,7 +241,7 @@ export async function initPosters() {
             let height = el.clientHeight;
             const observer = new ResizeObserver(() => {
                 if (el.clientWidth !== width || (!band.matches && el.clientHeight !== height)) {
-                    fitPoster(el);
+                    if (el.closest('.pg-work')) fitWorkPoster(el); else fitPoster(el);
                     width = el.clientWidth;
                     height = el.clientHeight;
                 }

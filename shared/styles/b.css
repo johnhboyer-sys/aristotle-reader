@@ -500,3 +500,23 @@ body.home { margin: 0; padding: 0; max-width: none; }
 .dir-b .b-feedback textarea::placeholder { color: var(--faint); opacity: 1; }
 .dir-b .fb-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
 .dir-b .fb-actions .b-btn.pri { flex: none; }
+
+/* Work posters keep a fixed title column and a separate plate column. The
+   image shrinks inside that column; the fitter owns the height budget. */
+.dir-b.pg-work .b-po.work { height: var(--poster-height, calc(100vw * 652 / 1440)); aspect-ratio: auto; }
+.dir-b.pg-work .b-po.work picture { position: absolute; left: 598px; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: flex-end; }
+.dir-b.pg-work .b-po.work img { position: static; width: min(100%, calc(var(--poster-height, 652px) * 1280 / 914)); height: auto; max-height: 100%; aspect-ratio: 1280 / 914; object-fit: contain; }
+.dir-b .b-crumb a, .dir-b .b-facts a, .dir-b .b-bkall button, .dir-b .b-chs a, .dir-b .b-print a, .dir-b .b-cred a, .dir-b .b-book-gap a, .dir-b .b-pc-l a { min-height: 40px; min-width: 40px; }
+.dir-b .b-crumb a, .dir-b .b-facts a, .dir-b .b-print a, .dir-b .b-cred a, .dir-b .b-book-gap a, .dir-b .b-pc-l a { display: inline-flex; align-items: center; }
+.dir-b .b-bkall button { padding: 8px 0; }
+.dir-b .b-chs a { align-items: center; }
+.dir-b .b-bkf { white-space: normal; overflow: visible; text-overflow: clip; }
+.dir-b .b-book-gap { font: 400 16px/1.5 var(--sans); color: var(--mid); padding: 12px 0; }
+.dir-b .b-print a { color: var(--red-ink); font: 500 15px/1.4 var(--sans); }
+.dir-b .b-ctas > #work-resume-slot:empty { display: none; }
+@media (max-width: 960px) {
+ .dir-b.pg-work .b-po.work { height: auto; }
+ .dir-b.pg-work .b-po.work picture { position: static; width: 100%; height: var(--plate-height, auto); aspect-ratio: 640 / 558; justify-content: center; }
+ .dir-b.pg-work .b-po.work img { width: min(100%, calc(var(--plate-height, 100vw) * 640 / 558)); max-height: none; height: auto; aspect-ratio: 640 / 558; }
+ .dir-b.pg-work .b-ctas > #work-resume-slot:not(:empty) { display: contents; }
+}
