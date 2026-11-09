@@ -177,8 +177,10 @@ export function fitPoster(el: HTMLElement) {
         return widths.get(s)!;
     };
     const lines = block(el.dataset.title || '', box, measure, { share: .92, base: .01, fmax: phone ? 170 : 400, floor: 0 });
-    if (!lines.length)
+    if (!lines.length) {
+        document.documentElement.classList.remove('poster-fitting');
         return;
+    }
     const textH = lines.reduce((n, x) => n + x.f * .88, 0);
     const gap = lines.length > 1 ? Math.max(0, Math.min((H - textH) / (lines.length - 1), .12 * Math.min(...lines.map(x => x.f)))) : 0;
     el.replaceChildren(...lines.map(x => {
@@ -193,26 +195,33 @@ export function fitPoster(el: HTMLElement) {
     el.dataset.set = lines.map(x => Math.round(x.f)).join(',');
     el.dataset.fitWidth = String(W);
     el.dataset.fitRevision = String(Number(el.dataset.fitRevision || 0) + 1);
+    document.documentElement.classList.remove('poster-fitting');
 }
 export async function initPosters() {
     const titles = [...document.querySelectorAll<HTMLElement>('[data-fit="poster"]')];
-    await document.fonts.load('700 100px Oswald');
-    await document.fonts.ready;
-    const refit = () => titles.forEach(fitPoster);
-    refit();
-    document.fonts.addEventListener('loadingdone', refit);
-    const band = matchMedia('(max-width: 960px)');
-    band.addEventListener('change', refit);
-    for (const el of titles) {
-        let width = el.clientWidth;
-        let height = el.clientHeight;
-        const observer = new ResizeObserver(() => {
-            if (el.clientWidth !== width || (!band.matches && el.clientHeight !== height)) {
-                fitPoster(el);
-                width = el.clientWidth;
-                height = el.clientHeight;
-            }
-        });
-        observer.observe(el);
+    try {
+        await document.fonts.load('700 100px Oswald');
+        await document.fonts.ready;
+        const refit = () => titles.forEach(fitPoster);
+        refit();
+        document.fonts.addEventListener('loadingdone', refit);
+        const band = matchMedia('(max-width: 960px)');
+        band.addEventListener('change', refit);
+        for (const el of titles) {
+            let width = el.clientWidth;
+            let height = el.clientHeight;
+            const observer = new ResizeObserver(() => {
+                if (el.clientWidth !== width || (!band.matches && el.clientHeight !== height)) {
+                    fitPoster(el);
+                    width = el.clientWidth;
+                    height = el.clientHeight;
+                }
+            });
+            observer.observe(el);
+        }
+    } catch {
+        // Fitting is optional; keep the heading readable when a font fails.
+    } finally {
+        document.documentElement.classList.remove('poster-fitting');
     }
 }

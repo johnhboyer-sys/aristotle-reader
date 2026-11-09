@@ -72,6 +72,10 @@ const structuredData = Astro.site
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Google Search Console ownership verification (URL-prefix property). -->
   <meta name="google-site-verification" content="tlPYj47QxxAGIB0RGMjr2fycUYsaqZK-yeOj9SmIjE4" />
+  <script is:inline>
+    document.documentElement.classList.add('poster-fitting');
+    setTimeout(() => document.documentElement.classList.remove('poster-fitting'), 3000);
+  </script>
   <ThemeInit />
   <Pwa />
   <title>The Aristotle Reader — Complete Works in Greek &amp; English</title>
@@ -189,7 +193,7 @@ const structuredData = Astro.site
       link.href = `${base}/${last.work}/book/${book}${last.cite ? `#${last.cite}` : ''}`;
       const title = document.createElement('i'); title.textContent = w.title;
       const label = w.bookLabels[book - 1];
-      const place = document.createTextNode(`, Book ${/^[IVXLCDM]+$/.test(label) ? label : roman(book)}`);
+      const place = document.createTextNode(w.books > 1 ? `, Book ${/^[IVXLCDM]+$/.test(label) ? label : roman(book)}` : '');
       link.append('Continue reading ', title, place); card.append(link); slot.append(card);
       if (!last.cite) return;
       try {
@@ -217,7 +221,9 @@ const structuredData = Astro.site
     let trigger: HTMLElement | null = null;
     for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-feedback-open]')) {
       link.addEventListener('click', e => {
-        e.preventDefault(); trigger = link; message.value = ''; modal.showModal(); message.focus();
+        e.preventDefault(); trigger = link; message.value = '';
+        modal.querySelector<HTMLInputElement>('input[name="fb-type"][value="bug"]')!.checked = true;
+        modal.showModal(); message.focus();
       });
     }
     modal.addEventListener('close', () => { trigger?.focus(); trigger = null; });

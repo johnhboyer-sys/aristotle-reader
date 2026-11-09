@@ -40,19 +40,26 @@ const assert = (ok, msg) => { if (!ok)
     throw Error(msg); };
 const sizes = { D1440: [1440, 900], D1280: [1280, 800], D961: [961, 800], S844: [844, 390], S960: [960, 540], P390: [390, 844], P360: [360, 780] };
 let browser;
-async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false) {
+async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false, stubPosterResize = false) {
     browser ||= await resolvePlaywright().chromium.launch();
     const [width, height] = sizes[size];
     const touch = /^[SP]/.test(size);
     const context = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch, colorScheme: theme });
-    await context.addInitScript(({ theme, seed, fresh }) => {
+    await context.addInitScript(({ theme, seed, fresh, stubPosterResize }) => {
+        if (stubPosterResize) {
+            window.ResizeObserver = class {
+                observe() {}
+                unobserve() {}
+                disconnect() {}
+            };
+        }
         if (!fresh) localStorage.setItem('ne-theme', theme);
         if (seed) {
             localStorage.setItem('reader-recent', JSON.stringify({ EN: Date.now() }));
             localStorage.setItem('reader-book-EN', '1');
             localStorage.setItem('reader-loc-EN', '1095b30');
         }
-    }, { theme, seed, fresh });
+    }, { theme, seed, fresh, stubPosterResize });
     const page = await context.newPage();
     page.fontFileRequests = [];
     page.fontSheetReads = [];
@@ -84,7 +91,22 @@ async function geometry(page) {
         return { gap: t.left + paddingLeft - i.right, width: title.clientWidth, right: p.right - t.right, fit: getComputedStyle(img).objectFit, position: getComputedStyle(img).objectPosition, phone: img.currentSrc.includes('/plates/phone/'), overflow: [...title.querySelectorAll('.ln')].filter(l => l.scrollWidth > contentWidth + 1).map(l => l.textContent), plateLeft: i.left, titleTop: t.top, plateTop: i.top };
     });
 }
-const controls = 'a[href],button,summary,input,select,[role="button"],[tabindex="0"]';
+const controls = 'a[href],button,summary,input,select,textarea,[role="button"],[tabindex="0"]';
+async function* accessStates(page, size) {
+    yield {name: 'closed', root: '.dir-b'};
+    if (size === 'P390' || size === 'S844') {
+        const menu = page.locator('.b-sm summary');
+        await menu.click();
+        assert(await page.locator('.b-sm').evaluate(el => el.open), `${size} phone menu did not open`);
+        yield {name: 'menu-open', root: '.dir-b'};
+        await menu.click();
+    }
+    await page.locator('[data-feedback-open]').click();
+    assert(await page.locator('#feedback-modal').evaluate(el => el.open), `${size} feedback dialog did not open`);
+    yield {name: 'feedback-open', root: '#feedback-modal'};
+    await page.locator('#fb-cancel').click();
+}
+
 const tokens = {
     light: ['#f4f4f1', '#fbfbf9', '#141413', '#5d5c57', '#6c6b66', '#d9d8d2', '#e6e5e0', '#e2382e', '#b42419', '#e9e8e3', '#f3e2a4'],
     dark: ['#121211', '#171716', '#ecebe6', '#a7a59e', '#8d8b85', '#2d2c29', '#22211f', '#ff5a4d', '#ff7b70', '#24231f', '#5a4917']
@@ -93,7 +115,7 @@ const names = ['bg', 'paper', 'ink', 'mid', 'faint', 'line', 'line2', 'red', 're
 const gates = {
     'R-T1-home': async () => {
         const golden = JSON.parse(readFileSync(join(app, 'scripts/fixtures/poster-golden.json'), 'utf8')).home;
-        if (prove) {
+        if (prove && proofCase === 'golden-line') {
             // Change only this in-memory copy; never rewrite the reference file.
             const lines = golden.phone.lines;
             assert(lines.length > 1, 'phone golden needs at least two lines for proof');
@@ -107,20 +129,6 @@ const gates = {
             assert(expectedSizes.length === expected.lines.length && expectedSizes.every(n => Number.isFinite(n) && n > 0), `${kind} invalid golden sizes`);
             const page = await open(viewport);
             try {
-                if (kind === 'desktop') {
-                    for (const size of ['D1280', 'D1440']) {
-                        const revision = await page.locator('.b-po-t').getAttribute('data-fit-revision');
-                        await page.setViewportSize({width: sizes[size][0], height: sizes[size][1]});
-                        await page.waitForFunction(previous => Number(document.querySelector('.b-po-t')?.dataset.fitRevision) > Number(previous), revision);
-                        const box = await page.locator('.b-po-t').evaluate(el => {
-                            const css = getComputedStyle(el);
-                            return {measured: el.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight), used: Number(el.dataset.fitWidth), set: el.dataset.set};
-                        });
-                        assert(box.used === box.measured && box.measured > 0, `${size} fitter width=${box.used} real content box=${box.measured}`);
-                        assert(box.set && box.set.split(',').every(n => Number(n) > 0), `${size} data-set was not recomputed`);
-                        examined++;
-                    }
-                }
                 const actual = await page.locator('.b-po-t').evaluate(el => ({
                     lines: [...el.querySelectorAll('.ln')].map(line => line.textContent),
                     set: el.dataset.set,
@@ -137,6 +145,26 @@ const gates = {
                 await close(page);
             }
         }
+        const sideways = await open('S844', 'light', '/', false, false, prove && proofCase === 'resize-observer');
+        try {
+            const read = () => sideways.locator('.b-po-t').evaluate(el => {
+                const css = getComputedStyle(el);
+                return {real: el.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight), used: Number(el.dataset.fitWidth), set: el.dataset.set};
+            });
+            const before = await read();
+            assert(before.real > 0 && before.used === before.real, `S844 initial fitter width=${before.used} content width=${before.real}`);
+            await sideways.setViewportSize({width: 960, height: 540});
+            // Report an assertion failure, rather than count a timeout as a caught proof.
+            await sideways.waitForFunction(previous => {
+                const el = document.querySelector('.b-po-t');
+                return Number(el?.dataset.fitWidth) !== previous.used && el?.dataset.set !== previous.set;
+            }, before, {timeout: 3000}).catch(() => {});
+            const after = await read();
+            assert(before.real !== after.real, 'S844 → S960 did not change the real title content width');
+            assert(before.used !== after.used && before.set !== after.set && after.used === after.real,
+                `S844 → S960 fitter did not re-fit: before=${JSON.stringify(before)} after=${JSON.stringify(after)}`);
+            examined += 2;
+        } finally { await close(sideways); }
         return examined;
     },
     'R-C1': async () => {
@@ -156,13 +184,17 @@ const gates = {
         const samples = ['index.html', 'Cat/index.html', 'EN/book/1/index.html', 'search/index.html'];
         const lemma = walk(join(dist, 'lemma'), /\.html$/).find(f => f !== join(dist, 'lemma/index.html'));
         assert(lemma, 'no built lemma sample');
+        const attributes = html => [...html.matchAll(/<[a-z][^>]*>/gi)].flatMap(tag =>
+            [...tag[0].matchAll(/\bstyle\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)].map(m => m[1] ?? m[2] ?? m[3])
+        ).join('\n');
         const inputs = files.map(file => [file, readFileSync(file, 'utf8')]);
         for (const file of [...samples.map(f => join(dist, f)), lemma]) {
             const html = readFileSync(file, 'utf8');
             const inline = [...html.matchAll(/<(style|script)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map(m => m[2]).join('\n');
             inputs.push([file + ' inline style/script', inline]);
+            inputs.push([file + ' style attributes', attributes(html)]);
         }
-        if (prove) inputs.push(['injected fixture', 'fixture {width:var(--gw, max-content)}']);
+        if (prove) inputs.push(['injected fixture style attribute', attributes('<p style="width:var(--gw, max-content)">fixture</p>')]);
         const bad = inputs.filter(([,text]) => /--gw\b/.test(text)).map(([file]) => file);
         assert(!bad.length, `legacy width token: ${bad.join(', ')}`);
         return inputs.length;
@@ -438,6 +470,7 @@ const gates = {
         await p.locator('[data-feedback-open]').click();
         assert(await p.locator('#feedback-modal').evaluate(el => el.open), 'feedback form did not open');
         assert(await p.locator('#feedback-modal input[name="fb-type"]').count() === 2, 'feedback choices missing');
+        assert(await p.locator('#feedback-modal input[value="bug"]').isChecked(), 'Report an error did not select the error choice');
         await p.locator('#fb-cancel').click();
         for (const [label, href] of links) {
             if (href.startsWith('mailto:')) continue;
@@ -452,97 +485,111 @@ const gates = {
         let n = 0;
         for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size);
-            if (size === 'P390')
-                await p.locator('summary[aria-label="Menu"]').click();
-            if (prove)
-                await style(p, '.dir-b [data-theme-toggle]{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
-            const got = await p.locator(controls).evaluateAll(els => els.filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden').map(el => ({ tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0, 65), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height })));
-            for (const g of got) {
-                assert(g.w >= 39.99 && g.h >= 39.99, `${size} ${g.tag} ${g.text} ${g.w}×${g.h}`);
-                n++;
-            }
-            await close(p);
+            try {
+                if (prove)
+                    await style(p, '.dir-b [data-theme-toggle]{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
+                for await (const state of accessStates(p, size)) {
+                    const got = await p.locator(state.root).locator(controls).evaluateAll(els => els.filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden').map(el => ({tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0,65), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height})));
+                    assert(got.length > 0, `${size} ${state.name} examined=0 controls`);
+                    for (const control of got) {
+                        assert(control.w >= 39.99 && control.h >= 39.99, `${size} ${control.tag} ${control.text} ${control.w}×${control.h} state=${state.name}`);
+                        n++;
+                    }
+                }
+            } finally { await close(p); }
         }
         return n;
     },
     'R-A2': async () => {
         let n = 0;
-        for (const size of ['D1440', 'P390']) {
+        for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size);
-            if (size === 'P390')
-                await p.locator('summary[aria-label="Menu"]').click();
-            if (prove)
-                await style(p, '.dir-b .b-search input:focus-visible{outline:none!important;box-shadow:none!important}');
-            const count = await p.locator(controls).count();
-            const seen = new Set();
-            for (let i = 0; i < count + 5; i++) {
-                await p.keyboard.press('Tab');
-                const got = await p.evaluate(() => { const el = document.activeElement; if (!el || el === document.body)
-                    return null; const s = getComputedStyle(el); return { key: el.outerHTML.slice(0, 200), outline: s.outlineStyle, width: parseFloat(s.outlineWidth), shadow: s.boxShadow }; });
-                if (!got)
-                    continue;
-                if (seen.has(got.key))
-                    break;
-                seen.add(got.key);
-                assert((got.outline !== 'none' && got.width >= 2) || got.shadow !== 'none', `${size} focus missing ${got.key}`);
-                n++;
-            }
-            await close(p);
+            try {
+                if (prove)
+                    await style(p, '.dir-b .b-search input:focus-visible{outline:none!important;box-shadow:none!important}');
+                for await (const state of accessStates(p, size)) {
+                    // Start each walk at its root, including the modal's native focus trap.
+                    await p.locator(state.root).evaluate(el => {
+                        const old = el.getAttribute('tabindex');
+                        el.tabIndex = -1; el.focus();
+                        if (old === null) el.removeAttribute('tabindex'); else el.setAttribute('tabindex', old);
+                    });
+                    const count = await p.locator(state.root).locator(controls).count();
+                    const seen = new Set();
+                    for (let i = 0; i < count + 5; i++) {
+                        await p.keyboard.press('Tab');
+                        const got = await p.evaluate(({controls, root}) => {
+                            const el = document.activeElement;
+                            if (!el || el === document.body) return null;
+                            const css = getComputedStyle(el);
+                            return {key: [...document.querySelectorAll(controls)].indexOf(el), html: el.outerHTML.slice(0,200), inside: document.querySelector(root).contains(el), outline: css.outlineStyle, width: parseFloat(css.outlineWidth), shadow: css.boxShadow};
+                        }, {controls, root: state.root});
+                        if (!got) continue;
+                        assert(got.inside, `${size} ${state.name} focus left its root: ${got.html}`);
+                        if (seen.has(got.key)) break;
+                        seen.add(got.key);
+                        assert((got.outline !== 'none' && got.width >= 2) || got.shadow !== 'none', `${size} ${state.name} focus missing ${got.html}`);
+                        n++;
+                    }
+                    assert(seen.size > 0, `${size} ${state.name} examined=0 focused controls`);
+                }
+            } finally { await close(p); }
         }
         return n;
     },
     'R-A3': async () => {
         let n = 0;
         const failures = [];
-        for (const theme of ['light', 'dark']) {
-            const p = await open('D1440', theme);
-            if (prove)
-                await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
-            const result = await p.evaluate(() => {
-                const rgb = s => { const m = s.match(/[\d.]+/g)?.map(Number); return m ? [m[0], m[1], m[2], m[3] ?? 1] : [0, 0, 0, 0]; };
-                const mix = (a, b) => a.slice(0, 3).map((v, i) => v * a[3] + b[i] * (1 - a[3]));
-                const lum = a => a.map(v => v / 255).map(v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4).reduce((s, v, i) => s + v * [.2126, .7152, .0722][i], 0);
-                const walker = document.createTreeWalker(document.querySelector('.dir-b'), NodeFilter.SHOW_TEXT);
-                let node;
-                const out = [];
-                while (node = walker.nextNode()) {
-                    if (!node.textContent.trim())
-                        continue;
-                    const el = node.parentElement;
-                    if (el.closest('script,style,[hidden]'))
-                        continue;
-                    const range = document.createRange();
-                    range.selectNodeContents(node);
-                    if (!range.getBoundingClientRect().width)
-                        continue;
-                    const cs = getComputedStyle(el);
-                    if (cs.visibility === 'hidden')
-                        continue;
-                    const chain = [];
-                    for (let a = el; a; a = a.parentElement)
-                        chain.unshift(a);
-                    let bg = [255, 255, 255], opacity = 1;
-                    for (const a of chain) {
-                        const s = getComputedStyle(a);
-                        bg = mix(rgb(s.backgroundColor), bg);
-                        opacity *= Number(s.opacity);
+        for (const theme of ['light', 'dark']) for (const size of ['D1440', 'S844', 'P390']) {
+            const p = await open(size, theme);
+            try {
+                if (prove) await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
+                for await (const state of accessStates(p, size)) {
+                    const result = await p.evaluate(root => {
+                        const rgb = s => {
+                            const m = s.match(/[\d.]+/g)?.map(Number);
+                            return m ? [m[0], m[1], m[2], m[3] ?? 1] : [0,0,0,0];
+                        };
+                        const mix = (a,b) => a.slice(0,3).map((v,i) => v*a[3] + b[i]*(1-a[3]));
+                        const lum = a => a.map(v=>v/255).map(v=>v<=.04045 ? v/12.92 : ((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+                        const out = [];
+                        const examine = (el,text,pseudo=false) => {
+                            const cs = getComputedStyle(el,pseudo ? '::placeholder' : null);
+                            const chain = [];
+                            for (let a=el; a; a=a.parentElement) chain.unshift(a);
+                            let bg=[255,255,255], opacity=pseudo ? Number(cs.opacity) : 1;
+                            for (const a of chain) {
+                                const css=getComputedStyle(a);
+                                bg=mix(rgb(css.backgroundColor),bg); opacity*=Number(css.opacity);
+                            }
+                            const fg=rgb(cs.color); fg[3]*=opacity;
+                            const l1=lum(mix(fg,bg)), l2=lum(bg);
+                            const ratio=(Math.max(l1,l2)+.05)/(Math.min(l1,l2)+.05);
+                            const large=parseFloat(cs.fontSize)>=(Number(cs.fontWeight)>=700 ? 18.66 : 24);
+                            out.push({text:text.trim().slice(0,60), element:el.tagName+'.'+el.className+(pseudo?'::placeholder':''), ratio, min:large?3:4.5, color:cs.color, opacity});
+                        };
+                        const host=document.querySelector(root);
+                        const walker=document.createTreeWalker(host,NodeFilter.SHOW_TEXT);
+                        let node;
+                        while (node=walker.nextNode()) {
+                            if (!node.textContent.trim()) continue;
+                            const el=node.parentElement;
+                            if (el.closest('script,style,[hidden]') || getComputedStyle(el).visibility==='hidden') continue;
+                            const range=document.createRange(); range.selectNodeContents(node);
+                            if (range.getBoundingClientRect().width) examine(el,node.textContent);
+                        }
+                        for (const el of host.querySelectorAll('input[placeholder],textarea[placeholder]')) {
+                            if (!el.value && el.getClientRects().length && getComputedStyle(el).visibility!=='hidden') examine(el,el.placeholder,true);
+                        }
+                        return out;
+                    }, state.root);
+                    assert(result.length > 0, `${size}/${theme} ${state.name} examined=0 text elements`);
+                    for (const g of result) {
+                        n++;
+                        if (g.ratio+.001 < g.min) failures.push(`${theme} ${g.element} "${g.text}" ratio=${g.ratio.toFixed(3)} expected>=${g.min} color=${g.color} opacity=${g.opacity} viewport=${size} state=${state.name}`);
                     }
-                    const fg = rgb(cs.color);
-                    fg[3] *= opacity;
-                    const ink = mix(fg, bg);
-                    const l1 = lum(ink), l2 = lum(bg), ratio = (Math.max(l1, l2) + .05) / (Math.min(l1, l2) + .05);
-                    const large = parseFloat(cs.fontSize) >= (Number(cs.fontWeight) >= 700 ? 18.66 : 24);
-                    const min = large ? 3 : 4.5;
-                    out.push({ text: node.textContent.trim().slice(0, 60), element: el.tagName + '.' + el.className, ratio, min, color: cs.color, opacity });
                 }
-                return out;
-            });
-            for (const g of result) {
-                n++;
-                if (g.ratio + .001 < g.min)
-                    failures.push(`${theme} ${g.element} "${g.text}" ratio=${g.ratio.toFixed(3)} expected>=${g.min} color=${g.color} opacity=${g.opacity}`);
-            }
-            await close(p);
+            } finally { await close(p); }
         }
         assert(!failures.length, `examined=${n}; ${failures.join('; ')}`);
         return n;
@@ -599,7 +646,6 @@ if (only && !gates[only])
     throw Error(`Unknown gate ${only}`);
 // A proof is valid only when its own mutation causes the named assertion.
 const proofMessages = {
-    'R-T1-home': /P390 home lines=/,
     'R-C1': /home title color=rgb\(0, 0, 0\)/,
     'R-C2': /legacy width token:.*injected fixture/,
     'R-F1': /screen font Anton/,
@@ -616,6 +662,10 @@ const proofMessages = {
     'R-E1': /examined=6 violations=6; HTML fixture In this mockup/,
     'R-E2': /unsolicited overlay:.*reader-tip/,
 };
+const homeTitleProofs = {
+    'golden-line': /P390 home lines=/,
+    'resize-observer': /S844 → S960 fitter did not re-fit/,
+};
 const sidewaysProofs = {
     'desktop-poster': /S844 home gap=/,
     'two-columns': /S844 .*works grid has more than one column/,
@@ -625,10 +675,11 @@ let proofFailed = false;
 try {
     for (const [id, run] of Object.entries(gates)) {
         if (only && only !== id) continue;
-        const cases = prove && id === 'R-T5' ? Object.keys(sidewaysProofs) : ['default'];
+        const variants = id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
+        const cases = prove && variants ? Object.keys(variants) : ['default'];
         for (const variant of cases) {
             proofCase = variant;
-            const expected = id === 'R-T5' ? sidewaysProofs[variant] : proofMessages[id];
+            const expected = variants ? variants[variant] : proofMessages[id];
             try {
                 const n = await run();
                 assert(n > 0, 'examined=0');
