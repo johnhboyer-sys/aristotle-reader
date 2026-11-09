@@ -1,3 +1,4 @@
+import { Window } from 'happy-dom';
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
@@ -101,11 +102,21 @@ async function geometry(page) {
         const title = document.querySelector('.b-po-t'), img = document.querySelector('.b-po img'), po = document.querySelector('.b-po');
         const t = title.getBoundingClientRect(), image = img.getBoundingClientRect(), p = po.getBoundingClientRect();
         const isWork = po.classList.contains('work');
-        const i = isWork && matchMedia('(min-width: 961px)').matches ? po.querySelector('picture').getBoundingClientRect() : image;
-        // Measure the title's content edge: B puts the 20px gap inside its box.
+        const css=getComputedStyle(img);
+        const pl=parseFloat(css.paddingLeft), pr=parseFloat(css.paddingRight), pt=parseFloat(css.paddingTop), pb=parseFloat(css.paddingBottom);
+        const bl=parseFloat(css.borderLeftWidth), br=parseFloat(css.borderRightWidth), bt=parseFloat(css.borderTopWidth), bb=parseFloat(css.borderBottomWidth);
+        const cw=image.width-pl-pr-bl-br, ch=image.height-pt-pb-bt-bb;
+        let iw=cw, ih=ch;
+        if(css.objectFit==='contain') {const scale=Math.min(cw/img.naturalWidth,ch/img.naturalHeight);iw=img.naturalWidth*scale;ih=img.naturalHeight*scale;}
+        const position=css.objectPosition.split(/\s+/);
+        const fraction=(value,axis)=>value==='center'?.5:value===axis?1:parseFloat(value)/100||0;
+        const i={left:image.left+bl+pl+(cw-iw)*fraction(position[0],'right'),top:image.top+bt+pt+(ch-ih)*fraction(position[1]||'50%','bottom'),width:iw,height:ih};
+        i.right=i.left+iw;i.bottom=i.top+ih;
+        const desktopWork=isWork&&matchMedia('(min-width:961px)').matches;
+        const expectedWidth=Math.min(p.width-598,p.height*1280/914);
         const paddingLeft = parseFloat(getComputedStyle(title).paddingLeft);
         const contentWidth = title.clientWidth - paddingLeft - parseFloat(getComputedStyle(title).paddingRight);
-        return { gap: isWork && matchMedia('(min-width: 961px)').matches ? i.left-t.right : t.left+paddingLeft-i.right, titleLeft:t.left, titleBottom:t.bottom, imageTop:image.top, width: title.clientWidth, right: p.right - t.right, fit: getComputedStyle(img).objectFit, position: getComputedStyle(img).objectPosition, phone: img.currentSrc.includes('/plates/phone/'), overflow: [...title.querySelectorAll('.ln')].filter(l => l.scrollWidth > contentWidth + 1).map(l => l.textContent), plateLeft: i.left, titleTop: t.top, plateTop: i.top };
+        return {gap:desktopWork?i.left-t.right:t.left+paddingLeft-image.right,titleLeft:t.left,titleBottom:t.bottom,imageTop:i.top,width:title.clientWidth,right:p.right-t.right,fit:css.objectFit,position:css.objectPosition,phone:img.currentSrc.includes('/plates/phone/'),overflow:[...title.querySelectorAll('.ln')].filter(l=>l.scrollWidth>contentWidth+1).map(l=>l.textContent),plateLeft:desktopWork?i.left:image.left,titleTop:t.top,plateTop:i.top,plateRight:i.right,plateWidth:i.width,plateHeight:i.height,expectedPlateLeft:p.right-expectedWidth,expectedPlateRight:p.right,expectedPlateTop:p.top+(p.height-expectedWidth*914/1280)/2,expectedPlateWidth:expectedWidth};
     });
 }
 const controls = 'a[href],button,summary,input,select,textarea,[role="button"],[tabindex="0"]';
@@ -298,10 +309,12 @@ const gates = {
         for(const path of (stage===2?['/','/Cat/','/EN/']:['/'])) for (const theme of ['light', 'dark']) for (const size of ['D1440', 'D1280', 'D961']) {
             const p = await open(size, theme,path);
             try {
-                if (prove) await style(p, '.dir-b .b-po.tp-side.pl-l img{width:calc(100% - 586px)!important}');
+                if (prove && proofCase !== 'work-plate') await style(p, '.dir-b .b-po.tp-side.pl-l img{width:calc(100% - 586px)!important}');
+                if (prove && proofCase === 'work-plate' && path === '/Cat/') await style(p,'.dir-b.pg-work .b-po.work img{transform:translateX(-12px)!important}');
                 const g = await geometry(p);
-                assert(Math.abs(g.gap - 56) <= 1, `${size} home gap=${g.gap}, expected 56`);
-                assert(g.width === 470 && (path==='/' ? Math.abs(g.right - 72)<=1 && g.plateLeft===0 : Math.abs(g.titleLeft-72)<=1 && Math.abs(g.plateLeft-598)<=1), `${size} home geometry ${JSON.stringify(g)}`);
+                if(path==='/')assert(Math.abs(g.gap-56)<=1,`${size} ${path} gap=${g.gap}, expected 56`);
+                else assert(g.gap>=55&&Math.abs(g.plateLeft-g.expectedPlateLeft)<=1&&Math.abs(g.plateRight-g.expectedPlateRight)<=1&&Math.abs(g.plateTop-g.expectedPlateTop)<=1&&Math.abs(g.plateWidth-g.expectedPlateWidth)<=1,`${size} ${path} rendered plate geometry ${JSON.stringify(g)}`);
+                assert(g.width === 470 && (path==='/' ? Math.abs(g.right - 72)<=1 && g.plateLeft===0 : Math.abs(g.titleLeft-72)<=1), `${size} ${path} geometry ${JSON.stringify(g)}`);
                 const opacity = await p.locator('.b-po-t').evaluate(el => ({value: Number(getComputedStyle(el).opacity), token: Number(getComputedStyle(el).getPropertyValue('--po-op'))}));
                 const expected = theme === 'dark' ? .86 : .82;
                 assert(Math.abs(opacity.value - expected) < .001 && Math.abs(opacity.value - opacity.token) < .001, `${size}/${theme} title opacity=${opacity.value} --po-op=${opacity.token} expected=${expected}`);
@@ -333,7 +346,7 @@ const gates = {
         for (const size of ['S844', 'S960']) {
             const p = await open(size);
             try {
-                if (prove) {
+                if (prove && ['desktop-poster','two-columns'].includes(proofCase)) {
                     if (proofCase === 'desktop-poster') {
                         await style(p, '.dir-b .b-po.pl.tp-side.hp-p-side{display:block!important;aspect-ratio:1440/652!important;height:auto!important}.dir-b .b-po.tp-side.pl-l img{position:absolute!important;inset:0!important;width:calc(100% - 598px)!important;height:100%!important;object-fit:contain!important}.dir-b .b-po.pl.tp-side.hp-p-side .b-po-t{position:absolute!important;left:auto!important;right:72px!important;top:30px!important;bottom:26px!important;width:470px!important;padding:0!important;flex:none!important}');
                     } else {
@@ -423,7 +436,22 @@ const gates = {
         }
         if(stage===2)for(const size of ['S844','S960'])for(const id of ['Cat','EN','Int','AthPol']){
             const p=await open(size,'light',`/${id}/`);
-            try{const g=await geometry(p);assert(g.titleBottom<=g.imageTop+1,`${id} ${size} title overlaps plate`);assert(g.phone,`${id} ${size} desktop plate loaded`);assert(!g.overflow.length,`${id} ${size} title overflow: ${g.overflow}`);n++;}finally{await close(p);}
+            try{
+                if(prove&&proofCase==='wide-title'&&id==='Cat'&&size==='S844'){
+                    const source=readFileSync(join(app,'src/lib/poster-fit.ts'),'utf8').replace('? 354 :','? el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) :');
+                    const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}}).outputText;
+                    await p.evaluate(async js=>{const url=URL.createObjectURL(new Blob([js],{type:'text/javascript'}));try{const mod=await import(url);mod.fitPoster(document.querySelector('.b-po-t'));}finally{URL.revokeObjectURL(url);}},js);
+                }
+                if(prove&&proofCase==='short-plate'&&id==='Cat'&&size==='S844')await style(p,'.dir-b.pg-work .b-po.work img{height:80px!important;width:auto!important}');
+                const phone=await open('P390','light',`/${id}/`);
+                let upright;try{upright=(await phone.locator('.b-po-t').getAttribute('data-set')).split(',').map(Number);}finally{await close(phone);}
+                const actual=(await p.locator('.b-po-t').getAttribute('data-set')).split(',').map(Number);
+                assert(actual.length===upright.length&&actual.every((value,i)=>Math.abs(value-upright[i])<=1),`${id} ${size} title sizes=${actual} P390=${upright}`);
+                const g=await geometry(p);assert(g.titleBottom<=g.imageTop+1,`${id} ${size} title overlaps plate`);assert(g.phone,`${id} ${size} desktop plate loaded`);assert(!g.overflow.length,`${id} ${size} title overflow: ${g.overflow}`);
+                const plateHeight=await p.locator('.b-po img').evaluate(el=>el.getBoundingClientRect().height);
+                if(size==='S844')assert(plateHeight>=120,`${id} S844 plate height=${plateHeight} below 120`);
+                n++;
+            }finally{await close(p);}
         }
         return n;
     },
@@ -636,9 +664,21 @@ const gates = {
     },
     'R-E1': async () => {
         const files = walk(dist, /\.html$/);
+        if(stage===2){
+            const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});
+            try{for(const path of [...workIds.map(id=>`/${id}/`),'/picture-credits/']){
+                window.document.body.innerHTML=readFileSync(join(dist,path.slice(1),'index.html'),'utf8');
+                if(prove&&proofCase==='no-headings'&&path==='/Cat/')for(const h of window.document.querySelectorAll('h2'))h.remove();
+                if(prove&&proofCase==='empty-heading'&&path==='/Cat/')window.document.querySelector('[data-section] > h2').nextElementSibling.replaceChildren();
+                const headings=[...window.document.querySelectorAll('[data-section] > h2,.b-pc h2')];
+                assert(headings.length>0,`${path} examined=0 section headings`);
+                const empty=headings.filter(h=>!h.nextElementSibling?.textContent.trim()).map(h=>h.textContent);
+                assert(!empty.length,`${path} empty headings: ${empty.join(', ')}`);
+            }}finally{window.close();}
+        }
         const forbidden = ['In this mockup', 'No analysis', 'will appear here', 'keeps its own Bekker', 'Tap any Greek word', 'Click any Greek word'];
         let bad = [];
-        const inputs = prove ? forbidden.map(s => ['HTML fixture ' + s, `<p>${s}</p>`]) : files.map(f => [f, null]);
+        const inputs = prove && (stage===1||proofCase==='copy') ? forbidden.map(s => ['HTML fixture ' + s, `<p>${s}</p>`]) : files.map(f => [f, null]);
         for (const [f, source] of inputs) {
             const html = source ?? readFileSync(f, 'utf8');
             for (const s of forbidden) {
@@ -649,12 +689,12 @@ const gates = {
                     bad.push(`${f}: ${s}`);
             }
         }
-        assert(!bad.length, `examined=${prove ? inputs.length : files.length} violations=${bad.length}; ` + bad.slice(0, 12).join('; '));
+        assert(!bad.length, `examined=${prove && (stage===1||proofCase==='copy') ? inputs.length : files.length} violations=${bad.length}; ` + bad.slice(0, 12).join('; '));
         for(const path of publicPages){
         const p = await open('D1440','light',path);
         const empty = await p.locator('.b-div h2,.b-div h3,[data-section] > h2,.b-pc h2').evaluateAll(els => els.filter(el => !el.nextElementSibling?.textContent.trim()).map(el => el.textContent));
         await close(p);
-        assert(!empty.length, `empty home divisions ${empty}`);
+        assert(!empty.length, `${path} empty headings ${empty}`);
         }return files.length;
     },
     'R-E2': async () => {
@@ -689,10 +729,22 @@ if(stage===2) Object.assign(gates, {
   for(const id of workIds){
    const p=await open('D1440','light',`/${id}/`);
    try{
-    if(prove&&id==='AthPol')await p.locator('.b-crumb span').evaluate(el=>el.textContent='Rhetoric and poetics');
+    if(prove&&proofCase==='crumb'&&id==='AthPol')await p.locator('.b-crumb span').evaluate(el=>el.textContent='Rhetoric and poetics');
+    if(prove&&proofCase==='english-facts'&&id==='Cat')await p.locator('[data-english-entry]').first().evaluate(el=>el.textContent='W. D. Ross (Oxford, 1908)');
+    if(prove&&proofCase==='crumb-height'&&id==='Cat')await style(p,'.dir-b .b-crumb a{display:inline-flex!important;min-height:40px!important}');
+    const crumbHeight=await p.locator('.b-crumb').evaluate(el=>el.offsetHeight);
+    assert(crumbHeight<=16,`${id} D1440 crumb height=${crumbHeight}`);
     const work=registry.getWork(id);
     const crumb=(await p.locator('.b-crumb').textContent()).replace(/\s+/g,' ').trim();
-    assert(crumb===`Works / ${divisionName(id)}`,`${id} crumb=${crumb}`);
+    const literalCrumbs={AthPol:'Works / Ethics and politics',MM:'Works / Dubious and spurious works',Cat:'Works / Logic',Isa:'Works / Commentary'};
+    assert(crumb===(literalCrumbs[id]||`Works / ${divisionName(id)}`),`${id} crumb=${crumb}`);
+    if(prove&&proofCase==='peters-year'&&id==='EN')await p.locator('[data-english-entry]').filter({hasText:'F. H. Peters'}).evaluate(el=>el.textContent='F. H. Peters, Kegan Paul, rev. ed. 1893');
+    if(prove&&proofCase==='ellis-year'&&id==='Pol')await p.locator('[data-english-entry]').filter({hasText:'William Ellis'}).evaluate(el=>el.textContent='William Ellis, 1776; rev., 1912');
+    const english=await p.locator('[data-english-entry]').allTextContents();
+    assert(english.length>0,`${id} examined=0 English facts`);
+    for(const text of english)assert(/^[^,()]+(, [^,()]+)*$/.test(text),`${id} English facts form: ${text}`);
+    if(id==='EN')assert(english.some(text=>text.includes('rev. ed., 1893')),'EN Peters facts must contain rev. ed., 1893');
+    if(id==='Pol')assert(english.some(text=>text.includes('1776; rev. 1912')),'Pol Ellis facts must contain 1776; rev. 1912');
     const sections=[['print',registry.furtherReading(id).length>0],['resources',registry.resourcesFor(id).length>0],['commentary',id==='Cat']];
     for(const [section,wanted]of sections)assert(await p.locator(`[data-section="${section}"]`).count()===(wanted?1:0),`${id} ${section} presence mismatch`);
     const selectors=['.b-nav','.b-crumb','.b-po',...(work.greekTitle?['.b-wk-gt']:[]),'.b-wk-blurb','.b-ctas','[data-section="facts"]','[data-section="books"]',...sections.filter(([,yes])=>yes).map(([section])=>`[data-section="${section}"]`),'[data-section="sources"]','.b-foot'];
@@ -706,7 +758,12 @@ if(stage===2) Object.assign(gates, {
     assert(await p.locator('.support-card').count()===0,`${id} old support card remains`);
     assert(await p.locator('[data-section="sources"] a[href="/attribution"]').count()===1,`${id} Sources link absent`);
     if(id==='Cat')assert(await p.locator('[data-section="commentary"] a').getAttribute('href')==='/Isa','Cat commentary must link to Isa');
-    if(id==='EN')assert(await p.locator('a[href="/EN/glossary"]').count()===1,'EN glossary link was lost');
+    if(id==='EN'){
+     const facts=p.locator('.b-facts dd').nth(1);
+     const glossary=facts.locator('a').filter({hasText:/^glossary$/});
+     if(prove&&proofCase==='missing-glossary')await glossary.evaluateAll(links=>links.forEach(link=>link.remove()));
+     assert(await glossary.count()===1&&/\/EN\/glossary\/?$/.test(await glossary.getAttribute('href')),'EN English facts glossary link missing or invalid');
+    }
     for(const resource of registry.resourcesFor(id)){
      const section=p.locator('[data-section="resources"]');
      const text=await section.textContent();
@@ -726,7 +783,40 @@ if(stage===2) Object.assign(gates, {
     assert(await p.locator('.b-note3').count()===(named?1:0),`${id} chapter-title source note mismatch`);
     n++;
    }finally{await close(p);}
+   const phone=await open('P390','light',`/${id}/`);
+   try{const height=await phone.locator('.b-crumb').evaluate(el=>el.offsetHeight);assert(height<=16,`${id} P390 crumb height=${height}`);n++;}finally{await close(phone);}
   }return n;
+ },
+ 'R-W1-bekker':async()=>{
+  const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});let n=0;
+  const index=ref=>{const m=/^(\d+)([ab])(\d+)$/.exec(ref);return Number(m[1])*100000+(m[2]==='b'?10000:0)+Number(m[3]);};
+  try{for(const id of workIds.filter(id=>(registry.getWork(id).citation?.scheme||'bekker')==='bekker')){
+   window.document.body.innerHTML=readFileSync(join(dist,id,'index.html'),'utf8');
+   if(prove&&id==='Meta')window.document.querySelector('.b-bks2').textContent=proofCase==='backwards'?'993a29–980a21':'980a21–29';
+   for(const el of window.document.querySelectorAll('.b-bks2')){
+    const text=el.textContent.trim();assert(/^\d+[ab]\d+–\d+[ab]\d+$/.test(text),`${id} invalid book-header Bekker range: ${text}`);
+    const [start,end]=text.split('–');assert(index(end)>=index(start),`${id} backwards book-header Bekker range: ${text}`);n++;
+   }
+  }}finally{window.close();}return n;
+ },
+ 'R-W1-scheme':async()=>{
+  const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});let n=0;
+  try{for(const id of ['Isa','AthPol']){
+   window.document.body.innerHTML=readFileSync(join(dist,id,'index.html'),'utf8');
+   if(prove&&id==='Isa')window.document.querySelector('.b-cb').textContent='1a3–16';
+   const refs=[...window.document.querySelectorAll('.b-cb,.b-bks2')];assert(refs.length>0,`${id} examined=0 scheme references`);
+   for(const el of refs){assert(!/\d+a\d+/.test(el.textContent),`${id} synthetic range in non-Bekker work: ${el.textContent}`);n++;}
+  }}finally{window.close();}return n;
+ },
+ 'R-W1-text':async()=>{
+  const window=new Window({settings:{disableCSSFileLoading:true,disableJavaScriptFileLoading:true,disableJavaScriptEvaluation:true}});
+  let n=0;
+  try{for(const id of workIds){
+   window.document.body.innerHTML=readFileSync(join(dist,id,'index.html'),'utf8');
+   for(const el of window.document.querySelectorAll('script,style,[hidden]'))el.remove();
+   if(prove&&id==='Cat')window.document.querySelector('.b-ct').append('[^fixture]');
+   assert(!window.document.body.textContent.includes('[^'),`${id} raw footnote marker in work text`);n++;
+  }}finally{window.close();}return n;
  },
  'R-W2':async()=>{
   let n=0;
@@ -803,19 +893,30 @@ if(stage===2) Object.assign(gates, {
  'R-K1':async()=>{
   const p=await open('D1440','light','/picture-credits/');
   try{
-   if(prove)await p.locator('[data-plate="EN"] [data-record]').evaluate(el=>el.href='#');
+   if(prove&&proofCase==='record')await p.locator('[data-plate="EN"] [data-record]').evaluate(el=>el.href='#');
+   if(prove&&proofCase==='punctuation')await p.locator('[data-plate="home"] > span').evaluate(el=>el.append('..'));
+   if(prove&&proofCase==='licence')await p.locator('[data-plate="home"] [data-licence]').evaluate(el=>{el.previousSibling.textContent=' ';el.nextSibling.textContent='. ';});
+   if(prove&&proofCase==='licence-stop')await p.locator('[data-plate="home"] > span').evaluate(el=>el.append('bad. (lic).'));
    const ids=['home',...registry.CATEGORIES.flatMap(c=>[...(c.works||[]).map(w=>w.id),...(c.subcategories||[]).flatMap(g=>g.works.map(w=>w.id)),...(c.numeral==='I'?['Isa']:[])])];
    const got=await p.locator('[data-plate]').evaluateAll(els=>els.map(el=>el.dataset.plate));
    assert(got.length===48&&JSON.stringify(got)===JSON.stringify(ids),`credits row order/count ${got.length}`);
    let credits=0;
    for(const id of ids){
     const row=p.locator(`[data-plate="${id}"]`), data=plates[id];
+    const text=await row.textContent();
+    // Cat's quoted catalogue text contains ‘33 Ill. (Kupferst.)’; keep that source wording.
+    const punctuationText=text.replace(data.how, '');
+    assert(!punctuationText.includes('. ('),`${id} credits stop before licence`);
+    // Preserve ellipses copied from the manifest, including verbatim holder credits.
+    assert(!text.replaceAll('...', '…').includes('..'),`${id} credits doubled full stop`);
+    assert(text.includes(`(${data.lic})`),`${id} credits licence must be in parentheses`);
+    if(id==='Isa')assert(await row.locator(':scope > a').textContent()==='Porphyry, Isagoge','Isa credits title mismatch');
     const record=await row.locator('[data-record]').getAttribute('href');
     assert(record===data.url,`${id} Record href=${record} expected=${data.url}`);
-    for(const field of ['who','what','when','how','where'])assert(await row.locator(`[data-credit-part="${field}"]`).textContent()===data[field],`${id} ${field} mismatch`);
+    for(const field of ['who','what','when','how','where'])assert(await row.locator(`[data-credit-part="${field}"]`).textContent()===(field==='where'&&data.credit===null?data[field].replace(/\.\s*$/,''):data[field]),`${id} ${field} mismatch`);
     assert(await row.locator('[data-licence]').textContent()===data.lic,`${id} licence mismatch`);
     assert(await row.locator('[data-holder-credit]').count()===(data.credit===null?0:1),`${id} holder credit presence mismatch`);
-    if(data.credit!==null){assert(await row.locator('[data-holder-credit]').textContent()===data.credit,`${id} holder credit mismatch`);credits++;}
+    if(data.credit!==null){assert(await row.locator('[data-holder-credit]').textContent()===data.credit.replace(/\.\s*$/,''),`${id} holder credit mismatch`);credits++;}
     assert(await row.locator(':scope > a').getAttribute('href')===(id==='home'?'/':`/${id}`),`${id} work link mismatch`);
    }
    assert(credits===Object.values(plates).filter(p=>p.credit!==null).length,`holder credit count=${credits}`);
@@ -842,16 +943,26 @@ if(stage===2) Object.assign(gates, {
   for(const id of ['Cat',...workIds.filter(id=>id!=='Cat')])for(const size of ['D1440','D1280','D1920','P390','S844']){
    const p=await open(size,'light',`/${id}/`);
    try{
-    if(prove&&id==='Cat'&&size==='D1440')await style(p,'.dir-b.pg-work .b-po.work{height:calc(100vw * 652 / 1440)!important}');
+    if(prove&&proofCase==='cap'&&id==='Cat'&&size==='D1440')await style(p,'.dir-b.pg-work .b-po.work{height:calc(100vw * 652 / 1440)!important}');
+    if(prove&&proofCase==='crop'&&id==='Cat'&&size==='D1440')await style(p,'.dir-b.pg-work .b-po.work img{object-fit:cover!important}');
     const box=await p.evaluate(()=>{
-     const poster=document.querySelector('.b-po.work').getBoundingClientRect(), start=document.querySelector('[data-start]').getBoundingClientRect(), img=document.querySelector('.b-po img').getBoundingClientRect(), title=document.querySelector('.b-po-t');
-     return {height:innerHeight,bottom:start.bottom,posterHeight:poster.height,navHeight:document.querySelector('.b-nav').offsetHeight,titleHeight:title.clientHeight,ratio:img.width/img.height,phone:matchMedia('(max-width:960px)').matches};
+     const poster=document.querySelector('.b-po.work').getBoundingClientRect(), start=document.querySelector('[data-start]').getBoundingClientRect(), img=document.querySelector('.b-po img'), title=document.querySelector('.b-po-t');
+     const css=getComputedStyle(img);
+     const width=parseFloat(css.width)-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight)-parseFloat(css.borderLeftWidth)-parseFloat(css.borderRightWidth);
+     const height=parseFloat(css.height)-parseFloat(css.paddingTop)-parseFloat(css.paddingBottom)-parseFloat(css.borderTopWidth)-parseFloat(css.borderBottomWidth);
+     return {height:innerHeight,bottom:start.bottom,posterHeight:poster.height,navHeight:document.querySelector('.b-nav').offsetHeight,titleHeight:title.clientHeight,fit:css.objectFit,ratio:width/height,phone:matchMedia('(max-width:960px)').matches};
     });
     if(size==='S844')assert(box.posterHeight<=box.height-box.navHeight+1,`${id} ${size} poster height=${box.posterHeight} exceeds viewport minus nav`);
     else assert(box.bottom<=box.height-16+1,`${id} ${size} Start reading bottom=${box.bottom} viewport=${box.height}`);
     const expected=box.phone?640/558:1280/914;
+    assert(box.fit==='contain',`${id} ${size} object-fit=${box.fit} expected contain`);
     assert(Math.abs(box.ratio/expected-1)<=.01,`${id} ${size} plate ratio=${box.ratio} expected ${expected}`);
     if(!box.phone)assert(Math.abs(box.titleHeight-(box.posterHeight-56))<=1,`${id} ${size} title height=${box.titleHeight} poster=${box.posterHeight}`);
+    if(prove&&proofCase==='scroll-budget'&&id==='Cat'&&size==='D1440')await p.evaluate(()=>Object.defineProperty(window,'scrollY',{get:()=>0,configurable:true}));
+    await p.evaluate(()=>{window.scrollTo(0,600);window.dispatchEvent(new Event('resize'));});
+    await p.waitForTimeout(150);
+    const after=await p.locator('.b-po.work').evaluate(el=>el.offsetHeight);
+    assert(Math.abs(after-box.posterHeight)<=1,`${id} ${size} scroll changed poster height ${box.posterHeight} → ${after}`);
     n++;
    }finally{await close(p);}
   }assert(n===235,`poster cap count=${n}`);return n;
@@ -863,6 +974,7 @@ if (only && !gates[only])
 // A proof is valid only when its own mutation causes the named assertion.
 const proofMessages = {
     'R-W1': /AthPol crumb=Works \/ Rhetoric and poetics/,
+    'R-W1-text': /Cat raw footnote marker in work text/,
     'R-W2': /Cat Start reading target=\/EN\/book\/1/,
     'R-W3': /Cat wrong chapter target:/,
     'R-K1': /EN Record href=#/,
@@ -873,7 +985,7 @@ const proofMessages = {
     'R-F1': /screen font Anton/,
     'R-F2': /light --bg=#ffffff expected #f4f4f1/,
     'R-P4': /dark filter=invert\(1\)/,
-    'R-T3': /D1440 home gap=.*expected 56/,
+    'R-T3': /D1440 \/ gap=.*expected 56/,
     'R-T4': /P390\/light object-fit=contain/,
     'R-H1': /P390 home line mismatch/,
     'R-H2': /IV ids=EN,EE,Pol$/,
@@ -883,6 +995,16 @@ const proofMessages = {
     'R-A3': /light H3\.b-sub sub-label .*ratio=.*color=rgb\(226, 56, 46\)/,
     'R-E1': /examined=6 violations=6; HTML fixture In this mockup/,
     'R-E2': /unsolicited overlay:.*reader-tip/,
+};
+const stageTwoProofs = {
+    'R-W1': {'crumb': /AthPol crumb=Works \/ Rhetoric and poetics/, 'english-facts': /Cat English facts form: W\. D\. Ross \(Oxford, 1908\)/, 'missing-glossary': /EN English facts glossary link missing or invalid/, 'crumb-height': /Cat D1440 crumb height=/, 'peters-year': /EN Peters facts must contain rev\. ed\., 1893/, 'ellis-year': /Pol Ellis facts must contain 1776; rev\. 1912/},
+    'R-T3': {'home-plate': /D1440 \/ gap=.*expected 56/, 'work-plate': /D1440 \/Cat\/ rendered plate geometry/},
+    'R-T2': {'cap': /Cat D1440 Start reading bottom=/, 'scroll-budget': /Cat D1440 scroll changed poster height/, 'crop': /Cat D1440 object-fit=cover expected contain/},
+    'R-K1': {'record': /EN Record href=#/, 'punctuation': /home credits doubled full stop/, 'licence': /home credits licence must be in parentheses/, 'licence-stop': /home credits stop before licence/},
+    'R-W1-bekker': {'short-end': /Meta invalid book-header Bekker range: 980a21–29/, 'backwards': /Meta backwards book-header Bekker range: 993a29–980a21/},
+    'R-W1-scheme': {'synthetic': /Isa synthetic range in non-Bekker work: 1a3–16/},
+    'R-E1': {'copy': /examined=6 violations=6; HTML fixture In this mockup/, 'no-headings': /\/Cat\/ examined=0 section headings/, 'empty-heading': /\/Cat\/ empty headings:/},
+    'R-T5': {'desktop-poster': /S844 home gap=/, 'two-columns': /S844 .*works grid has more than one column/, 'wide-title': /Cat S844 title sizes=/, 'short-plate': /Cat S844 plate height=.*below 120/},
 };
 const homeTitleProofs = {
     'golden-line': /P390 home lines=/,
@@ -897,7 +1019,7 @@ let proofFailed = false;
 try {
     for (const [id, run] of Object.entries(gates)) {
         if (only && only !== id) continue;
-        const variants = id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
+        const variants = stage === 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
         const cases = prove && variants ? Object.keys(variants) : ['default'];
         for (const variant of cases) {
             proofCase = variant;

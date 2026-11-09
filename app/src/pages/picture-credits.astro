@@ -15,6 +15,8 @@ const works = buildDivisions(CATEGORIES).flatMap(d => [
   ...d.groups.flatMap(g => g.cards.flatMap(c => c.kind === 'work' ? [c.work] : [])),
   ...(d.numeral === 'I' ? [getWork('Isa')!] : []),
 ]);
+const beforeLicence = (text: string) => text.replace(/\.\s*$/, '');
+const stop = (text: string) => /[.!?]$/.test(text.trim()) ? ' ' : '. ';
 const sections = [
   {heading:'The home page', rows:[{id:'home',title:'Aristotle'}]},
   {heading:'The works', rows:works},
@@ -25,6 +27,6 @@ const sections = [
 <h1 class="b-pc-h">Picture credits</h1>
 {sections.map(({heading,rows}) => <section><h2 class="b-h2">{heading}</h2><ul class="b-pc-l">{rows.map(w => {
  const p = plates[w.id as keyof typeof plates];
- return <li data-plate={w.id}><a href={w.id === 'home' ? `${base}/` : `${base}${workLanding(w.id)}`}><i>{w.title}</i></a><span><span data-credit-part="who">{p.who}</span>, <i data-credit-part="what">{p.what}</i>, <span data-credit-part="when">{p.when}</span>. <span data-credit-part="how">{p.how}</span>. <span data-credit-part="where">{p.where}</span>{p.credit !== null && <>. <span data-holder-credit>{p.credit}</span></>}. <span data-licence>{p.lic}</span>. <a data-record href={p.url}>Record</a></span></li>;
+ return <li data-plate={w.id}><a href={w.id === 'home' ? `${base}/` : `${base}${workLanding(w.id)}`}><i>{w.id === 'Isa' ? 'Porphyry, Isagoge' : w.title}</i></a><span><span data-credit-part="who">{p.who}</span>, <i data-credit-part="what">{p.what}</i>, <span data-credit-part="when">{p.when}</span>{stop(p.when)}<span data-credit-part="how">{p.how}</span>{stop(p.how)}<span data-credit-part="where">{p.credit === null ? beforeLicence(p.where) : p.where}</span>{p.credit !== null && <>{stop(p.where)}<span data-holder-credit>{beforeLicence(p.credit)}</span></>}{' ('}<span data-licence>{p.lic}</span>{').'} <a data-record href={p.url}>Record</a></span></li>;
 })}</ul></section>)}
 </main><BFoot/></div></div></body></html>

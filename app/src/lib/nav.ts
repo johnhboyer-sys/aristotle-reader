@@ -29,7 +29,22 @@ export const translatorName = (name: string | undefined): string =>
 export const bookSpan = (chapters: { bekker: string }[]): string => {
   const n = chapters.length;
   const first = chapters[0]?.bekker.split('–')[0] ?? '';
-  const last = chapters.at(-1)?.bekker.split('–').at(-1) ?? '';
+  const finalChapter = chapters.at(-1)?.bekker.split('–') ?? [];
+  const end = finalChapter.at(-1) ?? '';
+  const start = /^(\d+)([ab])\d+$/.exec(finalChapter[0] ?? '');
+  const last = start && /^\d+$/.test(end) ? `${start[1]}${start[2]}${end}`
+    : start && /^[ab]\d+$/.test(end) ? `${start[1]}${end}` : end;
   const range = first && last ? ` · ${first}–${last}` : '';
   return `${n} chapter${n === 1 ? '' : 's'}${range}`;
+};
+
+// Split translation names for the work page’s English facts.
+export const transParts = (name: string) => {
+  const m = /^(.*?)\s*\((.*)\)\s*$/.exec(name);
+  const rest = m?.[2] || '';
+  const year = /^(.*?)[,\s]+(\d{4}(?:[–-]\d{2,4})?)$/.exec(rest);
+  const prefix = year?.[1].trim().replace(/,$/, '') || '';
+  // A bare ‘rev.’ keeps its year attached; ‘rev. ed.’ takes the kit’s comma.
+  const formatted = year ? `${prefix}${/\brev\.$/.test(prefix) ? ' ' : ', '}${year[2]}` : rest;
+  return {who: m ? m[1] : name, rest: formatted};
 };

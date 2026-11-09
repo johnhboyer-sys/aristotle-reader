@@ -20,7 +20,7 @@ import {
 import { sanitizeHtml } from '../lib/html';
 import { isChapterSection } from '@shared/lib/data';
 import { jsonLdSafe } from '../lib/jsonld';
-import { translatorName } from '../lib/nav';
+import { bookSpan, translatorName, transParts } from '../lib/nav';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
@@ -35,6 +35,7 @@ const work = getWork(workId)!;
 const author = work.author;
 // What the reader cites by: Bekker column and line, or (the Athenian
 // Constitution) chapter and section.
+const usesBekker = !work.citation || work.citation.scheme === 'bekker';
 const citationName = isChapterSection(work) ? 'chapter and section' : 'Bekker';
 
 interface ChapterRef { chapter: string; column: string; line: string; bekker: string; }
@@ -47,18 +48,11 @@ const outline: BookOutline[] = Array.from({ length: work.books }, (_, i) => {
   return { book: b, label: bookLabel(work, b), chapters: allChapters[String(b)] ?? [] };
 });
 const totalChapters = outline.reduce((n, b) => n + b.chapters.length, 0);
-// Expand a shortened final line (e.g. “14”) against that chapter's column.
-const bookSpan = (b: BookOutline) => {
-  const first = b.chapters[0];
-  const last = b.chapters.at(-1);
-  if (!first || !last) return '';
-  const end = last.bekker.split('–').at(-1)!;
-  return `${first.bekker.split('–')[0]}–${/^\d+[ab]\d/.test(end) ? end : last.column + end}`;
-};
 
 const editions = visibleTranslations(work);
 const primary = editions.find((t) => t.id === work.defaultTranslation)
   ?? editions.find((t) => t.slot === 'english') ?? editions[0];
+
 const translatorNames = editions.map((t) => translatorName(t.name));
 const commentaries = (work.commentaries ?? [])
   .map((id) => getWork(id))
@@ -77,7 +71,7 @@ const ostwaldTitles = primary?.id === 'ostwald' && Object.values(translationTitl
 const division = CATEGORIES.find(c => [...(c.works || []), ...(c.subcategories || []).flatMap(g => g.works)].some(w => w.id === workId));
 const divisionName = division ? DIVISION_NAMES[division.title] : 'Commentary';
 const extent = `${work.books > 1 ? `${work.books} books, ` : ''}${totalChapters} chapter${totalChapters === 1 ? '' : 's'}`;
-const chapterTitle = (book: number, chapter: string) => titles[String(book)]?.[chapter] || `Chapter ${chapter}`;
+const chapterTitle = (book: number, chapter: string) => (titles[String(book)]?.[chapter] || `Chapter ${chapter}`).replace(/\[\^[^\]]*\]/g, '');
 const chapterLink = (book: number, chapter: string) => `${base}${workPath(workId, book)}#ch-${book}-${chapter}`;
 const plate = plates[workId as keyof typeof plates];
 // ── SEO ─────────────────────────────────────────────────────────────────────
@@ -175,38 +169,37 @@ const breadcrumbLd = Astro.site
             <a class="b-btn" data-greek href={readHref('?view=greek')}>Greek only</a>
             {editions.length >= 2 && <a class="b-btn" data-compare href={readHref('?trans=compare')}>Compare translations</a>}
           </div>
+          {work.related?.map(r => getWork(r.id) && <p class="b-cred b-related"><a href={`${base}${workLanding(r.id)}`}>{r.label}</a></p>)}
         </div>
         <section class="b-wk" data-section="facts">
           <dl class="b-facts">
             <dt>Greek</dt><dd>{work.greekSource.full}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
-            <dt>English</dt><dd>{editions.map(t => <div><a href={readHref(`?trans=${t.id}`)}>{translatorName(t.name)}</a>{t.name.slice(translatorName(t.name).length)}{editions.length > 1 && primary?.id === t.id && <small>opens first</small>}</div>)}{workId === 'EN' && <a href={`${base}/EN/glossary`}>Glossary of Technical Terms</a>}</dd>
+            <dt>English</dt><dd>{editions.map(t => { const parts = transParts(t.name); return <><div><span data-english-entry><a href={readHref(`?trans=${t.id}`)}>{parts.who}</a>{parts.rest && `, ${parts.rest}`}</span>{editions.length > 1 && primary?.id === t.id && <>{' '}<small>opens first</small></>}</div>{workId === 'EN' && t.id === 'ostwald' && <div data-english-entry><a href={`${base}/EN/glossary`}>glossary</a></div>}</>; })}</dd>
             <dt>Length</dt><dd>{extent}</dd>
           </dl>
         </section>
         <section class="b-sec" data-section="books">
           <h2 class="b-h2">{work.books > 1 ? 'Books and chapters' : 'Chapters'}</h2>
-          {ostwaldTitles && <p class="b-note3">Chapter titles are Ostwald's.</p>}
+          {ostwaldTitles && <p class="b-note3">Chapter titles are Ostwald’s.</p>}
           {work.books > 1 && <p class="b-bkall"><button type="button" data-books-open>Open all books</button><button type="button" data-books-close>Close all</button></p>}
           <div class={work.books > 1 ? 'b-bks' : undefined}>
           {outline.map(b => {
-            const rows = <ol class="b-chs">{b.chapters.map(c => <li><a href={chapterLink(b.book,c.chapter)} data-book={b.book} data-chapter={c.chapter}><span class="b-cn">{c.chapter}</span><span class="b-ct">{chapterTitle(b.book,c.chapter)}</span><span class="b-cb">{c.bekker}</span></a></li>)}</ol>;
+            const rows = <ol class="b-chs">{b.chapters.map(c => <li><a href={chapterLink(b.book,c.chapter)} data-book={b.book} data-chapter={c.chapter}><span class="b-cn">{c.chapter}</span><span class="b-ct">{chapterTitle(b.book,c.chapter)}</span><span class="b-cb">{usesBekker ? c.bekker : ''}</span></a></li>)}</ol>;
             return work.books > 1 ? <>
-              <details class="b-bk" data-book={b.book}><summary><span class="b-bkn" lang={/[α-ωΑ-Ω]/.test(b.label) ? 'grc' : 'en'}><span class="b-bkw">Book </span>{b.label}</span><span class="b-bkf">{titles[String(b.book)]?.[b.chapters[0]?.chapter] || <span class="b-bks2">{bookSpan(b)}</span>}</span><span class="b-bkc">{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</span></summary>{rows}</details>
-              {work.missingBooks?.after === b.book && <p class="b-book-gap"><a href={`${base}${workPath(work.missingBooks.linkWork,work.missingBooks.linkBook)}`}>{work.missingBooks.note} {work.missingBooks.linkLabel}</a></p>}
+              <details class="b-bk" data-book={b.book}><summary><span class="b-bkn" lang={/[α-ωΑ-Ω]/.test(b.label) ? 'grc' : 'en'}><span class="b-bkw">Book </span>{b.label}</span><span class="b-bkf">{titles[String(b.book)]?.[b.chapters[0]?.chapter] ? chapterTitle(b.book,b.chapters[0].chapter) : <span class="b-bks2">{usesBekker ? bookSpan(b.chapters).split(' · ').at(-1) : ''}</span>}</span><span class="b-bkc">{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</span></summary>{rows}</details>
             </> : rows;
           })}
           </div>
         </section>
         <section class="b-sec b-two" data-section="reference">
           {(reading.length > 0 || resources.length > 0) && <div>
-            {reading.length > 0 && <section data-section="print"><h2 class="b-h2">In print</h2><ul class="b-print">{reading.map(r => <li><small>{r.kind === 'collection' ? 'In print' : r.kind === 'translation' ? 'Translation' : 'Commentary'}</small><span set:html={sanitizeHtml(r.cite)}/><a href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print</a></li>)}</ul></section>}
+            {reading.length > 0 && <section data-section="print"><h2 class="b-h2">In print</h2><ul class="b-print">{reading.map(r => <li><small>{r.kind === 'collection' ? 'In print' : r.kind === 'translation' ? 'Translation' : 'Commentary'}</small><span><a data-citation href={inPrintHref(r)} target="_blank" rel="noopener nofollow" set:html={sanitizeHtml(r.cite)}/></span></li>)}</ul></section>}
             {resources.length > 0 && <section data-section="resources"><h2 class="b-h2">Resources</h2><ul class="b-print">{resources.map(r => <li><span><a href={r.url} target="_blank" rel="noopener">{r.label}</a>{' — '}{r.blurb}{r.exercises && <> See {r.exercises}, relevant to this work.</>}{' '}Developed by <a href={r.authorUrl} target="_blank" rel="noopener">{r.authorName}</a>.</span></li>)}</ul></section>}
           </div>}
           <div>
-            {commentaries.length > 0 && <section data-section="commentary"><h2 class="b-h2">Commentary</h2><ul class="b-trs">{commentaries.map(c => <li><a href={`${base}${workLanding(c.id)}`}><span>{c.author}, <i>{c.title}</i>{c.greekTitle && <span lang="grc"> · {c.greekTitle}</span>}</span><small>{c.blurb}</small></a></li>)}</ul></section>}
+            {commentaries.length > 0 && <section data-section="commentary"><h2 class="b-h2">Commentary</h2><ul class="b-trs">{commentaries.map(c => <li><a href={`${base}${workLanding(c.id)}`}><span>{c.author}, <i>{c.title}</i></span><small>{c.blurb}</small></a></li>)}</ul></section>}
             <section data-section="sources"><h2 class="b-h2">Sources</h2><p class="b-cred"><a href={`${base}/attribution`}>Texts &amp; licences</a></p>
-              {work.related?.map(r => getWork(r.id) && <p class="b-cred"><a href={`${base}${workLanding(r.id)}`}>{r.label}</a></p>)}
-              <p class="b-cred"><a href={`${base}/advanced`}>Advanced search</a></p>
+
             </section>
           </div>
         </section>

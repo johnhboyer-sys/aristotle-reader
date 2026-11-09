@@ -166,7 +166,8 @@ export function fitPoster(el: HTMLElement) {
     const phone = matchMedia('(max-width: 960px)').matches;
     const home = poster.classList.contains('hp-p-side');
     const style = getComputedStyle(el);
-    const W = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    // Sideways work titles keep the kit's upright-phone setting (John, J4).
+    const W = !home && phone && matchMedia('(min-width: 701px)').matches ? 354 : el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
     const H = phone ? (home ? 300 : Number(poster.dataset.titleHeight || 210)) : el.clientHeight;
     const box = { W, H };
     const cv = document.createElement('canvas').getContext('2d')!;
@@ -211,7 +212,7 @@ function fitWorkPoster(el: HTMLElement) {
     const nav = document.querySelector<HTMLElement>('.b-nav')!;
     const rect = poster.getBoundingClientRect();
     const tail = start.getBoundingClientRect().bottom - rect.bottom;
-    const budget = Math.max(1, sideways ? innerHeight - nav.offsetHeight : innerHeight - rect.top - tail - 16);
+    const budget = Math.max(1, sideways ? innerHeight - nav.offsetHeight : innerHeight - (rect.top + scrollY) - tail - 16);
     if (phone) {
         if (el.offsetHeight >= budget) {
             poster.dataset.titleHeight = String(Math.max(14, (budget - 44) * .6));

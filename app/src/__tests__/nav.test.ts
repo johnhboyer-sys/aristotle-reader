@@ -4,7 +4,7 @@
 // on every outline click; one that turns the other way makes every cross-book
 // link in the drawer a no-op.
 import { describe, expect, it } from 'vitest';
-import { bookSpan, chapterHref, translatorName } from '../lib/nav';
+import { bookSpan, chapterHref, translatorName, transParts } from '../lib/nav';
 
 describe('chapterHref', () => {
   it('is a bare hash for a chapter in the book already open', () => {
@@ -59,6 +59,17 @@ describe('bookSpan', () => {
       .toBe('3 chapters · 1094a1–1096a10');
   });
 
+  it('expands book ends against the last chapter’s own start', () => {
+    expect(bookSpan([ch('980a21–982a3'), ch('993a11–29')]))
+      .toBe('2 chapters · 980a21–993a29');
+    expect(bookSpan([ch('71a1–72a4'), ch('89a21–b20')]))
+      .toBe('2 chapters · 71a1–89b20');
+    expect(bookSpan([ch('661a34–662a2'), ch('670b4–18')]))
+      .toBe('2 chapters · 661a34–670b18');
+    expect(bookSpan([ch('980a21–982a3'), ch('993a11–993b29')]))
+      .toBe('2 chapters · 980a21–993b29');
+  });
+
   it('says "1 chapter", singular', () => {
     expect(bookSpan([ch('1094a1–1094b11')])).toBe('1 chapter · 1094a1–1094b11');
   });
@@ -77,5 +88,15 @@ describe('bookSpan', () => {
   // still read across it rather than collapsing to a single number.
   it('spans a single chapter from its own start to its own end', () => {
     expect(bookSpan([ch('980a21–982a3')])).toBe('1 chapter · 980a21–982a3');
+  });
+});
+
+describe('transParts', () => {
+  it.each([
+    ['F. H. Peters (Kegan Paul, rev. ed. 1893)', 'F. H. Peters, Kegan Paul, rev. ed., 1893'],
+    ['William Ellis (1776; rev. 1912)', 'William Ellis, 1776; rev. 1912'],
+  ])('formats %s for English facts', (name, expected) => {
+    const {who, rest} = transParts(name);
+    expect([who, rest].filter(Boolean).join(', ')).toBe(expected);
   });
 });

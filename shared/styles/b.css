@@ -506,13 +506,22 @@ body.home { margin: 0; padding: 0; max-width: none; }
 .dir-b.pg-work .b-po.work { height: var(--poster-height, calc(100vw * 652 / 1440)); aspect-ratio: auto; }
 .dir-b.pg-work .b-po.work picture { position: absolute; left: 598px; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: flex-end; }
 .dir-b.pg-work .b-po.work img { position: static; width: min(100%, calc(var(--poster-height, 652px) * 1280 / 914)); height: auto; max-height: 100%; aspect-ratio: 1280 / 914; object-fit: contain; }
-.dir-b .b-crumb a, .dir-b .b-facts a, .dir-b .b-bkall button, .dir-b .b-chs a, .dir-b .b-print a, .dir-b .b-cred a, .dir-b .b-book-gap a, .dir-b .b-pc-l a { min-height: 40px; min-width: 40px; }
-.dir-b .b-crumb a, .dir-b .b-facts a, .dir-b .b-print a, .dir-b .b-cred a, .dir-b .b-book-gap a, .dir-b .b-pc-l a { display: inline-flex; align-items: center; }
+.dir-b .b-crumb a, .dir-b .b-facts a, .dir-b .b-bkall button, .dir-b .b-chs a, .dir-b .b-print a, .dir-b .b-cred a, .dir-b .b-pc-l a { min-height: 40px; min-width: 40px; }
+.dir-b .b-crumb a { display: inline; padding: 13px 0; }
+.dir-b .b-facts a, .dir-b .b-print a, .dir-b .b-cred a, .dir-b .b-pc-l a { display: inline; padding: 12px 0; border-bottom: 0; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: .15em; text-decoration-color: var(--red); }
+.dir-b .b-pc-l a { text-decoration-color: currentColor; }
+.dir-b .b-pc-l li { align-items: start; }
+.dir-b .b-pc-l li > a { padding: 0; text-decoration: none; }
 .dir-b .b-bkall button { padding: 8px 0; }
-.dir-b .b-chs a { align-items: center; }
+.dir-b .b-chs a { align-items: baseline; }
 .dir-b .b-bkf { white-space: normal; overflow: visible; text-overflow: clip; }
-.dir-b .b-book-gap { font: 400 16px/1.5 var(--sans); color: var(--mid); padding: 12px 0; }
-.dir-b .b-print a { color: var(--red-ink); font: 500 15px/1.4 var(--sans); }
+.dir-b .b-print a { color: var(--red-ink); font: inherit; text-decoration-color: currentColor; }
+.dir-b .b-print a[data-citation] { color: inherit; text-decoration: none; }
+/* Google Fonts Literata: 1000 units/em, hhea/OS2 ascent 1177, descent -308.
+   Keep the underline at the unpadded inline box’s descent edge. */
+.dir-b .b-facts dd a { border-bottom: 0; text-underline-offset: .308em; text-decoration-skip-ink: none; }
+.dir-b .b-cred a, .dir-b .b-pc-l span a, .dir-b [data-section="resources"] a { text-decoration: none; }
+.dir-b .b-related { margin-top: 18px; }
 .dir-b .b-ctas > #work-resume-slot:empty { display: none; }
 @media (max-width: 960px) {
  .dir-b.pg-work .b-po.work { height: auto; }
