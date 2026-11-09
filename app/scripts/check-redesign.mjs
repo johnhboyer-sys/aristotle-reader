@@ -427,7 +427,9 @@ const gates = {
         const p = await open('D1440', 'light', '/', true);
         assert(await p.locator('#resume-card').isVisible(), 'seeded resume absent');
         await p.waitForFunction(() => document.querySelector('#resume-link')?.textContent.includes('chapter'));
-        const label = await p.locator('#resume-link').textContent();
+        // innerText is the text as drawn: textContent kept a space that
+        // inline-flex layout dropped on screen ("Continue readingNicomachean").
+        const label = await p.locator('#resume-link').innerText();
         assert(label === 'Continue reading Nicomachean Ethics, Book I, chapter 5', `resume label ${label}`);
         assert(await p.locator('#resume-link i').textContent() === 'Nicomachean Ethics', 'resume work title is not italic');
         const href = await p.locator('#resume-link').getAttribute('href');

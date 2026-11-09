@@ -72,7 +72,8 @@
 .dir-b .b-search input::placeholder { color: var(--faint); }
 .dir-b .b-search button { border: 0; background: none; font: 650 15px/1 var(--sans); color: var(--red-ink); text-transform: uppercase; letter-spacing: .04em; }
 .dir-b .b-cont { margin: 22px 0 0; font: 500 16px/1.4 var(--sans); }
-.dir-b .b-cont a { color: var(--ink); border-bottom: 1px solid var(--red); padding-bottom: 2px; }
+.dir-b .b-cont a { color: var(--ink); }
+.dir-b .b-cont-t { border-bottom: 1px solid var(--red); padding-bottom: 2px; }
 .dir-b .b-div { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 48px; padding: 30px 72px 40px; border-top: 1px solid var(--ink); }
 .dir-b .b-dh { margin: 0; font: 600 56px/.88 var(--sans); font-family: var(--tface); font-weight: var(--tw); text-transform: uppercase; letter-spacing: -.005em; color: var(--red); text-wrap: balance; }
 .dir-b .b-sub { font: italic 400 18px/1.3 var(--read); color: var(--mid); margin: 18px 0 4px; }
@@ -460,7 +461,11 @@
 html.poster-fitting .dir-b .b-po-t:not([data-set]) { visibility: hidden; }
 .dir-b .b-po-t .ln { display: block; white-space: pre; }
 .dir-b .b-nav a, .dir-b .b-foot a, .dir-b .b-cont a { min-height: 40px; min-width: 40px; }
-.dir-b .b-foot a, .dir-b .b-cont a { display: inline-flex; align-items: center; }
+.dir-b .b-foot a { display: inline-flex; align-items: center; }
+/* The resume link: an inline-block 40px target (flex dropped the space after
+   "reading"); the inline span inside carries the kit's underline, line by line
+   when the label wraps on a phone. */
+.dir-b .b-cont a { display: inline-block; padding-top: 9px; }
 .dir-b .b-ib, .dir-b .b-search button, .dir-b .b-search input { min-width: 40px; min-height: 40px; }
 .dir-b .theme-icon { display: flex; }
 @media (max-width: 960px) {

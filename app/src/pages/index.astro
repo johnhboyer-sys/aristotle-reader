@@ -194,7 +194,10 @@ const structuredData = Astro.site
       const title = document.createElement('i'); title.textContent = w.title;
       const label = w.bookLabels[book - 1];
       const place = document.createTextNode(w.books > 1 ? `, Book ${/^[IVXLCDM]+$/.test(label) ? label : roman(book)}` : '');
-      link.append('Continue reading ', title, place); card.append(link); slot.append(card);
+      // The link is the 40px target (inline-flex, which would drop the space
+      // after "reading"); the span carries the text and the kit's underline.
+      const text = document.createElement('span'); text.className = 'b-cont-t';
+      text.append('Continue reading ', title, place); link.append(text); card.append(link); slot.append(card);
       if (!last.cite) return;
       try {
         const response = await fetch(`${base}/data/${last.work}/chapters.json`);
