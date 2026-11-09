@@ -5,7 +5,8 @@ const { bMoon = false } = Astro.props;
 ---
 <button
   type="button"
-  class="theme-toggle"
+  class={bMoon ? 'b-ib' : 'theme-toggle'}
+  data-theme-toggle
   data-b-moon={bMoon ? true : undefined}
   aria-label="Toggle night mode"
   title="Toggle night mode"
@@ -15,7 +16,7 @@ const { bMoon = false } = Astro.props;
 
 <script is:inline>
   (function () {
-    var btn = document.querySelector('.theme-toggle');
+    var btn = document.querySelector('[data-theme-toggle]');
     if (!btn) return;
     var icon = btn.querySelector('.theme-icon');
 

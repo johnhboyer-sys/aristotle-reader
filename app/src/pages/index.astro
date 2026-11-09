@@ -2,6 +2,8 @@
 import { AUTHENTICITY_LABEL, CATEGORIES, DIVISION_NAMES, workLanding, type Work } from '@shared/lib/works';
 import { builtWorkCards, buildDivisions } from '../lib/corpus';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { publicDir } from 'astro:config/server';
 import plates from '../data/plates.json';
 import BFonts from '../components/BFonts.astro';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
@@ -27,7 +29,7 @@ const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href 
 // Dubious and spurious works follows the numbered divisions.
 const divisions = buildDivisions(CATEGORIES);
 const extent = (w: Work) => {
-  const chapters: Record<string, unknown[]> = JSON.parse(readFileSync(`public/data/${w.id}/chapters.json`, 'utf8'));
+  const chapters: Record<string, unknown[]> = JSON.parse(readFileSync(fileURLToPath(new URL(`data/${w.id}/chapters.json`, publicDir)), 'utf8'));
   const n = Object.values(chapters).reduce((sum, book) => sum + book.length, 0);
   return `${w.books > 1 ? `${w.books} books, ` : ''}${n} chapter${n === 1 ? '' : 's'}`;
 };
@@ -97,7 +99,7 @@ const structuredData = Astro.site
 </head>
 <body class="home">
   <CommandPalette client:load />
-  <div class="frame dir-b">
+  <div class="frame dir-b pg-home">
     <div class="b-page">
       <header class="b-nav">
         <a class="b-brand" href={`${base}/`}>Aristotle Reader</a>
@@ -120,7 +122,7 @@ const structuredData = Astro.site
               <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.4"/></svg>
               <input name="q" autocomplete="off" spellcheck="false" placeholder="φύσις, justice, ἀρετή …" aria-label="Search the corpus"/><button type="submit">Search</button>
             </form>
-            <p class="b-cont" id="resume-card" hidden data-works={JSON.stringify(Object.fromEntries(builtWorks.map(c => [c.work.id,{title:c.work.title,books:c.work.books}])))}><a id="resume-link" href={`${base}/EN/book/1`}>Continue reading <span id="resume-meta"></span></a></p>
+            <div id="resume-slot" data-works={JSON.stringify(Object.fromEntries(builtWorks.map(c => [c.work.id,{title:c.work.title,books:c.work.books,bookLabels:c.work.bookLabels}])))}></div>
           </div>
         </section>
         {divisions.map(d => <section class="b-div" data-division={d.numeral || 'appendix'}>
@@ -136,8 +138,20 @@ const structuredData = Astro.site
       </main>
       <footer class="b-foot">
         <p>Also <a href="https://plato.johnhboyer.com/">The Plato Reader</a><a href="https://homer.johnhboyer.com/">The Homer Reader</a><a href="https://greekdrama.johnhboyer.com/">The Greek Drama Reader</a><a href="https://grammata.pages.dev/">Grammata</a></p>
-        <p><a href={`${base}/attribution`}>Texts &amp; licences</a><a href={`${base}/picture-credits/`}>Picture credits</a><a href={`${base}/support`}>Support</a><a href={`${base}/desktop`}>Desktop app</a><a href={`${base}/game/`}>Play a game</a><span>Site by John H. Boyer</span></p>
+        <p><a href={`${base}/attribution`}>Texts &amp; licences</a><a href={`${base}/picture-credits/`}>Picture credits</a><a href={`${base}/support`}>Support</a><a href={`${base}/desktop`}>Desktop app</a><a href="mailto:jhboyer@loyno.edu?subject=Aristotle%20Reader%3A%20Bug%20Report" data-feedback-open>Report an error</a><a href={`${base}/game/`}>Play a game</a><span>Site by John H. Boyer</span></p>
       </footer>
+      <dialog class="b-feedback" id="feedback-modal" aria-labelledby="fb-title">
+        <form id="feedback-form">
+          <h2 id="fb-title">Request a Feature / Report an Error</h2>
+          <fieldset class="fb-type"><legend class="sr-only">Type of feedback</legend>
+            <label><input type="radio" name="fb-type" value="feature" checked /> Feature request</label>
+            <label><input type="radio" name="fb-type" value="bug" /> Bug / error report</label>
+          </fieldset>
+          <label class="sr-only" for="fb-message">Describe the feature or error</label>
+          <textarea id="fb-message" placeholder="Describe the feature or error…" required autofocus></textarea>
+          <div class="fb-actions"><button type="button" id="fb-cancel" class="b-btn">Cancel</button><button type="submit" class="b-btn pri">Send</button></div>
+        </form>
+      </dialog>
     </div>
   </div>
   <script is:inline>
@@ -145,23 +159,81 @@ const structuredData = Astro.site
   </script>
   <script>
     import { initPosters } from '../lib/poster-fit';
-    import { citeShown, lastRead } from '@shared/lib/resume';
+    import { lastRead } from '@shared/lib/resume';
+    import { parseBekker } from '@shared/lib/data';
     initPosters();
-    const card = document.getElementById('resume-card');
-    if (card) {
-      const works = JSON.parse(card.dataset.works || '{}');
-      const last = lastRead(w => Object.hasOwn(works,w));
-      if (last) {
-        const w = works[last.work];
-        const book = Math.min(Math.max(1,last.book),w.books);
-        const bookBit = w.books > 1 ? ` · Book ${book}` : '';
-        const citeBit = last.cite ? ` · ${citeShown(last.work,last.cite)}` : '';
-        document.getElementById('resume-meta')!.textContent = `${w.title}${bookBit}${citeBit}`;
-        const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-        (document.getElementById('resume-link') as HTMLAnchorElement).href = `${base}/${last.work}/book/${book}${last.cite ? `#${last.cite}` : ''}`;
-        card.hidden = false;
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    const slot = document.getElementById('resume-slot');
+    const roman = (n: number) => {
+      let text = '';
+      for (const [value, letters] of [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']] as [number,string][]) {
+        while (n >= value) { text += letters; n -= value; }
       }
+      return text;
+    };
+    const citeKey = (cite: string) => {
+      const ref = parseBekker(cite);
+      if (!ref) return null;
+      return Number(ref.column.slice(0,-1)) * 100000 + (ref.column.endsWith('b') ? 10000 : 0) + ref.line * 100 + (ref.sub ? ref.sub.charCodeAt(0) - 96 : 0);
+    };
+    async function resume() {
+      if (!slot) return;
+      const works = JSON.parse(slot.dataset.works || '{}');
+      const last = lastRead(w => Object.hasOwn(works,w));
+      if (!last) return;
+      const w = works[last.work];
+      const book = Math.min(Math.max(1,last.book),w.books);
+      const card = document.createElement('p');
+      card.className = 'b-cont'; card.id = 'resume-card';
+      const link = document.createElement('a'); link.id = 'resume-link';
+      link.href = `${base}/${last.work}/book/${book}${last.cite ? `#${last.cite}` : ''}`;
+      const title = document.createElement('i'); title.textContent = w.title;
+      const label = w.bookLabels[book - 1];
+      const place = document.createTextNode(`, Book ${/^[IVXLCDM]+$/.test(label) ? label : roman(book)}`);
+      link.append('Continue reading ', title, place); card.append(link); slot.append(card);
+      if (!last.cite) return;
+      try {
+        const response = await fetch(`${base}/data/${last.work}/chapters.json`);
+        if (!response.ok) return;
+        const chapters = await response.json();
+        const point = citeKey(last.cite);
+        if (point === null) return;
+        for (const chapter of chapters[String(book)] || []) {
+          const start = citeKey(`${chapter.column}${chapter.line}`);
+          const endText = String(chapter.bekker).split(/[–—]/).pop()!.trim();
+          const end = citeKey(/^\d+[ab]/.test(endText) ? endText : `${chapter.column}${endText}`);
+          // A plain end-line number includes its lettered parts.
+          const limit = end === null ? null : end + (/\d$/.test(endText) ? 99 : 0);
+          if (start !== null && limit !== null && point >= start && point <= limit) {
+            place.textContent += `, chapter ${chapter.chapter}`;
+            break;
+          }
+        }
+      } catch { /* The book remains useful when chapter data is unavailable. */ }
     }
+    void resume();
+    const modal = document.getElementById('feedback-modal') as HTMLDialogElement;
+    const message = document.getElementById('fb-message') as HTMLTextAreaElement;
+    let trigger: HTMLElement | null = null;
+    for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-feedback-open]')) {
+      link.addEventListener('click', e => {
+        e.preventDefault(); trigger = link; message.value = ''; modal.showModal(); message.focus();
+      });
+    }
+    modal.addEventListener('close', () => { trigger?.focus(); trigger = null; });
+    modal.addEventListener('click', e => { if (e.target === modal) {
+      const box = modal.getBoundingClientRect();
+      if (e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom) modal.close();
+    }});
+    document.getElementById('fb-cancel')!.addEventListener('click', () => modal.close());
+    document.getElementById('feedback-form')!.addEventListener('submit', e => {
+      e.preventDefault();
+      const body = message.value.trim(); if (!body) return;
+      const type = modal.querySelector<HTMLInputElement>('input[name="fb-type"]:checked')!.value;
+      const subject = type === 'feature' ? 'Aristotle Reader: Feature Request' : 'Aristotle Reader: Bug Report';
+      window.location.href = `mailto:jhboyer@loyno.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      modal.close();
+    });
   </script>
 </body>
 </html>

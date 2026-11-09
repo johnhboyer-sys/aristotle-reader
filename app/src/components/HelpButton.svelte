@@ -2,11 +2,9 @@
   // The reader Help control opens its modal on request.
   import { onMount, onDestroy, tick } from 'svelte';
 
-
   let showHelp = false;
   let helpModal: HTMLDivElement;
   let helpTrigger: HTMLElement | null = null;
-
 
   async function openHelp(e?: Event) {
     helpTrigger = e?.currentTarget instanceof HTMLElement
@@ -23,7 +21,6 @@
     helpTrigger?.focus();
     helpTrigger = null;
   }
-
 
   function onKeydown(e: KeyboardEvent) {
     if (!showHelp) return;
@@ -75,7 +72,6 @@
   aria-label="How to use this reader"
   title="How to use this reader"
 >?</button>
-
 
 {#if showHelp}
   <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->

@@ -30,6 +30,7 @@ const flag = name => args.includes(name) ? args[args.indexOf(name) + 1] : undefi
 const BASE = flag('--base') || 'http://localhost:4329';
 const only = flag('--only') || flag('--prove');
 const prove = flag('--prove');
+let proofCase = 'default';
 if (flag('--stage') && flag('--stage') !== '1')
     throw Error('Only stage 1 is implemented');
 const app = fileURLToPath(new URL('../', import.meta.url));
@@ -53,6 +54,16 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
         }
     }, { theme, seed, fresh });
     const page = await context.newPage();
+    page.fontFileRequests = [];
+    page.fontSheetReads = [];
+    page.on('request', request => {
+        if (request.resourceType() === 'font') page.fontFileRequests.push(request.url());
+    });
+    page.on('response', response => {
+        if (response.request().resourceType() === 'stylesheet') {
+            page.fontSheetReads.push(response.text().then(text => ({url: response.url(), text})).catch(() => ({url: response.url(), text: ''})));
+        }
+    });
     await page.goto(BASE + path, { waitUntil: 'networkidle' });
     await page.evaluate(() => document.fonts.ready);
     // Wait for the title fitter only where there is a poster, so the gates can
@@ -96,16 +107,30 @@ const gates = {
             assert(expectedSizes.length === expected.lines.length && expectedSizes.every(n => Number.isFinite(n) && n > 0), `${kind} invalid golden sizes`);
             const page = await open(viewport);
             try {
+                if (kind === 'desktop') {
+                    for (const size of ['D1280', 'D1440']) {
+                        const revision = await page.locator('.b-po-t').getAttribute('data-fit-revision');
+                        await page.setViewportSize({width: sizes[size][0], height: sizes[size][1]});
+                        await page.waitForFunction(previous => Number(document.querySelector('.b-po-t')?.dataset.fitRevision) > Number(previous), revision);
+                        const box = await page.locator('.b-po-t').evaluate(el => {
+                            const css = getComputedStyle(el);
+                            return {measured: el.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight), used: Number(el.dataset.fitWidth), set: el.dataset.set};
+                        });
+                        assert(box.used === box.measured && box.measured > 0, `${size} fitter width=${box.used} real content box=${box.measured}`);
+                        assert(box.set && box.set.split(',').every(n => Number(n) > 0), `${size} data-set was not recomputed`);
+                        examined++;
+                    }
+                }
                 const actual = await page.locator('.b-po-t').evaluate(el => ({
                     lines: [...el.querySelectorAll('.ln')].map(line => line.textContent),
                     set: el.dataset.set,
                 }));
                 assert(actual.lines.length > 0, `${viewport} examined=0 title lines`);
                 assert(JSON.stringify(actual.lines) === JSON.stringify(expected.lines), `${viewport} home lines=${JSON.stringify(actual.lines)} expected=${JSON.stringify(expected.lines)}`);
-                const sizes = actual.set?.split(',').map(Number) || [];
-                assert(sizes.length === expectedSizes.length, `${viewport} home data-set=${actual.set} expected=${expected.set}`);
-                for (let i = 0; i < sizes.length; i++) {
-                    assert(Number.isFinite(sizes[i]) && Math.abs(sizes[i] - expectedSizes[i]) <= 1, `${viewport} home line ${i + 1} size=${sizes[i]} expected=${expectedSizes[i]} ±1px`);
+                const got = actual.set?.split(',').map(Number) || [];
+                assert(got.length === expectedSizes.length, `${viewport} home data-set=${actual.set} expected=${expected.set}`);
+                for (let i = 0; i < got.length; i++) {
+                    assert(Number.isFinite(got[i]) && Math.abs(got[i] - expectedSizes[i]) <= 1, `${viewport} home line ${i + 1} size=${got[i]} expected=${expectedSizes[i]} ±1px`);
                     examined++;
                 }
             } finally {
@@ -128,27 +153,53 @@ const gates = {
     },
     'R-C2': async () => {
         const files = walk(join(dist, '_astro'), /\.(css|js)$/);
-        const bad = files.filter(f => /--gw\b/.test(readFileSync(f, 'utf8')));
-        if (prove && /--gw\b/.test('fixture {width:var(--gw, max-content)}'))
-            bad.push('injected fixture var(--gw,)');
+        const samples = ['index.html', 'Cat/index.html', 'EN/book/1/index.html', 'search/index.html'];
+        const lemma = walk(join(dist, 'lemma'), /\.html$/).find(f => f !== join(dist, 'lemma/index.html'));
+        assert(lemma, 'no built lemma sample');
+        const inputs = files.map(file => [file, readFileSync(file, 'utf8')]);
+        for (const file of [...samples.map(f => join(dist, f)), lemma]) {
+            const html = readFileSync(file, 'utf8');
+            const inline = [...html.matchAll(/<(style|script)\b[^>]*>([\s\S]*?)<\/\1>/gi)].map(m => m[2]).join('\n');
+            inputs.push([file + ' inline style/script', inline]);
+        }
+        if (prove) inputs.push(['injected fixture', 'fixture {width:var(--gw, max-content)}']);
+        const bad = inputs.filter(([,text]) => /--gw\b/.test(text)).map(([file]) => file);
         assert(!bad.length, `legacy width token: ${bad.join(', ')}`);
-        return files.length;
+        return inputs.length;
     },
     'R-F1': async () => {
         const p = await open();
-        if (prove)
-            await p.evaluate(() => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Anton'; document.head.append(l); });
-        const links = await p.locator('link[rel="stylesheet"]:not([media="print"])').evaluateAll(els => els.map(l => l.href).filter(h => h.includes('fonts.googleapis.com')));
-        const requested = await p.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).filter(n => n.includes('fonts.googleapis.com')));
-        const urls = [...new Set([...links, ...requested])];
-        const families = urls.flatMap(u => new URL(u).searchParams.getAll('family').map(f => f.split(':')[0]));
-        await close(p);
-        assert(links.length === 1, `screen font links=${links.length}`);
-        for (const f of families)
-            assert(['Oswald', 'Sofia Sans', 'Literata', 'Gentium Book Plus'].includes(f), `screen font ${f}`);
-        for (const f of ['Oswald', 'Sofia Sans', 'Literata', 'Gentium Book Plus'])
-            assert(families.includes(f), `missing font ${f}`);
-        return families.length;
+        try {
+            if (prove)
+                await p.evaluate(() => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Anton'; document.head.append(l); });
+            const links = await p.locator('link[rel="stylesheet"]:not([media="print"])').evaluateAll(els => els.map(l => l.href).filter(h => h.includes('fonts.googleapis.com')));
+            const requested = await p.evaluate(() => performance.getEntriesByType('resource').map(r => r.name).filter(n => n.includes('fonts.googleapis.com')));
+            const urls = [...new Set([...links, ...requested])];
+            const families = urls.flatMap(u => new URL(u).searchParams.getAll('family').map(f => f.split(':')[0]));
+            const allowed = ['Oswald', 'Sofia Sans', 'Literata', 'Gentium Book Plus'];
+            for (const family of families) assert(allowed.includes(family), `screen font ${family}`);
+            assert(links.length === 1, `screen font links=${links.length}`);
+            for (const family of allowed) assert(families.includes(family), `missing font ${family}`);
+            const loaded = await p.evaluate(() => [...document.fonts].filter(f => f.status === 'loaded').map(f => f.family.replace(/^['"]|['"]$/g, '')));
+            assert(loaded.length > 0, 'examined=0 loaded font families');
+            for (const family of loaded) assert(allowed.includes(family), `loaded screen font ${family}`);
+            const fileFamilies = new Map();
+            for (const sheet of await Promise.all(p.fontSheetReads)) {
+                for (const block of sheet.text.matchAll(/@font-face\s*\{([^}]+)\}/gi)) {
+                    const family = block[1].match(/font-family:\s*['"]?([^;'"}]+)/i)?.[1].trim();
+                    for (const url of block[1].matchAll(/url\(\s*['"]?([^)'"\s]+)['"]?\s*\)/gi)) {
+                        if (family) fileFamilies.set(new URL(url[1], sheet.url).href, family);
+                    }
+                }
+            }
+            assert(p.fontFileRequests.length > 0, 'examined=0 font-file requests');
+            for (const url of p.fontFileRequests) {
+                const family = fileFamilies.get(url);
+                assert(family, `unmapped font-file request ${url}`);
+                assert(allowed.includes(family), `font-file request family ${family}: ${url}`);
+            }
+            return families.length + loaded.length + p.fontFileRequests.length;
+        } finally { await close(p); }
     },
     'R-F2': async () => {
         let n = 0;
@@ -183,15 +234,18 @@ const gates = {
     },
     'R-T3': async () => {
         let n = 0;
-        for (const size of ['D1440', 'D1280', 'D961']) {
-            const p = await open(size);
-            if (prove)
-                await style(p, '.dir-b .b-po.tp-side.pl-l img{width:calc(100% - 586px)!important}');
-            const g = await geometry(p);
-            await close(p);
-            assert(Math.abs(g.gap - 56) <= 1, `${size} home gap=${g.gap}, expected 56`);
-            assert(g.width === 470 && Math.abs(g.right - 72) <= 1 && g.plateLeft === 0, `${size} home geometry ${JSON.stringify(g)}`);
-            n++;
+        for (const theme of ['light', 'dark']) for (const size of ['D1440', 'D1280', 'D961']) {
+            const p = await open(size, theme);
+            try {
+                if (prove) await style(p, '.dir-b .b-po.tp-side.pl-l img{width:calc(100% - 586px)!important}');
+                const g = await geometry(p);
+                assert(Math.abs(g.gap - 56) <= 1, `${size} home gap=${g.gap}, expected 56`);
+                assert(g.width === 470 && Math.abs(g.right - 72) <= 1 && g.plateLeft === 0, `${size} home geometry ${JSON.stringify(g)}`);
+                const opacity = await p.locator('.b-po-t').evaluate(el => ({value: Number(getComputedStyle(el).opacity), token: Number(getComputedStyle(el).getPropertyValue('--po-op'))}));
+                const expected = theme === 'dark' ? .86 : .82;
+                assert(Math.abs(opacity.value - expected) < .001 && Math.abs(opacity.value - opacity.token) < .001, `${size}/${theme} title opacity=${opacity.value} --po-op=${opacity.token} expected=${expected}`);
+                n++;
+            } finally { await close(p); }
         }
         return n;
     },
@@ -216,8 +270,13 @@ const gates = {
         for (const size of ['S844', 'S960']) {
             const p = await open(size);
             try {
-                if (prove)
-                    await style(p, '.dir-b .b-works{grid-template-columns:repeat(2,minmax(0,1fr))!important}');
+                if (prove) {
+                    if (proofCase === 'desktop-poster') {
+                        await style(p, '.dir-b .b-po.pl.tp-side.hp-p-side{display:block!important;aspect-ratio:1440/652!important;height:auto!important}.dir-b .b-po.tp-side.pl-l img{position:absolute!important;inset:0!important;width:calc(100% - 598px)!important;height:100%!important;object-fit:contain!important}.dir-b .b-po.pl.tp-side.hp-p-side .b-po-t{position:absolute!important;left:auto!important;right:72px!important;top:30px!important;bottom:26px!important;width:470px!important;padding:0!important;flex:none!important}');
+                    } else {
+                        await style(p, '.dir-b .b-works{grid-template-columns:repeat(2,minmax(0,1fr))!important}');
+                    }
+                }
                 const g = await geometry(p);
                 assert(Math.abs(g.gap - 20) <= 1, `${size} home gap=${g.gap}`);
                 assert(g.phone, `${size} desktop plate loaded`);
@@ -312,10 +371,17 @@ const gates = {
             assert(await menu.isVisible() === (size === 'P390'), `${size} menu visibility`);
             const desktopLinks = await p.locator('.b-links > a:not(.b-only-s)').evaluateAll(els => els.filter(el => el.getClientRects().length).length);
             assert(desktopLinks === (size === 'P390' ? 0 : 5), `${size} visible desktop nav links=${desktopLinks}`);
-            assert(await p.locator('.theme-toggle').count() === 1, 'theme control count');
+            assert(await p.locator('[data-theme-toggle]').count() === 1, 'theme control count');
             const expected = `Parallel Greek–English editions of every work of Aristotle. ${size === 'P390' ? 'Tap' : 'Click'} any Greek word to parse it and see its definition. Search the corpus in Greek and English.`;
             assert(await p.locator('.b-lead').textContent() === expected, `${size} home line mismatch`);
-            assert(!await p.locator('#resume-card').isVisible(), `${size} resume with empty storage`);
+            assert(await p.locator('#resume-card').count() === 0, `${size} resume with empty storage`);
+            const resumeNodes = await p.evaluate(() => {
+                const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+                let node; let count = 0;
+                while (node = walker.nextNode()) if (!node.parentElement.closest('script,style') && node.textContent.includes('Continue reading')) count++;
+                return count;
+            });
+            assert(resumeNodes === 0, `${size} Continue reading exists in empty-storage DOM`);
             const order = await p.evaluate(() => ['.b-nav', '.b-po', '.b-lead', '.b-search', '.b-div', '.b-foot'].map(s => document.querySelector(s).getBoundingClientRect().top + scrollY));
             assert(order.every((v, i) => !i || v >= order[i - 1]), `${size} content order ${order}`);
             const nav = await p.locator('.b-links > a:not(.b-only-s)').evaluateAll(els => els.map(a => [a.textContent, new URL(a.href).pathname]));
@@ -328,8 +394,10 @@ const gates = {
         }
         const p = await open('D1440', 'light', '/', true);
         assert(await p.locator('#resume-card').isVisible(), 'seeded resume absent');
+        await p.waitForFunction(() => document.querySelector('#resume-link')?.textContent.includes('chapter'));
         const label = await p.locator('#resume-link').textContent();
-        assert(label.includes('Nicomachean Ethics') && label.includes('1095b30'), `resume label ${label}`);
+        assert(label === 'Continue reading Nicomachean Ethics, Book I, chapter 5', `resume label ${label}`);
+        assert(await p.locator('#resume-link i').textContent() === 'Nicomachean Ethics', 'resume work title is not italic');
         const href = await p.locator('#resume-link').getAttribute('href');
         assert((await p.request.get(BASE + href)).status() === 200, `resume link ${href}`);
         await close(p);
@@ -345,7 +413,7 @@ const gates = {
             const got = await p.locator(`[data-division="${div}"] [data-work]`).evaluateAll(els => els.map(e => e.dataset.work));
             assert(JSON.stringify(got) === JSON.stringify(wanted), `${div} ids=${got}`);
         }
-        assert(await p.locator('a[href="/Isa/"]').count() === 0, 'Isagoge on home');
+        assert(await p.locator('a[href]').evaluateAll(els => els.filter(a => /^\/Isa\/?$/.test(new URL(a.href).pathname)).length) === 0, 'Isagoge on home');
         const links = await p.locator('.b-works a').evaluateAll(els => els.map(a => a.href));
         for (const href of links)
             assert((await p.request.get(href)).status() === 200, `work link ${href}`);
@@ -362,17 +430,18 @@ const gates = {
             if (/href\s*=\s*["']#["']|data-noop\b/.test(html))
                 bad.push(f);
         assert(!bad.length, `placeholder links in ${bad.slice(0, 10).join(', ')}`);
-        const creditsMissing = !existsSync(join(dist, 'picture-credits/index.html'));
-        if (creditsMissing) console.log('EXPECTED-MISSING R-H3 /picture-credits/ (stage 2)');
         const p = await open();
         const links = await p.locator('.b-foot a').evaluateAll(els => els.map(a => [a.textContent, new URL(a.href).href]));
-        const expected = [['The Plato Reader', 'https://plato.johnhboyer.com/'], ['The Homer Reader', 'https://homer.johnhboyer.com/'], ['The Greek Drama Reader', 'https://greekdrama.johnhboyer.com/'], ['Grammata', 'https://grammata.pages.dev/'], ['Texts & licences', BASE + '/attribution'], ['Picture credits', BASE + '/picture-credits/'], ['Support', BASE + '/support'], ['Desktop app', BASE + '/desktop'], ['Play a game', BASE + '/game/']];
+        const expected = [['The Plato Reader', 'https://plato.johnhboyer.com/'], ['The Homer Reader', 'https://homer.johnhboyer.com/'], ['The Greek Drama Reader', 'https://greekdrama.johnhboyer.com/'], ['Grammata', 'https://grammata.pages.dev/'], ['Texts & licences', BASE + '/attribution'], ['Picture credits', BASE + '/picture-credits/'], ['Support', BASE + '/support'], ['Desktop app', BASE + '/desktop'], ['Report an error', 'mailto:jhboyer@loyno.edu?subject=Aristotle%20Reader%3A%20Bug%20Report'], ['Play a game', BASE + '/game/']];
         assert(JSON.stringify(links) === JSON.stringify(expected), `footer destinations ${JSON.stringify(links)}`);
+        assert(await p.locator('[data-feedback-open]').count() === 1, 'feedback footer link missing');
+        await p.locator('[data-feedback-open]').click();
+        assert(await p.locator('#feedback-modal').evaluate(el => el.open), 'feedback form did not open');
+        assert(await p.locator('#feedback-modal input[name="fb-type"]').count() === 2, 'feedback choices missing');
+        await p.locator('#fb-cancel').click();
         for (const [label, href] of links) {
+            if (href.startsWith('mailto:')) continue;
             const response = await p.request.get(href, { timeout: 30000 });
-            if (label === 'Picture credits' && response.status() === 404 && creditsMissing) {
-                continue;
-            }
             assert(response.ok(), `${label} ${href} HTTP ${response.status()}`);
         }
         await close(p);
@@ -386,7 +455,7 @@ const gates = {
             if (size === 'P390')
                 await p.locator('summary[aria-label="Menu"]').click();
             if (prove)
-                await style(p, '.dir-b .theme-toggle{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
+                await style(p, '.dir-b [data-theme-toggle]{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
             const got = await p.locator(controls).evaluateAll(els => els.filter(el => el.getClientRects().length && getComputedStyle(el).visibility !== 'hidden').map(el => ({ tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0, 65), w: el.getBoundingClientRect().width, h: el.getBoundingClientRect().height })));
             for (const g of got) {
                 assert(g.w >= 39.99 && g.h >= 39.99, `${size} ${g.tag} ${g.text} ${g.w}×${g.h}`);
@@ -528,28 +597,61 @@ const gates = {
 };
 if (only && !gates[only])
     throw Error(`Unknown gate ${only}`);
+// A proof is valid only when its own mutation causes the named assertion.
+const proofMessages = {
+    'R-T1-home': /P390 home lines=/,
+    'R-C1': /home title color=rgb\(0, 0, 0\)/,
+    'R-C2': /legacy width token:.*injected fixture/,
+    'R-F1': /screen font Anton/,
+    'R-F2': /light --bg=#ffffff expected #f4f4f1/,
+    'R-P4': /dark filter=invert\(1\)/,
+    'R-T3': /D1440 home gap=.*expected 56/,
+    'R-T4': /P390\/light object-fit=contain/,
+    'R-H1': /P390 home line mismatch/,
+    'R-H2': /IV ids=EN,EE,Pol$/,
+    'R-H3': /placeholder links in .*footer fixture/,
+    'R-A1': /D1440 BUTTON.*34×34/,
+    'R-A2': /focus missing .*b-search|focus missing .*name="q"/,
+    'R-A3': /light H3\.b-sub sub-label .*ratio=.*color=rgb\(226, 56, 46\)/,
+    'R-E1': /examined=6 violations=6; HTML fixture In this mockup/,
+    'R-E2': /unsolicited overlay:.*reader-tip/,
+};
+const sidewaysProofs = {
+    'desktop-poster': /S844 home gap=/,
+    'two-columns': /S844 .*works grid has more than one column/,
+};
 let failed = 0;
+let proofFailed = false;
 try {
     for (const [id, run] of Object.entries(gates)) {
-        if (only && only !== id)
-            continue;
-        try {
-            const n = await run();
-            assert(n > 0, 'examined=0');
-            console.log(`PASS ${id} examined=${n}`);
-            if (prove) {
-                console.error(`FAIL ${id} proof mutation was not caught`);
+        if (only && only !== id) continue;
+        const cases = prove && id === 'R-T5' ? Object.keys(sidewaysProofs) : ['default'];
+        for (const variant of cases) {
+            proofCase = variant;
+            const expected = id === 'R-T5' ? sidewaysProofs[variant] : proofMessages[id];
+            try {
+                const n = await run();
+                assert(n > 0, 'examined=0');
+                if (prove) {
+                    proofFailed = true;
+                    console.error(`FAIL ${id} proof=${variant}: mutation was not caught`);
+                } else console.log(`PASS ${id} examined=${n}`);
+            } catch (e) {
                 failed++;
+                if (prove) {
+                    if (expected && expected.test(e.message)) {
+                        console.log(`PROVE-CAUGHT ${id} case=${variant} expected=${expected}`);
+                    } else {
+                        proofFailed = true;
+                        console.error(`PROVE-FAILED ${id} case=${variant}: unrelated failure; expected ${expected}`);
+                    }
+                }
+                console.error(`FAIL ${id} ${e.message.split('\n')[0]}${e.message.includes('Permission denied (1100)') ? ' — sandbox: bootstrap_check_in Permission denied (1100)' : ''}`);
             }
         }
-        catch (e) {
-            failed++;
-            console.error(`FAIL ${id} ${e.message.split('\n')[0]}${e.message.includes('Permission denied (1100)') ? ' — sandbox: bootstrap_check_in Permission denied (1100)' : ''}`);
-        }
     }
+} finally {
+    if (browser) await browser.close();
 }
-finally {
-    if (browser)
-        await browser.close();
-}
-process.exitCode = failed ? 1 : 0;
+// Expected fixture failure remains non-zero (1). An invalid proof is distinct (2).
+process.exitCode = prove ? (proofFailed ? 2 : 1) : (failed ? 1 : 0);

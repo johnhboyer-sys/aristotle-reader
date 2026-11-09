@@ -2,6 +2,7 @@ import { test, expect } from 'vitest';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createHash } from 'node:crypto';
+import { spawnSync, execFileSync } from 'node:child_process';
 import { WORKS, CATEGORIES } from '@shared/lib/works';
 const root = resolve(import.meta.dirname, '../..');
 const json = (p: string) => JSON.parse(readFileSync(resolve(root, p), 'utf8'));
@@ -76,19 +77,12 @@ test('R-K3 source blurbs omit book counts; exact MM and Prob', () => {
 test('R-K5 appendix wording throughout sources', () => {
     count('R-K5', CATEGORIES.length);
     expect(CATEGORIES.find(c => c.appendix)!.title).toBe('Dubious and spurious works');
-    let n = 0;
-    const walk = (dir: string) => { for (const d of readdirSync(dir, { withFileTypes: true })) {
-        if (['node_modules', 'dist', 'public', '__tests__', '.git'].includes(d.name))
-            continue;
-        const p = resolve(dir, d.name);
-        if (d.isDirectory())
-            walk(p);
-        else if (/\.(ts|svelte|astro|css|mjs)$/.test(p)) {
-            n++;
-            expect(readFileSync(p, 'utf8'), p).not.toMatch(/doubtful and spurious|doubted and spurious/i);
-        }
-    } };
-    walk(resolve(root, 'src'));
-    walk(resolve(root, '../shared'));
-    count('R-K5 files', n);
+    const repo = resolve(root, '..');
+    const tracked = execFileSync('git', ['ls-files', '--', 'app', 'shared', ':!**/__tests__/**'], {cwd: repo, encoding: 'utf8'}).trim().split('\n').filter(Boolean);
+    count('R-K5 tracked files', tracked.length);
+    const result = spawnSync('git', ['grep', '-i', '-E', 'doubtful and spurious|doubted and spurious', '--', 'app', 'shared', ':!**/__tests__/**'], {cwd: repo, encoding: 'utf8'});
+    expect(result.error).toBeUndefined();
+    expect([0, 1]).toContain(result.status);
+    expect(result.stderr).toBe('');
+    expect(result.stdout).toBe('');
 });

@@ -163,7 +163,7 @@ function block(title: string, box: Box, w100: Measure, opt: Options = {}) {
 }
 export function fitPoster(el: HTMLElement) {
     const poster = el.closest<HTMLElement>('.b-po')!;
-    const phone = poster.clientWidth <= 960;
+    const phone = matchMedia('(max-width: 960px)').matches;
     const home = poster.classList.contains('hp-p-side');
     const style = getComputedStyle(el);
     const W = el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -191,17 +191,23 @@ export function fitPoster(el: HTMLElement) {
     el.style.gap = `${gap.toFixed(1)}px`;
     el.style.alignItems = lines.length === 1 && measure(lines[0].text) * lines[0].f / 100 < W * .9 ? 'center' : '';
     el.dataset.set = lines.map(x => Math.round(x.f)).join(',');
+    el.dataset.fitWidth = String(W);
+    el.dataset.fitRevision = String(Number(el.dataset.fitRevision || 0) + 1);
 }
 export async function initPosters() {
+    const titles = [...document.querySelectorAll<HTMLElement>('[data-fit="poster"]')];
+    await document.fonts.load('700 100px Oswald');
     await document.fonts.ready;
-    for (const el of document.querySelectorAll<HTMLElement>('[data-fit="poster"]')) {
-        fitPoster(el);
+    const refit = () => titles.forEach(fitPoster);
+    refit();
+    document.fonts.addEventListener('loadingdone', refit);
+    const band = matchMedia('(max-width: 960px)');
+    band.addEventListener('change', refit);
+    for (const el of titles) {
         let width = el.clientWidth;
         let height = el.clientHeight;
         const observer = new ResizeObserver(() => {
-            // Desktop titles keep a fixed width while the poster height changes.
-            const desktop = el.closest<HTMLElement>('.b-po')!.clientWidth > 960;
-            if (el.clientWidth !== width || (desktop && el.clientHeight !== height)) {
+            if (el.clientWidth !== width || (!band.matches && el.clientHeight !== height)) {
                 fitPoster(el);
                 width = el.clientWidth;
                 height = el.clientHeight;
