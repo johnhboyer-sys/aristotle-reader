@@ -342,7 +342,7 @@ Two lanes must not edit `Search.svelte` at the same time.
 1. **The redesign's search stage lands first.** The search-page options (phase 1 and the controls of phase 2) are redone on the new markup once stage 4 is in. Phase 0 shipped ahead of it in this PR: it is two lines in `Search.svelte` plus `shared/lib`.
 2. **Textual search: yes.** Build a Greek-only text file per work at pipeline stage 6 (phase 4). Measure its size before choosing how the client loads it.
 3. **Part-of-speech search: yes.** Pipeline work to carry the word class (noun, verb, adjective, article, pronoun) into `grammar-dict` (phase 2.3). Size it from Morpheus's full output first.
-4. **Saved searches: open.** The cost of keeping them in the browser is set out below.
+4. **Saved searches: in the browser only, no accounts.** Add export and import as a file, and a "Copy link" on each entry. The costs are set out below.
 5. **Middle Liddell: not now.** It waits for a full grammata t8 version of Middle Liddell. Bonitz is not a blocker.
 
 6. **Every search upgrade is ported to the other readers afterwards** (plato-reader, homer).
@@ -361,7 +361,7 @@ Two lanes must not edit `Search.svelte` at the same time.
 - Each PR ends with a port note: which hunks, which data files, and anything specific to one corpus.
 - The Phase 0 fixes in this PR (`betaQueryToGreek`, the accent fold) are the first to port.
 
-#### What browser-only saved searches cost (decision 4)
+#### What browser-only saved searches cost (decision 4, accepted)
 
 A saved search would be the search's URL (which already holds the whole query, filters included), plus a name, a note and the date. They would be kept in the browser's local storage.
 
