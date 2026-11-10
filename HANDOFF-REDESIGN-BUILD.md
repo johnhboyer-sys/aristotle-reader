@@ -1,7 +1,8 @@
 # HANDOFF: redesign build (direction B)
 
 Rewritten 10 Nov 2026, 12:20, mid-task: John had to close his laptop. The home
-and work-page design (D26) **is now built** in this worktree, **uncommitted**.
+and work-page design (D26) **is now built** and committed here as a local
+work-in-progress commit, `0ee48bd0bc`. It is not pushed.
 Rewrite this file (don't append) when you hand off.
 
 ## Start here
@@ -9,10 +10,10 @@ Rewrite this file (don't append) when you hand off.
 1. Work in this worktree,
    `~/Developer/aristotle-reader/.claude/worktrees/redesign-build`, on branch
    `claude/redesign-build`. The branch is **not pushed**, and today's work is
-   **not committed**: `git status` shows it all. Commit only when John says.
+   one local WIP commit, `0ee48bd0bc` (John, 12:22: "Yes, commit locally").
+   Anything the gates agent wrote after it shows in `git status`.
 2. Read `CLAUDE.md`, then this file, then
-   `docs/redesign-home-and-work-spec.md` (its "Nothing here is built" line is
-   now out of date; fix it when you commit).
+   `docs/redesign-home-and-work-spec.md`.
 3. John's words for each ruling: `.redesign-shots/notes/hero-rounds.md`.
    `.redesign-shots/` is untracked and must stay so: never `git add` it.
    Today's notes, briefs, review results, scripts and shots are in
@@ -25,7 +26,7 @@ Rewrite this file (don't append) when you hand off.
    `shared/`, `app/scripts/`; implementation and verification are never the
    same model family.
 
-## What was built on 10 Nov (all uncommitted)
+## What was built on 10 Nov (WIP commit `0ee48bd0bc`)
 
 | File | What changed |
 |---|---|
@@ -90,7 +91,7 @@ Rewrite this file (don't append) when you hand off.
      Greek title on work pages).
 3. D26 is logged in `.redesign-shots/notes/departures-amend.md`; add it to
    `.redesign-shots/notes/pr-body.md`.
-4. On John's yes: commit, then the "Then finish" list below.
+4. On John's yes to the built pages: a clean commit on top, then the "Then finish" list below.
 
 ## Then finish
 
@@ -121,8 +122,8 @@ Rewrite this file (don't append) when you hand off.
 | OG cards | `c6a276c90c`, wording John's |
 | Gate fixes | `e98749a8a3`: Grok's 12 gate-honesty findings closed; eng-table 1em; WordPopup Escape guard gated to B |
 | Merge of main (PR #194) | `fa39aef88b`: one import conflict; Beta Code accent fix carried into `doBSearch`; compat hash updated (stage 3 + main's hunk only, checked); Grok: no findings |
-| Home and work-page design (D26) | **built 10 Nov, uncommitted**; gates written by an agent, unreviewed |
-| Tracked files | **dirty**: ten files changed on 10 Nov, one new script; nothing committed |
+| Home and work-page design (D26) | **built 10 Nov, local WIP commit `0ee48bd0bc`**; gates written by an agent, unreviewed |
+| Tracked files | committed as WIP at 12:22 on 10 Nov; the gates agent may have written more since |
 | Earlier hero build | superseded; saved as `.redesign-shots/notes/hero-build/landing-hero-superseded.patch` (applies cleanly; 117 lines added to `index.astro`, `b.css`, `check-redesign.mjs`). Its division ids and `.b-gt` Greek line are reusable. Its layout and its R-H4 gate are not |
 | Preview server | was running on 4329 when the laptop closed. `app/dist` is stale by three small fixes: rebuild before you trust a screenshot or a gate |
 | Gates on the merged build | 42 PASS; proofs 109/109 caught (run before the merge, on the committed tree) |
