@@ -156,28 +156,32 @@ const breadcrumbLd = Astro.site
       <BNav />
       <main>
         <p class="b-crumb"><a href={`${base}/`}>Works</a> / <span>{divisionName}</span></p>
+        <div class={`b-top pl-${plate.place}`} style={`--ix:${plate.ink[0]};--iy:${plate.ink[1]};--iw:${plate.ink[2] - plate.ink[0]};--ih:${plate.ink[3] - plate.ink[1]}`}>
         <section class="b-po work pl dp-paper tp-side" data-tp="side" data-ts="1" data-work={workId}>
           <picture><source media="(max-width: 960px)" srcset={`${base}/plates/phone/${workId}.jpg`} width="640" height="558"/><img src={`${base}/plates/desk/${workId}.jpg`} width="1280" height="914" alt={plate.alt} decoding="async"/></picture>
           <h1 class="b-po-t" data-fit="poster" data-title={work.title}>{work.title}</h1>
         </section>
         <div class="b-po-below">
-          {work.greekTitle && <p class="b-wk-gt" lang="grc">{work.greekTitle}</p>}
-          <p class="b-wk-blurb">{work.blurb}{work.authenticity && work.authenticity !== 'genuine' && <span class="b-tag">{AUTHENTICITY_LABEL[work.authenticity]}</span>}</p>
+          {work.greekTitle && <p class="b-wk-gt" lang="grc" data-fit="line">{work.greekTitle}</p>}
           <div class="b-ctas" data-work={workId} data-books={JSON.stringify(work.bookLabels)} data-chapters={JSON.stringify(allChapters)}>
             <a class="b-btn pri" data-start href={primary ? readHref(`?trans=${primary.id}`) : readHref()}>Start reading</a>
             <span id="work-resume-slot"></span>
             <a class="b-btn" data-greek href={readHref('?view=greek')}>Greek only</a>
             {editions.length >= 2 && <a class="b-btn" data-compare href={readHref('?trans=compare')}>Compare translations</a>}
           </div>
-          {work.related?.map(r => getWork(r.id) && <p class="b-cred b-related"><a href={`${base}${workLanding(r.id)}`}>{r.label}</a></p>)}
+          <div class="b-words">
+            <p class="b-wk-blurb">{work.blurb}{work.authenticity && work.authenticity !== 'genuine' && <span class="b-tag">{AUTHENTICITY_LABEL[work.authenticity]}</span>}</p>
+            {work.related?.map(r => getWork(r.id) && <p class="b-cred b-related"><a href={`${base}${workLanding(r.id)}`}>{r.label}</a></p>)}
+            <section class="b-wk" data-section="facts">
+              <dl class="b-facts">
+                <dt>Greek</dt><dd>{work.greekSource.full}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
+                <dt>English</dt><dd>{editions.map(t => { const parts = transParts(t.name); return <><div><span data-english-entry><a href={readHref(`?trans=${t.id}`)}>{parts.who}</a>{parts.rest && `, ${parts.rest}`}</span>{editions.length > 1 && primary?.id === t.id && <>{' '}<small>opens first</small></>}</div>{workId === 'EN' && t.id === 'ostwald' && <div data-english-entry><a href={`${base}/EN/glossary`}>glossary</a></div>}</>; })}</dd>
+                <dt>Length</dt><dd>{extent}</dd>
+              </dl>
+            </section>
+          </div>
         </div>
-        <section class="b-wk" data-section="facts">
-          <dl class="b-facts">
-            <dt>Greek</dt><dd>{work.greekSource.full}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
-            <dt>English</dt><dd>{editions.map(t => { const parts = transParts(t.name); return <><div><span data-english-entry><a href={readHref(`?trans=${t.id}`)}>{parts.who}</a>{parts.rest && `, ${parts.rest}`}</span>{editions.length > 1 && primary?.id === t.id && <>{' '}<small>opens first</small></>}</div>{workId === 'EN' && t.id === 'ostwald' && <div data-english-entry><a href={`${base}/EN/glossary`}>glossary</a></div>}</>; })}</dd>
-            <dt>Length</dt><dd>{extent}</dd>
-          </dl>
-        </section>
+        </div>
         <section class="b-sec" data-section="books">
           <h2 class="b-h2">{work.books > 1 ? 'Books and chapters' : 'Chapters'}</h2>
           {ostwaldTitles && <p class="b-note3">Chapter titles are Ostwald’s.</p>}

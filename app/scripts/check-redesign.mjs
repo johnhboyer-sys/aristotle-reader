@@ -103,7 +103,9 @@ const failureMessage = msg => {
 };
 const assert = (ok, msg) => { if (!ok)
     throw Error(failureMessage(msg)); };
-const sizes = { D1440: [1440, 900], D1920: [1920, 1080], G1440: [1440, 1400], D1280: [1280, 800], D961: [961, 800], S844: [844, 390], S960: [960, 540], P390: [390, 844], P360: [360, 780], W1200: [1200, 800], W900: [900, 800] };
+const sizes = { D1440: [1440, 900], D1920: [1920, 1080], G1440: [1440, 1400], D1280: [1280, 800], D961: [961, 800], S844: [844, 390], S960: [960, 540], P390: [390, 844], P360: [360, 780], W1200: [1200, 800], W900: [900, 800],
+    // D26: the two windows the home and work designs were drawn at, and the widths spec §8.10 names for the grid.
+    D1525: [1525, 896], D1152: [1152, 663], D1024: [1024, 700], D1366: [1366, 768] };
 let browser;
 async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false, stubPosterResize = false) {
     gateContext = {path, size, theme};
@@ -280,7 +282,32 @@ const gates = {
             lines.splice(0, 2, lines[0] + ' ' + lines[1], '');
         }
         let examined = 0;
-        for (const [viewport, kind] of [['D1440', 'desktop'], ['P390', 'phone']]) {
+        // D26: from 961px the title stands in one list column (spec §3.2): four lines
+        // at 82.5px in a 1525 window and 70.3px in a 1152 window. The old poster's
+        // 106px desktop golden is retired; the phone golden below is unchanged.
+        for (const [viewport, size] of [['D1525', 82.5], ['D1152', 70.3]]) {
+            const page = await open(viewport);
+            try {
+                if (prove && proofCase === 'desktop-size') await style(page, '.dir-b.pg-home .b-po-t .ln{font-size:60px!important}');
+                const actual = await page.locator('.b-po-t').evaluate(el => ({
+                    lines: [...el.querySelectorAll('.ln')].map(line => line.textContent),
+                    set: el.dataset.set,
+                    drawn: [...el.querySelectorAll('.ln')].map(line => parseFloat(getComputedStyle(line).fontSize)),
+                }));
+                assert(actual.lines.length > 0, `${viewport} examined=0 title lines`);
+                assert(actual.lines.length === 4 && actual.lines.join(' ') === 'THE COMPLETE WORKS OF ARISTOTLE', `${viewport} home lines=${JSON.stringify(actual.lines)} expected 4 lines of THE COMPLETE WORKS OF ARISTOTLE`);
+                const got = actual.set?.split(',').map(Number) || [];
+                assert(got.length === 4, `${viewport} home data-set=${actual.set} expected 4 sizes`);
+                for (let i = 0; i < got.length; i++) {
+                    assert(Number.isFinite(got[i]) && Math.abs(got[i] - size) <= 1, `${viewport} home line ${i + 1} size=${got[i]} expected=${size} ±1px (spec §3.2)`);
+                    assert(Math.abs(actual.drawn[i] - size) <= 1, `${viewport} home line ${i + 1} drawn size=${actual.drawn[i]} expected=${size} ±1px (spec §3.2)`);
+                    examined += 2;
+                }
+            } finally {
+                await close(page);
+            }
+        }
+        for (const [viewport, kind] of [['P390', 'phone']]) {
             const expected = golden[kind];
             assert(expected?.lines?.length, `${kind} golden has no lines`);
             const expectedSizes = expected.set.split(',').map(Number);
@@ -335,7 +362,8 @@ const gates = {
                 if(prove&&(proofCase==='home'||proofCase==='default'))await style(p,'.dir-b .b-po-t{color:black!important}');
                 const selector=path==='/picture-credits/'?'.b-pc-h':'.b-po-t';
                 const color=await p.locator(selector).evaluate(el=>getComputedStyle(el).color);
-                assert(color===(path==='/picture-credits/'?'rgb(180, 36, 25)':'rgb(226, 56, 46)'),`${path==='/'?'home':path} title color=${color}`);n++;
+                // D26: colour B. From 961px the home and work titles are --ink (spec §4); R-C3 checks the rest.
+                assert(color===(path==='/picture-credits/'?'rgb(180, 36, 25)':RGB.ink),`${path==='/'?'home':path} title color=${color}`);n++;
             }finally{await close(p);}
         }
         if(stage>=3){
@@ -492,19 +520,43 @@ const gates = {
         return n;
     },
     'R-T3': async () => {
+        // D26: the tall poster is gone from 961px. The old checks here (a 56px gap, a 470px
+        // title, opacity .82/.86) described it. What replaces them comes from the spec:
+        // the title is opaque (§4), the home bust is 189 and 161 wide at aspect .592 (§3.2), and the three drawn
+        // plates fill a column cut to the ink box in plates.json (§5.3). Which column the
+        // title and plate stand in is R-H5 and R-W5.
         let n = 0;
         for(const path of (stage>=2?['/','/Cat/','/EN/']:['/'])) for (const theme of ['light', 'dark']) for (const size of ['D1440', 'D1280', 'D961']) {
             const p = await open(size, theme,path);
             try {
-                if (prove && proofCase !== 'work-plate') await style(p, '.dir-b .b-po.tp-side.pl-l img{width:calc(100% - 586px)!important}');
-                if (prove && proofCase === 'work-plate' && path === '/Cat/') await style(p,'.dir-b.pg-work .b-po.work img{transform:translateX(-12px)!important}');
-                const g = await geometry(p);
-                if(path==='/')assert(Math.abs(g.gap-56)<=1,`${size} ${path} gap=${g.gap}, expected 56`);
-                else assert(g.gap>=55&&Math.abs(g.plateLeft-g.expectedPlateLeft)<=1&&Math.abs(g.plateRight-g.expectedPlateRight)<=1&&Math.abs(g.plateTop-g.expectedPlateTop)<=1&&Math.abs(g.plateWidth-g.expectedPlateWidth)<=1,`${size} ${path} rendered plate geometry ${JSON.stringify(g)}`);
-                assert(g.width === 470 && (path==='/' ? Math.abs(g.right - 72)<=1 && g.plateLeft===0 : Math.abs(g.titleLeft-72)<=1), `${size} ${path} geometry ${JSON.stringify(g)}`);
-                const opacity = await p.locator('.b-po-t').evaluate(el => ({value: Number(getComputedStyle(el).opacity), token: Number(getComputedStyle(el).getPropertyValue('--po-op'))}));
-                const expected = theme === 'dark' ? .86 : .82;
-                assert(Math.abs(opacity.value - expected) < .001 && Math.abs(opacity.value - opacity.token) < .001, `${size}/${theme} title opacity=${opacity.value} --po-op=${opacity.token} expected=${expected}`);
+                if (prove && proofCase === 'title-faded' && path === '/' && theme === 'light' && size === 'D1440') await style(p, '.dir-b .b-po-t{opacity:.82!important}');
+                const opacity = await p.locator('.b-po-t').evaluate(el => { let o = 1; for (let e = el; e; e = e.parentElement) o *= Number(getComputedStyle(e).opacity); return o; });
+                assert(Math.abs(opacity - 1) < .001, `${size}/${theme} ${path} title opacity=${opacity} expected 1`);
+                n++;
+            } finally { await close(p); }
+        }
+        // Bust: width from §3.2 and its aspect, .592 wide to 1 tall. The spec's heights (320, 272) are
+        // printed: the build is 1.5px and 1.1px off them, which is not asserted away here.
+        for (const [size, w, specH] of [['D1525', 189, 320], ['D1152', 161, 272]]) {
+            const p = await open(size, 'light', '/');
+            try {
+                if (prove && proofCase === 'home-plate' && size === 'D1525') await style(p, '.dir-b.pg-home .b-top > .b-po picture{top:60px!important}');
+                const box = await p.locator('.b-top .b-po picture').evaluate(el => { const r = el.getBoundingClientRect(); return {w: r.width, h: r.height}; });
+                assert(Math.abs(box.w - w) <= 1 && Math.abs(box.w / box.h - .592) <= .004, `${size} / bust size=${box.w.toFixed(1)}×${box.h.toFixed(1)}, spec says ${w} wide at aspect .592`);
+                console.log(`R-T3 ${size} bust ${box.w.toFixed(1)}×${box.h.toFixed(1)}; spec ${w}×${specH}`);
+                n++;
+            } finally { await close(p); }
+        }
+        // Plates at 1525: one column wide, cut to the ink box plates.json holds (§5.3). The spec's heights are printed.
+        if (stage >= 2) for (const [id, specH] of [['Mete', 259], ['GC', 356], ['MA', 343]]) {
+            const p = await open('D1525', 'light', `/${id}/`);
+            try {
+                if (prove && proofCase === 'work-plate' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-po.work picture{width:200px!important}');
+                const [x0, y0, x1, y1] = plates[id].ink, iw = x1 - x0, ih = y1 - y0, col = gridAt(1525).col;
+                const w = Math.min(col, col * iw / ih), h = w * ih / iw;
+                const box = await p.locator('.b-top .b-po picture').evaluate(el => { const r = el.getBoundingClientRect(); return {w: r.width, h: r.height}; });
+                assert(Math.abs(box.w - w) <= 1 && Math.abs(box.h - h) <= 1, `D1525 /${id}/ plate size=${box.w.toFixed(1)}×${box.h.toFixed(1)}, plates.json ink box gives ${w.toFixed(1)}×${h.toFixed(1)}`);
+                console.log(`R-T3 /${id}/ plate ${box.w.toFixed(1)}×${box.h.toFixed(1)}; spec 363×${specH}`);
                 n++;
             } finally { await close(p); }
         }
@@ -692,8 +744,9 @@ const gates = {
         if (prove)
             await p.evaluate(() => document.querySelector('[data-division="V"] .b-works').append(document.querySelector('[data-work="AthPol"]').parentElement));
         const heads = await p.locator('.b-dh').allTextContents();
-        assert(JSON.stringify(heads) === JSON.stringify(['Logic', 'Natural philosophy', 'Metaphysics', 'Ethics and politics', 'Rhetoric and poetics', 'Dubious and spurious works']), `division heads ${heads}`);
-        for (const [div, wanted] of [['IV', ['EN', 'EE', 'Pol', 'AthPol']], ['V', ['Rhet', 'Poet']]]) {
+        // D26: spec §3.3. The "Dubious and spurious works" division is gone; its works stand in the main divisions.
+        assert(JSON.stringify(heads) === JSON.stringify(['Logic', 'Natural philosophy', 'Metaphysics', 'Ethics and politics', 'Rhetoric and poetics']), `division heads ${heads}`);
+        for (const [div, wanted] of [['IV', ['EN', 'MM', 'EE', 'VV', 'Pol', 'Oec', 'AthPol']], ['V', ['Rhet', 'RhetAl', 'Poet']]]) {
             const got = await p.locator(`[data-division="${div}"] [data-work]`).evaluateAll(els => els.map(e => e.dataset.work));
             assert(JSON.stringify(got) === JSON.stringify(wanted), `${div} ids=${got}`);
         }
@@ -1068,7 +1121,7 @@ if(stage>=2) Object.assign(gates, {
     assert(crumbHeight<=16,`${id} D1440 crumb height=${crumbHeight}`);
     const work=registry.getWork(id);
     const crumb=(await p.locator('.b-crumb').textContent()).replace(/\s+/g,' ').trim();
-    const literalCrumbs={AthPol:'Works / Ethics and politics',MM:'Works / Dubious and spurious works',Cat:'Works / Logic',Isa:'Works / Commentary'};
+    const literalCrumbs={AthPol:'Works / Ethics and politics',MM:'Works / Ethics and politics',Cat:'Works / Logic',Isa:'Works / Commentary'};
     assert(crumb===(literalCrumbs[id]||`Works / ${divisionName(id)}`),`${id} crumb=${crumb}`);
     if(prove&&proofCase==='peters-year'&&id==='EN')await p.locator('[data-english-entry]').filter({hasText:'F. H. Peters'}).evaluate(el=>el.textContent='F. H. Peters, Kegan Paul, rev. ed. 1893');
     if(prove&&proofCase==='ellis-year'&&id==='Pol')await p.locator('[data-english-entry]').filter({hasText:'William Ellis'}).evaluate(el=>el.textContent='William Ellis, 1776; rev., 1912');
@@ -1080,7 +1133,8 @@ if(stage>=2) Object.assign(gates, {
     if(id==='Pol')assert(english.some(text=>text.includes('1776; rev. 1912')),'Pol Ellis facts must contain 1776; rev. 1912');
     const sections=[['print',registry.furtherReading(id).length>0],['resources',registry.resourcesFor(id).length>0],['commentary',id==='Cat']];
     for(const [section,wanted]of sections)assert(await p.locator(`[data-section="${section}"]`).count()===(wanted?1:0),`${id} ${section} presence mismatch`);
-    const selectors=['.b-nav','.b-crumb','.b-po',...(work.greekTitle?['.b-wk-gt']:[]),'.b-wk-blurb','.b-ctas','[data-section="facts"]','[data-section="books"]',...sections.filter(([,yes])=>yes).map(([section])=>`[data-section="${section}"]`),'[data-section="sources"]','.b-foot'];
+    // D26: source order is the order of the columns (spec §3.4): title, Greek title, buttons, then blurb and details.
+    const selectors=['.b-nav','.b-crumb','.b-po',...(work.greekTitle?['.b-wk-gt']:[]),'.b-ctas','.b-wk-blurb','[data-section="facts"]','[data-section="books"]',...sections.filter(([,yes])=>yes).map(([section])=>`[data-section="${section}"]`),'[data-section="sources"]','.b-foot'];
     const order=await p.evaluate(selectors=>{
      const els=selectors.map(selector=>document.querySelector(selector));
      return els.every((el,i)=>el&&(!i||Boolean(els[i-1].compareDocumentPosition(el)&Node.DOCUMENT_POSITION_FOLLOWING)));
@@ -1117,7 +1171,12 @@ if(stage>=2) Object.assign(gates, {
     n++;
    }finally{await close(p);}
    const phone=await open('P390','light',`/${id}/`);
-   try{if(prove&&proofCase==='crumb-height-phone'&&id==='Cat')await style(phone,'.dir-b .b-crumb a{display:inline-flex!important;min-height:40px!important}');const height=await phone.locator('.b-crumb').evaluate(el=>el.offsetHeight);assert(height<=16,`${id} P390 crumb height=${height}`);n++;}finally{await close(phone);}
+   try{if(prove&&proofCase==='crumb-height-phone'&&id==='Cat')await style(phone,'.dir-b .b-crumb a{display:inline-flex!important;min-height:40px!important}');const height=await phone.locator('.b-crumb').evaluate(el=>el.offsetHeight);assert(height<=16,`${id} P390 crumb height=${height}`);
+    // D26: the source order changed (buttons before blurb); the phone must still draw the old order.
+    if(prove&&proofCase==='phone-order'&&id==='Cat')await style(phone,'.dir-b.pg-work .b-ctas{order:-1!important}');
+    const phoneSel=['.b-crumb','.b-po',...(registry.getWork(id).greekTitle?['.b-wk-gt']:[]),'.b-wk-blurb','.b-ctas','[data-section="facts"]'];
+    const tops=await phone.evaluate(sel=>sel.map(s=>document.querySelector(s)?.getBoundingClientRect().top),phoneSel);
+    assert(tops.every(Number.isFinite)&&tops.every((t,i)=>!i||t>=tops[i-1]),`${id} P390 visual order ${phoneSel.join(' < ')}: tops=${tops.map(t=>Math.round(t))}`);n++;}finally{await close(phone);}
   }return n;
  },
  'R-W1-bekker':async()=>{
@@ -1196,15 +1255,17 @@ if(stage>=2) Object.assign(gates, {
   for(const id of workIds){
    const p=await open('D1440','light',`/${id}/`);
    try{
-    if(prove&&id==='Cat')await p.locator('.b-chs a').first().evaluate(el=>el.hash='#ch-1-999');
+    if(prove&&proofCase==='chapter-target'&&id==='Cat')await p.locator('.b-chs a').first().evaluate(el=>el.hash='#ch-1-999');
+    if(prove&&proofCase==='numeral-red'&&id==='Phys')await style(p,'.dir-b .b-bkn{color:var(--red)!important}');
     const work=registry.getWork(id), chapters=chaptersOf(id);
     assert(await p.locator('.b-bk[open]').count()===0,`${id} books open initially`);
     assert(await p.locator('.b-bk').count()===(work.books>1?work.books:0),`${id} book count mismatch`);
     if(work.books>1){
      const labels=await p.locator('.b-bkn').allTextContents();
      assert(JSON.stringify(labels)===JSON.stringify(work.bookLabels.map(label=>'Book '+label)),`${id} Book labels=${labels}`);
-     const red=await p.locator('.b-bkn').evaluateAll(els=>els.every(el=>getComputedStyle(el).color==='rgb(226, 56, 46)'));
-     assert(red,`${id} book numbers are not red`);
+     // D26: colour B. The book numerals are --red-ink on the work page (spec §4).
+     const red=await p.locator('.b-bkn').evaluateAll((els,want)=>els.every(el=>getComputedStyle(el).color===want),RGB.redInk);
+     assert(red,`${id} book numbers are not --red-ink`);
      await p.locator('[data-books-open]').click();assert(await p.locator('.b-bk[open]').count()===work.books,`${id} Open all books failed`);
      await p.locator('[data-books-close]').click();assert(await p.locator('.b-bk[open]').count()===0,`${id} Close all failed`);
     }
@@ -1257,6 +1318,8 @@ if(stage>=2) Object.assign(gates, {
   }finally{await close(p);}
  },
  'R-T1':async()=>{
+  // D26: the desktop golden is for a title one list column wide (362.67px at G1440, spec §5.1),
+  // not the old poster's 470px: same lines, sizes scaled by 362.67/470 (spec §3.4: GC 66, Meteorology 60.5, Movement of Animals 80.9). Phone entries are unchanged.
   const golden=JSON.parse(readFileSync(join(app,'scripts/fixtures/poster-golden.json'),'utf8')).works;
   if(prove){const lines=golden.Cat.desktop.lines;lines.splice(0,1,lines[0].slice(0,3),lines[0].slice(3));}
   let n=0;
@@ -1276,26 +1339,31 @@ if(stage>=2) Object.assign(gates, {
   for(const id of ['Cat',...workIds.filter(id=>id!=='Cat')])for(const size of ['D1440','D1280','D1920','P390','S844']){
    const p=await open(size,'light',`/${id}/`);
    try{
-    if(prove&&proofCase==='cap'&&id==='Cat'&&size==='D1440')await style(p,'.dir-b.pg-work .b-po.work{height:calc(100vw * 652 / 1440)!important}');
+    // D26: the poster's height cap is gone from 961px (spec §3.4); the cap proof now pushes the buttons off the first screen.
+    if(prove&&proofCase==='cap'&&id==='Cat'&&size==='D1440')await style(p,'.dir-b.pg-work .b-top .b-ctas{margin-top:2000px!important}');
     if(prove&&proofCase==='crop'&&id==='Cat'&&size==='D1440')await style(p,'.dir-b.pg-work .b-po.work img{object-fit:cover!important}');
     const box=await p.evaluate(()=>{
      const poster=document.querySelector('.b-po.work').getBoundingClientRect(), start=document.querySelector('[data-start]').getBoundingClientRect(), img=document.querySelector('.b-po img'), title=document.querySelector('.b-po-t');
      const css=getComputedStyle(img);
      const width=parseFloat(css.width)-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight)-parseFloat(css.borderLeftWidth)-parseFloat(css.borderRightWidth);
      const height=parseFloat(css.height)-parseFloat(css.paddingTop)-parseFloat(css.paddingBottom)-parseFloat(css.borderTopWidth)-parseFloat(css.borderBottomWidth);
-     return {height:innerHeight,bottom:start.bottom,posterHeight:poster.height,navHeight:document.querySelector('.b-nav').offsetHeight,titleHeight:title.clientHeight,fit:css.objectFit,ratio:width/height,phone:matchMedia('(max-width:960px)').matches};
+     return {startDoc:start.bottom+scrollY,height:innerHeight,bottom:start.bottom,posterHeight:poster.height,navHeight:document.querySelector('.b-nav').offsetHeight,titleHeight:title.clientHeight,fit:css.objectFit,ratio:width/height,phone:matchMedia('(max-width:960px)').matches};
     });
     if(size==='S844')assert(box.posterHeight<=box.height-box.navHeight+1,`${id} ${size} poster height=${box.posterHeight} exceeds viewport minus nav`);
     else assert(box.bottom<=box.height-16+1,`${id} ${size} Start reading bottom=${box.bottom} viewport=${box.height}`);
     const expected=box.phone?640/558:1280/914;
-    assert(box.fit==='contain',`${id} ${size} object-fit=${box.fit} expected contain`);
+    // D26: from 961px the plate is cut to its ink box and drawn with object-fit: fill at its own 1280:914 ratio (spec §5.3).
+    const wantFit=box.phone?'contain':'fill';
+    assert(box.fit===wantFit,`${id} ${size} object-fit=${box.fit} expected ${wantFit}`);
     assert(Math.abs(box.ratio/expected-1)<=.01,`${id} ${size} plate ratio=${box.ratio} expected ${expected}`);
-    if(!box.phone)assert(Math.abs(box.titleHeight-(box.posterHeight-56))<=1,`${id} ${size} title height=${box.titleHeight} poster=${box.posterHeight}`);
-    if(prove&&proofCase==='scroll-budget'&&id==='Cat'&&size==='D1440')await p.evaluate(()=>Object.defineProperty(window,'scrollY',{get:()=>0,configurable:true}));
+    // D26: only the phone and sideways posters still budget their height from scrollY, so this proof runs at P390, on Long, whose long title makes its budget bind.
+    if(prove&&proofCase==='scroll-budget'&&id==='Long'&&size==='P390')await p.evaluate(()=>Object.defineProperty(window,'scrollY',{get:()=>0,configurable:true}));
     await p.evaluate(()=>{window.scrollTo(0,600);window.dispatchEvent(new Event('resize'));});
     await p.waitForTimeout(150);
-    const after=await p.locator('.b-po.work').evaluate(el=>el.offsetHeight);
-    assert(Math.abs(after-box.posterHeight)<=1,`${id} ${size} scroll changed poster height ${box.posterHeight} → ${after}`);
+    // D26: on desktop .b-po.work is display:contents, so the layout to hold still is the buttons' place on the page.
+    const after=await p.evaluate(desktop=>desktop?document.querySelector('[data-start]').getBoundingClientRect().bottom+scrollY:document.querySelector('.b-po.work').offsetHeight,!box.phone&&size!=='S844');
+    const before=(!box.phone&&size!=='S844')?box.startDoc:box.posterHeight;
+    assert(Math.abs(after-before)<=1,`${id} ${size} scroll changed poster height ${before} → ${after}`);
     n++;
    }finally{await close(p);}
   }assert(n===235,`poster cap count=${n}`);return n;
@@ -1927,6 +1995,300 @@ if (stage >= 3) Object.assign(gates, {
  },
 });
 
+// ── D26 (10 Nov 2026): the home and work pages on one grid (spec §12 checks 1–8) ──
+// Every expected number below comes from the spec (§3.1 grid, §3.3 list, §3.4
+// foot lines, §4 tokens), from plates.json (`place`) or from works.ts. None is
+// read back from the page being checked.
+const hexRgb = hex => { const n = parseInt(hex.slice(1), 16); return `rgb(${n >> 16}, ${(n >> 8) & 255}, ${n & 255})`; };
+const RGB = {red: hexRgb(tokens.light[7]), redInk: hexRgb(tokens.light[8]), ink: hexRgb(tokens.light[2]), darkRed: hexRgb(tokens.dark[7]), darkRedInk: hexRgb(tokens.dark[8])};
+// Spec §3.1: content width = min(1168, viewport − 144), centred, three columns 40px apart.
+const gridAt = vw => {
+    const content = Math.min(1168, vw - 144), col = (content - 80) / 3, left = (vw - content) / 2;
+    return {content, col, left, colLeft: i => left + i * (col + 40)};
+};
+const near = (a, b, tol) => Math.abs(a - b) <= tol;
+const f1 = x => Math.round(x * 10) / 10;
+// The Continue line is built by script after load (spec §6).
+async function resumeReady(page) {
+    await page.waitForFunction(() => document.querySelector('#resume-link')?.textContent.includes('chapter'));
+    await settleFonts(page);
+    await page.waitForTimeout(150);
+}
+// Spec §3.3, in order. † marks and tags are the spec's own.
+const SPEC_LIST = [
+    {name: 'Logic', groups: [{label: null, works: ['Cat', 'Int', 'APr', 'APo', 'Top', 'SE']}]},
+    {name: 'Natural philosophy', groups: [
+        {label: 'Major works on nature', works: ['Phys', 'Cael', 'GC', 'Mete', 'DM', 'DA']},
+        {label: 'Short works on nature (Parva naturalia)', works: ['Sens', 'Mem', 'Somn', 'Insomn', 'DivSomn', 'Long', 'Juv', 'Spir']},
+        {label: 'Biological works', works: ['HA', 'PA', 'MA', 'IA', 'GA']},
+        {label: 'Minor works (Opuscula)', works: ['Col', 'Aud', 'Phgn', 'Plant', 'Mirab', 'Mech', 'Prob', 'Lin', 'Vent', 'MXG']},
+    ]},
+    {name: 'Metaphysics', groups: [{label: null, works: ['Meta']}]},
+    {name: 'Ethics and politics', groups: [{label: null, works: ['EN', 'MM', 'EE', 'VV', 'Pol', 'Oec', 'AthPol']}]},
+    {name: 'Rhetoric and poetics', groups: [{label: null, works: ['Rhet', 'RhetAl', 'Poet']}]},
+];
+const SPEC_TAGS = {DM: 'spurious', Spir: 'spurious', Col: 'spurious', Aud: 'spurious', Phgn: 'spurious', Plant: 'spurious', Mirab: 'spurious', Mech: 'spurious', Prob: 'dubious', Lin: 'spurious', Vent: 'spurious', MXG: 'spurious', MM: 'dubious', VV: 'spurious', Oec: 'dubious', RhetAl: 'spurious'};
+const OPUSCULA = ['Col', 'Aud', 'Phgn', 'Plant', 'Mirab', 'Mech', 'Prob', 'Lin', 'Vent', 'MXG'];
+if (stage >= 2) Object.assign(gates, {
+ // Check 1. The list shows on the first screen.
+ 'R-H4': async () => {
+  const logic = registry.CATEGORIES[0];
+  assert(registry.DIVISION_NAMES[logic.title] === 'Logic' && logic.works.length === 6, `works.ts: first division is ${registry.DIVISION_NAMES[logic.title]} with ${logic.works?.length} works, expected Logic with 6`);
+  let n = 0;
+  for (const size of ['D1525', 'D1152']) {
+   const p = await open(size, 'light', '/');
+   try {
+    if (prove && proofCase === 'tall-top' && size === 'D1525') await style(p, '.dir-b.pg-home .b-top{padding-bottom:300px!important}');
+    if (prove && proofCase === 'one-column') await style(p, '.dir-b.pg-home .b-works{grid-template-columns:minmax(0,1fr)!important}');
+    if (prove && proofCase === 'scrolled' && size === 'D1152') await p.evaluate(() => scrollTo(0, 120));
+    const r = await p.evaluate(() => {
+     const rows = [...document.querySelectorAll('.b-works li')];
+     const first = document.querySelector('.b-div');
+     return {count: rows.length, bottom: rows[5]?.getBoundingClientRect().bottom, height: innerHeight, scrollY, inFirst: rows[5] ? first.contains(rows[5]) : false, inFirstCount: first.querySelectorAll('.b-works li').length};
+    });
+    assert(r.count >= 6 && r.inFirst, `${size} examined=${r.count} work rows; the sixth must be in the first division`);
+    assert(r.inFirstCount === logic.works.length, `${size} first division lists ${r.inFirstCount} works, works.ts has ${logic.works.length}`);
+    assert(r.scrollY === 0, `${size} scrollY=${r.scrollY}, must be 0 (empty storage, no scroll)`);
+    assert(r.bottom <= r.height, `${size} sixth work row bottom=${f1(r.bottom)} is below the window height=${r.height}`);
+    console.log(`R-H4 ${size} sixth work row bottom=${f1(r.bottom)} window=${r.height}`);
+    n++;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ // Check 2. One grid: the title is a list column.
+ 'R-H5': async () => {
+  let n = 0;
+  const homeSizes = ['D961', 'D1024', 'D1152', 'D1280', 'D1366', 'D1440', 'D1525', 'D1920'];
+  for (const size of homeSizes) {
+   const p = await open(size, 'light', '/');
+   try {
+    if (prove && proofCase === 'title-wide' && size === 'D1525') await style(p, '.dir-b.pg-home .b-top .b-po.tp-side .b-po-t{margin-right:-30px!important}');
+    if (prove && proofCase === 'title-shifted' && size === 'D1152') await style(p, '.dir-b.pg-home .b-top .b-po.tp-side .b-po-t{position:relative!important;left:20px!important}');
+    const r = await p.evaluate(() => {
+     const rows = [...document.querySelector('.b-div').querySelectorAll('.b-works li')];
+     const box = el => { const b = el.getBoundingClientRect(); return {left: b.left, width: b.width, top: b.top}; };
+     return {vw: document.documentElement.clientWidth, count: rows.length, title: box(document.querySelector('.b-po-t')), r1c2: rows[1] && box(rows[1]), r2c1: rows[3] && box(rows[3]), r2c2: rows[4] && box(rows[4])};
+    });
+    assert(r.count >= 6, `${size} examined=${r.count} rows in the first division`);
+    assert(r.r2c2.top > r.r1c2.top && r.r2c2.left > r.r2c1.left, `${size} the fifth work is not in row two, column two`);
+    const g = gridAt(r.vw);
+    assert(near(r.r2c2.left, g.colLeft(1), 1) && near(r.r2c2.width, g.col, 1), `${size} list column 2 left=${f1(r.r2c2.left)} width=${f1(r.r2c2.width)}, spec grid says left=${f1(g.colLeft(1))} width=${f1(g.col)}`);
+    assert(near(r.title.left, r.r2c2.left, 1), `${size} home title left=${f1(r.title.left)} but list column 2 left=${f1(r.r2c2.left)}`);
+    assert(near(r.title.width, r.r2c2.width, 1), `${size} home title width=${f1(r.title.width)} but list column width=${f1(r.r2c2.width)}`);
+    n++;
+   } finally { await close(p); }
+  }
+  for (const size of ['D1525', 'D1152']) for (const id of ['GC', 'Mete']) {
+   const p = await open(size, 'light', `/${id}/`);
+   try {
+    if (prove && proofCase === 'work-title-narrow' && size === 'D1525' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-po.tp-side .b-po-t{width:300px!important}');
+    const r = await p.evaluate(() => { const b = document.querySelector('.b-po-t').getBoundingClientRect(); return {vw: document.documentElement.clientWidth, left: b.left, width: b.width}; });
+    const g = gridAt(r.vw), place = plates[id].place;
+    assert(place === 'left' || place === 'right', `${id} plates.json place=${place}`);
+    assert(near(r.width, g.col, 1), `${id} ${size} work title width=${f1(r.width)}, expected one third of (content ${f1(g.content)} − 80) = ${f1(g.col)}`);
+    assert(near(r.left, g.colLeft(place === 'right' ? 0 : 1), 1), `${id} ${size} work title left=${f1(r.left)}, plate ${place} so expected column ${place === 'right' ? 1 : 2} at ${f1(g.colLeft(place === 'right' ? 0 : 1))}`);
+    n++;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ // Check 3. The home block ends on one foot line; the list starts 44px under it.
+ 'R-H6': async () => {
+  let n = 0;
+  const cases = [['D1525', false], ['D1152', false], ['D1525', true]];
+  for (const [size, returning] of cases) {
+   const p = await open(size, 'light', '/', returning);
+   try {
+    if (returning) await resumeReady(p);
+    const label = `${size} ${returning ? 'returning' : 'new'} reader`;
+    if (prove && proofCase === 'bust-short' && size === 'D1525' && !returning) await style(p, '.dir-b.pg-home .b-top > .b-po picture{bottom:30px!important}');
+    if (prove && proofCase === 'list-gap' && size === 'D1152') await style(p, '.dir-b.pg-home .b-top{padding-bottom:70px!important}');
+    if (prove && proofCase === 'returning-bust-short' && returning) await style(p, '.dir-b.pg-home .b-top > .b-po picture{bottom:30px!important}');
+    const r = await p.evaluate(() => {
+     const b = sel => document.querySelector(sel)?.getBoundingClientRect();
+     return {bust: b('.b-top .b-po picture')?.bottom, search: b('.b-top form.b-search')?.bottom, div: b('.b-div')?.top, cont: !!document.querySelector('#resume-link'), scrollY};
+    });
+    assert([r.bust, r.search, r.div].every(Number.isFinite), `${label} examined=0: bust=${r.bust} search=${r.search} first division=${r.div}`);
+    assert(r.cont === returning, `${label} Continue line present=${r.cont}`);
+    assert(near(r.bust, r.search, 2), `${label} bust bottom=${f1(r.bust)} and search bottom=${f1(r.search)} differ by more than 2px`);
+    for (const [what, y] of [['bust', r.bust], ['search', r.search]])
+     assert(near(r.div - y, 44, 2), `${label} first division starts ${f1(r.div - y)}px under the ${what} bottom, expected 44±2`);
+    console.log(`R-H6 ${label} bust=${f1(r.bust)} search=${f1(r.search)} list=${f1(r.div)}`);
+    n++;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ // Check 4. A work block ends on one foot line; the books heading starts 44px under it.
+ 'R-W4': async () => {
+  let n = 0;
+  for (const size of ['D1525', 'D1152']) for (const id of ['GC', 'Mete', 'MA', 'Juv']) {
+   const p = await open(size, 'light', `/${id}/`);
+   try {
+    if (prove && proofCase === 'ctas-high' && size === 'D1525' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-ctas{align-self:start!important}');
+    if (prove && proofCase === 'ctas-lifted' && size === 'D1152' && id === 'Juv') await style(p, '.dir-b.pg-work .b-top .b-ctas{margin-bottom:30px!important}');
+    if (prove && proofCase === 'books-gap' && size === 'D1525' && id === 'Mete') await style(p, '.dir-b.pg-work .b-top{padding-bottom:70px!important}');
+    const r = await p.evaluate(() => {
+     const b = sel => document.querySelector(sel)?.getBoundingClientRect();
+     return {plate: b('.b-top .b-po picture')?.bottom, words: b('.b-top .b-words')?.bottom, ctas: b('.b-top .b-ctas')?.bottom, books: b('section[data-section="books"] > h2.b-h2')?.top, scrollY};
+    });
+    assert(Object.values(r).every(Number.isFinite), `${id} ${size} examined=0: ${JSON.stringify(r)}`);
+    const low = Math.max(r.plate, r.words, r.ctas);
+    const sets = r.plate === low ? 'plate' : r.words === low ? 'words' : 'buttons';
+    assert(near(r.ctas, low, 1), `${id} ${size} .b-ctas bottom=${f1(r.ctas)} but the lowest part ends at ${f1(low)} (plate ${f1(r.plate)}, words ${f1(r.words)})`);
+    assert(near(r.books - r.ctas, 44, 2), `${id} ${size} books heading starts ${f1(r.books - r.ctas)}px under the foot line, expected 44±2`);
+    console.log(`R-W4 ${id} ${size} foot=${f1(r.ctas)} set by ${sets}; books heading=${f1(r.books)}`);
+    // Spec §3.4 "Measured results": the foot line and the books heading, in page pixels.
+    const spec = {'GC/D1525': [486, 530], 'Mete/D1525': [434, 478], 'MA/D1525': [473, 517], 'GC/D1152': [446, 490], 'Mete/D1152': [450, 494]}[`${id}/${size}`];
+    // Printed, not asserted: the build sits 2.5px under the spec's page y at GC 1525 (report, do not widen a tolerance).
+    if (spec) console.log(`R-W4 ${id} ${size} spec §3.4 foot=${spec[0]} books heading=${spec[1]}; built ${f1(r.ctas)} and ${f1(r.books)}`);
+    n++;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ // Check 5. The plate stands on the side plates.json gives; the crumb on the content column's left edge.
+ 'R-W5': async () => {
+  const ids = Object.keys(plates).filter(id => id !== 'home');
+  assert(ids.length === 47, `plates.json holds ${ids.length} work plates, expected 47`);
+  let n = 0;
+  for (const id of ids) {
+   const p = await open('D1525', 'light', `/${id}/`);
+   try {
+    if (prove && proofCase === 'class-flip' && n === 0) await p.evaluate(() => { const t = document.querySelector('.b-top'); t.classList.toggle('pl-left'); t.classList.toggle('pl-right'); });
+    if (prove && proofCase === 'plate-middle' && n === 1) await style(p, '.dir-b.pg-work .b-top .b-po.work picture{grid-column:2!important}');
+    if (prove && proofCase === 'crumb-indent' && n === 2) await style(p, '.dir-b.pg-work .b-crumb{margin-left:24px!important}');
+    const r = await p.evaluate(() => { const b = sel => document.querySelector(sel)?.getBoundingClientRect(); const pic = b('.b-top .b-po picture'); return {vw: document.documentElement.clientWidth, plateCentre: pic && pic.left + pic.width / 2, plateWidth: pic?.width, crumb: b('p.b-crumb')?.left}; });
+    assert(Number.isFinite(r.plateCentre) && Number.isFinite(r.crumb) && r.plateWidth > 0, `${id} examined=0: ${JSON.stringify(r)}`);
+    const g = gridAt(r.vw), place = plates[id].place;
+    assert(place === 'left' || place === 'right', `${id} plates.json place=${place}`);
+    const col = place === 'left' ? 0 : 2, lo = g.colLeft(col);
+    assert(r.plateCentre >= lo && r.plateCentre <= lo + g.col, `${id} plate centre x=${f1(r.plateCentre)} is not in the ${place} column [${f1(lo)}, ${f1(lo + g.col)}] that plates.json gives`);
+    assert(near(r.crumb, g.left, 1), `${id} crumb left=${f1(r.crumb)}, content column left=${f1(g.left)}`);
+    n++;
+   } finally { await close(p); }
+  }
+  console.log(`R-W5 plates examined=${n}: ${ids.filter(id => plates[id].place === 'left').length} left, ${ids.filter(id => plates[id].place === 'right').length} right`);
+  return n;
+ },
+ // Check 6. Colour B: no --red on home or work pages at desktop widths.
+ 'R-C3': async () => {
+  let n = 0, elements = 0;
+  for (const theme of ['light', 'dark']) for (const path of ['/', '/GC/', '/Mete/', '/MA/']) {
+   const p = await open('D1525', theme, path);
+   try {
+    if (prove && proofCase === 'red-title' && theme === 'light' && path === '/') await style(p, '.dir-b .b-po-t{color:var(--red)!important}');
+    if (prove && proofCase === 'red-border' && theme === 'light' && path === '/GC/') await style(p, '.dir-b .b-bk{border-bottom:3px solid var(--red)!important}');
+    if (prove && proofCase === 'red-dark' && theme === 'dark' && path === '/Mete/') await style(p, '.dir-b .b-crumb a{color:var(--red)!important}');
+    if (prove && proofCase === 'faded-title' && theme === 'light' && path === '/MA/') await style(p, '.dir-b .b-po-t{opacity:.82!important}');
+    const red = theme === 'light' ? RGB.red : RGB.darkRed, accent = theme === 'light' ? RGB.redInk : RGB.darkRedInk;
+    const r = await p.evaluate(({red, accent}) => {
+     const hits = [], seen = new Set(); let examined = 0, accents = 0;
+     for (const el of document.querySelectorAll('.b-page, .b-page *')) {
+      examined++;
+      for (const pseudo of [undefined, '::before', '::after']) {
+       const cs = getComputedStyle(el, pseudo);
+       if (pseudo && cs.content === 'none') continue;
+       const props = [['color', cs.color], ['background-color', cs.backgroundColor], ['text-decoration-color', cs.textDecorationColor], ['outline-color', cs.outlineColor]];
+       for (const s of ['top', 'right', 'bottom', 'left'])
+        if (parseFloat(cs.getPropertyValue(`border-${s}-width`)) > 0 && cs.getPropertyValue(`border-${s}-style`) !== 'none') props.push([`border-${s}-color`, cs.getPropertyValue(`border-${s}-color`)]);
+       for (const [k, v] of props) {
+        if (v === red) hits.push(`${el.tagName.toLowerCase()}${[...el.classList].map(c => '.' + c).join('')}${pseudo || ''} ${k}`);
+        if (v === accent) seen.add(el);
+       }
+      }
+     }
+     accents = seen.size;
+     const t = document.querySelector('.b-po-t');
+     let opacity = 1;
+     for (let e = t; e; e = e.parentElement) opacity *= Number(getComputedStyle(e).opacity);
+     return {hits: [...new Set(hits)], examined, accents, title: getComputedStyle(t).color, opacity};
+    }, {red, accent});
+    assert(r.examined > 50, `${path} ${theme} examined=${r.examined} elements`);
+    assert(r.accents > 0, `${path} ${theme} no element uses --red-ink ${accent}: the scan sees nothing it should`);
+    assert(!r.hits.length, `${path} ${theme} uses --red ${red}: ${r.hits.slice(0, 6).join('; ')}`);
+    if (theme === 'light') {
+     assert(r.title === RGB.ink, `${path} title color=${r.title}, expected --ink ${RGB.ink}`);
+     assert(Math.abs(r.opacity - 1) < .001, `${path} title opacity=${r.opacity}, expected 1`);
+    }
+    elements += r.examined;
+    n++;
+   } finally { await close(p); }
+  }
+  console.log(`R-C3 pages=${n} elements examined=${elements}`);
+  return n;
+ },
+ // Check 7. The home list is the spec's table.
+ 'R-H7': async () => {
+  const p = await open('D1525', 'light', '/');
+  try {
+   if (prove && proofCase === 'old-heading') await p.evaluate(() => { document.querySelectorAll('.b-dh')[4].textContent = 'Dubious and spurious works'; });
+   if (prove && proofCase === 'duplicate') await p.evaluate(() => { const li = document.querySelector('.b-works li'); li.parentElement.append(li.cloneNode(true)); });
+   if (prove && proofCase === 'tag-lost') await p.evaluate(() => document.querySelector('.b-tag').remove());
+   if (prove && proofCase === 'prob-moved') await p.evaluate(() => { const ul = [...document.querySelectorAll('.b-works')].find(u => u.querySelector('[data-work="Prob"]')); ul.prepend(ul.querySelector('[data-work="Prob"]').parentElement); });
+   if (prove && proofCase === 'isa') await p.evaluate(() => { const li = document.querySelector('.b-works li').cloneNode(true); li.querySelector('a').dataset.work = 'Isa'; document.querySelector('.b-works').append(li); });
+   const got = await p.evaluate(() => [...document.querySelectorAll('.b-div')].map(d => {
+    const groups = [];
+    for (const c of d.querySelector('.b-dw').children) {
+     if (c.matches('.b-sub')) groups.push({label: c.textContent.trim(), works: [], tags: {}});
+     else if (c.matches('.b-works')) {
+      if (!groups.length) groups.push({label: null, works: [], tags: {}});
+      const g = groups.at(-1);
+      for (const a of c.querySelectorAll('a[data-work]')) { g.works.push(a.dataset.work); const t = a.querySelector('.b-tag'); if (t) g.tags[a.dataset.work] = t.textContent.trim().toLowerCase(); }
+     }
+    }
+    return {name: d.querySelector('.b-dh').textContent.trim(), groups};
+   }));
+   const all = got.flatMap(d => d.groups.flatMap(g => g.works));
+   assert(got.length > 0 && all.length > 0, `examined=0 divisions/works (${got.length}/${all.length})`);
+   assert(!got.some(d => /dubious and spurious works/i.test(d.name)), `a division head reads "Dubious and spurious works": ${got.map(d => d.name)}`);
+   const dup = all.filter((id, i) => all.indexOf(id) !== i);
+   assert(!dup.length, `data-work listed twice: ${dup}`);
+   const tags = got.flatMap(d => d.groups.flatMap(g => Object.entries(g.tags)));
+   assert(tags.length === 16, `tags=${tags.length}, expected 16`);
+   const opus = got.flatMap(d => d.groups).find(g => g.label?.toLowerCase() === 'minor works (opuscula)');
+   assert(opus, `no group labelled "Minor works (Opuscula)"; groups: ${got.flatMap(d => d.groups.map(g => g.label))}`);
+   assert(JSON.stringify(opus.works) === JSON.stringify(OPUSCULA), `Minor works (Opuscula) holds ${opus.works}, expected ${OPUSCULA}`);
+   const shape = ds => JSON.stringify(ds.map(d => [d.name, d.groups.map(g => [g.label?.toLowerCase() ?? null, g.works])]));
+   const expected = SPEC_LIST.map(d => ({name: d.name, groups: d.groups}));
+   assert(shape(got) === shape(expected), `list differs from spec §3.3:\n got ${shape(got)}\n want ${shape(expected)}`);
+   for (const [id, kind] of Object.entries(SPEC_TAGS)) assert(tags.some(([w, t]) => w === id && t.includes(kind)), `${id} lacks its "${kind}" tag`);
+   assert(!all.includes('Isa'), 'the Isagoge is on the home list');
+   console.log(`R-H7 divisions=${got.length} works=${all.length} tags=${tags.length} opuscula=${opus.works.join(',')}`);
+   return all.length;
+  } finally { await close(p); }
+ },
+ // Check 8. The home Greek line: one line, deep red, as wide as its column.
+ 'R-H8': async () => {
+  let n = 0;
+  for (const size of ['D1525', 'D1152', 'D961']) {
+   const p = await open(size, 'light', '/');
+   try {
+    if (prove && proofCase === 'wraps' && size === 'D1525') await style(p, '.dir-b.pg-home .b-top .b-gt{white-space:normal!important;font-size:40px!important}');
+    if (prove && proofCase === 'wrong-red' && size === 'D1152') await style(p, '.dir-b.pg-home .b-top .b-gt{color:var(--red)!important}');
+    if (prove && proofCase === 'short' && size === 'D961') await style(p, '.dir-b.pg-home .b-top .b-gt{font-size:12px!important}');
+    const r = await p.evaluate(() => {
+     const el = document.querySelector('p.b-gt');
+     if (!el) return null;
+     const range = document.createRange(); range.selectNodeContents(el);
+     const rects = [...range.getClientRects()].filter(x => x.width > 0);
+     const lines = []; for (const x of rects) if (!lines.some(t => Math.abs(t - x.top) < 3)) lines.push(x.top);
+     return {vw: document.documentElement.clientWidth, lines: lines.length, color: getComputedStyle(el).color, text: range.getBoundingClientRect().width, size: getComputedStyle(el).fontSize, shown: el.getClientRects().length > 0};
+    });
+    assert(r && r.shown, `${size} examined=0: no visible p.b-gt`);
+    const g = gridAt(r.vw);
+    assert(r.lines === 1, `${size} Greek line is drawn on ${r.lines} lines`);
+    assert(r.color === RGB.redInk, `${size} Greek line color=${r.color}, expected --red-ink ${RGB.redInk}`);
+    assert(near(r.text, g.col, 2), `${size} Greek line text width=${f1(r.text)} but its column is ${f1(g.col)}`);
+    console.log(`R-H8 ${size} text ${f1(r.text)} of ${f1(g.col)}, ${r.size}`);
+    n++;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+});
+
 // A proof is valid only when its own mutation causes the named assertion.
 const proofMessages = {
     'R-W1': /AthPol crumb=Works \/ Rhetoric and poetics/,
@@ -1941,10 +2303,10 @@ const proofMessages = {
     'R-F1': /screen font Anton/,
     'R-F2': /light --bg=#ffffff expected #f4f4f1/,
     'R-P4': /dark filter=invert\(1\)/,
-    'R-T3': /D1440 \/ gap=.*expected 56/,
+    'R-T3': /D1525 \/ bust size=.*, spec says 189 wide at aspect \.592/,
     'R-T4': /P390\/light object-fit=contain/,
     'R-H1': /P390 home line mismatch/,
-    'R-H2': /IV ids=EN,EE,Pol$/,
+    'R-H2': /IV ids=EN,MM,EE,VV,Pol,Oec$/,
     'R-H3': /placeholder links in .*footer fixture/,
     'R-A1': /D1440 BUTTON.*34×34/,
     'R-A2': /focus missing .*b-search|focus missing .*name="q"/,
@@ -1953,16 +2315,30 @@ const proofMessages = {
     'R-E2': /unsolicited overlay:.*reader-tip/,
 };
 const stageTwoProofs = {
-    'R-W1': {'crumb': /AthPol crumb=Works \/ Rhetoric and poetics/, 'english-facts': /Cat English facts form: W\. D\. Ross \(Oxford, 1908\)/, 'missing-glossary': /EN English facts glossary link missing or invalid/, 'crumb-height': /Cat D1440 crumb height=/, 'crumb-height-phone': /Cat P390 crumb height=/, 'no-english': /Cat examined=0 English facts/, 'peters-year': /EN Peters facts must contain rev\. ed\., 1893/, 'ellis-year': /Pol Ellis facts must contain 1776; rev\. 1912/},
-    'R-T3': {'home-plate': /D1440 \/ gap=.*expected 56/, 'work-plate': /D1440 \/Cat\/ rendered plate geometry/},
-    'R-T2': {'cap': /Cat D1440 Start reading bottom=/, 'scroll-budget': /Cat D1440 scroll changed poster height/, 'crop': /Cat D1440 object-fit=cover expected contain/},
+    'R-W1': {'crumb': /AthPol crumb=Works \/ Rhetoric and poetics/, 'english-facts': /Cat English facts form: W\. D\. Ross \(Oxford, 1908\)/, 'missing-glossary': /EN English facts glossary link missing or invalid/, 'crumb-height': /Cat D1440 crumb height=/, 'crumb-height-phone': /Cat P390 crumb height=/, 'phone-order': /Cat P390 visual order /, 'no-english': /Cat examined=0 English facts/, 'peters-year': /EN Peters facts must contain rev\. ed\., 1893/, 'ellis-year': /Pol Ellis facts must contain 1776; rev\. 1912/},
+    'R-T3': {'title-faded': /D1440\/light \/ title opacity=0\.82 expected 1/, 'home-plate': /D1525 \/ bust size=.*, spec says 189 wide at aspect \.592/, 'work-plate': /D1525 \/GC\/ plate size=200\.0×.*, plates\.json ink box gives 362\.7×358\.6/},
+    'R-T2': {'cap': /Cat D1440 Start reading bottom=/, 'scroll-budget': /Long P390 scroll changed poster height/, 'crop': /Cat D1440 object-fit=cover expected fill/},
     'R-K1': {'record': /EN Record href=#/, 'punctuation': /home credits doubled full stop/, 'licence': /home credits licence must be in parentheses/, 'licence-stop': /home credits stop before licence/},
+    'R-W3': {'chapter-target': /Cat wrong chapter target:/, 'numeral-red': /Phys book numbers are not --red-ink/},
     'R-W1-bekker': {'short-end': /Meta invalid book-header Bekker range: 980a21–29/, 'backwards': /Meta backwards book-header Bekker range: 993a29–980a21/},
     'R-W1-scheme': {'synthetic': /Isa synthetic range in non-Bekker work: 1a3–16/},
     'R-E1': {'copy': /examined=6 violations=6; HTML fixture In this mockup/, 'no-headings': /\/Cat\/ examined=0 section headings/, 'empty-heading': /\/Cat\/ empty headings:/},
     'R-T5': {'desktop-poster': /S844 home gap=/, 'two-columns': /S844 .*works grid has more than one column/, 'wide-title': /Cat S844 title sizes=/, 'short-plate': /Cat S844 plate height=.*below 120/},
 };
+// D26 gates: each proof is a deliberate break that must trip the gate's own assertion.
+const d26Proofs = {
+    'R-H4': {'tall-top': /D1525 sixth work row bottom=[\d.]+ is below the window height=896/, 'one-column': /D1525 sixth work row bottom=[\d.]+ is below the window height=896/, 'scrolled': /D1152 scrollY=120, must be 0/},
+    'R-H5': {'title-wide': /D1525 home title width=[\d.]+ but list column width=/, 'title-shifted': /D1152 home title left=[\d.]+ but list column 2 left=/, 'work-title-narrow': /GC D1525 work title width=300, expected one third of/},
+    'R-H6': {'bust-short': /D1525 new reader bust bottom=[\d.]+ and search bottom=[\d.]+ differ by more than 2px/, 'list-gap': /D1152 new reader first division starts [\d.]+px under the bust bottom, expected 44±2/, 'returning-bust-short': /D1525 returning reader bust bottom=[\d.]+ and search bottom=[\d.]+ differ by more than 2px/},
+    'R-W4': {'ctas-high': /GC D1525 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'ctas-lifted': /Juv D1152 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'books-gap': /Mete D1525 books heading starts [\d.]+px under the foot line, expected 44±2/},
+    'R-W5': {'class-flip': /plate centre x=[\d.]+ is not in the (left|right) column/, 'plate-middle': /plate centre x=[\d.]+ is not in the (left|right) column/, 'crumb-indent': /crumb left=[\d.]+, content column left=/},
+    'R-C3': {'red-title': /\/ light uses --red rgb\(226, 56, 46\): h1\.b-po-t color/, 'red-border': /\/GC\/ light uses --red rgb\(226, 56, 46\): .*border-bottom-color/, 'red-dark': /\/Mete\/ dark uses --red rgb\(255, 90, 77\): .*color/, 'faded-title': /\/MA\/ title opacity=0\.82, expected 1/},
+    'R-H7': {'old-heading': /a division head reads "Dubious and spurious works"/, 'duplicate': /data-work listed twice: Cat/, 'tag-lost': /tags=15, expected 16/, 'prob-moved': /Minor works \(Opuscula\) holds Prob,Col,/, 'isa': /(the Isagoge is on the home list|list differs from spec)/},
+    'R-H8': {'wraps': /D1525 Greek line is drawn on [2-9] lines/, 'wrong-red': /D1152 Greek line color=rgb\(226, 56, 46\), expected --red-ink/, 'short': /D961 Greek line text width=[\d.]+ but its column is/},
+};
+Object.assign(stageTwoProofs, d26Proofs);
 const homeTitleProofs = {
+    'desktop-size': /D1525 home line 1 size=\d+ expected=82\.5 ±1px|D1525 home line 1 drawn size=60 expected=82\.5/,
     'golden-line': /P390 home lines=/,
     'resize-observer': /S844 → S960 fitter did not re-fit/,
 };

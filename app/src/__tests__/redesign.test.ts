@@ -45,13 +45,23 @@ test('R-P2 manifest schema and ids', () => {
         string,
         any
     ][]) {
-        expect(p.place, id).toBe(id === 'home' ? 'left' : 'right');
+        // D26 (John, 10 Nov): the plate's side follows the picture.
+        expect(['left', 'right'], id).toContain(p.place);
+        // The ink box, in the desk plate's own 1280×914 pixels.
+        expect(p.ink, id).toHaveLength(4);
+        const [x0, y0, x1, y1] = p.ink;
+        expect(Number.isInteger(x0) && Number.isInteger(y0) && Number.isInteger(x1) && Number.isInteger(y1), id).toBe(true);
+        expect(0 <= x0 && x0 < x1 && x1 <= 1280 && 0 <= y0 && y0 < y1 && y1 <= 914, `${id} ink ${p.ink}`).toBe(true);
         for (const k of ['alt', 'who', 'what', 'when', 'how', 'where', 'lic', 'url'])
             expect(p, id).toHaveProperty(k);
         expect(p.url, id).toMatch(/^https?:\/\//);
         for (const k of ['pick', 'desk', 'phone'])
             expect(p, id).not.toHaveProperty(k);
     }
+    const sides = (side: string) => Object.entries(m).filter(([id, p]: [string, any]) => id !== 'home' && p.place === side).length;
+    expect([sides('left'), sides('right')]).toEqual([22, 25]);
+    expect(m.home.place).toBe('left');
+    expect([m.GC.place, m.Mete.place, m.MA.place, m.Isa.place]).toEqual(['right', 'left', 'left', 'left']);
 });
 test('R-P3 credit keys and EN exact credit', () => {
     const m = manifest();
@@ -63,7 +73,8 @@ test('R-P3 credit keys and EN exact credit', () => {
     }
     expect(m.EN.credit).toBe('Gift of Mrs. Carroll G. Ross, 1945');
 });
-test('R-K2 AthPol follows Pol in IV', () => { count('R-K2', CATEGORIES.length); expect(CATEGORIES.find(c => c.numeral === 'IV')!.works!.map(w => w.id)).toEqual(['EN', 'EE', 'Pol', 'AthPol']); expect(CATEGORIES.find(c => c.numeral === 'V')!.works!.map(w => w.id)).toEqual(['Rhet', 'Poet']); });
+// D26 (John, 10 Nov): the dubious and spurious works stand in the main divisions.
+test('R-K2 AthPol follows Pol in IV', () => { count('R-K2', CATEGORIES.length); expect(CATEGORIES.find(c => c.numeral === 'IV')!.works!.map(w => w.id)).toEqual(['EN', 'MM', 'EE', 'VV', 'Pol', 'Oec', 'AthPol']); expect(CATEGORIES.find(c => c.numeral === 'V')!.works!.map(w => w.id)).toEqual(['Rhet', 'RhetAl', 'Poet']); });
 test('R-K3 source blurbs omit book counts; exact MM and Prob', () => {
     const source = readFileSync(resolve(root, '../shared/lib/works.ts'), 'utf8');
     const blurbs = [...source.matchAll(/blurb: '((?:\\.|[^'\\])*)'/g)].map(m => m[1]);
@@ -76,7 +87,8 @@ test('R-K3 source blurbs omit book counts; exact MM and Prob', () => {
 });
 test('R-K5 appendix wording throughout sources', () => {
     count('R-K5', CATEGORIES.length);
-    expect(CATEGORIES.find(c => c.appendix)!.title).toBe('Dubious and spurious works');
+    // D26: no division of their own any more; the tags carry the wording.
+    expect(CATEGORIES.filter(c => c.appendix)).toEqual([]);
     const repo = resolve(root, '..');
     const tracked = execFileSync('git', ['ls-files', '--', 'app', 'shared', ':!**/__tests__/**'], {cwd: repo, encoding: 'utf8'}).trim().split('\n').filter(Boolean);
     count('R-K5 tracked files', tracked.length);

@@ -5,7 +5,7 @@
         "lines": [
           "CATEGORIES"
         ],
-        "set": "92"
+        "set": "71"
       },
       "phone": {
         "lines": [
@@ -20,7 +20,7 @@
           "DE",
           "INTERPRETATIONE"
         ],
-        "set": "63,63"
+        "set": "49,49"
       },
       "phone": {
         "lines": [
@@ -35,7 +35,7 @@
         "lines": [
           "ISAGOGE"
         ],
-        "set": "130"
+        "set": "100"
       },
       "phone": {
         "lines": [
@@ -49,7 +49,7 @@
         "lines": [
           "PHYSICS"
         ],
-        "set": "129"
+        "set": "100"
       },
       "phone": {
         "lines": [
@@ -64,7 +64,7 @@
           "ON THE",
           "HEAVENS"
         ],
-        "set": "127,127"
+        "set": "98,98"
       },
       "phone": {
         "lines": [
@@ -82,7 +82,7 @@
           "AND",
           "CORRUPTION"
         ],
-        "set": "85,85,85,85"
+        "set": "66,66,66,66"
       },
       "phone": {
         "lines": [
@@ -98,7 +98,7 @@
         "lines": [
           "METEOROLOGY"
         ],
-        "set": "78"
+        "set": "60"
       },
       "phone": {
         "lines": [
@@ -113,7 +113,7 @@
           "DE",
           "ANIMA"
         ],
-        "set": "173,173"
+        "set": "133,133"
       },
       "phone": {
         "lines": [
@@ -129,7 +129,7 @@
           "SENSE AND",
           "SENSIBILIA"
         ],
-        "set": "101,101"
+        "set": "78,78"
       },
       "phone": {
         "lines": [
@@ -145,7 +145,7 @@
           "ON",
           "MEMORY"
         ],
-        "set": "131,131"
+        "set": "101,101"
       },
       "phone": {
         "lines": [
@@ -161,7 +161,7 @@
           "ON",
           "SLEEP"
         ],
-        "set": "190,190"
+        "set": "147,147"
       },
       "phone": {
         "lines": [
@@ -177,7 +177,7 @@
           "ON",
           "DREAMS"
         ],
-        "set": "136,136"
+        "set": "105,105"
       },
       "phone": {
         "lines": [
@@ -194,7 +194,7 @@
           "DIVINATION",
           "IN SLEEP"
         ],
-        "set": "98,98,98"
+        "set": "76,76,76"
       },
       "phone": {
         "lines": [
@@ -213,7 +213,7 @@
           "SHORTNESS",
           "OF LIFE"
         ],
-        "set": "97,97,97,97"
+        "set": "75,75,75,75"
       },
       "phone": {
         "lines": [
@@ -233,7 +233,7 @@
           "DEATH, AND",
           "RESPIRATION"
         ],
-        "set": "84,84,84,84,84"
+        "set": "65,65,65,65,65"
       },
       "phone": {
         "lines": [
@@ -252,7 +252,7 @@
           "OF",
           "ANIMALS"
         ],
-        "set": "127,127,127"
+        "set": "98,98,98"
       },
       "phone": {
         "lines": [
@@ -269,7 +269,7 @@
           "OF",
           "ANIMALS"
         ],
-        "set": "127,127,127"
+        "set": "98,98,98"
       },
       "phone": {
         "lines": [
@@ -286,7 +286,7 @@
           "OF",
           "ANIMALS"
         ],
-        "set": "104,104,104"
+        "set": "80,80,80"
       },
       "phone": {
         "lines": [
@@ -302,7 +302,7 @@
           "PROGRESSION",
           "OF ANIMALS"
         ],
-        "set": "79,79"
+        "set": "61,61"
       },
       "phone": {
         "lines": [
@@ -318,7 +318,7 @@
           "GENERATION",
           "OF ANIMALS"
         ],
-        "set": "91,91"
+        "set": "70,70"
       },
       "phone": {
         "lines": [
@@ -333,7 +333,7 @@
         "lines": [
           "METAPHYSICS"
         ],
-        "set": "81"
+        "set": "63"
       },
       "phone": {
         "lines": [
@@ -348,7 +348,7 @@
           "PRIOR",
           "ANALYTICS"
         ],
-        "set": "106,106"
+        "set": "82,82"
       },
       "phone": {
         "lines": [
@@ -364,7 +364,7 @@
           "POSTERIOR",
           "ANALYTICS"
         ],
-        "set": "99,99"
+        "set": "76,76"
       },
       "phone": {
         "lines": [
@@ -379,7 +379,7 @@
         "lines": [
           "TOPICS"
         ],
-        "set": "155"
+        "set": "120"
       },
       "phone": {
         "lines": [
@@ -394,7 +394,7 @@
           "SOPHISTICAL",
           "REFUTATIONS"
         ],
-        "set": "85,85"
+        "set": "66,66"
       },
       "phone": {
         "lines": [
@@ -410,7 +410,7 @@
           "NICOMACHEAN",
           "ETHICS"
         ],
-        "set": "77,77"
+        "set": "59,59"
       },
       "phone": {
         "lines": [
@@ -426,7 +426,7 @@
           "EUDEMIAN",
           "ETHICS"
         ],
-        "set": "110,110"
+        "set": "85,85"
       },
       "phone": {
         "lines": [
@@ -441,7 +441,7 @@
         "lines": [
           "POLITICS"
         ],
-        "set": "123"
+        "set": "95"
       },
       "phone": {
         "lines": [
@@ -455,7 +455,7 @@
         "lines": [
           "OECONOMICA"
         ],
-        "set": "84"
+        "set": "65"
       },
       "phone": {
         "lines": [
@@ -470,7 +470,7 @@
           "MAGNA",
           "MORALIA"
         ],
-        "set": "123,123"
+        "set": "95,95"
       },
       "phone": {
         "lines": [
@@ -487,7 +487,7 @@
           "VIRTUTIBUS",
           "ET VITIIS"
         ],
-        "set": "94,94,94"
+        "set": "73,73,73"
       },
       "phone": {
         "lines": [
@@ -504,7 +504,7 @@
           "DE",
           "MUNDO"
         ],
-        "set": "153,153"
+        "set": "118,118"
       },
       "phone": {
         "lines": [
@@ -519,7 +519,7 @@
         "lines": [
           "MECHANICA"
         ],
-        "set": "95"
+        "set": "73"
       },
       "phone": {
         "lines": [
@@ -533,7 +533,7 @@
         "lines": [
           "PROBLEMATA"
         ],
-        "set": "85"
+        "set": "66"
       },
       "phone": {
         "lines": [
@@ -548,7 +548,7 @@
           "DE",
           "COLORIBUS"
         ],
-        "set": "97,97"
+        "set": "75,75"
       },
       "phone": {
         "lines": [
@@ -563,7 +563,7 @@
         "lines": [
           "PHYSIOGNOMONICA"
         ],
-        "set": "57"
+        "set": "44"
       },
       "phone": {
         "lines": [
@@ -578,7 +578,7 @@
           "DE",
           "PLANTIS"
         ],
-        "set": "136,136"
+        "set": "105,105"
       },
       "phone": {
         "lines": [
@@ -595,7 +595,7 @@
           "XENOPHANE",
           "GORGIA"
         ],
-        "set": "95,95,95"
+        "set": "73,73,73"
       },
       "phone": {
         "lines": [
@@ -612,7 +612,7 @@
           "DE",
           "AUDIBILIBUS"
         ],
-        "set": "86,86"
+        "set": "66,66"
       },
       "phone": {
         "lines": [
@@ -628,7 +628,7 @@
           "DE LINEIS",
           "INSECABILIBUS"
         ],
-        "set": "73,73"
+        "set": "56,56"
       },
       "phone": {
         "lines": [
@@ -644,7 +644,7 @@
           "DE",
           "SPIRITU"
         ],
-        "set": "139,139"
+        "set": "107,107"
       },
       "phone": {
         "lines": [
@@ -660,7 +660,7 @@
           "VENTORUM",
           "SITUS"
         ],
-        "set": "104,104"
+        "set": "80,80"
       },
       "phone": {
         "lines": [
@@ -676,7 +676,7 @@
           "DE MIRABILIBUS",
           "AUSCULTATIONIBUS"
         ],
-        "set": "57,57"
+        "set": "44,44"
       },
       "phone": {
         "lines": [
@@ -691,7 +691,7 @@
         "lines": [
           "RHETORIC"
         ],
-        "set": "111"
+        "set": "86"
       },
       "phone": {
         "lines": [
@@ -707,7 +707,7 @@
           "AD",
           "ALEXANDRUM"
         ],
-        "set": "83,83,83"
+        "set": "64,64,64"
       },
       "phone": {
         "lines": [
@@ -723,7 +723,7 @@
         "lines": [
           "POETICS"
         ],
-        "set": "134"
+        "set": "103"
       },
       "phone": {
         "lines": [
@@ -738,7 +738,7 @@
           "ATHENIAN",
           "CONSTITUTION"
         ],
-        "set": "78,78"
+        "set": "60,60"
       },
       "phone": {
         "lines": [
@@ -750,15 +750,6 @@
     }
   },
   "home": {
-    "desktop": {
-      "lines": [
-        "THE",
-        "COMPLETE",
-        "WORKS OF",
-        "ARISTOTLE"
-      ],
-      "set": "106,106,106,106"
-    },
     "phone": {
       "lines": [
         "THE",

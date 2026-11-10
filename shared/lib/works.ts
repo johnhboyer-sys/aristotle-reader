@@ -1426,6 +1426,10 @@ export const CATEGORIES: Category[] = [
       { id: 'SE' },
     ],
   },
+  // The works whose authenticity is doubted or denied (Barnes 1984: * or **)
+  // stand in the division their subject gives them, in Bekker's order; each
+  // carries its dubious/spurious tag (John, 10 Nov 2026). The small treatises
+  // of Oxford vol. VI (1913), with the Problemata, are the Opuscula.
   {
     numeral: 'II',
     title: 'Natural Philosophy',
@@ -1438,6 +1442,7 @@ export const CATEGORIES: Category[] = [
           { id: 'Cael' },
           { id: 'GC' },
           { id: 'Mete' },
+          { id: 'DM' },
           { id: 'DA' },
         ],
       },
@@ -1452,6 +1457,7 @@ export const CATEGORIES: Category[] = [
           { id: 'DivSomn' },
           { id: 'Long' },
           { id: 'Juv' },
+          { id: 'Spir' },
         ],
       },
       {
@@ -1463,6 +1469,22 @@ export const CATEGORIES: Category[] = [
           { id: 'MA' },
           { id: 'IA' },
           { id: 'GA' },
+        ],
+      },
+      {
+        ref: 'II.d',
+        label: 'Minor Works (Opuscula)',
+        works: [
+          { id: 'Col' },
+          { id: 'Aud' },
+          { id: 'Phgn' },
+          { id: 'Plant' },
+          { id: 'Mirab' },
+          { id: 'Mech' },
+          { id: 'Prob' },
+          { id: 'Lin' },
+          { id: 'Vent' },
+          { id: 'MXG' },
         ],
       },
     ],
@@ -1479,8 +1501,11 @@ export const CATEGORIES: Category[] = [
     title: 'Moral and Political Philosophy',
     works: [
       { id: 'EN' },
+      { id: 'MM' },
       { id: 'EE' },
+      { id: 'VV' },
       { id: 'Pol' },
+      { id: 'Oec' },
       { id: 'AthPol' },
     ],
   },
@@ -1489,33 +1514,8 @@ export const CATEGORIES: Category[] = [
     title: 'Rhetoric and Poetics',
     works: [
       { id: 'Rhet' },
-      { id: 'Poet' },
-    ],
-  },
-  // Appendix — the works transmitted under Aristotle's name whose authenticity is
-  // doubted or denied (Barnes 1984: * or **). Grouped OUTSIDE the numbered divisions
-  // (no numeral); each card still carries its Dubious/Spurious badge.
-  {
-    numeral: '',
-    title: 'Dubious and spurious works',
-    appendix: true,
-    works: [
-      { id: 'DM' },
-      { id: 'MXG' },
-      { id: 'Mech' },
-      { id: 'Prob' },
-      { id: 'Col' },
-      { id: 'Aud' },
-      { id: 'Phgn' },
-      { id: 'Plant' },
-      { id: 'Mirab' },
-      { id: 'Lin' },
-      { id: 'Vent' },
-      { id: 'MM' },
-      { id: 'VV' },
-      { id: 'Oec' },
-      { id: 'Spir' },
       { id: 'RhetAl' },
+      { id: 'Poet' },
     ],
   },
   // Porphyry's Isagoge (id 'Isa') is intentionally NOT a home division: it's
@@ -1567,5 +1567,4 @@ export const DIVISION_NAMES: Record<string, string> = {
   Metaphysics: 'Metaphysics',
   'Moral and Political Philosophy': 'Ethics and politics',
   'Rhetoric and Poetics': 'Rhetoric and poetics',
-  'Dubious and spurious works': 'Dubious and spurious works',
 };

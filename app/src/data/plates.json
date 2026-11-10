@@ -1,6 +1,7 @@
 {
   "home": {
     "place": "left",
+    "ink": [395, 55, 885, 882],
     "alt": "A marble bust of Aristotle, head in profile to the right, on a round stand.",
     "who": "François Huot",
     "what": "Aristoteles. Apud Fulvium Ursinum in marmore",
@@ -14,6 +15,7 @@
   },
   "Cat": {
     "place": "right",
+    "ink": [346, 51, 1016, 851],
     "alt": "A ladder of ringed words set in the crown of a leafy tree: Ens, Substantia, Corpus, Vivens, Animal, Homo down the trunk to Petrus Paulus, with the differences in subsistens, corpoream, animatum, sensitivum, rationale on the left and their opposites on the right, joined by bands lettered Dividitur, Constituit and Repugnat.",
     "who": "Edme Pourchot (Purchotius), author; engraved by Fillœul ('Fillœul Sculp.' on the plate)",
     "what": "'Arbor Porphyrii secundum doctrinam Aristotelis et Peripateticorum', Tab. 1, plate in Institutiones philosophicae ad faciliorem veterum et recentiorum philosophorum intelligentiam comparatae, fourth edition",
@@ -27,6 +29,7 @@
   },
   "Int": {
     "place": "right",
+    "ink": [244, 74, 1035, 842],
     "alt": "Four boxed statements about a man running at the corners of a square, joined by bands marked Contrariae, Subalternae and Subcontrariae and crossed by two bands of Contradictoriae.",
     "who": "Bernardo Sannig (author, as the holder gives it)",
     "what": "Fig. I, square of opposition (Omnis homo currit, Nullus homo currit, Quidam homo currit, Quidam homo non currit; Contraria, Subalterna, Contradictoria, Subcontraria), in Schola philosophica scotistarum, seu Cursus philosophicus completus, ad mentem doctoris subtilis Joannis Duns Scoti, authore P.F. Bernardo Sannig, tomus 1 (the printed label 'Fig: I' and a foxing spot are blotted from the cut)",
@@ -39,7 +42,8 @@
     "creditChecked": "2026-11-08"
   },
   "Isa": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1262, 914],
     "alt": "A tree of linked circles, Substantia, Corpus, Vivens and Animal down the middle, with paired circles on each side joined by bands marked Dividitur, Constituit and Repugnat",
     "who": "Edmond Purchot",
     "what": "Arbor Porphyrii, from Institutiones philosophicae, volume 1",
@@ -53,6 +57,7 @@
   },
   "APr": {
     "place": "right",
+    "ink": [15, 56, 1257, 848],
     "alt": "Rows of overlapping circles lettered A, B and C, some marked with a star, numbered Fig. 1 to Fig. 22.",
     "who": "Leonhard Euler; translated by Henry Hunter (engraver not named)",
     "what": "Plate II, Second Series, in Letters of Euler on different subjects in physics and philosophy, volume 1",
@@ -65,7 +70,8 @@
     "creditChecked": "2026-11-08"
   },
   "APo": {
-    "place": "right",
+    "place": "left",
+    "ink": [152, 18, 1149, 875],
     "alt": "Dense lines of Greek in abbreviated type giving the proof, ending in a small circle with a diameter and chords from a point on the rim, labelled with Greek letters.",
     "who": "Euclid; edited by Simon Grynaeus (Basel edition, with Proclus on Book I)",
     "what": "Elements Book III, Prop. 31 (λα), proof and figure, p. 42 (folio), in Ευκλείδου Στοιχείων βιβλ. ιε′ (Greek only)",
@@ -78,7 +84,8 @@
     "creditChecked": "2026-11-08"
   },
   "Top": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "Three men in wigs and gowns stand together in a columned room, two of them gesturing at each other and the third reading from a book.",
     "who": "Unidentified engraver signing GWHWHNM; sold by John Bowles",
     "what": "The Triple Plea (law, physic and divinity dispute which ranks highest)",
@@ -91,7 +98,8 @@
     "creditChecked": "2026-11-08"
   },
   "SE": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "Six men in caps and gowns sit and stand round a draped table, bent over an open book, one old man talking and pointing.",
     "who": "Hans Burgkmair (I), named on the object",
     "what": "Zes geleerden zitten rond een tafel (Six scholars sit round a table over a book), block first used in Liber theoricae nec non praticae Alsaharavii",
@@ -105,6 +113,7 @@
   },
   "Phys": {
     "place": "right",
+    "ink": [214, 12, 1069, 882],
     "alt": "Concentric rings with lettering: earth, water, air and fire at the centre, then the seven planetary spheres, the fixed stars, the Primum Mobile, the Crystalline sphere and the Empyrean.",
     "who": "Peter Apian and Gemma Frisius (author and editor), printer Joannes Withagius",
     "what": "Schema praedictae divisionis (diagram of the elemental region and the heavenly spheres, Empyreum at the rim), page 6 of the first part of Cosmographia, siue descriptio vniuersi orbis",
@@ -118,6 +127,7 @@
   },
   "Cael": {
     "place": "right",
+    "ink": [107, 5, 1186, 914],
     "alt": "An armillary sphere on an ornate stand, a small earth at the centre of crossed rings and a band of zodiac signs",
     "who": "Bénard",
     "what": "Sphère armillaire, Encyclopédie, Astronomie, plate II",
@@ -131,6 +141,7 @@
   },
   "GC": {
     "place": "right",
+    "ink": [197, 17, 1081, 891],
     "alt": "A round wheel with eight discs (four elements and four qualities) joined by bands marked Contraria, Conuenientes and Repugnantes, with a lettered ring around a central circle.",
     "who": "Oronce Fine",
     "what": "Figura elementarium primariumque qualitatum, tam conuenientium quam discordantium inuicem (wheel of the elements Ignis, Aer, Aqua, Terra and the qualities hot, cold, wet, dry), page 2 of Book I of Sphaera mundi",
@@ -143,7 +154,8 @@
     "creditChecked": "2026-11-08"
   },
   "Mete": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A great comet streams across a starry sky above dark fields and a river",
     "who": "Anonymous",
     "what": "The comet",
@@ -157,6 +169,7 @@
   },
   "DA": {
     "place": "right",
+    "ink": [237, 0, 1280, 914],
     "alt": "A man's head in profile with a band across the skull divided into cells with Latin labels, lines running from the eye, nose, ear and mouth to the cells.",
     "who": "Gregor Reisch",
     "what": "Head with the inner senses (fantasia, sensus communis, imaginativa, cogitativa, aestimativa, memorativa) and the outer senses, from Margarita philosophica nova, Book X, tract 2",
@@ -170,6 +183,7 @@
   },
   "Sens": {
     "place": "right",
+    "ink": [216, 84, 1018, 708],
     "alt": "A single human eye, engraved large, with its lashes and brow",
     "who": "Thomas Milton",
     "what": "Anatomy: organs of sense, the eye, plate I",
@@ -183,6 +197,7 @@
   },
   "Mem": {
     "place": "right",
+    "ink": [338, 42, 956, 877],
     "alt": "The wax impression of an engraved gem: a young ruler’s head in profile, with a headband and a cloak of scales",
     "who": "Rudolf Erich Raspe",
     "what": "A Descriptive Catalogue of Ancient and Modern Engraved Gems, cast by James Tassie, plate LV",
@@ -196,6 +211,7 @@
   },
   "Somn": {
     "place": "right",
+    "ink": [125, 53, 1123, 914],
     "alt": "A child asleep, its head of curls turned on the pillow, eyes closed",
     "who": "Dominique Vivant Denon",
     "what": "Head of a Sleeping Child",
@@ -208,7 +224,8 @@
     "creditChecked": "2026-11-08"
   },
   "Insomn": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A man slumped asleep over a desk with owls, bats and a cat crowding behind him.",
     "who": "Francisco de Goya",
     "what": "Plate 43 from Los Caprichos: The sleep of reason produces monsters (El sueño de la razon produce monstruos)",
@@ -221,7 +238,8 @@
     "creditChecked": "2026-11-08"
   },
   "DivSomn": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A woman asleep in a canopied bed; above her, in a cloud, a winged dragon hovers over a walled city and river.",
     "who": "Anonymous printmaker, after a design by Jörg Breu the Younger; publisher Heinrich Steiner (as the Rijksmuseum gives it)",
     "what": "Droom van Skanderbegs moeder (Dream of Skanderbeg's mother), illustration in Marinus Barletius, Scanderbeg",
@@ -234,7 +252,8 @@
     "creditChecked": "2026-11-08"
   },
   "Long": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A very tall oak with a thick trunk in a park of old oaks, a horse standing at its foot",
     "who": "Jacob George Strutt",
     "what": "The Tall Oak at Fredville, from Sylva Britannica",
@@ -248,6 +267,7 @@
   },
   "Juv": {
     "place": "right",
+    "ink": [32, 138, 1280, 787],
     "alt": "Two front views of the lungs with the larynx and ringed windpipe above, the left with the heart's place between the lobes, the right with the lobes drawn aside from a central sac.",
     "who": "Bartolomeo Eustachi (author); the holder names no engraver",
     "what": "Tab. XV, six figures of the lungs with the larynx and trachea (figures I and IV used), in Tabulae anatomicae",
@@ -261,6 +281,7 @@
   },
   "HA": {
     "place": "right",
+    "ink": [28, 83, 1228, 850],
     "alt": "Eight sea animals on one sheet: an octopus, two cuttlefish, two squids, a sea hare, a small squid and a tiny cuttlefish, with a sprig of eggs.",
     "who": "Johannes Jonston (author); engraver not named by the holder",
     "what": "Tab. I, octopus (Polypus), cuttlefish (Sepia), squids (Loligo) and sepiola, in Historiae naturalis de exanguibus aquaticis libri IV",
@@ -274,6 +295,7 @@
   },
   "PA": {
     "place": "right",
+    "ink": [69, 0, 1225, 914],
     "alt": "A horse's heart lying open among the folds of the two lungs, windpipe and great vessels above.",
     "who": "J. Pass, after Harguinier",
     "what": "The Lungs and Heart (Farriery, plate IX), dissection of a horse's lungs and heart",
@@ -286,7 +308,8 @@
     "creditChecked": "2026-11-08"
   },
   "IA": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "The skeleton of a horse stepping forward with one foreleg raised, and a human skeleton striding beside it",
     "who": "Benjamin Waterhouse Hawkins",
     "what": "Skeleton of a man, with the skeleton of a horse, in action, plate V of A Comparative View of the Human and Animal Frame",
@@ -299,7 +322,8 @@
     "creditChecked": "2026-11-08"
   },
   "MA": {
-    "place": "right",
+    "place": "left",
+    "ink": [218, 21, 1143, 889],
     "alt": "A flayed male figure in a deep lunge, one arm swung back and one thrust forward, his muscles, ribs and hip bone drawn",
     "who": "Jean-Galbert Salvage",
     "what": "Plate 10 of Anatomie du gladiateur combattant",
@@ -313,6 +337,7 @@
   },
   "GA": {
     "place": "right",
+    "ink": [39, 0, 1139, 914],
     "alt": "A child at term with hands and feet drawn up, in the opened womb, the cord and membranes beside it.",
     "who": "William Hunter (author); drawn by J. van Rymsdyk, engraved by R. Strange (plate signed \"delin.\" and \"sculp.\")",
     "what": "Tab. XII (child at term in the opened uterus, seen from behind), in Anatomia uteri humani gravidi tabulis illustrata",
@@ -325,7 +350,8 @@
     "creditChecked": "2026-11-08"
   },
   "Meta": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "Plato pointing upward and Aristotle with his palm held level walk side by side down the steps of a vaulted hall, other philosophers around them",
     "who": "Giovanni Volpato, after Raphael",
     "what": "The School of Athens",
@@ -338,7 +364,8 @@
     "creditChecked": "2026-11-08"
   },
   "EN": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A long Doric temple of heavy fluted columns, with trees on the entablature and three men and a horse in front.",
     "who": "Giovanni Battista Piranesi",
     "what": "View showing the remains of a large enclosure of columns, from Différentes vues de quelques Restes de trois grands Edifices ... de Pesto autrement Posidonia",
@@ -351,7 +378,8 @@
     "creditChecked": "2026-11-08"
   },
   "EE": {
-    "place": "right",
+    "place": "left",
+    "ink": [42, 1, 1280, 914],
     "alt": "A woman balancing a sieve on her head stands on a ladder among people tending a sick man, gathering firewood, storing food and mending a house.",
     "who": "Philips Galle, after Pieter Bruegel the Elder; published by Hieronymus Cock",
     "what": "Prudence (Prudentia), from \"The Virtues\"",
@@ -364,7 +392,8 @@
     "creditChecked": "2026-11-08"
   },
   "Pol": {
-    "place": "right",
+    "place": "left",
+    "ink": [10, 2, 1280, 914],
     "alt": "Solon sits writing on a tablet beside a column while two men, a helmeted soldier and three veiled women stand watching.",
     "who": "Anonymous",
     "what": "Solon writing laws for Athens, from Merry's Museum",
@@ -377,7 +406,8 @@
     "creditChecked": "2026-11-08"
   },
   "Oec": {
-    "place": "right",
+    "place": "left",
+    "ink": [22, 0, 1265, 914],
     "alt": "An old farmhouse with an outside stair: a woman on the stair scatters feed to ducks below, another sits by the door with a baby, and small children play in the yard",
     "who": "Charles Jacque",
     "what": "In Front of the House",
@@ -390,7 +420,8 @@
     "creditChecked": "2026-11-08"
   },
   "VV": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 4, 1280, 914],
     "alt": "A seated woman counts coins at a table under a ruined roof, around her hooded and fishlike figures hoard, steal and crawl among coins, bags and burning ruins.",
     "who": "Pieter van der Heyden, after Pieter Bruegel the Elder; published by Hieronymus Cock",
     "what": "Avarice (Avaritia), from \"The Seven Deadly Sins\"",
@@ -403,7 +434,8 @@
     "creditChecked": "2026-11-08"
   },
   "DM": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A globe at the centre of nested rings for the planets and a tilted band of zodiac signs inside a ring of latitude lines.",
     "who": "Andreas Cellarius, engraved by Jan van Loon",
     "what": "Scenographia systematis mundani Ptolemaici, plate 2 of Harmonia macrocosmica",
@@ -417,6 +449,7 @@
   },
   "Mech": {
     "place": "right",
+    "ink": [253, 13, 1023, 893],
     "alt": "A spoked wheel with a cord and a 6 lb weight on the axle and a 1 lb weight on the rim.",
     "who": "James Reynolds",
     "what": "Wheel and axle (figure 10 of five), Principles of science, Large series, No. 2, Mechanical powers",
@@ -429,7 +462,8 @@
     "creditChecked": "2026-11-08"
   },
   "Col": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "Two concentric rainbows over a flat country of farm buildings and trees under a cloudy sky, small letters along the horizon.",
     "who": "Royce",
     "what": "Meteorology: a double rainbow over fields in the country",
@@ -443,6 +477,7 @@
   },
   "Phgn": {
     "place": "right",
+    "ink": [0, 78, 1205, 821],
     "alt": "A lion’s head seen from the front beside a bearded man’s head seen from the front, the brow and hair drawn alike",
     "who": "L. P. Baltard and A. Le Grand, after Charles Le Brun",
     "what": "Dissertation sur un traité de Charles Le Brun, concernant le rapport de la physionomie humaine avec celle des animaux",
@@ -455,7 +490,8 @@
     "creditChecked": "2026-11-08"
   },
   "MXG": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A round figure of concentric bands, a cloud ring, a dark ring, ringed bands and a sun with a face at the centre.",
     "who": "Robert Fludd; plates engraved by Johann Theodor de Bry and Matthäus Merian the elder",
     "what": "Concentric rings of cloud and light around a sun, from Utriusque cosmi historia, volume 1",
@@ -469,6 +505,7 @@
   },
   "Aud": {
     "place": "right",
+    "ink": [182, 44, 1050, 914],
     "alt": "A head in profile, cut open to show the outer ear, the passage and drum, the small bones and the inner ear, with a probe in the ear",
     "who": "Thomas Buchanan",
     "what": "An External and Internal View of the Organ of Hearing in Situ, from An Engraved Representation of the Anatomy of the Human Ear",
@@ -482,6 +519,7 @@
   },
   "Lin": {
     "place": "right",
+    "ink": [146, 66, 1120, 863],
     "pre": true,
     "alt": "Ancient bronze compasses and calipers above a long folding rule, shown open and half folded",
     "note": "Bronze compasses, calipers and a folding foot-rule found at Pompeii. Dots on the rule mark sixteen digits on one face and twelve inches on the other.",
@@ -497,6 +535,7 @@
   },
   "Vent": {
     "place": "right",
+    "ink": [193, 0, 1083, 914],
     "alt": "A circle of twenty-four wind names in Latin set round a ring with a star-shaped diagram of lines inside.",
     "who": "Attributed to Peter Flötner and others, for Walther Ryff’s Vitruvius",
     "what": "Figur der vier und zwentzig Wind, p. 96 of Vitruuius ... zehen Buecher von der Architectur",
@@ -510,6 +549,7 @@
   },
   "Mirab": {
     "place": "right",
+    "ink": [29, 129, 1140, 786],
     "alt": "A horse with a long straight horn on its brow leaps over open ground.",
     "who": "Jan Jonston (author); engraver not named",
     "what": "Monoceros Unicornu Einhorn, upper figure of Tab. X, in Historiae naturalis de quadrupedibus libri",
@@ -523,6 +563,7 @@
   },
   "Rhet": {
     "place": "right",
+    "ink": [0, 0, 1280, 914],
     "alt": "A stout man in an eighteenth-century coat stands on a step with one arm stretched out and speaks to a crowded hall of deputies while a priest and others in the foreground look up at him.",
     "who": "Anonymous (draughtsman-lithographer); printed by Veuve Gosselin, Paris",
     "what": "Mirabeau à l'Assemblée des États Généraux (Carnavalet inventory G.27667BIS)",
@@ -536,6 +577,7 @@
   },
   "Poet": {
     "place": "right",
+    "ink": [0, 103, 1278, 885],
     "alt": "Four mourning figures in long robes, three carrying jars, walk in a row with heads bowed.",
     "who": "John Flaxman (designer); Thomas Piroli (engraver)",
     "what": "Orestes, Electra and the Chorus of Trojan Dames bring oblations (Choephorae 1), plate 19 of Compositions from the Tragedies of Aeschylus",
@@ -549,6 +591,7 @@
   },
   "MM": {
     "place": "right",
+    "ink": [25, 106, 1189, 811],
     "alt": "Two engraved heads side by side: at left a head in a headcloth with raised brows and wide eyes, at right a young man with long curls and a calm, level gaze.",
     "who": "Charles Le Brun, engraved by John Tinney",
     "what": "Desire, and Joy with Tranquility, plate 4 of a set of Le Brun’s passions",
@@ -561,7 +604,8 @@
     "creditChecked": "2026-11-08"
   },
   "Prob": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "In a study with jars, a hung crocodile and drawers of papers, an old man in a fur-edged coat sights a long telescope through a window of stars while a young man holds a book.",
     "who": "Charles Grignion the Elder, after Samuel Wale, as the holder gives it (the plate is signed I. Taylor)",
     "what": "Astronomy: an astronomer in his study, looking out of the window with a telescope",
@@ -575,6 +619,7 @@
   },
   "Plant": {
     "place": "right",
+    "ink": [44, 0, 1268, 899],
     "alt": "One strawberry plant shown whole, with its fibrous roots, a crown of stalks, large toothed leaves, flowers and ripe fruit.",
     "who": "Basilius Besler",
     "what": "Fraga fructu magno, with the white and red strawberries, Hortus Eystettensis",
@@ -588,6 +633,7 @@
   },
   "Spir": {
     "place": "right",
+    "ink": [142, 39, 1117, 914],
     "alt": "Both lungs seen from behind, each in an upper and a lower lobe, with the windpipe's branches and the great vessels running between them, in shaded engraving.",
     "who": "Benoît-Louis Prévost, after Albrecht von Haller",
     "what": "Anatomie, second plate XVI, figure 2: the lungs and their vessels, Encyclopédie",
@@ -600,7 +646,8 @@
     "creditChecked": "2026-11-08"
   },
   "RhetAl": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A bearded old man in a hooded cloak holds a scroll while a curly-haired child sits on a cushioned chair with a hand at his brow; fluted columns stand behind them.",
     "who": "Johann Sebastian Müller (?), after Johann Heinrich Ramberg",
     "what": "Alexander und sein Lehrer Aristoteles",
@@ -613,7 +660,8 @@
     "creditChecked": "2026-11-08"
   },
   "AthPol": {
-    "place": "right",
+    "place": "left",
+    "ink": [0, 0, 1280, 914],
     "alt": "A long Doric temple seen from a corner, with fourteen columns on its flank and a pediment, standing on a rise with a ruined tower behind and a few seated and mounted men in the foreground.",
     "who": "Julien-David Le Roy, engraved by Le Bas",
     "what": "Vue du Temple de Thésée, plate XI of Les ruines des plus beaux monuments de la Grèce",

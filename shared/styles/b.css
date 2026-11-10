@@ -72,15 +72,15 @@
 .dir-b .b-search button { border: 0; background: none; font: 650 15px/1 var(--sans); color: var(--red-ink); text-transform: uppercase; letter-spacing: .04em; }
 .dir-b .b-cont { margin: 22px 0 0; font: 500 16px/1.4 var(--sans); }
 .dir-b .b-cont a { color: var(--ink); }
-.dir-b .b-cont-t { border-bottom: 1px solid var(--red); padding-bottom: 2px; }
+.dir-b .b-cont-t { border-bottom: 1px solid var(--red-ink); padding-bottom: 2px; }
 .dir-b .b-div { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 48px; padding: 30px 72px 40px; border-top: 1px solid var(--ink); }
-.dir-b .b-dh { margin: 0; font: 600 56px/.88 var(--sans); font-family: var(--tface); font-weight: var(--tw); text-transform: uppercase; letter-spacing: -.005em; color: var(--red); text-wrap: balance; }
+.dir-b .b-dh { margin: 0; font: 600 56px/.88 var(--sans); font-family: var(--tface); font-weight: var(--tw); text-transform: uppercase; letter-spacing: -.005em; color: var(--red-ink); text-wrap: balance; }
 .dir-b .b-sub { font: italic 400 18px/1.3 var(--read); color: var(--mid); margin: 18px 0 4px; }
 .dir-b .b-sub:first-child { margin-top: 0; }
 
 .dir-b .b-sub.sub-caps, .dir-b .b-sub.sub-red { font: 600 30px/.95 var(--sans); font-family: var(--tface); font-weight: var(--tw); text-transform: uppercase; color: var(--ink); margin: 40px 0 12px; }
 .dir-b .b-sub.sub-red { color: var(--red); }
-.dir-b .b-sub.sub-label { font: 600 14px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--red-ink); margin: 38px 0 6px; padding-bottom: 8px; border-bottom: 2px solid var(--red); }
+.dir-b .b-sub.sub-label { font: 600 14px/1.2 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--red-ink); margin: 38px 0 6px; padding-bottom: 8px; border-bottom: 2px solid var(--red-ink); }
 .dir-b .b-sub[class*="sub-"]:first-child { margin-top: 0; }
 .dir-b .b-works { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 40px; }
 .dir-b .b-works a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 14px; padding: 10px 0; border-bottom: 1px solid var(--line2); color: var(--ink); }
@@ -107,7 +107,7 @@
 .dir-b .b-facts { margin: 0; display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px 18px; font-size: 17px; line-height: 1.45; max-width: 880px; }
 .dir-b .b-facts dt { font: 600 13.5px/1.75 var(--sans); color: var(--mid); text-transform: uppercase; letter-spacing: .04em; }
 .dir-b .b-facts dd { margin: 0; }
-.dir-b .b-facts dd a { color: var(--ink); border-bottom: 1px solid var(--red); }
+.dir-b .b-facts dd a { color: var(--ink); border-bottom: 1px solid var(--red-ink); }
 .dir-b .b-facts dd a:hover { color: var(--red-ink); }
 .dir-b .b-facts dd small { font: 500 13px/1 var(--sans); color: var(--mid); margin-left: 6px; }
 .dir-b .b-sec { padding: 0 72px 54px; }
@@ -122,7 +122,7 @@
 .dir-b .b-bk summary::-webkit-details-marker { display: none; }
 .dir-b .b-bk summary::after { content: ""; width: 8px; height: 8px; border-right: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); transform: rotate(45deg); justify-self: end; align-self: center; }
 .dir-b .b-bk[open] summary::after { transform: rotate(225deg); }
-.dir-b .b-bkn { font: 600 58px/.9 var(--sans); letter-spacing: -.01em; color: var(--red); white-space: nowrap; }
+.dir-b .b-bkn { font: 600 58px/.9 var(--sans); letter-spacing: -.01em; color: var(--red-ink); white-space: nowrap; }
 .dir-b .b-bkn[lang="grc"] { font-size: 62px; }
 .dir-b .b-bkw { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .dir-b .b-bk summary:hover .b-bkf, .dir-b .b-bk[open] .b-bkf { color: var(--red-ink); }
@@ -612,6 +612,101 @@ body.home { margin: 0; padding: 0; max-width: none; }
  .dir-b.pg-work .b-po.work picture { position: static; width: 100%; height: var(--plate-height, auto); aspect-ratio: 640 / 558; justify-content: center; }
  .dir-b.pg-work .b-po.work img { width: min(100%, calc(var(--plate-height, 100vw) * 640 / 558)); max-height: none; height: auto; aspect-ratio: 640 / 558; }
  .dir-b.pg-work .b-ctas > #work-resume-slot:not(:empty) { display: contents; }
+}
+
+/* D26 (John, 9–10 Nov 2026). Colour B: on the home and work pages every red
+   is --red-ink. The token --red stays: the reader, lexicon and search use it. */
+.dir-b:where(.pg-home, .pg-work) :is(.b-facts, .b-print, .b-cred) a { text-decoration-color: var(--red-ink); }
+/* The home Greek line is drawn from 961px only. */
+.dir-b .b-gt { display: none; }
+/* The source runs Continue, then search, and Start reading, then the blurb
+   (the order of the columns from 961px). Under that width the page keeps its
+   one column in the order it has always had. */
+@media (max-width: 960px) {
+  .dir-b.pg-home .b-intro-r { display: flex; flex-direction: column; }
+  .dir-b.pg-home #resume-slot { order: 1; }
+  .dir-b.pg-work .b-po-below { display: flex; flex-direction: column; }
+  .dir-b.pg-work .b-words { display: contents; }
+  .dir-b.pg-work .b-wk-gt { order: 1; }
+  .dir-b.pg-work .b-wk-blurb { order: 2; }
+  .dir-b.pg-work .b-ctas { order: 3; }
+  .dir-b.pg-work .b-related { order: 4; }
+  .dir-b.pg-work .b-po-below .b-wk { order: 5; padding-left: 0; padding-right: 0; }
+}
+/* From 961px the home and work pages stand on one grid: a column of at most
+   1168px, 72px from the window's edges, in three columns 40px apart. The top
+   block and the home list share it, so a title is exactly one list column
+   wide; the fitter (poster-fit.ts) sets it as large as that column allows.
+   Titles are ink. The block ends on one foot line, and what follows starts
+   44px under it. Plates and the bust are cut to their ink box (--ix, --iy,
+   --iw, --ih: plates.json, in the plate's own 1280×914 pixels). */
+@media (min-width: 961px) {
+  .dir-b:where(.pg-home, .pg-work) .b-page { max-width: 1312px; margin-inline: auto; }
+  .dir-b:where(.pg-home, .pg-work) .b-foot { margin: 0 72px; padding-left: 0; padding-right: 0; }
+  .dir-b:where(.pg-home, .pg-work) .b-top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 40px; margin: 0 72px; padding-bottom: 44px; }
+  /* 44px is the unfitted size (no script): the longest title's longest word
+     still fits a 245px column. The fitter sizes each line itself. */
+  .dir-b:where(.pg-home, .pg-work) .b-top .b-po.tp-side .b-po-t { position: static; width: auto; justify-content: flex-start; font-size: 44px; color: var(--ink); opacity: 1; }
+  /* The cut box is its own layer, so the box, not the image in it, takes
+     the page's ground. */
+  .dir-b:where(.pg-home, .pg-work) .b-top .b-po picture { isolation: isolate; mix-blend-mode: multiply; }
+  :root[data-theme="dark"] .dir-b:where(.pg-home, .pg-work) .b-top .b-po picture { mix-blend-mode: normal; }
+  .dir-b:where(.pg-home, .pg-work) .b-top .b-po.tp-side img { position: absolute; inset: auto; left: calc(var(--ix) / var(--iw) * -100%); top: calc(var(--iy) / var(--ih) * -100%); width: calc(1280 / var(--iw) * 100%); height: auto; max-width: none; max-height: none; aspect-ratio: 1280 / 914; object-fit: fill; }
+
+  /* Home: bust | title and Greek line | home line, Continue, search. The
+     bust is as tall as the title and the Greek line: from the title's cap
+     line (--cap, set by the fitter) to the Greek line's baseline, which is
+     the foot line. */
+  .dir-b.pg-home .b-top { padding-top: 14px; }
+  .dir-b.pg-home .b-top > .b-po.pl.tp-side { grid-column: 1 / span 2; display: grid; grid-template-columns: subgrid; grid-template-rows: auto auto; align-content: end; height: auto; aspect-ratio: auto; overflow: visible; background: none; }
+  .dir-b.pg-home .b-top > .b-po picture { position: absolute; grid-column: 1 / 2; grid-row: 1 / 3; top: var(--cap, calc(var(--unfit) * .097)); bottom: 0; left: 50%; transform: translateX(-50%); aspect-ratio: var(--iw) / var(--ih); overflow: hidden; }
+  /* Before the fitter runs (and if it never does) the home title stands at
+     the size the fitter gives it: in Oswald 700, COMPLETE fills a column at
+     1/4.39 of the column's width, and the four lines break the same way. So
+     the bust and the list do not move when the title is fitted. */
+  .dir-b.pg-home .b-top > .b-po { --unfit: calc((min(1168px, 100cqw - 144px) - 80px) / 13.17); }
+  .dir-b.pg-home .b-top .b-po.tp-side .b-po-t { grid-column: 2; grid-row: 1; font-size: var(--unfit); letter-spacing: .01em; }
+  .dir-b.pg-home .b-top .b-gt { display: block; grid-column: 2; grid-row: 2; margin: 13px 0 -.27em; font: 400 calc((min(1168px, 100cqw - 144px) - 80px) / 49.1) / 1.3 var(--read); color: var(--red-ink); white-space: nowrap; }
+  .dir-b.pg-home .b-top > .b-intro { grid-column: 3; display: flex; flex-direction: column; align-items: stretch; gap: 0; padding: 1px 0 0; }
+  .dir-b.pg-home .b-top .b-lead { font-size: 21px; max-width: none; }
+  .dir-b.pg-home .b-top .b-intro-r { margin-top: auto; padding-top: 18px; }
+  .dir-b.pg-home .b-top .b-cont { margin: 0 0 9px; }
+
+  /* Home list: the division's name above its works; group labels at the
+     right end of their rules; works three across. */
+  .dir-b.pg-home .b-div { display: block; margin: 0 72px; padding: 26px 0 34px; }
+  .dir-b.pg-home .b-dh { font-size: 40px; line-height: .92; }
+  .dir-b.pg-home .b-dw { margin-top: 16px; }
+  .dir-b.pg-home .b-sub.sub-label { margin: 30px 0 6px; padding-bottom: 10px; text-align: right; }
+  .dir-b.pg-home .b-sub.sub-label:first-child { margin-top: 0; }
+  .dir-b.pg-home .b-works { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .dir-b.pg-home .b-works li { display: grid; }
+  .dir-b.pg-home .b-works a { align-content: start; }
+  .dir-b.pg-home .b-wt { grid-column: 1 / -1; }
+  .dir-b.pg-home .b-wg { line-height: 24px; align-self: baseline; }
+  .dir-b.pg-home .b-we { grid-row: 2; align-self: baseline; }
+
+  /* Work page: the plate takes one end (.pl-left, .pl-right: plates.json
+     `place`); the other two columns are title, then words. The tallest
+     column sets the foot line and the buttons sit on it. */
+  .dir-b.pg-work .b-crumb { margin-bottom: 16px; }
+  .dir-b.pg-work .b-top { --c-title: 1; --c-words: 2; --c-plate: 3; grid-template-rows: auto auto 1fr; }
+  .dir-b.pg-work .b-top.pl-left { --c-title: 2; --c-words: 3; --c-plate: 1; }
+  .dir-b.pg-work .b-top > .b-po.work, .dir-b.pg-work .b-top > .b-po-below { display: contents; }
+  .dir-b.pg-work .b-top .b-po.tp-side .b-po-t { grid-column: var(--c-title); grid-row: 1; }
+  /* One line keeps its 42px box when the fitter steps the size down; the
+     fitter sets 1.5 when the title has to wrap. */
+  .dir-b.pg-work .b-top .b-wk-gt { grid-column: var(--c-title); grid-row: 2; margin: 12px 0 0; font-size: 28px; line-height: 42px; }
+  .dir-b.pg-work .b-top .b-ctas { grid-column: var(--c-title); grid-row: 3; align-self: end; margin-top: 28px; }
+  .dir-b.pg-work .b-top .b-words { grid-column: var(--c-words); grid-row: 1 / span 3; margin-top: -1px; }
+  .dir-b.pg-work .b-top .b-wk-blurb { font-size: 21px; max-width: none; margin: 0; }
+  .dir-b.pg-work .b-top .b-wk { padding: 0; margin-top: 22px; }
+  .dir-b.pg-work .b-top .b-po.work picture { position: relative; inset: auto; display: block; grid-column: var(--c-plate); grid-row: 1 / span 3; align-self: start; justify-self: center; margin-top: 6px; width: min(100%, calc(100% * var(--iw) / var(--ih))); aspect-ratio: var(--iw) / var(--ih); overflow: hidden; }
+}
+/* A column under 330px: the search placeholder and the details step down. */
+@media (min-width: 961px) and (max-width: 1239px) {
+  .dir-b.pg-home .b-top .b-search input { font-size: 18px; }
+  .dir-b.pg-work .b-top .b-facts { grid-template-columns: 72px minmax(0, 1fr); column-gap: 12px; font-size: 15.5px; }
 }
 
 /* Search: the live query engine and controls in B. Desktop keeps its own view. */

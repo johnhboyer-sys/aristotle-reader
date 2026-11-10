@@ -168,7 +168,9 @@ export function fitPoster(el: HTMLElement) {
     const style = getComputedStyle(el);
     // Sideways work titles keep the kit's upright-phone setting (John, J4).
     const W = !home && phone && matchMedia('(min-width: 701px)').matches ? 354 : el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
-    const H = phone ? (home ? 300 : Number(poster.dataset.titleHeight || 210)) : el.clientHeight;
+    // From 961px the box is one list column wide and as tall as it needs:
+    // the largest size at which every line fits the column.
+    const H = phone ? (home ? 300 : Number(poster.dataset.titleHeight || 210)) : Infinity;
     const box = { W, H };
     const cv = document.createElement('canvas').getContext('2d')!;
     cv.font = '700 100px Oswald';
@@ -182,8 +184,14 @@ export function fitPoster(el: HTMLElement) {
         document.documentElement.classList.remove('poster-fitting');
         return;
     }
+    if (!phone) {
+        // The solver steps a pixel at a time; set the widest line to the
+        // column's exact width.
+        const widest = Math.max(...lines.map(x => measure(x.text) * x.f / 100 + .01 * x.f * (x.text.length - 1)));
+        for (const x of lines) x.f *= W / widest;
+    }
     const textH = lines.reduce((n, x) => n + x.f * .88, 0);
-    const gap = lines.length > 1 ? Math.max(0, Math.min((H - textH) / (lines.length - 1), .12 * Math.min(...lines.map(x => x.f)))) : 0;
+    const gap = phone && lines.length > 1 ? Math.max(0, Math.min((H - textH) / (lines.length - 1), .12 * Math.min(...lines.map(x => x.f)))) : 0;
     el.replaceChildren(...lines.map(x => {
         const span = document.createElement('span');
         span.className = 'ln';
@@ -195,16 +203,50 @@ export function fitPoster(el: HTMLElement) {
     el.style.alignItems = lines.length === 1 && measure(lines[0].text) * lines[0].f / 100 < W * .9 ? 'center' : '';
     el.dataset.set = lines.map(x => Math.round(x.f)).join(',');
     el.dataset.fitWidth = String(W);
+    // Oswald's capitals start .097em under the top of a .88 line. The home
+    // bust stands from that line (b.css).
+    if (phone) poster.style.removeProperty('--cap'); else poster.style.setProperty('--cap', `${(lines[0].f * .097).toFixed(1)}px`);
     el.dataset.fitRevision = String(Number(el.dataset.fitRevision || 0) + 1);
     document.documentElement.classList.remove('poster-fitting');
+}
+// A line of Greek kept on one line of its column, from 961px. With
+// data-fill (the home line) it is set exactly as wide as the column.
+// Otherwise (a work's Greek title) it only steps down from its own size, to
+// 20px at the least, and then wraps.
+function fitLine(el: HTMLElement) {
+    el.style.fontSize = '';
+    el.style.whiteSpace = '';
+    el.style.lineHeight = '';
+    if (matchMedia('(max-width: 960px)').matches) return;
+    el.style.whiteSpace = 'nowrap';
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const natural = range.getBoundingClientRect().width;
+    const W = el.clientWidth;
+    const size = parseFloat(getComputedStyle(el).fontSize);
+    if (!natural || !W) return;
+    if ('fill' in el.dataset) el.style.fontSize = `${(size * W / natural).toFixed(2)}px`;
+    else if (natural > W) {
+        const fitted = Math.floor(size * W / natural * 10) / 10;
+        el.style.fontSize = `${Math.max(20, fitted)}px`;
+        if (fitted < 20) { el.style.whiteSpace = ''; el.style.lineHeight = '1.5'; }
+    }
+    el.dataset.fitWidth = String(W);
 }
 // All work-poster cap arithmetic lives here, after the fonts and intro settle.
 function fitWorkPoster(el: HTMLElement) {
     const poster = el.closest<HTMLElement>('.b-po')!;
     const phone = matchMedia('(max-width: 960px)').matches;
-    const sideways = phone && matchMedia('(min-width: 701px)').matches;
-    const naturalHeight = poster.clientWidth * 652 / 1440;
-    poster.style.setProperty('--poster-height', `${naturalHeight}px`);
+    if (!phone) {
+        // From 961px the title is a column of the top block (b.css): no caps.
+        poster.style.removeProperty('--poster-height');
+        poster.style.removeProperty('--plate-height');
+        delete poster.dataset.titleHeight;
+        fitPoster(el);
+        return;
+    }
+    const sideways = matchMedia('(min-width: 701px)').matches;
+    poster.style.setProperty('--poster-height', `${poster.clientWidth * 652 / 1440}px`);
     poster.style.setProperty('--plate-height', `${poster.clientWidth * 558 / 640}px`);
     delete poster.dataset.titleHeight;
     fitPoster(el);
@@ -213,25 +255,24 @@ function fitWorkPoster(el: HTMLElement) {
     const rect = poster.getBoundingClientRect();
     const tail = start.getBoundingClientRect().bottom - rect.bottom;
     const budget = Math.max(1, sideways ? innerHeight - nav.offsetHeight : innerHeight - (rect.top + scrollY) - tail - 16);
-    if (phone) {
-        if (el.offsetHeight >= budget) {
-            poster.dataset.titleHeight = String(Math.max(14, (budget - 44) * .6));
-            fitPoster(el);
-        }
-        // Never enlarge a plate beyond its full-width natural cut.
-        const height = Math.min(poster.clientWidth * 558 / 640, Math.max(1, budget - el.offsetHeight));
-        poster.style.setProperty('--plate-height', `${height}px`);
-    } else {
-        poster.style.setProperty('--poster-height', `${Math.min(naturalHeight, Math.max(56, budget))}px`);
+    if (el.offsetHeight >= budget) {
+        poster.dataset.titleHeight = String(Math.max(14, (budget - 44) * .6));
         fitPoster(el);
     }
+    // Never enlarge a plate beyond its full-width natural cut.
+    const height = Math.min(poster.clientWidth * 558 / 640, Math.max(1, budget - el.offsetHeight));
+    poster.style.setProperty('--plate-height', `${height}px`);
 }
 export async function initPosters() {
     const titles = [...document.querySelectorAll<HTMLElement>('[data-fit="poster"]')];
     try {
         await document.fonts.load('700 100px Oswald');
         await document.fonts.ready;
-        const refit = () => titles.forEach(el => el.closest('.pg-work') ? fitWorkPoster(el) : fitPoster(el));
+        const greek = [...document.querySelectorAll<HTMLElement>('[data-fit="line"]')];
+        const refit = () => {
+            titles.forEach(el => el.closest('.pg-work') ? fitWorkPoster(el) : fitPoster(el));
+            greek.forEach(fitLine);
+        };
         refit();
         document.fonts.addEventListener('loadingdone', refit);
         if (titles.some(el => el.closest('.pg-work'))) window.addEventListener('resize', refit);
@@ -242,7 +283,7 @@ export async function initPosters() {
             let height = el.clientHeight;
             const observer = new ResizeObserver(() => {
                 if (el.clientWidth !== width || (!band.matches && el.clientHeight !== height)) {
-                    if (el.closest('.pg-work')) fitWorkPoster(el); else fitPoster(el);
+                    refit();
                     width = el.clientWidth;
                     height = el.clientHeight;
                 }

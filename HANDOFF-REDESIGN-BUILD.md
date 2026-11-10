@@ -1,111 +1,96 @@
 # HANDOFF: redesign build (direction B)
 
-Rewritten 10 Nov 2026, 10:48, by the session that took the home hero to
-Figma. All five stages of B are built and committed on `claude/redesign-build`.
-The PR is still blocked on the home page, and the fix has grown: over 9–10 Nov
-John ruled a new top block and a regrouped list for the home page, **and** a
-new top block for every work page. That design is drawn in Figma and written
-up as a spec. **None of it is built.** Rewrite this file (don't append) when
-you hand off.
+Rewritten 10 Nov 2026, 12:20, mid-task: John had to close his laptop. The home
+and work-page design (D26) **is now built** in this worktree, **uncommitted**.
+Rewrite this file (don't append) when you hand off.
 
 ## Start here
 
 1. Work in this worktree,
    `~/Developer/aristotle-reader/.claude/worktrees/redesign-build`, on branch
-   `claude/redesign-build`. The branch is **not pushed**; the work exists only
-   here.
+   `claude/redesign-build`. The branch is **not pushed**, and today's work is
+   **not committed**: `git status` shows it all. Commit only when John says.
 2. Read `CLAUDE.md`, then this file, then
-   `docs/redesign-home-and-work-spec.md`. The spec has every measurement and
-   marks each statement as ruled by John, drawn and unquestioned, or only my
-   recommendation.
-3. For John's exact words and the order of events, read
-   `.redesign-shots/notes/hero-rounds.md`. `.redesign-shots/` is untracked and
-   must stay so: never `git add` it.
-4. **Do not build yet.** John's last words on building were "Not yet" and
-   "More Figma"; then he closed the session ("lets wrap now"). Ask him before
-   you start.
-5. Safeguards still bind:
-   - nothing merges to `main`, nothing deploys, nothing is pushed until John
-     says yes;
-   - the kit, the mockup and `docs/redesign-kit/` are read-only;
-   - blast radius is `app/`, `shared/`, `app/scripts/`;
-   - in Figma, never edit John's own frames, `4:2` ("Yours · move things
-     here") and `23:1230`. Draw new frames beside the current ones;
-   - implementation and verification are never the same model family. Load
-     the `delegate` skill before your first spawn, and route by the session's
-     budget board. This session spawned nothing.
+   `docs/redesign-home-and-work-spec.md` (its "Nothing here is built" line is
+   now out of date; fix it when you commit).
+3. John's words for each ruling: `.redesign-shots/notes/hero-rounds.md`.
+   `.redesign-shots/` is untracked and must stay so: never `git add` it.
+   Today's notes, briefs, review results, scripts and shots are in
+   `.redesign-shots/notes/d26/`.
+4. John said "Read the spec and continue" on 10 Nov at 11:05; I took that as
+   his go to build and told him so. He has seen three shots at 1152×663 and
+   has not yet given a verdict.
+5. Safeguards still bind: nothing merges, deploys or is pushed until John says
+   yes; the kit and `docs/redesign-kit/` are read-only; blast radius is `app/`,
+   `shared/`, `app/scripts/`; implementation and verification are never the
+   same model family.
 
-## Where the design stands
+## What was built on 10 Nov (all uncommitted)
 
-Figma: https://www.figma.com/design/3FGcwopu3awgAt63aiwlmH, page "Home hero".
-The canvas was tidied on 10 Nov:
+| File | What changed |
+|---|---|
+| `shared/lib/works.ts` | `CATEGORIES` regrouped: the dubious and spurious works stand in the main divisions; new group II.d "Minor Works (Opuscula)"; the appendix division is gone |
+| `app/src/data/plates.json` | `place` per work from the ruled list (22 left with the Isagoge, 25 right); `ink: [l, t, r, b]` per plate |
+| `app/scripts/measure-plate-ink.mjs` | new: measures each plate's ink box (`--check` verifies) |
+| `app/src/pages/index.astro` | `.b-top` wrapper; bust cut to its ink box; Greek line `p.b-gt`; Continue before search in the source |
+| `app/src/components/Landing.astro` | `.b-top.pl-left/.pl-right`; buttons before the blurb in the source; blurb, related and facts inside `.b-words` |
+| `app/src/lib/poster-fit.ts` | from 961px the title fills one column exactly; `fitLine` fits Greek lines; the old desktop poster-height arithmetic is gone |
+| `shared/styles/b.css` | the block headed "D26 (John, 9–10 Nov 2026)": colour B, the ≤960px `order` rules that keep phone and sideways as they were, and the 961px-up grid for both page types |
+| `app/src/__tests__/redesign.test.ts` | plate sides, ink boxes, new division ids |
+| `app/scripts/check-redesign.mjs`, `app/scripts/fixtures/poster-golden.json` | **written by a Sonnet agent, not yet reviewed by me**: eight new gates (R-H4, R-H5, R-H6, R-W4, R-W5, R-C3, R-H7, R-H8) and repairs to the old ones |
 
-- **CURRENT DESIGN** (top of the canvas, y −5600 to −1700): the home page for
-  a new and a returning reader, three work pages, the same at John's Safari
-  size (1152×663), the whole home page, and the plate-side picture.
-- **OPEN · YOUR CALL** (inside that block): the two frames John has not ruled.
-- **HISTORY** (y 0 down): every earlier round, oldest first, each row
-  labelled. Nothing there is current.
+## Where verification stands
 
-Node ids are in the spec, §13. Reference shots of the current frames are in
-`.redesign-shots/notes/vplato/current/`.
+- Unit tests on the built code: app 115/115, shared 735/735, scripts 99/99,
+  svelte-check 0 errors. Run before the last three small fixes below.
+- Measured against the Figma frames at 1525×896 and 1152×663: within 3px, in
+  Chromium and WebKit. **Firefox not checked** (Playwright has none here).
+- Phone and sideways: 86 before/after shots (baseline in
+  `.redesign-shots/notes/d26/phone-baseline/`); shapes differ only in the
+  crumb, the regrouped list, and colour.
+- Old gate suite against the new build (before any gate edits): 34 PASS, 8
+  FAIL, all stale desktop expectations (R-T1-home, R-C1, R-T3, R-H2, R-W1,
+  R-W3, R-T1, R-T2). Log: `.redesign-shots/notes/d26/gates-first.log`.
+- **Gates agent (Sonnet): interrupted.** It had written all eight gates and
+  was in its final full-suite run (log `/tmp/d26-gates.log`) when the laptop
+  closed. Its report never arrived. Treat its gate edits as unreviewed: read
+  the diff of `check-redesign.mjs`, check each repaired old gate keeps its
+  phone and sideways assertions untouched, and check R-W1 "Cat sections out of
+  order" was a stale expectation and not a real defect.
+- Grok code review (static): no blockers.
+  `.redesign-shots/notes/d26/grok-review-result.log`. Acted on: the bust and
+  list no longer jump when the home title is fitted (CSS pre-fit size
+  `--unfit`).
+- Codex screenshot judge (gpt-6.1-sol, medium): 3 of 9 pairs PASS, 6 FAIL on
+  its 2px bar. `.redesign-shots/notes/d26/codex-judge-result.md`. My reading:
+  Figma's whole-pixel line heights (≤3px), as-built book rows, and one real
+  wrap (Mirabilibus in the home list, 2px too wide for one line). Acted on:
+  the work page's Greek title keeps a 42px line when it steps down.
+- **`app/dist` is stale by three small fixes** made after the last build (the
+  42px Greek line, `--unfit`, the 44px no-script title size). Rebuild
+  (`cd app && PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22, about 25s), then
+  re-run the unit tests, the new gates with their proofs, and the full suite.
 
-**Ruled** (John's words are in the spec, §2):
+## Next steps
 
-- Titles are tight stacks in ink, set in a box one list column wide. Three
-  columns on home (bust, title and Greek line, home line and search) and on
-  work pages (plate at one end; title, then blurb and details).
-- Plate side follows the picture: 21 works left, 25 right
-  (`.redesign-shots/notes/vplato/r3/plate-sides.json`). The crumb stays left.
-- Home list: division names above their works, three columns, group labels
-  right-aligned.
-- Dubious and spurious works sit in the main divisions with tags. The small
-  treatises and the Problemata form "Minor works (Opuscula)".
-- Colour B: every red on these pages is `--red-ink` (#b42419). The home Greek
-  line is that red.
-
-**Open, John's call:**
-
-1. The home Greek line: σῳζόμενα (drawn) or ἔργα (frame `60:5938`).
-2. The Greek title on work pages: grey (drawn) or deep red (frame `59:5909`).
-
-**Not drawn** (spec §8 has all thirteen). The ones most likely to bite:
-
-- a returning reader at 1152×663: the Continue line does not fit as specified;
-- dark mode;
-- the longest titles;
-- how far colour B reaches (reader, lexicon, search, phone posters);
-- the crop for each of the 25 cut-out plates. Only two are drawn.
-
-## The task
-
-1. Get John's two answers, and draw whatever else he asks for in Figma.
-2. On his go, build to the spec:
-   - the list: regroup `CATEGORIES` in `shared/lib/works.ts`, restyle the list;
-   - the home top block;
-   - the work-page top block, `place` and the ink box per plate in
-     `app/src/data/plates.json`;
-   - colour B on these two page types. Do not change the `--red` token; other
-     pages use it and are not ruled.
-3. Write the spec's §12 checks as gates in `app/scripts/check-redesign.mjs`,
-   failing case first, each printing what it examined. Update R-H1, R-T1-home
-   and R-T3 only where they assume the old layout, and say why for each.
-   Re-run R-A2.
-
-**Done means:**
-
-1. The §12 gates pass, each with a `--prove` case that fails.
-2. Phone (700px and under) and sideways (701–960px) are unchanged, and the
-   existing gates (42 today) stay green.
-3. Checked at 1152×663 and 1525×896, light and dark, and at the widths in the
-   spec's §8.10.
-4. Every "Mine" and "not drawn" item in the spec's §8 has been shown to John,
-   or built as recommended and listed for him.
-5. A screenshot judge from another model family passes the build against the
-   shots in `.redesign-shots/notes/vplato/current/`.
-6. Logged as **D26**, with John's rulings quoted, in
-   `.redesign-shots/notes/departures-amend.md` and in the PR body.
-7. *(John)* He says yes to old-against-new side-by-sides.
+1. Rebuild; restart the preview (`redesign-preview` in the main checkout's
+   `.claude/launch.json`, port 4329); review the agent's gate diff; run the
+   full suite and every `--prove`. A cross-family read of the new gates
+   (Codex or Grok, static) is still owed.
+2. Show John the undrawn cases (`.redesign-shots/notes/d26/undrawn/`) and get
+   his calls:
+   - phone: deeper reds now reach the phone, but the phone title keeps the
+     bright red (spec §8.12);
+   - returning reader at 1152×663: a two-line Continue pushes the block down
+     about 44px, and the title and bust stand on the foot line;
+   - dark mode: plates on their paper, cut tight to the ink;
+   - the nav sits on the 1168px column on home and work pages only;
+   - the Mirabilibus row wraps in the home list at 1525;
+   - the two open items in the spec's §2 (σῳζόμενα or ἔργα; grey or red
+     Greek title on work pages).
+3. D26 is logged in `.redesign-shots/notes/departures-amend.md`; add it to
+   `.redesign-shots/notes/pr-body.md`.
+4. On John's yes: commit, then the "Then finish" list below.
 
 ## Then finish
 
@@ -136,17 +121,17 @@ Node ids are in the spec, §13. Reference shots of the current frames are in
 | OG cards | `c6a276c90c`, wording John's |
 | Gate fixes | `e98749a8a3`: Grok's 12 gate-honesty findings closed; eng-table 1em; WordPopup Escape guard gated to B |
 | Merge of main (PR #194) | `fa39aef88b`: one import conflict; Beta Code accent fix carried into `doBSearch`; compat hash updated (stage 3 + main's hunk only, checked); Grok: no findings |
-| Home and work-page design | ruled in Figma, spec written, **not built** |
-| Tracked files | clean: the tree matches the last commit, apart from this file and the new spec |
+| Home and work-page design (D26) | **built 10 Nov, uncommitted**; gates written by an agent, unreviewed |
+| Tracked files | **dirty**: ten files changed on 10 Nov, one new script; nothing committed |
 | Earlier hero build | superseded; saved as `.redesign-shots/notes/hero-build/landing-hero-superseded.patch` (applies cleanly; 117 lines added to `index.astro`, `b.css`, `check-redesign.mjs`). Its division ids and `.b-gt` Greek line are reusable. Its layout and its R-H4 gate are not |
-| Preview server | **stopped** on 10 Nov. `app/dist` is stale: it was built from the superseded hero. Rebuild before you trust a screenshot |
+| Preview server | was running on 4329 when the laptop closed. `app/dist` is stale by three small fixes: rebuild before you trust a screenshot or a gate |
 | Gates on the merged build | 42 PASS; proofs 109/109 caught (run before the merge, on the committed tree) |
 | build:public | green: 47 works, preflight ok, shared LSJ 76,345 keys ok, 7,559 pages, 0 broken links of 414,112 |
 | deploy:dry | green: leak check at baseline (Rackham 2 known-benign; Ackrill, Tredennick, Irwin 0), held works none, shards match; no push |
 | Tests | app 115/115, shared 735/735, scripts 99/99, svelte-check 0 errors |
 | Share images | X teaser and Stripe image in `.redesign-shots/share/`, both handed to John |
 
-Nothing in the gate, build and test rows was re-run on 10 Nov.
+The gate, build:public and deploy:dry rows below date from before D26 and must be re-run.
 
 ## Follow-ups for the PR body (not this PR)
 
