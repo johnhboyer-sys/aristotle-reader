@@ -20,7 +20,7 @@ import {
 import { sanitizeHtml } from '../lib/html';
 import { isChapterSection } from '@shared/lib/data';
 import { jsonLdSafe } from '../lib/jsonld';
-import { bookSpan, translatorName, transParts } from '../lib/nav';
+import { bookSpan, translatorName } from '../lib/nav';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
@@ -70,7 +70,6 @@ const titles: Record<string, Record<string,string>> = translationTitles[primary?
 const ostwaldTitles = primary?.id === 'ostwald' && Object.values(translationTitles.ostwald || {}).some((chapters) => Object.keys(chapters as object).length);
 const division = CATEGORIES.find(c => [...(c.works || []), ...(c.subcategories || []).flatMap(g => g.works)].some(w => w.id === workId));
 const divisionName = division ? DIVISION_NAMES[division.title] : 'Commentary';
-const extent = `${work.books > 1 ? `${work.books} books, ` : ''}${totalChapters} chapter${totalChapters === 1 ? '' : 's'}`;
 const chapterTitle = (book: number, chapter: string) => (titles[String(book)]?.[chapter] || `Chapter ${chapter}`).replace(/\[\^[^\]]*\]/g, '');
 const chapterLink = (book: number, chapter: string) => `${base}${workPath(workId, book)}#ch-${book}-${chapter}`;
 const plate = plates[workId as keyof typeof plates];
@@ -174,9 +173,8 @@ const breadcrumbLd = Astro.site
             {work.related?.map(r => getWork(r.id) && <p class="b-cred b-related"><a href={`${base}${workLanding(r.id)}`}>{r.label}</a></p>)}
             <section class="b-wk" data-section="facts">
               <dl class="b-facts">
-                <dt>Greek</dt><dd>{work.greekSource.full}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
-                <dt>English</dt><dd>{editions.map(t => { const parts = transParts(t.name); return <><div><span data-english-entry><a href={readHref(`?trans=${t.id}`)}>{parts.who}</a>{parts.rest && `, ${parts.rest}`}</span>{editions.length > 1 && primary?.id === t.id && <>{' '}<small>opens first</small></>}</div>{workId === 'EN' && t.id === 'ostwald' && <div data-english-entry><a href={`${base}/EN/glossary`}>glossary</a></div>}</>; })}</dd>
-                <dt>Length</dt><dd>{extent}</dd>
+                <dt>Greek</dt><dd>{work.greekSource.short}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
+                <dt>English</dt><dd>{editions.map(t => { const reviser = t.name.match(/, rev\. (?:\S+ )*(\S+) \(/)?.[1]; const imprint = t.name.match(/\(.*\)$/)?.[0]; return <><div><span data-english-entry><a href={readHref(`?trans=${t.id}`)}>{t.short}</a>{reviser && `, rev. ${reviser}`}{imprint && ` ${imprint}`}</span>{editions.length > 1 && primary?.id === t.id && <>{' '}<small>opens first</small></>}</div>{workId === 'EN' && t.id === 'ostwald' && <div data-english-entry><a href={`${base}/EN/glossary`}>glossary</a></div>}</>; })}</dd>
               </dl>
             </section>
           </div>

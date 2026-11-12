@@ -1,8 +1,8 @@
 # Handoff spec: home page and work pages (direction B, desktop)
 
 Written 10 Nov 2026 from the Figma frames John ruled on over 9–10 Nov.
-Nothing here is built. The branch `claude/redesign-build` still carries the
-kit's tall home poster.
+Built on 10 Nov 2026 on `claude/redesign-build` (D26). John's verdict on the
+built pages is still owed; see `HANDOFF-REDESIGN-BUILD.md`.
 
 - Figma: https://www.figma.com/design/3FGcwopu3awgAt63aiwlmH (page "Home hero").
   The block at the top of the canvas, "CURRENT DESIGN", holds every frame this

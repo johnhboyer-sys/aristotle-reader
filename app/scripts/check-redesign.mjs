@@ -535,15 +535,17 @@ const gates = {
                 n++;
             } finally { await close(p); }
         }
-        // Bust: width from §3.2 and its aspect, .592 wide to 1 tall. The spec's heights (320, 272) are
-        // printed: the build is 1.5px and 1.1px off them, which is not asserted away here.
-        for (const [size, w, specH] of [['D1525', 189, 320], ['D1152', 161, 272]]) {
-            const p = await open(size, 'light', '/');
+        // Bust: width and height from §3.2 (189×320, 161×272) and its aspect, .592 wide to 1
+        // tall, in both themes (§5.2: John saw them differ on 9 Nov). Height within 2px: the
+        // build's title lines are 0.88 of their size where Figma's are whole pixels (1.5px over four lines).
+        for (const theme of ['light', 'dark']) for (const [size, w, specH] of [['D1525', 189, 320], ['D1152', 161, 272]]) {
+            const p = await open(size, theme, '/');
             try {
-                if (prove && proofCase === 'home-plate' && size === 'D1525') await style(p, '.dir-b.pg-home .b-top > .b-po picture{top:60px!important}');
+                if (prove && proofCase === 'home-plate' && size === 'D1525' && theme === 'light') await style(p, '.dir-b.pg-home .b-top > .b-po picture{top:60px!important}');
+                if (prove && proofCase === 'dark-bust' && size === 'D1152' && theme === 'dark') await style(p, '.dir-b.pg-home .b-top > .b-po picture{top:30px!important}');
                 const box = await p.locator('.b-top .b-po picture').evaluate(el => { const r = el.getBoundingClientRect(); return {w: r.width, h: r.height}; });
-                assert(Math.abs(box.w - w) <= 1 && Math.abs(box.w / box.h - .592) <= .004, `${size} / bust size=${box.w.toFixed(1)}×${box.h.toFixed(1)}, spec says ${w} wide at aspect .592`);
-                console.log(`R-T3 ${size} bust ${box.w.toFixed(1)}×${box.h.toFixed(1)}; spec ${w}×${specH}`);
+                assert(Math.abs(box.w - w) <= 1 && Math.abs(box.w / box.h - .592) <= .004 && Math.abs(box.h - specH) <= 2, `${size}/${theme} / bust size=${box.w.toFixed(1)}×${box.h.toFixed(1)}, spec says ${w}×${specH} at aspect .592`);
+                console.log(`R-T3 ${size}/${theme} bust ${box.w.toFixed(1)}×${box.h.toFixed(1)}; spec ${w}×${specH}`);
                 n++;
             } finally { await close(p); }
         }
@@ -552,10 +554,17 @@ const gates = {
             const p = await open('D1525', 'light', `/${id}/`);
             try {
                 if (prove && proofCase === 'work-plate' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-po.work picture{width:200px!important}');
+                if (prove && proofCase === 'plate-origin' && id === 'MA') await style(p, '.dir-b.pg-work .b-top .b-po.tp-side img{left:0!important}');
                 const [x0, y0, x1, y1] = plates[id].ink, iw = x1 - x0, ih = y1 - y0, col = gridAt(1525).col;
                 const w = Math.min(col, col * iw / ih), h = w * ih / iw;
-                const box = await p.locator('.b-top .b-po picture').evaluate(el => { const r = el.getBoundingClientRect(); return {w: r.width, h: r.height}; });
+                const box = await p.locator('.b-top .b-po picture').evaluate(el => { const r = el.getBoundingClientRect(), i = el.querySelector('img').getBoundingClientRect(); return {w: r.width, h: r.height, dx: i.left - r.left, dy: i.top - r.top, iw: i.width}; });
                 assert(Math.abs(box.w - w) <= 1 && Math.abs(box.h - h) <= 1, `D1525 /${id}/ plate size=${box.w.toFixed(1)}×${box.h.toFixed(1)}, plates.json ink box gives ${w.toFixed(1)}×${h.toFixed(1)}`);
+                // The image sits so the ink box's corner is the frame's corner, at the frame's scale (Grok, 10 Nov: the origin was unchecked).
+                const k = w / iw;
+                assert(Math.abs(box.dx + x0 * k) <= 1 && Math.abs(box.dy + y0 * k) <= 1 && Math.abs(box.iw - 1280 * k) <= 1, `D1525 /${id}/ plate image offset=${box.dx.toFixed(1)},${box.dy.toFixed(1)} width=${box.iw.toFixed(1)}, ink box gives ${(-x0 * k).toFixed(1)},${(-y0 * k).toFixed(1)} width=${(1280 * k).toFixed(1)}`);
+                // The spec's drawn sizes (§5.3) were cropped by hand in Figma; the build's come from a
+                // measured ink box (scripts/measure-plate-ink.mjs --check ties plates.json to the images). Within 3px.
+                assert(Math.abs(box.w - 363) <= 1 && Math.abs(box.h - specH) <= 3, `D1525 /${id}/ plate size=${box.w.toFixed(1)}×${box.h.toFixed(1)}, spec §5.3 draws 363×${specH}`);
                 console.log(`R-T3 /${id}/ plate ${box.w.toFixed(1)}×${box.h.toFixed(1)}; spec 363×${specH}`);
                 n++;
             } finally { await close(p); }
@@ -1321,16 +1330,19 @@ if(stage>=2) Object.assign(gates, {
   // D26: the desktop golden is for a title one list column wide (362.67px at G1440, spec §5.1),
   // not the old poster's 470px: same lines, sizes scaled by 362.67/470 (spec §3.4: GC 66, Meteorology 60.5, Movement of Animals 80.9). Phone entries are unchanged.
   const golden=JSON.parse(readFileSync(join(app,'scripts/fixtures/poster-golden.json'),'utf8')).works;
-  if(prove){const lines=golden.Cat.desktop.lines;lines.splice(0,1,lines[0].slice(0,3),lines[0].slice(3));}
+  if(prove&&proofCase!=='drawn-size'){const lines=golden.Cat.desktop.lines;lines.splice(0,1,lines[0].slice(0,3),lines[0].slice(3));}
   let n=0;
   for(const id of ['Cat',...workIds.filter(id=>id!=='Cat')])for(const [size,kind] of [['G1440','desktop'],['P390','phone']]){
    const p=await open(size,'light',`/${id}/`);
    try{
-    const actual=await p.locator('.b-po-t').evaluate(el=>({lines:[...el.querySelectorAll('.ln')].map(l=>l.textContent),set:el.dataset.set}));
+    // Grok, 10 Nov: data-set is the fitter's own note; a rule that redraws the lines left it true.
+    if(prove&&proofCase==='drawn-size'&&id==='Cat'&&size==='G1440')await style(p,'.dir-b .b-po-t .ln{font-size:12px!important}');
+    const actual=await p.locator('.b-po-t').evaluate(el=>({lines:[...el.querySelectorAll('.ln')].map(l=>l.textContent),set:el.dataset.set,drawn:[...el.querySelectorAll('.ln')].map(l=>parseFloat(getComputedStyle(l).fontSize))}));
     const expected=golden[id][kind];
     assert(actual.lines.length>0&&JSON.stringify(actual.lines)===JSON.stringify(expected.lines),`${id} ${size} poster lines=${JSON.stringify(actual.lines)} expected=${JSON.stringify(expected.lines)}`);
     const sizes=actual.set.split(',').map(Number), target=expected.set.split(',').map(Number);
-    assert(sizes.length===target.length&&sizes.every((v,i)=>Math.abs(v-target[i])<=1),`${id} ${size} poster sizes=${actual.set} expected=${expected.set}`);n++;
+    assert(sizes.length===target.length&&sizes.every((v,i)=>Math.abs(v-target[i])<=1),`${id} ${size} poster sizes=${actual.set} expected=${expected.set}`);
+    assert(actual.drawn.length===target.length&&actual.drawn.every((v,i)=>Math.abs(v-target[i])<=1),`${id} ${size} drawn sizes=${actual.drawn.map(v=>v.toFixed(1))} expected=${expected.set}`);n++;
    }finally{await close(p);}
   }assert(n===94,`poster golden count=${n}`);return n;
  },
@@ -2129,16 +2141,29 @@ if (stage >= 2) Object.assign(gates, {
     if (prove && proofCase === 'ctas-high' && size === 'D1525' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-ctas{align-self:start!important}');
     if (prove && proofCase === 'ctas-lifted' && size === 'D1152' && id === 'Juv') await style(p, '.dir-b.pg-work .b-top .b-ctas{margin-bottom:30px!important}');
     if (prove && proofCase === 'books-gap' && size === 'D1525' && id === 'Mete') await style(p, '.dir-b.pg-work .b-top{padding-bottom:70px!important}');
+    // A cross-family read (Grok, 10 Nov) found the first version comparing the buttons with a
+    // maximum that held the buttons themselves, and with .b-words, which stretches to the foot.
+    if (prove && proofCase === 'ctas-dropped' && size === 'D1525' && id === 'Mete') await style(p, '.dir-b.pg-work .b-top .b-ctas{position:relative!important;top:40px!important}');
+    if (prove && proofCase === 'ctas-padded' && size === 'D1525' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-ctas{margin-top:160px!important}');
+    // Each column's own content: the plate; the last thing in the words column (.b-words
+    // itself stretches); the title column as it would stand alone, which is the Greek title
+    // (or the title), the 28px the build keeps above the buttons, and the buttons' height.
     const r = await p.evaluate(() => {
      const b = sel => document.querySelector(sel)?.getBoundingClientRect();
-     return {plate: b('.b-top .b-po picture')?.bottom, words: b('.b-top .b-words')?.bottom, ctas: b('.b-top .b-ctas')?.bottom, books: b('section[data-section="books"] > h2.b-h2')?.top, scrollY};
+     const last = document.querySelector('.b-top .b-words')?.lastElementChild?.getBoundingClientRect();
+     const ctas = b('.b-top .b-ctas');
+     return {plate: b('.b-top .b-po picture')?.bottom, words: last?.bottom, over: (b('.b-top .b-wk-gt') || b('.b-top .b-po-t'))?.bottom, ctasHeight: ctas?.height, ctas: ctas?.bottom, books: b('section[data-section="books"] > h2.b-h2')?.top, scrollY};
     });
     assert(Object.values(r).every(Number.isFinite), `${id} ${size} examined=0: ${JSON.stringify(r)}`);
-    const low = Math.max(r.plate, r.words, r.ctas);
-    const sets = r.plate === low ? 'plate' : r.words === low ? 'words' : 'buttons';
-    assert(near(r.ctas, low, 1), `${id} ${size} .b-ctas bottom=${f1(r.ctas)} but the lowest part ends at ${f1(low)} (plate ${f1(r.plate)}, words ${f1(r.words)})`);
-    assert(near(r.books - r.ctas, 44, 2), `${id} ${size} books heading starts ${f1(r.books - r.ctas)}px under the foot line, expected 44±2`);
-    console.log(`R-W4 ${id} ${size} foot=${f1(r.ctas)} set by ${sets}; books heading=${f1(r.books)}`);
+    const titleColumn = r.over + 28 + r.ctasHeight;
+    const low = Math.max(r.plate, r.words, titleColumn);
+    const sets = r.plate === low ? 'plate' : r.words === low ? 'words' : 'title column';
+    assert(near(r.ctas, low, 1), `${id} ${size} .b-ctas bottom=${f1(r.ctas)} but the lowest part ends at ${f1(low)} (plate ${f1(r.plate)}, words ${f1(r.words)}, title column ${f1(titleColumn)})`);
+    assert(near(r.books - low, 44, 2), `${id} ${size} books heading starts ${f1(r.books - low)}px under the foot line, expected 44±2`);
+    // Spec §3.4, "Measured results": which column sets the foot in the three frames drawn at 1525.
+    const drawn = {'GC/D1525': 'plate', 'Mete/D1525': 'words', 'MA/D1525': 'plate'}[`${id}/${size}`];
+    assert(!drawn || sets === drawn, `${id} ${size} foot line set by the ${sets}, spec §3.4 says the ${drawn}`);
+    console.log(`R-W4 ${id} ${size} foot=${f1(low)} set by ${sets} (plate ${f1(r.plate)}, words ${f1(r.words)}, title column ${f1(titleColumn)}); buttons bottom=${f1(r.ctas)}; books heading=${f1(r.books)}`);
     // Spec §3.4 "Measured results": the foot line and the books heading, in page pixels.
     const spec = {'GC/D1525': [486, 530], 'Mete/D1525': [434, 478], 'MA/D1525': [473, 517], 'GC/D1152': [446, 490], 'Mete/D1152': [450, 494]}[`${id}/${size}`];
     // Printed, not asserted: the build sits 2.5px under the spec's page y at GC 1525 (report, do not widen a tolerance).
@@ -2159,12 +2184,15 @@ if (stage >= 2) Object.assign(gates, {
     if (prove && proofCase === 'class-flip' && n === 0) await p.evaluate(() => { const t = document.querySelector('.b-top'); t.classList.toggle('pl-left'); t.classList.toggle('pl-right'); });
     if (prove && proofCase === 'plate-middle' && n === 1) await style(p, '.dir-b.pg-work .b-top .b-po.work picture{grid-column:2!important}');
     if (prove && proofCase === 'crumb-indent' && n === 2) await style(p, '.dir-b.pg-work .b-crumb{margin-left:24px!important}');
+    // Grok, 10 Nov: "centre somewhere in the column" let a plate slide 150px.
+    if (prove && proofCase === 'plate-shifted' && n === 3) await style(p, '.dir-b.pg-work .b-top .b-po.work picture{position:relative!important;left:60px!important}');
     const r = await p.evaluate(() => { const b = sel => document.querySelector(sel)?.getBoundingClientRect(); const pic = b('.b-top .b-po picture'); return {vw: document.documentElement.clientWidth, plateCentre: pic && pic.left + pic.width / 2, plateWidth: pic?.width, crumb: b('p.b-crumb')?.left}; });
     assert(Number.isFinite(r.plateCentre) && Number.isFinite(r.crumb) && r.plateWidth > 0, `${id} examined=0: ${JSON.stringify(r)}`);
     const g = gridAt(r.vw), place = plates[id].place;
     assert(place === 'left' || place === 'right', `${id} plates.json place=${place}`);
     const col = place === 'left' ? 0 : 2, lo = g.colLeft(col);
     assert(r.plateCentre >= lo && r.plateCentre <= lo + g.col, `${id} plate centre x=${f1(r.plateCentre)} is not in the ${place} column [${f1(lo)}, ${f1(lo + g.col)}] that plates.json gives`);
+    assert(near(r.plateCentre, lo + g.col / 2, 1) && r.plateWidth <= g.col + 1, `${id} plate centre x=${f1(r.plateCentre)} width=${f1(r.plateWidth)}: not centred on the ${place} column (centre ${f1(lo + g.col / 2)}, width ${f1(g.col)})`);
     assert(near(r.crumb, g.left, 1), `${id} crumb left=${f1(r.crumb)}, content column left=${f1(g.left)}`);
     n++;
    } finally { await close(p); }
@@ -2316,7 +2344,7 @@ const proofMessages = {
 };
 const stageTwoProofs = {
     'R-W1': {'crumb': /AthPol crumb=Works \/ Rhetoric and poetics/, 'english-facts': /Cat English facts form: W\. D\. Ross \(Oxford, 1908\)/, 'missing-glossary': /EN English facts glossary link missing or invalid/, 'crumb-height': /Cat D1440 crumb height=/, 'crumb-height-phone': /Cat P390 crumb height=/, 'phone-order': /Cat P390 visual order /, 'no-english': /Cat examined=0 English facts/, 'peters-year': /EN Peters facts must contain rev\. ed\., 1893/, 'ellis-year': /Pol Ellis facts must contain 1776; rev\. 1912/},
-    'R-T3': {'title-faded': /D1440\/light \/ title opacity=0\.82 expected 1/, 'home-plate': /D1525 \/ bust size=.*, spec says 189 wide at aspect \.592/, 'work-plate': /D1525 \/GC\/ plate size=200\.0×.*, plates\.json ink box gives 362\.7×358\.6/},
+    'R-T3': {'title-faded': /D1440\/light \/ title opacity=0\.82 expected 1/, 'home-plate': /D1525\/light \/ bust size=.*, spec says 189×320 at aspect \.592/, 'dark-bust': /D1152\/dark \/ bust size=.*, spec says 161×272 at aspect \.592/, 'work-plate': /D1525 \/GC\/ plate size=200\.0×.*, plates\.json ink box gives 362\.7×358\.6/, 'plate-origin': /D1525 \/MA\/ plate image offset=0\.0,/},
     'R-T2': {'cap': /Cat D1440 Start reading bottom=/, 'scroll-budget': /Long P390 scroll changed poster height/, 'crop': /Cat D1440 object-fit=cover expected fill/},
     'R-K1': {'record': /EN Record href=#/, 'punctuation': /home credits doubled full stop/, 'licence': /home credits licence must be in parentheses/, 'licence-stop': /home credits stop before licence/},
     'R-W3': {'chapter-target': /Cat wrong chapter target:/, 'numeral-red': /Phys book numbers are not --red-ink/},
@@ -2327,11 +2355,12 @@ const stageTwoProofs = {
 };
 // D26 gates: each proof is a deliberate break that must trip the gate's own assertion.
 const d26Proofs = {
+    'R-T1': {'golden-line': /Cat G1440 poster lines=/, 'drawn-size': /Cat G1440 drawn sizes=12\.0 expected=/},
     'R-H4': {'tall-top': /D1525 sixth work row bottom=[\d.]+ is below the window height=896/, 'one-column': /D1525 sixth work row bottom=[\d.]+ is below the window height=896/, 'scrolled': /D1152 scrollY=120, must be 0/},
     'R-H5': {'title-wide': /D1525 home title width=[\d.]+ but list column width=/, 'title-shifted': /D1152 home title left=[\d.]+ but list column 2 left=/, 'work-title-narrow': /GC D1525 work title width=300, expected one third of/},
     'R-H6': {'bust-short': /D1525 new reader bust bottom=[\d.]+ and search bottom=[\d.]+ differ by more than 2px/, 'list-gap': /D1152 new reader first division starts [\d.]+px under the bust bottom, expected 44±2/, 'returning-bust-short': /D1525 returning reader bust bottom=[\d.]+ and search bottom=[\d.]+ differ by more than 2px/},
-    'R-W4': {'ctas-high': /GC D1525 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'ctas-lifted': /Juv D1152 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'books-gap': /Mete D1525 books heading starts [\d.]+px under the foot line, expected 44±2/},
-    'R-W5': {'class-flip': /plate centre x=[\d.]+ is not in the (left|right) column/, 'plate-middle': /plate centre x=[\d.]+ is not in the (left|right) column/, 'crumb-indent': /crumb left=[\d.]+, content column left=/},
+    'R-W4': {'ctas-high': /GC D1525 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'ctas-lifted': /Juv D1152 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'books-gap': /Mete D1525 books heading starts [\d.]+px under the foot line, expected 44±2/, 'ctas-dropped': /Mete D1525 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'ctas-padded': /GC D1525 \.b-ctas bottom=[\d.]+ but the lowest part ends at/},
+    'R-W5': {'class-flip': /plate centre x=[\d.]+ is not in the (left|right) column/, 'plate-middle': /plate centre x=[\d.]+ is not in the (left|right) column/, 'crumb-indent': /crumb left=[\d.]+, content column left=/, 'plate-shifted': /plate centre x=[\d.]+ width=[\d.]+: not centred on the (left|right) column/},
     'R-C3': {'red-title': /\/ light uses --red rgb\(226, 56, 46\): h1\.b-po-t color/, 'red-border': /\/GC\/ light uses --red rgb\(226, 56, 46\): .*border-bottom-color/, 'red-dark': /\/Mete\/ dark uses --red rgb\(255, 90, 77\): .*color/, 'faded-title': /\/MA\/ title opacity=0\.82, expected 1/},
     'R-H7': {'old-heading': /a division head reads "Dubious and spurious works"/, 'duplicate': /data-work listed twice: Cat/, 'tag-lost': /tags=15, expected 16/, 'prob-moved': /Minor works \(Opuscula\) holds Prob,Col,/, 'isa': /(the Isagoge is on the home list|list differs from spec)/},
     'R-H8': {'wraps': /D1525 Greek line is drawn on [2-9] lines/, 'wrong-red': /D1152 Greek line color=rgb\(226, 56, 46\), expected --red-ink/, 'short': /D961 Greek line text width=[\d.]+ but its column is/},

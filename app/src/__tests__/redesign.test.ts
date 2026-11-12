@@ -63,6 +63,12 @@ test('R-P2 manifest schema and ids', () => {
     expect(m.home.place).toBe('left');
     expect([m.GC.place, m.Mete.place, m.MA.place, m.Isa.place]).toEqual(['right', 'left', 'left', 'left']);
 });
+// The ink box each page cuts its plate to is re-measured from the image itself.
+test('R-P2 ink boxes match the desk plates', () => {
+    const out = execFileSync('node', ['scripts/measure-plate-ink.mjs', '--check'], {cwd: root, encoding: 'utf8'});
+    count('R-P2 ink', Number(out.match(/examined=(\d+)/)?.[1] || 0));
+    expect(out).toMatch(/examined=48 plates; all match/);
+});
 test('R-P3 credit keys and EN exact credit', () => {
     const m = manifest();
     count('R-P3', Object.keys(m).length);
