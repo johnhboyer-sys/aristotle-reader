@@ -1,206 +1,306 @@
 # HANDOFF: redesign build (direction B)
 
-Rewritten 10 Nov 2026, 12:20, mid-task: John had to close his laptop. The home
-and work-page design (D26) **is now built** and committed here as a local
-work-in-progress commit, `0ee48bd0bc`. It is not pushed.
-Rewrite this file (don't append) when you hand off.
+Rewritten 12 Nov 2026, 13:45. Rewrite this file (don't append) when you hand
+off. The version before this one (11 Nov, with the search mock-up history
+stacked on it) is kept at
+`.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-12.md`.
 
-## Start here
+## 1. Where it stands
 
-1. Work in this worktree,
-   `~/Developer/aristotle-reader/.claude/worktrees/redesign-build`, on branch
-   `claude/redesign-build`. The branch is **not pushed**, and today's work is
-   one local WIP commit, `0ee48bd0bc` (John, 12:22: "Yes, commit locally").
-   Anything the gates agent wrote after it shows in `git status`.
-2. Read `CLAUDE.md`, then this file, then
-   `docs/redesign-home-and-work-spec.md`.
-3. John's words for each ruling: `.redesign-shots/notes/hero-rounds.md`.
-   `.redesign-shots/` is untracked and must stay so: never `git add` it.
-   Today's notes, briefs, review results, scripts and shots are in
-   `.redesign-shots/notes/d26/`.
-4. John said "Read the spec and continue" on 10 Nov at 11:05; I took that as
-   his go to build and told him so. He has seen three shots at 1152×663 and
-   has not yet given a verdict.
-5. Safeguards still bind: nothing merges, deploys or is pushed until John says
-   yes; the kit and `docs/redesign-kit/` are read-only; blast radius is `app/`,
-   `shared/`, `app/scripts/`; implementation and verification are never the
-   same model family.
+Branch `claude/redesign-build`, this worktree
+(`~/Developer/aristotle-reader/.claude/worktrees/redesign-build`). **Not
+pushed.** 152 commits ahead of `main`; `main` has not moved since, so no merge
+is due.
 
-## What was built on 10 Nov (WIP commit `0ee48bd0bc`)
-
-| File | What changed |
+| Part | State |
 |---|---|
-| `shared/lib/works.ts` | `CATEGORIES` regrouped: the dubious and spurious works stand in the main divisions; new group II.d "Minor Works (Opuscula)"; the appendix division is gone |
-| `app/src/data/plates.json` | `place` per work from the ruled list (22 left with the Isagoge, 25 right); `ink: [l, t, r, b]` per plate |
-| `app/scripts/measure-plate-ink.mjs` | new: measures each plate's ink box (`--check` verifies) |
-| `app/src/pages/index.astro` | `.b-top` wrapper; bust cut to its ink box; Greek line `p.b-gt`; Continue before search in the source |
-| `app/src/components/Landing.astro` | `.b-top.pl-left/.pl-right`; buttons before the blurb in the source; blurb, related and facts inside `.b-words` |
-| `app/src/lib/poster-fit.ts` | from 961px the title fills one column exactly; `fitLine` fits Greek lines; the old desktop poster-height arithmetic is gone |
-| `shared/styles/b.css` | the block headed "D26 (John, 9–10 Nov 2026)": colour B, the ≤960px `order` rules that keep phone and sideways as they were, and the 961px-up grid for both page types |
-| `app/src/__tests__/redesign.test.ts` | plate sides, ink boxes, new division ids |
-| `app/scripts/check-redesign.mjs`, `app/scripts/fixtures/poster-golden.json` | **written by a Sonnet agent, not yet reviewed by me**: eight new gates (R-H4, R-H5, R-H6, R-W4, R-W5, R-C3, R-H7, R-H8) and repairs to the old ones |
+| Stages 1–5 (home, work pages, reader, search, lexicon in B) | built, committed, gates and screenshot judges passed (`ae65fb23b4` … `4129016580`) |
+| OG cards, gate fixes, merge of main (PR #194) | committed (`c6a276c90c`, `e98749a8a3`, `fa39aef88b`) |
+| Home and work pages | **D26 is built** (WIP commits `0ee48bd0bc`, `b883eac61b`; reviewers scored it 5–5.5). **Round 9 is ruled, NOT built** (§3). |
+| Search page | stage 4 built the old search in B. **The new design (round 34) is NOT built**; its own spec is `HANDOFF-SEARCH-BUILD.md`. |
+| Tests | app 115/115, shared 735/735, scripts 99/99, svelte-check 0 errors, before the round 9 work |
+| build:public, deploy:dry | green before D26; re-run before the PR |
 
-## Where verification stands
+## 2. Two tracks; pick the one John names
 
-- Unit tests on the built code: app 115/115, shared 735/735, scripts 99/99,
-  svelte-check 0 errors. Run before the last three small fixes below.
-- Measured against the Figma frames at 1525×896 and 1152×663: within 3px, in
-  Chromium and WebKit. **Firefox not checked** (Playwright has none here).
-- Phone and sideways: 86 before/after shots (baseline in
-  `.redesign-shots/notes/d26/phone-baseline/`); shapes differ only in the
-  crumb, the regrouped list, and colour.
-- Old gate suite against the new build (before any gate edits): 34 PASS, 8
-  FAIL, all stale desktop expectations (R-T1-home, R-C1, R-T3, R-H2, R-W1,
-  R-W3, R-T1, R-T2). Log: `.redesign-shots/notes/d26/gates-first.log`.
-- **Gates agent (Sonnet): interrupted.** It had written all eight gates and
-  was in its final full-suite run (log `/tmp/d26-gates.log`) when the laptop
-  closed. Its report never arrived. Treat its gate edits as unreviewed: read
-  the diff of `check-redesign.mjs`, check each repaired old gate keeps its
-  phone and sideways assertions untouched, and check R-W1 "Cat sections out of
-  order" was a stale expectation and not a real defect.
-- Grok code review (static): no blockers.
-  `.redesign-shots/notes/d26/grok-review-result.log`. Acted on: the bust and
-  list no longer jump when the home title is fitted (CSS pre-fit size
-  `--unfit`).
-- Codex screenshot judge (gpt-6.1-sol, medium): 3 of 9 pairs PASS, 6 FAIL on
-  its 2px bar. `.redesign-shots/notes/d26/codex-judge-result.md`. My reading:
-  Figma's whole-pixel line heights (≤3px), as-built book rows, and one real
-  wrap (Mirabilibus in the home list, 2px too wide for one line). Acted on:
-  the work page's Greek title keeps a 42px line when it steps down.
-- **`app/dist` is stale by three small fixes** made after the last build (the
-  42px Greek line, `--unfit`, the 44px no-script title size). Rebuild
-  (`cd app && PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22, about 25s), then
-  re-run the unit tests, the new gates with their proofs, and the full suite.
+- **Track A, home and work pages, round 9.** This file. Work here, on
+  `claude/redesign-build`.
+- **Track B, the search page.** `HANDOFF-SEARCH-BUILD.md`, on its own branch
+  `claude/search-build` in its own worktree, cut from this branch's tip of 12 Nov 13:40. It merges
+  back into `claude/redesign-build` before the PR.
 
-## Next steps
+The two run at once (John, 12 Nov 13:30). To keep the later merge clean:
+Track A leaves the search files alone (`app/src/pages/search.astro`,
+`advanced.astro`, `shared/components/Search.svelte`, `shared/lib/search*`);
+Track B puts its styles in a new `shared/styles/b-search.css`. Both may need
+`shared/styles/b.css`; keep edits there small and say so in the commit
+message. If John says only "continue UI work", ask which.
+When both are in, do §6 (finish).
 
-1. Rebuild; restart the preview (`redesign-preview` in the main checkout's
-   `.claude/launch.json`, port 4329); review the agent's gate diff; run the
-   full suite and every `--prove`. A cross-family read of the new gates
-   (Codex or Grok, static) is still owed.
-2. Show John the undrawn cases (`.redesign-shots/notes/d26/undrawn/`) and get
-   his calls:
-   - phone: deeper reds now reach the phone, but the phone title keeps the
-     bright red (spec §8.12);
-   - returning reader at 1152×663: a two-line Continue pushes the block down
-     about 44px, and the title and bust stand on the foot line;
-   - dark mode: plates on their paper, cut tight to the ink;
-   - the nav sits on the 1168px column on home and work pages only;
-   - the Mirabilibus row wraps in the home list at 1525;
-   - the two open items in the spec's §2 (σῳζόμενα or ἔργα; grey or red
-     Greek title on work pages).
-3. D26 is logged in `.redesign-shots/notes/departures-amend.md`; add it to
-   `.redesign-shots/notes/pr-body.md`.
-4. On John's yes to the built pages: a clean commit on top, then the "Then finish" list below.
+**Models (John, 12 Nov 13:29, for both tracks).** The session runs on Opus
+5.5 at high effort and reviews. Codex writes the code:
+`codex-companion.mjs task --background --model gpt-6.1-sol --effort medium`
+(`~/.claude/plugins/cache/openai-codex/codex/1.0.6/scripts/`); run `status` and
+`result` from this worktree. Escalate a task to `--model gpt-6-astra --effort
+medium` only after Sol fails it twice. Grok is benched ("no run codex. bench
+grok"). Implementation and review are never the same model family. Load the
+`delegate` skill before the first dispatch. Every Codex brief must say "Do not
+launch a browser or run browser gates": its sandbox's Chromium throws macOS
+dialogs. Run the browser gates yourself.
 
-## Then finish
+## 3. Track A: what to build
 
-1. Full gate run plus the new proofs; tests (`app` vitest, `shared` vitest,
-   root `test:scripts`, svelte-check); app build; link check. A full
-   `npm run build:public` is only needed again if corpus data changes.
-2. Fill the PR body, `.redesign-shots/notes/pr-body.md`:
-   - `__BUILD__`: build:public and deploy:dry results (below);
-   - add D26;
-   - follow-ups (below).
-3. Push the branch and open the PR against `main`. Don't merge it. Bind it with
-   the `ccd_pr` tools.
-4. Start the speed session. John asked: "After the build is fully done, have a
-   new session measure the site's speed and figure out how to optimize it." It
+Build round 9 of the mock-ups with John's rulings of 11 Nov applied. Round 9
+was drawn as CSS and a script over the built site; it is a sketch to port,
+not code to paste.
+
+### 3.1 Sources, in order of authority
+
+1. **John's rulings in the decision page's db.** Artifact
+   https://claude.ai/artifact/HaqsYCej1WAwvmF7WhohsU, collection `rulings`,
+   one doc per question id. Read it with ArtifactData `list` first; where it
+   differs from §3.2, the db is newer.
+2. **§3.2 below** (the decisions log, 11 Nov).
+3. **The ruled pictures:** phone work pages with the rulings applied, which
+   John said "look good": https://claude.ai/artifact/JJsvrUAeMJAC9DxK2xcZ4s
+   (source `.redesign-shots/notes/d26/decide/ruled/`); the desktop returning
+   masthead: https://claude.ai/artifact/PJCANJ2F7RrFn4EbDtEDef (source
+   `decide/masthead/`, variant `ret1q3` in `decide/shots.mjs`).
+4. **Round 9 itself**, `.redesign-shots/notes/d26/round9/`: 26 shots
+   (`r9-01` to `r9-26`), `BRIEF-R9.md` (what each shot shows, what round 9
+   changed, measurements at 1152px, and the owner's settled choices), `r9.css`
+   (522 lines) and `r9.js` (126), and the two reviews.
+5. **Before and after with the reason for each change:**
+   https://claude.ai/artifact/4yCNVqNTXmr2FZHTV5wm7b (source
+   `.redesign-shots/notes/d26/final/page/index.html`).
+6. `docs/redesign-home-and-work-spec.md` is the spec for what is **built**
+   (D26). Update it to match what John accepted from round 9, in the same
+   commit as the code.
+
+### 3.2 Decisions log, 11 Nov 2026 (John)
+
+Round 9 departs from earlier rulings in six places; John accepted each:
+natural-wrap work titles, 36–60px (a 72px cap was tried and dropped); buttons
+under the Greek title, not on the foot line; phone and sideways layouts no
+longer frozen; wide plates dropped, one frame for all 47 works; the Greek title
+in ink; the home sentence rewritten (below).
+
+Desktop work page:
+- Title: round 9's natural-wrap title, 36–60px.
+- Buttons under the Greek title, as round 9.
+- Plate always on the right, as round 9.
+- Greek title in ink.
+
+Home page:
+- Greek line τὰ σῳζόμενα (not ἔργα).
+- Sentence: "Read and search every work of Aristotle in Greek and English.
+  Click any Greek word to parse and define it."
+- **Returning reader, desktop: one work, with the passage and search on top**
+  (14:59; replaces his 14:49 "two works"). The search box runs across both
+  columns at the top of the intro; below it, the most recent work's card on
+  the left and, on the right, the sentence the reader stopped at, Greek (16px,
+  `--font-greek`) above the English (14px, `--read`), linking to the same
+  place. Card sizes drop to keep the masthead height: title 24px, location
+  15px, button text 14px (the button stays 44px tall). Only the most recent
+  work shows, as on the phone. The passage comes from the book data at the
+  saved location: the `greek` lines and the English the public build shows by
+  default for that work; never a private translation (`private: true` in
+  `shared/lib/works.ts`). For the Ethics that is Rackham's 1926 Loeb in the
+  `english` field (the mock showed Ross's wording; that was wrong).
+
+Phone and sideways (each page ruled on its own):
+- **Home:** round 9, but **cut the red Greek line on the phone**.
+- **Home, returning:** the bust and the full title; no site sentence; one
+  "Continue reading" card for the single most recent work. Picture:
+  `decide/img/ret-ph-keep.png` (it still shows the Greek line, which goes).
+- **Work page (Ethics), new and returning:** round 9's layout with the **plate
+  moved up, just under the English and Greek titles** (not round 9's
+  tailpiece after the contents, and not the built page's place above the
+  Greek title).
+- **De Mirabilibus:** round 9.
+- **Sideways (Ethics, On Youth):** round 9 with the **plate in a right-hand
+  column** beside the title, Greek title, and buttons; the description in the
+  left column under them; a long title (On Youth) wraps. For a returning
+  reader, round 9's full-width "Continue at…" button and the three buttons
+  below it take that left column instead of the description.
+
+Words and plates:
+- **No captions.** Round 9's caption code (`r3-cap`) is not ported.
+- Edition labels as round 9: "Greek text", "Open Greek and English with",
+  "opens first".
+- De Mirabilibus count "178", not "about 178".
+- **On Youth plate (14:46):** a composite, Milton's heart beside Eustachi's
+  lungs (Milton, Anatomy, Viscera, Plate IV fig. 1, London 1814, Wellcome
+  cr44ptdy; Eustachi, Tabulae anatomicae Tab. XV fig. I, Rome 1714). Ready to
+  drop in: `decide/juv/final/{desk,phone}-Juv.jpg` (same sizes and mode as
+  `app/public/plates/{desk,phone}/Juv.jpg`) and the record
+  `decide/juv/final/plates-entry.json`. It has two sources, so `who`, `url`,
+  and the credit name both; check the credit line shows two prints. Built by
+  `decide/juv/comp.py`.
+
+### 3.3 Build notes the rulings raise
+
+- `app/src/lib/poster-fit.ts` `fitWorkPoster` shrinks a phone work title until
+  the Start/Continue button fits the first screen. With the plate between
+  title and button it drops the title to its 14px floor. With the plate under
+  the titles, **the plate gives way** (cap `--plate-height` to the room left),
+  never the title.
+- The dark theme's cut-out plates (figures cut to their outline) were made
+  for the mock-up and are saved in `.redesign-shots/notes/d26/saved-scratch/`
+  (`sil/`, `oval/`, `contour/`, each with its script). Whether the build ships
+  them is in round 9's shots (`r9-04`, `r9-10`, `r9-11`, `r9-21`); ask John if
+  the db says nothing.
+- Files in play: `shared/styles/b.css`, `app/src/pages/index.astro`,
+  `app/src/components/Landing.astro`, `app/src/lib/poster-fit.ts`,
+  `app/src/data/plates.json`, `app/public/plates/`, and the gates
+  (`app/scripts/check-redesign.mjs`, `app/scripts/redesign-browser.mjs`).
+  Blast radius: `app/`, `shared/`, `app/scripts/`.
+
+### 3.4 Uncommitted edits already in this worktree
+
+Left on purpose (John has not asked for a commit); keep them:
+- `app/src/components/Landing.astro`: the facts list names the Greek source and
+  each translation in short form ("rev. Reviser" and the imprint kept) and
+  drops the "Length" row.
+- `app/scripts/check-redesign.mjs`: tighter gates R-W4, R-W5, R-T1, R-T3,
+  written after a Grok read and **never run**.
+- `app/src/__tests__/redesign.test.ts`: an ink-box unit test (passes).
+- `docs/redesign-home-and-work-spec.md`: its header line.
+- This file and `HANDOFF-SEARCH-BUILD.md`.
+
+### 3.5 Steps
+
+1. Read the db rulings (§3.1). List any that differ from §3.2.
+2. Brief Codex on the desktop pages (home new, home returning, work page) from
+   §3.2 and the round 9 shots. Review: diff against the blast radius; tests
+   re-run outside Codex's sandbox; build; shots in both themes beside round
+   9's.
+3. Then the phone and sideways pages, the same way, against `decide/ruled/`.
+4. The On Youth plate.
+5. Rewrite the gates for what was built (the D26 gates are stale; don't run or
+   repair them before the build). **Write each gate's failing case first** and
+   make each gate say when it examined nothing (CLAUDE.md, "a gate that
+   compares a thing to itself").
+6. Update `docs/redesign-home-and-work-spec.md`.
+7. Show John the built pages beside round 9 before calling Track A done.
+
+### 3.6 Still open for John (ask; don't guess)
+
+- The Categories scan download again (bsb11761492, p. 833).
+- The parentheses in the Greek summary and "rev. Ross" on the Politics.
+- The nav on the 1168px column, home and work pages only.
+- The De Mirabilibus row wrapping at 1525px (not rechecked against round 9).
+
+### 3.7 Reviewer suggestions on round 9, not ruled (don't build unless John says)
+
+- Opus: a fixed width for the chapter count so the Bekker ranges line up;
+  "saved at chapter 3" under the title on desktop; one type treatment for all
+  Bekker ranges; a dark-theme button of `#c4392d` with light text; small text
+  on desktop at 15px or more; the "opens first" tag's baseline and wrap with
+  long names; the Contents link only when the contents fall below the first
+  screen; Oswald for book numerals.
+- Codex: the go-to field on book-based works too; untitled chapter numbers and
+  ranges at 18px or more; about 24px off the contents header on the phone; the
+  saved book's numeral in red; larger header icons on the phone.
+
+## 4. Rules that bind both tracks
+
+- Nothing merges, deploys, or is pushed until John says so; commit only when
+  he asks.
+- `.redesign-shots/` is untracked and must stay so: never `git add` it. Nor
+  the stray `node_modules/` at the repo root.
+- The kit and `docs/redesign-kit/` are read-only.
+- Never shrink type or tap targets (one reader is vision-impaired and reads on
+  a phone held sideways). Don't change the `--red` token. No explainer text in
+  the reader.
+- In Figma, never edit John's frames `4:2` and `23:1230`.
+- Never write into `build/dist` (a read-only link chain).
+- The design bar is the Vase (memory `design-bar-is-the-vase`); design is
+  collaborative unless John says NOT THIS or MUST HAVE THIS.
+- Svelte component `<style>` blocks: keep styles in `shared/styles/b.css` or
+  `global.css` and check the built page (memory
+  `svelte-styles-dead-in-built-site`).
+
+## 5. How to see and check the pages
+
+- **Preview:** start `redesign-preview` from the main checkout's
+  `.claude/launch.json`, or, with Node 22 (`~/.nvm/versions/node/v22.23.1/bin`),
+  `cd app && npx astro preview --port 4329 --host 127.0.0.1` (serves
+  `app/dist` at http://127.0.0.1:4329). Rebuild with
+  `cd app && PUBLIC_SHOW_PRIVATE=0 npm run build` (about 25s).
+- **Round 9 shots again:** start the preview, then
+  `node .redesign-shots/notes/d26/round9/shots9.mjs`. Copy it to shoot the
+  build at the same states with no overlay.
+- **Gates:** `.redesign-shots/notes/scripts/full5.sh <tag> [proof ids]` runs
+  the full suite, then the proofs; `only5.sh` runs single gates. The older
+  scripts there point at dead temp folders; fix their `S=` paths before use.
+- Shot rules: set the viewport height to the shot height (`fullPage: true`
+  with injected CSS blanks the plates); wait for `document.fonts.ready`.
+- `build/export` in this worktree was made by hand (memory
+  `worktree-builds-need-the-export-cache`).
+- John judges in Safari at about 1152×663 with a dark-mode extension on.
+- A shell heredoc holding JavaScript trips a safety check; write a Python
+  patch file and run it.
+
+## 6. Finish (after both tracks)
+
+1. Full gate run plus proofs; tests (`app` vitest, `shared` vitest, root
+   `test:scripts`, svelte-check); app build; link check (0 broken);
+   `npm run build:public` and `npm run deploy:dry` at the root.
+2. Fill the PR body, `.redesign-shots/notes/pr-body.md`: `__BUILD__` (the
+   build:public and deploy:dry results), D26 and what followed it (logged in
+   `.redesign-shots/notes/departures-amend.md`), round 9, the search build, and
+   the follow-ups in §7.
+3. On John's yes: push with an explicit refspec and open the PR against
+   `main`. Don't merge it.
+4. Start the speed session. John: "After the build is fully done, have a new
+   session measure the site's speed and figure out how to optimize it." It
    reports to you.
-5. Homepage card: staged in `~/personal-website/` (`assets/` and `dist/`),
-   showing the reader's home page with background `--stock-aristotle: #b42419`.
-   Backups are in `~/personal-website/backup-2026-11-09/`. **Not deployed.**
-   Deploy (`npx wrangler deploy` there) only on John's yes. Once the home page
-   is built, retake the shot (1280×860 at 1x) so the card shows it.
-6. Rewrite this file.
+5. Homepage card: staged in `~/personal-website/` (`assets/`, `dist/`;
+   backups in `~/personal-website/backup-2026-11-09/`). **Not deployed.**
+   Retake the shot (1280×860 at 1x) once the home page is final; deploy
+   (`npx wrangler deploy` there) only on John's yes. The card shows only the
+   left 71% of its picture.
+6. At deploy, raise the Daily Nous pitch with John.
+7. Then port the search design to plato-reader (memory
+   `port-search-fixes-to-plato`), per hunk.
+8. Rewrite this file.
 
-## State
-
-| What | Where it stands |
-|---|---|
-| Stages 1–5 | committed, gates and screenshot judges passed (`6b25099d75` … `4129016580`) |
-| OG cards | `c6a276c90c`, wording John's |
-| Gate fixes | `e98749a8a3`: Grok's 12 gate-honesty findings closed; eng-table 1em; WordPopup Escape guard gated to B |
-| Merge of main (PR #194) | `fa39aef88b`: one import conflict; Beta Code accent fix carried into `doBSearch`; compat hash updated (stage 3 + main's hunk only, checked); Grok: no findings |
-| Home and work-page design (D26) | **built 10 Nov, local WIP commit `0ee48bd0bc`**; gates written by an agent, unreviewed |
-| Tracked files | committed as WIP at 12:22 on 10 Nov; the gates agent may have written more since |
-| Earlier hero build | superseded; saved as `.redesign-shots/notes/hero-build/landing-hero-superseded.patch` (applies cleanly; 117 lines added to `index.astro`, `b.css`, `check-redesign.mjs`). Its division ids and `.b-gt` Greek line are reusable. Its layout and its R-H4 gate are not |
-| Preview server | was running on 4329 when the laptop closed. `app/dist` is stale by three small fixes: rebuild before you trust a screenshot or a gate |
-| Gates on the merged build | 42 PASS; proofs 109/109 caught (run before the merge, on the committed tree) |
-| build:public | green: 47 works, preflight ok, shared LSJ 76,345 keys ok, 7,559 pages, 0 broken links of 414,112 |
-| deploy:dry | green: leak check at baseline (Rackham 2 known-benign; Ackrill, Tredennick, Irwin 0), held works none, shards match; no push |
-| Tests | app 115/115, shared 735/735, scripts 99/99, svelte-check 0 errors |
-| Share images | X teaser and Stripe image in `.redesign-shots/share/`, both handed to John |
-
-The gate, build:public and deploy:dry rows below date from before D26 and must be re-run.
-
-## Follow-ups for the PR body (not this PR)
+## 7. Follow-ups for the PR body (not this PR)
 
 - Corpus: no lemma page for σωφροσύνη or ἀκούσιος.
 - LSJ track: grammata's Logeion link is 14px tall; `.t8-entry` margin gap on
   phones.
 - Print track: `/EN/book/1` prints a blank first page (old build too).
-- Search:
-  - Results open on Categories while the rail sorts by count.
-  - With "Match accents exactly", `λόγου` gives page 1 of 72 with no rows. The
-    filter runs per page. The old design does the same.
+- Search (old design; check again after Track B): results open on Categories
+  while the rail sorts by count; with "Match accents exactly", `λόγου` gives
+  page 1 of 72 with no rows (the filter runs per page).
+- Plates for the six new works (Prob, Spir, MM, Plant, RhAl, AthPol), ruled 7
+  Nov, are on the unpushed branch `claude/new-work-plates-61b59e` (memory
+  `plates-new-six-works`); RhAl-3 needs its British Museum credit shown.
 - Desktop app: side effects of `shared/` changes are low priority (John, 9
   Nov).
 
-## Gotchas
-
-- **Compound bash.** The build session found the worktree guard refusing
-  `cd x && git …`, `env -i` and loops; on 10 Nov such commands ran. If one is
-  refused, put the steps in a script file and run it with `zsh`. Saved scripts
-  are in `.redesign-shots/notes/scripts/`; fix their `S=` paths before use.
-- **Preview server:** `scripts/preview.sh` runs `astro preview` on
-  127.0.0.1:4329, serving `app/dist`. The harness expects it there. Rebuild
-  with `scripts/build.sh` (Node 22, `PUBLIC_SHOW_PRIVATE=0`).
-- **Gates:** `scripts/full5.sh <tag> [proof ids]` runs the full suite and then
-  the proofs. `scripts/only5.sh` runs single gates.
-- **Codex:** every brief must say "Do not launch a browser or run browser
-  gates". Its sandbox's Chromium throws macOS "Playwright cannot be opened"
-  dialogs.
-- **`build/export`** in this worktree was made by hand: the Diogenes export,
-  run directly, for authors 0086, 0547 and 2034, then
-  `pipeline/tools/merge_juv.py`. From a background shell the export dies with
-  exit 25. See memory `worktree-builds-need-the-export-cache`.
-- There is a stray untracked `node_modules/` at the repo root. Never add it.
-- **Figma, through the plugin API:**
-  - `node.clone()` puts the copy on the page, not in the source's parent. Move
-    it in the same call.
-  - Layers inside instances of a frame cloned in the same call are not found
-    by `findAll`. Recolour them in a second call.
-  - A frame's height read straight after resizing its width can be stale. Set
-    what depends on it in a second call.
-  - The "Book row" master in Parts still has the old red numeral. The
-    instances in the current frames are right.
-- John judges in Safari at about 1152×663 with a dark-mode extension on.
-- The homepage card shows only the left 71% of its picture (`.shot` is 36% in
-  from the left, 90% wide), so the right of any shot is hidden. Every card on
-  the homepage does this.
-- The first attempts at the hero (options A–D on the real build, and the
-  slider playground) are in this file's previous version, commit `bbfd31e827`.
-
-## Where things are
+## 8. Where things are
 
 | What | Where |
 |---|---|
-| Build spec for all of B | `docs/redesign-build-brief.md` |
-| Home and work-page design spec | `docs/redesign-home-and-work-spec.md` |
-| Figma file | https://www.figma.com/design/3FGcwopu3awgAt63aiwlmH |
+| Build brief for all of B | `docs/redesign-build-brief.md` |
+| Spec for the built home and work pages | `docs/redesign-home-and-work-spec.md` |
+| Search build spec | `HANDOFF-SEARCH-BUILD.md` |
+| Mock-up rounds, reviews, decision pages | `.redesign-shots/notes/d26/` (untracked); round N in `roundN/` |
+| Search mock-up history (rounds 0–34) | the archive named at the top; flip page https://claude.ai/artifact/B9pKNaLxdQHqVYbVCzzb8U |
+| Figma file | https://www.figma.com/design/3FGcwopu3awgAt63aiwlmH (page "Home hero"; the built pages are the block "BUILT · THE REAL SITE ON 10 NOV 2026", label `75:6138`) |
 | John's rulings, round by round | `.redesign-shots/notes/hero-rounds.md` (untracked) |
-| Shots of the current frames | `.redesign-shots/notes/vplato/current/` (untracked) |
-| Plate sides, work by work | `.redesign-shots/notes/vplato/r3/plate-sides.json` (untracked) |
-| Scripts that read page data for Figma | `.redesign-shots/notes/figma/` (untracked) |
-| Design history and earlier rulings | `HANDOFF-REDESIGN.md` (top section wins) |
+| Design history and earlier rulings | `HANDOFF-REDESIGN.md` in the main checkout (top section wins) |
 | B kit (read-only) | `~/Developer/aristotle-plates-scratch/kit/dirs/b/`; copies in `docs/redesign-kit/dirs/b/` |
-| Home markup | `app/src/pages/index.astro` |
-| Work page markup | `app/src/components/Landing.astro` |
-| Title fitting | `app/src/lib/poster-fit.ts` (`fitPoster`, `fitWorkPoster`, `initPosters`) |
-| B styles | `shared/styles/b.css` |
-| Gates | `app/scripts/check-redesign.mjs`, `app/scripts/redesign-browser.mjs` |
 | Notes, PR draft, departures | `.redesign-shots/notes/` (untracked) |
-| Side-by-sides from stages 2–5 | `.redesign-shots/stage{2..5}/` |
 | Chapter titles (separate track) | branch `claude/chapter-titles-18c59c`, `HANDOFF-CHAPTERS.md` there |
 | Deploy recipe | `DEPLOY-STATUS.md`; deploy only on John's yes |
+
+Figma plugin gotchas (if a session draws there): `node.clone()` puts the copy
+on the page, not in the source's parent, so move it in the same call; layers
+inside instances of a frame cloned in the same call are not found by
+`findAll`, so recolour them in a second call; a frame's height read straight
+after resizing its width can be stale; the "Book row" master in Parts still
+has the old red numeral.
