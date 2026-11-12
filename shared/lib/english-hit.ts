@@ -1,172 +1,146 @@
-// Where an English hit stands on the page: the snippet to show, the Bekker
-// line to jump to, and the chapter it belongs to — for any of a work's
-// translations, not only the primary.
-//
-// The index says which words matched (word positions counted by englishWords()
-// through the translation's text for the segment); this turns them back into
-// a place. The primary translation is one chunk per segment; every other one is
-// a run of chapter slices, so a hit is placed in its own slice and the snippet
-// never runs across into the next chapter's text.
-import type { OverlayPiece, Segment } from './data';
+// English matching and snippets shared by search and the reader. Turn-aligned
+// translations follow their book's turnFlow; column translations follow each
+// segment's pieces. Bekker line and chapter placement lives in english-place.
+import type { BookData, Segment } from './data';
 import { englishTermMatcher, englishWords, type EnglishWord } from './search';
 import { esc } from './text';
 import type { TranslationRef } from './works';
 
-type Tick = { n: number; offset: number; real: boolean };
+type Ref = Pick<TranslationRef, 'id' | 'slot'>;
 
-interface Piece {
-  text: string;
-  bekker?: Tick[];
-  chapter: string | null;   // null: the primary, whose chapters are offsets
-  cont: boolean;
-}
-
-/** A non-primary translation's slices in a segment, by the field its slot
- * names. `ross` is the pre-rename name of `secondary`, still emitted. */
-export function overlayPieces(seg: Segment, t: Pick<TranslationRef, 'id' | 'slot'> | null | undefined): OverlayPiece[] {
-  if (!t) return [];
-  if (t.slot === 'secondary') return seg.secondary ?? seg.ross ?? [];
-  if (t.slot === 'third') return seg.third ?? [];
-  if (t.slot === 'overlay') return seg.overlays?.[t.id] ?? [];
-  return [];
-}
-
-function piecesOf(seg: Segment, t: Pick<TranslationRef, 'id' | 'slot'>): Piece[] {
-  if (t.slot === 'english') {
-    return seg.english
-      ? [{ text: seg.english.text, bekker: seg.english.bekker, chapter: null, cont: false }]
-      : [];
+/** One turn-aligned translation's texts in a book, by segment id, in turn
+ * order. A turn goes under the section its Greek starts in (g.c); an
+ * English-only residual (g null) under the section before it, or the book's
+ * first. Mirror of stage6 turn_translations(). */
+export function turnTranslationTexts(book: Pick<BookData, 'segments' | 'turnFlow'>, id: string): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  const turns = book.turnFlow?.turns;
+  if (!turns?.length || !book.segments.length) return out;
+  const ids = new Map(book.segments.map(s => [s.column, s.id]));
+  let current = book.segments[0].id;
+  for (const turn of turns) {
+    const at = turn.g ? ids.get(turn.g.c) : undefined;
+    if (at) current = at;
+    const text = turn.alt?.[id]?.e;
+    if (text) (out.get(current) ?? out.set(current, []).get(current)!).push(text);
   }
-  return overlayPieces(seg, t).map(p => ({ text: p.text, bekker: p.bekker, chapter: p.chapter, cont: p.cont }));
+  return out;
 }
 
-export interface EnglishPlace {
-  html: string;              // KWIC snippet, matched words in <mark>
-  line: number;              // Bekker line to jump to: a line the column has
-  sub?: string;
-  // The chapter the hit is in, when the text says so: an overlay slice names
-  // its chapter, the primary marks chapter starts by offset. Null where the
-  // primary's hit precedes every chapter start in the column, so it is in
-  // whichever chapter the column opened in.
-  chapter: string | null;
+/** A translation's texts in one segment, in the order the index counted
+ * them. `turns` is the book's turnTranslationTexts for this translation, which
+ * is where a turn-aligned overlay lives; a section-cut overlay (the sister
+ * repo's shape) is read off the segment. */
+export function translationTexts(seg: Segment, t: Ref, turns?: Map<string, string[]>): string[] {
+  if (t.slot === 'english') return seg.english?.text ? [seg.english.text] : [];
+  if (t.slot === 'secondary') return (seg.secondary ?? seg.ross ?? []).map(p => p.text);
+  if (t.slot === 'third') return (seg.third ?? []).map(p => p.text);
+  const pieces = seg.overlays?.[t.id];
+  if (pieces?.length) return pieces.map(p => p.text);
+  return turns?.get(seg.id) ?? [];
 }
 
-// Characters of context either side of the hit, as before.
-const WINDOW = 140;
+// Characters of context either side of the hit, unless the caller asks for
+// another (the results page's Context control).
+export const WINDOW = 140;
 
 // The reader shows a footnote marker as a numbered control and floats a
 // sidenote or figure out of the prose, so a snippet shows neither.
 const FOOTNOTE = /\[\^[0-9A-Za-z_.*†]+\]/g;
 const SIDENOTE = /\s*\[\[(?:s|fig)[0-9]+\]\]\s*/g;
 const plain = (s: string) => s.replace(SIDENOTE, ' ').replace(FOOTNOTE, '');
+export { plain as plainEnglish };
 
-/** Place one translation's hit in a segment. `positions` are the index's word
- * positions; when they are missing (an index built before positions) or do
- * not land on a matching word (an index from a different build than the
- * books), the first matching words are found in the text instead, by the same
- * rule the index used — with `forms`, any form of each term, as an "any form"
- * search found it. Null when the translation has no text here. */
-export function englishPlace(
-  seg: Segment,
-  t: Pick<TranslationRef, 'id' | 'slot'>,
+/** The KWIC snippets for one translation's hit in a segment, matched words
+ * in <mark>: one passage for each place the words fall, so every match the
+ * results count is shown — a second match in another speech, or past the
+ * first one's window, gets a passage of its own. `positions` are the index's
+ * word positions; when they are missing or any does not land on a match (an
+ * index from a different build than the books), the matches are found in the
+ * text instead, by the rule the index used: `units` are the query's words as
+ * englishQueryUnits() groups them, a unit's words standing together (a
+ * hyphenated word), and the whole query one run under `phrase` — with
+ * `forms`, any form of each word, as an "any form" search found it. Empty
+ * when the translation has no text here. With `centers` (word positions from
+ * englishMarked), only the passages around those words are built; every match
+ * in them is still marked. `reach` is the characters of context either side. */
+export function englishSnippets(
+  texts: string[],
   positions: number[],
-  terms: string[],
+  units: string[][],
   phrase: boolean,
   forms = false,
-): EnglishPlace | null {
-  const pieces = piecesOf(seg, t);
-  if (!pieces.some(p => p.text)) return null;
+  centers?: number[],
+  reach = WINDOW,
+): string[] {
+  if (!texts.some(Boolean)) return [];
   const words: (EnglishWord & { piece: number })[] = [];
-  pieces.forEach((p, i) => { for (const w of englishWords(p.text)) words.push({ ...w, piece: i }); });
+  texts.forEach((text, i) => { for (const w of englishWords(text)) words.push({ ...w, piece: i }); });
 
-  const marked = matchedWords(words, positions, terms, phrase, forms);
-  const center = marked.length ? marked[0] : -1;
-  const pieceIdx = center >= 0 ? words[center].piece : pieces.findIndex(p => p.text);
-  const piece = pieces[pieceIdx];
-  const offset = center >= 0 ? words[center].start : 0;
-
-  return {
-    html: center >= 0 ? snippet(piece.text, words, pieceIdx, center, new Set(marked)) : head(piece.text),
-    ...lineFor(seg, piece, offset),
-    chapter: piece.chapter ?? primaryChapter(seg, offset),
-  };
-}
-
-/** A translation's matched word positions in a segment, split by the chapter
- * each word stands in, in text order, so each chapter is credited with its
- * own hits. Positions that do not fit the text (an index from another build)
- * stay together, for englishPlace to place as it can. */
-export function positionsByChapter(
-  seg: Segment,
-  t: Pick<TranslationRef, 'id' | 'slot'>,
-  positions: number[],
-): number[][] {
-  const pieces = piecesOf(seg, t);
-  const words: { piece: number; start: number }[] = [];
-  pieces.forEach((p, i) => { for (const w of englishWords(p.text)) words.push({ piece: i, start: w.start }); });
-  if (!positions.length || !positions.every(p => p < words.length)) return [positions];
-  const by = new Map<string, number[]>();
-  for (const p of [...positions].sort((a, b) => a - b)) {
-    const { piece, start } = words[p];
-    // '' is the chapter the column opened in, as englishPlace's null is.
-    const chapter = pieces[piece].chapter ?? primaryChapter(seg, start) ?? '';
-    (by.get(chapter) ?? by.set(chapter, []).get(chapter)!).push(p);
+  const { marked, runEnd } = matchedWords(words, positions, phrase ? [units.flat()] : units, forms);
+  if (!marked.length) return [head(texts.find(Boolean)!)];
+  const set = new Set(marked);
+  const only = centers && new Set(centers);
+  const out: string[] = [];
+  let shown = -1;   // the last word a passage so far has printed
+  for (const center of marked) {
+    if (only && !only.has(center)) continue;
+    if (center <= shown) continue;
+    const piece = words[center].piece;
+    const { html, last } = snippet(texts[piece], words, piece, center, set, shown, runEnd, reach);
+    out.push(html);
+    shown = last;
   }
-  return [...by.values()];
+  return out;
 }
 
-/** positionsByChapter, split again at each tick: for a chapter-section work,
- * where every section opens with a real tick, each section is credited with
- * its own hits and gets its own row. */
-export function positionsBySection(
-  seg: Segment,
-  t: Pick<TranslationRef, 'id' | 'slot'>,
+/** The word positions englishSnippets marks, in order: the index's where they
+ * can be trusted, else every match found in the text. Counted through `texts`
+ * as the index counts them. */
+export function englishMarked(
+  texts: string[],
   positions: number[],
-): number[][] {
-  const pieces = piecesOf(seg, t);
-  const words: { piece: number; start: number }[] = [];
-  pieces.forEach((p, i) => { for (const w of englishWords(p.text)) words.push({ piece: i, start: w.start }); });
-  const byChapter = positionsByChapter(seg, t, positions);
-  if (!positions.length || !positions.every(p => p < words.length)) return byChapter;
-  const tickAt = (p: number) => {
-    const { piece, start } = words[p];
-    const ticks = pieces[piece].bekker ?? [];
-    let i = -1;
-    while (i + 1 < ticks.length && ticks[i + 1].offset <= start) i++;
-    return `${piece}:${i}`;
-  };
-  return byChapter.flatMap(group => {
-    const out: number[][] = [];
-    let key = '';
-    for (const p of group) {
-      const k = tickAt(p);
-      if (k !== key || !out.length) { out.push([]); key = k; }
-      out[out.length - 1].push(p);
-    }
-    return out;
-  });
-}
-
-function matchedWords(
-  words: { word: string; piece: number }[],
-  positions: number[],
-  terms: string[],
+  units: string[][],
   phrase: boolean,
-  forms: boolean,
+  forms = false,
 ): number[] {
-  const any = englishTermMatcher(terms, forms);
-  if (positions.length && positions.every(p => p < words.length) && any(words[positions[0]].word)) {
-    return [...positions].sort((a, b) => a - b);
-  }
-  if (phrase && terms.length > 1) {
-    const each = terms.map(t => englishTermMatcher([t], forms));
-    for (let i = 0; i + terms.length <= words.length; i++) {
-      const run = terms.map((_, j) => i + j);
-      if (run.every((k, j) => words[k].piece === words[i].piece && each[j](words[k].word))) return run;
+  const words = texts.flatMap(text => englishWords(text));
+  return matchedWords(words, positions, phrase ? [units.flat()] : units, forms).marked;
+}
+
+// The words the query matched, and for each the last word of the longest-
+// reaching run it stands in, so a passage can show that run whole.
+function matchedWords(
+  words: { word: string }[],
+  positions: number[],
+  runs: string[][],
+  forms: boolean,
+): { marked: number[]; runEnd: Map<number, number> } {
+  // Every run of the query in the text, overlapping runs included, as
+  // phraseStarts() finds them: the index counts a section's words straight
+  // through its speeches, so a run may cross from one into the next. The bare
+  // * matches no word in particular, so marks none.
+  const spans: [number, number][] = [];
+  for (const run of runs) {
+    if (run.length === 1 && run[0] === '*') continue;
+    const tests = run.map(t => englishTermMatcher([t], forms));
+    for (let i = 0; i + run.length <= words.length; i++) {
+      if (tests.every((test, j) => test(words[i + j].word))) spans.push([i, i + run.length - 1]);
     }
-    return [];
   }
-  return words.flatMap((w, i) => (any(w.word) ? [i] : []));
+  const found = new Set(spans.flatMap(([a, b]) => Array.from({ length: b - a + 1 }, (_, j) => a + j)));
+  // The index's positions, when every one falls in such a run: one that does
+  // not means the index counted a different text, and the rest are no safer.
+  const trusted = positions.length > 0 && positions.every(p => found.has(p));
+  const marked = trusted ? new Set(positions) : found;
+  const runEnd = new Map<number, number>();
+  for (const [a, b] of spans) {
+    let whole = true;
+    for (let k = a; k <= b; k++) whole &&= marked.has(k);
+    if (!whole) continue;
+    for (let k = a; k <= b; k++) runEnd.set(k, Math.max(runEnd.get(k) ?? k, b));
+  }
+  return { marked: [...marked].sort((a, b) => a - b), runEnd };
 }
 
 function snippet(
@@ -175,15 +149,31 @@ function snippet(
   piece: number,
   center: number,
   marked: Set<number>,
-): string {
+  shown: number,
+  runEnd: Map<number, number>,
+  reach: number,
+): { html: string; last: number } {
+  // Back no further than the passage before it reached, so no word prints twice.
   let first = center;
-  while (first > 0 && words[first - 1].piece === piece
-    && words[center].start - words[first - 1].start <= WINDOW) first--;
-  // A phrase is shown whole, however long; past it, the window decides.
-  let last = center;
-  while (last + 1 < words.length && words[last + 1].piece === piece && marked.has(last + 1)) last++;
+  while (first - 1 > shown && words[first - 1].piece === piece
+    && words[center].start - words[first - 1].start <= reach) first--;
+  // A run is shown whole, however long; past it, the window decides, and a
+  // run the window reaches is not cut off at its edge, nor is a run that
+  // shares a word with it. Neither goes on into a run that only stands beside
+  // it, nor into the next speech.
+  const through = (from: number) => {
+    let at = from;
+    let end = runEnd.get(from) ?? from;
+    while (at < end && words[at + 1].piece === piece) {
+      at++;
+      end = Math.max(end, runEnd.get(at) ?? at);
+    }
+    return at;
+  };
+  let last = through(center);
   while (last + 1 < words.length && words[last + 1].piece === piece
-    && words[last + 1].end - words[center].start <= WINDOW) last++;
+    && words[last + 1].end - words[center].start <= reach) last++;
+  last = through(last);
 
   let html = '';
   for (let i = first; i <= last; i++) {
@@ -194,50 +184,12 @@ function snippet(
   const more = (i: number) => i >= 0 && i < words.length && words[i].piece === piece;
   if (more(first - 1)) html = '… ' + html;
   if (more(last + 1)) html += ' …';
-  return html;
+  return { html, last };
 }
 
 function head(text: string): string {
   const t = plain(text);
   return esc(t.slice(0, 300)) + (t.length > 300 ? ' …' : '');
-}
-
-// The ticks interpolate Bekker lines down the text (exact at a real
-// milestone, an estimate otherwise); between two ticks the line is read off
-// proportionally. The answer is snapped to a line the column actually has,
-// so the jump lands on an anchor.
-function lineFor(seg: Segment, piece: Piece, offset: number): { line: number; sub?: string } {
-  const lines = seg.greek;
-  if (!lines.length) return { line: 1 };
-  let estimate: number | null = null;
-  const ticks = piece.bekker ?? [];
-  if (ticks.length) {
-    let i = 0;
-    while (i + 1 < ticks.length && ticks[i + 1].offset <= offset) i++;
-    const a = ticks[i];
-    const b = ticks[i + 1];
-    estimate = b && b.offset > a.offset && offset >= a.offset
-      ? a.n + Math.floor(((offset - a.offset) * (b.n - a.n)) / (b.offset - a.offset))
-      : a.n;
-  } else if (piece.chapter === null) {
-    estimate = lines[Math.min(lines.length - 1,
-      Math.floor((offset / Math.max(1, piece.text.length)) * lines.length))].n;
-  } else if (!piece.cont) {
-    estimate = seg.chapterStarts?.find(c => c.chapter === piece.chapter)?.beforeLine ?? null;
-  }
-  if (estimate === null) return { line: lines[0].n, sub: lines[0].sub };
-  let best = lines[0];
-  for (const l of lines) if (Math.abs(l.n - estimate) < Math.abs(best.n - estimate)) best = l;
-  return { line: best.n, sub: best.sub };
-}
-
-function primaryChapter(seg: Segment, offset: number): string | null {
-  let chapter: string | null = null;
-  let at = -1;
-  for (const c of seg.chapterStarts ?? []) {
-    if (c.engOffset <= offset && c.engOffset >= at) { chapter = c.chapter; at = c.engOffset; }
-  }
-  return chapter;
 }
 
 /** A stretch of English as HTML with the query's words marked, by the rule
@@ -270,3 +222,23 @@ export function markEnglishHtml(text: string, units: string[][], phrase: boolean
   });
   return html + esc(text.slice(at));
 }
+
+/** A text as HTML with the words at `marked` in <mark>: word positions as
+ * englishWords counts them through this text. The words a search's own hits
+ * hold, where markEnglishHtml would mark every word the query matches.
+ * Footnote and sidenote markers are left out, as a snippet leaves them. */
+export function markWordsHtml(text: string, marked: ReadonlySet<number>): string {
+  let html = '';
+  let at = 0;
+  englishWords(text).forEach((w, i) => {
+    const word = esc(plain(text.slice(w.start, w.end)));
+    html += esc(plain(text.slice(at, w.start))) + (marked.has(i) ? `<mark>${word}</mark>` : word);
+    at = w.end;
+  });
+  return html + esc(plain(text.slice(at)));
+}
+
+export { englishPlace, positionsByChapter, positionsBySection } from './english-place';
+export type { EnglishPlace } from './english-place';
+
+export { overlayPieces } from './english-place';

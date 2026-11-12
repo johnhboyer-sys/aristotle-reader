@@ -1,3 +1,4 @@
+import { schemeFor } from './citation';
 // Data-fetch helpers. All paths relative to /data (public symlink to
 // build/dist/ne). Every fetcher is memoised through lib/memo.ts so a single
 // click won't re-fetch the same shard twice in a session — and so a failure is
@@ -62,6 +63,7 @@ export interface OverlayPiece {
 }
 
 export interface Segment {
+  speakers?: SpeakerTurn[];
   id: string;
   column: string;
   greek: GreekLine[];
@@ -90,11 +92,15 @@ export interface ChapterRef {
 }
 
 export interface BookData {
+  turnFlow?: TurnFlow;
   book: number;
   segments: Segment[];
 }
 
 export interface Analysis {
+  page?: string;
+  pos?: string[];
+  unlikely?: boolean;
   lemma: string;   // Beta Code
   gloss: string;
   parse: string;
@@ -367,15 +373,18 @@ export function lineAtPosition(seg: Segment, pos: number): { n: number; sub?: st
 // The tokens a search hit names, as the very objects the page renders.
 // `positions` count a segment's tokens line by line, as the index does. A
 // table row's cells carry their own copies of the line's tokens, and need not
-// carry all of them (De Int 22a), so those are matched to the line's in
-// order, by surface form.
+// carry all of them, so those are matched to the line's in order, by surface
+// form. A position past the segment's last token counts on into the segments
+// after it (a running-text match that crosses a section).
 export function hitTokens(segments: Segment[], column: string, positions: Iterable<number>): Set<Token> {
   const out = new Set<Token>();
-  const seg = segments.find(s => s.column === column);
-  if (!seg) return out;
+  const at = segments.findIndex(s => s.column === column);
+  if (at < 0) return out;
   const want = new Set(positions);
+  const top = Math.max(-1, ...want);
   let pos = 0;
-  for (const line of seg.greek) {
+  for (const line of segments.slice(at).flatMap(s => s.greek)) {
+    if (pos > top) break;
     const hits = new Set<number>();
     line.tokens.forEach((tok, i) => { if (want.has(pos + i)) { out.add(tok); hits.add(i); } });
     if (line.cells && hits.size) {
@@ -456,7 +465,8 @@ export function fetchAnalyses(work: string): Promise<Record<string, Analysis[]>>
 // has a /lemma/<slug> reference page (produced by scripts/build-lemmata.mjs).
 // The word popup loads it once to decide whether to offer a "see all N
 // occurrences" link, and only for lemmata that actually have a page.
-export interface LemmaRef { slug: string; head: string; count: number; distinctiveness_label?: string; }
+export interface LemmaRef {
+  slug: string; head: string; count: number; distinctiveness_label?: string; }
 // A missing/failed manifest just means no lemma links (every caller catches)
 // — don't cache the failure. It has to be a rejection for that to work: a
 // {} resolved on a 404 would be cached as an empty manifest for the session.
@@ -719,3 +729,168 @@ export async function lookupWord(
   }
   return { analyses: entries, lsj: lsjEntries };
 }
+
+
+
+export interface EnglishTurn {
+  offset: number;
+  speaker: string | null;
+  display: string | null;
+}
+
+
+// One entry of a dialogue book's global turn flow (see TurnFlow): `g` is the
+// Greek start ref (Stephanus column token, line n, char offset) — null for an
+// English-only residual; `e` is the turn's English slice text — null for a
+// Greek-only residual; `s`/`d` are the canonical speaker and the printed
+// English lead-in; `p` marks a paired (level-locked) turn.
+export interface FlowTurn {
+  s: string | null;
+  d: string | null;
+  g: { c: string; n: number; o: number } | null;
+  e: string | null;
+  p: boolean;
+  // ── Optional flow extensions. The pipeline emits an explicit JSON `null`
+  // when a field is absent (not an omitted key), so each is `T[] | null` as
+  // well as optional; old dialogue JSON (keys absent) still typechecks.
+  //
+  // `ep`: paragraph-break offsets within this turn's stripped English slice
+  // (exclusive of 0 and the slice end) — the reader renders each as a break.
+  // Emitted for para-flow rows AND for dialogue turns with internal paragraphs
+  // (Timaeus/Phaedo long speeches).
+  ep?: number[] | null;
+  // `es`: Stephanus section starts within this turn's stripped English slice —
+  // `o` is the char offset where section `c` begins, so the reader can hang each
+  // gutter citation tick beside the prose it actually labels. A turn whose Greek
+  // spans several sections (Laches 181e-182d, Timaeus' monologue) gets one entry
+  // per section; before this existed the reader painted them all at the row's
+  // top edge, stacking every label on one illegible spot. Omitted when empty.
+  es?: { o: number; c: string }[] | null;
+  // `et`: embedded english.turns for a para-flow row — intra-row speech blocks
+  // with lead-ins (dialogue nested inside a narrated paragraph row). `o` is the
+  // char offset in the row's English slice where the embedded speech begins.
+  et?: { o: number; s: string | null; d: string | null }[] | null;
+  // `sub`: stacked one-sided English speeches folded under this row (pipeline
+  // B4's column-grouped residual rows — dialogue flows like Lysis/Parmenides,
+  // and the para-flow contract). Usually the row's `e` is null and the stack
+  // is its whole English cell; when the row also carries English (a narration
+  // lead, e.g. Lysis 203a) the stack follows it. Each speech has its own
+  // lead-in, English text, and optional paragraph breaks.
+  sub?: { s: string | null; d: string | null; e: string; ep?: number[] | null; es?: { o: number; c: string }[] | null }[] | null;
+  // `alt`: this turn's text in ALTERNATE translations, keyed by translation id
+  // (see shared/lib/works.ts TranslationRef.id). Populated by the post-stage7
+  // turn aligner (pipeline/plato_pipeline/align_turns.py), which pairs each
+  // alternate translation's speaker turns to this reference turnFlow so the
+  // alternate inherits Stephanus anchoring. The reader's turn-by-turn compare
+  // renders `alt[id].e` in the second column on this same row; `e` is null for
+  // a reference turn the alternate has no match for (rendered as an em-dash).
+  // `es` (optional): section starts placed inside the alternate's slice by
+  // pipeline/plato_pipeline/align_sections.py (matched against the reference
+  // turn's words, so approximate); absent → the reader projects them itself.
+  alt?: Record<string, { e: string | null; ep?: number[] | null; es?: { o: number; c: string }[] | null }> | null;
+}
+
+
+// A dialogue book's turn flow: the globally-paired, ordered turn list the
+// reader renders as Greek-beside-English rows (each speaker's statement level
+// with its translation; Stephanus sections become gutter ticks). Present only
+// for books with Greek turn events; narrated books keep section-row rendering.
+// `leadE` is English prose preceding the first English turn.
+//
+// `kind: 'para'` marks a paragraph-anchored flow for a NARRATED work: rows are
+// paragraphs (s/d null, p false), the English cut at paragraph boundaries and
+// the Greek ref snapped to the nearest Stephanus section boundary. Absent (or
+// omitted) for ordinary speaker-turn dialogue flows.
+export interface TurnFlow {
+  kind?: 'para';
+  leadE: string | null;
+  turns: FlowTurn[];
+}
+
+
+// A speaker-turn event in a Stephanus dialogue (Plato): the interlocutor whose
+// speech begins at `offset` (char position in line `line`'s rejoined text). The
+// `label` siglum ("ΕΥΘ.") or dialectic dash ("—") is EXCLUDED from the line text
+// and rendered as a separate inline lead-in, so token char-offsets never shift.
+// See shared/lib/speakers.ts for the render model. Absent for non-dialogue works.
+export interface SpeakerTurn {
+  line: number;
+  offset: number;
+  label: string;
+}
+
+
+// All caches are keyed by work so two works loaded in one session (e.g. unified
+// search) never collide.
+
+
+
+
+
+
+
+// One entry of a Stephanus work's section outline: a page+letter column
+// ("17a"), the page number and letter split out, and the stable segment anchor
+// id (`book:column`) the reader emits as `col-{column}`. Emitted per book by the
+// pipeline's stage7 emit_sections (a section scheme replaces chapters.json with
+// sections.json as the outline-nav source — Plato is cited by page+section, not
+// by chapter). Ordered in reading order (2a, 2b, … 17e, 18a).
+export interface SectionRef { column: string; page: number; letter: string; id: string; }
+
+
+const _sectionsCache = new Map<string, Promise<Record<string, SectionRef[]>>>();
+
+
+// Per-book Stephanus section outline: { book -> ordered SectionRef[] }. Present
+// only for section-scheme (stephanus) works; the outline nav groups these by
+// page. Cached per work, failure evicted so it can be retried.
+export function fetchSections(work: string): Promise<Record<string, SectionRef[]>> {
+  const cached = _sectionsCache.get(work);
+  if (cached) return cached;
+  const p = fetch(`${workBase(work)}/sections.json`).then(r => {
+    if (!r.ok) throw new Error(`${work} sections: ${r.status}`);
+    return r.json();
+  });
+  p.catch(() => { if (_sectionsCache.get(work) === p) _sectionsCache.delete(work); });
+  _sectionsCache.set(work, p);
+  return p;
+}
+
+
+// Group a book's ordered sections into Stephanus pages for the outline nav:
+// [{ page, column }] where `column` is the first section column on that page —
+// the anchor (`col-{column}`) the page's outline entry links to. Reading order
+// is preserved (sections are already ordered), so pages come out ascending and
+// each page appears once, keyed to where it first starts.
+export interface SectionPage { page: number; column: string; }
+
+export function sectionPages(sections: SectionRef[]): SectionPage[] {
+  const pages: SectionPage[] = [];
+  let last: number | null = null;
+  for (const s of sections) {
+    if (s.page !== last) { pages.push({ page: s.page, column: s.column }); last = s.page; }
+  }
+  return pages;
+}
+
+
+// Analytical sidenotes for a work: { sidenote number -> text }. Present only for
+// works whose translation carries marginal notes (the Isagoge's Owen). Loaded
+// lazily and cached for the session.
+
+
+// Diagrams for a work: { figure number -> pre-rendered HTML <figure> }. Present
+// only for works that carry [[figN]] markers (the Isagoge's Tree of Porphyry).
+
+
+// Parse a `?loc=` value (or a hand-typed citation) against the citation scheme
+// a work actually uses — bare column ("17a"), column:line ("1097a:15"), or the
+// legacy concatenated Bekker form ("1097a15"). See shared/lib/citation.ts for
+// the grammar and why a lineless scheme (stephanus) rejects a line component
+// instead of silently dropping it.
+export function parseLocation(work: string, raw: string): { column: string; line: number | null } | null {
+  return schemeFor(work).parseLocation(raw);
+}
+
+
+// work -> global offsets, delta-encoded after the first.

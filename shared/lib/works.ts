@@ -45,6 +45,7 @@ export interface MissingBooks {
 }
 
 export interface Work {
+  narrator?: string;
   id: string;       // slug + data dir, e.g. 'EN'
   title: string;
   greekTitle?: string;  // polytonic Greek title, shown in the print masthead
@@ -1568,3 +1569,6 @@ export const DIVISION_NAMES: Record<string, string> = {
   'Moral and Political Philosophy': 'Ethics and politics',
   'Rhetoric and Poetics': 'Rhetoric and poetics',
 };
+
+// This corpus has no speaker or turn search controls.
+export const HAS_SPEAKERS = false;

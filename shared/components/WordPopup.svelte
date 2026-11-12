@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { fly } from 'svelte/transition';
-  import { lookupWord, fetchLemmata, fetchLsjHeads, type Analysis, type LsjEntry,
-           type LemmaRef, type LsjHead } from '../lib/data';
+  import { lookupWord, fetchLemmata, fetchLsjHeads,
+    type Analysis, type LsjEntry, type LemmaRef, type LsjHead } from '../lib/data';
+  import { classLine, lessLikelyFrom, withoutIndeclform } from '../lib/popup-class';
   import { betaToGreek } from '../lib/betacode';
   import { renderLsjEntry } from '../lib/html';
 
@@ -10,11 +11,12 @@
   export let token: { t: string; k: string };
   export const anchor: { x: number; y: number } = { x: 0, y: 0 };
   export let onClose: () => void;
-  // The site's B word panel (Reader passes b): the same content in B's
-  // .b-side / .b-card frame, with the word's place and word stepping.
+  // The B reader uses the compact word card.
   export let b = false;
   export let place = '';
   export let onStep: ((d: number) => void) | null = null;
+  // Compare mode uses a bottom sheet on tablets to keep the text full width.
+  export let asSheet: boolean = false;
 
   let dialogEl: HTMLElement;
   let previousFocus: HTMLElement | null = null;
@@ -29,50 +31,42 @@
   // params when the element mounts, before onMount runs.
   const isMobile = typeof window !== 'undefined'
     && window.matchMedia('(max-width: 680px)').matches;
+  // Whether we render as a bottom sheet: always on phones, and on tablets when
+  // the caller is in compare mode (asSheet) — matches the CSS in global.css.
+  const asSheetHere = typeof window !== 'undefined'
+    && (isMobile || (asSheet && window.matchMedia('(min-width: 681px) and (max-width: 1100px)').matches));
+  // Honour the OS "reduce motion" setting: the fly-in is decorative, so collapse
+  // it to an instant appearance. (The CSS @media query can't reach Svelte's JS
+  // transitions, so it's gated here too.)
+  const reduceMotion = typeof window !== 'undefined'
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Reload when the clicked word changes. The sidebar switches word in place —
-  // Reader reassigns `token` without remounting this component (see the
-  // .word-open comment in Reader.svelte) — so a one-shot load at creation would
-  // leave the PREVIOUS word's analyses/LSJ sitting under the new headword. The
-  // monotonic request id discards a slow earlier lookup that resolves after a
-  // newer click.
+  // Reactive on token.k: clicking another Greek word while the panel is open
+  // swaps the analysis in place (no remount, no reflow). The request id guards
+  // against out-of-order responses when the reader clicks quickly.
   let reqId = 0;
   $: loadWord(work, token.k);
   function loadWord(w: string, k: string) {
-    // Bump the lexicon generation too: a dictionary render still in flight
-    // belongs to the word being replaced.
-    const my = ++reqId;
-    lexId++;
+    const id = ++reqId;
     loading = true;
     error = '';
     analyses = [];
     lsj = [];
+    lexId++;
     lookupWord(w, k, { withLsj: useLocalLexicon })
-      .then(r => { if (my === reqId) { analyses = r.analyses; lsj = r.lsj; } })
-      .catch(e => { if (my === reqId) error = String(e); })
-      .finally(() => { if (my === reqId) loading = false; });
+      .then(r => { if (id !== reqId) return; analyses = r.analyses; lsj = r.lsj; })
+      .catch(e => { if (id !== reqId) return; error = String(e); })
+      .finally(() => { if (id === reqId) loading = false; });
   }
 
-  // The lemma-page manifest (loaded once, cached): lets each analysis card offer
-  // a "see all N occurrences" link into /lemma/<slug>, but only for lemmata that
-  // actually have a page. Absent manifest = no links, popup unchanged.
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-  let lemmata: Record<string, LemmaRef> = {};
-  fetchLemmata().then(m => { lemmata = m; }).catch(() => {});
-  // Headword + homograph letter for every LSJ key, so the website never
-  // downloads a letter shard just to spell a word. Absent manifest = the
-  // betaToGreek fallback below, which is why nothing here throws.
-  let heads: Record<string, LsjHead> = {};
-  fetchLsjHeads().then(m => { heads = m; }).catch(() => {});
   // ── The dictionary entry ────────────────────────────────────────────────
   // Served by grammata (grammar-site's deploy), not rendered here: one grammata
-  // deploy updates every reader site. Architecture decided 2026-08-29. Do not
-  // vendor, proxy, pin or cache-bust this URL — its deploys ARE the update
-  // mechanism — and do not style anything inside the container: the widget's
-  // CSS is generated from grammata's design system and changes with it.
+  // deploy updates every reader site. Do not vendor, proxy, pin or cache-bust
+  // this URL — its deploys ARE the update mechanism — and do not style anything
+  // inside the container: the widget's CSS comes from grammata's design system
+  // and changes with it.
   const GRAMMATA_LOOKUP = 'https://grammata.pages.dev/t8/lookup.js';
-  // The packaged desktop app bundles its corpus and is offline-first, so it
-  // keeps rendering the local LSJ shards. Same check runtime.ts uses.
+  // The desktop app uses bundled LSJ shards; the website uses Grammata.
   const useLocalLexicon =
     typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 
@@ -83,33 +77,39 @@
   ) => Promise<void>;
 
   let lexLoader: Promise<LookupFn> | null = null;
-  // Loaded on the first word click, then reused: the import is the only cost
-  // paid before a lookup, and the browser caches the module after that.
   function loadLookup(): Promise<LookupFn> {
     // @vite-ignore keeps the remote specifier out of the bundle graph — Vite
     // cannot resolve an https: import at build time and would fail the build.
     if (!lexLoader) lexLoader = import(/* @vite-ignore */ GRAMMATA_LOOKUP).then(m => m.lookup);
     return lexLoader;
   }
-
-  // The sidebar switches word in place (see loadWord above), so this re-runs on
-  // a new token rather than remounting. Its own counter, not loadWord's: the
-  // two requests resolve independently and a slow earlier entry must not land
-  // in the container after a newer click.
+  // Its own counter, not loadWord's: the two requests resolve independently and
+  // a slow earlier entry must not land in the container after a newer click.
   let lexId = 0;
+
+  // Headword + homograph letter for every LSJ key, so the website never pulls a
+  // whole letter shard just to spell a word. Absent manifest = the betaToGreek
+  // fallback below, which is why nothing here throws.
+  let heads: Record<string, LsjHead> = {};
+  fetchLsjHeads().then(m => { heads = m; }).catch(() => {});
+
+  // The lemma-page manifest (loaded once, cached): lets each analysis card offer
+  // a "see all N occurrences" link into /lemma/<slug>, but only for lemmata that
+  // actually have a page. Absent manifest = no links, popup unchanged.
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  let lemmata: Record<string, LemmaRef> = {};
+  fetchLemmata().then(m => { lemmata = m; }).catch(() => {});
   // ── Cards are keyed by DICTIONARY ENTRY, not by Morpheus lemma ──────────
-  // An analysis can name several LSJ entries (νοῦν's unnumbered νέω points at
-  // all three of νέω A/B/C). Keying on the entry means its parses join each of
-  // those entries' cards, no card ever names more than one entry, and there is
-  // no unresolved-parent card that opens nothing. νοῦν: 17 cards -> 4.
+  // An analysis can name several LSJ entries. Keying on the entry means its
+  // parses join each of those entries' cards, no card ever names more than one
+  // entry, and there is no unresolved-parent card that opens nothing.
   const DIALECTS = ['attic', 'epic', 'doric', 'ionic', 'aeolic', 'homeric'];
 
-  // Aristotle is Attic, so Attic is the unmarked default and never printed.
-  // A form with NO Attic reading is worth doubting, so it says what it is
-  // limited to. Cuts on Attic's presence, not on how many dialects are named:
-  // "(attic)" alone would otherwise flag (meaningless here) and "(epic ionic)"
-  // would otherwise stay silent (exactly the case worth seeing). 2,007 of
-  // 15,041 analyses flag — 13%.
+  // Aristotle is Attic, so Attic is the unmarked default and never printed (John's
+  // ruling 2026-08-30). A form with NO Attic reading is worth doubting, so it
+  // says what it IS limited to. Cuts on Attic's PRESENCE, not on how many
+  // dialects are named: "(attic)" alone would otherwise flag (meaningless
+  // here) and "(epic ionic)" would otherwise stay silent — exactly backwards.
   function splitParse(parse: string): { text: string; dialect: string } {
     const m = /\(([^)]*)\)\s*$/.exec(parse ?? '');
     if (!m) return { text: (parse ?? '').trim(), dialect: '' };
@@ -120,11 +120,10 @@
     return { text, dialect: named.length === 1 ? `${named[0]} only` : named.join(' ') };
   }
 
-  // LSJ marks its own homographs — νέω (A), νέω (B), νέω (C) — in the entry
-  // text itself. Read that, never derive it from the key's trailing digit:
-  // ka/r2 is LSJ's (A), not (B), and li^to/s2 is (A) too, so the digit lies in
-  // 6 cases. 32% of numbered keys carry no letter at all (a)/llos1), and those
-  // show nothing rather than being given a letter LSJ never printed.
+  // LSJ marks its own homographs — νέω (A), νέω (B) — in the entry text itself.
+  // Read that, never derive it from the key's trailing digit: the digit
+  // disagrees on real entries, and many numbered keys carry no letter at all,
+  // which must show nothing rather than a letter LSJ never printed.
   function homograph(html: string | undefined): string {
     if (!html) return '';
     const m = /^\s*\S+\s*\(([A-Z])\)/.exec(html.replace(/<[^>]+>/g, ''));
@@ -134,6 +133,9 @@
   interface EntryCard {
     id: string;
     lsjKey: string;          // '' when this analysis names no LSJ entry
+    // LSJ's headword when it prints this word inside another entry
+    // (Λακεδαιμόνιος inside Λακεδαίμων, Analysis.page); '' otherwise.
+    under: string;
     head: string;
     hom: string;             // LSJ's own homograph letter, '' when unmarked
     gloss: string;
@@ -141,8 +143,13 @@
     // analysis can fan out across several entries carrying the gloss of only
     // one of them, and first-wins then mislabels the rest.
     glossExact: boolean;
+    // The Morpheus lemma is capitalised (Beta Code '*'): a name. Most names
+    // have no LSJ entry and so ship no gloss; the card says what the blank is.
+    properName: boolean;
     rows: { text: string; dialect: string }[];
     ref: LemmaRef | null;
+    pos: string[];           // the classes of its readings (popup-class)
+    unlikely: boolean;       // every reading is less likely in Aristotle
   }
 
   $: cards = (() => {
@@ -152,42 +159,40 @@
       const keys = a.lsj && a.lsj.length ? a.lsj : [''];
       // An analysis naming exactly one entry describes THAT entry; one naming
       // several is unresolved and its gloss belongs to none in particular.
-      // νοῦν opens with an unresolved νέω naming all three numbered entries
-      // and glossing them "swim", so νέω (B) "spin" and νέω (C) "heap" both
-      // read "swim" while opening the right entry underneath — a card lying
-      // about the definition it is about to show.
       const exact = keys.length === 1;
       for (const k of keys) {
-        const id = k || `lemma:${a.lemma}`;
+        const id = a.page ? `page:${a.page}` : k || `lemma:${a.lemma}`;
         let card = byId.get(id);
         if (!card) {
           // Manifest first (website: no shard fetched at all), then the shard
-          // (desktop, which has it in hand), then the lemma transliterated.
+          // (an offline build, which has it in hand), then the transliteration.
           const meta = k ? heads[k] : undefined;
           const entry = k ? lsj.find(e => e.key === k) : undefined;
           card = {
             id,
             lsjKey: k,
-            head: meta?.head || entry?.head || betaToGreek(a.lemma),
-            hom: meta?.hom ?? homograph(entry?.html),
+            head: a.page ? lemmata[a.page]?.head || betaToGreek(a.page) : meta?.head || entry?.head || betaToGreek(a.lemma),
+            under: '',
+            hom: a.page ? '' : meta?.hom ?? homograph(entry?.html),
             gloss: a.gloss,
             glossExact: exact,
+            properName: a.lemma.startsWith('*'),
             rows: [],
-            ref: (k && lemmata[k]) || null,
+            ref: (a.page ? lemmata[a.page] : k && lemmata[k]) || null,
+            pos: [],
+            unlikely: true,
           };
+          // Named only when it differs: LSJ heads `dianoe/w` διανοέομαι itself.
+          if (a.page) {
+            const host = meta?.head || entry?.head || lemmata[k]?.head || betaToGreek(k);
+            if (host !== card.head) card.under = host;
+          }
           byId.set(id, card);
           out.push(card);
         }
-        // Precedence, in order:
-        //  - a non-empty exact gloss always wins, even over an earlier exact:
-        //    οἰκοδόμου has two analyses of oi)kodo/mos, the first glossed ""
-        //    and the second "builder, architect", and first-exact-wins left
-        //    the card blank on 92 tokens.
-        //  - an empty exact still marks the card exact, and CLEARS a gloss
-        //    that came from a fan-out: δύσει's du/w1 stamps "two" onto du/w2,
-        //    whose own analysis has no gloss, and blank is honest where "two"
-        //    is simply another verb's meaning.
-        //  - a fan-out gloss only ever fills a hole, and never overwrites.
+        // A later non-empty exact gloss wins. An empty exact clears a
+        // fan-out gloss, but keeps an earlier exact gloss. A fan-out only
+        // fills a blank card that has no exact gloss.
         if (exact) {
           if (a.gloss) card.gloss = a.gloss;
           else if (!card.glossExact) card.gloss = '';
@@ -195,23 +200,28 @@
         } else if (!card.glossExact && !card.gloss && a.gloss) {
           card.gloss = a.gloss;
         }
-        const row = splitParse(a.parse);
-        // Drop rows this card already carries: an analysis naming three
-        // entries repeats its parse into all three, and the corpus holds 701
-        // byte-identical duplicates besides.
-        if (!card.rows.some(r => r.text === row.text && r.dialect === row.dialect)) {
+        card.pos.push(...(a.pos ?? []));
+        if (!a.unlikely) card.unlikely = false;
+        const split = splitParse(a.parse);
+        const row = { ...split, text: a.pos?.length ? withoutIndeclform(split.text) : split.text };
+        // Drop rows this card already carries: an analysis naming several
+        // entries repeats its parse into all of them.
+        if ((row.text || row.dialect) && !card.rows.some(r => r.text === row.text && r.dialect === row.dialect)) {
           card.rows.push(row);
         }
       }
     }
     return out;
   })();
+  // Less likely readings last, under their own line (U2).
+  $: shown = lessLikelyFrom(cards);
 
   // Which card's entry is open. One at a time: the panel is narrow and the
-  // reader came for one definition, not a stack.
+  // reader came for one definition, not a stack. Nothing is fetched for a
+  // reader who wanted only the parse.
   let openId = '';
-  // Reset when the sidebar switches word in place, or the previous word's
-  // entry would sit open under a new set of cards.
+  // Reset when the sidebar switches word in place, or the previous word's entry
+  // would sit open under a new set of cards.
   $: if (token) openId = '';
 
   function toggleCard(card: EntryCard, el: HTMLElement | undefined) {
@@ -224,44 +234,53 @@
     try {
       const lookup = await loadLookup();
       if (my !== lexId) return;
-      // lang:'grc' skips the Latin fetch outright on a Greek reader. With a
-      // key the word argument is ignored, so it stays empty; without one the
-      // widget re-analyses the Unicode headword and may stack fold-siblings.
+      // PASS THE KEY, never the surface form. A surface form makes the widget
+      // re-analyse from scratch and discard the disambiguation already done
+      // here — εἰσὶ returns ἵημι, εἰμί and εἶμι, so the entry under a card
+      // reading "εἰμί" would be a different verb. With a key it skips its own
+      // analysis entirely, and the word argument is ignored.
       await lookup(key ? '' : word, el, key ? { lang: 'grc', key } : { lang: 'grc' });
       // Re-checked after the await: the reader may have moved on mid-render.
       if (my !== lexId) return;
     } catch (e) {
       // A failed module load is the only case the widget cannot report itself
-      // (it renders its own not-found and network-failure states).
+      // (it renders its own loading, not-found and network-failure states).
       if (my === lexId) el.textContent = 'Word data is not available here.';
       console.error('[grammata] lookup failed', e);
     }
   }
 
   function onKey(e: KeyboardEvent) {
-    // B: Escape closes an open menu or the contents first, not the panel too.
-    // The shell marks an Escape it consumed (Contents, Book menu).
-    if (b && e.defaultPrevented) return;
-    if (b && document.querySelector('.b-aa, .b-pk, .b-toc:not([hidden]), .b-bkm[open]')) return;
+    if (b && (e.defaultPrevented || document.querySelector('.b-aa, .b-pk, .b-toc:not([hidden]), .b-bkm[open]'))) return;
     if (e.key === 'Escape') onClose();
   }
 
-  // Close on any CLICK outside the panel — EXCEPT on a Greek token, whose
-  // own click handler swaps the popup to the new word. (A blocking backdrop
-  // here would swallow that click and force close-then-reopen, with two page
-  // reflows; see the bug report of 2026-07-29.) Click, not pointerdown: a
-  // click only fires after press+release on the same target, so a touch pan,
-  // a text-selection drag, or a right-click never dismisses the panel — the
-  // same tap-not-pan semantics the old backdrop had (Sol adversarial-review
-  // catch, 2026-07-29). Capture phase, not bubble: Reader's footnote-marker,
-  // Bekker-info, and print-menu handlers stopPropagation(), which would keep
-  // the panel open behind the popup they raise — John's ruling 2026-07-29:
-  // a footnote click closes the word panel.
+  // Close on a completed click outside the panel — EXCEPT on a Greek token,
+  // whose own click handler swaps the popup to the new word. (A blocking
+  // backdrop here would swallow that click and force close-then-reopen, with
+  // two page reflows; see the bug report of 2026-07-29.) A click, not a
+  // pointerdown: on touch screens a scroll drag begins with a press on the
+  // text, and that must not dismiss the panel.
+  // Clicks inside the reader's other overlays (command palette, footnote
+  // popup body, settings, help, the copy-citation button) belong to those
+  // layers — the word panel must not treat them as "outside" and vanish
+  // behind them. The footnote MARKER and the Bekker-info toggle are NOT in
+  // the list: John's ruling 2026-07-29 — a click that raises another popup
+  // (footnote, Bekker note, print menu) closes the word panel. Their
+  // handlers stopPropagation(), which is why the listener below runs in the
+  // capture phase — a bubble listener would never see those clicks.
+  const KEEP_OPEN =
+    '.word-sidebar, .b-side, .tok, .cp-backdrop, .footnote-popup, '
+    + '.settings-sidebar, .settings-backdrop, '
+    + '.help-modal, .help-backdrop, .copy-cite-btn';
   function onOutsideClick(e: MouseEvent) {
     const t = e.target as HTMLElement | null;
-    if (!t || t.closest('.word-sidebar, .b-side') || t.closest('.tok')) return;
-    // B: the head and its menus (Aa, the translations) leave the panel open.
-    if (b && t.closest('.b-rh, .b-menu')) return;
+    if (!t || t.closest(KEEP_OPEN) || (b && t.closest('.b-rh, .b-menu'))) return;
+    // A text-selection drag ends in a click on the ancestor; selecting Greek
+    // (e.g. for the append-citation copy) must not dismiss the panel. (A later
+    // unrelated click clears the selection at mousedown, so a lingering
+    // selection does not pin the panel open.)
+    if (window.getSelection()?.toString()) return;
     onClose();
   }
 
@@ -279,12 +298,7 @@
 
 <svelte:window on:keydown={onKey} on:click|capture={onOutsideClick} />
 
-<!-- Desktop: slide-in sidebar. Mobile: bottom sheet. Both via CSS.
-     A non-modal dialog, honestly: the reader can click other words (swap),
-     footnotes, and links while it is open, so aria-modal and a Tab trap would
-     tell assistive tech the background is unavailable while pointer users
-     interact with it freely (Sol adversarial-review catch, 2026-07-29).
-     Escape still closes; focus returns to the opener. -->
+<!-- Desktop: slide-in sidebar. Mobile / tablet-compare: bottom sheet. Both via CSS. -->
 {#if b}
 <aside
   class="b-side"
@@ -343,8 +357,9 @@
 {:else}
 <div
   class="word-sidebar"
+  class:as-sheet={asSheet}
   bind:this={dialogEl}
-  transition:fly={isMobile ? { y: 600, duration: 260, opacity: 1 } : { x: 420, duration: 220, opacity: 1 }}
+  transition:fly={reduceMotion ? { duration: 0 } : asSheetHere ? { y: 600, duration: 260, opacity: 1 } : { x: 420, duration: 220, opacity: 1 }}
   role="dialog"
   aria-label="Word analysis"
   tabindex="-1"
@@ -361,8 +376,9 @@
     {:else if analyses.length === 0}
       <div class="popup-loading">No analysis found for this form.</div>
     {:else}
-      {#each cards as card (card.id)}
-        <div class="analysis-card" class:card-open={openId === card.id}>
+      {#each shown.cards as card, i (card.id)}
+        {#if i === shown.from}<p class="less-likely">Less likely</p>{/if}
+        <div class="analysis-card" class:card-open={openId === card.id} class:card-unlikely={card.unlikely && shown.from >= 0}>
           <button
             type="button"
             class="card-face"
@@ -370,8 +386,22 @@
             on:click={(e) => toggleCard(card, (e.currentTarget as HTMLElement)
               .parentElement?.querySelector('.grammata-mount') as HTMLElement)}
           >
-            <span class="lemma" lang="grc">{card.head}{#if card.hom}<span class="lemma-hom" lang="en"> ({card.hom})</span>{/if}</span>
+            <!-- &nbsp;, not a plain space: Svelte trims whitespace at the start of an
+                 element's content, so " (B)" shipped as "(B)" hard against the headword.
+                 It also keeps LSJ's letter from wrapping away from the word it marks. -->
+            <span class="lemma" lang="grc">{card.head}{#if card.hom}<span class="lemma-hom" lang="en">&nbsp;({card.hom})</span>{/if}</span>
             <span class="gloss">{card.gloss}</span>
+            {#if !card.gloss && card.properName}
+              <!-- Morpheus carries no gloss for most names (LSJ has no entry to
+                   draw one from), so about a quarter of the corpus's lemmata
+                   arrived with this slot blank. Naming the blank is honest;
+                   inventing an English rendering of the name would not be. -->
+              <span class="gloss gloss-note">proper name</span>
+            {/if}
+            {#if card.under}
+              <span class="gloss gloss-note">LSJ treats it under <span lang="grc">{card.under}</span></span>
+            {/if}
+            {#if card.pos.length}<span class="card-class">{classLine(card.pos)}</span>{/if}
             <dl class="parse-rows">
               {#each card.rows as row}
                 <dt>{row.text}</dt>
@@ -384,10 +414,8 @@
             </span>
           </button>
 
-          {#if card.ref}
-            {#if card.ref.distinctiveness_label}
-              <em class="distinct-label">{card.ref.distinctiveness_label}</em>
-            {/if}
+          {#if card.ref?.distinctiveness_label}<em class="distinct-label">{card.ref.distinctiveness_label}</em>{/if}
+            {#if card.ref}
             <a class="lemma-link" href={`${base}/lemma/${card.ref.slug}/`}>
               Appears {card.ref.count.toLocaleString()}× across Aristotle
               <span class="lemma-link-arr" aria-hidden="true">→</span>
@@ -397,7 +425,7 @@
           <div class="card-entry" hidden={openId !== card.id}>
             {#if useLocalLexicon}
               {#if card.lsjKey && lsj.find(e => e.key === card.lsjKey)}
-                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                <!-- eslint-disable-next-line svelte/no-at-html-tags — sanitized by renderLsjEntry -->
                 {@html renderLsjEntry(lsj.find(e => e.key === card.lsjKey)!.html, { base })}
               {:else}
                 <div class="popup-loading">No dictionary entry for this form.</div>
@@ -411,4 +439,12 @@
     {/if}
   </div>
 </div>
+
 {/if}
+
+<!-- No <style> block here on purpose. Reader pages load global.css and nothing
+     else, so a component style block ships NOWHERE — it works in `astro dev`,
+     which is how .lemma-link went unstyled in production while every local
+     check passed. The popup's styles live in global.css under
+     "word popup: analysis cards". -->
+

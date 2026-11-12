@@ -238,7 +238,7 @@ describe('WordPopup', () => {
       lsj: [],
     });
     render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
-    expect(await screen.findByText('coined by Aristotle')).toBeInTheDocument();
+    expect(await screen.findByText('coined by Aristotle')).toHaveClass('distinct-label');
     expect(screen.getByText(/Appears 10/)).toBeInTheDocument();
   });
 
@@ -254,7 +254,8 @@ describe('WordPopup', () => {
     await screen.findByText(/Appears 10/);
     expect(screen.queryByText('coined by Aristotle')).toBeNull();
     expect(screen.queryByText('rare before Aristotle')).toBeNull();
-    expect(document.querySelector('.distinct-label')).toBeNull();
+    expect(document.querySelector('.word-sidebar')).not.toHaveTextContent(/coined by Aristotle|rare before Aristotle/);
+    expect(document.querySelector('em')).toBeNull();
   });
   it('makes one card per dictionary entry, not one per analysis', async () => {
     // δεῖ's real shape: nine analyses naming three entries. Two of them are

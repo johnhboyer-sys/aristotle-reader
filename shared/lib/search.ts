@@ -10,8 +10,9 @@
 //   one translator's prose — and reported per translation.
 // Phrase search: after intersection, verify token adjacency in segment data.
 // Cross-language: AND (intersection) or OR (union) the two result sets.
+import { formatCite } from './citation';
 import { memoAsyncBy } from './memo';
-import { getWork, searchableTranslations, type TranslationRef } from './works';
+import { getWork, searchableTranslations, WORKS, type TranslationRef } from './works';
 
 // Honour Astro's base path. BASE_URL may lack a trailing slash, so strip + join.
 // Same host override as data.ts: the desktop app points the whole data layer
@@ -36,23 +37,25 @@ type EngIndex = Record<string, [number, number][]>; // word → [[seg_idx, word_
 // The word-offset primitive: one running token number per work, in document
 // order, with the structural coordinates beside it. Global offset of a posting
 // is seg_base_offset[seg_idx] + token_pos.
+//
+// Bekker columns and token offsets locate hits. Proximity search reads
+// chapter_bounds to keep windows within a chapter when requested.
 export interface Offsets {
+  chapter_bounds?: { book: number; chapter: string; start: number; accuracy: string }[];
   token_count: number;
   seg_base_offset: number[];
-  // A run is [n, count], or [n, count, sub] on a lettered line (stage6 since
-  // 2026-09-07). An older build carries only the pair, and a token on a
-  // lettered line is then cited by the bare number, as it always was.
   segments: { book: number; column: string; line_runs: ([number, number] | [number, number, string])[] }[];
   book_bounds: { book: number; start: number }[];
-  // accuracy is 'exact' where the chapter start was matched against the Greek
-  // text, 'line-snapped' where the source knew only the Bekker line.
-  chapter_bounds: { book: number; chapter: string; start: number; accuracy: string }[];
+  // Plato's substitute for chapter bounds: one entry per speaker turn, global
+  // per book. `accuracy` is 'exact' where the turn start was matched against
+  // the Greek text. Only `start`, `speaker` and `accuracy` are consumed here.
+  turn_bounds?: { book: number; speaker: string; start: number; accuracy: string }[];
 }
 
 // A morphological reading: category → the values it licenses. A reading with
 // more than one value for a category is syncretic ("fem nom/voc sg"), which is
 // as genuinely ambiguous as two separate analyses.
-type Reading = Record<string, string[]>;
+export type Reading = Record<string, string[]>;
 
 // Signature dictionary + packed column. sigs[id] is the distinct readings a
 // token's analyses license; the column holds one id per token, by global offset.
@@ -104,13 +107,19 @@ const _index = memoAsyncBy<string, unknown>(key =>
   fetch(searchUrl(key)).then(r => {
     if (!r.ok) throw new Error(`HTTP ${r.status} for ${key}`);
     return r.json();
+  }).then(j => {
+    // Aristotle: an Aristotle offsets.json has no speaker turns. An
+    // empty list reads as "no labelled speakers", which is what it means.
+    if (key.endsWith('/offsets.json') && j && !(j as Offsets).turn_bounds) (j as Offsets).turn_bounds = [];
+    return j;
   }));
 
-function loadIndex<T>(work: string, file: string): Promise<T> {
+export function loadIndex<T>(work: string, file: string): Promise<T> {
   return _index(`${work}/${file}`) as Promise<T>;
 }
 
-// The results page reads chapter edges from here to lay out its pages.
+// The results page reads chapter bounds to lay out pages. Shared speaker
+// searches read turn bounds when a corpus supplies them.
 export function loadOffsets(work: string): Promise<Offsets> {
   return loadIndex<Offsets>(work, 'offsets.json');
 }
@@ -163,7 +172,7 @@ export async function pool<T, R>(
 
 // -- Unicode Greek → Beta Code fold form ----------------------------------
 
-const GREEK_BETA: Record<string, string> = {
+export const GREEK_BETA: Record<string, string> = {
   α:'a',β:'b',γ:'g',δ:'d',ε:'e',ζ:'z',η:'h',θ:'q',ι:'i',κ:'k',
   λ:'l',μ:'m',ν:'n',ξ:'c',ο:'o',π:'p',ρ:'r',σ:'s',ς:'s',τ:'t',
   υ:'u',φ:'f',χ:'x',ψ:'y',ω:'w',ϝ:'v',
@@ -193,17 +202,314 @@ export function greekFold(input: string): string {
 // which is what decides the corpus shards it can match in.
 type CompiledPattern = { exact: string } | { test: (key: string) => boolean; prefix: string };
 
+// The Greek pattern syntax (John, 2026-11-10), over folded letters:
+//   ? .     exactly one letter (never an elision's apostrophe)
+//   *       any run, apostrophes included
+//   +       one or more of the letter before (a letter, ? ., or a class)
+//   […]     one of these letters; [^…] any letter but these
+//   ( ) |   a group, and alternatives
+//   ^ $     the word's start and end
+// It depends on the script the term is typed in. A term with any Greek letter
+// takes all of it, and a leading * is a wildcard there (*ικος), since Greek
+// script needs no capital marker. A term without one is Beta Code: a leading *
+// is the capital and is dropped, and ( ) | + are breathings, the iota
+// subscript and the diaeresis, dropped by the fold like = / \. So a Beta Code
+// suffix search is written .*ikos$.
+export type PatternPiece =
+  | { kind: 'char'; ch: string }                         // a literal, unfolded
+  | { kind: 'run' } | { kind: 'one' } | { kind: 'plus' }
+  | { kind: 'set'; negated: boolean; chars: string[] }   // members unfolded
+  | { kind: 'open' } | { kind: 'close' } | { kind: 'or' };
+
+// A Greek letter: not Greek punctuation (U+037E, U+0387), and not Coptic.
+const GREEK_LETTER = /(?=\p{L})\p{Script=Greek}/u;
+/** Whether a term is typed in Greek script (any Greek letter), which decides
+ * how its pattern symbols read. */
+export const greekScript = (term: string) => GREEK_LETTER.test(term);
+
+/** A Greek search term read as a pattern, by the script rule above; null for
+ * a class left open, or a ^ or $ anywhere but the very start or very end,
+ * none of which can match anything. The term is read composed (NFC), and a
+ * combining mark left over goes with the letter before it, so a letter typed
+ * decomposed is still one letter, to a + or a class. */
+export function patternPieces(term: string): PatternPiece[] | null {
+  const greek = greekScript(term);
+  const chars = [...(greek ? term : term.replace(/^\*+/, '')).normalize('NFC')];
+  const out: PatternPiece[] = [];
+  const mark = (ch: string) => /\p{M}/u.test(ch);
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    const last = out[out.length - 1];
+    if (mark(ch) && last?.kind === 'char') last.ch += ch;
+    else if (ch === '*') out.push({ kind: 'run' });
+    else if (ch === '?' || ch === '.') out.push({ kind: 'one' });
+    // Whole-word matching already pins both ends, so ^ and $ change nothing;
+    // they are read so that .*ikos$ says what it means. Inside a word they
+    // can match nothing (λο$γος), so the pattern is invalid.
+    else if (ch === '^' || ch === '$') {
+      if (ch === '^' ? i !== 0 : i !== chars.length - 1) return null;
+    }
+    else if (ch === '[') {
+      const close = chars.indexOf(']', i + 1);
+      if (close < 0) return null;
+      const negated = chars[i + 1] === '^';
+      const members: string[] = [];
+      for (const m of chars.slice(i + (negated ? 2 : 1), close)) {
+        if (mark(m) && members.length) members[members.length - 1] += m;
+        else members.push(m);
+      }
+      out.push({ kind: 'set', negated, chars: members });
+      i = close;
+    } else if (greek && ch === '+') out.push({ kind: 'plus' });
+    else if (greek && ch === '(') out.push({ kind: 'open' });
+    else if (greek && ch === ')') out.push({ kind: 'close' });
+    else if (greek && ch === '|') out.push({ kind: 'or' });
+    else out.push({ kind: 'char', ch });
+  }
+  return out;
+}
+
+/** How a pattern reads the units of a word: what a typed character (a letter
+ * with its marks) stands for, as units, and which units are letters. */
+export interface PatternUnits {
+  literal: (ch: string) => string[];
+  isLetter: (unit: string) => boolean;
+}
+
+type PatternNode =
+  | { t: 'lit'; units: string[] }
+  | { t: 'one' } | { t: 'run' }
+  | { t: 'set'; negated: boolean; members: Set<string> }
+  | { t: 'seq'; items: PatternNode[] }
+  | { t: 'alt'; options: PatternNode[] }
+  | { t: 'plus'; item: PatternNode };
+
+// The pieces as a tree; null when they do not make a pattern: an unbalanced
+// group, an empty class, or a + after anything but a single letter.
+function parsePattern(pieces: PatternPiece[], units: PatternUnits): PatternNode | null {
+  let i = 0;
+  const alt = (): PatternNode | null => {
+    const options: PatternNode[] = [];
+    for (;;) {
+      const s = seq();
+      if (!s) return null;
+      options.push(s);
+      if (pieces[i]?.kind !== 'or') break;
+      i++;
+    }
+    return options.length === 1 ? options[0] : { t: 'alt', options };
+  };
+  const seq = (): PatternNode | null => {
+    const items: PatternNode[] = [];
+    for (; i < pieces.length; i++) {
+      const p = pieces[i];
+      if (p.kind === 'or' || p.kind === 'close') break;
+      if (p.kind === 'plus') {
+        // + repeats one letter only, as the help says: after a group, a * or
+        // another + it would nest repeats, (.+)+β.
+        const before = pieces[i - 1]?.kind;
+        if (before !== 'char' && before !== 'one' && before !== 'set') return null;
+        items.push({ t: 'plus', item: items.pop()! });
+      } else if (p.kind === 'open') {
+        i++;
+        const inner = alt();
+        if (!inner || pieces[i]?.kind !== 'close') return null;
+        items.push(inner);
+      } else if (p.kind === 'char') items.push({ t: 'lit', units: units.literal(p.ch) });
+      else if (p.kind === 'one') items.push({ t: 'one' });
+      else if (p.kind === 'run') items.push({ t: 'run' });
+      else {
+        const members = new Set(p.chars.flatMap(units.literal));
+        if (!members.size) return null;
+        items.push({ t: 'set', negated: p.negated, members });
+      }
+    }
+    return { t: 'seq', items };
+  };
+  const root = alt();
+  return root && i === pieces.length ? root : null;
+}
+
+/** The pattern as a test of a whole word, given as its units (a string's
+ * characters, or a token's letter clusters); null when the pattern does not
+ * compile. The test runs the pattern as a set of states over the word, one
+ * unit at a time, so its work is bounded by the word's length times the
+ * pattern's size, whatever the pattern: no pattern can make it backtrack. */
+export function patternMatcher(
+  pieces: PatternPiece[],
+  units: PatternUnits,
+): ((word: ArrayLike<string>) => boolean) | null {
+  const root = parsePattern(pieces, units);
+  if (!root) return null;
+  // States: a test of one unit with the state after it, or a fork to any of
+  // several states that reads nothing. The last state accepts.
+  const test: (((u: string) => boolean) | null)[] = [];
+  const next: number[][] = [];
+  const state = (t: ((u: string) => boolean) | null, to: number[]) => {
+    test.push(t);
+    next.push(to);
+    return test.length - 1;
+  };
+  const any = () => true;
+  // The start of `node` followed by state `after`, built back to front.
+  const build = (node: PatternNode, after: number): number => {
+    switch (node.t) {
+      case 'lit': {
+        let at = after;
+        for (let k = node.units.length - 1; k >= 0; k--) {
+          const want = node.units[k];
+          at = state(u => u === want, [at]);
+        }
+        return at;
+      }
+      case 'one': return state(units.isLetter, [after]);
+      case 'set': {
+        const { members, negated } = node;
+        return state(negated ? u => units.isLetter(u) && !members.has(u) : u => members.has(u), [after]);
+      }
+      case 'run': {
+        const fork = state(null, []);
+        next[fork].push(state(any, [fork]), after);
+        return fork;
+      }
+      case 'plus': {
+        const fork = state(null, []);
+        const body = build(node.item, fork);
+        next[fork].push(body, after);
+        return body;
+      }
+      case 'seq': {
+        let at = after;
+        for (let k = node.items.length - 1; k >= 0; k--) at = build(node.items[k], at);
+        return at;
+      }
+      case 'alt': return state(null, node.options.map(o => build(o, after)));
+    }
+  };
+  const accept = state(null, []);
+  const start = build(root, accept);
+  const size = test.length;
+  const seen = new Int32Array(size);
+  const stack = new Int32Array(size);
+  let gen = 0;
+  // Adds state s and every state it forks to, once each per step.
+  const add = (list: number[], s: number) => {
+    if (seen[s] === gen) return;
+    seen[s] = gen;
+    let top = 0;
+    stack[top++] = s;
+    while (top) {
+      const x = stack[--top];
+      if (test[x] || x === accept) list.push(x);
+      else for (const y of next[x]) if (seen[y] !== gen) { seen[y] = gen; stack[top++] = y; }
+    }
+  };
+  const step = (from: number[], u: string): number[] => {
+    gen++;
+    const to: number[] = [];
+    for (const x of from) {
+      const t = test[x];
+      if (t && t(u)) add(to, next[x][0]);
+    }
+    return to;
+  };
+  // Each set of states met is kept with the sets each unit leads to, so a
+  // word mostly costs one lookup a unit. The store is capped; past it the
+  // sets are stepped afresh, which is still bounded.
+  const sets: number[][] = [];
+  const accepts: boolean[] = [];
+  const moves: Map<string, number>[] = [];
+  const ids = new Map<string, number>();
+  const intern = (set: number[]): number => {
+    const key = set.sort((x, y) => x - y).join(',');
+    let id = ids.get(key);
+    if (id === undefined) {
+      if (sets.length >= 4096) return -1;
+      id = sets.length;
+      ids.set(key, id);
+      sets.push(set);
+      accepts.push(set.includes(accept));
+      moves.push(new Map());
+    }
+    return id;
+  };
+  gen++;
+  const first: number[] = [];
+  add(first, start);
+  const initial = intern(first);
+  return (word) => {
+    let d = initial;
+    let w = 0;
+    for (; w < word.length; w++) {
+      if (!sets[d].length) return false;
+      let to = moves[d].get(word[w]);
+      if (to === undefined) {
+        const set = step(sets[d], word[w]);
+        to = intern(set);
+        if (to < 0) {
+          // The store is full: carry on without it.
+          let cur = set;
+          for (w++; w < word.length && cur.length; w++) cur = step(cur, word[w]);
+          return cur.includes(accept);
+        }
+        moves[d].set(word[w], to);
+      }
+      d = to;
+    }
+    return accepts[d];
+  };
+}
+
+/** A token as the accent filter reads it: letter clusters, each a base
+ * character with the combining marks after it. */
+export const letterClusters = (s: string): string[] =>
+  s.normalize('NFC').match(/\P{M}\p{M}*|\p{M}+/gu) ?? [];
+
+// Index keys hold only fold letters and apostrophes; what a character folds
+// to is all the pattern sees of it.
+const INDEX_UNITS: PatternUnits = {
+  literal: ch => [...greekFold(ch)],
+  isLetter: u => u !== "'",
+};
+
+function compileGreekPattern(term: string): CompiledPattern | null {
+  const pieces = patternPieces(term);
+  if (!pieces) return null;
+  const lead = pieces.findIndex(p => p.kind !== 'char');
+  const literal = (end: number) => pieces.slice(0, end)
+    .map(p => (p.kind === 'char' ? greekFold(p.ch) : '')).join('');
+  if (lead < 0) {
+    const exact = literal(pieces.length);
+    return exact ? { exact } : null;
+  }
+  // Preserve the common trailing-* fast path without compiling or scanning
+  // with a regular expression.
+  if (lead === pieces.length - 1 && pieces[lead].kind === 'run') {
+    const prefix = literal(lead);
+    return { test: key => key.startsWith(prefix), prefix };
+  }
+  const matches = patternMatcher(pieces, INDEX_UNITS);
+  if (!matches) return null;
+  // Alternatives at the top level share no prefix: λογος|αρετη is two.
+  let depth = 0;
+  const split = pieces.some(p => {
+    if (p.kind === 'open') depth++;
+    else if (p.kind === 'close') depth--;
+    return p.kind === 'or' && depth === 0;
+  });
+  return { test: matches, prefix: split ? '' : literal(lead) };
+}
+
 function compilePattern(
   term: string,
   fold: (s: string) => string,
 ): CompiledPattern | null {
-  // A leading * is Beta Code's capital marker, so a Greek pattern drops it.
-  // English has no such use for it, and there it is a wildcard like any
-  // other: *ness finds happiness and goodness. Dropping it there turned the
-  // query into the exact word "ness" and found nothing.
-  const input = fold === greekFold ? term.replace(/^\*+/, '') : term;
+  if (fold === greekFold) return compileGreekPattern(term);
+  // English keeps * and ? alone. A leading * there is a wildcard like any
+  // other: *ness finds happiness and goodness (Beta Code's capital marker is
+  // Greek's business).
   let pattern = '';
-  for (const ch of input) {
+  for (const ch of term) {
     pattern += ch === '*' || ch === '?' ? ch : fold(ch);
   }
   if (!pattern) return null;
@@ -226,7 +532,9 @@ function compilePattern(
   const pieces: string[] = [];
   for (const ch of pattern) {
     if (ch === '*') pieces.push("[a-z']*");
-    else if (ch === '?') pieces.push("[a-z']");
+    // One letter, as the hint and the guide say: never the apostrophe of an
+    // elision (d? is δέ, not δ’) or of English can't.
+    else if (ch === '?') pieces.push('[a-z]');
     else pieces.push(ch);
   }
   const regex = new RegExp(`^${pieces.join('')}$`);
@@ -235,7 +543,7 @@ function compilePattern(
 
 // The one statement of what an English word is, on the reader's side; stage6's
 // english_words() is its mirror on the index side (pinned by a pipeline test).
-// The page prints possession and elision with U+2019 (Aristotle’s) and quotes
+// The page prints possession and elision with U+2019 (Socrates’) and quotes
 // with U+2018/U+2019 (‘change’): both become a straight apostrophe, and an
 // apostrophe at a word's edge is a quotation mark, not part of the word.
 const ENGLISH_QUOTES = /[\u2018\u2019\u02bc]/g;
@@ -311,8 +619,8 @@ export function englishWords(text: string): EnglishWord[] {
 
 // "Any form" in English: a typed word also finds its plural and possessive
 // forms, and a plural or possessive its singular. Exact matching found
-// "virtue" 232 times in Rackham's Ethics and missed "virtues" 83 times; a
-// wildcard (virtue*) finds the plural but also every word that merely begins
+// "soul" 1,073 times in the translations and missed "souls" 182 times; a
+// wildcard (soul*) finds the plural but also every word that merely begins
 // the same way. Only forms the index holds are looked up (englishMatch), so a
 // rule's misfire ("virtu" from "virtues") costs nothing.
 //
@@ -486,7 +794,7 @@ function union(a: Set<number>, b: Set<number>): Set<number> {
 //
 // Each term is a list of ALTERNATIVE keys, any of which may stand at that
 // position: a lemma search resolves a typed inflection to every headword it can
-// belong to, and a phrase typed as it stands on the page — κατὰ συμβεβηκός —
+// belong to, and a phrase typed as it stands on the page — ἦν δ’ ἐγώ —
 // must find its run under whichever of those headwords the token was analysed
 // to. Taking only the first alternative found nothing for exactly the phrases
 // a reader copies off the page.
@@ -530,7 +838,10 @@ export type LangOp = 'and' | 'or';
 // TranslationRef id) and the word positions the query matched there, counted
 // as englishWords() counts them through that translation's text for the
 // segment. Positions are empty only for a bare *, which no word answers.
-export interface EngHit { translation: string; positions: number[] }
+// A query with a unit of several words (a phrase, a hyphenated term) also
+// gives `matches`, the first word of each run the query matched, a run of
+// several words one match (John, 2026-11-11).
+export interface EngHit { translation: string; positions: number[]; matches?: number[] }
 
 export interface SearchResult {
   work: string;           // which work this hit belongs to
@@ -545,6 +856,145 @@ export interface SearchResult {
   // readings license for the queried categories, and whether every reading
   // agrees. `certain: false` must be shown as one-of-N, never asserted.
   grammar?: { values: Record<string, string[]>; certain: boolean }[];
+  // Set only when a speaker filter ran, parallel to grkPositions: who is
+  // speaking at each matched token, from the work's turn bounds. `null` is a
+  // token before the first labelled turn (a narrator's opening, say) — it has
+  // no speaker to name, and no filter mode claims it.
+  speakers?: (string | null)[];
+  // A search of several words (phrase, proximity, running text): each match's
+  // tokens, ascending, cited in the section the match starts in (a token past
+  // its last counts on into the next, as hitTokens reads it). A window is one
+  // match and counts once however many words it touches (John, 2026-11-11).
+  // They partition grkPositions: a token two windows share is the first's,
+  // and a window left with none of its own is not listed. Filtered as the
+  // positions are (cutPositions in lib/result-views).
+  windows?: number[][];
+}
+
+// Windows as SearchResult keeps them: a token two share is the first's, and
+// one left with none of its own is dropped.
+function ownWindows(windows: number[][]): number[][] {
+  const claimed = new Set<number>();
+  return windows.map(w => w.filter(p => !claimed.has(p) && (claimed.add(p), true))).filter(w => w.length);
+}
+
+// -- Speaker attribution ---------------------------------------------------
+//
+// The TLG marks every change of speaker in the dialogues, and stage 6 records
+// each turn's start as a global offset with the speaker's name (offsets.json
+// `turn_bounds`). So the speaker of any token is the turn whose start is the
+// last one at or before it — one binary search, no extra artifact. The
+// narrated works (Republic, Apology, Charmides, Letters, Lovers) carry no
+// labels in the OCT and so have no turn bounds: nothing there can be
+// attributed, and a speaker filter must exclude them rather than guess.
+
+export interface SpeakerFilter {
+  // 'only': keep tokens spoken by one of `names`. 'except': keep tokens spoken
+  // by anyone else. Tokens with no speaker fail both — "anyone but Socrates"
+  // is a claim about who IS speaking, and an unlabelled token cannot make it.
+  mode: 'only' | 'except';
+  names: string[];
+}
+
+// Who is speaking at a global offset, or null before the first turn.
+export function speakerAt(offsets: Offsets, global: number): string | null {
+  const bounds = offsets.turn_bounds ?? [];
+  if (!bounds.length || global < bounds[0].start) return null;
+  let lo = 0;
+  let hi = bounds.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (bounds[mid].start <= global) lo = mid;
+    else hi = mid - 1;
+  }
+  return bounds[lo].speaker;
+}
+
+// Every speaker with a turn inside segment `si` (including the turn already
+// running when the segment opens). An English chunk is aligned to its section,
+// not to a word, so this is the finest attribution the English side allows.
+function segmentSpeakers(offsets: Offsets, si: number): Set<string> {
+  const base = offsets.seg_base_offset;
+  const start = base[si];
+  const end = si + 1 < base.length ? base[si + 1] : offsets.token_count;
+  const out = new Set<string>();
+  const opening = speakerAt(offsets, start);
+  if (opening) out.add(opening);
+  // Seek to the first turn at or after this segment rather than scanning from
+  // the top: a scan is bounded by the segment's position in the WORK, not by
+  // its length, so a hit late in the Laws walked nearly every turn.
+  const bounds = offsets.turn_bounds ?? [];
+  let lo = 0;
+  let hi = bounds.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (bounds[mid].start < start) lo = mid + 1;
+    else hi = mid;
+  }
+  for (let i = lo; i < bounds.length && bounds[i].start < end; i++) {
+    out.add(bounds[i].speaker);
+  }
+  return out;
+}
+
+// A work the filter can attribute at all: it has labelled turns, and those
+// labels are its speakers rather than a narrator's frame (works.ts
+// `narrator`). Phaedo's 34 labels are Echecrates and Phaedo; filtered on them,
+// every word Socrates says in the prison came back as Phaedo's.
+export function attributable(work: string, offsets: Offsets | null | undefined): boolean {
+  return !!offsets?.turn_bounds?.length && !getWork(work)?.narrator;
+}
+
+export function speakerPasses(filter: SpeakerFilter, speaker: string | null): boolean {
+  if (speaker === null) return false;
+  const named = filter.names.includes(speaker);
+  return filter.mode === 'only' ? named : !named;
+}
+
+// A work's cast as the search sees it: each speaker with the number of turns
+// the turn bounds give them. `speakers` is empty for a work with no labelled
+// turns; `loaded` is false when its offsets could not be fetched at all, which
+// is a different thing from having no speakers and is reported as such.
+export interface SpeakerRosterEntry {
+  work: string;
+  loaded: boolean;
+  speakers: { name: string; turns: number }[];
+  // Some turn start in this work was matched only to its line of Greek, not to
+  // the word. Every token between the true boundary and the snapped one is
+  // then attributed to the wrong speaker, so a filtered search over this work
+  // has to say so — the pipeline stamps each bound, and this is the only place
+  // that reads the stamp for the plain search paths.
+  approximate: boolean;
+  // The work is reported by this speaker and its labels are the frame, not the
+  // speeches (works.ts `narrator`): the filter leaves it out, `speakers` is
+  // empty, and the note names it apart from the works with no labels at all.
+  narrator: string | null;
+}
+
+export async function speakerRoster(works: string[]): Promise<SpeakerRosterEntry[]> {
+  return pool(works, 8, async work => {
+    try {
+      const offsets = await loadIndex<Offsets>(work, 'offsets.json');
+      const narrator = getWork(work)?.narrator ?? null;
+      const counts = new Map<string, number>();
+      // An unlabelled turn (the OCT's dash) names nobody: it is not a chip.
+      // 2,003 of them across six works once made one, showing only its count.
+      for (const t of offsets.turn_bounds ?? []) {
+        if (t.speaker && !narrator) counts.set(t.speaker, (counts.get(t.speaker) ?? 0) + 1);
+      }
+      const speakers = [...counts.entries()]
+        .map(([name, turns]) => ({ name, turns }))
+        .sort((a, b) => b.turns - a.turns || a.name.localeCompare(b.name));
+      // A snapped bound at offset 0 is the book opening, which is exact in the
+      // only sense that matters — same rule the combo path already applies.
+      const approximate = (offsets.turn_bounds ?? []).some(
+        t => t.accuracy !== 'exact' && t.start !== 0);
+      return { work, loaded: true, speakers, approximate, narrator };
+    } catch (err) {
+      console.warn(`speakerRoster: skipping ${work} —`, err);
+      return { work, loaded: false, speakers: [], approximate: false, narrator: null };
+    }
+  });
 }
 
 // search() returns the hits PLUS any works whose index failed to load, so the
@@ -557,13 +1007,18 @@ export interface SearchOutcome {
   // of them: a corpus emitted before those indexes existed, or a dropped
   // fetch. The primary translation's index failing fails the work instead.
   unsearchedTranslations?: { work: string; translation: string }[];
-  // Works whose chapter starts are known only to the Bekker line, reported ONLY
-  // when the query actually leans on chapter geometry. The pipeline stamps each
-  // bound exact or line-snapped; saying nothing here would let a chapter-scoped
-  // result imply a precision the source does not have. Categories and De
-  // Interpretatione declare chapters by Bekker line, so nearly every edge in
-  // them is approximate.
+  // Greek words typed under "any form" whose headwords could not be looked up
+  // (the lemma map did not load), so each was searched only as typed.
+  unresolvedTerms?: string[];
+  // A grammar-only combo refused because nothing narrows it (ruling 3): the
+  // page shows the narrowing controls rather than "no passages".
+  unnarrowed?: boolean;
+  // Works whose turn starts are known only approximately, reported ONLY when
+  // the query actually leans on turn geometry. The pipeline stamps each bound
+  // exact or not; saying nothing here would let a turn-scoped result imply a
+  // precision the source does not have.
   approximateChapters?: string[];
+  approximateTurns?: string[];
 }
 
 // Positions of a single term across segments: seg_idx → [token positions].
@@ -627,17 +1082,19 @@ function unitMatch(
   idx: EngIndex,
   unit: string[],
   forms: boolean,
-): { segs: Set<number>; positions: Map<number, number[]> } {
+): { segs: Set<number>; positions: Map<number, number[]>; starts: Map<number, number[]> } {
   const positions = new Map<number, number[]>();
+  const runs = new Map<number, number[]>();
   // The bare *: every word matches it, so no word is the hit.
-  if (unit.length === 1 && unit[0] === '*') return { segs: engEverySegment(idx), positions };
+  if (unit.length === 1 && unit[0] === '*') return { segs: engEverySegment(idx), positions, starts: runs };
   const alts = unit.map(t => (forms
     ? englishForms(englishTerm(t)).filter((f, i) => i === 0 || Object.hasOwn(idx, f))
     : [englishTerm(t)]));
   for (const [si, starts] of phraseStarts(idx, alts, englishFold)) {
     positions.set(si, starts.flatMap(start => unit.map((_, j) => start + j)));
+    runs.set(si, starts);
   }
-  return { segs: new Set(positions.keys()), positions };
+  return { segs: new Set(positions.keys()), positions, starts: runs };
 }
 
 // The segments one English index matches by the mode's rule, and where in
@@ -647,16 +1104,68 @@ function englishMatch(
   units: string[][],
   engMode: SearchMode,
   forms: boolean,
-): { segs: Set<number>; positions: Map<number, number[]> } {
-  const matches = (engMode === 'phrase' ? [units.flat()] : units).map(u => unitMatch(idx, u, forms));
+): { segs: Set<number>; positions: Map<number, number[]>; matches: Map<number, number[]> } {
+  const asked = engMode === 'phrase' ? [units.flat()] : units;
+  const matches = asked.map(u => unitMatch(idx, u, forms));
   const segs = matches.map(m => m.segs).reduce(engMode === 'any' ? union : intersect);
   const positions = new Map<number, number[]>();
+  // Each run once, by where it starts and how long it is; only where a unit
+  // has several words, else every word is its own match, as before.
+  const several = asked.some(u => u.length > 1);
+  const runs = new Map<number, number[]>();
   for (const si of segs) {
     const ps = new Set<number>();
     for (const m of matches) for (const p of m.positions.get(si) ?? []) ps.add(p);
     if (ps.size) positions.set(si, [...ps].sort((a, b) => a - b));
+    if (!several) continue;
+    const seen = new Map<string, number>();
+    matches.forEach((m, i) => {
+      for (const start of m.starts.get(si) ?? []) seen.set(`${start}:${asked[i].length}`, start);
+    });
+    if (seen.size) runs.set(si, [...seen.values()].sort((a, b) => a - b));
   }
-  return { segs, positions };
+  return { segs, positions, matches: runs };
+}
+
+// The same matches as greekPositions, but kept in the groups the query mode is
+// defined over: one group per TERM for 'all'/'any', one per phrase RUN for
+// 'phrase'. Only a speaker filter needs this, and only because a flat position
+// list cannot answer the two questions the modes ask — whether every term
+// survived, and where one phrase ends and the next begins.
+function greekGroups(
+  idx: GrkIndex,
+  terms: string[][],
+  mode: SearchMode,
+  hits: Set<number>,
+): Map<number, number[][]> {
+  const out = new Map<number, number[][]>();
+  const push = (si: number, group: number[]) => {
+    const groups = out.get(si);
+    if (groups) groups.push(group);
+    else out.set(si, [group]);
+  };
+  if (mode === 'phrase' && terms.length > 1) {
+    for (const [si, starts] of phraseStarts(idx, terms)) {
+      if (!hits.has(si)) continue;
+      for (const start of starts) push(si, terms.map((_, j) => start + j));
+    }
+    return out;
+  }
+  for (const alts of terms) {
+    // A term's own alternatives (the headwords a typed inflection resolves to)
+    // are one term, so they union into a single group.
+    const perTerm = new Map<number, number[]>();
+    for (const t of alts) {
+      for (const [si, ps] of termPositions(idx, t)) {
+        if (!hits.has(si)) continue;
+        const arr = perTerm.get(si);
+        if (arr) arr.push(...ps);
+        else perTerm.set(si, [...ps]);
+      }
+    }
+    for (const [si, ps] of perTerm) push(si, [...new Set(ps)].sort((a, b) => a - b));
+  }
+  return out;
 }
 
 interface WorkOutcome { results: SearchResult[]; unsearched: string[] }
@@ -665,7 +1174,7 @@ interface WorkOutcome { results: SearchResult[]; unsearched: string[] }
 //
 // Stage 9 merges every work's lexical indexes into one set per stream, split
 // by a word's first two letters: {word: {source: postings}}. A query fetches
-// only the shards its words can fall in — "happiness" is one shard, where it
+// only the shards its words can fall in — "justice" is one shard, where it
 // used to be every work's english.json — and the postings are the per-work
 // ones unchanged, so the matching here runs on them as it always did.
 // index.json lists each stream's shards and sources: the work for Greek,
@@ -701,8 +1210,27 @@ function shardsFor(pattern: CompiledPattern, listed: string[]): string[] {
   return listed.filter(name => name.slice(0, fixed) === want);
 }
 
+// A pattern with no literal prefix (*ικος, (λ|τ).*) could be in any shard.
+// Rather than fetch them all, it is matched over the stream's vocabulary — every
+// key, read once — and only the shards its words are filed under are fetched.
+// vocab.json lists the form keys; a stream it has no list for, or a corpus
+// built without it, reads every shard as before.
+interface Vocab { forms?: string[]; lemmas?: string[] }
+const VOCAB_LIST: Partial<Record<Stream, keyof Vocab>> = { form: 'forms', lemma: 'lemmas' };
+async function vocabKeys(stream: Stream): Promise<string[] | null> {
+  const list = VOCAB_LIST[stream];
+  if (!list) return null;
+  const vocab = await loadShared<Vocab>('search-shards/vocab.json').catch(() => null);
+  return vocab?.[list] ?? null;
+}
+
 async function shardSlice(stream: Stream, listed: string[], patterns: CompiledPattern[]): Promise<Slice> {
-  const names = [...new Set(patterns.flatMap(p => shardsFor(p, listed)))];
+  const open = patterns.filter(p => !('exact' in p) && !p.prefix);
+  const vocab = open.length ? await vocabKeys(stream) : null;
+  const names = [...new Set(patterns.flatMap(p => {
+    if (!vocab || 'exact' in p || p.prefix) return shardsFor(p, listed);
+    return vocab.filter(key => p.test(key)).map(shardName).filter(name => listed.includes(name));
+  }))];
   const shards = await pool(names, 8, name => loadShared<Shard>(`search-shards/${stream}/${name}.json`));
   const slice: Slice = new Map();
   for (const shard of shards) {
@@ -711,6 +1239,31 @@ async function shardSlice(stream: Stream, listed: string[], patterns: CompiledPa
     }
   }
   return slice;
+}
+
+/** The accented spellings of each folded form key, commonest first, from the
+ * accents shards (filed by shardName, as the form shards are). For display
+ * only: a key the shards do not hold, a shard that does not load, or a corpus
+ * without the shard listing leaves the key out, and the caller prints the
+ * fold. Each shard is read once. */
+export async function formAccents(keys: string[]): Promise<Map<string, string[]>> {
+  const out = new Map<string, string[]>();
+  if (!keys.length) return out;
+  const listing = await loadShared<ShardListing>('search-shards/index.json').catch(() => null);
+  // Aristotle: this corpus has no accents stream; asking for its shards
+  // only logs 404s, so a listing without one leaves every key folded.
+  if (!listing || !(listing as { streams?: Record<string, unknown> }).streams?.accents) return out;
+  const byShard = new Map<string, string[]>();
+  for (const key of keys) {
+    const name = shardName(key);
+    (byShard.get(name) ?? byShard.set(name, []).get(name)!).push(key);
+  }
+  await pool([...byShard], 8, async ([name, inShard]) => {
+    const shard = await loadShared<Record<string, string[]>>(`search-shards/accents/${name}.json`).catch(() => null);
+    if (!shard) return;
+    for (const key of inShard) if (Object.hasOwn(shard, key) && shard[key].length) out.set(key, shard[key]);
+  });
+  return out;
 }
 
 // Where one query's lexical indexes come from. Each per-work index it hands
@@ -763,10 +1316,13 @@ async function searchWork(
   langOp: LangOp,
   indexes: QueryIndexes,
   engForms: boolean,
+  speaker?: SpeakerFilter,
 ): Promise<WorkOutcome> {
   // Fetch only what this query needs: the Greek index iff there are Greek
-  // terms; an English index per translation iff there are English terms.
-  // Kick them off together, then await.
+  // terms; an English index per translation iff there are English terms; the
+  // offsets iff a speaker filter has to place each hit in a turn. Kick them
+  // off together, then await.
+  const offP: Promise<Offsets | null> = speaker ? loadOffsets(work) : Promise.resolve(null);
   const grkP: Promise<GrkIndex | null> = grkTerms.length ? indexes.greek(work) : Promise.resolve(null);
   const sources = engUnits.length ? englishSources(work) : [];
   // The primary index failing fails the work, as it always has; any other
@@ -783,6 +1339,12 @@ async function searchWork(
   });
   const grkIdx = await grkP;
   const engIdxs = await Promise.all(engP);
+  const offsets = await offP;
+  // A work with no labelled turns has nobody to attribute a word to, and a
+  // narrated one only its narrator. Excluding it is the only answer a speaker
+  // filter can give; the roster tells the UI which works these are, so the
+  // exclusion is stated rather than silent.
+  if (speaker && !attributable(work, offsets)) return { results: [], unsearched };
 
   let grkHits: Set<number> | null = null;
   let engHits: Set<number> | null = null;
@@ -812,15 +1374,88 @@ async function searchWork(
     sources.forEach((t, i) => {
       const idx = engIdxs[i];
       if (!idx) return;
-      const { segs: hits, positions } = englishMatch(idx, engUnits, engMode, engForms);
+      const { segs: hits, positions, matches } = englishMatch(idx, engUnits, engMode, engForms);
       for (const si of hits) {
         engHits!.add(si);
-        const hit = { translation: t.id, positions: positions.get(si) ?? [] };
+        const hit: EngHit = { translation: t.id, positions: positions.get(si) ?? [] };
+        if (matches.has(si)) hit.matches = matches.get(si);
         const arr = engBySeg.get(si);
         if (arr) arr.push(hit);
         else engBySeg.set(si, [hit]);
       }
     });
+  }
+
+  const grkPos = grkHits && grkIdx
+    ? greekPositions(grkIdx, grkTerms, grkMode, grkHits)
+    : new Map<number, number[]>();
+
+  // The speaker filter runs BEFORE the languages combine, so an AND query asks
+  // for a passage where the filtered Greek and the filtered English both hit.
+  // English is filtered by the speakers the passage holds (see
+  // segmentSpeakers) — in every translation alike, since each is placed by
+  // section; Greek is filtered in the STRUCTURE its mode is defined over, never
+  // over a flattened position list — see greekGroups.
+  const spokenBy = new Map<number, (string | null)[]>();
+  // A phrase's runs, each one match (its window), by segment.
+  const isPhrase = grkMode === 'phrase' && grkTerms.length > 1;
+  const runs = isPhrase && grkHits && grkIdx
+    ? greekGroups(grkIdx, grkTerms, grkMode, grkHits)
+    : new Map<number, number[][]>();
+  if (speaker && offsets) {
+    const base = offsets.seg_base_offset;
+    if (grkHits && grkIdx) {
+      const groupsBySeg = greekGroups(grkIdx, grkTerms, grkMode, grkHits);
+      for (const si of [...grkHits]) {
+        const groups = groupsBySeg.get(si) ?? [];
+        const survived: number[][] = [];
+        // Who said each surviving token. A phrase's words all carry the
+        // speaker of its first word — the one it was kept on — so a phrase
+        // that runs across a turn break never labels its tail with the
+        // speaker the filter excluded.
+        const said = new Map<number, string | null>();
+        for (const group of groups) {
+          if (isPhrase) {
+            // A phrase is one utterance: it stands or falls on its first word,
+            // which is how the variant and combo engines treat it too. Keeping
+            // it word by word would leave half a phrase highlighted.
+            const first = speakerAt(offsets, base[si] + group[0]);
+            if (speakerPasses(speaker, first)) {
+              survived.push(group);
+              for (const p of group) said.set(p, first);
+            }
+          } else {
+            const kept = group.filter(p => {
+              const who = speakerAt(offsets, base[si] + p);
+              if (!speakerPasses(speaker, who)) return false;
+              said.set(p, who);
+              return true;
+            });
+            if (kept.length) survived.push(kept);
+          }
+        }
+        // "All words" means one speaker said all of them. Requiring only that
+        // SOME matched token survive would return a section where Socrates
+        // says one term and Callicles the other, and report it as his.
+        const ok = (isPhrase || grkMode === 'any')
+          ? survived.length > 0
+          : groups.length > 0 && survived.length === groups.length;
+        if (!ok) { grkHits.delete(si); grkPos.delete(si); continue; }
+        if (isPhrase) runs.set(si, survived);
+        const merged = [...new Set(survived.flat())].sort((a, b) => a - b);
+        grkPos.set(si, merged);
+        spokenBy.set(si, merged.map(p => said.get(p) ?? null));
+      }
+    }
+    if (engHits) {
+      for (const si of [...engHits]) {
+        const present = [...segmentSpeakers(offsets, si)];
+        if (!present.some(s => speakerPasses(speaker, s))) {
+          engHits.delete(si);
+          engBySeg.delete(si);
+        }
+      }
+    }
   }
 
   let combined: Set<number>;
@@ -829,10 +1464,6 @@ async function searchWork(
   } else {
     combined = grkHits ?? engHits ?? new Set();
   }
-
-  const grkPos = grkHits && grkIdx
-    ? greekPositions(grkIdx, grkTerms, grkMode, grkHits)
-    : new Map<number, number[]>();
 
   // Only a work with hits needs to name them.
   if (!combined.size) return { results: [], unsearched };
@@ -846,13 +1477,20 @@ async function searchWork(
       engMatch: engHits?.has(si) ?? false,
       ...(engHits ? { engHits: engBySeg.get(si) ?? [] } : {}),
       grkPositions: grkPos.get(si) ?? [],
+      ...(isPhrase && grkHits?.has(si) ? { windows: ownWindows(runs.get(si) ?? []) } : {}),
+      ...(spokenBy.has(si) ? { speakers: spokenBy.get(si) } : {}),
     }));
   return { results, unsearched };
 }
 
 // Turn a global offset into a citable position, using only offsets.json — the
 // phrase browser shows hundreds of citations at once and must not have to fetch
-// a whole book for each. line_runs exists for exactly this.
+// a whole book for each.
+//
+// Plato is cited by Stephanus page + section ("34b"), which is exactly a
+// segment's `column`, so the citation falls out of the segment lookup alone.
+// `line_runs` is deliberately NOT consulted: Plato has no user-facing line
+// numbers, and there is nothing finer than the section to cite.
 export interface OffsetRef { seg_idx: number; pos: number; book: number; column: string; line: number; sub?: string }
 
 export function offsetRef(offsets: Offsets, global: number): OffsetRef | null {
@@ -871,11 +1509,22 @@ export function offsetRef(offsets: Offsets, global: number): OffsetRef | null {
   return null;
 }
 
-// -- Grammatical search ---------------------------------------------------
+// The citation string a reader sees for a global offset, e.g. "34b". Routed
+// through citation.ts so the no-line rule is enforced by the work's scheme
+// rather than by this call site remembering it.
+export function offsetCite(work: string, offsets: Offsets, global: number): string | null {
+  const ref = offsetRef(offsets, global);
+  return ref ? formatCite(work, ref.column, ref.line, ref.sub) : null;
+}
+
+// -- Grammatical matching -------------------------------------------------
 //
-// A separate engine from the lexical one above, deliberately: it answers "which
-// words are in the optative", not "where does this word occur". Combining the
-// two in one query is combo search, which is a later piece of work.
+// Grammar is reachable only through a combo slot; no standalone entry point
+// is exported. Asking the whole corpus for "genitive plural feminine" returns
+// tens of thousands of tokens, which is the corpus, not a search result. So,
+// by John's ruling 3 (2026-11-10), a grammar-only query runs only when
+// something narrows it — fewer works, a speaker, or a second term near or not
+// near — and searchCombo refuses it otherwise.
 //
 // Honesty rules, applied here and rendered by the UI:
 //   possible — at least one of a token's readings satisfies the query. That is
@@ -884,6 +1533,12 @@ export function offsetRef(offsets: Offsets, global: number): OffsetRef | null {
 //              one licensed value. Anything else is one-of-N.
 // A token whose sole analysis is "fem nom/voc sg" is NOT certain for case: one
 // analysis record, two possible cases.
+//
+// Part of speech is the exception (2026-11-10). Its values on one reading are
+// all true at once — John's ruling makes ἄλλος both adjective and pronoun —
+// not alternatives, so a second value there leaves nothing open. Readings that
+// disagree (a noun reading beside a verb reading) still make a match uncertain.
+export const BOTH_AT_ONCE = new Set(['pos']);
 
 function readingSatisfies(reading: Reading, query: GrammarQuery): boolean {
   for (const category in query) {
@@ -902,7 +1557,15 @@ function compileQuery(dict: GrammarDict, query: GrammarQuery) {
     const values: Record<string, string[]> = {};
     for (const category in query) {
       const licensed = new Set<string>();
-      for (const reading of readings) for (const v of reading[category] ?? []) licensed.add(v);
+      if (BOTH_AT_ONCE.has(category)) {
+        // Settled when every reading has the class asked for, whatever else it
+        // is too. Otherwise each reading's classes stay together ("adj+pronoun"
+        // beside "noun"), and a reading with none says so.
+        if (readings.every(r => r[category]?.includes(query[category]))) licensed.add(query[category]);
+        else for (const r of readings) licensed.add(r[category]?.length ? [...r[category]].sort().join('+') : 'no class');
+      } else {
+        for (const reading of readings) for (const v of reading[category] ?? []) licensed.add(v);
+      }
       values[category] = [...licensed].sort();
     }
     const certain =
@@ -925,75 +1588,6 @@ function locate(base: number[], global: number): [number, number] {
   return [lo, global - base[lo]];
 }
 
-async function grammarSearchWork(work: string, query: GrammarQuery): Promise<SearchResult[]> {
-  const [meta, offsets, dict] = await Promise.all([
-    loadIndex<SegMeta[]>(work, 'meta.json'),
-    loadIndex<Offsets>(work, 'offsets.json'),
-    loadIndex<GrammarDict>(work, 'grammar-dict.json'),
-  ]);
-  // The column is joined to the offsets by position alone, so a mismatched
-  // token_count means the two files came from different builds — refuse rather
-  // than silently report the wrong words.
-  if (dict.token_count !== offsets.token_count) {
-    throw new Error(`${work}: grammar/offsets built from different runs`);
-  }
-  const wanted = compileQuery(dict, query);
-  if (!wanted.size) return [];
-
-  const buffer = await loadBinary(work, 'grammar-col.bin');
-  const column = dict.width === 4 ? new Uint32Array(buffer) : new Uint16Array(buffer);
-  if (column.length !== offsets.token_count) {
-    throw new Error(`${work}: grammar column length does not match token count`);
-  }
-
-  const bySeg = new Map<number, SearchResult>();
-  for (let global = 0; global < column.length; global++) {
-    const hit = wanted.get(column[global]);
-    if (!hit) continue;
-    const [si, pos] = locate(offsets.seg_base_offset, global);
-    let result = bySeg.get(si);
-    if (!result) {
-      result = {
-        work,
-        meta: meta[si],
-        grkMatch: true,
-        engMatch: false,
-        grkPositions: [],
-        grammar: [],
-      };
-      bySeg.set(si, result);
-    }
-    result.grkPositions.push(pos);
-    result.grammar!.push(hit);
-  }
-  return [...bySeg.keys()].sort((a, b) => a - b).map(si => bySeg.get(si)!);
-}
-
-// Grammatical search across one or more works. Same per-work failure tolerance
-// as search(): a work whose index will not load is reported, not fatal.
-export async function searchGrammar(
-  query: GrammarQuery,
-  works: string[],
-): Promise<SearchOutcome> {
-  if (!Object.keys(query).length || !works.length) {
-    return { results: [], failedWorks: [] };
-  }
-  const failedWorks: string[] = [];
-  const perWork = await pool(works, 8, async w => {
-    try {
-      return await grammarSearchWork(w, query);
-    } catch (err) {
-      console.warn(`searchGrammar: skipping ${w} —`, err);
-      failedWorks.push(w);
-      return [] as SearchResult[];
-    }
-  });
-  if (failedWorks.length === works.length) {
-    throw new Error('Could not load the grammar index — check your connection and try again.');
-  }
-  return { results: perWork.flat(), failedWorks };
-}
-
 // -- Inflected variants of a typed phrase ---------------------------------
 //
 // A reader who types τὸ τί ἦν εἶναι gets the places where those exact words
@@ -1002,12 +1596,10 @@ export async function searchGrammar(
 // those means knowing that τό, τῷ and τοῦ all lemmatise to ὁ, which is exactly
 // the knowledge a reader should not need. So widen it for them.
 //
-// Widening is a FAN-OUT, not a lookup: `hn` alone belongs to five headwords
-// (ἐάν, εἰμί, ἠμί, ἤν, ὅς), so a four-word phrase can have several readings.
-// Every reading is tried and their OFFSETS ARE UNIONED, never summed — in the
-// Metaphysics the εἰμί and ἠμί readings hit exactly the same 67 tokens, being
-// one passage under two parses, and adding them would report 135 results for
-// 68 places.
+// Widening is a FAN-OUT, not a lookup: `hn` alone belongs to several headwords,
+// so a four-word phrase can have several readings. Every reading is tried and
+// their OFFSETS ARE UNIONED, never summed — two readings of one passage are one
+// passage, and adding them would double the count.
 
 // Above this many readings the fan-out is truncated rather than run, and the
 // caller is told. A phrase of common ambiguous words could otherwise multiply
@@ -1064,18 +1656,20 @@ export function lemmaReadings(perTerm: string[][], cap: number): { readings: str
 export async function searchPhraseVariants(
   grkQuery: string,
   works: string[],
+  speaker?: SpeakerFilter,
 ): Promise<VariantOutcome> {
   const terms = grkQuery.trim().split(/\s+/).filter(Boolean).map(t => t.replace(/^\*+/, ''));
   const empty: VariantOutcome = {
     results: [], failedWorks: [], readings: [], productive: [], cappedFrom: 0,
   };
   if (terms.length < 2 || !works.length) return empty;
+  if (speaker && !speaker.names.length) speaker = undefined;
 
   // Resolve each typed word to the headwords it can belong to.
   const folds = terms.map(t => greekFold(t));
   if (folds.some(f => !f)) return empty;
   const perTerm = await lemmaOptions(folds);
-  if (!perTerm) return empty;   // without the map there is nothing to widen with
+  if (!perTerm) return empty;              // without the map there is nothing to widen with
   if (perTerm.some(options => !options.length)) return empty;
 
   const { readings, total } = lemmaReadings(perTerm, VARIANT_READING_CAP);
@@ -1086,30 +1680,59 @@ export async function searchPhraseVariants(
   const indexes = queryIndexes('lemma', [...new Set(readings.flat())], []);
   const perWork = await pool(works, 8, async work => {
     try {
-      const idx = await indexes.greek(work);
+      const [idx, offsets] = await Promise.all([
+        indexes.greek(work),
+        speaker ? loadOffsets(work) : Promise.resolve(null),
+      ]);
+      if (speaker && !attributable(work, offsets)) return [] as SearchResult[];
       // seg_idx -> the token positions any reading matched. A Set because two
       // readings routinely land on the same token.
-      const bySeg = new Map<number, Set<number>>();
+      // seg_idx -> token position -> who said it (the phrase's first word's
+      // speaker for every word of it; null when no filter asked).
+      const bySeg = new Map<number, Map<number, string | null>>();
+      // seg_idx -> each run kept, one match apiece; two readings of one
+      // run are one match (ownWindows drops the second).
+      const runs = new Map<number, number[][]>();
       for (const reading of readings) {
         const starts = phraseStarts(idx, reading.map(t => [t]));
         if (starts.size) productiveKeys.add(reading.join(' '));
         for (const [si, positions] of starts) {
           let seen = bySeg.get(si);
-          if (!seen) { seen = new Set(); bySeg.set(si, seen); }
+          if (!seen) { seen = new Map(); bySeg.set(si, seen); }
           for (const start of positions) {
-            for (let k = 0; k < reading.length; k++) seen.add(start + k);
+            // A phrase is one utterance: it is kept or dropped on its first
+            // word, and labelled with that word's speaker throughout.
+            const who = speaker && offsets
+              ? speakerAt(offsets, offsets.seg_base_offset[si] + start) : null;
+            if (speaker && !speakerPasses(speaker, who)) continue;
+            (runs.get(si) ?? runs.set(si, []).get(si)!).push(reading.map((_, k) => start + k));
+            for (let k = 0; k < reading.length; k++) {
+              // A reading that STARTS here names the position; a reading that
+              // merely runs through it defers to one that does, whichever
+              // order the readings come in.
+              if (k === 0 || !seen.has(start + k)) seen.set(start + k, who);
+            }
           }
         }
       }
-      if (!bySeg.size) return [] as SearchResult[];
+      const hits = [...bySeg.keys()].sort((a, b) => a - b).filter(si => bySeg.get(si)!.size);
+      // Only a work with hits needs to name them.
+      if (!hits.length) return [] as SearchResult[];
       const meta = await loadIndex<SegMeta[]>(work, 'meta.json');
-      return [...bySeg.keys()].sort((a, b) => a - b).map(si => ({
-        work,
-        meta: meta[si],
-        grkMatch: true,
-        engMatch: false,
-        grkPositions: [...bySeg.get(si)!].sort((a, b) => a - b),
-      } as SearchResult));
+      return hits.map(si => {
+        const grkPositions = [...bySeg.get(si)!.keys()].sort((a, b) => a - b);
+        return {
+          work,
+          meta: meta[si],
+          grkMatch: true,
+          engMatch: false,
+          grkPositions,
+          windows: ownWindows(runs.get(si)!.sort((a, b) => a[0] - b[0])),
+          ...(speaker && offsets
+            ? { speakers: grkPositions.map(p => bySeg.get(si)!.get(p) ?? null) }
+            : {}),
+        } as SearchResult;
+      });
     } catch (err) {
       console.warn(`searchPhraseVariants: skipping ${work} —`, err);
       failedWorks.push(work);
@@ -1132,20 +1755,22 @@ export async function searchPhraseVariants(
 //
 // Query-time, over the global offset. A query is a list of slots, each naming
 // its own match type; a hit is a place where every slot lands within one
-// proximity window. Distinct from the precomputed n-gram engine: combo answers
-// "these terms, near each other", n-grams answer "what phrases recur".
+// proximity window. This is also the only way a grammatical predicate is
+// searchable: as one slot beside a lexical one.
 //
-// Boundary rule (shared with n-grams, not forked): a window NEVER spans a book
-// edge. Chapters are a toggle, default keep — chapter divisions are editorial
-// and an argument routinely runs across one.
+// Boundary rule: a window NEVER spans a book edge. Speaker turns are a toggle,
+// default keep — an argument routinely runs across a change of speaker, and
+// Plato's shortest turns are a single word.
 
 export type SlotKind = 'phrase' | 'form' | 'lemma' | 'grammatical';
 
 // Where a slot must fall relative to the FIRST slot — not to the slot before
 // it. "before"/"after" answer the question a reader actually asks ("does the
 // qualification come before the term or after it?"); chaining each slot to its
-// predecessor instead is the whole-query `ordered` lock.
-export type SlotRelation = 'near' | 'before' | 'after';
+// predecessor instead is the whole-query `ordered` lock. "not" is the
+// opposite: the slot must NOT occur near a match of the others (see
+// comboWindows). It never holds on the first slot, which a match is built on.
+export type SlotRelation = 'near' | 'before' | 'after' | 'not';
 
 export interface ComboSlot {
   kind: SlotKind;
@@ -1158,13 +1783,18 @@ export interface ComboSlot {
   relation?: SlotRelation;
 }
 
-export type WindowUnit = 'words' | 'line' | 'chapter';
+export type WindowUnit = 'words' | 'line' | 'turn' | 'chapter';
 
 export interface ComboOptions {
-  window: number;          // words; ignored for the line/chapter units
+  window: number;          // words; ignored for the line/turn units
   unit: WindowUnit;
   ordered: boolean;        // slots must appear in the order given
-  crossChapter: boolean;   // default true — keep hits that straddle a chapter
+  crossChapter?: boolean;
+  crossTurn?: boolean;      // default true — keep hits that straddle a turn
+  // Keep only windows whose EVERY term is spoken by a wanted speaker. Stricter
+  // than filtering the anchor alone: "ἀρετή near ἐπιστήμη in Socrates' mouth"
+  // should not be satisfied by his ἀρετή and Protagoras' ἐπιστήμη.
+  speaker?: SpeakerFilter;
 }
 
 // A slot's hits in one work, as global offsets. `span` is how many tokens the
@@ -1172,9 +1802,8 @@ export interface ComboOptions {
 // require the next slot to start after this one ends.
 interface SlotHit { start: number; span: number; certain: boolean; values?: Record<string, string[]> }
 
-// The proximity default: 5 words, which is roughly half a Bekker line (the
-// corpus averages 9.5 tokens per line). Capped at 50 — about five lines — since
-// past that "near" stops meaning anything.
+// The proximity default: 5 words. Capped at 50, since past that "near" stops
+// meaning anything.
 export const COMBO_WINDOW_DEFAULT = 5;
 export const COMBO_WINDOW_MAX = 50;
 
@@ -1221,8 +1850,11 @@ function slotHits(
 
 // The structural unit an offset falls in, as a half-open [start, end) range of
 // global offsets. Bounds are sorted, so this is a binary search over a short
-// array. Used for the line/chapter window units and the book-edge rule.
+// array. Used for the line/turn window units and the book-edge rule.
+// Text before the first start is a unit of its own: Parmenides and Lysis open
+// with narration before the first labelled turn, and it is not that turn.
 function unitRange(starts: number[], global: number, total: number): [number, number] {
+  if (!starts.length || global < starts[0]) return [0, starts.length ? starts[0] : total];
   let lo = 0;
   let hi = starts.length - 1;
   while (lo < hi) {
@@ -1246,7 +1878,8 @@ function lowerBound(hits: SlotHit[], target: number): number {
 }
 
 // Flatten the per-segment line runs into one array of line-start offsets, so a
-// same-line window is the same kind of lookup as same-chapter.
+// same-line window is the same kind of lookup as same-turn. The line is a
+// proximity measure only — it is never shown, and never cited.
 function lineStarts(offsets: Offsets): number[] {
   const out: number[] = [];
   offsets.segments.forEach((seg, i) => {
@@ -1254,16 +1887,6 @@ function lineStarts(offsets: Offsets): number[] {
     for (const [, count] of seg.line_runs) { out.push(at); at += count; }
   });
   return out;
-}
-
-export interface ComboHit {
-  work: string;
-  seg_idx: number;
-  pos: number;             // token position of the leftmost slot, within its segment
-  global: number;
-  positions: number[];     // every matched token position in that segment
-  certain: boolean;        // false if ANY slot rested on an ambiguous parse
-  values?: Record<string, string[]>;
 }
 
 // Given each slot's hits, find every window where all slots co-occur.
@@ -1279,12 +1902,53 @@ export function comboWindows(
   // Two slots sharing an identity are the same query asked twice, so they may
   // not both be satisfied by one token. Empty string means "no constraint".
   identities: string[] = [],
-): { start: number; end: number; hits: SlotHit[] }[] {
+): ComboWindow[] {
+  if (opts.unit === 'chapter' || opts.crossChapter === false) {
+    return comboWindows(perSlot, { ...opts, unit: opts.unit === 'chapter' ? 'turn' : opts.unit,
+      crossTurn: opts.crossChapter ?? true, crossChapter: undefined },
+      { ...offsets, turn_bounds: (offsets.chapter_bounds ?? []).map(c => ({ ...c, speaker: '' })) }, relations, identities);
+  }
+  offsets = { ...offsets, turn_bounds: offsets.turn_bounds ?? [] };
+  // A "not" slot takes no part in forming a match: the match is found over the
+  // other slots, in their order if the lock is on, and must have no NOT hit
+  // near it. Measured over the whole match: with the words unit a NOT hit
+  // within the window of either end, in the same book (and turn, when turns
+  // are kept apart); with the line or turn unit, one in the same line or turn.
+  // A NOT slot with no hits excludes nothing, and its hits are never part of
+  // the match, so they are neither marked nor counted. The NOT hits are
+  // applied while partners are chosen (windows below), so a partner a NOT hit
+  // reaches gives way to one it does not.
+  const isNot = (s: number) => s > 0 && relations[s] === 'not';
+  const kept = perSlot.map((_, s) => s).filter(s => !isNot(s));
+  const nots: NotSlot[] = perSlot
+    .map((hits, s) => ({ id: identities[s] ?? '', hits: [...hits].sort((a, b) => a.start - b.start) }))
+    .filter((n, s) => isNot(s) && n.hits.length)
+    .map(n => ({ ...n, longest: n.hits.reduce((m, h) => Math.max(m, h.span), 1) }));
+  return windows(
+    kept.map(s => perSlot[s]), opts, offsets, kept.map(s => relations[s] ?? 'near'), kept.map(s => identities[s] ?? ''), nots,
+  );
+}
+
+interface NotSlot { id: string; hits: SlotHit[]; longest: number }
+
+// One match: its span, the hit chosen for each slot, and `near`, every other
+// hit of a term within range of the anchor (the first slot's hit): marked
+// with the match, never counted (John, 2026-11-11, R3).
+export interface ComboWindow { start: number; end: number; hits: SlotHit[]; near: SlotHit[] }
+
+function windows(
+  perSlot: SlotHit[][],
+  opts: ComboOptions,
+  offsets: Offsets,
+  relations: SlotRelation[],
+  identities: string[],
+  nots: NotSlot[],
+): ComboWindow[] {
   if (!perSlot.length || perSlot.some(h => !h.length)) return [];
   const sorted = perSlot.map(h => [...h].sort((a, b) => a.start - b.start));
   const total = offsets.token_count;
   const bookStarts = offsets.book_bounds.map(b => b.start);
-  const chapStarts = offsets.chapter_bounds.map(c => c.start);
+  const turnStarts = (offsets.turn_bounds ?? []).map(t => t.start);
   const lines = opts.unit === 'line' ? lineStarts(offsets) : null;
 
   // The offsets an anchor's partners may occupy: the structural unit the anchor
@@ -1303,16 +1967,85 @@ export function comboWindows(
     let hi = total;
     const clamp = ([s, e]: [number, number]) => { if (s > lo) lo = s; if (e < hi) hi = e; };
     clamp(unitRange(bookStarts, at, total));                       // never cross a book
-    if (!opts.crossChapter && chapStarts.length) clamp(unitRange(chapStarts, at, total));
+    if (!opts.crossTurn && turnStarts.length) clamp(unitRange(turnStarts, at, total));
     if (opts.unit === 'line' && lines) clamp(unitRange(lines, at, total));
-    if (opts.unit === 'chapter' && chapStarts.length) clamp(unitRange(chapStarts, at, total));
+    if (opts.unit === 'turn' && turnStarts.length) clamp(unitRange(turnStarts, at, total));
     return [lo, hi];
   };
 
-  const out: { start: number; end: number; hits: SlotHit[] }[] = [];
+  // A NOT hit on a word a slot asking the same query also holds may be that
+  // slot's own word, and then it does not count: "X not near X" means an X
+  // with no OTHER X near it (John's ruling). Without this every X would
+  // exclude itself and the query would always come back empty.
+  // A NOT hit counts only where a partner could stand: wholly inside the
+  // unit, so a NOT phrase across a turn kept apart is in neither turn.
+  const fits = (h: SlotHit, unitLo: number, unitHi: number) => h.start >= unitLo && h.start + h.span <= unitHi;
+  // The longest run a positive slot holds, which bounds how far a match
+  // reaches past its anchor.
+  const longestPos = sorted.reduce((m, hs) => hs.reduce((k, h) => Math.max(k, h.span), m), 1);
+  // Line and turn units: whether a NOT hit not exempt as the same query
+  // stands in the unit, found once per unit, not once per anchor.
+  const unitBlocked = new Map<number, boolean>();
+  const sameQueryAt = (n: NotSlot, h: SlotHit) => !!n.id && identities.some((id, k) => {
+    if (id !== n.id) return false;
+    const i = lowerBound(sorted[k], h.start);
+    return i < sorted[k].length && sorted[k][i].start === h.start;
+  });
+  // Whether a NOT hit stands near a chosen match, unless it is one of the
+  // match's own words of the same query (above).
+  const excluded = (take: SlotHit[], unitLo: number, unitHi: number) => {
+    let lo = unitLo;
+    let hi = unitHi;
+    if (opts.unit === 'words') {
+      lo = Math.max(lo, Math.min(...take.map(h => h.start)) - opts.window);
+      hi = Math.min(hi, Math.max(...take.map(h => h.start + h.span)) + opts.window);
+    }
+    return nots.some(n => {
+      for (let i = lowerBound(n.hits, lo - n.longest + 1); i < n.hits.length && n.hits[i].start < hi; i++) {
+        const h = n.hits[i];
+        if (h.start + h.span <= lo || !fits(h, unitLo, unitHi)) continue;
+        if (!take.some((m, k) => m.start === h.start && identities[k] === n.id)) return true;
+      }
+      return false;
+    });
+  };
+
+  const out: ComboWindow[] = [];
   for (const anchor of sorted[0]) {
     const [unitLo, unitHi] = structural(anchor.start);
     if (anchor.start + anchor.span > unitHi) continue;   // the anchor's own run must fit
+
+    // The stretch [L, H) the match may occupy with no NOT hit near it, so
+    // partners are chosen inside it and one a NOT hit reaches gives way to
+    // one it does not. With the words unit: past the reach of the nearest NOT
+    // hit before the anchor and short of the nearest after it; with the line
+    // or turn unit, nothing if one stands in the unit. Cheap: per anchor and
+    // NOT slot, one binary search and a read of the NOT hits within 2W of the
+    // anchor (or up to the first in the unit). A NOT hit a slot of the same
+    // query might take is left to the final check, since whether it counts
+    // depends on which partner is chosen.
+    // The scan stops where no match on this anchor can reach: its partners
+    // start within W of it, and a NOT hit counts within W of the match's end.
+    let L = unitLo;
+    let H = unitHi;
+    const blocked = opts.unit === 'words' ? undefined : unitBlocked.get(unitLo);
+    if (blocked === true) continue;
+    if (blocked === undefined) for (const n of nots) {
+      const from = opts.unit === 'words' ? Math.max(unitLo, anchor.start - 2 * opts.window) : unitLo;
+      const to = opts.unit === 'words'
+        ? Math.min(unitHi, anchor.start + Math.max(anchor.span, opts.window + longestPos) + opts.window)
+        : unitHi;
+      for (let i = lowerBound(n.hits, from - n.longest + 1); i < n.hits.length && n.hits[i].start < to; i++) {
+        const h = n.hits[i];
+        if (!fits(h, unitLo, unitHi) || sameQueryAt(n, h)) continue;
+        if (opts.unit !== 'words') { L = H; break; }
+        if (h.start + h.span <= anchor.start) L = Math.max(L, h.start + h.span + opts.window);
+        else if (h.start >= anchor.start + anchor.span) { H = Math.min(H, h.start - opts.window); break; }
+        else { L = H; break; }                             // on the anchor itself
+      }
+    }
+    if (opts.unit !== 'words') unitBlocked.set(unitLo, L === H);
+    if (anchor.start < L || anchor.start + anchor.span > H) continue;
 
     // Everything each slot could contribute for THIS anchor: inside the unit,
     // inside the word window, and on the side its relation requires.
@@ -1329,7 +2062,7 @@ export function comboWindows(
       for (let i = lowerBound(sorted[s], from); i < sorted[s].length; i++) {
         const h = sorted[s][i];
         if (h.start >= to) break;
-        if (h.start + h.span > unitHi) continue;
+        if (h.start + h.span > unitHi || h.start < L || h.start + h.span > H) continue;
         // "before" is measured by the END of the run, so a phrase only counts
         // as preceding when the whole run finishes first.
         if (relation === 'before' && h.start + h.span > anchor.start) continue;
@@ -1383,22 +2116,59 @@ export function comboWindows(
         take.push(pick);
         cursor = pick.start + pick.span;
       }
-      if (ok) { chosen = take; break; }
+      if (ok && !(nots.length && excluded(take, unitLo, unitHi))) { chosen = take; break; }
     }
     if (!chosen) continue;
+    // Every other word of a term in range of the anchor, as its partners were
+    // sought: the first term's on either side, the others' as `feasible`, and
+    // under the order lock only after the anchor, where a partner may stand.
+    const near: SlotHit[] = [];
+    for (let i = lowerBound(sorted[0], lo); i < sorted[0].length && sorted[0][i].start < hi; i++) {
+      const h = sorted[0][i];
+      if (h.start + h.span > unitHi || h.start < L || h.start + h.span > H) continue;
+      if (!chosen.includes(h)) near.push(h);
+    }
+    for (const picks of feasible.slice(1)) {
+      for (const h of picks) {
+        if (opts.ordered && h.start < anchor.start + anchor.span) continue;
+        if (!chosen.includes(h)) near.push(h);
+      }
+    }
     out.push({
       start: Math.min(...chosen.map(h => h.start)),
       end: Math.max(...chosen.map(h => h.start + h.span - 1)),
       hits: chosen,
+      near,
     });
   }
   return out;
+}
+
+// What a Greek term asks, as the index reads it: its pattern pieces with the
+// literals folded and runs of them joined, so two spellings that fold alike
+// are one query. A term that is no pattern asks nothing, and keeps its text.
+function termMeaning(term: string): string {
+  const pieces = patternPieces(term);
+  if (!pieces) return `!${term}`;
+  const out: (string | [string, ...string[]])[] = [];
+  for (const p of pieces) {
+    if (p.kind === 'char') {
+      const f = greekFold(p.ch);
+      if (typeof out[out.length - 1] === 'string' && !/^[.*+()|]$/.test(out[out.length - 1] as string)) {
+        out[out.length - 1] += f;
+      } else out.push(f);
+    } else if (p.kind === 'set') {
+      out.push([p.negated ? '^' : '', ...[...new Set(p.chars.map(greekFold).filter(Boolean))].sort()]);
+    } else out.push({ run: '*', one: '.', plus: '+', open: '(', close: ')', or: '|' }[p.kind]);
+  }
+  return JSON.stringify(out);
 }
 
 async function comboSearchWork(
   work: string,
   slots: ComboSlot[],
   opts: ComboOptions,
+  seen?: { notHit: boolean },   // set when a NOT term occurs in this work
 ): Promise<SearchResult[]> {
   const needLemma = slots.some(s => s.kind === 'lemma');
   const needForm = slots.some(s => s.kind === 'form' || s.kind === 'phrase');
@@ -1413,28 +2183,50 @@ async function comboSearchWork(
   ]);
   let column: Uint16Array | Uint32Array | null = null;
   if (dict) {
+    // The column is joined to the offsets by position alone, so a mismatched
+    // token_count means the two files came from different builds — refuse
+    // rather than silently report the wrong words.
     if (dict.token_count !== offsets.token_count) {
       throw new Error(`${work}: grammar/offsets built from different runs`);
     }
     const buffer = await loadBinary(work, 'grammar-col.bin');
     column = dict.width === 4 ? new Uint32Array(buffer) : new Uint16Array(buffer);
     // A short column would silently drop every grammatical hit past its end and
-    // still report a complete result, so check it here as well as in
-    // grammarSearchWork.
+    // still report a complete result.
     if (column.length !== offsets.token_count) {
       throw new Error(`${work}: grammar column length does not match token count`);
     }
   }
 
+  // Same rule as the plain search: no labelled turns, or a narrator's only,
+  // nothing to attribute.
+  const speaker = opts.speaker?.names.length ? opts.speaker : undefined;
+  if (speaker && !attributable(work, offsets)) return [];
+
   const base = offsets.seg_base_offset;
-  const perSlot = slots.map(s => slotHits(s, base, lemmaIdx, formIdx, dict, column));
+  let perSlot = slots.map(s => slotHits(s, base, lemmaIdx, formIdx, dict, column));
+  if (seen && perSlot.some((hits, i) => i > 0 && slots[i].relation === 'not' && hits.length)) seen.notHit = true;
+  // The speaker filter is applied to each slot's hits BEFORE windows form, not
+  // to the windows after. Each anchor takes one partner per slot — the nearest
+  // feasible one — so filtering afterwards would let an unwanted speaker's
+  // token claim the window and hide a wanted one a few words further on.
+  // A "not" slot is left unfiltered: a NOT term excludes a match whoever says
+  // the excluded word. "ἀρετή in Socrates' mouth, not near ἐπιστήμη" asks
+  // about the passage, and an ἐπιστήμη his partner says is still near it.
+  if (speaker) {
+    perSlot = perSlot.map((hits, i) => (i > 0 && slots[i].relation === 'not'
+      ? hits
+      : hits.filter(h => speakerPasses(speaker, speakerAt(offsets, h.start)))));
+  }
   // Two slots are the same slot when they ask the same thing, whatever order
   // the reader ticked or typed it in: a lemma slot's heads are unioned, so
   // their order carries nothing; a phrase is a run, so its order is the
   // question. A grammatical query's categories are a set.
+  // A term is compared by what it asks, not how it is spelled: λόγος, LOGOS
+  // and λογος are one query.
   const slotIds = slots.map(s => JSON.stringify([
     s.kind,
-    s.terms ? (s.kind === 'phrase' ? s.terms : [...s.terms].sort()) : null,
+    s.terms ? (s.kind === 'phrase' ? s.terms.map(termMeaning) : s.terms.map(termMeaning).sort()) : null,
     s.query ? Object.fromEntries(Object.entries(s.query).sort(([a], [b]) => a.localeCompare(b))) : null,
   ]));
   const duplicated = new Set(slotIds.filter((id, i) => slotIds.indexOf(id) !== i));
@@ -1445,45 +2237,68 @@ async function comboSearchWork(
   );
 
   const bySeg = new Map<number, SearchResult>();
-  const seenBySeg = new Map<number, Set<number>>();
   const resultFor = (si: number): SearchResult => {
     let r = bySeg.get(si);
     if (!r) {
-      r = { work, meta: meta[si], grkMatch: true, engMatch: false, grkPositions: [], grammar: [] };
+      r = {
+        work, meta: meta[si], grkMatch: true, engMatch: false,
+        grkPositions: [], grammar: [], windows: [],
+        ...(speaker ? { speakers: [] } : {}),
+      };
       bySeg.set(si, r);
-      seenBySeg.set(si, new Set());
     }
     return r;
   };
-  for (const w of windows) {
-    // Report every matched token so the KWIC marks all of them. Ambiguity is
-    // recorded PER SLOT, not per window: a lexically matched word is certain
-    // whatever its neighbour's parse allows, and labelling it with the other
-    // slot's alternatives would attribute morphology to the wrong word. Merging
-    // the two slots' values would be worse still — a second grammatical slot
-    // would overwrite the first's alternatives and hide the very ambiguity that
-    // made the hit uncertain.
-    for (const h of w.hits) {
-      for (let k = 0; k < h.span; k++) {
-        const [hs, hp] = locate(base, h.start + k);
-        // A window can straddle a column boundary — segments are keyed
-        // (book, column), and a book edge is the only thing a window may not
-        // cross. Mark the token in whichever segment it actually falls in, so
-        // both halves of the passage are shown; dropping the far half used to
-        // leave the reader looking at a hit with a term missing.
-        const result = resultFor(hs);
-        const seen = seenBySeg.get(hs)!;
-        if (seen.has(hp)) continue;
-        seen.add(hp);
-        result.grkPositions.push(hp);
-        result.grammar!.push({ values: h.values ?? {}, certain: h.certain });
-      }
+  // A window can straddle a column boundary — segments are keyed (book,
+  // column), and a book edge is the only thing a window may not cross. It is
+  // one match all the same: cited in the section it starts in, a token past
+  // that section's last counting on into the next (hitTokens), so one row
+  // marks every word of it (audit, 2026-11-11). A token two windows share is
+  // the first's (global offsets, so a token is one token whichever section
+  // a window starts in).
+  const claimed = new Set<number>();
+  // Report every matched token so the KWIC marks all of them. Ambiguity is
+  // recorded PER SLOT, not per window: a lexically matched word is certain
+  // whatever its neighbour's parse allows, and labelling it with the other
+  // slot's alternatives would attribute morphology to the wrong word.
+  const mark = (si: number, list: number[], h: SlotHit) => {
+    for (let k = 0; k < h.span; k++) {
+      const g = h.start + k;
+      if (claimed.has(g)) continue;
+      claimed.add(g);
+      const result = resultFor(si);
+      const hp = g - base[si];
+      list.push(hp);
+      result.grkPositions.push(hp);
+      result.grammar!.push({ values: h.values ?? {}, certain: h.certain });
+      // Every word of a slot's run carries the speaker it was kept on (its
+      // first word's), as the plain and variant engines do: a phrase slot
+      // across a turn break must not print the excluded speaker on its tail.
+      if (speaker) result.speakers!.push(speakerAt(offsets, h.start));
     }
+  };
+  // The matched words first, every window's, so which windows stand (and so
+  // the count) is as it was; then the words in range of each anchor, on the
+  // windows that stand, where no window has them.
+  const listed: { si: number; list: number[]; near: SlotHit[] }[] = [];
+  for (const w of windows) {
+    const [si] = locate(base, w.start);
+    const list: number[] = [];
+    for (const h of w.hits) mark(si, list, h);
+    if (list.length) listed.push({ si, list, near: w.near });
+  }
+  for (const { si, list, near } of listed) {
+    // A word in range before the section the match is cited in has no place
+    // on its row (positions count on from that section's first word), so it
+    // is not marked; the match's own words never stand there.
+    for (const h of near) if (h.start >= base[si]) mark(si, list, h);
+    bySeg.get(si)!.windows!.push(list.sort((a, b) => a - b));
   }
   for (const r of bySeg.values()) {
     const order = r.grkPositions.map((p, i) => [p, i] as const).sort((a, b) => a[0] - b[0]);
     r.grkPositions = order.map(([p]) => p);
     r.grammar = order.map(([, i]) => r.grammar![i]);
+    if (r.speakers) r.speakers = order.map(([, i]) => r.speakers![i]);
   }
   return [...bySeg.keys()].sort((a, b) => a - b).map(si => bySeg.get(si)!);
 }
@@ -1496,7 +2311,27 @@ export async function searchCombo(
 ): Promise<SearchOutcome> {
   const usable = slots.filter(s =>
     s.kind === 'grammatical' ? Object.keys(s.query ?? {}).length : (s.terms ?? []).length);
-  if (usable.length < 2 || !works.length) return { results: [], failedWorks: [] };
+  // Grammar alone (ruling 3, John, 2026-11-10; this replaces "grammar is a
+  // filter on a lexical query and nothing else"). A query of grammar terms
+  // only runs when something narrows it: fewer than all works, a speaker
+  // filter, or a second term near or not near it. Unnarrowed, "genitive
+  // plural feminine" returns the corpus, not an answer, so it is refused here
+  // and the page shows the narrowing controls instead.
+  // A single word term is no proximity search: that is the main search box.
+  // A search that opens with a NOT term has nothing for it to stand apart from.
+  // A NOT term narrows only by occurring: one that occurs nowhere takes
+  // nothing away, so that case is settled after the search, below.
+  const narrowed = new Set(works).size < WORKS.length || !!opts.speaker?.names.length;
+  const positive = usable.slice(1).filter(s => s.relation !== 'not');
+  const grammarOnly = usable.every((s, i) => s.kind === 'grammatical' || (i > 0 && s.relation === 'not'));
+  const onlyNotNarrows = grammarOnly && !narrowed && usable.length >= 2 && !positive.length;
+  if (usable[0]?.relation === 'not' || !works.length) return { results: [], failedWorks: [] };
+  if (usable.length === 1) {
+    if (usable[0].kind !== 'grammatical') return { results: [], failedWorks: [] };
+    if (!narrowed) return { results: [], failedWorks: [], unnarrowed: true };
+  }
+  if (!usable.length) return { results: [], failedWorks: [] };
+  const seen = { notHit: false };
 
   const bounded: ComboOptions = {
     ...opts,
@@ -1505,7 +2340,7 @@ export async function searchCombo(
   const failedWorks: string[] = [];
   const perWork = await pool(works, 8, async w => {
     try {
-      return await comboSearchWork(w, usable, bounded);
+      return await comboSearchWork(w, usable, bounded, seen);
     } catch (err) {
       console.warn(`searchCombo: skipping ${w} —`, err);
       failedWorks.push(w);
@@ -1515,23 +2350,32 @@ export async function searchCombo(
   if (failedWorks.length === works.length) {
     throw new Error('Could not load the search index — check your connection and try again.');
   }
+  if (onlyNotNarrows && !seen.notHit) return { results: [], failedWorks, unnarrowed: true };
 
-  // Only worth saying when the answer depends on where a chapter begins.
-  const approximateChapters: string[] = [];
-  if (bounded.unit === 'chapter' || !bounded.crossChapter) {
+  // Only worth saying when the answer depends on where a turn begins — which a
+  // speaker filter does as much as the turn unit: a snapped bound puts the
+  // words either side of it in the wrong mouth.
+  const approximateTurns: string[] = [];
+  if (bounded.unit === 'chapter' || bounded.crossChapter === false) {
+    const approximateChapters: string[] = [];
+    for (const w of works) {
+      try { if ((await loadOffsets(w)).chapter_bounds?.some(c => c.accuracy !== 'exact' && c.start !== 0)) approximateChapters.push(w); } catch {}
+    }
+    return { results: perWork.flat(), failedWorks, approximateChapters };
+  }
+  if (bounded.unit === 'turn' || !bounded.crossTurn || !!bounded.speaker?.names.length) {
     for (const w of works) {
       if (failedWorks.includes(w)) continue;
       try {
-        const offsets = await loadIndex<Offsets>(w, 'offsets.json');   // already cached
-        if (offsets.chapter_bounds.some(c => c.accuracy !== 'exact' && c.start !== 0)) {
-          approximateChapters.push(w);
+        const offsets = await loadOffsets(w);   // already cached
+        if ((offsets.turn_bounds ?? []).some(t => t.accuracy !== 'exact' && t.start !== 0)) {
+          approximateTurns.push(w);
         }
       } catch { /* a work that failed to load is already reported */ }
     }
   }
-  return { results: perWork.flat(), failedWorks, approximateChapters };
+  return { results: perWork.flat(), failedWorks, approximateTurns };
 }
-
 /** The headwords each typed word can belong to, for a lemma search.
  *
  * A lemma index is keyed on dictionary forms, so matching the typed word
@@ -1543,28 +2387,202 @@ export async function searchCombo(
  *
  * The typed fold is kept alongside the headwords: a reader who does know the
  * dictionary form must never come off worse, and a word absent from the map
- * still searches as itself. Wildcards are left alone — they are patterns over
- * index keys, not surface words to resolve.
+ * still searches as itself. Patterns are left alone — they are patterns over
+ * index keys, not surface words to resolve. Which terms are patterns is
+ * compilePattern's call: in Beta Code a leading * is the capital (*LO/GOU).
+ *
+ * Where the map does not load, a word searches as typed, and `unresolved`
+ * names it: an inflection searched as itself finds nothing, and the reader
+ * must not take that for the corpus's answer.
  */
-async function resolveHeadwords(terms: string[]): Promise<string[][]> {
-  return Promise.all(terms.map(async term => {
-    if (/[*?]/.test(term)) return [term];
-    const fold = greekFold(term);
-    if (!fold) return [term];
+async function resolveHeadwords(terms: string[]): Promise<{ terms: string[][]; unresolved: string[] }> {
+  const unresolved: string[] = [];
+  const resolved = await Promise.all(terms.map(async term => {
+    const pattern = compilePattern(term, greekFold);
+    if (!pattern || !('exact' in pattern)) return [term];
+    const fold = pattern.exact;
     const letter = /^[a-z]/.test(fold) ? fold[0] : '_';
     try {
       const shard = await loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`);
-      const heads = shard[fold];
+      const heads = Object.hasOwn(shard, fold) ? shard[fold] : undefined;
       return heads?.length ? [...new Set([fold, ...heads])] : [term];
     } catch {
-      return [term];   // without the map, behave exactly as before
+      unresolved.push(term);
+      return [term];
     }
   }));
+  return { terms: resolved, unresolved };
+}
+
+// -- The form of each Greek hit ---------------------------------------------
+//
+// A result says where the query's words stand, not what form each takes: a
+// lemma search reads the lemma index, whose postings carry no form. The form
+// index does, so the forms are read back from it. For a lemma search the
+// candidates are the forms the lemma map files under the headwords searched,
+// which is every form the lemma index could have counted (stage 8 writes the
+// map from the same analyses). The whole map is a third of a megabyte, read
+// once; the forms then fall in a few shards.
+
+export interface HitForms {
+  /** `${work}:${segment id}` → the folded form at each of that result's
+   * grkPositions, in step with them; "" where none was found. */
+  byResult: Map<string, string[]>;
+  /** Folded form → the headwords searched that it is a form of. Empty for a
+   * search by form, which names no headword. */
+  headwords: Map<string, string[]>;
+  /** Works whose indexes did not load: their results have no entry in
+   * byResult, so nothing of theirs can be counted or set aside. */
+  failedWorks: string[];
+}
+
+// The letters a folded Greek word can begin with (greekFold's, digamma's v
+// among them), as lemma-map is split; "_" holds the rest. A corpus has no
+// shard for a letter none of its words begins with: that 404 is an answer,
+// and is not asked for again. Any other failure is one.
+const LEMMA_MAP_SHARDS = [...'abcdefghiklmnopqrstuvwxyz', '_'];
+const _noLemmaMap = new Set<string>();
+async function lemmaMapShard(letter: string): Promise<Record<string, string[]>> {
+  if (_noLemmaMap.has(letter)) return {};
+  // Aristotle: no lemma begins with digamma, so there is no v shard.
+  if (letter === 'v') return {};
+  try {
+    return await loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`);
+  } catch (err) {
+    if (!/^HTTP 404 /.test(err instanceof Error ? err.message : '')) throw err;
+    _noLemmaMap.add(letter);
+    return {};
+  }
+}
+
+// The keys of an index one query's terms match. On the shard path the index
+// holds only those; a work read from its own file holds every key.
+function matchedKeys(idx: GrkIndex, terms: string[]): string[] {
+  const patterns = terms.map(t => compilePattern(t, greekFold)).filter(p => p !== null);
+  return Object.keys(idx).filter(key => patterns.some(p => ('exact' in p ? p.exact === key : p.test(key))));
+}
+
+/** The form of every Greek hit in `results`, for the search (`grkQuery`,
+ * `matchMode`) that found them: the same query search() was given. A work
+ * whose indexes do not load is left without forms and named in failedWorks;
+ * a lemma map that cannot be read fails the whole lookup. */
+export async function greekHitForms(
+  results: SearchResult[],
+  grkQuery: string,
+  matchMode: MatchMode,
+): Promise<HitForms> {
+  const out: HitForms = { byResult: new Map(), headwords: new Map(), failedWorks: [] };
+  const failed = new Set<string>();
+  const works = [...new Set(results.filter(r => r.grkMatch && r.grkPositions.length).map(r => r.work))];
+  const typed = grkQuery.trim().split(/\s+/).filter(Boolean);
+  if (!works.length || !typed.length) return out;
+
+  let formTerms = typed;
+  if (matchMode !== 'form') {
+    const terms = (matchMode === 'lemma' ? (await resolveHeadwords(typed)).terms : typed.map(t => [t])).flat();
+    const lemmaIx = queryIndexes('lemma', terms, []);
+    const heads = new Set<string>();
+    await pool(works, 8, async w => {
+      try { for (const key of matchedKeys(await lemmaIx.greek(w), terms)) heads.add(key); } catch { failed.add(w); }
+    });
+    const maps = await pool(LEMMA_MAP_SHARDS, 8, lemmaMapShard);
+    for (const map of maps) {
+      for (const form of Object.keys(map)) {
+        const own = map[form].filter(h => heads.has(h));
+        if (own.length) out.headwords.set(form, own.sort());
+      }
+    }
+    formTerms = [...out.headwords.keys()];
+  }
+
+  const formIx = queryIndexes('form', formTerms, []);
+  await pool(works.filter(w => !failed.has(w)), 8, async w => {
+    try {
+      const [idx, meta] = await Promise.all([formIx.greek(w), loadIndex<SegMeta[]>(w, 'meta.json')]);
+      const at = new Map<string, string>();               // `${seg_idx}:${pos}` → form
+      for (const form of matchedKeys(idx, formTerms)) {
+        for (const [si, pos] of idx[form]) at.set(`${si}:${pos}`, form);
+      }
+      const segIndex = new Map(meta.map((m, i) => [m.id, i]));
+      // Whole or not at all, as greekHitGrammar reads a work.
+      const own = new Map<string, string[]>();
+      for (const r of results) {
+        if (r.work !== w || !r.grkMatch) continue;
+        const si = segIndex.get(r.meta.id);
+        if (si === undefined) throw new Error(`${w}: segment ${r.meta.id} is not in its index`);
+        own.set(`${w}:${r.meta.id}`, r.grkPositions.map(pos => at.get(`${si}:${pos}`) ?? ''));
+      }
+      for (const [key, forms] of own) out.byResult.set(key, forms);
+    } catch (err) {
+      console.warn(`search: no forms for ${w} —`, err);
+      failed.add(w);
+    }
+  });
+  out.failedWorks = works.filter(w => failed.has(w));
+  return out;
+}
+
+// -- The grammar of each Greek hit -------------------------------------------
+//
+// The readings of every hit, for the results page's grammar view and facets:
+// the same column a grammatical search reads, looked up at each hit's global
+// offset after the search, so the search itself loads no grammar it was not
+// asked for.
+
+export interface HitGrammar {
+  /** `${work}:${segment id}` → the readings of the token at each of that
+   * result's grkPositions, in step with them; [] for an unanalysed token. */
+  byResult: Map<string, Reading[][]>;
+  /** Works whose grammar files did not load: no entry in byResult for their results. */
+  failedWorks: string[];
+}
+
+/** The readings of every Greek hit in `results`. A work whose grammar does
+ * not load is left without and named in failedWorks; the rest still resolve. */
+export async function greekHitGrammar(results: SearchResult[]): Promise<HitGrammar> {
+  const out: HitGrammar = { byResult: new Map(), failedWorks: [] };
+  const failed = new Set<string>();
+  const works = [...new Set(results.filter(r => r.grkMatch && r.grkPositions.length).map(r => r.work))];
+  await pool(works, 8, async w => {
+    try {
+      const [dict, offsets, meta, buffer] = await Promise.all([
+        loadIndex<GrammarDict>(w, 'grammar-dict.json'),
+        loadOffsets(w),
+        loadIndex<SegMeta[]>(w, 'meta.json'),
+        loadBinary(w, 'grammar-col.bin'),
+      ]);
+      // As in comboSearchWork: the column is joined to the offsets by
+      // position alone, so files from different builds would name the wrong words.
+      const column = dict.width === 4 ? new Uint32Array(buffer) : new Uint16Array(buffer);
+      if (dict.token_count !== offsets.token_count || column.length !== offsets.token_count) {
+        throw new Error(`${w}: grammar/offsets built from different runs`);
+      }
+      const segIndex = new Map(meta.map((m, i) => [m.id, i]));
+      // Read whole or not at all: a result whose segment this index does not
+      // know is from another build, and the work's hits would then be partly
+      // narrowed and partly not, with nothing to say so.
+      const own = new Map<string, Reading[][]>();
+      for (const r of results) {
+        if (r.work !== w || !r.grkMatch) continue;
+        const si = segIndex.get(r.meta.id);
+        if (si === undefined) throw new Error(`${w}: segment ${r.meta.id} is not in its index`);
+        const base = offsets.seg_base_offset[si];
+        own.set(`${w}:${r.meta.id}`, r.grkPositions.map(pos => dict.sigs[column[base + pos]] ?? []));
+      }
+      for (const [key, readings] of own) out.byResult.set(key, readings);
+    } catch (err) {
+      console.warn(`search: no grammar for ${w} —`, err);
+      failed.add(w);
+    }
+  });
+  out.failedWorks = works.filter(w => failed.has(w));
+  return out;
 }
 
 // Unified search across one or more works. `matchMode` chooses the Greek index
 // (lemma = all forms of a headword, form = the exact inflected token);
-// `engForms` lets each English word match its plural and possessive forms.
+// `engForms` lets each English word match its plural and possessive forms;
+// `speaker` holds the hits to one voice (see SpeakerFilter).
 export async function search(
   grkQuery: string,
   engQuery: string,
@@ -1574,14 +2592,18 @@ export async function search(
   works: string[],
   matchMode: MatchMode = 'lemma',
   engForms = false,
+  speaker?: SpeakerFilter,
 ): Promise<SearchOutcome> {
   if (!grkQuery.trim() && !engQuery.trim()) return { results: [], failedWorks: [] };
   if (!works.length) return { results: [], failedWorks: [] };
+  // An empty name list would mean "only nobody" or "anyone but nobody"; treat
+  // both as no filter rather than return an empty corpus or the whole one.
+  if (speaker && !speaker.names.length) speaker = undefined;
 
   const typedGrk = grkQuery.trim().split(/\s+/).filter(Boolean);
-  const grkTerms = matchMode === 'lemma'
+  const { terms: grkTerms, unresolved: unresolvedTerms } = matchMode === 'lemma'
     ? await resolveHeadwords(typedGrk)
-    : typedGrk.map(t => [t]);
+    : { terms: typedGrk.map(t => [t]), unresolved: [] };
   const engUnits = englishQueryUnits(engQuery);
   // "Any form" looks each word's forms up in the index it is handed, which on
   // the shard path holds only the keys cut for these terms: so the forms are
@@ -1599,7 +2621,7 @@ export async function search(
   const perWork = await pool(works, 8, async w => {
     try {
       const { results, unsearched } =
-        await searchWork(w, grkTerms, engUnits, grkMode, engMode, langOp, indexes, engForms);
+        await searchWork(w, grkTerms, engUnits, grkMode, engMode, langOp, indexes, engForms, speaker);
       for (const translation of unsearched) unsearchedTranslations.push({ work: w, translation });
       return results;
     } catch (err) {
@@ -1621,5 +2643,89 @@ export async function search(
     results: perWork.flat(),
     failedWorks,
     ...(unsearchedTranslations.length ? { unsearchedTranslations } : {}),
+    ...(unresolvedTerms.length ? { unresolvedTerms } : {}),
   };
+}
+
+
+
+async function grammarSearchWork(work: string, query: GrammarQuery): Promise<SearchResult[]> {
+  const [meta, offsets, dict] = await Promise.all([
+    loadIndex<SegMeta[]>(work, 'meta.json'),
+    loadIndex<Offsets>(work, 'offsets.json'),
+    loadIndex<GrammarDict>(work, 'grammar-dict.json'),
+  ]);
+  // The column is joined to the offsets by position alone, so a mismatched
+  // token_count means the two files came from different builds — refuse rather
+  // than silently report the wrong words.
+  if (dict.token_count !== offsets.token_count) {
+    throw new Error(`${work}: grammar/offsets built from different runs`);
+  }
+  const wanted = compileQuery(dict, query);
+  if (!wanted.size) return [];
+
+  const buffer = await loadBinary(work, 'grammar-col.bin');
+  const column = dict.width === 4 ? new Uint32Array(buffer) : new Uint16Array(buffer);
+  if (column.length !== offsets.token_count) {
+    throw new Error(`${work}: grammar column length does not match token count`);
+  }
+
+  const bySeg = new Map<number, SearchResult>();
+  for (let global = 0; global < column.length; global++) {
+    const hit = wanted.get(column[global]);
+    if (!hit) continue;
+    const [si, pos] = locate(offsets.seg_base_offset, global);
+    let result = bySeg.get(si);
+    if (!result) {
+      result = {
+        work,
+        meta: meta[si],
+        grkMatch: true,
+        engMatch: false,
+        grkPositions: [],
+        grammar: [],
+      };
+      bySeg.set(si, result);
+    }
+    result.grkPositions.push(pos);
+    result.grammar!.push(hit);
+  }
+  return [...bySeg.keys()].sort((a, b) => a - b).map(si => bySeg.get(si)!);
+}
+
+
+// Grammatical search across one or more works. Same per-work failure tolerance
+// as search(): a work whose index will not load is reported, not fatal.
+export async function searchGrammar(
+  query: GrammarQuery,
+  works: string[],
+): Promise<SearchOutcome> {
+  if (!Object.keys(query).length || !works.length) {
+    return { results: [], failedWorks: [] };
+  }
+  const failedWorks: string[] = [];
+  const perWork = await pool(works, 8, async w => {
+    try {
+      return await grammarSearchWork(w, query);
+    } catch (err) {
+      console.warn(`searchGrammar: skipping ${w} —`, err);
+      failedWorks.push(w);
+      return [] as SearchResult[];
+    }
+  });
+  if (failedWorks.length === works.length) {
+    throw new Error('Could not load the grammar index — check your connection and try again.');
+  }
+  return { results: perWork.flat(), failedWorks };
+}
+
+
+export interface ComboHit {
+  work: string;
+  seg_idx: number;
+  pos: number;             // token position of the leftmost slot, within its segment
+  global: number;
+  positions: number[];     // every matched token position in that segment
+  certain: boolean;        // false if ANY slot rested on an ambiguous parse
+  values?: Record<string, string[]>;
 }

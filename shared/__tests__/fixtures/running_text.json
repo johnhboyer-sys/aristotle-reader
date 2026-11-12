@@ -1,0 +1,297 @@
+{
+ "_note": "The spine of pipeline/tests/test_running_text.py through stage3 and running_text, with the offsets and meta stage6 writes for it; read by shared/__tests__/running-text.test.ts.",
+ "spine": {
+  "work": "Test",
+  "segments": [
+   {
+    "id": "1:17a",
+    "book": 1,
+    "column": "17a",
+    "lines": [
+     {
+      "n": 1,
+      "text": "Ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε"
+     },
+     {
+      "n": 2,
+      "text": "ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ οἶδα· ἐγὼ δ' οὖν"
+     }
+    ]
+   },
+   {
+    "id": "1:17b",
+    "book": 1,
+    "column": "17b",
+    "lines": [
+     {
+      "n": 1,
+      "text": "[καὶ] ἀ<μφι>γνοεῖν — \"Τί δή;\" ᾧ (ὡς) δοκεῖ."
+     },
+     {
+      "n": 2,
+      "text": ""
+     },
+     {
+      "n": 3,
+      "text": "—"
+     },
+     {
+      "n": 4,
+      "text": "τί λέγεις;’ ἔφη."
+     }
+    ]
+   }
+  ]
+ },
+ "running": {
+  "v": 1,
+  "token_count": 26,
+  "text": "o(/ti me\\n u(mei=s, w)= a)/ndres a)qhnai=oi, pepo/nqate u(po\\ tw=n e)mw=n kathgo/rwn, ou)k oi)=da: e)gw\\ d' ou)=n kai\\ a)mfignoei=n - \"ti/ dh/;\" w(=| w(s dokei=. - ti/ le/geis;\" e)/fh"
+ },
+ "offsets": {
+  "token_count": 26,
+  "seg_base_offset": [
+   0,
+   16
+  ],
+  "segments": [
+   {
+    "book": 1,
+    "column": "17a",
+    "line_runs": [
+     [
+      1,
+      7
+     ],
+     [
+      2,
+      9
+     ]
+    ]
+   },
+   {
+    "book": 1,
+    "column": "17b",
+    "line_runs": [
+     [
+      1,
+      7
+     ],
+     [
+      2,
+      0
+     ],
+     [
+      3,
+      0
+     ],
+     [
+      4,
+      3
+     ]
+    ]
+   }
+  ],
+  "book_bounds": [
+   {
+    "book": 1,
+    "start": 0
+   }
+  ],
+  "chapter_bounds": [],
+  "turn_bounds": []
+ },
+ "book": {
+  "book": 1,
+  "segments": [
+   {
+    "id": "1:17a",
+    "column": "17a",
+    "greek": [
+     {
+      "n": 1,
+      "text": "Ὅτι μὲν ὑμεῖς, ὦ ἄνδρες Ἀθηναῖοι, πεπόνθατε",
+      "tokens": [
+       {
+        "t": "Ὅτι",
+        "o": 0,
+        "k": "o(/ti"
+       },
+       {
+        "t": "μὲν",
+        "o": 4,
+        "k": "me/n"
+       },
+       {
+        "t": "ὑμεῖς",
+        "o": 8,
+        "k": "u(mei=s"
+       },
+       {
+        "t": "ὦ",
+        "o": 15,
+        "k": "w)="
+       },
+       {
+        "t": "ἄνδρες",
+        "o": 17,
+        "k": "a)/ndres"
+       },
+       {
+        "t": "Ἀθηναῖοι",
+        "o": 24,
+        "k": "a)qhnai=oi"
+       },
+       {
+        "t": "πεπόνθατε",
+        "o": 34,
+        "k": "pepo/nqate"
+       }
+      ]
+     },
+     {
+      "n": 2,
+      "text": "ὑπὸ τῶν ἐμῶν κατηγόρων, οὐκ οἶδα· ἐγὼ δ' οὖν",
+      "tokens": [
+       {
+        "t": "ὑπὸ",
+        "o": 0,
+        "k": "u(po/"
+       },
+       {
+        "t": "τῶν",
+        "o": 4,
+        "k": "tw=n"
+       },
+       {
+        "t": "ἐμῶν",
+        "o": 8,
+        "k": "e)mw=n"
+       },
+       {
+        "t": "κατηγόρων",
+        "o": 13,
+        "k": "kathgo/rwn"
+       },
+       {
+        "t": "οὐκ",
+        "o": 24,
+        "k": "ou)k"
+       },
+       {
+        "t": "οἶδα",
+        "o": 28,
+        "k": "oi)=da"
+       },
+       {
+        "t": "ἐγὼ",
+        "o": 34,
+        "k": "e)gw/"
+       },
+       {
+        "t": "δ'",
+        "o": 38,
+        "k": "d'"
+       },
+       {
+        "t": "οὖν",
+        "o": 41,
+        "k": "ou)=n"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "id": "1:17b",
+    "column": "17b",
+    "greek": [
+     {
+      "n": 1,
+      "text": "[καὶ] ἀ<μφι>γνοεῖν — \"Τί δή;\" ᾧ (ὡς) δοκεῖ.",
+      "tokens": [
+       {
+        "t": "καὶ",
+        "o": 0,
+        "k": "kai/"
+       },
+       {
+        "t": "ἀμφιγνοεῖν",
+        "o": 6,
+        "k": "a)mfignoei=n"
+       },
+       {
+        "t": "Τί",
+        "o": 21,
+        "k": "ti/"
+       },
+       {
+        "t": "δή",
+        "o": 25,
+        "k": "dh/"
+       },
+       {
+        "t": "ᾧ",
+        "o": 30,
+        "k": "w(=|"
+       },
+       {
+        "t": "ὡς",
+        "o": 32,
+        "k": "w(s"
+       },
+       {
+        "t": "δοκεῖ",
+        "o": 37,
+        "k": "dokei="
+       }
+      ]
+     },
+     {
+      "n": 2,
+      "text": "",
+      "tokens": []
+     },
+     {
+      "n": 3,
+      "text": "—",
+      "tokens": []
+     },
+     {
+      "n": 4,
+      "text": "τί λέγεις;’ ἔφη.",
+      "tokens": [
+       {
+        "t": "τί",
+        "o": 0,
+        "k": "ti/"
+       },
+       {
+        "t": "λέγεις",
+        "o": 3,
+        "k": "le/geis"
+       },
+       {
+        "t": "ἔφη",
+        "o": 12,
+        "k": "e)/fh"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "meta": [
+  {
+   "id": "1:17a",
+   "book": 1,
+   "column": "17a"
+  },
+  {
+   "id": "1:17b",
+   "book": 1,
+   "column": "17b"
+  }
+ ]
+}

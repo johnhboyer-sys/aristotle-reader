@@ -150,7 +150,7 @@ describe('searchCombo', () => {
       [slot('iota'), slot('kappa'), slot('lambda')], opts({ window: 8 }), ['CG1'],
     );
     expect(results).toHaveLength(1);
-    expect(results[0].grkPositions).toEqual([10, 12, 18]);
+    expect(results[0].grkPositions).toEqual([5, 10, 12, 18]);
   });
 
   it('still rejects that group when the window is genuinely too small', async () => {
@@ -166,8 +166,7 @@ describe('searchCombo', () => {
     // of its terms missing.
     const { results } = await searchCombo([slot('mu'), slot('nu')], opts({ window: 5 }), ['CX1']);
     expect(results.map((r) => [r.meta.id, r.grkPositions])).toEqual([
-      ['2:1001a', [9]],
-      ['2:1001b', [0]],
+      ['2:1001a', [9, 10]],
     ]);
   });
 

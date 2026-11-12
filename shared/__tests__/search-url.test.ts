@@ -160,3 +160,21 @@ describe('search URL', () => {
     expect(decodeSearchUrl(qs, ALL).eng).toBe('virtue, & vice: 1');
   });
 });
+
+describe('Aristotle URL forms alongside the adopted grammar', () => {
+  it('keeps the chapter unit and chapter-crossing switch on old proximity links', () => {
+    const state = decodeSearchUrl('?c=f:ἀρετή&c=f:ἕξις&cu=chapter&cx=0&cw=10', ALL);
+    expect(state.combo).toEqual({
+      slots: [
+        { kind: 'form', relation: 'near', text: 'ἀρετή', picked: [], grammar: {} },
+        { kind: 'form', relation: 'near', text: 'ἕξις', picked: [], grammar: {} },
+      ], window: 10, unit: 'chapter', ordered: false, crossChapter: false,
+    });
+    expect(roundTrip(state)).toEqual(state);
+  });
+  it('keeps Morpheus word-class tags, which Aristotle still indexes', () => {
+    const state = decodeSearchUrl('?c=g:marker.adverb&c=f:λόγος', ALL);
+    expect(state.combo?.slots[0].grammar).toEqual({ marker: 'adverb' });
+    expect(roundTrip(state)).toEqual(state);
+  });
+});

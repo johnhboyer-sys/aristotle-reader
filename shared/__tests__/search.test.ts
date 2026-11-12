@@ -505,8 +505,8 @@ describe('English search across a work’s translations', () => {
     const { results } = await search('', 'the good', 'all', 'phrase', 'and', ['EN']);
     expect(results.map((r) => [r.meta.id, r.engHits])).toEqual([
       ['1:1094b', [
-        { translation: 'rackham', positions: [0, 1] },
-        { translation: 'ross', positions: [4, 5] },
+        { translation: 'rackham', positions: [0, 1], matches: [0] },
+        { translation: 'ross', positions: [4, 5], matches: [4] },
       ]],
     ]);
   });

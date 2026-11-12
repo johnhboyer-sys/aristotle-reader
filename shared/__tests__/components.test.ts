@@ -119,11 +119,11 @@ describe('Search.svelte', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await vi.waitFor(() => expect(status).toHaveTextContent('5 instances'));
-    const works = screen.getByRole('group', { name: 'Show hits from' });
-    const en = within(works).getByRole('button', { name: /^EN/ });
-    expect(en).toHaveTextContent('EN3');
-    expect(within(works).getByRole('button', { name: /^Met\./ })).toHaveTextContent('Met.2');
-    await vi.waitFor(() => expect(screen.getByText('3 instances')).toBeInTheDocument());
+    const works = screen.getByRole('group', { name: 'Show hits from one work' });
+    const en = within(works).getByRole('button', { name: /^Nicomachean Ethics/ });
+    expect(en).toHaveTextContent('Nicomachean Ethics3');
+    expect(within(works).getByRole('button', { name: /^Metaphysics/ })).toHaveTextContent('Metaphysics2');
+    await vi.waitFor(() => expect(screen.getByText('3 instances', { selector: '.group-count' })).toBeInTheDocument());
 
     await fireEvent.click(en);
     await vi.waitFor(() => expect(status).toHaveTextContent('3 instances'));
@@ -145,18 +145,18 @@ describe('Search.svelte "Match accents exactly"', () => {
   });
 
   // `token` swaps the word at position 0 for one surface form.
-  async function marksFor(url: string, token?: string): Promise<string[]> {
+  async function marksFor(url: string, token?: string, empty = false): Promise<string[]> {
     const { fetchBook } = await import('../lib/data');
     if (token) {
       const book = structuredClone(fixtureBook);
       book.segments[0].greek[0] = { n: 1, text: token, tokens: [{ t: token, o: 0, k: 'x' }] };
-      vi.mocked(fetchBook).mockResolvedValueOnce(book);
+      vi.mocked(fetchBook).mockResolvedValue(book);
     }
     window.history.replaceState(null, '', url);
     const { container } = render(Search);
-    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('before accent filtering'));
+    
     await vi.waitFor(() => expect(fetchBook).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    await vi.waitFor(() => expect(container.querySelector('.result-count')).toHaveTextContent(empty ? 'No passages found.' : /\d+ instances?/));
     // A chapter with more than one instance starts folded.
     for (const head of container.querySelectorAll('button.group-head[aria-expanded="false"]')) {
       await fireEvent.click(head);
@@ -169,7 +169,7 @@ describe('Search.svelte "Match accents exactly"', () => {
   });
 
   it('drops a hit typed in Greek with a different accent', async () => {
-    expect(await marksFor(`/search?g=${encodeURIComponent('λὸγος')}&acc=1`)).toEqual([]);
+    expect(await marksFor(`/search?g=${encodeURIComponent('λὸγος')}&acc=1`, undefined, true)).toEqual([]);
   });
 
   it('keeps a hit typed in Beta Code with the same accent', async () => {
@@ -189,11 +189,11 @@ describe('Search.svelte "Match accents exactly"', () => {
   });
 
   it('drops a hit typed in Beta Code with a different accent', async () => {
-    expect(await marksFor(`/search?g=${encodeURIComponent('lo\\gos')}&acc=1`)).toEqual([]);
+    expect(await marksFor(`/search?g=${encodeURIComponent('lo\\gos')}&acc=1`, undefined, true)).toEqual([]);
   });
 
   it('drops a hit typed in Beta Code with no accent', async () => {
-    expect(await marksFor('/search?g=logos&acc=1')).toEqual([]);
+    expect(await marksFor('/search?g=logos&acc=1', undefined, true)).toEqual([]);
   });
 
   // The text stores elision mostly as ' (U+0027) and in a few works as
@@ -213,7 +213,7 @@ describe('Search.svelte "Match accents exactly"', () => {
   });
 
   it('still drops an elided word with the wrong letter', async () => {
-    expect(await marksFor(`/search?g=${encodeURIComponent("τ'")}&acc=1`, 'δ’')).toEqual([]);
+    expect(await marksFor(`/search?g=${encodeURIComponent("τ'")}&acc=1`, 'δ’', true)).toEqual([]);
   });
 });
 
@@ -229,12 +229,12 @@ describe('Search.svelte in the address bar', () => {
     at('/search?g=logos&gm=phrase&m=form&acc=1&e=virtue&em=any&op=or&w=EN,Pol');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('logos', 'virtue', 'phrase', 'any', 'or', ['EN', 'Pol'], 'form', true);
+    expect(search).toHaveBeenCalledWith('logos', 'virtue', 'phrase', 'any', 'or', ['EN', 'Pol'], 'form', true, undefined);
     expect(screen.getByLabelText('Greek')).toHaveValue('logos');
     expect(screen.getByLabelText('English')).toHaveValue('virtue');
     expect(checked('Only as I typed it', 'matchmode')).toBe(true);
     expect(checked('Any form of this word', 'engforms')).toBe(true);
-    expect(checked('Match accents exactly')).toBe(true);
+    expect(screen.getByRole('button', { name: /Accents exact/ })).toBeInTheDocument();
     expect(checked('Either query')).toBe(true);
   });
 
@@ -243,7 +243,7 @@ describe('Search.svelte in the address bar', () => {
     at(`/search?g=${encodeURIComponent('λόγος')}`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('λόγος', '', 'all', 'all', 'and', expect.any(Array), 'lemma', true);
+    expect(search).toHaveBeenCalledWith('λόγος', '', 'all', 'all', 'and', expect.any(Array), 'lemma', true, undefined);
   });
 
   it('restores English "only as I typed it", and writes it as ef=0', async () => {
@@ -251,7 +251,7 @@ describe('Search.svelte in the address bar', () => {
     at('/search?e=virtue&ef=0');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('', 'virtue', 'all', 'all', 'and', expect.any(Array), 'lemma', false);
+    expect(search).toHaveBeenCalledWith('', 'virtue', 'all', 'all', 'and', expect.any(Array), 'lemma', false, undefined);
     expect(checked('Only as I typed it', 'engforms')).toBe(true);
 
     // Back to any form: the default, so ef leaves the URL.
@@ -290,7 +290,7 @@ describe('Search.svelte in the address bar', () => {
     const replace = vi.spyOn(window.history, 'replaceState');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('', 'happiness', 'all', 'all', 'and', expect.any(Array), 'lemma', true);
+    expect(search).toHaveBeenCalledWith('', 'happiness', 'all', 'all', 'and', expect.any(Array), 'lemma', true, undefined);
     await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled());
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     expect(window.location.search).toBe('?e=happiness');
@@ -482,19 +482,19 @@ describe('Search.svelte in the address bar', () => {
     at('/search?g=logos');
     const push = vi.spyOn(window.history, 'pushState');
     const { unmount } = render(Search);
-    const works = await screen.findByRole('group', { name: 'Show hits from' });
-    await fireEvent.click(within(works).getByRole('button', { name: /^Met\./ }));
+    const works = await screen.findByRole('group', { name: 'Show hits from one work' });
+    await fireEvent.click(within(works).getByRole('button', { name: /^Metaphysics/ }));
     expect(window.location.search).toBe('?g=logos&wf=Meta');
     expect(push).not.toHaveBeenCalled();
-    await fireEvent.click(within(works).getByRole('button', { name: /^Met\./ }));
+    await fireEvent.click(within(works).getByRole('button', { name: /^Metaphysics/ }));
     expect(window.location.search).toBe('?g=logos');
     push.mockRestore();
     unmount();
 
     at('/search?g=logos&wf=Meta');
     const second = render(Search);
-    const restored = await screen.findByRole('group', { name: 'Show hits from' });
-    await vi.waitFor(() => expect(within(restored).getByRole('button', { name: /^Met\./ }))
+    const restored = await screen.findByRole('group', { name: 'Show hits from one work' });
+    await vi.waitFor(() => expect(within(restored).getByRole('button', { name: /^Metaphysics/ }))
       .toHaveAttribute('aria-pressed', 'true'));
     await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
 
@@ -502,14 +502,14 @@ describe('Search.svelte in the address bar', () => {
     at('/search?g=logos');
     window.dispatchEvent(new PopStateEvent('popstate'));
     await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
-    expect(within(screen.getByRole('group', { name: 'Show hits from' })).getByRole('button', { name: /^Met\./ }))
+    expect(within(screen.getByRole('group', { name: 'Show hits from one work' })).getByRole('button', { name: /^Metaphysics/ }))
       .toHaveAttribute('aria-pressed', 'false');
 
     // A work this search did not find is dropped from the URL.
     second.unmount();
     at('/search?g=logos&wf=Pol');
     render(Search);
-    await screen.findByRole('group', { name: 'Show hits from' });
+    await screen.findByRole('group', { name: 'Show hits from one work' });
     await vi.waitFor(() => expect(window.location.search).toBe('?g=logos'));
   });
 });

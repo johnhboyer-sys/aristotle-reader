@@ -284,9 +284,9 @@ describe('Search hits in a chapter-section work', () => {
     } as never);
     window.history.replaceState(null, '', '/search?g=logos&e=text');
     const { container } = render(Search);
-    const head = await screen.findByRole('button', { name: /Chapter 49/ });
+    const head = await screen.findByRole('button', { name: /Athenian Constitution/ });
     expect(container.querySelector('.group-bekker')).toBeNull();
-    await fireEvent.click(head);
+    expect(head).toHaveAttribute('aria-expanded', 'true');
     const refs = [...container.querySelectorAll('.inst-ref')].map(a => a.textContent);
     expect(refs).toEqual(['49.2', '49.3', '49.5', '49.6']);
     const hrefs = [...container.querySelectorAll('.inst-ref')].map(a => a.getAttribute('href'));
