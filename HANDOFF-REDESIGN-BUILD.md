@@ -27,13 +27,18 @@ are real faults in the new search page:
 - no focus ring on the Greek box;
 - dimmed Match and Form labels at 3.7:1 contrast.
 
-All three went to the search session to fix (13 Nov 05:05). Log:
-`.redesign-shots/notes/d26/final6/searchport/`.
+The search session fixed all three (`ead5584589`, merged as `53535ede1c`).
+Full run after the merge: 63 pass, 1 fail. The one failure is R-S1, the
+English ref format below; it clears once you rule. Logs:
+`.redesign-shots/notes/d26/final6/searchport/` (`check-redesign-full2.log`).
 
 **One ruling for you: English search refs.** The new page cites English hits
 to the line ("1095b25"). An earlier ruling in the gates says English hits cite
 the column ("1095b"), as the old search did, because the translation doesn't
-follow Bekker lines exactly. Which?
+follow Bekker lines exactly. Which? (The search session found no ruling for
+the line refs: they came in with Plato's search stack, `86693cb7ad`, and the
+tests only pin that code. If you keep the column, it is a small change on
+their side.)
 
 After the search fixes, and a green run, the next step is your yes to push
 and open the PR (not merge, not deploy).

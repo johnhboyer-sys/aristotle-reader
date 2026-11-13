@@ -214,7 +214,9 @@ export function readInstanceRefs(hits) {
             sideBySide: getComputedStyle(hit).gridTemplateColumns.split(' ').length > 1,
             refRight: Math.max(ref.getBoundingClientRect().right, ...rects.map(r => r.right)),
             columnLeft: column ? column.getBoundingClientRect().left : NaN,
-            height: ref.offsetHeight, lineHeight: parseFloat(getComputedStyle(ref).lineHeight),
+            // The text's height: the link's padding grows its tap area (R-A1), not its lines.
+            height: (cs => ref.offsetHeight - ['paddingTop', 'paddingBottom', 'borderTopWidth', 'borderBottomWidth'].reduce((n, k) => n + parseFloat(cs[k]), 0))(getComputedStyle(ref)),
+            lineHeight: parseFloat(getComputedStyle(ref).lineHeight),
             lines: lineCount(rects), leadLines: lineCount(lead),
             textWidth: rects.length ? Math.max(...rects.map(r => r.right)) - Math.min(...rects.map(r => r.left)) : 0,
             visible: ref.isConnected && ref.getClientRects().length > 0 && rects.length > 0,
