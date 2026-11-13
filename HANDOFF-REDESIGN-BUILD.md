@@ -32,13 +32,12 @@ Full run after the merge: 63 pass, 1 fail. The one failure is R-S1, the
 English ref format below; it clears once you rule. Logs:
 `.redesign-shots/notes/d26/final6/searchport/` (`check-redesign-full2.log`).
 
-**One ruling for you: English search refs.** The new page cites English hits
-to the line ("1095b25"). An earlier ruling in the gates says English hits cite
-the column ("1095b"), as the old search did, because the translation doesn't
-follow Bekker lines exactly. Which? (The search session found no ruling for
-the line refs: they came in with Plato's search stack, `86693cb7ad`, and the
-tests only pin that code. If you keep the column, it is a small change on
-their side.)
+**English search refs, ruled (John, 13 Nov 11:39, in the search session):**
+"for now the column. once every work is properly aligned, the line." English
+hits cite the column ("1095b"); their links still go to the line;
+chapter-section works keep "49.3". **Proximity editor, ruled (John, 13 Nov
+11:38, comment on the sheet):** after a search it collapses to its one-line
+summary. The search session is building both; one tip comes back for merge.
 
 After the search fixes, and a green run, the next step is your yes to push
 and open the PR (not merge, not deploy).
@@ -359,6 +358,8 @@ Left on purpose (John has not asked for a commit); keep them:
   Proposed method: one review page of every reader state with a note box under
   each, then rounds.
 
+- English search refs to the line, once every work is properly aligned (John,
+  13 Nov: column for now).
 - Corpus: no lemma page for σωφροσύνη or ἀκούσιος.
 - LSJ track: grammata's Logeion link is 14px tall; `.t8-entry` margin gap on
   phones.
