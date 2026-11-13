@@ -1949,11 +1949,14 @@ export function comboWindows(
   identities: string[] = [],
   // The slot each is measured from; an index into perSlot, default 0.
   targets: number[] = [],
+  // Placement steps left for the whole search; past them it throws
+  // ProximityTooComplex rather than return a short result.
+  budget: StepBudget = { left: COMBO_STEP_BUDGET },
 ): ComboWindow[] {
   if (opts.unit === 'chapter' || opts.crossChapter === false) {
     return comboWindows(perSlot, { ...opts, unit: opts.unit === 'chapter' ? 'turn' : opts.unit,
       crossTurn: opts.crossChapter ?? true, crossChapter: undefined },
-      { ...offsets, turn_bounds: (offsets.chapter_bounds ?? []).map(c => ({ ...c, speaker: '' })) }, relations, identities, targets);
+      { ...offsets, turn_bounds: (offsets.chapter_bounds ?? []).map(c => ({ ...c, speaker: '' })) }, relations, identities, targets, budget);
   }
   offsets = { ...offsets, turn_bounds: offsets.turn_bounds ?? [] };
   // A "not" slot takes no part in forming a match: the match is found over the
@@ -1981,11 +1984,25 @@ export function comboWindows(
     .map(n => ({ ...n, longest: n.hits.reduce((m, h) => Math.max(m, h.span), 1) }));
   return windows(
     kept.map(s => perSlot[s]), opts, offsets, kept.map(s => relations[s] ?? 'near'), kept.map(s => identities[s] ?? ''),
-    kept.map(s => keptAt.get(targetOf(s)) ?? 0), nots,
+    kept.map(s => keptAt.get(targetOf(s)) ?? 0), nots, budget,
   );
 }
 
 interface NotSlot { id: string; target: number; hits: SlotHit[]; longest: number }
+
+// Placing the terms is a search: a failing anchor may try every combination
+// of its partners. Pruning (windows, below) removes every hit that cannot
+// take part in any match, which settles the common cases; what is left is
+// bounded by this many candidate tries per search, after which the search
+// stops and says so: about a third of a second of work at most.
+export const COMBO_STEP_BUDGET = 5_000_000;
+export interface StepBudget { left: number }
+export class ProximityTooComplex extends Error {
+  constructor() {
+    super('This proximity search has too many ways to place its terms to finish. Narrow it: a smaller distance, fewer works, or a more particular term.');
+    this.name = 'ProximityTooComplex';
+  }
+}
 
 // One match: its span, the hit chosen for each slot, and `near`, every other
 // hit of a term within range of the hit its partner was sought from: marked
@@ -2000,6 +2017,7 @@ function windows(
   identities: string[],
   targets: number[],
   nots: NotSlot[],
+  budget: StepBudget,
 ): ComboWindow[] {
   if (!perSlot.length || perSlot.some(h => !h.length)) return [];
   const sorted = perSlot.map(h => [...h].sort((a, b) => a.start - b.start));
@@ -2052,13 +2070,62 @@ function windows(
     for (let i = lowerBound(n.hits, lo - n.longest + 1); i < n.hits.length && n.hits[i].start < hi; i++) {
       const h = n.hits[i];
       if (h.start + h.span <= lo || !fits(h, unitLo, unitHi)) continue;
-      if (!take.some((m, k) => m.start === h.start && identities[k] === n.id)) return true;
+      if (!n.id || !take.some((m, k) => m.start === h.start && identities[k] === n.id)) return true;
     }
     return false;
   });
 
+  // Pruning: the hits of each slot that could take part in some match, found
+  // before any anchor is placed, so that a search with no match does not try
+  // every combination of partners to learn it. A hit stays only if every
+  // slot measured from it has a hit left within its reach, on the side its
+  // relation asks; under the order lock, if the next slot has a hit left
+  // after it in its unit; and, with the words unit, if no NOT term measured
+  // from its slot (one no slot asks the same thing as) stands within the
+  // window of it. Each is required of a match, so removing a hit that fails
+  // one changes no result: the placement below finds the same hits, in the
+  // same order. Slots are measured from earlier ones, so this runs from the
+  // last slot back. Every hit of a match stands in the anchor's unit, and the
+  // unit is the same from any offset in it, so each hit's own unit serves.
+  const reach = words ? opts.window : total;
+  const live: SlotHit[][] = [];
+  {
+    const counts: number[][] = [];   // prefix counts of live hits per slot
+    const anyLive = (k: number, from: number, to: number) =>
+      from < to && counts[k][lowerBound(sorted[k], to)] - counts[k][lowerBound(sorted[k], from)] > 0;
+    for (let s = sorted.length - 1; s >= 0; s--) {
+      const children = targets.map((t, c) => (c > s && t === s ? c : -1)).filter(c => c >= 0);
+      const notsFrom = words ? nots.filter(n => n.target === s && !n.id) : [];
+      const keep = sorted[s].map(h => {
+        const [uLo, uHi] = structural(h.start);
+        if (h.start + h.span > uHi) return false;
+        for (const c of children) {
+          const relation = relations[c] ?? 'near';
+          const lo = Math.max(uLo, h.start - reach);
+          const hi = Math.min(uHi, h.start + reach + 1);
+          if (!anyLive(c, relation === 'after' ? Math.max(lo, h.start + h.span) : lo, relation === 'before' ? Math.min(hi, h.start + 1) : hi)) return false;
+        }
+        if (opts.ordered && s + 1 < sorted.length && !anyLive(s + 1, h.start + h.span, uHi)) return false;
+        for (const n of notsFrom) {
+          const lo = Math.max(uLo, h.start - opts.window);
+          const hi = Math.min(uHi, h.start + h.span + opts.window);
+          for (let i = lowerBound(n.hits, lo - n.longest + 1); i < n.hits.length && n.hits[i].start < hi; i++) {
+            const x = n.hits[i];
+            if (x.start + x.span > lo && fits(x, uLo, uHi)) return false;
+          }
+        }
+        return true;
+      });
+      const count = [0];
+      keep.forEach((k, i) => count.push(count[i] + (k ? 1 : 0)));
+      counts[s] = count;
+      live[s] = sorted[s].filter((_, i) => keep[i]);
+    }
+  }
+  if (live.some(h => !h.length)) return [];
+
   const out: ComboWindow[] = [];
-  for (const anchor of sorted[0]) {
+  for (const anchor of live[0]) {
     const [unitLo, unitHi] = structural(anchor.start);
     if (anchor.start + anchor.span > unitHi) continue;   // the anchor's own run must fit
 
@@ -2089,28 +2156,28 @@ function windows(
     if (!words) unitBlocked.set(unitLo, !clear);
     if (!clear) continue;
 
-    // Everything slot s could take, placed against `from`, the hit chosen for
-    // the slot it is measured from: inside the unit, inside the word window,
-    // and on the side its relation requires. "before" wants the nearest
-    // preceding run first; everything else the earliest.
-    const reach = words ? opts.window : total;
-    const candidates = (s: number, from: SlotHit): SlotHit[] => {
+    // Where slot s may stand, placed against `from`, the hit chosen for the
+    // slot it is measured from: inside the unit, inside the word window, and
+    // on the side its relation requires (from `after` on, when given), as a
+    // range of indexes into `list`. "before" wants the nearest preceding run
+    // first, so is read from the end; everything else from the start.
+    const range = (s: number, from: SlotHit, list: SlotHit[], after: number): [number, number] => {
       const relation = relations[s] ?? 'near';
       const lo = Math.max(unitLo, from.start - reach);
       const hi = Math.min(unitHi, from.start + reach + 1);
-      const first = relation === 'after' ? Math.max(lo, from.start + from.span) : lo;
+      const first = Math.max(after, relation === 'after' ? Math.max(lo, from.start + from.span) : lo);
       const last = relation === 'before' ? Math.min(hi, from.start + 1) : hi;
-      const picks: SlotHit[] = [];
-      for (let i = lowerBound(sorted[s], first); i < sorted[s].length; i++) {
-        const h = sorted[s][i];
-        if (h.start >= last) break;
-        if (h.start + h.span > unitHi) continue;
-        // "before" is measured by the END of the run, so a phrase only counts
-        // as preceding when the whole run finishes first.
-        if (relation === 'before' && h.start + h.span > from.start) continue;
-        picks.push(h);
-      }
-      return relation === 'before' ? picks.reverse() : picks;
+      return [lowerBound(list, first), lowerBound(list, last)];
+    };
+    // Whether a hit in that range may stand there: its run inside the unit,
+    // and "before" measured by the END of the run, so a phrase only counts as
+    // preceding when the whole run finishes first.
+    const standsAt = (s: number, from: SlotHit, h: SlotHit) =>
+      h.start + h.span <= unitHi && !((relations[s] ?? 'near') === 'before' && h.start + h.span > from.start);
+    const candidates = (s: number, from: SlotHit, list: SlotHit[], after: number): SlotHit[] => {
+      const [i0, i1] = range(s, from, list, after);
+      const picks = list.slice(i0, Math.max(i0, i1)).filter(h => standsAt(s, from, h));
+      return relations[s] === 'before' ? picks.reverse() : picks;
     };
 
     // Each slot in turn, against the hit its target took, trying the next
@@ -2135,10 +2202,15 @@ function windows(
     const place = (s: number): boolean => {
       if (s === sorted.length) return !(nots.length && excluded(take, unitLo, unitHi));
       const set = taken(s);
-      for (const h of candidates(s, take[targets[s]])) {
-        // The whole-query order lock: each slot after the one before it.
-        if (opts.ordered && h.start < take[s - 1].start + take[s - 1].span) continue;
-        if (set?.has(h.start)) continue;
+      const from = take[targets[s]];
+      const list = live[s];
+      // The whole-query order lock: each slot after the one before it.
+      const [i0, i1] = range(s, from, list, opts.ordered ? take[s - 1].start + take[s - 1].span : 0);
+      const back = relations[s] === 'before';
+      for (let k = 0; k < i1 - i0; k++) {
+        if (--budget.left < 0) throw new ProximityTooComplex();
+        const h = list[back ? i1 - 1 - k : i0 + k];
+        if (!standsAt(s, from, h) || set?.has(h.start)) continue;
         set?.add(h.start);
         take[s] = h;
         if (place(s + 1)) return true;
@@ -2149,20 +2221,33 @@ function windows(
     };
     if (!place(1)) continue;
     const chosen = take;
-    // Every other word of a term in range of the hit it was sought from, as
-    // its partners were sought: the first term's on either side of the
-    // anchor, the others' as `candidates`, and under the order lock only
-    // after the anchor, where a partner may stand.
+    // An extra mark must work in its term's place with every other chosen
+    // hit fixed: both ends of each relation, the slot order, and NOT terms.
     const near: SlotHit[] = [];
+    const canReplace = (s: number, h: SlotHit) => {
+      if (!fits(h, unitLo, unitHi)) return false;
+      const alt = chosen.slice();
+      alt[s] = h;
+      if (opts.ordered && ((s > 0 && alt[s - 1].start + alt[s - 1].span > h.start)
+        || (s + 1 < alt.length && h.start + h.span > alt[s + 1].start))) return false;
+      for (let k = 0; k < alt.length; k++) {
+        if (k !== s && identities[s] && identities[s] === identities[k] && h.start === alt[k].start) return false;
+        if (k === 0 || (k !== s && targets[k] !== s)) continue;
+        const from = alt[targets[k]], hit = alt[k];
+        if (words && Math.abs(hit.start - from.start) > opts.window) return false;
+        if (relations[k] === 'after' && hit.start < from.start + from.span) return false;
+        if (relations[k] === 'before' && hit.start + hit.span > from.start) return false;
+      }
+      return !nots.length || !excluded(alt, unitLo, unitHi);
+    };
     for (let i = lowerBound(sorted[0], Math.max(unitLo, anchor.start - reach)); i < sorted[0].length && sorted[0][i].start < Math.min(unitHi, anchor.start + reach + 1); i++) {
       const h = sorted[0][i];
       if (h.start + h.span > unitHi) continue;
-      if (!chosen.includes(h)) near.push(h);
+      if (!chosen.includes(h) && canReplace(0, h)) near.push(h);
     }
     for (let s = 1; s < sorted.length; s++) {
-      for (const h of candidates(s, chosen[targets[s]])) {
-        if (opts.ordered && h.start < anchor.start + anchor.span) continue;
-        if (!chosen.includes(h)) near.push(h);
+      for (const h of candidates(s, chosen[targets[s]], sorted[s], opts.ordered ? anchor.start + anchor.span : 0)) {
+        if (!chosen.includes(h) && canReplace(s, h)) near.push(h);
       }
     }
     out.push({
@@ -2200,6 +2285,7 @@ async function comboSearchWork(
   groups: ComboGroup<ComboSlot>[],
   opts: ComboOptions,
   seen?: { notHit: boolean },   // set when a NOT term occurs in this work
+  budget?: StepBudget,
 ): Promise<SearchResult[]> {
   const slots = groups.flatMap(g => g.members);
   const needLemma = slots.some(s => s.kind === 'lemma');
@@ -2278,6 +2364,7 @@ async function comboSearchWork(
     groups.map(g => g.relation),
     slotIds.map(id => (duplicated.has(id) ? id : '')),
     groups.map(g => g.target),
+    budget,
   );
 
   const bySeg = new Map<number, SearchResult>();
@@ -2383,10 +2470,14 @@ export async function searchCombo(
     window: Math.max(1, Math.min(opts.window || COMBO_WINDOW_DEFAULT, COMBO_WINDOW_MAX)),
   };
   const failedWorks: string[] = [];
+  const budget: StepBudget = { left: COMBO_STEP_BUDGET };
   const perWork = await pool(works, 8, async w => {
     try {
-      return await comboSearchWork(w, groups, bounded, seen);
+      return await comboSearchWork(w, groups, bounded, seen, budget);
     } catch (err) {
+      // Too many placements is the search's answer, not one work's failure:
+      // the whole search stops and says so, never a short count.
+      if (err instanceof ProximityTooComplex) throw err;
       console.warn(`searchCombo: skipping ${w} —`, err);
       failedWorks.push(w);
       return [] as SearchResult[];

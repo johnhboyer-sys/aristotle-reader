@@ -185,7 +185,9 @@ function decodeSlot(raw: string): UrlComboSlot | null | 'retired' | { empty: Url
 function decodeSlots(raw: ReturnType<typeof decodeSlot>[]): UrlComboSlot[] {
   const out: UrlComboSlot[] = [];
   const at: number[] = [];   // URL slot index -> the kept slot standing for it
-  let dropped: { relation: SlotRelation; target: number } | null = null;
+  // A dropped head, and the URL slots of its group dropped so far: the "or"
+  // slot that takes its place stands for them all (Codex review, 12 Nov).
+  let dropped: { relation: SlotRelation; target: number; slots: number[] } | null = null;
   raw.forEach((r, i) => {
     if (r === null || r === 'retired') { at.push(0); return; }
     const slot = 'empty' in r ? r.empty : r;
@@ -193,10 +195,12 @@ function decodeSlots(raw: ReturnType<typeof decodeSlot>[]): UrlComboSlot[] {
     const target = t > 0 && t < i ? at[t] : 0;
     const joined = !!slot.or && i > 0;
     if ('empty' in r) {
-      if (!joined) dropped = { relation: slot.relation, target };
+      if (!joined) dropped = { relation: slot.relation, target, slots: [i] };
+      else dropped?.slots.push(i);
       at.push(joined ? at[i - 1] : target);
       return;
     }
+    if (joined && dropped) for (const k of dropped.slots) at[k] = out.length;
     const kept: UrlComboSlot = { kind: slot.kind, relation: slot.relation, text: slot.text, picked: slot.picked, grammar: slot.grammar };
     if (joined && dropped) {
       kept.relation = dropped.relation;

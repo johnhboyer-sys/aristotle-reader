@@ -18,10 +18,13 @@
 // A state whose step cannot find its target is FAILED, naming the selector; it
 // is never shot in the wrong state. Each step must reach its end state (see
 // runStep): a step whose end state already holds is skipped, never clicked
-// back off, and one that does not reach it is FAILED. Before every shot a
-// search URL must show its result count (a number, or "No passages found.")
-// and a bare /search its empty form; other pages are shot unchecked, and the
-// result says so. Any page error, or console error from the site's own
+// back off, and one that does not reach it is FAILED. A step with no end state
+// to prove is FAILED too, unless it declares why it cannot be checked
+// (`uncheckable: '<reason>'`), and the summary prints the reason. Before every
+// shot a search URL must show its result count (a number, or "No passages
+// found.") and, when the count is not zero, at least one hit with its text,
+// and no passage-load warning; a bare /search its empty form; other pages are
+// shot unchecked, and the result says so. Any page error, or console error from the site's own
 // origin, FAILS the state. Before every shot the page must have loaded faces
 // of each family in FONTS, or the state is FAILED.
 //
@@ -38,9 +41,11 @@ const e = encodeURIComponent;
 const AR = `/search?g=${e('ἀρετή')}`;
 const D = [1152, 1000], W = [1152, 900], P = [390, 844], S = [844, 390];
 
-// A step is { sel, text?, act, value?, index?, expect?, want? }; sel is what
-// must be visible first. expect: what must be visible after it (a selector, or
-// { sel, text }); false: no end state of its own (a submit). opens() adds one.
+// A step is { sel, text?, act, value?, index?, expect?, want?, uncheckable? };
+// sel is what must be visible first. expect: what must be visible after it (a
+// selector, or { sel, text } or { sel, value }, a field holding that value);
+// false: requires an uncheckable reason. Submits also prove a new search ran.
+// opens() adds an end state.
 const opens = (step, expect) => ({ ...step, expect });
 const sum = (t) => opens({ sel: 'details.opt > summary', text: t, act: 'click' }, { sel: 'details.opt[open] > summary', text: t });
 const btn = (sel, text) => ({ sel, text, act: 'click' });
@@ -48,12 +53,14 @@ const typeIn = (sel, s) => ({ sel, act: 'type', value: s });
 const select = (sel, value) => ({ sel, act: 'select', value });
 const top = { act: 'scrollTop' };
 const EDITOR = '.prox-terms'; // the proximity editor's term grid, drawn only while it is open
+const WORD = '[role="dialog"][aria-label^="Word"]'; // the word card a click on a hit opens (WordPopup)
+const ARETH = { sel: '.query-input', value: 'ἀρετή' }; // a)reth/ typed with Beta Code on
 
 // Menu and control states (menus.mjs): viewport-only shots, light.
 const MENUS = [
   ['d01-match', AR, D, [sum('Match')]],
   ['d02-form', AR, D, [sum('Form')]],
-  ['d03-accents-on', AR, D, [opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), opens(btn('.search-btn'), false)]],
+  ['d03-accents-on', AR, D, [opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), btn('.search-btn')]],
   ['d05-in-works', AR, D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]'), opens(btn('.opt-in label', 'Choose works'), '#works-panel')]],
   ['d30-in-menu', AR, D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
   ['d31-in-authentic', AR + '&w=-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl', D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
@@ -70,12 +77,12 @@ const MENUS = [
   ['d16-perpage-menu', AR, D, [sum('Per page')]],
   ['d17-citations-only', AR + '&ps=c', D, []],
   ['d18-keyboard', '/search', D, [opens(btn('.gk-toggle'), '#grk-keys')]],
-  ['d19-beta-code', '/search', D, [opens(btn('.sq-row .tog'), '.sq-row .tog[aria-pressed="true"]'), typeIn('.query-input', 'a)reth/')]],
+  ['d19-beta-code', '/search', D, [opens(btn('.sq-row .tog'), '.sq-row .tog[aria-pressed="true"]'), opens(typeIn('.query-input', 'a)reth/'), ARETH)]],
   ['d20-both', `/search?g=${e('ἀρετή')}&e=virtue`, D, []],
-  ['d21-forms-untick', AR, D, [btn('.fx input[type=checkbox] >> nth=1'), btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ instances/), top]],
+  ['d21-forms-untick', AR, D, [{ ...btn('.fx input[type=checkbox] >> nth=1'), want: false }, opens(btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ instances/), '.fx-apply[disabled]'), top]],
   ['d23-save', AR, D, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
-  ['d24-word-click', AR, D, [btn('.instance mark')]],
-  ['d27-word-card', AR + '#zcard', D, [btn('.instance mark')]],
+  ['d24-word-click', AR, D, [opens(btn('.instance mark'), WORD)]],
+  ['d27-word-card', AR + '#zcard', D, [opens(btn('.instance mark'), WORD)]],
   ['d28-pending-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&cw=10`, D, [opens(btn('.prox-change'), EDITOR), { sel: '.combo-slot >> nth=1 >> .prox-relw select', act: 'select', index: 1 }]],
   ['d25-group-collapsed', AR, D, [{ ...btn('.group-head'), want: false }]],
   ['d26-any-word', `/search?g=${e('ἀρετή ἕξις')}&gm=any`, D, []],
@@ -97,12 +104,12 @@ const MENUS = [
   ['q02-accents-on', AR, P, [btn('.z-opts'), btn('.opt-btn', 'Accents')]],
   ['q03-in-works', AR, P, [btn('.z-opts'), btn('.z-in > summary'), btn('.z-in label', 'Choose works')]],
   ['q13-in-menu', AR, P, [btn('.z-opts'), btn('.z-in > summary')]],
-  ['q04-lemma-typing', '/search', P, [btn('.z-opts'), btn('.z-lemma'), typeIn('.query-input', 'ψυχ')]],
+  ['q04-lemma-typing', '/search', P, [btn('.z-opts'), btn('.z-lemma'), opens(typeIn('.query-input', 'ψυχ'), '.gs-under')]],
   ['q05-near-editor', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('lb:hdonh')}&cw=10`, P, [btn('details.combo-panel > summary')]],
-  ['q06-beta-code', '/search', P, [btn('.sq-row .tog'), typeIn('.query-input', 'a)reth/')]],
-  ['q07-filter-works', AR, P, [btn('.sx-icon', 'Filter'), btn('.sx-panel button', 'Works')]],
-  ['q08-filter-forms', AR, P, [btn('.sx-icon', 'Filter'), btn('.sx-panel button', 'Forms')]],
-  ['q09-word-click', AR, P, [btn('.instance mark')]],
+  ['q06-beta-code', '/search', P, [btn('.sq-row .tog'), opens(typeIn('.query-input', 'a)reth/'), ARETH)]],
+  ['q07-filter-works', AR, P, [btn('.sx-icon', 'Filter'), opens(btn('.sx-panel button', 'Works'), '.sx-panel[data-screen="works"]')]],
+  ['q08-filter-forms', AR, P, [btn('.sx-icon', 'Filter'), opens(btn('.sx-panel button', 'Forms'), '.sx-panel[data-screen="forms"]')]],
+  ['q09-word-click', AR, P, [opens(btn('.instance mark'), WORD)]],
   ['q10-save', AR, P, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
   ['q11-group-grammar', AR + '&v=grammar', P, []],
   ['q12-citations-only', AR + '&ps=c', P, []],
@@ -152,9 +159,19 @@ if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
 
 class StepFail extends Error { constructor(cause, msg) { super(msg); this.cause = cause; } }
 
-const describe = (s) => s.text === undefined ? s.sel : `${s.sel} [text ${s.text instanceof RegExp ? s.text : JSON.stringify(s.text)}]`;
+const describe = (s) => s.sel
+  + (s.text === undefined ? '' : ` [text ${s.text instanceof RegExp ? s.text : JSON.stringify(s.text)}]`)
+  + (s.act === undefined && s.value !== undefined ? ` [value ${JSON.stringify(s.value)}]` : '');
 const spec = (x) => typeof x === 'string' ? { sel: x } : x;
 const visible = (p, x) => { const { sel, text } = spec(x); return p.locator(`${sel} >> visible=true`, text === undefined ? {} : { hasText: text }); };
+// Whether an end state holds: its element visible, and a field's value, when
+// it names one (compared composed, as typed Greek may arrive decomposed).
+export async function holds(p, x) {
+  const { value } = spec(x);
+  const loc = visible(p, x);
+  if (value === undefined) return (await loc.count()) > 0;
+  return loc.evaluateAll((els, v) => els.some(el => (el.value ?? '').normalize('NFC') === v.normalize('NFC')), value);
+}
 
 async function need(p, s) {
   const loc = (s.text === undefined ? p.locator(s.sel) : p.locator(s.sel, { hasText: s.text })).first();
@@ -167,10 +184,11 @@ async function need(p, s) {
   return loc;
 }
 
-// A toggle's state: a summary's <details> open, else aria-expanded, else
-// aria-pressed; null when the element is none of these.
+// A toggle's state: a summary's <details> open, a checkbox ticked, else
+// aria-expanded, else aria-pressed; null when the element is none of these.
 const toggled = (loc) => loc.evaluate(el => {
   if (el.tagName === 'SUMMARY' && el.parentElement?.tagName === 'DETAILS') return el.parentElement.open;
+  if (el.tagName === 'INPUT' && el.type === 'checkbox') return el.checked;
   const a = el.getAttribute('aria-expanded') ?? el.getAttribute('aria-pressed');
   return a === null ? null : a === 'true';
 }).catch(() => undefined);
@@ -190,22 +208,64 @@ async function until(fn, ms = 3000) {
   for (const t0 = Date.now(); ; await new Promise(r => setTimeout(r, 150))) { if (await fn()) return true; if (Date.now() - t0 > ms) return false; }
 }
 
-// Runs step n and proves its end state. With `expect`, that must be visible
-// after; without, a click on a toggle must leave it on (want: false, off) and
-// a select must hold its option. A step whose end state already holds is
-// skipped, so no step can toggle its state back off. Returns null, or
-// { skipped } or { unchecked } (a step with no end state to prove).
-async function runStep(p, s, n = 1) {
-  if (s.act === 'scrollTop') { await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(900); return null; }
+// Search.svelte writes the URL, disables the submit button while searching,
+// and then draws its count. Watch before clicking so even a fast search of
+// the same query and count has proof; the old render alone proves nothing.
+async function submitSearch(p, loc, s, tag) {
+  const before = new URL(p.url()).search;
+  const count = () => p.locator('.result-count').first().textContent({ timeout: 500 }).catch(() => null);
+  const oldCount = await count();
+  await p.evaluate(() => {
+    window.__searchShotSubmit?.observer.disconnect();
+    const state = { started: false, observer: null };
+    state.observer = new MutationObserver(records => {
+      if (records.some(r => r.type === 'attributes' && r.attributeName === 'disabled'
+        && r.oldValue === null && r.target.matches('.search-btn'))) state.started = true;
+    });
+    state.observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['disabled'], attributeOldValue: true });
+    window.__searchShotSubmit = state;
+  });
+  try {
+    await act(p, loc, s);
+    if (!await until(async () => new URL(p.url()).search !== before || await count() !== oldCount
+      || await p.evaluate(() => window.__searchShotSubmit.started))) {
+      throw new StepFail('state', `${tag}: no new search observed after submit (query and count unchanged, no search started)`);
+    }
+  } finally {
+    await p.evaluate(() => { window.__searchShotSubmit.observer.disconnect(); delete window.__searchShotSubmit; });
+  }
+}
+
+// Runs step n and proves its end state. With `expect`, that must hold after;
+// without, a click on a toggle must leave it on (want: false, off) and a
+// select must hold its option. A step whose end state already holds is
+// skipped, so no step can toggle its state back off. A step with no end state
+// to prove FAILS, unless it declares why it cannot be checked
+// (`uncheckable`). Returns null, or { skipped } or { unchecked } (the reason).
+export async function runStep(p, s, n = 1) {
   const tag = `step ${n} (${s.act} ${describe(s)})`;
+  const unproved = (why) => {
+    if (typeof s.uncheckable === 'string' && s.uncheckable.trim()) return { unchecked: `${tag}: ${s.uncheckable}` };
+    throw new StepFail('state', `${tag}: ${why}, and no end state given (name one, or declare uncheckable: '<reason>')`);
+  };
+  if (s.expect === false && !(typeof s.uncheckable === 'string' && s.uncheckable.trim())) return unproved('expect: false requires a reason');
+  if (s.act === 'scrollTop') { await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(900); return s.expect === false ? unproved('no end state given') : null; }
+  const target = (s.text === undefined ? p.locator(s.sel) : p.locator(s.sel, { hasText: s.text })).first();
+  const submit = s.act === 'click' && await target.evaluateAll(els => els.some(el => el.type === 'submit' && !!el.form));
+  if (submit) {
+    await submitSearch(p, await need(p, s), s, tag);
+    if (s.expect && !await until(() => holds(p, s.expect))) throw new StepFail('state', `${tag}: expected ${describe(spec(s.expect))} after submit`);
+    return s.expect === false ? unproved('no end state given') : null;
+  }
   if (s.expect) {
-    if (await visible(p, s.expect).count()) return { skipped: `${tag}: ${describe(spec(s.expect))} already visible` };
+    if (await holds(p, s.expect)) return { skipped: `${tag}: ${describe(spec(s.expect))} already holds` };
     await act(p, await need(p, s), s);
-    if (!await until(async () => (await visible(p, s.expect).count()) > 0)) throw new StepFail('state', `${tag}: expected ${describe(spec(s.expect))} visible after it`);
+    if (!await until(() => holds(p, s.expect))) throw new StepFail('state', `${tag}: expected ${describe(spec(s.expect))} after it`);
     return null;
   }
   const loc = await need(p, s);
-  if (s.expect === false || s.act === 'type') { await act(p, loc, s); return s.expect === false ? null : { unchecked: `${tag}: no end state given` }; }
+  if (s.expect === false) { await act(p, loc, s); return unproved('no end state given'); }
+  if (s.act === 'type') { await act(p, loc, s); return unproved('typing proves nothing by itself'); }
   if (s.act === 'select') {
     if (await selected(loc, s)) return { skipped: `${tag}: already selected` };
     await act(p, loc, s);
@@ -215,15 +275,19 @@ async function runStep(p, s, n = 1) {
   const want = s.want ?? true, was = await toggled(loc);
   if (was === want) return { skipped: `${tag}: already ${want ? 'open' : 'closed'}` };
   await act(p, loc, s);
-  if (was === null) return { unchecked: `${tag}: not a toggle, and no end state given` };
+  if (was === null) return unproved('not a toggle');
   if (!await until(async () => (await toggled(loc)) === want)) throw new StepFail('state', `${tag}: expected it ${want ? 'open' : 'closed'} after the click, found it ${want ? 'closed' : 'open'} or gone`);
   return null;
 }
 
 // What a page must show before it is shot. A search URL (g, e or c): its
-// result count, a number or "No passages found."; a bare /search: the empty
-// form. Returns what it saw; any other page is not checked, and says so.
-async function checkRender(p, path) {
+// result count, a number or "No passages found."; when the number is not
+// zero, at least one hit drawn with its text (a citation, in the citations
+// view), and no warning that the page's passages did not load (the count is
+// drawn before the passages, and a failure to draw them is caught and shown
+// as a warning with Retry). A bare /search: the empty form. Returns what it
+// saw; any other page is not checked, and says so.
+export async function checkRender(p, path) {
   const u = new URL(path, 'http://x');
   if (!/\/search\/?$/.test(u.pathname)) return `render not checked: ${u.pathname} is not the search page`;
   if (['g', 'e', 'c'].some(k => u.searchParams.getAll(k).some(v => v.trim()))) {
@@ -234,8 +298,20 @@ async function checkRender(p, path) {
       throw new StepFail('render', `search did not render: no visible .result-count${err ? `; search error: ${err.trim()}` : ''}`);
     }
     const t = (await c.textContent()).trim();
-    if (!/^(\d[\d,]* instances?\b|No passages found\.)/.test(t)) throw new StepFail('render', `result count reads ${JSON.stringify(t)}`);
-    return t;
+    const m = /^(\d[\d,]*) instances?\b|^No passages found\./.exec(t);
+    if (!m) throw new StepFail('render', `result count reads ${JSON.stringify(t)}`);
+    if (!m[1] || Number(m[1].replace(/,/g, '')) === 0) return t;
+    const warning = async () => {
+      const w = visible(p, '.search-note.warn:has(.retry-btn)').first();
+      return (await w.count()) ? (await w.textContent()).replace(/\s+/g, ' ').trim() : null;
+    };
+    const drawn = () => p.locator('.instance, .cite-list .cite').evaluateAll(els => els.filter(el =>
+      el.checkVisibility() && (el.classList.contains('cite') ? el : el.querySelector('.inst-snippet, .inst-pair-text'))?.textContent.trim()).length);
+    let hits = 0, warned = null;
+    await until(async () => (warned = await warning()) !== null || (hits = await drawn()) > 0, 20000);
+    if (warned !== null) throw new StepFail('render', `passages did not render: ${warned}`);
+    if (!hits) throw new StepFail('render', `count reads ${JSON.stringify(t)} but no hit with its text rendered`);
+    return `${t}; ${hits} hit${hits === 1 ? '' : 's'} drawn`;
   }
   if (!await visible(p, '.query-input').count()) throw new StepFail('render', 'empty form did not render: no visible .query-input');
   if (await p.locator('.result-count').count()) throw new StepFail('render', 'bare /search shows a result count');
@@ -362,7 +438,8 @@ async function main() {
   const withErrs = [...tally.shot, ...tally.failed].filter(x => x.errs.length);
   if (withErrs.length) console.log(`  page errors in ${withErrs.length}: ${withErrs.map(x => x.name).join(', ')}`);
   const unchecked = tally.shot.filter(x => x.unchecked?.length || !/^(\d|No passages|empty form)/.test(x.render));
-  if (unchecked.length) console.log(`  shot with something unchecked (${unchecked.length}): ${unchecked.map(x => x.name.replace(/\.png$/, '')).join(', ')}`);
+  if (unchecked.length) console.log(`  shot with something unchecked (${unchecked.length}), each by declaration:`);
+  for (const x of unchecked) for (const why of [...(x.unchecked ?? []), ...(/^(\d|No passages|empty form)/.test(x.render) ? [] : [x.render])]) console.log(`         ${x.name.replace(/\.png$/, '')}: ${why}`);
 
   const hard = tally.failed.filter(f => !(a.allowMissing && (f.cause === 'missing' || f.cause === 'hidden')));
   process.exit(hard.length ? 1 : 0);

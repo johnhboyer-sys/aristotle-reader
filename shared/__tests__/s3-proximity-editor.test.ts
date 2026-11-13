@@ -313,3 +313,37 @@ describe('term 1 and the page query', () => {
     expect(terms()[0].querySelector('.lpsel .hw')).toHaveTextContent('ἕξις');
   });
 });
+
+// Codex review of S3 (a31ffeb4b3), findings 4 and 5.
+describe('editing after review', () => {
+  it('removing an or-member keeps a term measured from it with the members left', async () => {
+    // d is measured from c, which is joined to b by "or". Remove c: d stays with b.
+    await arrive('c=l:a&c=l:b&c=lo:c&c=l3:d');
+    await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove term 3' }));
+    expect(select('Term 3 is measured from').selectedOptions[0].textContent).toBe('b');
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await vi.waitFor(async () => expect((await lastSlots()).map((s) => [s.terms![0], s.target ?? 0])).toEqual([['a', 0], ['b', 0], ['d', 1]]));
+    expect(new URLSearchParams(location.search).getAll('c')).toEqual(['l:a', 'l:b', 'l2:d']);
+  });
+
+  it('an edit that leaves no complete search is still pending, and Search says what is missing', async () => {
+    await arrive('c=l:areth&c=l:ecis');
+    const { searchCombo } = await import('../lib/search');
+    const calls = vi.mocked(searchCombo).mock.calls.length;
+    await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Remove term 2' }));
+    expect(summary()).toBe('Last search · ἕξις near ἀρετή, within 5 words');
+    expect(document.querySelector('main')).toHaveClass('prox-pending');
+    expect(document.querySelector('.prox-pend')).toBeNull();
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    expect(document.querySelector('.prox-pend')).toHaveTextContent(/^Add a second term$/);
+    await new Promise((r) => setTimeout(r, 20));
+    expect(vi.mocked(searchCombo).mock.calls.length).toBe(calls);
+    expect(new URLSearchParams(location.search).getAll('c')).toEqual(['l:areth', 'l:ecis']);
+    expect(document.querySelector('main')).toHaveClass('prox-pending');
+    // Adding a term back: the line goes, and the edit is a search again.
+    await fireEvent.click(screen.getByRole('button', { name: 'Add term' }));
+    expect(document.querySelector('.prox-pend')).toBeNull();
+  });
+});
