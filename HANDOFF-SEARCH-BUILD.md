@@ -1,105 +1,109 @@
 # HANDOFF: search build (the redesigned search page, for real)
 
-Written 12 Nov 2026, 13:20, at the end of the session that refined the search
-mock-up. Rewrite this file (don't append) when you hand off.
+Rewritten 13 Nov 2026, 17:30, before a restart. Rewrite this file (don't append) when you hand off.
 
-## 0. State (13 Nov 13:10): John's review rulings being built; tip goes to the coordinator
+## 0. State (13 Nov 17:30): built and merged; a new form design ruled; its build ON HOLD
 
-- **Built and merged before 13 Nov:** stages S1–S6 (Codex R1–R9), tip e987866002;
-  the redesign gates' a11y fixes ead5584589 (R10). Track A (home/work/reader on
-  `claude/redesign-build`) is coordinator: it merges this branch and runs the
-  release gates (build:public, deploy:dry, link and leak checks). One deploy for
-  the whole redesign. Nothing is pushed.
-- **John's rulings of 13 Nov, built and committed on `claude/search-build`
-  (each with a Codex review, R11–R14):**
-  - English hits cite the column ("Cat 2b"), links still go to the line; "for
-    now the column. once every work is properly aligned, the line"
-    (55159aa136; `englishCiteLine` holds the rule).
-  - The proximity editor folds after its Search (cd9221f2dc).
-  - Rulings 1–5: (1) Accents on sets Form to "Only as I typed it" (not in
-    Running text) — built; (2) the phone "This search" lists filters only, Clear
-    all keeps the view — as built; (3) the guide keeps Typing Greek first — as
-    built; (4) superseded by (a); (5) keep the new wildcard rules; the PR lists
-    the change for old links.
-  - (a) A translation switch on Greek-only hits and opened sections, the work's
-    own order, reference first (8e7a2bedf1 on the side branch).
-  - Keyboard: the seven mark keys above the first letter row, CSS dotted ring
-    under Literata's spacing marks ("c2: b for all", bd62434c9f).
-  - Group by (1e7738c278): form key = spelling with every accent off, breathing,
-    subscript, diaeresis kept; phrase/running text keyed on the whole phrase;
-    By form only for one word / phrase / running text (lemma off), By grammar
-    only for lemma searches, else By work only; By grammar = headword over its
-    paradigm (round B opt 2); stage6 `signature()` carries each reading's lemma,
-    and the client keeps only the searched headwords' readings. **Needs the
-    corpus rebuild** (Track A, build:public after merge) before the grammar rows
-    and facets lose the homograph's parses.
-  - Shot d27 retired (word card option b dropped).
-  - Merge of the side branch `claude/search-build-b`: b024fb2ba2.
-- **Waiting on John (pictures on his rounds page, folders in the session
-  scratchpad `rounds/`):** D (Both view compact: D5b vs his two-column D6;
-  phone and/or centred in its own gap, letters centred, D7); F (proximity editor
-  = opt-4b, one line per term, footer on one row) after G (grammar chips:
-  G-3 one menu per category + switches recommended); H (phone query width: H2
-  tools under the rule recommended); Group by: rows open or shut, the data size
-  (grammar-dict EN gz 7.7 → 87 KB), facets lemma-only. Track A relays rulings.
-- **13 Nov afternoon: the page re-mocked; BUILD ON HOLD until John rules on it.** John chose D6 (Greek and
-  English side by side on desktop, stacked on the phone) and D8: no Greek | English | Both switch; the filled
-  fields decide the search; a field's options show only once it has text, as one compact row. Other choices:
-  - "In all works | authentic works | choose works…" as words on the Proximity/Search row.
-  - F 4b: Search on the editor's foot row, no "Not searched yet".
-  - G-3 with switches: one menu per grammar category, word class first. The class is derived from the data: case →
-    declined word, mood → verb, marker → the rest. The mood decides a verb's menus.
+### Built, merged, green
+- **Built:** stages S1–S6 and John's 13 Nov morning rulings, all on `claude/search-build` (worktree
+  `.claude/worktrees/search-build`, unpushed).
+- **Merged:** Track A (the coordinator, `claude/redesign-build`) merged tip 153603d79a as 6fefc4f536 and ran every
+  gate green after `build:public`:
+  - shared 1867, app 130, test:scripts 99, svelte-check 0, stage6 pytest 41;
+  - 0 broken links; deploy:dry ok;
+  - check-redesign 64/0; search-shots 0 failed; all 14 search-counts unchanged.
+- **Nothing is pushed or deployed.** One deploy for the whole redesign, on John's word.
+- **The morning rulings built** (each with a Codex review, R11–R14c):
+  - English hits cite the column, while links go to the line (55159aa136): "for now the column. once every work is
+    properly aligned, the line".
+  - The proximity editor folds after Search (cd9221f2dc).
+  - Accents on sets Form to "only as I typed it". Rulings 2, 3, and 5 kept as built.
+  - A translation switch on Greek-only hits (8e7a2bedf1).
+  - Keyboard: the mark keys on top, on dotted rings (bd62434c9f).
+  - Group by (1e7738c278):
+    - the form key ignores accents;
+    - each view is offered only for its kind of search;
+    - By grammar shows a headword over its paradigm;
+    - stage6 puts the lemma on each reading; the corpus rebuild has run.
+  - Merge of the side branch: b024fb2ba2.
+- **Since the merge, this branch has only handoff commits** (no source changes).
 
-  The full mock-up is published at https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X. Source:
-  `.redesign-shots/notes/search-mock-13nov/mock/`
-  (notes.md has every choice and measure). The four review rounds and their log are in `.redesign-shots/notes/search-mock-13nov/mock-review/`.
-  - **Reviews:** Opus and Codex alternating. All four chose H3 and (a) words, and said adopt the 44px keyboard and the
-    sideways fold after Search.
-  - **John ruled (17:07, final 17:08): options (b), the menus, on the PHONE, upright and sideways; (a), the words,
-    on desktop (1152 and 961).** In his words: "except for phone upright, i think a works better" … "and phone
-    sideways". Every state that shows options follows that split.
-  - **One row on the phone: B1 option 3, "switches as words"** (John, 17:23). Match ▾ and Form ▾ stay menus;
-    Accents and Lemma lose the switch track and become words: off is mid on a hairline, on is ink with the red
-    underline (one tap each, as ruling 5). Gaps 20px, 12px below 380px. Pictures and measures:
-    `.redesign-shots/notes/search-mock-13nov/rounds/B1/`
-    (index.html, notes.md, shoot.mjs). It fits on one row at 390, 360 and sideways, but at 360 with the longest
-    values it has only 2px to spare (322 of 324). The build's 360 test must hold that, or let the row wrap rather
-    than clip.
-  - **H3 on the phone, upright and sideways** (John, 17:21: "phone (both) H3"): "Greek" and "English" labels above
-    the fields, Keyboard and Beta Code beside the Greek label. His reason: he likes H2 better on the empty page and
-    Greek only, "it's not working for both mode".
-  - **Where it all is** (copied from the session scratchpad on 13 Nov, 17:25, on John's "commit whatever so it
-    doesn't get lost"): `.redesign-shots/notes/search-mock-13nov/` in this worktree, on disk and untracked. NEVER
-    git-add `.redesign-shots` (183 MB of shots; it is not in any ignore file). It holds:
-    - `mock/`: the flip page, shots, measures and scripts.
-    - `mock-r0` to `mock-r2`: snapshots of each round.
-    - `mock-review/`: LOG.md, R1 to R4, and the fix lists.
-    - `rounds/`: B through H, plus D6–D8 and B1.
-    - `briefs/`, `reports/` (Codex verifies R11–R14c), `r2-failcase/` and `r3-failcase/`.
+### The new form design, ruled 13 Nov afternoon. BUILD ON HOLD until John says go
+- **Base:** D6. Greek and English side by side on desktop, stacked on the phone, with and/or between them.
+- **No Greek | English | Both switch** (D8). The fields that hold text decide the search. A field's options show only
+  once it has text, as one compact row.
+- **Options:** (a) words on desktop, 1152 and 961: Match "all | any | exact", Form "any form | exact form (| running
+  text)", Accents and Lemma switches. (b) menus on the phone, upright and sideways (John 17:07–17:08).
+- **On the phone, B1 option 3 keeps (b) on one row** (John 17:23): Match ▾ and Form ▾; Accents and Lemma as words,
+  off mid on a hairline, on ink with the red underline, one tap each. Gaps 20px, 12px below 380px. At 360px with the
+  longest values it has only 2px to spare (322/324): the build's 360 test must hold it, or the row wraps, never clips.
+- **H3 on the phone, upright and sideways** (John 17:21): "Greek" and "English" labels above the fields, Keyboard and
+  Beta Code beside the Greek label. He prefers H2 on the empty page and Greek only, "it's not working for both mode".
+  A hybrid was rejected because it jumps.
+- **In:** "In all works | authentic works | choose works…" as words on the Proximity/Search row, shown once there is a
+  query.
+- **F 4b proximity editor:** one line per term (two upright, see open questions); Add term, In this order, Keep hits,
+  and Search on one foot row; no "Not searched yet" line ("unnecessary explanation").
+- **G-3 with switches:** one menu per grammar category, word class first. The class is derived from the data, with
+  no new data: case → declined word, mood → verb, marker → the rest. The mood decides a verb's menus. In this order
+  and Keep hits are switches.
+- **Carried:** the editor folds after Search; column refs; Accents sets Form; translator switch; keyboard C2-b; Group
+  by per kind of search.
 
-    Three shoot scripts still name the old scratchpad path, so fix that before rerunning them.
-  - **Still open for John:** the count on a Both search (it adds Greek and English word hits, `hitCount` in
-    search-pages.ts); what Lemma does beyond "any form"; two lines per term in the upright editor; naming
-    "Keep hits that cross a chapter" in the folded line; paradigm rows shut.
-  - **For the build:**
-    - `lang` becomes derived. The switch, `setLang` and `LANGS` go. Keyboard and Beta Code stop keying off
-      `lang !== 'english'`.
-    - R-S1's language loop must be rewritten (Track A's gate).
-    - Dark `--go` has no dark value: two reds.
-    - Controls under the sideways key sheet stay focusable.
-    - Segment words should be radio groups (one tab stop).
-    - The chapter-starts NOTE before results breaks the no-explainer rule.
-    - At 360px the count runs into Save.
-    - The measuring gaps R4 lists, for whoever ports these checks into a gate.
-- **Follow-ups (not blockers):** the Forms rail needs an accents stream for
-  Aristotle (pipeline), then its tick boxes split by case; until then ἀρετή and
-  ἀρετῇ are two groups in the results but one row (αρετη) in the rail. Also:
-  the desktop app mounts the new Search unstyled; an opened section's English
-  can start a clause early; b.css still uses `max-width: 960px` elsewhere; after
-  "Find this phrase in any inflection" the address keeps the old sp/sn/wf; dead
-  code from the port (`groupState`, corpus-tools, inscription, sect-ticks,
-  speaker-colors); the 6-term proximity cap's speed test; R-A3 exempts `.tr-dot`
-  by name (Track A's gate). Then the port of the design fixes to plato-reader (§1).
+### Seven questions open for John
+1. **The count on a Both search.** It adds Greek and English word hits (`hitCount`, shared/lib/search-pages.ts), so
+   "ἀρετή and virtue" shows 2,952 while "virtue" alone shows 2,394. Should it count passages?
+2. **Lemma:** what does it do beyond "any form", now that Accents sets Form?
+3. **Two lines per term** in the upright phone editor; one line doesn't fit at 390px without smaller type.
+4. **Naming "Keep hits that cross a chapter"** in the folded line. It is on by default, so silent now.
+5. **Paradigm rows** in By grammar: shut (recommended) or open.
+6. **The 44px phone keyboard:** 48.8×44 keys, seven across, built key order. Default keys are 31×44.
+7. **The sideways fold after Search:** the whole form folds to one line plus Change. With it, every sideways search
+   state shows a whole line of Aristotle on the first screen; without it, none does.
+
+### Where the mock-up lives
+- **Published:** https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X (Track A's copy, defaults H3 and (a)).
+- **On disk, untracked:** `.redesign-shots/notes/search-mock-13nov/` in this worktree, 183 MB. **Never git-add
+  `.redesign-shots`**: it is in no ignore file. It holds:
+  - `mock/`: index.html, shots, measures.json, notes.md (every choice and measure), and scripts.
+  - `mock-r0` to `mock-r2`: snapshots of each round.
+  - `mock-review/`: LOG.md (four rounds, verdicts, disagreements), R1–R4, and the fix lists.
+  - `rounds/`: B–H, D6–D8, and B1 (the one-row options).
+  - `briefs/`, `reports/` (Codex verifies R11–R14c), `r2-failcase/` and `r3-failcase/`.
+- Three shoot scripts still name the old session scratchpad path, so fix it before rerunning.
+- Grammar shots route to the rebuilt `grammar-dict.json` and `grammar-col.bin` in the redesign-build worktree.
+- **Reviews:** Opus (fresh agents, pictures only) and Codex alternated, four rounds. All four chose H3 and (a), and
+  said adopt the 44px keyboard and the sideways fold. John overrode (a) on the phone.
+
+### For the build (when John says go)
+- **The language switch:**
+  - `lang` becomes derived from the filled fields; the switch, `setLang`, and `LANGS` go.
+  - Keyboard and Beta Code stop keying off `lang !== 'english'`.
+  - URLs need no change: the mode was always read from g/e.
+  - R-S1's language loop must be rewritten (Track A's gate).
+  - About 12 test files and the review shots change.
+- **Risks** (D8 notes):
+  - English typed into the Greek box reads as Beta Code.
+  - A leftover English word joins a new Greek search with "and"; give each filled field a clear button.
+  - Phone key-panel order.
+- **Found by the reviews:**
+  - Dark `--go` has no dark value, so there are two reds.
+  - Controls under the sideways key sheet stay focusable.
+  - Segment words should be radio groups (one tab stop).
+  - The chapter-starts NOTE before results breaks the no-explainer rule.
+  - At 360px the count runs into Save.
+  - Translator names on a both-language hit may offer a translation lacking the English word. The reviewers disagree;
+    check it.
+  - The measuring gaps R4 lists, for whoever ports these checks into a gate.
+- **Follow-ups (not blockers):**
+  - The Forms rail needs an accents stream (pipeline), then its tick boxes split by case.
+  - The desktop app mounts the new Search unstyled.
+  - An opened section's English can start a clause early.
+  - b.css `max-width: 960px` elsewhere.
+  - After "Find this phrase in any inflection" the address keeps the old sp/sn/wf.
+  - Dead code from the port (`groupState`, corpus-tools, inscription, sect-ticks, speaker-colors).
+  - The 6-term proximity cap's speed test.
+  - Then port the design fixes to plato-reader (§1).
 
 ## 1. What this track is
 
