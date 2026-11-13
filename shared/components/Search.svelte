@@ -96,6 +96,7 @@
     book?: number;
     column: string;
     line: number;
+    sub?: string;
     ref: string;       // e.g. "34b"
     html: string;      // KWIC snippet
     jumpUrl: string;
@@ -2433,6 +2434,15 @@
     // text marks these, not every word the query would match there.
     const held = new Map<string, Set<number>>();
 
+    // A hit's chapter, as the page groups it.
+    const chapterOf = (work: string, book: number, inst: Pick<Instance, 'column' | 'line'>) => lookups.get(`${work}:${book}`)!(inst.column, inst.line ?? 1);
+    // Whole sections hold only the hits of this page's chapters.
+    const onPage = (work: string, book: number, inst: Pick<Instance, 'column' | 'line'>) => {
+      if (allPages || context !== 's') return true;
+      const source = results.find(r => r.work === work && r.meta.book === book && r.meta.column === inst.column);
+      return !source || pageOf(source, chapterOf(work, book, inst).chapter) === pageIdx;
+    };
+
     const gmap = new Map<string, ChapterGroup>();
     const add = (work: string, book: number, ch: { chapter: string; order: number }, inst: Instance) => {
       const source = results.find(r => r.work === work && r.meta.book === book && r.meta.column === inst.column);
@@ -2509,7 +2519,7 @@
           const speaker = speakersOf(held);
           const unit = unitAtGreek(ix, seg, pos);
           const surface = toks[pos];
-          const inst: Instance = { lang: 'grk', work: r.work, book: r.meta.book, seg: r.meta.id, surface, form: greekFold(surface ?? ''), column: seg.column, line, ref: formatCite(r.work, seg.column, line, sub), html: windows?.length
+          const inst: Instance = { lang: 'grk', work: r.work, book: r.meta.book, seg: r.meta.id, surface, form: greekFold(surface ?? ''), column: seg.column, line, sub, ref: formatCite(r.work, seg.column, line, sub), html: windows?.length
             ? greekKwic(r.work, seg, kept, greekReach, [own[0], own[own.length - 1]], after)
             : greekKwic(r.work, seg, [pos], greekReach),
             toks: own, grkHits: 1, jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, undefined, kept) + (sub ? sub : ''), held, speaker, unit, at: pos };
@@ -2559,6 +2569,8 @@
           const starts: number[] = [];
           texts.reduce((n, text) => { starts.push(n); return n + englishWords(text).length; }, 0);
           for (const w of marked) {
+            const unit = unitAtEnglish(ix, seg, t, w);
+            if (!onPage(r.work, r.meta.book, { column: unit.section, line: firstLine(unit) })) continue;
             let k = starts.length - 1;
             while (k > 0 && starts[k] > w) k--;
             const key = `${pair}:${t.id}:${seg.id}:${k}`;
@@ -2728,7 +2740,7 @@
           const seg = books.get(`${work}:${book}`)!.segments.find(s => s.column === inst.column)!;
           const display = pairContext(ix, seg, inst.unit!, context);
           const paired = unitEnglish(ix, display, t?.id ?? '', near);
-          const greekWindow = pairGreekWindow(seg, display, inst.line ?? firstLine(inst.unit!), context);
+          const greekWindow = pairGreekWindow(seg, display, inst.line ?? firstLine(inst.unit!), context, undefined, inst.sub);
           const text = t ? (context === 's' ? plainEnglish(paired) : pairEnglishWindow(seg, t, { ...display, english: { ...display.english, [t.id]: paired } }, inst.line ?? firstLine(inst.unit!),
             greekWindow.greek.reduce((n, l) => n + l.text.split(/\s+/).length, 0))) : '';
           if (!t || !text) continue;
@@ -2749,16 +2761,6 @@
     // and under the whole-section context the instance itself, one for each
     // section and holding all its hits, so the Greek and the English widen
     // together (John, 2026-11-09: "Both, to the section").
-    // A hit's chapter, as the page groups it.
-    const chapterOf = (work: string, book: number, inst: Instance) => lookups.get(`${work}:${book}`)!(inst.column, inst.line ?? 1);
-    // Under Whole section a section is one instance, so it holds only the
-    // hits of this page's chapters: a section that runs over a chapter break
-    // whose chapters are on two pages shows on each with that page's hits.
-    const onPage = (work: string, book: number, inst: Instance) => {
-      if (allPages || context !== 's') return true;
-      const source = results.find(r => r.work === work && r.meta.book === book && r.meta.column === inst.column);
-      return !source || pageOf(source, chapterOf(work, book, inst).chapter) === pageIdx;
-    };
     const placed = made.filter(m => !merged.has(m.inst) && onPage(m.work, m.book, m.inst));
     const bySection = new Map<string, { work: string; book: number; column: string; insts: Instance[] }>();
     for (const { work, book, inst } of placed) {

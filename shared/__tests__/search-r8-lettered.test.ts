@@ -37,12 +37,19 @@ it('keeps the suffix in paired spans and counts 6b as its own context line', () 
   expect(pairGreekWindow(seg, unit, 6, '3', undefined, 'b').greek.map(l => l.text)).toEqual(['βῆτα', 'γάμμα', 'μετά']);
 });
 
-async function open(positions: number[], params: string) {
+it('keeps the lettered start when lastTok widens the window', () => {
+  const ix = pairUnits(book, []);
+  const unit = unitAtGreek(ix, seg, 3);
+  expect(pairGreekWindow(seg, unit, 6, '1', 4, 'b').greek.map(l => `${l.n}${l.sub ?? ''}`))
+    .toEqual(['6b', '7']);
+});
+
+async function open(positions: number[], params: string, data = book, index = offsets) {
   const { fetchBook, fetchChapters } = await import('../lib/data');
   const { search, loadOffsets } = await import('../lib/search');
-  vi.mocked(fetchBook).mockResolvedValue(book);
+  vi.mocked(fetchBook).mockResolvedValue(data);
   vi.mocked(fetchChapters).mockResolvedValue({ '1': [{ column: '2b', chapter: '1', line: '5', bekker: '2b' }] });
-  vi.mocked(loadOffsets).mockResolvedValue(offsets);
+  vi.mocked(loadOffsets).mockResolvedValue(index);
   const result: SearchResult = { work: 'Int', meta: { id: seg.id, book: 1, column: seg.column },
     grkMatch: true, engMatch: false, grkPositions: positions };
   vi.mocked(search).mockResolvedValue({ results: [result], failedWorks: [] });
@@ -58,6 +65,19 @@ it('shows and marks the matched word on 6b at Context 1 line', async () => {
   const snippet = container.querySelector('.inst-snippet.greek')!;
   expect([...snippet.querySelectorAll('button.gw')].map(el => el.textContent)).toEqual(['γάμμα']);
   expect(snippet.querySelector('mark')).toHaveTextContent('γάμμα');
+});
+
+it('sizes the paired English from the 40-word line 6b', async () => {
+  const data: BookData = { book: 1, segments: [{ ...seg,
+    greek: [line(6, 'ἄλφα'), line(6, Array(40).fill('γάμμα').join(' '), 'b')],
+    english: { text: Array.from({ length: 100 }, (_, i) => `word${i}`).join(' '), notes: [], markers: [],
+      bekker: [{ n: 6, offset: 0, real: true }] },
+  }] };
+  const index: Offsets = { ...offsets, token_count: 41,
+    segments: [{ book: 1, column: '2b', line_runs: [[6, 1], [6, 40, 'b']] }] };
+  const { container } = await open([1], '&ctx=1', data, index);
+  const words = container.querySelector('.inst-pair-text')!.textContent!.match(/word\d+/g);
+  expect(words).toHaveLength(56);
 });
 
 it('merges overlapping contexts without repeating or swapping 6, 6a, or 6b', async () => {
