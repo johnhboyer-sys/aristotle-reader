@@ -1980,7 +1980,9 @@
     const itemOf = (inst: Instance) => ({ inst, work: inst.work, form: inst.lang === 'grk' ? inst.form : undefined, surface: inst.surface, surfaces: inst.surfaces, hits: hitsIn(inst), grk: inst.grkHits ?? 0 });
     const freq = new Map<string, number>();
     for (const g of groups) for (const inst of g.instances) {
-      if (inst.lang === 'grk' && inst.form) freq.set(inst.form, (freq.get(inst.form) ?? 0) + (inst.grkHits ?? 0));
+      for (const hit of inst.forms ?? [inst]) {
+        if (hit.lang === 'grk' && hit.form) freq.set(hit.form, (freq.get(hit.form) ?? 0) + (hit.grkHits ?? 0));
+      }
     }
     const ordered = (list: Instance[], s: ResultSort) => orderHits(list.map(itemOf), s, title, freq).map(x => x.inst);
     if (v === 'form' || v === 'grammar') {
@@ -2463,7 +2465,7 @@
             // By whole lines: the stretch is the lines it touches.
             const span = lineTokens(seg);
             const lines = win.greek.map(l => span.get(l.n)).filter((x): x is [number, number] => !!x);
-            if (lines.length) shownOf.set(inst, {
+            if (lines.length && !windows?.length) shownOf.set(inst, {
               key: `${pair}:${seg.id}:lines`, from: lines[0][0], to: lines.at(-1)![1], turns: false,
               draw: (from, to, marked) => pairGreekHtml(r.work, seg, { ...unit, greek: seg.greek
                 .filter(l => { const t = span.get(l.n); return !!t && t[0] < to && t[1] > from; })
@@ -2595,7 +2597,11 @@
       const byKey = new Map<string, Instance[]>();
       for (const { inst } of made) {
         const sh = shownOf.get(inst);
-        if (sh && !merged.has(inst)) (byKey.get(sh.key) ?? byKey.set(sh.key, []).get(sh.key)!).push(inst);
+        if (sh && !merged.has(inst)) {
+          const chapter = lookups.get(`${inst.work}:${inst.book}`)!(inst.column, inst.line ?? 1).chapter;
+          const key = `${sh.key}:chapter:${chapter}`;
+          (byKey.get(key) ?? byKey.set(key, []).get(key)!).push(inst);
+        }
       }
       const mergeRun = (run: Instance[]) => {
         const parts = run.map(inst => ({ ...inst }));
@@ -2620,6 +2626,8 @@
         });
         const head = run[0];
         Object.assign(head, join(parts));
+        const surfaces = [...new Set(parts.map(part => part.surface ?? ''))].filter(Boolean);
+        if (surfaces.length > 1) head.surfaces = surfaces;
         head.speaker = speakersOf(head.held!);
         for (const inst of run.slice(1)) merged.add(inst);
         const byForm = new Map<string, Instance[]>();

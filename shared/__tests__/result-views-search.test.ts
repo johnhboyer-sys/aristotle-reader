@@ -107,13 +107,18 @@ function expectAllOpen(c: HTMLElement) {
   expect(c.querySelectorAll('.group-head').length).toBeGreaterThan(0);
   expect(c.querySelectorAll('.group-head[aria-expanded="false"]')).toHaveLength(0);
 }
-// Each hit shown, by the Greek word it marks, which no two instances share.
+// Each hit, its citation URL and the text of its passage.
 // Hits whose passages overlap are one instance, every hit marked (S4a), and
 // a form view files that instance under each form with its own marks: the
 // hits are the same in every view, the instances not.
 const hitsShown = (c: HTMLElement) => [...c.querySelectorAll('li.instance .inst-snippet.greek mark')].map(m => {
   const b = m.closest<HTMLElement>('button.gw')!;
-  return `${b.dataset.w}:${b.dataset.s}:${b.dataset.i}`;
+  const instance = m.closest('li.instance')!;
+  return JSON.stringify({
+    token: `${b.dataset.w}:${b.dataset.s}:${b.dataset.i}`,
+    href: instance.querySelector('.inst-ref')!.getAttribute('href'),
+    snippet: text(m.closest('.inst-snippet')),
+  });
 }).sort();
 const facetRow = () => screen.getByRole('group', { name: 'Narrow by grammar' });
 const formRows = (panel: HTMLElement) => [...panel.querySelectorAll('label')].map(label =>
@@ -141,6 +146,18 @@ describe('Search.svelte: views', () => {
       expect(hitsShown(container)).toEqual(shown);
     }
     expect(status()).toHaveTextContent('6 instances');
+  });
+
+  it('detects a changed citation URL or snippet even when token ids stay the same', async () => {
+    const { container } = await open(G);
+    const shown = hitsShown(container);
+    const ref = container.querySelector('.inst-ref')!;
+    const href = ref.getAttribute('href')!;
+    ref.setAttribute('href', '/wrong-citation');
+    expect(hitsShown(container)).not.toEqual(shown);
+    ref.setAttribute('href', href);
+    container.querySelector('.inst-snippet.greek')!.append(' changed');
+    expect(hitsShown(container)).not.toEqual(shown);
   });
 
   it('by form: a group per form, its spellings and count, and every citation names its work', async () => {
