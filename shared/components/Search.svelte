@@ -1406,6 +1406,13 @@
   }
   // The editor's Search: the page is in proximity from now on. An editor
   // that makes no search says what it lacks, and nothing is searched.
+  // One that searches folds to its summary (John, 13 Nov), but doSearch
+  // folds it: shut here, the button would leave the page before the form
+  // could submit it. A key (Enter, Space, Enter in a field) clicks with
+  // detail 0, and its focus goes to Change; a mouse or tap's goes there
+  // too, without scrolling the page or drawing a ring.
+  let proxChange: HTMLButtonElement | undefined;
+  let editorKeyed = false;
   function searchEditor(e: MouseEvent) {
     if (!comboNow) {
       e.preventDefault();
@@ -1413,6 +1420,12 @@
       return;
     }
     proxOn = true;
+    editorKeyed = e.detail === 0;
+  }
+  async function foldEditor() {
+    advancedOpen = false;
+    await tick();
+    proxChange?.focus({ preventScroll: !editorKeyed });
   }
   // Measure the whole bar, including wrapped text, border and safe area.
   // Both reserves inherit this value; only the narrow layout uses it.
@@ -3158,6 +3171,9 @@
       showNarrowPrompt(opts.history ?? 'push');
       return;
     }
+    // The editor's own Search, read by now: the editor folds once the engine
+    // has run it (a search it refuses keeps the editor open).
+    const fromEditor = advancedOpen && !!(e as SubmitEvent | undefined)?.submitter?.classList.contains('prox-search');
     // A new search starts with every form in; one read from the address bar
     // keeps the forms it names.
     hitForms = null;
@@ -3243,6 +3259,7 @@
         await showNarrowPrompt(opts.history ?? 'push');
         return;
       }
+      if (fromEditor && advancedOpen) void foldEditor();
       failedWorks = failed;
       approximateTurns = approximate ?? [];
       approximateChapters = chaptersApproximate ?? [];
@@ -4297,7 +4314,7 @@
             {#if advancedOpen}
               <button type="button" class="prox-link" on:click={closeEditor}>Close</button>
             {:else}
-              <button type="button" class="prox-link prox-change" aria-expanded="false" on:click={openEditor}>Change</button>
+              <button type="button" class="prox-link prox-change" aria-expanded="false" bind:this={proxChange} on:click={openEditor}>Change</button>
             {/if}
             <a class="prox-link" href={`${BASE_URL}/advanced#combo`}>Guide</a>
           </p>
