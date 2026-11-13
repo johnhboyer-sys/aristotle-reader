@@ -240,4 +240,17 @@ describe('proximity joiners and targets', () => {
     const from = decodeSearchUrl('?c=l:a&c=l:b&c=l:&c=l3:d', ALL).combo!.slots;
     expect(from.map((s) => [s.picked[0], s.target ?? 0])).toEqual([['a', 0], ['b', 0], ['d', 0]]);
   });
+
+  it('measures a term from the or-member that takes an empty head\'s place (Codex review)', () => {
+    // The empty term 2 goes; b, joined to it by "or", stands in its place,
+    // so d, measured from term 2, is measured from b.
+    const slots = decodeSearchUrl('?c=l:a&c=la:&c=lo:b&c=l2:c', ALL).combo!.slots;
+    expect(slots.map((s) => [s.picked[0], s.relation, s.target ?? 0])).toEqual([['a', 'near', 0], ['b', 'after', 0], ['c', 'near', 1]]);
+    // An empty member between them points the same way.
+    const two = decodeSearchUrl('?c=l:a&c=la:&c=lo:&c=lo:b&c=l3:c', ALL).combo!.slots;
+    expect(two.map((s) => [s.picked[0], s.target ?? 0])).toEqual([['a', 0], ['b', 0], ['c', 1]]);
+    // A group with nothing left: measured from what the head was measured from.
+    const none = decodeSearchUrl('?c=l:a&c=l:b&c=l2:&c=lo:&c=l3:c', ALL).combo!.slots;
+    expect(none.map((s) => [s.picked[0], s.target ?? 0])).toEqual([['a', 0], ['b', 0], ['c', 1]]);
+  });
 });

@@ -1259,7 +1259,18 @@
   // What the proximity search shown is, in one sentence; and the editor's,
   // when it differs and is not yet searched (d28).
   $: proxLive = proxOn && !!lastSearch?.combo;
-  $: comboPending = advancedOpen && !!comboNow && comboKey(comboNow) !== comboKey(lastSearch?.combo);
+  // Pending whenever the open editor differs from the search shown, a
+  // complete search or not (Codex review, 12 Nov): an edit that leaves too
+  // few terms still leaves the results it no longer describes.
+  $: comboPending = advancedOpen && comboKey(comboNow) !== comboKey(lastSearch?.combo);
+  // What an editor that makes no search lacks, said when its Search is
+  // pressed; any edit takes the line away.
+  const comboMissing = (editors: ComboEditor[]) => {
+    const groups = editorGroups(editors);
+    return !groups.length ? 'Add two terms' : groups[0].relation === 'not' ? 'Fill term 1' : 'Add a second term';
+  };
+  let comboAsked = '';
+  $: comboEditors, comboAsked = '';
   const headsOf = (info: typeof pickInfo) => (key: string) => info[key]?.heads.split(' · ')[0] ?? key;
   // The In value of a search's works: none for all works.
   const sameSet = (a: string[], b: Set<string>) => a.length === b.size && a.every(id => b.has(id));
@@ -1293,8 +1304,14 @@
     await tick();
     document.querySelector<HTMLElement>('#advanced-tools .combo-slot :is(input, select, button)')?.focus();
   }
-  // The editor's Search: the page is in proximity from now on.
-  function searchEditor() {
+  // The editor's Search: the page is in proximity from now on. An editor
+  // that makes no search says what it lacks, and nothing is searched.
+  function searchEditor(e: MouseEvent) {
+    if (!comboNow) {
+      e.preventDefault();
+      comboAsked = comboMissing(comboEditors);
+      return;
+    }
     proxOn = true;
   }
   // Turn off: back to the search the boxes hold, or to the empty page.
@@ -1502,7 +1519,9 @@
   }
 
   // What was measured from a removed term is measured from what it was; an
-  // or-run's next term takes its place.
+  // or-run's next term takes its place. A removed member of an or-run leaves
+  // its run standing: what was measured from it is measured from the member
+  // before it, which is the same term (Codex review, 12 Nov).
   function removeComboEditor(id: number) {
     const index = comboEditors.findIndex((slot) => slot.id === id);
     if (index < 1) return;
@@ -1510,7 +1529,8 @@
     const next = comboEditors[index + 1];
     const heir = next?.or && !gone.or ? next : null;
     if (heir) Object.assign(heir, { or: false, relation: gone.relation, targetId: gone.targetId });
-    for (const ed of comboEditors) if (ed.targetId === id) ed.targetId = heir ? heir.id : gone.targetId;
+    const standIn = heir ? heir.id : gone.or ? comboEditors[index - 1].id : gone.targetId;
+    for (const ed of comboEditors) if (ed.targetId === id) ed.targetId = standIn;
     comboEditors = comboEditors.filter((slot) => slot.id !== id);
   }
 
@@ -3942,7 +3962,8 @@
           <label class="prox-lock"><input type="checkbox" bind:checked={comboCrossChapter} /> Keep hits that cross a chapter</label>
           <div class="prox-go">
             <button type="submit" class="search-btn prox-search" disabled={loading} on:click={searchEditor}>{loading ? 'Searching…' : 'Search'}</button>
-            {#if pendingSentence}<p class="prox-pend">Not searched yet: {pendingSentence}</p>{/if}
+            {#if pendingSentence}<p class="prox-pend">Not searched yet: {pendingSentence}</p>
+            {:else if comboAsked}<p class="prox-pend" role="status">{comboAsked}</p>{/if}
           </div>
         {/if}
       </div>
