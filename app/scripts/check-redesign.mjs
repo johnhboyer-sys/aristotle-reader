@@ -1105,16 +1105,18 @@ const gates = {
         return n;
     },
     'R-A3': async () => {
-        let n = 0;
+        let n = 0, separators = 0;
         const failures = [];
         for (const theme of ['light', 'dark']) for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size, theme,path);
             try {
-                if (prove && !['reader-ln','search-small-red'].includes(proofCase)) await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
+                if (prove && !['reader-ln','search-small-red','separator-word'].includes(proofCase)) await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
                 if(prove&&proofCase==='search-small-red'&&path===SEARCH)await style(p,'.dir-b .advanced-trigger{color:var(--red)!important}');
                 if (prove && proofCase === 'reader-ln' && path === READER) await style(p, '.dir-b .b-ln{color:#c8c8c8!important}');
+                // The exemption below is by glyph, not by class: a faint word in a .tr-dot must still fail.
+                if (prove && proofCase === 'separator-word' && path === SEARCH) await p.evaluate(() => { const s = document.createElement('span'); s.className = 'tr-dot'; s.setAttribute('aria-hidden', 'true'); s.style.color = '#dddddd'; s.textContent = 'Owen'; document.querySelector('main')?.prepend(s); });
                 for await (const state of accessStates(p, size)) {
-                    const result = await p.evaluate(root => {
+                    const scan = await p.evaluate(root => {
                         const rgb = s => {
                             const m = s.match(/[\d.]+/g)?.map(Number);
                             return m ? [m[0], m[1], m[2], m[3] ?? 1] : [0,0,0,0];
@@ -1122,6 +1124,7 @@ const gates = {
                         const mix = (a,b) => a.slice(0,3).map((v,i) => v*a[3] + b[i]*(1-a[3]));
                         const lum = a => a.map(v=>v/255).map(v=>v<=.04045 ? v/12.92 : ((v+.055)/1.055)**2.4).reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
                         const out = [];
+                        let exempt = 0;
                         const examine = (el,text,pseudo=false) => {
                             const cs = getComputedStyle(el,pseudo ? '::placeholder' : null);
                             const chain = [];
@@ -1145,14 +1148,19 @@ const gates = {
                             const el=node.parentElement;
                             // A closed <details> keeps its content's boxes in Chrome but draws none of it.
                             if (el.closest('script,style,[hidden],details:not([open]) > :not(summary)') || getComputedStyle(el).visibility==='hidden') continue;
+                            // Exempt by name: the aria-hidden dot between translator names (.tr-dot)
+                            // is decoration, which the contrast rule does not cover; the names
+                            // around it are examined. Only a lone separator glyph is exempt.
+                            if (el.matches('.tr-dot[aria-hidden="true"]') && /^[·•]$/.test(node.textContent.trim())) { exempt++; continue; }
                             const range=document.createRange(); range.selectNodeContents(node);
                             if (range.getBoundingClientRect().width) examine(el,node.textContent);
                         }
                         for (const el of host.querySelectorAll('input[placeholder],textarea[placeholder]')) {
                             if (!el.value && el.getClientRects().length && getComputedStyle(el).visibility!=='hidden' && !el.closest('details:not([open]) > :not(summary)')) examine(el,el.placeholder,true);
                         }
-                        return out;
+                        return {out, exempt};
                     }, state.root);
+                    const result = scan.out; separators += scan.exempt;
                     assert(result.length > 0, `${size}/${theme} ${state.name} examined=0 text elements`);
                     for (const g of result) {
                         n++;
@@ -1161,6 +1169,7 @@ const gates = {
                 }
             } finally { await close(p); }
         }
+        console.log(`R-A3 exempt by name: .tr-dot separator glyphs (aria-hidden) skipped=${separators}`);
         assert(!failures.length, `examined=${n}; ${failures.join('; ')}`);
         return n;
     },
@@ -3733,7 +3742,7 @@ const stageFourProofs = {
     'R-S1': {'overlap-ref':/D1440 hit ref overlaps column:/,'wrapped-ref':/D1440 hit ref wraps:/,'dead-filter':/D1440 work filter did not change hits:/,'dead-language':/D1440 language English did not change live query mode:/,'copy-language':/D1440 language English copied a query across languages/,'hash-link':/D1440 page 1 search href="#" count=1/,'non-bekker-ref':/non-Bekker ref format: I\.1 wrong/,'late-hash':/D1440 page 2 search href="#" count=1/},
     'R-A1': {...stageThreeProofs['R-A1'],'search-target':/D1440 BUTTON Greek 34×34/},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <input[^>]*id="grk-input"/},
-    'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/},
+    'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},
     'R-E2': {'reader-tip':/unsolicited overlay:.*reader-tip/,'search-toast':/search\?q=ἀρετή D1440 unsolicited overlay:.*reader-tip/},
 };
