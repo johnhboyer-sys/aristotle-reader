@@ -42,6 +42,16 @@ summary. The search session is building both; one tip comes back for merge.
 After the search fixes, and a green run, the next step is your yes to push
 and open the PR (not merge, not deploy).
 
+**Latest (13 Nov 14:13):** search tip `153603d79a` merged as `6fefc4f536`
+(column refs, proximity collapse, Accents→Form, translator switch, keyboard
+C2-b, Group by with lemma on readings). Full checks on the merged tree all
+green: app 130, shared 1867, scripts 99, svelte-check 0, stage6 pytest 41,
+build:public 0 broken, deploy:dry ok, check-redesign 64/0, search-shots 0
+failed, 14 counts unchanged. Logs `.redesign-shots/notes/d26/final7/`. Rounds
+page: https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV. Waiting on John: D
+(D5b / D6), G (grammar menu), H (phone query width), Group by (rows shut,
+data size, facets lemma-only).
+
 **Search screenshot sheet** (build beside round 34, light and dark):
 https://claude.ai/artifact/3CZPdw9xaQbTnBeNEgFtJQ
 
