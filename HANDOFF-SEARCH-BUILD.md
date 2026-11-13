@@ -3,6 +3,48 @@
 Written 12 Nov 2026, 13:20, at the end of the session that refined the search
 mock-up. Rewrite this file (don't append) when you hand off.
 
+## 0. State (13 Nov 02:50): BUILD DONE, tip handed to the coordinator
+
+- **Every stage is built and committed** on `claude/search-build` (worktree
+  `.claude/worktrees/search-build`, from 73007670f2, unpushed): S1 engine, S1b
+  running text, S2 form and menus, S3 proximity (plain pairwise distance), S4a
+  results, S4b rail / Save / `/saved` / word panel, S5a phone form and editor,
+  S5b phone results, sheets and sideways, S6 the `/advanced` guide. Each stage
+  had a Codex review (R1–R9) and its fixes are in. **Tip e987866002.**
+- **Gates at the tip:** shared 1,719 passed (corpus tests included), app 116,
+  svelte-check 0 errors, verify-shared-imports 0 broken, `astro build` complete,
+  check-redesign 17/17, the search screenshot gate 140 shot / 0 failed (both
+  themes, phone and sideways; d04 and d22 retired), all 14 search-counts totals
+  unchanged (967, 2394, 1514, 102, 55, 78, 5398, 768, 736, 736, 17, 7, 6, 11).
+- **Screenshot sheet** (self-contained, beside its round-34 twins):
+  `~/.claude/reviews/search-build/shots-final/index.html`.
+- **Merging:** John made the Track A session (home/work/reader on
+  `claude/redesign-build`) coordinator, 13 Nov 01:07. It merges this tip in its
+  own worktree and runs HANDOFF-REDESIGN-BUILD.md §6 (build:public, deploy:dry,
+  link check, leak check). A trial merge against its f5f3b4a07f had no
+  conflicts; this branch never touches b.css, BFonts.astro or Reader.svelte.
+  One deploy for the whole redesign (John's ruling (a)). Nothing is pushed.
+- **For John (morning of 13 Nov), with recommendations:** (1) Accents vs Form —
+  turning Accents on should set Form to "only as I typed"; (2) confirm the phone
+  "This search" lists filters only, matching the Filter badge, Clear all keeping
+  the view; (3) the guide puts Typing Greek first; (4) no translator-names
+  switch on Greek-only hits for now; (5) old links under Plato's wildcard
+  syntax (`λόγος.`, `*λόγος`) open a different search — keep the new rules.
+  Plus his look at the phone/sideways departures in the sheet.
+- **Follow-ups (not blockers):** the desktop app mounts the new Search
+  unstyled (needs b.css tokens and b-search.css); "Group by grammar" groups by
+  spelling (needs per-word grammar data); an opened section's English can start
+  a clause early (corpus alignment); proximity-editor controls under 44px on
+  desktop (`.prox-sel`, `.prox-win`, `.prox-chip`, the field's clear button, held
+  in the 44px test's allow-list); b.css still uses `max-width: 960px` elsewhere;
+  after "Find this phrase in any inflection" the address keeps the old
+  sp/sn/wf; /saved is not in check-redesign's contrast list (checked separately,
+  PASS); dead code from the port (`groupState`, corpus-tools, inscription,
+  sect-ticks, speaker-colors); the 6-term proximity cap's speed test; the
+  running.json files in `build/dist` came from a one-off backfill and
+  `npm run build:public` regenerates them through stage 6. Then the port of
+  the design fixes to plato-reader (§1).
+
 ## 1. What this track is
 
 Build the redesigned search page into the site: the Svelte component, its
@@ -144,6 +186,27 @@ mock-ups" and "Round 7"), the artifact comments, and 12 Nov:
     button**.
 14. Design is collaborative except where John says NOT THIS or MUST HAVE
     THIS (memory `design-calls-are-suggestions`).
+15. **Running text is in** (12 Nov 16:53): port Plato's running-text search
+    whole, pipeline included (done as S1b).
+16. **No gloss line above the results** (12 Nov 17:53): the old page's
+    "word: meaning · Lexicon" line stays out; the word panel covers it.
+17. **Page breaks: the chapter rule stays, with chapter name lines**
+    (12 Nov 18:02, option A on the decision page
+    https://claude.ai/artifact/CEmX4yFRkqPk45sBUfme3U): a page never splits a
+    chapter; each chapter's hits get a name line ("Chapter 13" plus its title
+    where the corpus has one), so a page that ends short ends at a chapter.
+    S4.
+18. **Translator names under the English** (12 Nov 18:36, John's idea, from the
+    Lyceum Presocratics reader's `seg-trans-toggle`): a passage several
+    translations hit is ONE instance, Greek once, ONE English shown; under it the
+    names of the translators with hits ("Rackham · Ross · Ostwald · Peters"),
+    the label's small capitals, chosen one bold and underlined, others `--mid`;
+    clicking a name shows that translation with its hits. No buttons drawn. A
+    single translator's name sits in the same place. Names set close under the
+    English, more room before the next passage. Phone: full label size and a
+    44px tap area. First shown: the Translations rail's order. S4. (Opus also
+    suggested the same names for a Greek hit's English, all translations of the
+    passage; not yet ruled.)
 
 Standing rules from memory: **never shrink type or tap targets** (one reader is
 vision-impaired and reads on a phone held sideways); **no explainer text in

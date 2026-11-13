@@ -6,9 +6,32 @@ import BNav from '../components/BNav.astro';
 import BFoot from '../components/BFoot.astro';
 import BFonts from '../components/BFonts.astro';
 import { jsonLdSafe } from '../lib/jsonld';
+import { readFileSync } from 'node:fs';
+import { WORKS, visibleTranslations } from '@shared/lib/works';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
+import '@shared/styles/b-search.css';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+// The chapter titles the search's chapter lines name (ruling 17), as the
+// reader's contents name them (ReaderShell): the work's own, else those its
+// opening translation heads its chapters with (Ostwald's in the Ethics).
+// Most works have neither; they get the chapter number alone.
+type Titles = Record<string, Record<string, string>>;
+const readTitles = (path: string): Record<string, unknown> => {
+  try { return JSON.parse(readFileSync(`public/data/${path}`, 'utf-8')); } catch { return {}; }
+};
+const chapterTitles: Record<string, Titles> = {};
+for (const w of WORKS) {
+  const editions = visibleTranslations(w);
+  const opening = (editions.find((t) => t.id === w.defaultTranslation) ?? editions.find((t) => t.slot === 'english') ?? editions[0])?.id ?? '';
+  const own = readTitles(`${w.id}/chapter-titles.json`) as Titles;
+  const titles = Object.keys(own).length ? own : ((readTitles(`${w.id}/third-titles.json`)[opening] ?? {}) as Titles);
+  const clean: Titles = {};
+  for (const [book, chapters] of Object.entries(titles)) {
+    clean[book] = Object.fromEntries(Object.entries(chapters).map(([c, t]) => [c, String(t).replace(/\[\^[^\]]*\]/g, '').trim()]));
+  }
+  if (Object.keys(clean).length) chapterTitles[w.id] = clean;
+}
 const searchDescription =
   'Search the complete works of Aristotle across the original Greek and every' +
   ' English translation — by word or phrase, in Greek script or Beta Code, with' +
@@ -57,7 +80,7 @@ const jsonLd = {
 <body>
   <div class="frame dir-b pg-search">
     <BNav active="/search" />
-    <Search b client:load />
+    <Search client:load {chapterTitles} />
     <BFoot />
   </div>
 </body>

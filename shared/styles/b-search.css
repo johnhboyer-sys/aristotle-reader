@@ -1,0 +1,1940 @@
+/* The search page in direction B (round 34): the form, its menus, the works
+   picker, the Greek keyboard, the dictionary-word list and the results.
+   Imported by app/src/pages/search.astro only; every rule sits under the
+   component's root, .search-page.
+   Colours are the site's tokens (b.css); the few below are the search
+   page's own. */
+
+.dir-b .search-page {
+  --veil: rgba(244, 243, 238, .88);
+  --shade: rgba(20, 20, 19, .16);   /* a rail list's edge where more is hidden */
+  --go: #b42419;          /* the Search button: white on this red in both themes */
+  --sq-side: 220px;       /* Greek · English · Both: three 72px buttons and their rules */
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 28px 72px 48px;
+  font-family: var(--sans);
+  color: var(--ink);
+}
+:root[data-theme="dark"] .dir-b .search-page { --veil: rgba(20, 20, 19, .88); --shade: rgba(236, 235, 230, .14); }
+/* The root's face is the form's. What S2 did not rebuild (results and rail,
+   proximity editor, help) inherited the root's face before S2 and keeps a
+   reading face: the English under each hit is reading text, in Literata. */
+.dir-b .search-page :is(.sx-layout, .help-modal, .narrow-prompt, .search-error, .rt-progress) { font-family: var(--read); }
+
+.search-page .search-form { position: relative; }
+
+/* ── The field ──────────────────────────────────────────────────────────── */
+.search-page .sq { display: flex; align-items: flex-start; gap: 24px; }
+.search-page .sq-fields { flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 28px; }
+.search-page .sq-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 58px;
+  border-bottom: 2px solid var(--ink);
+  color: var(--mid);
+}
+.search-page .sq-glass { flex: none; width: 22px; height: 22px; margin-left: 2px; }
+.search-page .query-label { flex: none; width: 72px; font: 500 15px/1 var(--sans); color: var(--mid); }
+.search-page .query-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: 400 40px/1.2 var(--read);
+  color: var(--ink);
+}
+.search-page .query-input::placeholder { font-size: 30px; font-style: italic; color: var(--faint); opacity: 1; }
+.search-page .query-input:focus { outline: none; }
+/* The clear button: a thin cross in the ink, not the browser's own. */
+.search-page .query-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-left: 12px;
+  background:
+    linear-gradient(45deg, transparent calc(50% - 1px), var(--ink) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(-45deg, transparent calc(50% - 1px), var(--ink) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
+  cursor: pointer;
+}
+.search-page .query-input:disabled { color: var(--ink); -webkit-text-fill-color: var(--ink); opacity: 1; }
+
+/* Keyboard and Beta Code: quiet tools on the field's rule (ruling 7). */
+.search-page .sq-tool {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--mid);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page .sq-tool + .sq-tool { margin-left: 14px; }
+.search-page .sq-tool [lang="grc"] { font: 400 16px/1 var(--read); }
+.search-page .sq-tool:hover:not(:disabled) { color: var(--ink); }
+.search-page .sq-tool:is([aria-pressed="true"], [aria-expanded="true"]) { color: var(--ink); box-shadow: inset 0 -3px 0 var(--red-ink); }
+.search-page .sq-tool:disabled { opacity: .5; cursor: default; }
+
+/* Greek · English · Both: a segmented control. */
+.search-page .lang-switch { flex: none; display: inline-flex; margin-top: 4px; border: 1px solid var(--ink); }
+.search-page .lang-switch button {
+  width: 72px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .lang-switch button:first-child { border-left: 0; }
+.search-page .lang-switch button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* ── The options ────────────────────────────────────────────────────────── */
+.search-page .sopt:not(.sx-display) { display: flex; align-items: center; gap: 4px 16px; margin-top: 18px; }
+.search-page .sopt:not(.sx-display):not(.sopt-both) > :is(.sopt-g, .sopt-e, .sopt-w) { display: contents; }
+.search-page .sopt.sopt-both { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.search-page .sopt-both > :is(.sopt-g, .sopt-e, .sopt-w) { grid-column: 1; display: flex; align-items: center; gap: 16px; }
+.search-page .sopt-both > .sopt-act { grid-column: 2; grid-row: 3; }
+.search-page .sopt-act { display: inline-flex; align-items: center; gap: 22px; margin-left: auto; flex: none; }
+
+.search-page :is(.search-form, .sx-display) .opt > summary,
+.search-page :is(.search-form, .sx-display) .opt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 500 16px/1.3 var(--sans);
+  color: var(--mid);
+  white-space: nowrap;
+  list-style: none;
+  cursor: pointer;
+}
+.search-page :is(.search-form, .sx-display) .opt > summary::-webkit-details-marker { display: none; }
+.search-page :is(.search-form, .sx-display) .opt b,
+.search-page :is(.search-form, .sx-display) .opt-btn b {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+  color: var(--ink);
+}
+.search-page :is(.search-form, .sx-display) .opt > summary:hover b,
+.search-page :is(.search-form, .sx-display) .opt-btn:hover b { color: var(--red-ink); border-bottom-color: currentColor; }
+.search-page :is(.search-form, .sx-display) .opt-caret { flex: none; color: var(--mid); transition: transform .12s; }
+/* Open: the value underlined in red, the caret turned up. The picker open
+   under In counts as In open. */
+.search-page :is(.search-form, .sx-display) .opt:is([open], .picking) > summary b { border-bottom: 2px solid var(--red-ink); padding-bottom: 1px; color: var(--ink); }
+.search-page :is(.search-form, .sx-display) .opt:is([open], .picking) > summary .opt-caret { transform: rotate(180deg); }
+.search-page :is(.search-form, .sx-display) .opt > summary:focus-visible,
+.search-page :is(.search-form, .sx-display) .opt-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* A switch, drawn alone: no state word (ruling 5). */
+.search-page .opt-switch { gap: 8px; }
+.search-page .opt-switch .sw {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 18px;
+  border: 1.5px solid var(--mid);
+  border-radius: 10px;
+}
+.search-page .opt-switch .sw::after {
+  content: "";
+  position: absolute;
+  top: 2.5px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mid);
+  transition: left .15s;
+}
+.search-page .opt-switch[aria-pressed="true"] .sw { border-color: var(--ink); background: var(--ink); }
+.search-page .opt-switch[aria-pressed="true"] .sw::after { left: 14px; background: var(--bg); }
+.search-page .opt-switch:hover .sw { border-color: var(--ink); }
+
+/* Proximity and Search: one block at the right (ruling 4). */
+.search-page .advanced-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 16px/1 var(--sans);
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page .advanced-trigger .opt-caret { color: var(--ink); transition: transform .12s; }
+.search-page .advanced-trigger[aria-expanded="true"] .opt-caret { transform: rotate(180deg); }
+.search-page .advanced-trigger[aria-expanded="true"] { box-shadow: inset 0 -2px 0 var(--red-ink); }
+.search-page .advanced-trigger:hover { color: var(--red-ink); }
+.search-page .search-btn {
+  height: 46px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 0;
+  background: var(--go);
+  font: 650 16px/1 var(--sans);
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page .search-btn:hover:not(:disabled) { background: var(--ink); color: var(--bg); }
+.search-page .search-btn:disabled { opacity: .6; cursor: default; }
+.search-page .search-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ── The menus (Match, Form, In, Hits match; over the hits, Group by, Sort,
+   Context, Per page) ───────────────────────────────────────────────────── */
+/* A panel flush under its trigger, outlined all round (ruling 3), with a veil
+   over the page. The veil is the summary's ::before, so a click on it lands
+   on the summary and shuts the menu, never on what lies under it. */
+.search-page :is(.search-form, .sx-display) .opt { position: relative; }
+.search-page :is(.search-form, .sx-display) .opt[open] { z-index: 40; }
+.search-page :is(.search-form, .sx-display) .opt[open] > summary { position: relative; z-index: 1; }
+.search-page :is(.search-form, .sx-display) .opt[open] > summary::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--veil);
+  cursor: default;
+}
+.search-page :is(.search-form, .sx-display) .opt-panel {
+  position: absolute;
+  top: calc(100% - 6px);
+  left: 0;
+  z-index: 2;
+  display: block;
+  min-width: 300px;
+  margin: 0;
+  padding: 0 0 8px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+  color: var(--ink);
+}
+.search-page :is(.search-form, .sx-display) .opt-title {
+  float: left;
+  width: 100%;
+  padding: 22px 18px 6px;
+  font: 650 12px/1 var(--sans);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+.search-page :is(.search-form, .sx-display) .opt-row { clear: both; position: relative; padding: 10px 18px; }
+.search-page :is(.search-form, .sx-display) .opt-row:hover { background: var(--line2); }
+.search-page :is(.search-form, .sx-display) .opt-row.opt-rule { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+.search-page :is(.search-form, .sx-display) .opt-panel .ck { display: flex; align-items: center; gap: 12px; font: 500 16px/1.2 var(--sans); color: var(--ink); white-space: nowrap; }
+/* The whole row picks, its gloss too. */
+.search-page :is(.search-form, .sx-display) .opt-panel .ck::after { content: ""; position: absolute; inset: 0; }
+.search-page :is(.search-form, .sx-display) .opt-panel .ck input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--mid);
+  border-radius: 50%;
+  background: none;
+}
+.search-page :is(.search-form, .sx-display) .opt-panel .ck input:checked { border-color: var(--red-ink); background: radial-gradient(circle, var(--red-ink) 0 4.5px, transparent 5px); }
+.search-page :is(.search-form, .sx-display) .opt-panel .ck input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.search-page :is(.search-form, .sx-display) .opt-panel .ck:has(input:checked) span { font-weight: 650; }
+.search-page :is(.search-form, .sx-display) .opt-gloss { display: block; padding: 2px 0 0 30px; font: 500 14px/1.3 var(--sans); color: var(--mid); white-space: nowrap; }
+.search-page :is(.search-form, .sx-display) .opt-gloss [lang="grc"] { font: 600 15px/1.2 var(--read); color: var(--ink); }
+
+/* ── The hint and the empty page ────────────────────────────────────────── */
+.search-page .sx-hint { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 10px 0 0; }
+.search-page .sx-hint .hk { white-space: nowrap; font: 500 15px/1.4 var(--sans); color: var(--mid); }
+.search-page .sx-hint .hk [lang="grc"] { font-family: var(--read); }
+.search-page .sx-hint code { margin-right: 4px; padding: 2px 6px; background: var(--line2); font: 700 15px/1 var(--sans); color: var(--ink); }
+.search-page .sx-hint .link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.search-page .sx-try { margin: 44px 0 40px; padding-top: 18px; border-top: 2px solid var(--ink); }
+.search-page .sx-try h2 { margin: 0 0 14px; font: 700 30px/1 var(--tface); text-transform: uppercase; color: var(--ink); }
+.search-page .sx-try ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; margin: 0; padding: 0; list-style: none; }
+.search-page .sx-try li a { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; min-height: 56px; padding-top: 8px; border-bottom: 1px solid var(--line); color: var(--ink); }
+.search-page .sx-try li a span { font: 400 24px/1.3 var(--read); text-decoration: underline 2px var(--red-ink); text-underline-offset: 7px; }
+.search-page .sx-try li a small { font: 500 15px/1.3 var(--sans); color: var(--mid); text-align: right; }
+.search-page .sx-try li a:hover span { color: var(--red-ink); }
+.search-page .sx-try p { display: flex; gap: 28px; margin: 20px 0 0; font: 600 16px/1 var(--sans); }
+.search-page .sx-try p a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-decoration: underline 2px var(--red-ink); text-underline-offset: 5px; }
+.search-page .sx-try p a:hover { color: var(--red-ink); }
+
+/* ── Dictionary words ───────────────────────────────────────────────────── */
+/* Under the field as a word is typed; with Lemma on, under the options, as
+   wide as the field, the page behind it stepping back. */
+.search-page .sq-row > .gs,
+.search-page .gs-under {
+  position: absolute;
+  left: 0;
+  z-index: 40;
+  margin: 0;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+}
+.search-page .sq-row > .gs { top: calc(100% + 2px); right: 0; }
+.search-page .gs-under { right: calc(var(--sq-side) + 24px); margin-top: 1px; }
+.search-page .gk > .gs { position: static; margin: 0 0 12px; border: 1px solid var(--ink); background: var(--paper); }
+.search-page .gs { padding: 4px 0; list-style: none; }
+.search-page .gs-under .gs { margin: 0; }
+.search-page .gs-cap { margin: 0; padding: 14px 16px 2px; font: 650 13px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--mid); }
+.search-page .gs li { display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 0 16px; font: 400 20px/1.2 var(--read); color: var(--ink); cursor: pointer; }
+.search-page .gs li:is(:hover, .on) { background: var(--line2); }
+.search-page .gs .gl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: italic 400 16px/1.2 var(--read); color: var(--mid); }
+.search-page .gs .ct { margin-left: auto; font: 500 14px/1 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+.dir-b .search-page:has(.gs-under) > :not(.search-form) { opacity: .15; }
+
+/* ── The Greek keyboard ─────────────────────────────────────────────────── */
+/* A panel under the field, as wide as it; the keys in Literata (ruling 6). */
+.search-page .gk { margin: 10px 0 6px; padding: 14px; border: 1px solid var(--line); background: var(--paper); }
+.search-page .gk-keys { display: grid; grid-template-columns: repeat(21, minmax(0, 1fr)); gap: 6px; }
+.search-page .gk-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg);
+  font: 400 22px/1 var(--read);
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .gk-key:hover { border-color: var(--ink); }
+.search-page .gk-key:is(.gk-space, .gk-bs, .gk-wide) { font: 600 15px/1 var(--sans); }
+.search-page .gk-key.gk-mark { background: var(--soft); font-size: 30px; }
+.search-page .gk-mf { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--read); line-height: 1; }
+.search-page .gk-mm { height: .42em; font-size: 1.15em; font-weight: 600; line-height: 1.05; }
+.search-page .gk-mb { line-height: .8; }
+.search-page .gk.gk-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0; padding: 12px 6px calc(12px + env(safe-area-inset-bottom)); border-width: 1px 0 0; }
+
+/* ── The works picker (In: Choose works…) ───────────────────────────────── */
+.search-page .works-panel { margin-top: 16px; border-top: 1px solid var(--ink); }
+.search-page .works-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; padding: 22px 0 8px; border-bottom: 1px solid var(--ink); }
+.search-page .works-count, .search-page .speaker-count { margin-right: auto; font: 600 15px/1 var(--sans); color: var(--ink); }
+.search-page :is(.works-action, .scope-btn, .retry-btn) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page :is(.works-action, .scope-btn):hover:not(:disabled) { color: var(--red-ink); }
+.search-page .works-action:disabled { color: var(--mid); cursor: default; }
+.search-page .works-done { height: 46px; padding: 0 26px; border: 0; border-radius: 0; background: var(--ink); font: 650 16px/1 var(--sans); color: var(--bg); cursor: pointer; }
+.search-page .works-find {
+  display: block;
+  width: min(420px, 100%);
+  height: 50px;
+  margin: 4px 0 12px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  font: 500 17px/1 var(--sans);
+  color: var(--ink);
+}
+.search-page .works-find::placeholder { font-style: italic; color: var(--mid); opacity: 1; }
+.search-page .works-find:focus { outline: none; border-bottom-color: var(--red-ink); }
+.search-page .works-auth { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.search-page .auth-btn {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .auth-btn.on { border-bottom-color: var(--red-ink); }
+.search-page .auth-btn:hover:not(:disabled) { color: var(--red-ink); }
+.search-page .auth-btn:disabled { color: var(--mid); cursor: default; }
+.search-page .auth-count { margin-left: 4px; font-weight: 500; color: var(--mid); font-variant-numeric: tabular-nums; }
+.search-page .works-group { margin-top: 4px; }
+.search-page .works-group-head { display: flex; align-items: center; gap: 8px 32px; padding: 16px 0 6px; border-bottom: 1px solid var(--line); }
+.search-page .works-group-name { margin-right: auto; font: 700 24px/1.1 var(--tface); text-transform: uppercase; color: var(--ink); }
+.search-page .works-group-scope { display: flex; gap: 32px; }
+.search-page .works-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
+.search-page .work-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font: 500 16px/1.25 var(--sans);
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .work-chip::before { content: ""; flex: none; width: 18px; height: 18px; border: 1.5px solid var(--mid); }
+.search-page .work-chip.on::before { border-color: var(--red-ink); background: var(--red-ink); }
+/* The tick, in the page's own background, so it reads in either theme. */
+.search-page .work-chip.on::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 5px;
+  height: 10px;
+  margin-top: -7px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.search-page .work-chip:hover { color: var(--red-ink); }
+.search-page .work-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ── The proximity editor (§5.5) ────────────────────────────────────────── */
+/* Proximity: a red dot before the word while a proximity search is live. */
+.search-page .advanced-trigger .prox-dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--red-ink); }
+/* With the editor open, Match and Form step back; In applies, and stays. */
+.search-page .sopt.prox-editing :is(.sopt-g, .sopt-e) > details.opt { opacity: .78; }
+/* An edit not yet searched: the results step back together (d28). */
+.dir-b .search-page.prox-pending .sx-layout { opacity: .45; }
+
+.search-page .prox { margin-top: 22px; }
+.search-page .prox-sum { margin: 0; font: 400 18px/1.4 var(--read); color: var(--ink); }
+.search-page .prox-sum.prox-was { color: var(--mid); }
+.search-page .prox-last { font: 650 12px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--mid); }
+.search-page .prox-links { display: flex; flex-wrap: wrap; gap: 0 24px; margin: 4px 0 0; }
+.search-page :is(.prox-link, .prox-add, .prox-remove, .lpsel .x) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page :is(.prox-link, .prox-add, .prox-remove, .lpsel .x):hover:not(:disabled) { color: var(--red-ink); }
+.search-page .prox-add:disabled { color: var(--mid); text-decoration-color: var(--line); cursor: default; }
+
+/* The terms: one grid per term on the same columns, so every column lines
+   up down the editor; column heads on term 1's line. */
+.search-page .prox-terms { margin-top: 18px; }
+.search-page .prox > .prox-terms:first-child { margin-top: 30px; }
+.search-page .combo-slot {
+  position: relative;
+  display: grid;
+  grid-template-columns: 300px 168px 130px minmax(0, 1fr) auto;
+  column-gap: 28px;
+  align-items: start;
+}
+.search-page .combo-slot + .combo-slot { padding-top: 24px; }
+.search-page .combo-slot > :is(.prox-colh, .prox-head) { grid-row: 1; }
+.search-page .combo-slot > :is(.prox-word, .prox-rel, .prox-kindc, .prox-dist, .prox-remove) { grid-row: 2; }
+.search-page .combo-slot > .prox-c1 { grid-column: 1; }
+.search-page .combo-slot > .prox-c2 { grid-column: 2; }
+.search-page .combo-slot > .prox-c3 { grid-column: 3; }
+.search-page .combo-slot > .prox-c4 { grid-column: 4; }
+.search-page .combo-slot > .prox-c5 { grid-column: 5; justify-self: end; }
+.search-page .prox-colh, .search-page .prox-tn, .search-page .prox-chiph {
+  font: 650 12px/1 var(--sans);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+.search-page .prox-colh { padding-bottom: 2px; }
+.search-page .prox-head { display: flex; align-items: center; gap: 16px; }
+
+/* An or-joined run: an ink bar at the content edge, its words indented. */
+.search-page .combo-slot.prox-run::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; border-left: 2px solid var(--ink); }
+.search-page .combo-slot.prox-run:not(:has(+ .prox-run)) { padding-bottom: 14px; }
+.search-page .combo-slot.prox-run > :is(.prox-word, .prox-head) { padding-left: 14px; }
+.search-page .prox-as { display: inline-flex; align-items: center; min-height: 44px; font: 500 15px/1 var(--sans); color: var(--mid); white-space: nowrap; }
+
+/* A term: a field with an example, or the word chosen. */
+.search-page .prox-field {
+  display: block;
+  width: 280px;
+  max-width: 100%;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 2px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  font: 400 22px/1.2 var(--read);
+  color: var(--ink);
+}
+.search-page .prox-field::placeholder { font-style: italic; color: var(--faint); opacity: 1; }
+.search-page .prox-field:focus { outline: none; border-bottom-color: var(--red-ink); }
+.search-page .prox-field::-webkit-search-cancel-button { -webkit-appearance: none; }
+.search-page .lp { position: relative; }
+.search-page .lpsel { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 12px; min-height: 44px; }
+.search-page .lpsel .hw { font: 400 28px/44px var(--read); color: var(--ink); }
+.search-page .lpsel .ct { font: 500 14px/1 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+.search-page .lpsel .x { min-height: 0; align-self: baseline; }
+.search-page .lp > .gl { display: block; margin-top: 6px; font: italic 400 16px/1.3 var(--read); color: var(--mid); }
+.search-page .prox-gram { display: block; font: 400 24px/44px var(--read); color: var(--ink); }
+.search-page .prox-gram.prox-empty { font-style: italic; color: var(--faint); }
+.search-page .lp-status { margin: 6px 0 0; font: italic 400 15px/1.3 var(--read); color: var(--mid); }
+.search-page .lplist {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 25;
+  width: min(560px, calc(100vw - 32px));
+  max-height: 18rem;
+  overflow-y: auto;
+  margin: 4px 0 0;
+  padding: 4px 0;
+  list-style: none;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+}
+.search-page .lplist li:is(:hover, .on) { background: var(--line2); }
+.search-page .lplist button {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: baseline;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 0;
+  background: none;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .lplist .hw { font: 400 20px/1.2 var(--read); }
+.search-page .lplist .gl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: italic 400 16px/1.2 var(--read); color: var(--mid); }
+.search-page .lplist .ct { font: 500 14px/1 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+.search-page .lplist button:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+
+/* The menus inside the editor: the value on a hairline with a caret, the
+   native select laid over it unseen, so each is as wide as its word. */
+.search-page .prox-sel {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding-right: 18px;
+  border-bottom: 1px solid var(--line);
+  font: 500 15px/1 var(--sans);
+  color: var(--ink);
+  white-space: nowrap;
+}
+.search-page .prox-sel select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  font: 500 15px/1 var(--sans);
+  cursor: pointer;
+}
+.search-page .prox-sel::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  top: 50%;
+  margin-top: -2px;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--ink);
+  pointer-events: none;
+}
+.search-page .prox-sel:hover { border-bottom-color: var(--ink); }
+.search-page .prox-sel:has(select:focus-visible),
+.search-page :is(.prox-link, .prox-add, .prox-remove, .lpsel .x, .prox-chip, .prox-win):focus-visible,
+.search-page .prox-lock input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.search-page .prox-head .prox-sel { height: 36px; font-size: 16px; font-weight: 600; }
+.search-page .prox-targetv { font: 400 16px/1 var(--read); }
+.search-page .prox-rel { display: flex; align-items: center; }
+.search-page .prox-relw { width: 82px; flex: none; }
+
+/* Distance, on term 1's line. */
+.search-page .prox-dist { display: flex; align-items: center; gap: 8px; min-height: 44px; font: 500 15px/1 var(--sans); color: var(--ink); white-space: nowrap; }
+.search-page .prox-win {
+  width: 48px;
+  height: 32px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  font: 500 15px/1 var(--sans);
+  text-align: center;
+  color: var(--ink);
+  -moz-appearance: textfield;
+}
+.search-page .prox-win::-webkit-inner-spin-button, .search-page .prox-win::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.search-page .prox-win:focus { border-bottom: 2px solid var(--red-ink); }
+
+/* A grammar term: every category at once, rows of chips, two columns. */
+.search-page .prox-chips {
+  grid-row: 3;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 76px 340px 76px auto;
+  align-items: center;
+  row-gap: 8px;
+  margin-top: 24px;
+}
+.search-page .prox-chipset { display: flex; flex-wrap: wrap; }
+.search-page .prox-chiph-wide { white-space: nowrap; }
+.search-page .prox-chipset-wide { grid-column: 2 / -1; margin-left: 14px; }
+.search-page .prox-chip {
+  height: 36px;
+  margin: 0 0 0 -1px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font: 500 15px/1 var(--sans);
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page .prox-chip:first-child { margin-left: 0; }
+.search-page .prox-chip:hover { position: relative; border-color: var(--ink); }
+.search-page .prox-chip[aria-pressed="true"] { position: relative; border-color: var(--ink); background: var(--ink); color: var(--bg); }
+
+/* Add term, the order, and the editor's own Search. */
+.search-page .prox-add { margin-top: 8px; }
+.search-page .prox-order { display: flex; align-items: center; min-height: 44px; margin: 0; font: 500 15px/1.3 var(--sans); color: var(--mid); }
+.search-page .prox-lock { display: flex; align-items: center; gap: 10px; min-height: 44px; font: 500 15px/1 var(--sans); color: var(--ink); cursor: pointer; }
+.search-page .prox-lock input {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--mid);
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+}
+.search-page .prox-lock input:checked { border-color: var(--ink); background: var(--ink); }
+.search-page .prox-lock input:checked::after {
+  content: "";
+  position: absolute;
+  left: 4.5px;
+  top: 1px;
+  width: 5px;
+  height: 10px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.search-page .prox-go { display: flex; align-items: center; gap: 8px 18px; margin: 12px 0 32px; }
+.search-page .prox-pend { margin: 0; font: 600 16px/1.4 var(--read); color: var(--ink); }
+
+/* ── The results (S4a, round 34) ────────────────────────────────────────── */
+/* The menus over the hits, then the pager at the right end of their row. */
+/* One row as in round 34; should the menus' values run long, the pager
+   drops to a line of its own rather than past the column. */
+.search-page .sopt.sx-display { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; margin: 0 0 30px; }
+.search-page .sx-display > * { white-space: nowrap; }
+/* The last menu's panel opens leftward, under its own trigger. */
+.search-page .sx-display details.opt:last-of-type:not(:first-of-type) > .opt-panel { left: auto; right: 0; }
+.search-page .pager { display: inline-flex; align-items: center; gap: 0; margin: 0; }
+.search-page .sx-display .pager { margin-left: auto; }
+.search-page .pager-bottom { display: flex; justify-content: center; margin-top: 28px; }
+.search-page .pager-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--red-ink);
+  cursor: pointer;
+}
+/* Grow the targets outward, keeping the status and inner edges in place. */
+.search-page .pager-btn:first-child { margin-left: -12px; }
+.search-page .pager-next { margin-right: -12px; }
+.search-page .pager-arrow { width: 10px; height: 10px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(135deg); }
+.search-page .pager-next .pager-arrow { transform: rotate(-45deg); }
+.search-page .pager-btn:disabled { color: var(--faint); opacity: .5; cursor: default; }
+.search-page .pager-btn:hover:not(:disabled) { color: var(--ink); }
+.search-page .pager-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.search-page .pager-status { padding: 0 2px; font: 600 15px/1 var(--sans); color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* A work's heading: its title, its count, and the fold at the right (d25).
+   Works are set off by an ink rule; the page's first needs none. */
+.search-page .book-section + .book-section,
+.search-page .form-section { border-top: 2px solid var(--ink); }
+.search-page .book-section + .book-section { margin-top: 26px; }
+.search-page .book-header { margin: 0; font: inherit; }
+.search-page .group-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 72px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .group-head:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+.search-page .work-name { font: 700 30px/1.05 var(--tface); text-transform: uppercase; color: var(--ink); }
+.search-page .group-head:hover :is(.work-name, .group-label) { color: var(--red-ink); }
+.search-page .group-label { font: 400 26px/1.25 var(--read); color: var(--ink); }
+.search-page .group-count { margin-left: auto; font: 500 15px/1 var(--sans); color: var(--mid); white-space: nowrap; }
+/* The fold: a chevron, down while open, right while shut. */
+.search-page .group-head .caret { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 44px; height: 44px; }
+.search-page .group-head .caret::after { content: ""; width: 10px; height: 10px; border: solid var(--ink); border-width: 0 2px 2px 0; transform: translateY(-3px) rotate(45deg); }
+.search-page .group-head[aria-expanded="false"] .caret::after { transform: rotate(-45deg); }
+
+/* A form's readings, folded under their count (d12). */
+.search-page .sx-analyses {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 5px;
+  cursor: pointer;
+}
+.search-page .sx-analyses:hover { color: var(--red-ink); }
+.search-page .sx-analyses-caret { font-size: 12px; text-decoration: none; }
+.search-page .group-readings { margin: 0 0 12px; font: 500 15px/1.5 var(--sans); color: var(--mid); }
+
+/* A book, where a work has several, and a chapter (ruling 17): a line each
+   over the hits they hold. */
+.search-page .sx-book { display: flex; align-items: center; gap: 10px; min-height: 44px; margin: 0; border-top: 1px solid var(--line); font: 600 16px/1.2 var(--sans); color: var(--ink); }
+.search-page .sx-book-n { font-weight: 500; color: var(--mid); font-variant-numeric: tabular-nums; }
+.search-page .sx-chap { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; margin: 0; padding: 14px 0 10px; border-top: 1px solid var(--line); font: inherit; }
+.search-page .sx-chap-n { font: 600 14px/1.3 var(--sans); letter-spacing: .1em; text-transform: uppercase; color: var(--mid); white-space: nowrap; }
+.search-page .sx-chap-t { font: italic 400 17px/1.35 var(--read); color: var(--ink); }
+
+/* A hit: its place in a column at the left, the passage beside it. By work
+   the place is the section's own ("6b16"); the other views name the work
+   ("Cat. 6b16"), and a hit with a speaker or a reading's note keeps the
+   wider column. */
+.search-page .instance-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.search-page .instance {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  column-gap: 20px;
+  padding: 18px 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+.search-page .instance:last-child { border-bottom: 0; }
+.search-page .sx-results.by-work .instance { grid-template-columns: 84px minmax(0, 1fr); }
+.search-page .inst-ref {
+  grid-column: 1;
+  padding-top: 4px;
+  font: 500 16px/1.6 var(--sans);
+  color: var(--ink);
+  text-decoration: none;
+  font-variant-numeric: tabular-nums;
+}
+.search-page .inst-ref:hover { color: var(--red-ink); }
+.search-page .inst-ref:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.search-page .inst-body { grid-column: 2; grid-row: 1 / span 3; display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.search-page .inst-body > * { max-width: 100%; }
+.search-page .inst-speaker,
+.search-page .inst-oneof { grid-column: 1; margin-top: 4px; font: 500 14px/1.35 var(--sans); color: var(--mid); }
+.search-page .inst-oneof { font-style: italic; }
+/* The Greek in Literata, as everywhere on the site. */
+.search-page .inst-snippet.greek { font: 400 21px/1.55 var(--read); color: var(--ink); }
+.search-page .inst-pair.greek { margin-top: 14px; font: 400 18px/1.6 var(--read); color: var(--ink); }
+/* The English: under a Greek hit, the passage's, quieter; an English hit's
+   own, at reading size. */
+.search-page .inst-en { margin-top: 14px; }
+.search-page .inst-en:first-child { margin-top: 0; }
+.search-page .inst-en .inst-snippet,
+.search-page .inst-pair-text { display: block; font: 400 16px/1.6 var(--read); color: var(--mid); }
+.search-page .inst-rows .inst-snippet { color: var(--ink); }
+.search-page .inst-hit-en .inst-snippet { font-size: 19px; line-height: 1.55; }
+.search-page .instance.open .inst-pair-text { color: var(--ink); }
+/* The hits, washed. */
+.search-page .inst-body mark { padding: 0; background: var(--hl); color: inherit; }
+
+/* The translations with hits in the passage, close under its English, the
+   one shown bold and underlined (ruling 18). A name is a button whose tap
+   area is 44px tall, unseen. */
+.search-page .tr-names { display: flex; flex-wrap: wrap; align-items: center; margin: -6px 0 -4px; }
+.search-page .tr-name {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 14px/1 var(--sans);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+.search-page span.tr-name { min-height: 36px; }
+.search-page button.tr-name { cursor: pointer; }
+.search-page button.tr-name:hover { color: var(--ink); }
+.search-page button.tr-name[aria-pressed="true"] { font-weight: 700; color: var(--ink); text-decoration: underline 1px; text-underline-offset: 4px; }
+.search-page button.tr-name:focus-visible { outline: 2px solid var(--ink); outline-offset: -6px; }
+.search-page .tr-dot { padding: 0 10px; font: 700 14px/1 var(--sans); color: var(--line); }
+
+/* Show the whole section, and Show less. */
+.search-page :is(.inst-more, .inst-less) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page :is(.inst-more, .inst-less):hover { color: var(--red-ink); }
+.search-page :is(.inst-more, .inst-less):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+/* An opened hit: a head row naming where it is, with the way back (r34-06). */
+.search-page .inst-ohead { display: flex; align-items: center; gap: 14px; align-self: stretch; min-height: 48px; margin: -12px 0 12px; border-bottom: 1px solid var(--line); font: 600 16px/1.2 var(--sans); color: var(--ink); }
+.search-page .inst-ohead .inst-less { margin: 0 0 0 auto; }
+/* Inside an opened section, the Bekker line numbers, every fifth line as
+   the printed page has them; a following section, its letter. */
+.search-page .inst-body .ln { margin-right: 6px; font: 500 14px/1 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; user-select: none; }
+.search-page .inst-body .sec-on { margin-right: 6px; font: 600 14px/1 var(--sans); letter-spacing: .06em; color: var(--mid); }
+
+/* A Greek word of a hit: a button that reads as the text and opens its
+   card. On a touch screen its hit area grows to 40px square without moving
+   the line. */
+.search-page .inst-body .nb { white-space: nowrap; }
+.search-page .inst-body .gw {
+  position: relative;
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  line-height: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.search-page .inst-body .gw:hover { background: var(--soft); }
+.search-page .inst-body .gw:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+/* A proximity window: the stretch from its first term to its last, shaded;
+   a term inside it underlined. */
+.search-page .inst-body .prox { background: var(--soft); box-shadow: 0 0 0 1px var(--soft); }
+.search-page .inst-body .prox mark { box-shadow: inset 0 -2px 0 var(--ink); }
+@media (pointer: coarse) {
+  .search-page .inst-body .gw::after { content: ""; position: absolute; left: 50%; top: 50%; width: max(100%, 44px); height: 44px; transform: translate(-50%, -50%); }
+}
+
+/* Citations only (d17): places alone, a work's name once, then its books. */
+.search-page .cite-group + .cite-group { border-top: 2px solid var(--ink); margin-top: 26px; padding-top: 6px; }
+.search-page .cite-group.cite-more { border-top: 1px solid var(--line); margin-top: 0; padding-top: 0; }
+.search-page .cite-group .book-header { padding: 6px 0 4px; }
+.search-page .cite-group .work-name { display: block; }
+.search-page .cite-group .sx-book { min-height: 28px; border-top: 0; font-size: 15px; color: var(--mid); }
+.search-page .cite-list { display: flex; flex-wrap: wrap; gap: 0 22px; margin: 4px 0 8px; }
+.search-page .cite { display: inline-flex; align-items: baseline; gap: 4px; min-height: 44px; line-height: 44px; font: 500 16px/44px var(--sans); color: var(--ink); text-decoration: none; font-variant-numeric: tabular-nums; }
+.search-page .cite small { font: 500 14px/1 var(--sans); color: var(--mid); }
+.search-page .cite:hover { color: var(--red-ink); }
+
+/* ── The rail, and the narrow screen's sheet (S4b) ──────────────────────── */
+/* The hits and their controls. On a desktop the controls are the rail beside
+   the hits; on a narrow screen a sheet, opened from the bar over them. These
+   first rules are the sheet's and the narrow count row's, moved here from
+   Search.svelte as they were (S5 redraws them); the rail's own follow, at
+   961px and up. */
+/* Paging scrolls here: clear of the site header. */
+.search-page .sx-layout { margin-top: 1.375rem; scroll-margin-top: 5rem; }
+.search-page .result-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
+.search-page .result-count { margin: 0; font-size: 1.25rem; }
+/* The count row's icons: no box round them, a 44px target each, and they
+   keep their size while the count gives way. */
+.search-page .sx-icon {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+}
+.search-page .sx-icon:last-child { margin-right: -0.4375rem; }
+.search-page .sx-icon:hover:not(:disabled) { color: var(--accent); }
+.search-page .sx-icon:disabled { color: var(--text-mid); opacity: 0.45; cursor: default; }
+.search-page .sx-icon:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.search-page .sx-arrow { width: 2rem; }
+.search-page .sx-badge {
+  position: absolute;
+  top: 0.125rem;
+  right: 0.125rem;
+  min-width: 1.125rem;
+  height: 1.125rem;
+  padding: 0 0.25rem;
+  border-radius: 1rem;
+  background: var(--accent);
+  color: var(--page-bg);
+  font: 600 0.6875rem/1.125rem system-ui, sans-serif;
+  text-align: center;
+}
+/* The forms' buttons sit in the row beside a wide screen's list; on the
+   sheet they are its foot. */
+.search-page .fx-foot { display: contents; }
+.search-page .sx-panel:focus, .search-page .sx-sum:focus { outline: none; }
+.search-page .export-btn {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-caps);
+  font-weight: 300;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  cursor: pointer;
+}
+.search-page .export-btn:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 0.2em; }
+.search-page .export-btn:disabled { color: var(--text-mid); cursor: default; }
+.search-page .result-guide { font-size: 0.875rem; }
+/* The summary: what this search narrows or changes, a ruled line each. */
+.search-page .sx-sum { margin-top: 0.875rem; padding: 0.75rem 0 0.75rem; border-top: 1px solid var(--text); }
+.search-page .sx-sum ul { margin: 0.25rem 0 0; padding: 0; list-style: none; }
+.search-page .sx-sum li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--accent);
+}
+.search-page .sx-sum .x {
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-right: -0.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text-mid);
+  cursor: pointer;
+}
+.search-page .sx-sum .x:hover { color: var(--accent); }
+.search-page .sx-clear {
+  min-height: 2.75rem;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-caps);
+  font-weight: 300;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  cursor: pointer;
+}
+.search-page .sx-clear:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+/* Each control a block: its label above, its options below. */
+.search-page .sx-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  margin: 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border);
+  font-size: 1rem;
+}
+.search-page .sx-row .k, .search-page .sx-sum .k, .search-page .sx-sheet-head .k, .search-page .sx-seg .k {
+  display: block;
+  flex: 0 0 100%;
+  font-family: var(--font-caps);
+  font-weight: 300;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-mid);
+}
+.search-page .sx-row .i, .search-page .sx-row .more {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+/* Works and Translations: a list, the name left and its count right. */
+.search-page .sx-row .i {
+  display: flex;
+  flex: 0 0 100%;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+.search-page .sx-row .i:hover { color: var(--accent); }
+.search-page .sx-row .i small { font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
+.search-page .sx-row .i.on { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+.search-page .sx-row .i.on small { color: var(--accent); }
+.search-page .sx-row .more { min-height: 2.75rem; margin-right: 1.25rem; color: var(--accent); white-space: nowrap; }
+.search-page .sx-row .note { flex: 0 0 100%; margin-top: 0.375rem; font-size: 0.8125rem; font-style: italic; color: var(--text-mid); }
+/* The form panel: under each headword a tick box per form, each a 44px
+   target; under them all, "more", Select all and Apply on one line. */
+/* Centred, not on the baseline: a form's label would take its baseline from
+   its tick box, and the headwords would sit below the forms. */
+.search-page .sx-forms { align-items: center; }
+.search-page .sx-forms .fx-group { display: flex; flex: 0 0 100%; flex-direction: column; }
+/* Every form, in a box about six and a half rows high: the half row at the
+   cut shows there is more. Each headword stays at the top while its forms
+   scroll under it. */
+/* A rule under the box, so a row cut by it reads as cut: where the system
+   hides scroll bars, that row is all that says the list goes on. */
+/* Its own stacking context: the headwords pinned in it would otherwise
+   paint over the sheet's pinned header as the box passes under it. */
+.search-page .fx-list { flex: 0 0 100%; max-height: 16.5rem; overflow-y: auto; isolation: isolate; border-bottom: 1px solid var(--border); }
+.search-page .fx-list .fx-group:last-child .fx:last-child { border-bottom: none; }
+.search-page .sx-forms .fx-head { position: sticky; top: 0; z-index: 1; margin-top: 0.5rem; background: var(--page-bg); font-family: var(--font-greek); font-style: italic; color: var(--text-mid); }
+.search-page .sx-forms .fx {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.search-page .sx-forms .fx { font-family: var(--font-greek); }
+.search-page .sx-forms .fx input { flex: none; width: 1.125rem; height: 1.125rem; margin: 0; accent-color: var(--accent); }
+.search-page .sx-forms .fx small { margin-left: auto; font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
+.search-page .sx-forms .fx-apply:disabled { color: var(--text-mid); cursor: default; }
+/* Grammar: a line per category, its name in a column of its own, then its
+   values as chips that wrap, each a 44px target. */
+.search-page .sx-facets .gx-group { display: flex; flex: 0 0 100%; align-items: baseline; padding: 0.3125rem 0; border-bottom: 1px solid var(--border); }
+.search-page .sx-facets .gx-head { flex: 0 0 4.25rem; font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; letter-spacing: 0.08em; color: var(--text-mid); }
+.search-page .gx-chips { display: flex; flex: 1 1 0; flex-wrap: wrap; gap: 0.125rem 0.875rem; }
+.search-page .gx-chip { position: relative; display: inline-flex; align-items: center; gap: 0.3125rem; min-height: 2.75rem; cursor: pointer; }
+/* The tick box stays in the tab order, unseen: the chip shows its state. */
+.search-page .gx-chip input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
+.search-page .gx-chip:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.search-page .gx-chip:hover { color: var(--accent); }
+.search-page .gx-chip small { font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
+.search-page .gx-chip.on { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
+.search-page .gx-chip.on small { color: var(--accent); }
+/* Forced colours drop the accent and the shadow that underlines a ticked
+   value, so there it is underlined in the text itself. */
+@media (forced-colors: active) {
+  .search-page .gx-chip.on { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
+}
+/* Export and the inflection search, at the foot of the column. */
+.search-page .sx-tools { display: flex; flex-direction: column; align-items: flex-start; padding: 0.5rem 0; border-top: 1px solid var(--border); }
+.search-page .sx-tools .export-btn { min-height: 2.75rem; text-align: left; }
+.search-page .sx-tools .result-guide { display: inline-flex; align-items: center; min-height: 2.75rem; }
+
+/* The rail on a desktop (round 34, §5.6): 264px, 48px from the hits. It
+   runs the height of the results, so the word card it holds can stay in
+   view while they scroll. */
+@media (min-width: 961px) {
+  .search-page .sx-layout { display: grid; grid-template-columns: 264px minmax(0, 1fr); column-gap: 48px; margin-top: 34px; }
+  .search-page .sx-side { display: flex; flex-direction: column; min-width: 0; font-family: var(--sans); color: var(--ink); }
+  .search-page .sx-main > :first-child { margin-top: 0; }
+  .search-page .sx-icon { display: none; }
+  .search-page :is(.sx-pg, .sx-save .sx-ico) { display: none; }
+
+  /* The count in Oswald, red, "instances" under it; Save search beside it. */
+  .search-page .sx-head { padding-bottom: 14px; border-bottom: 2px solid var(--ink); }
+  .search-page .result-bar { flex-wrap: nowrap; align-items: flex-start; gap: 12px; }
+  .search-page .result-count { min-width: 0; font: 600 20px/1.2 var(--sans); color: var(--ink); }
+  .search-page .rc-n { display: block; font: 700 56px/.95 var(--tface); color: var(--red-ink); font-variant-numeric: tabular-nums; }
+  .search-page .rc-w { display: block; }
+  .search-page .rc-p { display: none; }
+  .search-page .sx-save {
+    flex: none;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--ink);
+    background: none;
+    font: 600 15px/1 var(--sans);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .search-page .sx-save:hover { color: var(--red-ink); border-color: var(--red-ink); }
+  .search-page .sx-save.saved { border-color: transparent; }
+  .search-page .sx-save:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* Under the count: what it is out of (d21), the way to the saved list
+     (d23), the export, and the inflection search (r34-05). */
+  .search-page .sx-head-more { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 6px; }
+  .search-page .sx-head-more .sx-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 600 15px/1.2 var(--sans);
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: left;
+    color: var(--ink);
+    text-decoration: underline 2px var(--red-ink);
+    text-underline-offset: 5px;
+    cursor: pointer;
+  }
+  .search-page .sx-head-more .sx-link:hover:not(:disabled) { color: var(--red-ink); }
+  .search-page .sx-head-more .sx-link:disabled { color: var(--mid); cursor: default; }
+  .search-page .sx-head-more .sx-link:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .search-page .sx-of { margin: 0; font: 600 15px/1.3 var(--sans); color: var(--mid); }
+  .search-page .sx-head-more .sx-of .sx-link { display: inline; min-height: 0; padding: 6px 0; margin: -6px 0; text-underline-offset: 4px; }
+
+  /* The lists: a heading, then the list whole in a box of its own that
+     scrolls. A soft shade at an edge says more is hidden there; it lifts
+     at the end (§8 item 5). */
+  .search-page .sx-panel { display: block; }
+  .search-page .sx-side.wp-open > .sx-panel { display: none; }
+  .search-page .sx-row { display: block; margin-top: 28px; padding: 0; border-top: 0; font: 500 16px/1.25 var(--sans); }
+  .search-page .sx-row > .k {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin: 0 0 13px;
+    font: 650 14px/1.2 var(--sans);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .search-page .sx-row > .k small { font: 500 14px/1.2 var(--sans); letter-spacing: 0; text-transform: none; color: var(--mid); }
+  .search-page .sx-row .note { display: none; }
+  .search-page :is(.sx-list, .sx-forms .fx-list) {
+    overflow-y: auto;
+    scrollbar-width: thin;
+    border-bottom: 1px solid var(--line);
+    background:
+      linear-gradient(var(--bg) 30%, transparent) center top / 100% 36px no-repeat local,
+      linear-gradient(transparent, var(--bg) 70%) center bottom / 100% 36px no-repeat local,
+      radial-gradient(farthest-side at 50% 0, var(--shade), transparent) center top / 100% 12px no-repeat scroll,
+      radial-gradient(farthest-side at 50% 100%, var(--shade), transparent) center bottom / 100% 12px no-repeat scroll;
+  }
+  /* Seven rows. */
+  .search-page .sx-list { max-height: 308px; }
+  .search-page .sx-row .i {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0;
+    border-bottom: 1px solid var(--line);
+    font: 500 16px/1.25 var(--sans);
+    color: var(--ink);
+    box-shadow: none;
+  }
+  .search-page .sx-list .i:last-child { border-bottom: 0; }
+  .search-page .sx-row .i-t { flex: 1 1 auto; min-width: 0; }
+  .search-page .sx-row .i small { flex: none; font: 500 14px/1 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+  .search-page .sx-row .i:hover .i-t { color: var(--red-ink); }
+  .search-page .sx-row .i:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+  /* The chosen one: an ink bar, its × at the right edge. */
+  .search-page .sx-row .i.on { padding: 0 8px 0 12px; background: var(--ink); font-weight: 600; color: var(--bg); }
+  .search-page .sx-row .i.on:hover .i-t { color: var(--bg); }
+  .search-page .sx-row .i.on small { color: var(--bg); }
+  .search-page .sx-row .i-x { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 20px; height: 20px; margin-left: 24px; font: 400 20px/1 var(--sans); }
+  .search-page .sx-row .i.on:focus-visible { outline-color: var(--red-ink); outline-offset: 2px; }
+
+  /* Forms: the headword over its forms, a tick box each; Deselect all and
+     Apply (while there is something to apply) under the box (d21). */
+  .search-page .sx-forms .fx-list { max-height: 330px; border-bottom: 1px solid var(--line); }
+  .search-page .sx-forms .fx-group { display: block; }
+  .search-page .sx-forms .fx-head { display: block; margin: 0; padding: 8px 0 4px; background: var(--bg); font: 400 18px/1.3 var(--read); color: var(--ink); }
+  .search-page .sx-forms .fx { gap: 8px; min-height: 44px; border-bottom: 1px solid var(--line); font: 400 18px/1.2 var(--read); color: var(--ink); }
+  .search-page .sx-forms .fx input { width: 18px; height: 18px; accent-color: var(--red-ink); }
+  .search-page .sx-forms .fx input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .search-page .sx-forms .fx small { font: 500 14px/1 var(--sans); color: var(--mid); }
+  .search-page .sx-forms .fx-foot { display: flex; align-items: center; gap: 18px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .search-page .sx-forms .fx-foot .more {
+    min-height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 600 15px/1 var(--sans);
+    color: var(--ink);
+    text-decoration: underline 2px var(--red-ink);
+    text-underline-offset: 5px;
+    cursor: pointer;
+  }
+  .search-page .sx-forms .fx-foot .more:hover { color: var(--red-ink); }
+  .search-page .sx-forms .fx-foot .fx-apply { padding: 0 18px; background: var(--ink); color: var(--bg); text-decoration: none; }
+  .search-page .sx-forms .fx-foot .fx-apply:hover { background: var(--red-ink); color: #fff; }
+  .search-page .sx-forms .fx-foot .fx-apply:disabled { display: none; }
+  .search-page .sx-forms .fx-foot .more:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  /* Grammar, with the grammar view: a line per category, its values as chips. */
+  .search-page .sx-facets .gx-group { padding: 4px 0; border-bottom: 1px solid var(--line); }
+  .search-page .sx-facets .gx-head { flex-basis: 76px; font: 600 14px/1.2 var(--sans); letter-spacing: 0; color: var(--mid); }
+  .search-page .gx-chip { min-height: 44px; font: 500 15px/1.2 var(--sans); color: var(--ink); }
+  .search-page .gx-chip small { font: 500 14px/1 var(--sans); color: var(--mid); }
+  .search-page .gx-chip:hover { color: var(--red-ink); }
+  .search-page .gx-chip.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--red-ink); }
+  .search-page .gx-chip.on small { color: var(--ink); }
+  .search-page .gx-chip:has(input:focus-visible) { outline-color: var(--ink); }
+
+  /* The word card in the rail's column, held in view while the hits scroll
+     (d24, ruling 12). */
+  .search-page .word-rail {
+    position: sticky;
+    top: 24px;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
+    display: block;
+    width: auto;
+    max-height: calc(100vh - 48px);
+    margin-top: 22px;
+    overflow-y: auto;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    font-family: var(--sans);
+    color: var(--ink);
+  }
+}
+/* The word card's insides, the rail's on a desktop and the sheet's on a
+   narrow screen (d24, q09). */
+.search-page .word-sidebar:focus { outline: none; }
+.search-page .word-sidebar .word-sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0; border: 0; }
+.search-page .word-sidebar .popup-surface { font: 400 28px/1.15 var(--read); color: var(--ink); }
+.search-page .word-sidebar .settings-close {
+  flex: none;
+  min-height: 44px;
+  padding: 0;
+  font: 600 16px/1 var(--sans);
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 5px;
+}
+.search-page .word-sidebar .settings-close:hover { color: var(--red-ink); }
+.search-page .word-sidebar .settings-close:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.search-page .word-sidebar .word-sidebar-body { display: block; padding: 6px 0 0; overflow: visible; }
+.search-page .word-sidebar .analysis-card { padding: 0 0 14px; border-radius: 0; background: none; font-size: inherit; }
+.search-page .word-sidebar .analysis-card + .analysis-card,
+.search-page .word-sidebar .less-likely { padding-top: 14px; border-top: 1px solid var(--line); }
+.search-page .word-sidebar .less-likely { margin: 0; font: 600 14px/1.2 var(--sans); color: var(--mid); }
+.search-page .word-sidebar .card-face { gap: 6px; }
+.search-page .word-sidebar .card-face:focus-visible { outline: 2px solid var(--ink); }
+.search-page .word-sidebar .lemma { font: 400 22px/1.25 var(--read); color: var(--ink); }
+.search-page .word-sidebar .lemma-from { font: 500 15px/1 var(--sans); color: var(--mid); }
+.search-page .word-sidebar .lemma-hom { color: var(--mid); }
+.search-page .word-sidebar .gloss { margin: 0; font: italic 400 18px/1.4 var(--read); color: var(--ink); }
+.search-page .word-sidebar .gloss-note { font-size: 16px; color: var(--mid); }
+.search-page .word-sidebar .card-class { font: 500 15px/1.4 var(--sans); color: var(--mid); }
+.search-page .word-sidebar .parse-rows { display: block; font: 500 15px/1.4 var(--sans); }
+.search-page .word-sidebar .parse-rows dt { color: var(--mid); }
+.search-page .word-sidebar .parse-rows dd { margin: 0; color: var(--red-ink); }
+.search-page .word-sidebar .parse-rows dd:empty { display: none; }
+.search-page .word-sidebar .card-open-hint {
+  display: inline-block;
+  margin-top: 4px;
+  font: 600 16px/1.3 var(--sans);
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 5px;
+}
+.search-page .word-sidebar .card-arrow { margin-right: 6px; font-size: 11px; vertical-align: 2px; }
+.search-page .word-sidebar .card-face:hover .card-open-hint { color: var(--red-ink); }
+.search-page .word-sidebar .distinct-label { font: italic 500 15px/1.3 var(--sans); color: var(--mid); }
+.search-page .word-sidebar .lemma-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 0;
+  font: 600 16px/1.3 var(--sans);
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 5px;
+}
+.search-page .word-sidebar .lemma-link:hover { color: var(--red-ink); }
+.search-page .word-sidebar .popup-loading { font: 500 15px/1.4 var(--sans); color: var(--mid); }
+/* The word clicked stays marked while its card is open (d24). */
+.search-page .inst-body .gw.gw-on,
+.search-page .inst-body .gw.gw-on mark { box-shadow: inset 0 -2px 0 var(--ink); }
+
+/* ── Phone and sideways (S5) ────────────────────────────────────────────── */
+/* What only a narrow screen draws: Options and the line under it, each
+   proximity control's own name, and a menu's Done band. */
+@media (min-width: 961px) {
+  .search-page :is(.opts-toggle, .sopt-sum, .prox-ml, .sheet-foot) { display: none; }
+}
+@media not all and (min-width: 961px) {
+  .dir-b .search-page { padding: 8px 18px 40px; }
+
+  /* The field. Keyboard and Beta Code keep their place at its right however
+     long the query (§5.9), each an icon over a 14px label; a query too long
+     for the field ends in an ellipsis until it is touched. */
+  .search-page .sq { flex-wrap: wrap; gap: 12px; }
+  .search-page .sq-fields { flex-basis: 100%; }
+  .search-page .sq-row { gap: 8px; height: 56px; min-height: 0; }
+  .search-page .query-input { font-size: 30px; text-overflow: ellipsis; }
+  .search-page .query-input::placeholder { font-size: 28px; }
+  .search-page .sq-tool {
+    flex-direction: column;
+    justify-content: center;
+    gap: 7px;
+    min-width: 48px;
+    height: 54px;
+    padding: 0 4px;
+  }
+  .search-page .sq-tool + .sq-tool { margin-left: 2px; }
+  .search-page .sq-tool [lang="grc"] { display: block; height: 16px; font: 400 23px/16px var(--read); }
+  .search-page .sq-tool-l { padding-bottom: 5px; font: 600 14px/1 var(--sans); }
+  /* The tool in use: its label underlined in red, clear of the descenders. */
+  .search-page .sq-tool:is([aria-pressed="true"], [aria-expanded="true"]) { box-shadow: none; }
+  .search-page .sq-tool:is([aria-pressed="true"], [aria-expanded="true"]) .sq-tool-l { box-shadow: inset 0 -2px 0 var(--red-ink); }
+
+  /* Greek · English · Both across the page; put away while the proximity
+     editor is open, which searches the Greek. */
+  .search-page .lang-switch { display: flex; width: 100%; margin-top: 0; }
+  .search-page .lang-switch button { flex: 1 1 0; width: auto; }
+  .search-page .search-form:has(.sopt.prox-editing) .lang-switch { display: none; }
+
+  /* The row: Options, Proximity, and the smaller red Search at the right.
+     Open, the options are a grid of two columns under it: Match, Form /
+     Accents, Lemma / In (§5.7); under Both, one column, as its labels are
+     long. While the works picker is open it takes their place. */
+  .search-page .sopt:not(.sx-display) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+    gap: 12px 14px;
+    margin-top: 16px;
+  }
+  .search-page .sopt.sopt-both { grid-template-columns: minmax(0, 1fr); }
+  .search-page .sopt:not(.sx-display) > :is(.sopt-g, .sopt-e, .sopt-w) { display: contents; }
+  .search-page .sopt:not(.sx-display):not(.opts-open) > :is(.sopt-g, .sopt-e, .sopt-w),
+  .search-page .sopt:not(.sx-display).works-picking > :is(.sopt-g, .sopt-e, .sopt-w) { display: none; }
+  .search-page .sopt:not(.sx-display) > .sopt-act { grid-column: 1 / -1; grid-row: 1; gap: 24px; width: 100%; margin-left: 0; }
+  .search-page .sopt:not(.sx-display) > :is(.sopt-g, .sopt-e, .sopt-w) > * { justify-self: start; }
+  .search-page .opts-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 600 16px/1 var(--sans);
+    color: var(--ink);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .search-page .opts-toggle .opt-caret { color: var(--ink); transition: transform .12s; }
+  .search-page .opts-toggle[aria-expanded="true"] { box-shadow: inset 0 -2px 0 var(--red-ink); }
+  .search-page .opts-toggle[aria-expanded="true"] .opt-caret { transform: rotate(180deg); }
+  .search-page .opts-toggle:hover { color: var(--red-ink); }
+  .search-page .opts-toggle:focus-visible,
+  .search-page .advanced-trigger:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .search-page .sopt-act .search-btn { height: 44px; margin-left: auto; padding: 0 22px; }
+
+  /* What the folded options are set to; the settings of the results that are
+     not their defaults in red. */
+  .search-page .sopt-sum { margin: 8px 0 0; font: 500 15px/1.35 var(--sans); color: var(--mid); }
+  .search-page .sopt-sum-v { color: var(--red-ink); }
+
+  /* A menu of the form is a sheet from the foot of the screen (§5.9), as the
+     Filter sheet is: the page veiled, a head, the choices, a Done band.
+     .sheet, .sheet-head, .sheet-foot and .sheet-done make any panel one. */
+  .search-page .search-form .opt[open] > summary::before { background: rgba(0, 0, 0, .45); }
+  .search-page { --sheet-foot: calc(73px + env(safe-area-inset-bottom)); }
+  .search-page :is(.sheet, .search-form .opt-panel.sheet) {
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: var(--sheet-foot);
+    left: 0;
+    z-index: 60;
+    min-width: 0;
+    max-height: calc(85vh - var(--sheet-foot));
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 0;
+    border-top: 1px solid var(--ink);
+    background: var(--paper);
+    box-shadow: 0 -12px 40px -14px rgba(0, 0, 0, .45);
+    color: var(--ink);
+  }
+  .search-page :is(.sheet-head, .search-form .opt-panel .sheet-head) {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    float: left;
+    box-sizing: border-box;
+    width: calc(100% - 36px);
+    margin: 0 18px 6px;
+    padding: 22px 0 10px;
+    border-bottom: 2px solid var(--ink);
+    background: var(--paper);
+    font: 700 26px/1 var(--tface);
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .search-page .search-form .opt-panel.sheet .opt-row { clear: both; padding: 12px 18px; }
+  .search-page .search-form .opt-panel.sheet .opt-gloss { white-space: normal; }
+  /* The foot band is fixed under the sheet, and the sheet ends where it
+     begins, so its rows scroll above the band, never behind it (§5.9). */
+  .search-page .sheet-foot {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+    box-sizing: border-box;
+    height: var(--sheet-foot);
+    margin: 0;
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--paper);
+  }
+  .search-page .sheet-done {
+    display: block;
+    width: 100%;
+    height: 48px;
+    border: 0;
+    border-radius: 0;
+    background: var(--ink);
+    font: 600 17px/1 var(--sans);
+    color: var(--bg);
+    cursor: pointer;
+  }
+  .search-page .sheet-done:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 2px; }
+
+  /* The dictionary words, under the field, two lines a word: the headword
+     and its count, the gloss under them. */
+  .search-page .gs-under { top: 56px; right: 0; max-height: 60vh; overflow-y: auto; }
+  .search-page .gs li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 16px; padding: 8px 16px; }
+  .search-page .gs .gl { grid-column: 1 / -1; grid-row: 2; }
+  .search-page .gs .gl:empty { display: none; }
+  .search-page .gs-cap { font-size: 14px; }
+
+  /* The works picker in the page, its Done a band pinned to the foot of the
+     screen; the works one to a line. */
+  .search-page .works-panel { padding-bottom: 84px; }
+  .search-page .works-done {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    height: auto;
+    padding: 0;
+    border: solid var(--bg);
+    border-width: 12px 18px calc(12px + env(safe-area-inset-bottom));
+    background: var(--ink) padding-box;
+    box-shadow: 0 -1px 0 var(--line);
+    font: 600 17px/48px var(--sans);
+  }
+  .search-page .works-group-head { flex-wrap: wrap; }
+  .search-page .works-group-name { flex: 1 0 100%; }
+  .search-page .works-chips { grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); }
+
+  /* The proximity editor (§5.7). The summary leads with the distance, two
+     lines at most; each term named, each control named over it; term 1's
+     Kind and Distance on one row; terms 2 on, the joiner at 64px, then
+     Relation | Kind | Remove. */
+  .search-page .sopt.prox-editing ~ .prox .prox-sum {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .search-page .prox { margin-top: 14px; }
+  .search-page .prox-last { font-size: 14px; letter-spacing: .06em; }
+  .search-page .prox-terms,
+  .search-page .prox > .prox-terms:first-child { margin-top: 12px; }
+  .search-page .combo-slot {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 64px;
+    column-gap: 0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .search-page .combo-slot + .combo-slot { padding-top: 8px; }
+  .search-page .combo-slot.prox-run:not(:has(+ .prox-run)) { padding-bottom: 12px; }
+  .search-page .combo-slot > :is(.prox-colh.prox-c1, .prox-head) { grid-column: 1 / -1; grid-row: 1; }
+  .search-page .combo-slot > .prox-colh:not(.prox-c1) { display: none; }
+  .search-page .combo-slot > .prox-word { grid-column: 1 / -1; grid-row: 2; padding-top: 4px; }
+  .search-page .combo-slot > .prox-ml { grid-row: 3; padding-top: 10px; }
+  .search-page .combo-slot > .prox-m1 { grid-column: 1; }
+  .search-page .combo-slot > .prox-m2 { grid-column: 2 / -1; }
+  .search-page .combo-slot > :is(.prox-rel, .prox-kindc, .prox-dist, .prox-remove) { grid-row: 4; }
+  .search-page .combo-slot > :is(.prox-rel, .prox-kindc) { grid-column: 1; }
+  .search-page .combo-slot > .prox-rel ~ .prox-kindc { grid-column: 2; }
+  .search-page .combo-slot > .prox-dist { grid-column: 2 / -1; }
+  .search-page .combo-slot > .prox-remove { grid-column: 3; justify-self: end; }
+  .search-page .combo-slot > .prox-chips { grid-column: 1 / -1; grid-row: 5; }
+  .search-page :is(.prox-colh, .prox-tn, .prox-chiph, .prox-ml) {
+    font: 650 14px/1 var(--sans);
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--mid);
+  }
+  .search-page .prox-colh { padding: 4px 0 0; }
+  .search-page .prox-head .prox-sel { flex: none; width: 64px; height: 44px; }
+  .search-page .prox-field { width: 100%; height: 48px; }
+  .search-page .prox-rel { flex-wrap: wrap; column-gap: 14px; padding-right: 12px; }
+  .search-page .prox-relw { width: auto; }
+  .search-page .prox-dist { flex-wrap: wrap; }
+  .search-page .prox-chips { grid-template-columns: 84px minmax(0, 1fr); margin-top: 18px; }
+  .search-page .prox-chipset-wide { grid-column: 2; margin-left: 0; }
+  .search-page .prox-chip { height: 44px; }
+  /* The editor's Search, in a bar pinned to the foot of the screen; what is
+     not searched yet over it. The editor keeps the bar's height free under
+     its last row. */
+  .search-page .prox-go {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 30;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 8px;
+    margin: 0;
+    padding: 12px 18px calc(12px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--line);
+    background: var(--bg);
+  }
+  .search-page .prox-go .prox-search { width: 100%; height: 48px; font-size: 17px; }
+  .search-page .prox-pend {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    text-align: center;
+  }
+  .search-page .prox:has(.prox-go) { padding-bottom: var(--prox-bar-height, 0px); }
+}
+/* The page's own foot is kept clear of the bar too. */
+@media not all and (min-width: 961px) {
+  .frame.dir-b:has(.search-page .prox-go) { padding-bottom: var(--prox-bar-height, 0px); }
+}
+/* The hits on a narrow screen: one column, their type kept; sideways,
+   their reference column stays (r34-13). */
+@media not all and (min-width: 961px) {
+  .search-page .sx-try ul { grid-template-columns: 1fr; }
+  .search-page .sx-try { margin-top: 28px; }
+  .search-page .work-name { font-size: 24px; }
+  @media not all and (max-height: 500px) {
+    .search-page .instance,
+    .search-page .sx-results.by-work .instance { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
+    .search-page :is(.inst-ref, .inst-body, .inst-speaker, .inst-oneof) { grid-column: 1; grid-row: auto; }
+  }
+}
+@media not all and (min-width: 961px) {
+  /* The results bar (§5.7, r34-11): the count, "instances" under it; Save;
+     the pager ‹ 1/28 ›; Filter and View; each an icon over its 14px label.
+     One row, never wrapped, over a 2px rule. */
+  .search-page .sx-layout { margin-top: 18px; }
+  .search-page .result-bar {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .search-page .result-count {
+    display: flex;
+    flex: 0 1 auto;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 0;
+    margin-right: 6px;
+    font: 600 14px/1 var(--sans);
+    color: var(--ink);
+  }
+  /* The number as large as the row lets it be: a fifth of the screen for
+     three digits, less for more. */
+  .search-page .rc-n { font: 700 min(46px, calc(150px / var(--d, 3)))/.95 var(--tface); color: var(--red-ink); font-variant-numeric: tabular-nums; }
+  .search-page .rc-w { margin-top: 2px; white-space: nowrap; }
+  .search-page .rc-p { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .search-page :is(.sx-icon, .sx-save) {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: auto;
+    min-width: 50px;
+    height: 52px;
+    margin: 0;
+    padding: 0 4px;
+    border: 0;
+    background: none;
+    font: 600 14px/1 var(--sans);
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .search-page .sx-icon:last-child { margin-right: -4px; }
+  .search-page .sx-save .sx-ico { flex: none; }
+  .search-page .sx-lab { white-space: nowrap; }
+  .search-page .sx-save:hover, .search-page .sx-icon:hover:not(:disabled) { color: var(--red-ink); }
+  .search-page :is(.sx-icon, .sx-save):focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .search-page .sx-icon:disabled { color: var(--mid); opacity: .5; cursor: default; }
+  /* The pager in the middle of the row; Filter and View at its end. */
+  .search-page .sx-arrow { min-width: 44px; }
+  .search-page .sx-arrow svg { stroke-width: 2.5; }
+  .search-page .sx-save + .sx-arrow, .search-page .result-count + .sx-arrow { margin-left: auto; }
+  .search-page .sx-pg { flex: none; font: 600 14px/1 var(--sans); color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .search-page .sx-filter { margin-left: auto; }
+  .search-page .sx-badge { top: 0; right: 4px; min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px; background: var(--red-ink); font: 700 14px/20px var(--sans); color: var(--bg); }
+  /* View not at its default: a red dot. */
+  .search-page .sx-dot { position: absolute; top: 4px; right: 10px; width: 10px; height: 10px; border-radius: 50%; background: var(--red-ink); }
+  /* Under the bar: what the count is out of, and the way to the saved
+     list (q10); Export is in View, the inflection search in Filter. */
+  .search-page .sopt.sx-display { display: none; }
+  .search-page .sx-save-w,
+  .search-page .sx-head-more .sx-link:is(.export-btn, .sx-variants) { display: none; }
+  .search-page .sx-head-more { display: flex; flex-direction: column; align-items: flex-start; }
+  .search-page .sx-head-more .sx-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 600 16px/1.2 var(--sans);
+    color: var(--ink);
+    text-decoration: underline 2px var(--red-ink);
+    text-underline-offset: 5px;
+  }
+  .search-page .sx-of { margin: 8px 0 0; font: 600 15px/1.3 var(--sans); color: var(--mid); }
+  .search-page .sx-head-more .sx-of .sx-link { display: inline; min-height: 0; padding: 12px 0; margin: -12px 0; text-underline-offset: 4px; }
+
+  /* The Filter and View sheets: S5a's sheet (.sheet, .sheet-foot,
+     .sheet-done) over the veil; its title and Close over a 2px rule, and
+     "‹ Filter" over them on a filter's own screen (p03, p04, q07, q08). */
+  .search-page .sx-panel { display: none; }
+  .search-page .sx-panel.open.sheet { z-index: 1001; display: block; padding: 0 18px 12px; font-family: var(--sans); }
+  .search-page .sx-scrim { position: fixed; inset: 0; z-index: 1000; background: rgba(0, 0, 0, .45); }
+  .search-page .sx-panel.sheet .sx-sheet-head.sheet-head {
+    float: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 16px;
+    width: auto;
+    margin: 0 0 4px;
+    padding: 10px 0 8px;
+  }
+  .search-page .sx-sheet-t { grid-column: 1; grid-row: 1; margin: 0; font: inherit; letter-spacing: 0; color: var(--ink); }
+  .search-page .sx-back ~ .sx-sheet-t { grid-column: 1 / -1; grid-row: 2; padding: 12px 0 2px; }
+  .search-page .sx-panel.sheet .sx-sheet-head.sheet-head:has(.sx-back) { padding-top: 0; }
+  .search-page :is(.sx-close, .sx-back) {
+    grid-row: 1;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: 600 16px/1 var(--sans);
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--ink);
+    text-decoration: underline 2px var(--red-ink);
+    text-underline-offset: 5px;
+    cursor: pointer;
+  }
+  .search-page .sx-close { grid-column: 2; justify-self: end; }
+  .search-page .sx-back { grid-column: 1; justify-self: start; }
+  .search-page :is(.sx-close, .sx-back):hover { color: var(--red-ink); }
+  .search-page :is(.sx-close, .sx-back):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  /* A filter's own screen fills the window under the site header; its
+     list scrolls, and ends where the foot band begins (§5.9). */
+  .search-page .sx-panel.open.sheet:is([data-screen="works"], [data-screen="trans"], [data-screen="forms"], [data-screen="grammar"]) {
+    top: 52px;
+    max-height: none;
+  }
+  .search-page .sx-panel.open[data-screen="forms"] { display: flex; flex-direction: column; overflow: hidden; }
+  .search-page .sx-panel.open[data-screen="forms"] .sx-forms { display: flex; flex: 1 1 auto; flex-direction: column; align-items: stretch; min-height: 0; }
+  .search-page .sx-panel.open[data-screen="forms"] .fx-list { flex: 1 1 auto; min-height: 0; max-height: none; border-bottom: 0; }
+  /* The title says which list it is. */
+  .search-page .sx-panel.open .sx-row > .k { display: none; }
+  .search-page .sx-panel.open .sx-row { display: block; margin: 0; padding: 0; border: 0; }
+  /* The menu (p03): a line per filter, what it is set to at the right. */
+  .search-page .sx-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 56px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: none;
+    font: 500 17px/1.2 var(--sans);
+    color: var(--ink);
+    text-align: left;
+    cursor: pointer;
+  }
+  .search-page .sx-nav:hover { color: var(--red-ink); }
+  .search-page .sx-nav:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+  .search-page .sx-nav small { flex: 1 1 auto; min-width: 0; overflow: hidden; font: 500 15px/1.2 var(--sans); color: var(--mid); text-align: right; white-space: nowrap; text-overflow: ellipsis; }
+  .search-page .sx-nav .gt { flex: none; font: 500 18px/1 var(--sans); color: var(--mid); }
+  /* What this search narrows, each undone by its ×. */
+  .search-page .sx-sum { margin: 0; padding: 8px 0; border: 0; border-bottom: 1px solid var(--line); font: 500 16px/1.3 var(--sans); }
+  .search-page .sx-sum .k { font: 650 14px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+  .search-page .sx-sum li { border-color: var(--line); color: var(--ink); }
+  .search-page .sx-sum .x { color: var(--mid); }
+  .search-page .sx-clear { font: 600 16px/1 var(--sans); color: var(--ink); text-decoration: underline 2px var(--red-ink); text-underline-offset: 5px; }
+  .search-page .sx-clear:disabled { color: var(--mid); text-decoration: none; cursor: default; }
+  /* Works and translations (q07): one of many, a ring each, All first. */
+  .search-page .sx-panel.open .sx-row .i {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    background: none;
+    font: 600 16px/1.25 var(--sans);
+    color: var(--ink);
+    box-shadow: none;
+    text-align: left;
+  }
+  .search-page .sx-panel.open .sx-row .i::before { content: ""; flex: none; box-sizing: border-box; width: 18px; height: 18px; border: 1.5px solid var(--mid); border-radius: 50%; }
+  .search-page .sx-panel.open .sx-row .i.on::before { border-color: var(--red-ink); background: radial-gradient(circle, var(--red-ink) 0 4.5px, transparent 5px); }
+  .search-page .sx-panel.open .sx-row .i-t { flex: 1 1 auto; min-width: 0; }
+  .search-page .sx-panel.open .sx-row .i small { flex: none; font: 500 14px/1 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+  .search-page .sx-panel.open .sx-row .i-x { display: none; }
+  .search-page .sx-panel.open .sx-row .note { display: block; margin-top: 8px; font: italic 500 14px/1.35 var(--sans); color: var(--mid); }
+  .search-page .sx-panel.open .sx-row .i:hover .i-t { color: var(--red-ink); }
+  .search-page .sx-panel.open .sx-row .i:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; }
+  /* Forms (q08): the headword over its forms, a red tick each. */
+  .search-page .sx-panel.open .fx-head { display: block; margin: 0; padding: 14px 0 4px; background: var(--paper); font: 400 18px/1.3 var(--read); color: var(--ink); }
+  .search-page .sx-panel.open .sx-forms .fx { gap: 12px; min-height: 44px; border-color: var(--line); font: 400 18px/1.2 var(--read); color: var(--ink); }
+  .search-page .sx-panel.open .sx-forms .fx input { width: 18px; height: 18px; accent-color: var(--red-ink); }
+  .search-page .sx-panel.open .sx-forms .fx small { font: 500 14px/1 var(--sans); color: var(--mid); }
+  /* Grammar: a line per category, its values as chips. */
+  .search-page .sx-panel.open .sx-facets .gx-group { padding: 4px 0; border-color: var(--line); }
+  .search-page .sx-panel.open .sx-facets .gx-head { font: 600 14px/1.2 var(--sans); letter-spacing: 0; color: var(--mid); }
+  .search-page .sx-panel.open .gx-chip { font: 500 16px/1.2 var(--sans); color: var(--ink); }
+  .search-page .sx-panel.open .gx-chip small { font: 500 14px/1 var(--sans); color: var(--mid); }
+  .search-page .sx-panel.open .gx-chip.on { box-shadow: inset 0 -2px 0 var(--red-ink); }
+  /* View (p04): a block each, its name over its choices in columns; no
+     glosses; Export; Done. */
+  .search-page .sx-seg { display: grid; grid-template-columns: repeat(3, max-content); column-gap: 26px; min-width: 0; margin: 0; padding: 22px 0 10px; border: 0; border-bottom: 1px solid var(--line); }
+  .search-page .sx-seg-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .search-page .sx-seg legend { float: left; grid-column: 1 / -1; width: 100%; margin: 0 0 6px; padding: 0; font: 650 14px/1.2 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: var(--ink); }
+  .search-page .sx-seg .ck { display: flex; align-items: center; gap: 12px; min-height: 44px; font: 500 16px/1.2 var(--sans); color: var(--ink); white-space: nowrap; cursor: pointer; }
+  .search-page .sx-seg .sx-seg-row { grid-column: 1 / -1; }
+  .search-page .sx-seg .ck input {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    border: 1.5px solid var(--mid);
+    border-radius: 50%;
+    background: none;
+  }
+  .search-page .sx-seg .ck input:checked { border-color: var(--red-ink); background: radial-gradient(circle, var(--red-ink) 0 4.5px, transparent 5px); }
+  .search-page .sx-seg .ck input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+  .search-page .sx-panel .sx-tools { padding: 10px 0 0; border: 0; }
+  .search-page .sx-panel .sx-tools .export-btn {
+    min-height: 44px;
+    padding: 0;
+    font: 600 16px/1.2 var(--sans);
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: left;
+    color: var(--ink);
+    text-decoration: underline 2px var(--red-ink);
+    text-underline-offset: 5px;
+  }
+  .search-page .sx-panel .sx-tools .export-btn:hover:not(:disabled) { color: var(--red-ink); }
+  .search-page .sx-panel .sx-tools .export-btn:disabled { color: var(--mid); text-decoration: none; }
+  .search-page .sx-panel .sx-tools .result-guide { font: 600 16px/1.2 var(--sans); color: var(--ink); }
+  /* The foot band: Clear or Deselect all, and the black button. */
+  .search-page .sx-panel .sheet-foot { display: flex; align-items: center; gap: 18px; }
+  .search-page .sx-panel .sheet-foot .sheet-done { flex: 1 1 auto; width: auto; min-width: 0; height: 48px; margin: 0; padding: 0 12px; border: 0; background: var(--ink); font: 600 17px/1 var(--sans); letter-spacing: 0; text-transform: none; text-align: center; text-decoration: none; color: var(--bg); }
+  .search-page .sx-panel .sheet-foot .sheet-done:hover:not(:disabled) { background: var(--red-ink); color: #fff; }
+  .search-page .sx-panel .sheet-foot .sheet-done:disabled { background: var(--line); color: var(--mid); cursor: default; }
+  .search-page .sx-panel .sheet-foot .more:not(.sheet-done) { flex: none; min-height: 44px; margin: 0; padding: 0; border: 0; background: none; font: 600 16px/1 var(--sans); color: var(--ink); text-decoration: underline 2px var(--red-ink); text-underline-offset: 5px; cursor: pointer; }
+  /* The word sheet (q09): from the foot of the screen, a rule along its top
+     only, at most 45% of the screen; the word, Close, then the card. */
+  .search-page .word-sidebar {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: block;
+    width: auto;
+    max-height: 45vh;
+    max-height: 45dvh;
+    padding: 0 18px calc(14px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--paper);
+    box-shadow: 0 -10px 18px -12px rgba(0, 0, 0, .35);
+    font-family: var(--sans);
+    color: var(--ink);
+  }
+  .search-page .word-sidebar .word-sidebar-head { min-height: 64px; border-bottom: 1px solid var(--line); }
+  .search-page .word-sidebar .word-sidebar-body { padding-top: 12px; }
+  .search-page .word-sidebar .analysis-card { padding-bottom: 6px; }
+}
+/* The language menu is a sideways screen's alone. */
+.search-page .lang-menu { display: none; }
+/* Sideways: a narrow screen no more than 500px tall (s01, s02, r34-13). One
+   row: the field with Keyboard and Beta Code, Greek ▾, Options ▾,
+   Proximity ▾, Search; the options open as one row under it; the hits keep
+   their reference column. */
+@media not all and (min-width: 961px) {
+  @media (max-height: 500px) {
+    .dir-b .search-page { padding-top: 0; }
+    .search-page .search-form { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; column-gap: 24px; }
+    .search-page .search-form > * { grid-column: 1 / -1; }
+    .search-page .search-form > :is(.sq, .sopt:not(.sx-display)) { display: contents; }
+    .search-page .search-form .sq-fields { grid-column: 1; grid-row: 1; min-width: 0; }
+    .search-page .search-form .lang-switch { display: none; }
+    .search-page .search-form .lang-menu { display: block; grid-column: 2; grid-row: 1; }
+    .search-page .search-form .lang-menu > summary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0;
+      border: 0;
+      font: 600 16px/1 var(--sans);
+      color: var(--ink);
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .search-page .search-form .lang-menu > summary .opt-caret { color: var(--ink); }
+    .search-page .search-form .lang-menu[open] > summary { box-shadow: inset 0 -2px 0 var(--red-ink); }
+    .search-page .search-form > .sopt:not(.sx-display) > .sopt-act { grid-column: 3; grid-row: 1; width: auto; }
+    .search-page .search-form > .sopt:not(.sx-display) > .sopt-act .search-btn { margin-left: 8px; }
+    /* Open, the options are a row under the field: Match, Form, Accents,
+       Lemma, and In at its end, kept clear of the rest (they wrap before
+       they reach it). Under Both, Greek's take a row of their own. */
+    .search-page .search-form > .sopt:not(.sx-display).opts-open:not(.works-picking) > :is(.sopt-g, .sopt-e, .sopt-w) {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 28px;
+      margin-top: 8px;
+    }
+    .search-page .search-form > .sopt:not(.sx-display) > :is(.sopt-g, .sopt-e, .sopt-w) { grid-column: 1 / -1; grid-row: 2; min-width: 0; padding-right: 200px; }
+    .search-page .search-form > .sopt:not(.sx-display) > .sopt-w { justify-self: end; align-self: start; padding-right: 0; }
+    .search-page .search-form > .sopt.sopt-both > :is(.sopt-g, .sopt-e, .sopt-w) { padding-right: 0; }
+    .search-page .search-form > .sopt.sopt-both > .sopt-e { grid-row: 3; }
+    .search-page .search-form > .sopt.sopt-both > .sopt-w { grid-row: 4; justify-self: start; }
+    .search-page .search-form > .sopt-sum { grid-column: 1; margin-top: 2px; }
+    /* Too narrow for the field to share its row: the field alone, then
+       the language, Options, Proximity and Search under it. */
+    @media (max-width: 759.98px) {
+      .search-page .search-form { grid-template-columns: auto minmax(0, 1fr); }
+      .search-page .search-form .sq-fields { grid-column: 1 / -1; }
+      .search-page .search-form .lang-menu { grid-column: 1; grid-row: 2; }
+      .search-page .search-form > .sopt:not(.sx-display) > .sopt-act { grid-column: 2; grid-row: 2; justify-self: end; }
+      .search-page .search-form > .sopt:not(.sx-display) > :is(.sopt-g, .sopt-e, .sopt-w) { grid-row: 3; }
+      .search-page .search-form > .sopt.sopt-both > .sopt-e { grid-row: 4; }
+      .search-page .search-form > .sopt.sopt-both > .sopt-w { grid-row: 5; }
+      .search-page .search-form > .sopt-sum { grid-column: 1 / -1; }
+    }
+    /* The bar: the count at the left, the rest together at the right. */
+    .search-page .sx-layout { margin-top: 10px; }
+    .search-page .rc-n { font-size: min(36px, calc(130px / var(--d, 3))); }
+    .search-page .sx-save,
+    .search-page .result-count + :is(.sx-arrow, .sx-filter) { margin-left: auto; }
+    .search-page .sx-save + .sx-arrow,
+    .search-page .sx-filter { margin-left: 16px; }
+    .search-page .result-count + .sx-filter { margin-left: auto; }
+  }
+}
+@media (min-width: 961px) and (max-width: 1100px) {
+  /* The options row's labels never wrap: the gaps give way first. */
+  .search-page .sopt:not(.sx-display) { gap: 4px 12px; }
+}

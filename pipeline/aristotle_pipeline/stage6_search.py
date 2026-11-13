@@ -22,6 +22,8 @@ Emits these files under build/stage6/:
                  Ordered list of segment metadata, indexed by seg_idx: the
                  search names a hit's passage from it.
 
+  running.json — {v: 1, token_count, text}: Greek running text with marks.
+
   offsets.json — the word-offset primitive: one running token number per work,
                  in document order, plus the structural coordinates beside it.
                  {token_count, seg_base_offset[], segments[{book, column,
@@ -53,6 +55,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .config import BUILD_DIR, Manifest
+from .running_text import build_running_text, check_alignment
 from .stage2_validate import check_grammar, check_ngram_streams, check_offsets
 
 _FOLD = re.compile(r"[^a-z']")  # keep only base letters and apostrophe
@@ -313,6 +316,13 @@ def run(manifest: Manifest) -> Path:
         (BUILD_DIR / "stage1" / "greek_spine.json").read_text(encoding="utf-8")
     )
 
+    for name, doc in (("stage3 tokens", tokens_doc), ("stage1 spine", spine)):
+        if doc["work"] != manifest.work_id:
+            raise ValueError(
+                f"stage6: {manifest.work_id}: {name} belongs to {doc['work']}; "
+                "restore this work's stage files before running stage6"
+            )
+
     # Ordered segment list for index keys
     segments = tokens_doc["segments"]
     seg_idx = {s["id"]: i for i, s in enumerate(segments)}
@@ -566,8 +576,15 @@ def run(manifest: Manifest) -> Path:
                 + "\n  ".join(check["problems"][:20])
             )
 
+    running = build_running_text(segments, spine)
+    check_alignment(manifest.work_id, running, segments, offsets["token_count"])
+
     out_dir = BUILD_DIR / "stage6"
     out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "running.json").write_text(
+        json.dumps({"v": 1, "token_count": token_count, "text": running}, ensure_ascii=False),
+        encoding="utf-8",
+    )
     (out_dir / "offsets.json").write_text(
         json.dumps(offsets, ensure_ascii=False), encoding="utf-8"
     )
@@ -617,6 +634,7 @@ def run(manifest: Manifest) -> Path:
         "english_terms": len(english_idx),
         "segments": len(meta),
         "tokens": token_count,
+        "running_text_chars": len(running),
         "chapter_bounds": len(chapter_bounds),
         "chapter_bounds_line_snapped": sum(
             1 for c in chapter_bounds if c["accuracy"] != "exact"

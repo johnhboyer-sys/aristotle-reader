@@ -151,3 +151,4 @@ export function rankLemmata(
   }
   return out.sort((a, b) => b.count - a.count).slice(0, limit);
 }
+

@@ -160,3 +160,97 @@ describe('search URL', () => {
     expect(decodeSearchUrl(qs, ALL).eng).toBe('virtue, & vice: 1');
   });
 });
+
+describe('Aristotle URL forms alongside the adopted grammar', () => {
+  it('keeps the chapter unit and chapter-crossing switch on old proximity links', () => {
+    const state = decodeSearchUrl('?c=f:ἀρετή&c=f:ἕξις&cu=chapter&cx=0&cw=10', ALL);
+    expect(state.combo).toEqual({
+      slots: [
+        { kind: 'form', relation: 'near', text: 'ἀρετή', picked: [], grammar: {} },
+        { kind: 'form', relation: 'near', text: 'ἕξις', picked: [], grammar: {} },
+      ], window: 10, unit: 'chapter', ordered: false, crossChapter: false,
+    });
+    expect(roundTrip(state)).toEqual(state);
+  });
+  it('keeps Morpheus word-class tags, which Aristotle still indexes', () => {
+    const state = decodeSearchUrl('?c=g:marker.adverb&c=f:λόγος', ALL);
+    expect(state.combo?.slots[0].grammar).toEqual({ marker: 'adverb' });
+    expect(roundTrip(state)).toEqual(state);
+  });
+});
+
+// S3: each proximity slot carries its joiner and the term it is measured
+// from, inside the c= grammar: "o" after the kind letter for a term joined
+// by "or" (it takes the term's relation and target, so writes neither), else
+// the relation letter, then the 1-based number of the term it is measured
+// from when that is not term 1.
+describe('proximity joiners and targets', () => {
+  const slot = (kind: 'lemma' | 'form', word: string, over: object = {}) => ({
+    kind, relation: 'near' as const, text: kind === 'form' ? word : '', picked: kind === 'lemma' ? [word] : [], grammar: {}, ...over,
+  });
+  const combo = (slots: ReturnType<typeof slot>[], over: object = {}) =>
+    base({ combo: { slots, window: 10, unit: 'words', ordered: false, crossChapter: true, ...over } });
+
+  it('writes an or-joined term as "o", and a target as the term number', () => {
+    const s = combo([
+      slot('lemma', 'areth'),
+      slot('lemma', 'ecis'),
+      slot('lemma', 'hdonh', { or: true }),
+      slot('lemma', 'luph', { relation: 'before', target: 1 }),
+    ]);
+    expect(encodeSearchUrl(s, ALL)).toContain('c=l:areth&c=l:ecis&c=lo:hdonh&c=lb2:luph&cw=10');
+    expect(roundTrip(s)).toEqual(s);
+    const not = combo([slot('lemma', 'areth'), slot('lemma', 'ecis'), slot('form', 'λόγος', { relation: 'not', target: 1 })]);
+    expect(encodeSearchUrl(not, ALL)).toContain(`c=fn2:${encodeURIComponent('λόγος')}`);
+    expect(roundTrip(not)).toEqual(not);
+  });
+
+  it('reads an "or" slot after a dropped term as that term, with its relation and target', () => {
+    const slots = decodeSearchUrl('?c=l:a&c=l:b&c=la2:&c=lo:d', ALL).combo!.slots;
+    expect(slots).toEqual([
+      { kind: 'lemma', relation: 'near', text: '', picked: ['a'], grammar: {} },
+      { kind: 'lemma', relation: 'near', text: '', picked: ['b'], grammar: {} },
+      { kind: 'lemma', relation: 'after', target: 1, text: '', picked: ['d'], grammar: {} },
+    ]);
+  });
+
+  it('opens every older link as it opened before: no joiner, every term from term 1', () => {
+    for (const qs of ['?c=l:areth&c=l:ecis', '?c=l:areth&c=lb:hdonh&c=ln:luph&cw=10', '?c=f:a&c=fa:b&c=gb:case.gen&co=1']) {
+      const read = decodeSearchUrl(qs, ALL).combo!;
+      for (const s of read.slots) {
+        expect(s.or).toBeUndefined();
+        expect(s.target).toBeUndefined();
+      }
+    }
+  });
+
+  it('reads a target that is not an earlier term as term 1', () => {
+    const read = (qs: string) => decodeSearchUrl(qs, ALL).combo?.slots.map((s) => s.target ?? 0);
+    expect(read('?c=l:a&c=l2:b&c=l9:c')).toEqual([0, 0, 0]);
+    expect(read('?c=l:a&c=l:b&c=l2:c')).toEqual([0, 0, 1]);
+    // A first term joined by "or" has nothing to join.
+    expect(decodeSearchUrl('?c=lo:a&c=l:b', ALL).combo?.slots[0].or).toBeUndefined();
+  });
+
+  it('keeps targets pointing at the same terms when an empty slot is dropped', () => {
+    // The empty second slot goes; term 4 was measured from term 3, which is now term 2.
+    const slots = decodeSearchUrl('?c=l:a&c=l:&c=l:c&c=l3:d', ALL).combo!.slots;
+    expect(slots.map((s) => [s.picked[0], s.target ?? 0])).toEqual([['a', 0], ['c', 0], ['d', 1]]);
+    // A term measured from the dropped slot is measured from term 1.
+    const from = decodeSearchUrl('?c=l:a&c=l:b&c=l:&c=l3:d', ALL).combo!.slots;
+    expect(from.map((s) => [s.picked[0], s.target ?? 0])).toEqual([['a', 0], ['b', 0], ['d', 0]]);
+  });
+
+  it('measures a term from the or-member that takes an empty head\'s place (Codex review)', () => {
+    // The empty term 2 goes; b, joined to it by "or", stands in its place,
+    // so d, measured from term 2, is measured from b.
+    const slots = decodeSearchUrl('?c=l:a&c=la:&c=lo:b&c=l2:c', ALL).combo!.slots;
+    expect(slots.map((s) => [s.picked[0], s.relation, s.target ?? 0])).toEqual([['a', 'near', 0], ['b', 'after', 0], ['c', 'near', 1]]);
+    // An empty member between them points the same way.
+    const two = decodeSearchUrl('?c=l:a&c=la:&c=lo:&c=lo:b&c=l3:c', ALL).combo!.slots;
+    expect(two.map((s) => [s.picked[0], s.target ?? 0])).toEqual([['a', 0], ['b', 0], ['c', 1]]);
+    // A group with nothing left: measured from what the head was measured from.
+    const none = decodeSearchUrl('?c=l:a&c=l:b&c=l2:&c=lo:&c=l3:c', ALL).combo!.slots;
+    expect(none.map((s) => [s.picked[0], s.target ?? 0])).toEqual([['a', 0], ['b', 0], ['c', 1]]);
+  });
+});

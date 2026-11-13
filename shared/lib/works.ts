@@ -45,6 +45,7 @@ export interface MissingBooks {
 }
 
 export interface Work {
+  narrator?: string;
   id: string;       // slug + data dir, e.g. 'EN'
   title: string;
   greekTitle?: string;  // polytonic Greek title, shown in the print masthead
@@ -1113,6 +1114,13 @@ export function getWork(id: string): Work | undefined {
   return BY_ID.get(id);
 }
 
+/** Authentic: Aristotle's, with no authenticity flag or 'genuine' (so not
+ * Porphyry's Isagoge). The search's "Authentic works" is this list, read from
+ * the registry, never written out by hand. */
+export const isAuthentic = (w: Work) =>
+  w.author === 'Aristotle' && (!w.authenticity || w.authenticity === 'genuine');
+export const AUTHENTIC_IDS: string[] = WORKS.filter(isAuthentic).map((w) => w.id);
+
 export function bookLabel(work: Work, n: number): string {
   return work.bookLabels[n - 1] ?? String(n);
 }
@@ -1549,6 +1557,17 @@ export const WORK_GROUPS: WorkGroup[] = (() => {
   return groups;
 })();
 
+// The search's works picker: the home divisions, then one more group for the
+// searchable works no division holds (today Porphyry's Isagoge), named by
+// their author, so every work can be ticked and unticked.
+export const SEARCH_GROUPS: WorkGroup[] = (() => {
+  const grouped = new Set(WORK_GROUPS.flatMap(g => g.ids));
+  const rest = WORKS.filter(w => !grouped.has(w.id));
+  if (!rest.length) return WORK_GROUPS;
+  const label = [...new Set(rest.map(w => w.author))].join(', ');
+  return [...WORK_GROUPS, { ref: '', label, ids: rest.map(w => w.id) }];
+})();
+
 // Cross-work ordering for search results, matching the home page's CATEGORIES
 // flatten order (which differs from the raw WORKS/corpus order). Any real work
 // not referenced by CATEGORIES is appended in WORKS order so every searchable
@@ -1568,3 +1587,6 @@ export const DIVISION_NAMES: Record<string, string> = {
   'Moral and Political Philosophy': 'Ethics and politics',
   'Rhetoric and Poetics': 'Rhetoric and poetics',
 };
+
+// This corpus has no speaker or turn search controls.
+export const HAS_SPEAKERS = false;

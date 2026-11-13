@@ -93,6 +93,8 @@ def _build(tmp_path, monkeypatch, chapters=()):
     load = lambda name: json.loads((out / name).read_text(encoding="utf-8"))  # noqa: E731
     return {
         "offsets": load("offsets.json"),
+        "running": load("running.json"),
+        "summary": load("summary.json"),
         "meta": load("meta.json"),
         "english": load("english.json"),
         "form": load("greek_form.json"),
@@ -345,3 +347,26 @@ def test_lemma_index_is_keyed_by_folded_headword(tmp_path, monkeypatch):
     assert got["form"]["to"] == [[0, 2]]
     # γὰρ occurs on 244b4 and 244b5a: both postings, in document order.
     assert got["lemma"]["gar"] == [[0, 1], [0, 6]]
+
+
+def test_running_file_uses_the_offset_tokens_and_summary(tmp_path, monkeypatch):
+    from aristotle_pipeline.running_text import check_alignment
+
+    built = _build(tmp_path, monkeypatch)
+    running = built["running"]
+    assert running["v"] == 1
+    assert running["token_count"] == built["offsets"]["token_count"]
+    assert built["summary"]["running_text_chars"] == len(running["text"])
+    check_alignment("TST", running["text"], built["tokens"]["segments"], running["token_count"])
+
+
+def test_stage6_refuses_running_text_drift_before_writing(tmp_path, monkeypatch):
+    import pytest
+
+    def wrong_text(segments, spine):
+        return "wrong"
+
+    monkeypatch.setattr(stage6_search, "build_running_text", wrong_text)
+    with pytest.raises(ValueError, match="TST.*global token 0.*ἅπασι"):
+        _build(tmp_path, monkeypatch)
+    assert not (tmp_path / "build/stage6/running.json").exists()

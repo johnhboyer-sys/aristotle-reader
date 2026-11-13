@@ -658,6 +658,7 @@ def run(manifest: Manifest) -> Path:
         "english.json",
         "meta.json",
         "offsets.json",
+        "running.json",
         "grammar-dict.json",
         "grammar-col.bin",
     ]:

@@ -97,21 +97,119 @@ export function betaToGreek(input: string): string {
   return out.join('');
 }
 
-// One search term typed in Beta Code → Greek, keeping the search wildcards.
-// In a search box `*` is a Beta Code capital marker only at the start of a
-// word ("*lo/gos"); anywhere else it is the any-run wildcard, as `?` is the
-// one-letter one. betaToGreek alone would read a later `*` as a capital marker
-// and drop it, so the wildcards are cut out first and each piece converted on
-// its own. A term with no Latin letters is already Greek and is left alone.
-// As in the main search (compilePattern, greekFold), every leading * is the
-// capital marker and digits are dropped: no Greek token holds one.
+// -- Live Beta Code in a text box ------------------------------------------
+//
+// Ported from Grammata's /words box (~/Developer/grammar-site,
+// src/lib/betacode.ts `liveGreek`, 2026-10-23). The box holds already-converted
+// Greek mixed with newly typed ASCII, and every pass re-normalizes the whole
+// string, so the conversion must be idempotent. TypeGreek conventions: Shift
+// makes a capital ('*' still works), marks attach to the letter before them in
+// any order, final sigma is automatic ('j' types a medial sigma). Unfinished
+// business, a trailing '*' (the search's wildcard) or a mark with no letter
+// yet, stays visible as typed. The apostrophe is not rewritten to ’; it stays
+// as typed. The search fold treats ' and ’ as the same key.
+
+const LIVE_MARKS: Record<string, string> = {
+  ')': '̓', '(': '̔', '/': '́', '\\': '̀',
+  '=': '͂', '+': '̈', '|': 'ͅ',
+};
+const LIVE_LETTER: Record<string, string> = Object.fromEntries(
+  Object.entries(LETTER).filter(([k]) => k !== 'v'),
+);
+const LIVE_BASE = new Set(Object.values(LIVE_LETTER));
+const LIVE_COMBINING = new Set(Object.values(LIVE_MARKS));
+const LIVE_REVERSE: Record<string, string> = Object.fromEntries(
+  Object.entries(LIVE_MARKS).map(([ascii, mark]) => [mark, ascii]),
+);
+// NFC never reorders marks of one combining class, so they are sorted into
+// the order precomposed letters decompose to: breathing or diaeresis, accent,
+// iota subscript. That is what makes "marks in any order" true.
+export const LIVE_RANK: Record<string, number> = {
+  '̓': 0, '̔': 0, '̈': 0,
+  '́': 1, '̀': 1, '͂': 1,
+  'ͅ': 2,
+};
+
+interface LiveToken { letter: string; capital: boolean; sigma: boolean; marks: string[] }
+
+// `digamma` also reads v as ϝ, which a text box leaves alone (see
+// betaQueryToGreek).
+export function liveGreek(text: string, digamma = false): string {
+  const out: (LiveToken | string)[] = [];
+  let current: LiveToken | null = null;
+  const pending: { ascii: string; mark: string }[] = [];
+  let capitalizeNext = false;
+
+  const pushLetter = (letter: string, capital: boolean, sigma: boolean) => {
+    const token: LiveToken = { letter, capital: capital || capitalizeNext, sigma, marks: pending.splice(0).map((p) => p.mark) };
+    capitalizeNext = false;
+    out.push(token);
+    current = token;
+  };
+  const flushPending = () => {
+    if (capitalizeNext) {
+      out.push('*');
+      capitalizeNext = false;
+    }
+    for (const p of pending.splice(0)) out.push(p.ascii);
+  };
+
+  // Whether the last character was a wildcard (. ? ] or a wildcard *): a *
+  // after one has no letter to capitalise, so it is a wildcard too (.*ikos$).
+  let afterWildcard = false;
+  for (const ch of text.normalize('NFD')) {
+    const wild = afterWildcard;
+    afterWildcard = ch === '.' || ch === '?' || ch === ']';
+    const lower = ch.toLowerCase();
+    if (LIVE_BASE.has(lower) || lower === 'ς' || (digamma && lower === 'ϝ')) {
+      const isSigma = lower === 'σ' || lower === 'ς';
+      pushLetter(isSigma ? 'σ' : lower, ch !== lower, isSigma);
+    } else if (LIVE_COMBINING.has(ch)) {
+      if (current) (current as LiveToken).marks.push(ch);
+      else pending.push({ ascii: LIVE_REVERSE[ch] ?? ch, mark: ch });
+    } else if (LIVE_LETTER[lower] || lower === 'j' || (digamma && lower === 'v')) {
+      const isSigma = lower === 's' || lower === 'j';
+      pushLetter(isSigma ? 'σ' : lower === 'v' ? 'ϝ' : LIVE_LETTER[lower], ch !== lower && lower !== 'j', isSigma);
+    } else if (ch === '*' && (current || wild)) {
+      // After a letter, '*' is the search's wildcard (log*os), not a capital.
+      out.push('*');
+      current = null;
+      afterWildcard = true;
+    } else if (ch === '*') {
+      // Pending marks wait for the capital that follows (*(h → Ἡ).
+      capitalizeNext = true;
+    } else if (LIVE_MARKS[ch]) {
+      if (current) (current as LiveToken).marks.push(LIVE_MARKS[ch]);
+      else pending.push({ ascii: ch, mark: LIVE_MARKS[ch] });
+    } else {
+      flushPending();
+      out.push(ch);
+      current = null;
+    }
+  }
+  flushPending();
+
+  return out
+    .map((token, index) => {
+      if (typeof token === 'string') return token;
+      let base = token.letter;
+      if (token.sigma) base = typeof out[index + 1] === 'object' ? 'σ' : 'ς';
+      if (token.capital) base = base === 'ς' ? 'Σ' : base.toUpperCase();
+      const marks = [...token.marks].sort((a, b) => (LIVE_RANK[a] ?? 9) - (LIVE_RANK[b] ?? 9));
+      return (base + marks.join('')).normalize('NFC');
+    })
+    .join('')
+    .normalize('NFC');
+}
+
+// One search term typed in Beta Code → Greek, keeping the search wildcards,
+// for the "Match accents exactly" filter: it compares against Greek tokens,
+// and "lo/gos" as typed equals none of them. liveGreek already reads `*` after
+// a letter as the wildcard and every leading `*` as the capital marker, as the
+// main search does (compilePattern). Digits go first, as greekFold drops them:
+// no Greek token holds one. And v is read as ϝ, a letter like any other (so a
+// * after it is still the wildcard): the index folds the two to one key.
 export function betaQueryToGreek(term: string): string {
   if (!/[a-zA-Z]/.test(term)) return term;
-  const input = term.replace(/[0-9]/g, '');
-  const cap = /^\*+[)(+/\\=|]*[a-zA-Z]/.exec(input);
-  const head = cap ? betaToGreek('*' + cap[0].replace(/^\*+/, '')) : '';
-  const rest = cap ? input.slice(cap[0].length) : input;
-  return head + rest.split(/([*?])/)
-    .map((piece) => (piece === '*' || piece === '?' ? piece : betaToGreek(piece)))
-    .join('');
+  return liveGreek(term.replace(/[0-9]/g, ''), true);
 }
