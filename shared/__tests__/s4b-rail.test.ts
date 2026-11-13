@@ -126,14 +126,21 @@ describe('Search.svelte: the word card on a desktop', () => {
     expect(document.activeElement).toBe(second);
   });
 
-  it('is the sidebar over the page below 961px, as before', async () => {
+  // S5b (q09): below 961px a sheet over the page, out of the rail's column,
+  // worded as the rail's card.
+  it('is a sheet over the page below 961px, worded as the rail\'s card', async () => {
     screenOf(false);
     const { container } = await open();
     await fireEvent.click(container.querySelector<HTMLElement>('li.instance button.gw')!);
     const card = await screen.findByRole('dialog', { name: 'Word analysis' });
     expect(container.querySelector('.sx-side')!.contains(card)).toBe(false);
     expect(card).not.toHaveClass('word-rail');
-    expect(text(within(card).getByRole('button', { name: 'Close' }))).toBe('×');
+    expect(container.querySelector('.search-page')!.contains(card)).toBe(true);
+    await within(card).findByText('goodness, excellence');
+    expect(text(within(card).getByRole('button', { name: 'Close' }))).toBe('Close');
+    expect(text(card.querySelector('.lemma'))).toBe('from ἀρετή');
+    expect(text(card.querySelector('.parse-rows dt'))).toBe('feminine nominative or vocative singular');
+    expect(text(within(card).getByRole('link', { name: /Appears/ }))).toBe('Appears 678× across Aristotle →');
   });
 });
 

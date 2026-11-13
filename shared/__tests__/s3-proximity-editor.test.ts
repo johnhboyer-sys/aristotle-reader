@@ -51,8 +51,14 @@ vi.mock('../lib/data', async (importOriginal) => {
   };
 });
 
+// The desktop editor (round 34, d06): the desktop's query matches. (S5b: a
+// screen that matches no query is a narrow one, as b-search.css draws it.)
 beforeEach(() => {
   vi.spyOn(globalThis, 'fetch').mockImplementation(async () => ({ ok: false, status: 404, json: async () => ({}) }) as Response);
+  vi.spyOn(window, 'matchMedia').mockImplementation((media: string) => ({
+    matches: media === '(min-width: 961px)', media, onchange: null, addListener() {}, removeListener() {},
+    addEventListener() {}, removeEventListener() {}, dispatchEvent: () => false,
+  }) as unknown as MediaQueryList);
 });
 afterEach(() => {
   vi.restoreAllMocks();

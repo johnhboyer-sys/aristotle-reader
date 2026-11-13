@@ -56,6 +56,8 @@ const EDITOR = '.prox-terms'; // the proximity editor's term grid, drawn only wh
 const WORD = '[role="dialog"][aria-label^="Word"]'; // the word card a click on a hit opens (WordPopup)
 const ARETH = { sel: '.query-input', value: 'ἀρετή' }; // a)reth/ typed with Beta Code on
 const OPTS = opens(btn('.opts-toggle'), '.opts-toggle[aria-expanded="true"]'); // a phone's Options, open
+const FILTER = opens(btn('.sx-icon', 'Filter'), '.sx-panel.open[data-screen="menu"]'); // a phone's Filter sheet, at its menu
+const VIEW = opens(btn('.sx-icon', 'View'), '.sx-panel.open[data-screen="sort"]'); // a phone's View sheet
 
 // Menu and control states (menus.mjs): viewport-only shots, light.
 const MENUS = [
@@ -97,8 +99,8 @@ const MENUS = [
   ['n05-phone-three', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('l:hdonh')}&cw=10`, P, []],
   ['p01-options', AR, P, [OPTS]],
   ['p02-options-match', AR, P, [OPTS, sum('Match')]],
-  ['p03-filter', AR, P, [btn('.sx-icon', 'Filter')]],
-  ['p04-sort', AR, P, [btn('.sx-icon', /Sort|View/)]],
+  ['p03-filter', AR, P, [FILTER]],
+  ['p04-sort', AR, P, [VIEW]],
   ['p05-keyboard', AR, P, [opens(btn('.gk-toggle'), '#grk-keys')]],
   ['p06-advanced', AR, P, [OPTS, opens(btn('.advanced-trigger'), EDITOR)]],
   ['q01-form', AR, P, [OPTS, sum('Form')]],
@@ -107,15 +109,15 @@ const MENUS = [
   ['q13-in-menu', AR, P, [OPTS, opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
   ['q04-lemma-typing', '/search', P, [OPTS, opens(btn('.opt-lemma'), '.opt-lemma[aria-pressed="true"]'), opens(typeIn('.query-input', 'ψυχ'), '.gs-under')]],
   ['q05-near-editor', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('lb:hdonh')}&cw=10`, P, [opens(btn('.prox-change'), EDITOR)]],
-  ['q06-beta-code', '/search', P, [btn('.sq-row .tog'), opens(typeIn('.query-input', 'a)reth/'), ARETH)]],
-  ['q07-filter-works', AR, P, [btn('.sx-icon', 'Filter'), opens(btn('.sx-panel button', 'Works'), '.sx-panel[data-screen="works"]')]],
-  ['q08-filter-forms', AR, P, [btn('.sx-icon', 'Filter'), opens(btn('.sx-panel button', 'Forms'), '.sx-panel[data-screen="forms"]')]],
+  ['q06-beta-code', '/search', P, [opens(btn('.sq-row .tog'), '.sq-row .tog[aria-pressed="true"]'), opens(typeIn('.query-input', 'a)reth/'), ARETH)]],
+  ['q07-filter-works', AR, P, [FILTER, opens(btn('.sx-panel .sx-nav', 'Works'), '.sx-panel.open[data-screen="works"]')]],
+  ['q08-filter-forms', AR, P, [FILTER, opens(btn('.sx-panel .sx-nav', 'Forms'), '.sx-panel.open[data-screen="forms"]')]],
   ['q09-word-click', AR, P, [opens(btn('.instance mark'), WORD)]],
   ['q10-save', AR, P, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
   ['q11-group-grammar', AR + '&v=grammar', P, []],
   ['q12-citations-only', AR + '&ps=c', P, []],
-  ['s01-sideways-options', AR, S, [btn('.z-opts')]],
-  ['s02-sideways-keyboard', AR, S, [btn('.gk-toggle')]],
+  ['s01-sideways-options', AR, S, [OPTS]],
+  ['s02-sideways-keyboard', AR, S, [opens(btn('.gk-toggle'), '#grk-keys')]],
 ];
 
 // Page states (shots.mjs): full-page capture clipped to clipH, theme as listed.

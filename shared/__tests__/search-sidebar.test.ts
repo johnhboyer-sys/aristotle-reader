@@ -307,26 +307,32 @@ describe('Search.svelte: "This search"', () => {
 
 });
 
-// Below 1100px the column is a sheet, opened by the filter icon on the count
-// row (P4, John 2026-11-10): a menu of the filters with "This search" at its
-// head, each filter on a full screen of its own. The sort icon opens a second
-// sheet of the display settings.
+// Below 961px the column is a sheet, opened by Filter on the count row (P4,
+// John 2026-11-10; S5b, p03): a menu of the filters with "This search" at its
+// head, each filter on a full screen of its own. View opens a second sheet
+// of the display settings (p04).
 describe('Search.svelte: the Filter sheet', () => {
   const filter = () => screen.getByRole('button', { name: /^Filter/ });
-  const sortBtn = () => screen.getByRole('button', { name: 'Sort and display' });
+  const viewBtn = () => screen.getByRole('button', { name: /^View/ });
 
-  it('says how many things are chosen, on a badge and in its name', async () => {
+  // S5b (§5.7): Filter counts what narrows the hits; how they are shown is
+  // View's, marked by a red dot and named in its label.
+  it('says how many filters are chosen, on a badge and in its name; View marks a changed display', async () => {
     await open(`${G}&wf=EN&v=form`);
-    expect(filter()).toHaveAccessibleName('Filter, 2 chosen');
-    expect(text(filter().querySelector('.sx-badge'))).toBe('2');
+    expect(filter()).toHaveAccessibleName('Filter, 1 chosen');
+    expect(text(filter().querySelector('.sx-badge'))).toBe('1');
+    expect(viewBtn()).toHaveAccessibleName('View, grouped by form');
+    expect(viewBtn().querySelector('.sx-dot')).not.toBeNull();
   });
 
-  it('has no badge when nothing is chosen, and the icons carry no words', async () => {
+  it('has no badge and no dot when nothing is chosen, and each icon carries its label', async () => {
     await open(G);
     expect(filter()).toHaveAccessibleName('Filter');
     expect(filter().querySelector('.sx-badge')).toBeNull();
-    expect(text(filter())).toBe('');
-    expect(text(sortBtn())).toBe('');
+    expect(viewBtn()).toHaveAccessibleName('View');
+    expect(viewBtn().querySelector('.sx-dot')).toBeNull();
+    expect(text(filter())).toBe('Filter');
+    expect(text(viewBtn())).toBe('View');
   });
 
   it('opens as a modal dialog with focus inside, and Escape shuts it and hands focus back', async () => {
@@ -369,7 +375,7 @@ describe('Search.svelte: the Filter sheet', () => {
     for (const name of ['Show hits from one work', 'Greek forms found', 'Narrow by grammar']) {
       expect(within(sheet).queryByRole('group', { name })).toBeNull();
     }
-    expect(within(sheet).getByRole('button', { name: 'Show 6 hits' })).toBeInTheDocument();
+    expect(within(sheet).getByRole('button', { name: 'Show 6 instances' })).toBeInTheDocument();
   });
 
   it('puts "This search" at the head of the menu when something is chosen, and only then', async () => {
@@ -407,14 +413,55 @@ describe('Search.svelte: the Filter sheet', () => {
     expect(text(document.activeElement)).toBe('Works Nicomachean Ethics ›');
   });
 
-  it('keeps Deselect all and Apply at the foot of the forms screen', async () => {
+  // S5b (q08): the foot's button applies the ticks and shows the hits they
+  // leave, counted before it is pressed.
+  it('keeps Deselect all and "Show N instances" at the foot of the forms screen', async () => {
     await open(G);
     await fireEvent.click(filter());
     await fireEvent.click(within(await screen.findByRole('dialog', { name: 'Filter' })).getByRole('button', { name: /^Forms/ }));
     const sheet = await screen.findByRole('dialog', { name: 'Forms' });
     const foot = sheet.querySelector('.sx-foot')!;
-    expect([...foot.querySelectorAll('button')].map(text)).toEqual(['Deselect all', 'Apply']);
+    expect(foot).toHaveClass('sheet-foot');
+    expect([...foot.querySelectorAll('button')].map(text)).toEqual(['Deselect all', 'Show 6 instances']);
     expect(within(sheet).getAllByRole('checkbox')).toHaveLength(3);
+  });
+
+  // S5b (q08): what the ticks would leave, counted on the button; pressed,
+  // they are applied and the hits shown.
+  it('counts the hits the ticks leave on its button, and applies them as it shuts', async () => {
+    await open(G);
+    await fireEvent.click(filter());
+    await fireEvent.click(within(await screen.findByRole('dialog', { name: 'Filter' })).getByRole('button', { name: /^Forms/ }));
+    const sheet = await screen.findByRole('dialog', { name: 'Forms' });
+    const boxes = within(sheet).getAllByRole('checkbox');
+    await fireEvent.click(boxes.find(b => /ται/.test(b.closest('label')!.textContent!))!);
+    const show = within(sheet).getByRole('button', { name: /^Show \d+ instances?$/ });
+    expect(text(show)).toBe('Show 5 instances');
+    expect(status()).toHaveTextContent('6 instances');
+    await fireEvent.click(show);
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
+    expect(window.location.search).toContain('xf=');
+    expect(document.activeElement).toBe(filter());
+  });
+
+  // S5b (q07): one work of many, or all, a ring each.
+  it('offers All works first on the works screen, and it lifts a chosen work', async () => {
+    await open(`${G}&wf=EN`);
+    await fireEvent.click(filter());
+    await fireEvent.click(within(await screen.findByRole('dialog', { name: 'Filter' })).getByRole('button', { name: /^Works/ }));
+    const sheet = await screen.findByRole('dialog', { name: 'Works' });
+    const rows = within(within(sheet).getByRole('group', { name: 'Show hits from one work' })).getAllByRole('button');
+    expect(text(rows[0])).toBe('All works');
+    expect(rows[0]).toHaveAttribute('aria-pressed', 'false');
+    expect(rows.filter(r => r.getAttribute('aria-pressed') === 'true').map(r => text(r.querySelector('.i-t')))).toEqual(['Nicomachean Ethics']);
+    await fireEvent.click(rows[0]);
+    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    expect(window.location.search).not.toContain('wf=');
+    expect(within(sheet).getByRole('button', { name: 'All works' })).toHaveAttribute('aria-pressed', 'true');
+    // Pressed again, All works changes nothing.
+    await fireEvent.click(within(sheet).getByRole('button', { name: 'All works' }));
+    expect(window.location.search).not.toContain('wf=');
   });
 
   it('clears the grammar from its screen', async () => {
@@ -432,58 +479,79 @@ describe('Search.svelte: the Filter sheet', () => {
     expect(window.location.search).not.toContain('gf=');
   });
 
-  it('shuts from "Show N hits" and hands focus back', async () => {
+  it('shuts from "Show N instances" and hands focus back', async () => {
     await open(G);
     await fireEvent.click(filter());
     const sheet = await screen.findByRole('dialog', { name: 'Filter' });
-    await fireEvent.click(within(sheet).getByRole('button', { name: 'Show 6 hits' }));
+    await fireEvent.click(within(sheet).getByRole('button', { name: 'Show 6 instances' }));
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(document.activeElement).toBe(filter());
   });
 });
 
-describe('Search.svelte: the Sort sheet', () => {
-  const sortBtn = () => screen.getByRole('button', { name: 'Sort and display' });
+// S5b (p04): the View sheet, as §5.7 draws it.
+describe('Search.svelte: the View sheet', () => {
+  const sortBtn = () => screen.getByRole('button', { name: /^View/ });
 
-  it('holds Sort, then Group by, Context and Per page, as the site\'s square boxes', async () => {
+  it('holds Group by, Sort, Context and Per page, no glosses, then Export and Done', async () => {
     await open(G);
     await fireEvent.click(sortBtn());
-    const sheet = await screen.findByRole('dialog', { name: 'Sort and display' });
+    const sheet = await screen.findByRole('dialog', { name: 'View' });
+    expect(text(sheet.querySelector('.sx-sheet-t'))).toBe('View');
     const legends = [...sheet.querySelectorAll('fieldset legend')].map(text);
-    expect(legends).toEqual(['Sort', 'Group by', 'Context', 'Per page']);
+    expect(legends).toEqual(['Group by', 'Sort', 'Context', 'Per page']);
     for (const fs of sheet.querySelectorAll('fieldset')) {
       for (const r of fs.querySelectorAll('input[type="radio"]')) expect(r.closest('label')).toHaveClass('ck');
     }
+    expect([...sheet.querySelectorAll('fieldset')].map(fs => [...fs.querySelectorAll('label')].map(text))).toEqual([
+      ['By work', 'By form', 'By grammar'],
+      ['Bekker order', 'Works A–Z', 'Forms A–Z', 'Commonest form'],
+      ['1 line', '3 lines', 'Whole section'],
+      ['20', '40', '100', 'Citations only'],
+    ]);
     const on = [...sheet.querySelectorAll<HTMLInputElement>('input:checked')].map(i => text(i.closest('label')));
-    expect(on).toEqual(['Bekker order', 'By work', '3 lines', '40']);
+    expect(on).toEqual(['By work', 'Bekker order', '3 lines', '40']);
+    expect(sheet.querySelector('.opt-gloss')).toBeNull();
+    expect(within(sheet).getByRole('button', { name: 'Export results as CSV' })).toBeInTheDocument();
+    expect(sheet.querySelector('.sheet-foot .sheet-done')).toHaveTextContent('Done');
     expect(within(sheet).queryByRole('group', { name: 'Show hits from one work' })).toBeNull();
+  });
+
+  it('shuts on Done, focus back on View', async () => {
+    await open(G);
+    await fireEvent.click(sortBtn());
+    const sheet = await screen.findByRole('dialog', { name: 'View' });
+    await fireEvent.click(within(sheet).getByRole('button', { name: 'Done' }));
+    await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(document.activeElement).toBe(sortBtn());
   });
 
   it('applies a choice at once, stays open, and hands focus back when shut', async () => {
     const { search } = await import('../lib/search');
     await open(G);
     await fireEvent.click(sortBtn());
-    const sheet = await screen.findByRole('dialog', { name: 'Sort and display' });
+    const sheet = await screen.findByRole('dialog', { name: 'View' });
     await fireEvent.click(within(sheet).getByRole('radio', { name: 'By form' }));
     await vi.waitFor(() => expect(window.location.search).toContain('v=form'));
-    expect(screen.getByRole('dialog', { name: 'Sort and display' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'View' })).toBeInTheDocument();
     expect(search).toHaveBeenCalledTimes(1);
     await fireEvent.keyDown(document.activeElement ?? sheet, { key: 'Escape' });
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(document.activeElement).toBe(sortBtn());
   });
 
-  it('keeps Tab inside: a radio group is one stop, its checked radio', async () => {
+  // S5b: Done is the last stop now and Close the first, so the wrap runs
+  // between them; no radio group sits at either end of the sheet any more.
+  it('keeps Tab inside: Done to Close, and back', async () => {
     await open(G);
     await fireEvent.click(sortBtn());
-    const sheet = await screen.findByRole('dialog', { name: 'Sort and display' });
-    // "40" is the last stop: Tab skips the unchecked "100" and "Citations only".
-    const forty = within(sheet).getByRole('radio', { name: '40' });
-    forty.focus();
-    await fireEvent.keyDown(forty, { key: 'Tab' });
+    const sheet = await screen.findByRole('dialog', { name: 'View' });
+    const done = within(sheet).getByRole('button', { name: 'Done' });
+    done.focus();
+    await fireEvent.keyDown(done, { key: 'Tab' });
     expect(document.activeElement).toBe(within(sheet).getByRole('button', { name: 'Close' }));
     await fireEvent.keyDown(document.activeElement!, { key: 'Tab', shiftKey: true });
-    expect(document.activeElement).toBe(forty);
+    expect(document.activeElement).toBe(done);
   });
 
   it('hands focus to the menus over the hits when the window widens past the sheet', async () => {
@@ -496,7 +564,7 @@ describe('Search.svelte: the Sort sheet', () => {
     try {
       const { container } = await open(G);
       await fireEvent.click(sortBtn());
-      const sheet = await screen.findByRole('dialog', { name: 'Sort and display' });
+      const sheet = await screen.findByRole('dialog', { name: 'View' });
       within(sheet).getByRole('radio', { name: 'By form' }).focus();
       for (const f of wide) f({ matches: true });
       await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
@@ -509,7 +577,7 @@ describe('Search.svelte: the Sort sheet', () => {
   it('offers only Per page for a list of citations', async () => {
     await open(`${G}&ps=c`);
     await fireEvent.click(sortBtn());
-    const sheet = await screen.findByRole('dialog', { name: 'Sort and display' });
+    const sheet = await screen.findByRole('dialog', { name: 'View' });
     expect([...sheet.querySelectorAll('fieldset legend')].map(text)).toEqual(['Per page']);
   });
 });

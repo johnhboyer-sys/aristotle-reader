@@ -269,11 +269,16 @@ describe('Search.svelte: the count row', () => {
   const bar = (c: HTMLElement) => c.querySelector('.result-bar')!;
   const names = (c: HTMLElement) => [...bar(c).children].map(el => el.getAttribute('aria-label') ?? text(el));
 
-  it('holds the count, Save, the arrows, the filter icon and the sort icon, in that order', async () => {
+  // S5b (§5.7, r34-11): the pager's page between its arrows, and View in
+  // place of the sort icon; a display setting is View's, not Filter's.
+  it('holds the count, Save, the pager, Filter and View, in that order', async () => {
     const { container } = await open(`${G}&ps=20`, WIDE, WIDE_FORMS);
-    expect(names(container)).toEqual(['28 instances · page 1 of 2', 'Save search', 'Previous page', 'Next page', 'Filter, 1 chosen', 'Sort and display']);
-    // Save (PR 8) is words; the rest are icons.
-    for (const b of bar(container).querySelectorAll('button:not(.sx-save)')) expect(b.querySelector('svg')).not.toBeNull();
+    expect(names(container)).toEqual(['28 instances · page 1 of 2', 'Save search', 'Previous page', '1/2', 'Next page', 'Filter', 'View, 20 per page']);
+    // Each is an icon; Save, Filter and View an icon over its label.
+    for (const b of bar(container).querySelectorAll('button')) expect(b.querySelector('svg')).not.toBeNull();
+    expect([...bar(container).querySelectorAll('.sx-lab')].map(text)).toEqual(['Save search', 'Filter', 'View']);
+    // A red dot on View while it is not the default.
+    expect(bar(container).querySelector('.sx-view .sx-dot')).not.toBeNull();
     // The pager over the hits names its arrows the same way (S4a): these are the count row's.
     const row = within(bar(container) as HTMLElement);
     expect(row.getByRole('button', { name: 'Previous page' })).toBeDisabled();
@@ -286,7 +291,8 @@ describe('Search.svelte: the count row', () => {
 
   it('has no arrows for one page', async () => {
     const { container } = await open(G);
-    expect(names(container)).toEqual(['6 instances', 'Save search', 'Filter', 'Sort and display']);
+    expect(names(container)).toEqual(['6 instances', 'Save search', 'Filter', 'View']);
+    expect(bar(container).querySelector('.sx-dot')).toBeNull();
   });
 
   it('tells the count how long it is, so it can shrink to fit', async () => {
@@ -397,20 +403,23 @@ describe('set B\'s rules', () => {
     return found.join(' ');
   }
   const DESK = /@media \(min-width: 961px\) \{/;
-  const NARROW = /@media \(max-width: 960px\) \{/;
+  // S5b: the narrow rules are the desktop's query turned round (Codex's
+  // review of S4b, finding 3).
+  const NARROW = /@media not all and \(min-width: 961px\) \{/;
 
   it('keeps every row of the rail a full-size target, and leaves none of its rules in the component', () => {
     const desk = blocks(B, DESK);
-    expect(find(desk, '.search-page .sx-row .i').some(r => /min-height:\s*42px/.test(r.body))).toBe(true);
+    // S5b (Codex's review of S4b, finding 2): 44px at every width.
+    expect(find(desk, '.search-page .sx-row .i').some(r => /min-height:\s*44px/.test(r.body))).toBe(true);
     expect(find(desk, '.search-page .sx-forms .fx').some(r => /min-height:\s*44px/.test(r.body))).toBe(true);
     expect(find(desk, '.search-page .sx-forms .fx-foot .more').some(r => /min-height:\s*44px/.test(r.body))).toBe(true);
     expect(find(desk, '.search-page .sx-head-more .sx-link').some(r => /min-height:\s*44px/.test(r.body))).toBe(true);
     // The 30px rows a mouse once had are gone (round 34 draws 42px and 44px).
     expect(B).not.toMatch(/1\.875rem/);
     expect(B).not.toMatch(/pointer: fine/);
-    // The sheet's targets stay 40px.
-    expect(find(topLevel(B), '.search-page .sx-row .i').some(r => /min-height:\s*2\.5rem/.test(r.body))).toBe(true);
-    expect(find(topLevel(B), '.search-page .sx-sum .x').some(r => /width:\s*2\.5rem/.test(r.body))).toBe(true);
+    // The sheet's targets are 44px too.
+    expect(find(topLevel(B), '.search-page .sx-row .i').some(r => /min-height:\s*2\.75rem/.test(r.body))).toBe(true);
+    expect(find(topLevel(B), '.search-page .sx-sum .x').some(r => /width:\s*2\.75rem/.test(r.body))).toBe(true);
     for (const sel of ['.sx-row .i', '.sx-layout', '.result-count', '.fx-list', '.sx-side']) expect(find(style, sel)).toEqual([]);
   });
 
@@ -423,7 +432,8 @@ describe('set B\'s rules', () => {
     // Two covers that travel with the list, two shades that stay at its edges.
     expect(box.match(/no-repeat local/g)).toHaveLength(2);
     expect(box.match(/radial-gradient\([^;]*?no-repeat scroll/g)).toHaveLength(2);
-    expect(find(desk, '.search-page .sx-list').some(r => /max-height:\s*294px/.test(r.body))).toBe(true);
+    // Seven 44px rows.
+    expect(find(desk, '.search-page .sx-list').some(r => /max-height:\s*308px/.test(r.body))).toBe(true);
     expect(find(desk, '.search-page .sx-forms .fx-list').some(r => /max-height:\s*330px/.test(r.body))).toBe(true);
     // Unbounded only on the forms screen of the narrow sheet, which then
     // does not scroll itself: the list fills it, and no list scrolls inside
@@ -453,28 +463,35 @@ describe('set B\'s rules', () => {
     expect(find(desk, '.search-page .sx-side.wp-open > .sx-panel').some(r => /display:\s*none/.test(r.body))).toBe(true);
   });
 
-  it('lays the count row out as one line up to 960px, the text giving way', () => {
+  // S5b (§5.7, r34-11): the count over "instances", then icons over 14px
+  // labels, one row over a 2px rule.
+  it('lays the count row out as one line under 961px, each icon over its label', () => {
     const narrow = blocks(B, NARROW);
-    expect(find(narrow, '.search-page .result-bar').some(r => /flex-wrap:\s*nowrap/.test(r.body) && /container-type:\s*inline-size/.test(r.body))).toBe(true);
+    expect(find(narrow, '.search-page .result-bar').some(r => /flex-wrap:\s*nowrap/.test(r.body) && /border-bottom:\s*2px solid var\(--ink\)/.test(r.body))).toBe(true);
     const count = find(narrow, '.search-page .result-count').map(r => r.body).join(';');
-    expect(count).toMatch(/white-space:\s*nowrap/);
+    expect(count).toMatch(/flex-direction:\s*column/);
     expect(count).toMatch(/min-width:\s*0/);
-    expect(count).toMatch(/font-size:\s*max\(0\.8125rem,\s*min\(1\.25rem,\s*calc\(\(100cqi - var\(--icons\) - var\(--save, 0rem\)\) \/ \(var\(--n\) \* 0\.46\)\)\)\)/);
-    // Cut, not shrunk past reading, it says so.
-    expect(count).toMatch(/text-overflow:\s*ellipsis/);
-    // The display menus are in the sort sheet there, and what the rail holds
-    // under the count is in the filter sheet.
+    expect(count).toMatch(/font:\s*600 14px/);
+    // The number in Oswald and red, smaller as it grows longer.
+    const n = find(narrow, '.search-page .rc-n').map(r => r.body).join(';');
+    expect(n).toMatch(/font:\s*700 min\(46px, calc\(150px \/ var\(--d, 3\)\)\)\/\.95 var\(--tface\)/);
+    expect(n).toMatch(/color:\s*var\(--red-ink\)/);
+    // The display menus are in View there; Export is too, and the
+    // inflection search is in Filter.
     expect(find(narrow, '.search-page .sopt.sx-display').some(r => /display:\s*none/.test(r.body))).toBe(true);
-    expect(rules(narrow).filter(r => r.sel === '.search-page :is(.sx-head-more, .sx-save-w)').some(r => /display:\s*none/.test(r.body))).toBe(true);
-    // The icons: no box, a 44px target, never shrunk.
-    const icon = find(topLevel(B), '.search-page .sx-icon').map(r => r.body).join(';');
-    expect(icon).toMatch(/border:\s*none/);
-    expect(icon).toMatch(/height:\s*2\.75rem/);
+    expect(rules(narrow).filter(r => r.sel.includes('.search-page .sx-head-more .sx-link:is(.export-btn, .sx-variants)')).some(r => /display:\s*none/.test(r.body))).toBe(true);
+    // The icons: no box, a 44px target or more, never shrunk, the label 14px.
+    const icon = rules(narrow).filter(r => r.sel === '.search-page :is(.sx-icon, .sx-save)').map(r => r.body).join(';');
+    expect(icon).toMatch(/border:\s*0/);
+    expect(icon).toMatch(/height:\s*52px/);
+    expect(icon).toMatch(/min-width:\s*50px/);
     expect(icon).toMatch(/flex:\s*none/);
-    // A desktop has its rail and its menus, so no icons.
+    expect(icon).toMatch(/flex-direction:\s*column/);
+    expect(icon).toMatch(/font:\s*600 14px/);
+    expect(find(narrow, '.search-page .sx-pg').some(r => /font:\s*600 14px/.test(r.body))).toBe(true);
+    // A desktop has its rail and its menus, so no icons and no page in the row.
     expect(find(blocks(B, DESK), '.search-page .sx-icon').some(r => /display:\s*none/.test(r.body))).toBe(true);
-    // A phone has no pager at the top: only the one under the hits.
-    expect(find(block(B, /@media \(max-width: 599\.98px\)/), '.search-page .sx-arrow').some(r => /display:\s*none/.test(r.body))).toBe(true);
+    expect(rules(blocks(B, DESK)).filter(r => r.sel === '.search-page :is(.sx-pg, .sx-save .sx-ico)').some(r => /display:\s*none/.test(r.body))).toBe(true);
   });
 
   it('gives a hit’s reference a narrow column in By work, where it is only the section', () => {
@@ -483,8 +500,10 @@ describe('set B\'s rules', () => {
     // 104px where the place names its work, 20px to the text.
     expect(find(topLevel(B), '.search-page .instance').some(r => /grid-template-columns:\s*104px minmax\(0, 1fr\)/.test(r.body) && /column-gap:\s*20px/.test(r.body))).toBe(true);
     expect(find(topLevel(B), '.search-page .sx-results.by-work .instance').some(r => /grid-template-columns:\s*84px minmax\(0, 1fr\)/.test(r.body))).toBe(true);
-    // A phone keeps one column, the reference over the text, in every view.
+    // An upright phone keeps one column, the reference over the text, in
+    // every view; sideways keeps the reference column (r34-13, S5b).
     expect(find(blocks(B, NARROW), '.search-page .sx-results.by-work .instance').some(r => /grid-template-columns:\s*minmax\(0, 1fr\)/.test(r.body))).toBe(true);
+    expect(B).toMatch(/@media not all and \(max-height: 500px\) \{ \.search-page \.instance, \.search-page \.sx-results\.by-work \.instance \{ grid-template-columns: minmax\(0, 1fr\)/);
     // None of it is left in the component.
     expect(find(style, '.instance')).toEqual([]);
   });

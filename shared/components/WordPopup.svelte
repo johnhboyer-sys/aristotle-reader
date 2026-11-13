@@ -22,6 +22,11 @@
   // page's flow (ruling 12, d24). The page gives the focus back to the word
   // on Close or Esc, and a click elsewhere leaves the card open.
   export let rail = false;
+  // The search page on a phone: a sheet over the page, worded as the rail's
+  // card (q09), and the page gives the focus back to the word, as it does
+  // for the rail.
+  export let searchSheet = false;
+  $: worded = rail || searchSheet;
 
   let dialogEl: HTMLElement;
   let previousFocus: HTMLElement | null = null;
@@ -282,6 +287,8 @@
     if (rail) return;
     const t = e.target as HTMLElement | null;
     if (!t || t.closest(KEEP_OPEN) || (b && t.closest('.b-rh, .b-menu'))) return;
+    // Another word of the hits: the page moves the card to it.
+    if (searchSheet && t.closest('button.gw')) return;
     // A text-selection drag ends in a click on the ancestor; selecting Greek
     // (e.g. for the append-citation copy) must not dismiss the panel. (A later
     // unrelated click clears the selection at mousedown, so a lingering
@@ -296,7 +303,7 @@
   });
 
   onDestroy(() => {
-    if (rail) return;
+    if (rail || searchSheet) return;
     // preventScroll: the reader pins its own scroll position across the close
     // reflow; letting focus() scroll to the old word snaps the page around.
     previousFocus?.focus({ preventScroll: true });
@@ -374,7 +381,7 @@
 >
   <div class="word-sidebar-head">
     <span class="popup-surface" lang="grc">{token.t}</span>
-    <button class="settings-close" on:click={onClose} aria-label="Close">{rail ? 'Close' : '×'}</button>
+    <button class="settings-close" on:click={onClose} aria-label="Close">{worded ? 'Close' : '×'}</button>
   </div>
   <div class="word-sidebar-body">
     {#if loading}
@@ -397,7 +404,7 @@
             <!-- &nbsp;, not a plain space: Svelte trims whitespace at the start of an
                  element's content, so " (B)" shipped as "(B)" hard against the headword.
                  It also keeps LSJ's letter from wrapping away from the word it marks. -->
-            <span class="lemma" lang="grc">{#if rail}<span class="lemma-from" lang="en">from</span>{' '}{/if}{card.head}{#if card.hom}<span class="lemma-hom" lang="en">&nbsp;({card.hom})</span>{/if}</span>
+            <span class="lemma" lang="grc">{#if worded}<span class="lemma-from" lang="en">from</span>{' '}{/if}{card.head}{#if card.hom}<span class="lemma-hom" lang="en">&nbsp;({card.hom})</span>{/if}</span>
             <span class="gloss">{card.gloss}</span>
             {#if !card.gloss && card.properName}
               <!-- Morpheus carries no gloss for most names (LSJ has no entry to
@@ -412,7 +419,7 @@
             {#if card.pos.length}<span class="card-class">{classLine(card.pos)}</span>{/if}
             <dl class="parse-rows">
               {#each card.rows as row}
-                <dt>{rail ? parseInWords(row.text) : row.text}</dt>
+                <dt>{worded ? parseInWords(row.text) : row.text}</dt>
                 <dd>{row.dialect}</dd>
               {/each}
             </dl>

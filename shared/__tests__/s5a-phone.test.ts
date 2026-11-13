@@ -230,7 +230,9 @@ describe('the phone rules in b-search.css', () => {
     if (!found.length) throw new Error(`no rule for ${sel}`);
     return found.join(';');
   };
-  const narrow = blocks('@media (max-width: 960px) {');
+  // S5b: the narrow rules are the desktop's query turned round, so no width
+  // is neither (Codex's review of S4b, finding 3).
+  const narrow = blocks('@media not all and (min-width: 961px) {');
   const desk = blocks('@media (min-width: 961px) {');
 
   it('draws the phone-only parts on no wide screen', () => {
@@ -252,7 +254,13 @@ describe('the phone rules in b-search.css', () => {
     expect(rule(narrow, '.search-page .sq-tool-l')).toMatch(/font:\s*600 14px/);
     const sheet = rule(narrow, '.search-page :is(.sheet, .search-form .opt-panel.sheet)');
     expect(sheet).toMatch(/position:\s*fixed/);
-    expect(sheet).toMatch(/bottom:\s*0/);
+    // S5b (§5.9): the sheet ends where its foot band begins, and the band is
+    // fixed to the foot of the screen, so no row scrolls behind it.
+    expect(sheet).toMatch(/bottom:\s*var\(--sheet-foot\)/);
+    const foot = rule(narrow, '.search-page .sheet-foot');
+    expect(foot).toMatch(/position:\s*fixed/);
+    expect(foot).toMatch(/bottom:\s*0/);
+    expect(foot).toMatch(/height:\s*var\(--sheet-foot\)/);
     expect(rule(narrow, '.search-page .sheet-done')).toMatch(/height:\s*48px/);
   });
 
