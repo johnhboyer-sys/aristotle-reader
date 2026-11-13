@@ -55,6 +55,7 @@ const top = { act: 'scrollTop' };
 const EDITOR = '.prox-terms'; // the proximity editor's term grid, drawn only while it is open
 const WORD = '[role="dialog"][aria-label^="Word"]'; // the word card a click on a hit opens (WordPopup)
 const ARETH = { sel: '.query-input', value: 'ἀρετή' }; // a)reth/ typed with Beta Code on
+const OPTS = opens(btn('.opts-toggle'), '.opts-toggle[aria-expanded="true"]'); // a phone's Options, open
 
 // Menu and control states (menus.mjs): viewport-only shots, light.
 const MENUS = [
@@ -94,18 +95,18 @@ const MENUS = [
   ['n04-add-term', '/search', [1152, 1200], [opens(btn('.advanced-trigger'), EDITOR), opens(btn('button', 'Add term'), '.combo-slot >> nth=2')]],
   ['n06-grammar-term', `/search?c=${e('l:areth')}&c=${e('g:case.gen,number.pl')}&cw=3`, [1152, 1200], [opens(btn('.prox-change'), EDITOR)]],
   ['n05-phone-three', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('l:hdonh')}&cw=10`, P, []],
-  ['p01-options', AR, P, [btn('.z-opts')]],
-  ['p02-options-match', AR, P, [btn('.z-opts'), sum('Match')]],
+  ['p01-options', AR, P, [OPTS]],
+  ['p02-options-match', AR, P, [OPTS, sum('Match')]],
   ['p03-filter', AR, P, [btn('.sx-icon', 'Filter')]],
   ['p04-sort', AR, P, [btn('.sx-icon', /Sort|View/)]],
-  ['p05-keyboard', AR, P, [btn('.gk-toggle')]],
-  ['p06-advanced', AR, P, [btn('.z-opts'), btn('.advanced-trigger')]],
-  ['q01-form', AR, P, [btn('.z-opts'), sum('Form')]],
-  ['q02-accents-on', AR, P, [btn('.z-opts'), btn('.opt-btn', 'Accents')]],
-  ['q03-in-works', AR, P, [btn('.z-opts'), btn('.z-in > summary'), btn('.z-in label', 'Choose works')]],
-  ['q13-in-menu', AR, P, [btn('.z-opts'), btn('.z-in > summary')]],
-  ['q04-lemma-typing', '/search', P, [btn('.z-opts'), btn('.z-lemma'), opens(typeIn('.query-input', 'ψυχ'), '.gs-under')]],
-  ['q05-near-editor', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('lb:hdonh')}&cw=10`, P, [btn('details.combo-panel > summary')]],
+  ['p05-keyboard', AR, P, [opens(btn('.gk-toggle'), '#grk-keys')]],
+  ['p06-advanced', AR, P, [OPTS, opens(btn('.advanced-trigger'), EDITOR)]],
+  ['q01-form', AR, P, [OPTS, sum('Form')]],
+  ['q02-accents-on', AR, P, [OPTS, opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), btn('.search-btn')]],
+  ['q03-in-works', AR, P, [OPTS, opens(btn('.opt-in > summary'), 'details.opt-in[open]'), opens(btn('.opt-in label', 'Choose works'), '#works-panel')]],
+  ['q13-in-menu', AR, P, [OPTS, opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
+  ['q04-lemma-typing', '/search', P, [OPTS, opens(btn('.opt-lemma'), '.opt-lemma[aria-pressed="true"]'), opens(typeIn('.query-input', 'ψυχ'), '.gs-under')]],
+  ['q05-near-editor', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('lb:hdonh')}&cw=10`, P, [opens(btn('.prox-change'), EDITOR)]],
   ['q06-beta-code', '/search', P, [btn('.sq-row .tog'), opens(typeIn('.query-input', 'a)reth/'), ARETH)]],
   ['q07-filter-works', AR, P, [btn('.sx-icon', 'Filter'), opens(btn('.sx-panel button', 'Works'), '.sx-panel[data-screen="works"]')]],
   ['q08-filter-forms', AR, P, [btn('.sx-icon', 'Filter'), opens(btn('.sx-panel button', 'Forms'), '.sx-panel[data-screen="forms"]')]],

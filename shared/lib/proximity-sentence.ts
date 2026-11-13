@@ -63,12 +63,15 @@ export function termWords(t: SentenceTerm, heads: (key: string) => string): stri
 
 const RELATION_WORDS: Record<SlotRelation, string> = { near: 'near', before: 'before', after: 'after', not: 'not near' };
 
-/** The whole search in one sentence; `works` is the In value, or null for all works. */
+/** The whole search in one sentence; `works` is the In value, or null for all works.
+ *  `lead` puts the distance first, "within 10 words: ἕξις near ἀρετή", as the
+ *  phone's open editor reads it (§5.7). */
 export function proximitySentence(
   terms: SentenceTerm[],
   opts: { window: number; unit: WindowUnit; ordered: boolean },
   heads: (key: string) => string,
   works: string | null,
+  lead = false,
 ): string {
   const groups = comboGroups(terms, usable);
   const named = groups.map(g => {
@@ -79,16 +82,19 @@ export function proximitySentence(
   const parts = groups.length > 1
     ? groups.slice(1).map((g, i) => `${named[i + 1]} ${RELATION_WORDS[g.relation]} ${named[g.target]}`)
     : named.slice(0, 1);
+  let first = '';
   if (groups.length > 1) {
-    parts.push(opts.unit === 'words' ? `within ${opts.window} word${opts.window === 1 ? '' : 's'}`
+    const distance = opts.unit === 'words' ? `within ${opts.window} word${opts.window === 1 ? '' : 's'}`
       : opts.unit === 'line' ? 'in the same line'
       : opts.unit === 'chapter' ? 'in the same chapter'
-      : 'in the same speech');
+      : 'in the same speech';
+    if (lead) first = `${distance}: `;
+    else parts.push(distance);
     const placed = groups.slice(1).some(g => g.relation === 'before' || g.relation === 'after');
     if (opts.ordered && !placed) parts.push('in this order');
   }
   if (works) parts.push(`in ${works}`);
-  return parts.join(', ');
+  return first + parts.join(', ');
 }
 
 /** The terms as the search box shows them while proximity is live, "; "

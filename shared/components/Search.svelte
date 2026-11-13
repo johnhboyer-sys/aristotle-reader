@@ -1331,7 +1331,7 @@
       : sameSet(works, chosen) ? label
       : `${works.length} works`;
   $: proxSentence = proxLive && lastSearch?.combo
-    ? proximitySentence(lastSearch.combo.slots, lastSearch.combo, headsOf(pickInfo), inValue(lastSearch.works, selectedWorks, worksValue)) : '';
+    ? proximitySentence(lastSearch.combo.slots, lastSearch.combo, headsOf(pickInfo), inValue(lastSearch.works, selectedWorks, worksValue), narrowScreen && advancedOpen) : '';
   // While proximity holds the box, it shows the terms, "; " between them
   // (John, 12 Nov): the search shown, or the open editor's before one is.
   $: proxTerms = !comboActive ? ''
@@ -1343,8 +1343,43 @@
   let proxTrigger: HTMLButtonElement | undefined;
   function toggleAdvanced() {
     advancedOpen = !advancedOpen;
-    if (advancedOpen) void seedFromQuery();
+    if (advancedOpen) { optsOpen = false; void seedFromQuery(); }
   }
+  // A phone folds the options under "Options" (§5.7): open, they are a grid
+  // of two columns; shut, a line under the row says what they are set to.
+  // Options and the editor are open one at a time there. A wide screen
+  // draws neither the link nor the line, so this never shows on it.
+  let optsOpen = false;
+  function toggleOpts() {
+    optsOpen = !optsOpen;
+    if (optsOpen) advancedOpen = false;
+    else for (const m of document.querySelectorAll<HTMLDetailsElement>('.sopt:not(.sx-display) .opt[open]')) m.open = false;
+  }
+  $: optsLine = optionWords(lang, grkMode, engMode, matchMode, engForms, accentSensitive, punctuation, lemmaOn, langOp, soloLemmaActive && !!engQuery.trim(), worksValue);
+  function optionWords(lang: Lang, gm: SearchMode, em: SearchMode, form: MatchMode | 'text', engAny: boolean, accents: boolean,
+    stops: boolean, lemma: boolean, op: LangOp, joined: boolean, works: string): string[] {
+    const g = lang !== 'english', en = lang !== 'greek';
+    const both = (gw: string | null, ew: string | null) =>
+      !gw ? (ew ? [ew] : []) : !ew || gw === ew ? [gw] : [`Greek ${gw}`, `English ${ew}`];
+    const gForm = form === 'text' ? 'running text' : form === 'lemma' ? 'any form' : 'as typed';
+    return [
+      ...both(g && form !== 'text' ? lower1(modeLabel(gm)) : null, en ? lower1(modeLabel(em)) : null),
+      ...both(g ? gForm : null, en ? (engAny ? 'any form' : 'as typed') : null),
+      ...(g ? [accents ? 'accents observed' : 'accents ignored'] : []),
+      ...(g && form === 'text' && stops ? ['punctuation observed'] : []),
+      ...(g && form !== 'text' && lemma ? ['by lemma'] : []),
+      ...(lang === 'both' || joined ? [op === 'and' ? 'both languages' : 'either language'] : []),
+      `in ${works}`,
+    ];
+  }
+  // The settings of the results that are not their defaults, in red after
+  // the options ("grouped by grammar").
+  $: viewLine = [
+    ...(view !== 'page' ? [`grouped by ${VIEWS.find(v => v.id === view)?.value ?? view}`] : []),
+    ...(sort !== 'page' ? [lower1(SORTS.find(v => v.id === sort)?.value ?? sort)] : []),
+    ...(context !== '3' ? [CONTEXTS.find(v => v.id === context)?.value ?? context] : []),
+    ...(pageSize === 'c' ? ['citations only'] : pageSize !== '40' ? [`${pageSize} per page`] : []),
+  ];
   async function closeEditor() {
     advancedOpen = false;
     await tick();
@@ -3011,6 +3046,11 @@
   // A desktop width (round 34, 961px and up): the rail beside the hits, and
   // the word card in the rail's column.
   let wide = false;
+  // A phone or a tablet (960px and under): the open editor's sentence leads
+  // with its distance (§5.7).
+  let narrowScreen = false;
+  let narrowQuery: MediaQueryList | undefined;
+  const onNarrow = (e: MediaQueryListEvent) => { narrowScreen = e.matches; };
   onMount(() => {
     window.addEventListener('popstate', onPopState);
     canSave = savedAvailable();
@@ -3018,6 +3058,9 @@
     wideQuery = window.matchMedia?.('(min-width: 961px)');
     wide = !!wideQuery?.matches;
     wideQuery?.addEventListener?.('change', onWide);
+    narrowQuery = window.matchMedia?.('(max-width: 960px)');
+    narrowScreen = !!narrowQuery?.matches;
+    narrowQuery?.addEventListener?.('change', onNarrow);
     phoneQuery = window.matchMedia?.(PHONE);
     phoneQuery?.addEventListener?.('change', onPhone);
     const s = decodeSearchUrl(window.location.search, WORK_IDS);
@@ -3027,6 +3070,7 @@
   onDestroy(() => {
     if (typeof window !== 'undefined') window.removeEventListener('popstate', onPopState);
     wideQuery?.removeEventListener?.('change', onWide);
+    narrowQuery?.removeEventListener?.('change', onNarrow);
     phoneQuery?.removeEventListener?.('change', onPhone);
     if (typeof document !== 'undefined') document.documentElement.style.overflow = '';
   });
@@ -3801,6 +3845,10 @@
     </ul>
   {/snippet}
 
+  <!-- A menu of the form is a sheet on a phone (§5.9): a head, its choices,
+       and a Done band at its foot; a wide screen draws no band. -->
+  {#snippet sheetDone()}<div class="sheet-foot"><button type="button" class="sheet-done" on:click={shutOpt}>Done</button></div>{/snippet}
+
   {#snippet caret()}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>{/snippet}
 
   <!-- A menu over the hits, drawn as the search form's are (§5.2): its value
@@ -3898,7 +3946,7 @@
             <span class="sq-tool-l" aria-hidden="true">Keyboard</span>
           </button>
           {#if lang !== 'english'}
-            <button type="button" class="sq-tool tog" aria-pressed={betaMode} disabled={comboActive} on:click={toggleBeta} title="Type Beta Code, see Greek: lo/gos becomes λόγος as you type"><span lang="grc">β</span> Beta Code</button>
+            <button type="button" class="sq-tool tog" aria-pressed={betaMode} disabled={comboActive} on:click={toggleBeta} title="Type Beta Code, see Greek: lo/gos becomes λόγος as you type"><span lang="grc">β</span> <span class="sq-tool-l">Beta Code</span></button>
           {/if}
           {#if sugg.length && !lemmaOn && !(kbdOpen && !kbdSheet)}{@render suggestList(sugg, suggActive, lemmaGlosses, false)}{/if}
         </div>
@@ -3960,27 +4008,28 @@
     <!-- The options: menus on a hairline underline, the switches alone, and
          Proximity with Search as one block at the right (ruling 4). Under Both,
          three rows: Greek, English, then what joins them and where. -->
-    <div class="sopt" class:sopt-both={lang === 'both'} class:prox-editing={advancedOpen}>
+    <div class="sopt" class:sopt-both={lang === 'both'} class:prox-editing={advancedOpen} class:opts-open={optsOpen} class:works-picking={worksOpen}>
       {#if lang !== 'english'}
         <div class="sopt-g">
           {#if matchMode !== 'text'}
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>{lang === 'both' ? 'Greek match' : 'Match'} <b>{lower1(modeLabel(grkMode))}{@render caret()}</b></summary>
-            <fieldset class="opt-panel">
-              <legend class="opt-title">{lang === 'both' ? 'Greek match' : 'Match'}</legend>
+            <fieldset class="opt-panel sheet">
+              <legend class="opt-title sheet-head">{lang === 'both' ? 'Greek match' : 'Match'}</legend>
               {#each MODE_OPTS as opt}
                 <div class="opt-row">
                   <label class="ck"><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} aria-describedby={`gm-${opt.v}`} /><span>{opt.l}</span></label>
                   <small class="opt-gloss" id={`gm-${opt.v}`}>{opt.g}</small>
                 </div>
               {/each}
+              {@render sheetDone()}
             </fieldset>
           </details>
           {/if}
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>{lang === 'both' ? 'Greek form' : 'Form'} <b>{matchMode === 'text' ? 'running text' : matchMode === 'lemma' ? 'any form' : 'as typed'}{@render caret()}</b></summary>
-            <fieldset class="opt-panel">
-              <legend class="opt-title">{lang === 'both' ? 'Greek form' : 'Form'}</legend>
+            <fieldset class="opt-panel sheet">
+              <legend class="opt-title sheet-head">{lang === 'both' ? 'Greek form' : 'Form'}</legend>
               <div class="opt-row">
                 <label class="ck"><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} aria-describedby="gf-lemma" /><span>Any form of this word</span></label>
                 <small class="opt-gloss" id="gf-lemma"><span lang="grc">ἀρετή</span> finds <span lang="grc">ἀρετῆς</span> and <span lang="grc">ἀρετάς</span></small>
@@ -3993,6 +4042,7 @@
                 <label class="ck"><input type="radio" name="matchmode" value="text" bind:group={matchMode} aria-describedby="gf-text" /><span>Running text</span></label>
                 <small class="opt-gloss" id="gf-text"><span lang="grc">λογ</span> finds <span lang="grc">λόγος</span> and <span lang="grc">ἀναλογία</span></small>
               </div>
+              {@render sheetDone()}
             </fieldset>
           </details>
           <!-- One choice, so one tap: a switch, drawn alone (ruling 5). -->
@@ -4016,22 +4066,24 @@
         <div class="sopt-e">
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>{lang === 'both' ? 'English match' : 'Match'} <b>{lower1(modeLabel(engMode))}{@render caret()}</b></summary>
-            <fieldset class="opt-panel">
-              <legend class="opt-title">{lang === 'both' ? 'English match' : 'Match'}</legend>
+            <fieldset class="opt-panel sheet">
+              <legend class="opt-title sheet-head">{lang === 'both' ? 'English match' : 'Match'}</legend>
               {#each MODE_OPTS as opt}
                 <div class="opt-row">
                   <label class="ck"><input type="radio" name="engmode" value={opt.v} bind:group={engMode} aria-describedby={`em-${opt.v}`} /><span>{opt.l}</span></label>
                   <small class="opt-gloss" id={`em-${opt.v}`}>{opt.g}</small>
                 </div>
               {/each}
+              {@render sheetDone()}
             </fieldset>
           </details>
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>{lang === 'both' ? 'English form' : 'Form'} <b>{engForms ? 'any form' : 'as typed'}{@render caret()}</b></summary>
-            <fieldset class="opt-panel" title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
-              <legend class="opt-title">{lang === 'both' ? 'English form' : 'Form'}</legend>
+            <fieldset class="opt-panel sheet" title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
+              <legend class="opt-title sheet-head">{lang === 'both' ? 'English form' : 'Form'}</legend>
               <div class="opt-row"><label class="ck"><input type="radio" name="engforms" value={true} bind:group={engForms} /><span>Any form of this word</span></label></div>
               <div class="opt-row"><label class="ck"><input type="radio" name="engforms" value={false} bind:group={engForms} /><span>Only as I typed it</span></label></div>
+              {@render sheetDone()}
             </fieldset>
           </details>
         </div>
@@ -4041,10 +4093,11 @@
         {#if lang === 'both' || (soloLemmaActive && engQuery.trim())}
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>Hits match <b>{langOp === 'and' ? 'both languages' : 'either language'}{@render caret()}</b></summary>
-            <fieldset class="opt-panel op-group">
-              <legend class="opt-title">Hits match</legend>
+            <fieldset class="opt-panel sheet op-group">
+              <legend class="opt-title sheet-head">Hits match</legend>
               <div class="opt-row"><label class="ck" title="Only passages matching both queries"><input type="radio" name="op" value="and" bind:group={langOp} /><span>Both languages</span></label></div>
               <div class="opt-row"><label class="ck" title="Passages matching either query"><input type="radio" name="op" value="or" bind:group={langOp} /><span>Either language</span></label></div>
+              {@render sheetDone()}
             </fieldset>
           </details>
         {/if}
@@ -4052,15 +4105,16 @@
              choice from the works picker, which shows In open while it is. -->
         <details class="opt opt-in" class:picking={worksOpen} on:toggle={closeOtherOpts}>
           <summary>In <b>{worksValue}{@render caret()}</b></summary>
-          <fieldset class="opt-panel">
-            <legend class="opt-title">In</legend>
+          <fieldset class="opt-panel sheet">
+            <legend class="opt-title sheet-head">In</legend>
             {#each WORKS_SCOPES as sc}
               <div class="opt-row" class:opt-rule={sc.v === 'pick'}>
                 <label class="ck"><input type="radio" name="worksscope" value={sc.v} checked={worksScope === sc.v} on:click={(e) => setWorksScope(sc.v, e)} aria-describedby={`ws-${sc.v}`} /><span>{sc.l}</span></label>
                 <small class="opt-gloss" id={`ws-${sc.v}`}>{sc.g}</small>
               </div>
             {/each}
-          </fieldset>
+            {@render sheetDone()}
+            </fieldset>
         </details>
         {#if SPEAKERS}
         <button
@@ -4073,6 +4127,8 @@
         {/if}
       </div>
       <div class="sopt-act">
+        <!-- A phone's: the options folded under one link (§5.7). -->
+        <button type="button" class="opts-toggle" aria-expanded={optsOpen} on:click={toggleOpts}>Options{@render caret()}</button>
         <button
           type="button"
           class="advanced-trigger"
@@ -4089,6 +4145,11 @@
         {/if}
       </div>
     </div>
+    {#if !optsOpen && !advancedOpen && !proxLive && !worksOpen}
+      <!-- A phone's line of what the folded options are set to, and the
+           settings of the results that are not their defaults, in red. -->
+      <p class="sopt-sum">{optsLine.join(' · ')}{#each viewLine as v}{' · '}<span class="sopt-sum-v">{v}</span>{/each}</p>
+    {/if}
     {#if lemmaOn && sugg.length}
       <!-- Lemma on: the dictionary words open under the options, so the
            choice is in view, and the results step back behind them. -->
@@ -4152,6 +4213,11 @@
                     <span class="prox-tn" id={`combo-slot-${slot.id}`}>Term {n}</span>
                   </div>
                 {/if}
+
+                <!-- A phone names each control over it (§5.7); a wide screen
+                     names the columns once, on term 1's line. -->
+                <span class="prox-ml prox-m1" aria-hidden="true">{i === 0 ? 'Kind' : 'Relation'}</span>
+                <span class="prox-ml prox-m2" aria-hidden="true">{i === 0 ? 'Distance' : 'Kind'}</span>
 
                 <div class="prox-word prox-c1">
                   {#if slot.kind === 'lemma'}
