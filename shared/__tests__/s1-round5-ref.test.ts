@@ -47,12 +47,18 @@ it.skipIf(!dataPresent)('a Greek hit is labelled, linked, and exported at its ow
 }, 240000);
 
 it.skipIf(!dataPresent)('a Greek hit on a lettered line keeps its letter (needs the built corpus)', async () => {
-  // Categories 2b6b holds ὑποκειμέναις; so does 2b5, whose lines it shares,
-  // so the two are one instance (S4a), cited to both lines, the letter kept.
+  // Categories 2b5 and 2b6b both hold ὑποκειμέναις. At three lines 2b5 draws
+  // lines 4, 5, 6 and 2b6b draws 6a, 6b, 6c: no line is shared, so they are
+  // two instances, each with its own word, 2b6b cited and linked with its
+  // letter. (They merged once only because 6b was read as line 6; Codex R8b.)
   const page = await real('g=ὑποκειμέναις&m=form&w=Cat');
   const a = refs(page.container).find(el => /loc=2b:5(&|$)/.test(el.getAttribute('href') ?? ''));
+  const b = refs(page.container).find(el => /loc=2b:6b(&|$)/.test(el.getAttribute('href') ?? ''));
   expect(a).toBeTruthy();
-  expect(shown(a!)).toBe('2b5–6b');
+  expect(b).toBeTruthy();
+  expect(shown(a!)).toBe('2b5');
+  expect(shown(b!)).toBe('2b6b');
+  for (const el of [a!, b!]) expect(shown(el.closest('li')!.querySelector('.inst-snippet'))).toContain('ὑποκειμέναις');
   page.unmount();
 }, 240000);
 

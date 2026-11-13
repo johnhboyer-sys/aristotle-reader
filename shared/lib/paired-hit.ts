@@ -28,7 +28,7 @@ export const PAIR_GREEK_LINES = 3;
  * turn flow to go by) a whole section. */
 export interface PairUnit {
   section: string;                                                  // column token
-  greek: { n: number; from: number; to: number; text: string }[];   // line spans
+  greek: { n: number; sub?: string; from: number; to: number; text: string }[];   // line spans
   english: Record<string, string>;                                  // translation id → text
   /** The turn the unit is cut from; -1 for a whole section. */
   turn: number;
@@ -112,13 +112,13 @@ export function pairUnits(book: Book, translations: Ref[]): PairIndex {
         const greek = seg.greek.filter(l => l.n >= n && l.n < end);
         const unit: PairUnit = { section: seg.column, turn: -1,
           first: seg.greek.filter(l => l.n < n).reduce((sum,l) => sum+l.tokens.length,0),
-          greek: greek.map(l => ({ n:l.n, from:0, to:l.text.length, text:l.text.trim() })), english:{} };
+          greek: greek.map(l => ({ n:l.n, sub:l.sub, from:0, to:l.text.length, text:l.text.trim() })), english:{} };
         for (const t of translations) unit.english[t.id] = bekkerEnglish(seg, t, n, end);
         return unit;
       }).filter(u => u.greek.length);
       index.units.push(...units);
       index.bySection.set(seg.column, units);
-      index.owners.set(seg.id, seg.greek.flatMap(l => l.tokens.map(() => units.find(u => u.greek.some(g => g.n === l.n))!)));
+      index.owners.set(seg.id, seg.greek.flatMap(l => l.tokens.map(() => units.find(u => u.greek.some(g => g.n === l.n && g.sub === l.sub))!)));
     }
     return index;
   }
@@ -146,7 +146,7 @@ export function pairUnits(book: Book, translations: Ref[]): PairIndex {
         }
         if (open?.unit !== unit) {
           if (open) open.span.to = tok.o;
-          const span = { n: line.n, from: ti ? tok.o : 0, to: line.text.length, text: '' };
+          const span = { n: line.n, sub: line.sub, from: ti ? tok.o : 0, to: line.text.length, text: '' };
           unit.greek.push(span);
           spans.push(span);
           open = { unit, span };
@@ -245,7 +245,7 @@ export function pairContext(index: PairIndex, seg: Segment, unit: PairUnit, cont
   const from = unit.greek[0]?.n ?? 1;
   const to = unit.greek.at(-1)?.n ?? from;
   const greek = seg.greek.filter(l => l.n >= from-reach && l.n <= to+reach);
-  return { ...unit, greek: greek.map(l => ({n:l.n,from:0,to:l.text.length,text:l.text})),
+  return { ...unit, greek: greek.map(l => ({n:l.n,sub:l.sub,from:0,to:l.text.length,text:l.text})),
     english: Object.fromEntries(index.translations.map(t => [t.id, bekkerEnglish(seg,t,from-reach,to+reach+1)])) };
 }
 
@@ -255,7 +255,7 @@ function wholeSection(index: PairIndex, seg: Segment): PairUnit {
   if (!unit) {
     unit = {
       section: seg.column, turn: -1, first: 0, english: {},
-      greek: seg.greek.map(l => ({ n: l.n, from: 0, to: l.text.length, text: l.text.trim() })),
+      greek: seg.greek.map(l => ({ n: l.n, sub: l.sub, from: 0, to: l.text.length, text: l.text.trim() })),
     };
     for (const t of index.translations) {
       let texts = translationTexts(seg, t);
@@ -379,13 +379,14 @@ export function pairGreekText(unit: PairUnit): string {
   return lines.slice(0, PAIR_GREEK_LINES).join(' ') + (lines.length > PAIR_GREEK_LINES ? ' …' : '');
 }
 
-/** The context control counts Greek lines, centred on the hit's line. A hit
- * of several words (a proximity window) names its last word's place in the
- * segment as `lastTok`, and the lines run on to that word's: none is cut. */
-export function pairGreekWindow(seg: Segment, unit: PairUnit, line: number, context: '1' | '3' | 's', lastTok?: number): PairUnit {
+/** The context control counts Greek lines, centred on the hit's line (a
+ * lettered line, 6b, by its number and letter). A hit of several words (a
+ * proximity window) names its last word's place in the segment as `lastTok`,
+ * and the lines run on to that word's: none is cut. */
+export function pairGreekWindow(seg: Segment, unit: PairUnit, line: number, context: '1' | '3' | 's', lastTok?: number, sub?: string): PairUnit {
   if (context === 's') return unit;
   const count = Number(context);
-  const at = Math.max(0, seg.greek.findIndex(l => l.n >= line));
+  const at = Math.max(0, seg.greek.findIndex(l => l.n > line || (l.n === line && (l.sub ?? '') >= (sub ?? ''))));
   const from = Math.max(0, Math.min(at - Math.floor(count / 2), seg.greek.length - count));
   let to = from + count;
   if (lastTok !== undefined) {
@@ -395,7 +396,7 @@ export function pairGreekWindow(seg: Segment, unit: PairUnit, line: number, cont
       if (lastTok < n) { to = Math.max(to, i + 1); break; }
     }
   }
-  return { ...unit, greek: seg.greek.slice(from, to).map(l => ({ n: l.n, from: 0, to: l.text.length, text: l.text })) };
+  return { ...unit, greek: seg.greek.slice(from, to).map(l => ({ n: l.n, sub: l.sub, from: 0, to: l.text.length, text: l.text })) };
 }
 
 /** English window within the aligned span. A hit supplies its character
