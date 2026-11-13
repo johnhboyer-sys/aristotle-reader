@@ -59,7 +59,13 @@ hits (Both view's names switch, the work's order, reference first); 5 keep
 the new wildcard rules. Also ruled on the sheet: proximity editor collapses
 after Search; form groups keyed with all accents stripped, breathing and
 subscript kept, one spelling shown; word card option a; all uncommented shots
-approved. Open rounds (pictures): B grammar heading, C keyboard marks
+approved. **Group by (John, 12:04, this PR):** By form for one word or an
+exact phrase / running text with lemma off (a phrase keyed on its whole
+spelling); By grammar for lemma searches (one headword, or several with
+"any"), shaped as round B option 2, headword over its paradigm; otherwise By
+work only. Needs the lemma kept on each reading (stage6 `signature()`), which
+also fixes the noun facets; corpus rebuild after the merge. Open rounds
+(pictures): C keyboard marks
 (https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV), D Both view compact, F
 proximity editor compact.
 
