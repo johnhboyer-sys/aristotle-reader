@@ -3,40 +3,47 @@
 Written 12 Nov 2026, 13:20, at the end of the session that refined the search
 mock-up. Rewrite this file (don't append) when you hand off.
 
-## 0. State (12 Nov 18:40)
+## 0. State (13 Nov 02:50): BUILD DONE, tip handed to the coordinator
 
-- Worktree `.claude/worktrees/search-build`, branch `claude/search-build` from
-  73007670f2. Unpushed. It has its OWN corpus copy in `build/` (cloned from
-  redesign-build 12 Nov 16:54) — never relink it; build the site with
-  `PUBLIC_SHOW_PRIVATE=0 npx astro build`, since `npm run build`'s prebuild
-  rewrites `public/data`.
-- **S1 committed** 86693cb7ad (engine adopted; 1,530 shared tests, 114 app;
-  hit totals equal the throwaway port on 8 queries; `app/scripts/search-counts.mjs`).
-  **S1b committed** 1a9d5188cf (running text; 4,142 pipeline tests; 47 works,
-  995,731 tokens aligned). Reviews: two Opus passes on S1, one on S1b; summaries
-  and Codex reports in the session scratchpad (lost on reboot; the commit
-  messages carry the substance).
-- **Next, when Codex's five-hour window allows:** the Greek-hit citation fix
-  (brief: a Greek hit cites its own line, not its tick span's first line —
-  1095b29 shows 1095b25), then S2. The running.json files in `build/dist` came
-  from a one-off backfill (not committed); `npm run build:public` regenerates
-  them through stage 6.
-- Desktop app now mounts the new Search (its byte-pin test was retired): PR
-  follow-up, per memory `desktop-parity-low-priority`. Since S2 its search form
-  is unstyled there (it loads neither b.css tokens nor b-search.css).
-- **John, 12 Nov evening:** Claude (Opus agents) writes the code while Codex is
-  out; Codex reviews every Claude commit after (cross-family). **Commit as you
-  go** once a stage is reviewed by Claude and green. **Going live: (a)** search
-  ships with the rest of the redesign (home/work pages, round 9) as ONE PR; not
-  a separate search PR. Proximity distance is plain pairwise (each term within
-  N of its target's hit); 4-term cap stays, test 6 after Codex. The Isagoge is
-  not an authentic work (30).
-- Committed after S1b: 459ca65815 citation fix · 0fb0a69910 screenshot gate ·
-  a4efcf6dbd S2 · acec61a06a Isagoge · 1cee9e4628 S3 · a73a85a175 pairwise + box
-  terms · a31ffeb4b3 gate proves states. Codex reviews: R1 (through acec61a06a,
-  4 findings, fixed or listed) and R2 (S3, 7 should-fix: being fixed on branch
-  `claude/search-r2` in worktree `.claude/worktrees/search-r2`, to be brought
-  onto this branch after S4a). Briefs and reports in the session scratchpad.
+- **Every stage is built and committed** on `claude/search-build` (worktree
+  `.claude/worktrees/search-build`, from 73007670f2, unpushed): S1 engine, S1b
+  running text, S2 form and menus, S3 proximity (plain pairwise distance), S4a
+  results, S4b rail / Save / `/saved` / word panel, S5a phone form and editor,
+  S5b phone results, sheets and sideways, S6 the `/advanced` guide. Each stage
+  had a Codex review (R1–R9) and its fixes are in. **Tip e987866002.**
+- **Gates at the tip:** shared 1,719 passed (corpus tests included), app 116,
+  svelte-check 0 errors, verify-shared-imports 0 broken, `astro build` complete,
+  check-redesign 17/17, the search screenshot gate 140 shot / 0 failed (both
+  themes, phone and sideways; d04 and d22 retired), all 14 search-counts totals
+  unchanged (967, 2394, 1514, 102, 55, 78, 5398, 768, 736, 736, 17, 7, 6, 11).
+- **Screenshot sheet** (self-contained, beside its round-34 twins):
+  `~/.claude/reviews/search-build/shots-final/index.html`.
+- **Merging:** John made the Track A session (home/work/reader on
+  `claude/redesign-build`) coordinator, 13 Nov 01:07. It merges this tip in its
+  own worktree and runs HANDOFF-REDESIGN-BUILD.md §6 (build:public, deploy:dry,
+  link check, leak check). A trial merge against its f5f3b4a07f had no
+  conflicts; this branch never touches b.css, BFonts.astro or Reader.svelte.
+  One deploy for the whole redesign (John's ruling (a)). Nothing is pushed.
+- **For John (morning of 13 Nov), with recommendations:** (1) Accents vs Form —
+  turning Accents on should set Form to "only as I typed"; (2) confirm the phone
+  "This search" lists filters only, matching the Filter badge, Clear all keeping
+  the view; (3) the guide puts Typing Greek first; (4) no translator-names
+  switch on Greek-only hits for now; (5) old links under Plato's wildcard
+  syntax (`λόγος.`, `*λόγος`) open a different search — keep the new rules.
+  Plus his look at the phone/sideways departures in the sheet.
+- **Follow-ups (not blockers):** the desktop app mounts the new Search
+  unstyled (needs b.css tokens and b-search.css); "Group by grammar" groups by
+  spelling (needs per-word grammar data); an opened section's English can start
+  a clause early (corpus alignment); proximity-editor controls under 44px on
+  desktop (`.prox-sel`, `.prox-win`, `.prox-chip`, the field's clear button, held
+  in the 44px test's allow-list); b.css still uses `max-width: 960px` elsewhere;
+  after "Find this phrase in any inflection" the address keeps the old
+  sp/sn/wf; /saved is not in check-redesign's contrast list (checked separately,
+  PASS); dead code from the port (`groupState`, corpus-tools, inscription,
+  sect-ticks, speaker-colors); the 6-term proximity cap's speed test; the
+  running.json files in `build/dist` came from a one-off backfill and
+  `npm run build:public` regenerates them through stage 6. Then the port of
+  the design fixes to plato-reader (§1).
 
 ## 1. What this track is
 
