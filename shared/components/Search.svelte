@@ -2373,7 +2373,7 @@
         const at = o && i >= 0 ? offsetRef(o, o.seg_base_offset[i] + w[0]) : null;
         if (!at) { add(formatCite(r.work, column), jump(r.work, r.meta.book, column, 1, undefined, r.grkPositions), 1); continue; }
         add(formatCite(r.work, at.column, at.line, at.sub),
-          jump(r.work, r.meta.book, at.column, at.line, undefined, at.column === column ? r.grkPositions : undefined), 1);
+          jump(r.work, r.meta.book, at.column, at.line, undefined, at.column === column ? r.grkPositions : undefined) + (at.sub ?? ''), 1);
       }
     }
     return [...out.values()];
@@ -2528,16 +2528,16 @@
             : greekKwic(r.work, seg, [pos], greekReach),
             toks: own, grkHits: 1, jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, undefined, kept) + (sub ? sub : ''), held, speaker, unit, at: pos };
           if (!books.get(pair)!.turnFlow && seg.english?.bekker?.length && !isChapterSection(getWork(r.work))) {
-            const win = pairGreekWindow(seg, unit, line, context);
+            const win = pairGreekWindow(seg, unit, line, context, sub);
             inst.html = pairGreekHtml(r.work, seg, win, true, new Set(own));
             // By whole lines: the stretch is the lines it touches.
             const span = lineTokens(seg);
-            const lines = win.greek.map(l => span.get(l.n)).filter((x): x is [number, number] => !!x);
+            const lines = win.greek.map(l => span.get(`${l.n}${l.sub ?? ''}`)).filter((x): x is [number, number] => !!x);
             if (lines.length && !windows?.length) shownOf.set(inst, {
               key: `${pair}:${seg.id}:lines`, from: lines[0][0], to: lines.at(-1)![1], turns: false,
               draw: (from, to, marked) => pairGreekHtml(r.work, seg, { ...unit, greek: seg.greek
-                .filter(l => { const t = span.get(l.n); return !!t && t[0] < to && t[1] > from; })
-                .map(l => ({ n: l.n, from: 0, to: l.text.length, text: l.text })) }, true, marked),
+                .filter(l => { const t = span.get(`${l.n}${l.sub ?? ''}`); return !!t && t[0] < to && t[1] > from; })
+                .map(l => ({ n: l.n, sub: l.sub, from: 0, to: l.text.length, text: l.text })) }, true, marked),
             });
           } else if (!windows?.length) {
             // A window of several words (phrase, proximity) keeps its own
@@ -3300,11 +3300,11 @@
 
   // A segment's Greek tokens in the order the index counts them.
   const segTokens = (seg: Segment): Token[] => seg.greek.flatMap(line => line.tokens);
-  // Each line's tokens as places in that order: line number → [first, past last).
-  function lineTokens(seg: Segment): Map<number, [number, number]> {
-    const out = new Map<number, [number, number]>();
+  // Each line's tokens in that order: number and suffix → [first, past last).
+  function lineTokens(seg: Segment): Map<string, [number, number]> {
+    const out = new Map<string, [number, number]>();
     let at = 0;
-    for (const line of seg.greek) { out.set(line.n, [at, at + line.tokens.length]); at += line.tokens.length; }
+    for (const line of seg.greek) { out.set(`${line.n}${line.sub ?? ''}`, [at, at + line.tokens.length]); at += line.tokens.length; }
     return out;
   }
 
@@ -3402,8 +3402,9 @@
     const index = new Map<Token, number>();
     segTokens(seg).forEach((tok, i) => index.set(tok, i));
     const spans = unit.greek.filter(span => span.text);
+    const lineIndex = (span: PairUnit['greek'][number]) => seg.greek.findIndex(l => l.n === span.n && l.sub === span.sub);
     const lines = spans.slice(0, full ? undefined : PAIR_GREEK_LINES).map(span => {
-      const line = seg.greek.find(l => l.n === span.n);
+      const line = seg.greek[lineIndex(span)];
       if (!line) return esc(span.text);
       const toks = line.tokens.filter(tok => tok.o >= span.from && tok.o < span.to);
       return lineRenderParts(line.text.slice(span.from, span.to), toks)
@@ -3411,7 +3412,7 @@
           : part.kind === 'text' ? esc(part.text) : '')
         .join('').trim();
     });
-    return (full && spans[0]?.n > (seg.greek[0]?.n ?? 0) ? '… ' : '') + joinLines(lines) + (full && (spans.at(-1)?.n ?? Infinity) < (seg.greek.at(-1)?.n ?? 0) ? ' …' : '') + (!full && spans.length > PAIR_GREEK_LINES ? ' …' : '');
+    return (full && spans.length && lineIndex(spans[0]) > 0 ? '… ' : '') + joinLines(lines) + (full && spans.length && lineIndex(spans.at(-1)!) < seg.greek.length - 1 ? ' …' : '') + (!full && spans.length > PAIR_GREEK_LINES ? ' …' : '');
   }
 
   // ── The word card ──────────────────────────────────────────────────────────
