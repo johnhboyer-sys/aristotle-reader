@@ -278,6 +278,26 @@ describe('Search: the Greek keyboard', () => {
     expect(vi.mocked(search).mock.calls[0][0]).toBe('ψυχή');
   });
 
+  it('puts the seven mark keys first, above the letter rows, each named for its mark (C2-b)', async () => {
+    render(Search);
+    await fireEvent.click(kbdButton());
+    const keys = [...pad().querySelectorAll<HTMLButtonElement>('.gk-keys > .gk-key')];
+    const marks = keys.slice(0, 7);
+    expect(marks.map((b) => b.getAttribute('aria-label'))).toEqual([
+      'smooth breathing', 'rough breathing', 'acute', 'grave', 'circumflex', 'diaeresis', 'iota subscript',
+    ]);
+    for (const b of marks) {
+      expect(b).toHaveClass('gk-mark');
+      expect(b.style.gridRow).toBe('1');
+      expect(b.querySelector('.gk-face .gk-o')).not.toBeNull();
+    }
+    const letters = keys.filter((b) => !b.matches('.gk-mark, .gk-space, .gk-bs, .gk-wide'));
+    expect(letters).toHaveLength(25);
+    expect(new Set(letters.map((b) => b.style.gridRow))).toEqual(new Set(['2', '3', '4']));
+    expect(letters[0]).toHaveTextContent('ς');
+    expect(keys.indexOf(letters[0])).toBe(7);
+  });
+
   it('combines marks with the letter before the caret, and backspace takes a letter', async () => {
     render(Search);
     await fireEvent.click(kbdButton());

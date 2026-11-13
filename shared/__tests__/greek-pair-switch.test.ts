@@ -144,7 +144,7 @@ describe.skipIf(!!process.env.PAIR_TIMING)('Greek-only paired translations', () 
   it('lets only the reference borrow text from a nearby unit', async () => {
     const { fetchBook } = await import('../lib/data');
     const book = structuredClone(fixture);
-    book.segments[0].english.text = 'Four five';
+    book.segments[0].english!.text = 'Four five';
     book.turnFlow!.turns[0].e = null;
     vi.mocked(fetchBook).mockResolvedValueOnce(book);
     const { list } = await draw(G('α'), hit, 1);
@@ -156,10 +156,10 @@ describe.skipIf(!!process.env.PAIR_TIMING)('Greek-only paired translations', () 
   it('falls back to the first translation with text when the reference has none', async () => {
     const { fetchBook } = await import('../lib/data');
     const book = structuredClone(fixture);
-    for (const seg of book.segments) seg.english.text = '';
+    for (const seg of book.segments) seg.english!.text = '';
     for (const turn of book.turnFlow!.turns) {
       turn.e = null;
-      for (const sub of turn.sub ?? []) sub.e = null;
+      for (const sub of turn.sub ?? []) sub.e = '';
     }
     vi.mocked(fetchBook).mockResolvedValueOnce(book);
     const { list } = await draw(G('α'), hit, 1);

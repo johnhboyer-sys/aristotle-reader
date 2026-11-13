@@ -79,12 +79,14 @@ describe('greek keys', () => {
 });
 
 describe('mark key faces', () => {
-  // A bare combining mark draws on a dotted circle, or not at all, in many
-  // phone fonts; each key shows its mark on a vowel, one precomposed letter.
-  it('each face is one precomposed letter carrying its own mark', () => {
+  // A bare combining mark falls back to another font, where it drifts or draws
+  // as a box; each key shows Literata's spacing form of its mark, over a
+  // dotted ring the page draws (C2-b).
+  it('each face is the spacing form of its mark, one character and not itself a combining mark', () => {
+    expect(GREEK_MARKS.map((m) => m.face)).toEqual(['\u1FBF', '\u1FFE', '\u1FFD', '\u1FEF', '\u1FC0', '\u00A8', '\u037A']);
     for (const m of GREEK_MARKS) {
-      expect(m.face.normalize('NFC')).toHaveLength(1);
-      expect(m.face.normalize('NFD')).toContain(m.mark);
+      expect([...m.face]).toHaveLength(1);
+      expect(m.face).not.toMatch(/\p{M}/u);
     }
   });
 });

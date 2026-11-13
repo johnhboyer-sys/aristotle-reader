@@ -3730,11 +3730,6 @@
   // the suggestions all see them. Under the box on a wide screen; a sheet
   // from the bottom on a phone, by the site's phone rule (global.css).
   const PHONE = '(max-width: 680px), (orientation: landscape) and (max-height: 500px)';
-  // A mark key shows its mark large over a bare ι: Literata's own breathings
-  // read as dots at key size. The subscript key shows ῳ (ruling 6).
-  const MARK_GLYPH: Record<string, string> = {
-    'smooth breathing': '᾿', 'rough breathing': '῾', acute: '΄', grave: '`', circumflex: '῀', diaeresis: '¨',
-  };
   let kbdOpen = false;
   let kbdSheet = false;
   // Proximity takes the box, so the keyboard has nothing to type into.
@@ -4064,29 +4059,26 @@
           {#if sugg.length && !lemmaOn && !(kbdOpen && !kbdSheet)}{@render suggestList(sugg, suggActive, lemmaGlosses, false)}{/if}
         </div>
         {#if kbdOpen && lang !== 'english'}
-          <!-- Apple's Greek layout, each row half a key right of the one above;
-               the marks on a row of their own, each drawn over a bare ι (the
-               subscript as ῳ); space, ⌫ and Close at the foot (ruling 6). -->
+          <!-- The marks on a row of their own above the letters, each over a
+               dotted ring (the subscript under it; C2-b); then Apple's Greek
+               layout, each row half a key right of the one above; space, ⌫
+               and Close at the foot (ruling 6). -->
           <div id="grk-keys" class="gk" class:gk-sheet={kbdSheet} role="group" aria-label="Greek keyboard">
             {#if sugg.length && !kbdSheet && !lemmaOn}{@render suggestList(sugg, suggActive, lemmaGlosses, false)}{/if}
             <div class="gk-keys">
+              {#each GREEK_MARKS as m, j}
+                <button type="button" class="gk-key gk-mark" aria-label={m.name} title={m.name} style:grid-row={1} style:grid-column={`${4 + 2 * j} / span 2`}
+                  on:mousedown|preventDefault
+                  on:click={() => keyEdit((v, a) => addMark(v, a, m.mark))}>
+                  <span class="gk-face" class:gk-sub={m.name === 'iota subscript'} aria-hidden="true" lang="grc"><span class="gk-o"></span><span class="gk-mk">{m.face}</span></span>
+                </button>
+              {/each}
               {#each KEY_ROWS as row, r}
                 {#each [...row] as k, j}
-                  <button type="button" class="gk-key" lang="grc" style:grid-row={r + 1} style:grid-column={`${r + 2 + 2 * j} / span 2`}
+                  <button type="button" class="gk-key" lang="grc" style:grid-row={r + 2} style:grid-column={`${r + 2 + 2 * j} / span 2`}
                     on:mousedown|preventDefault
                     on:click={() => keyEdit((v, a, b) => insertText(v, a, b, k))}>{k}</button>
                 {/each}
-              {/each}
-              {#each GREEK_MARKS as m, j}
-                <button type="button" class="gk-key gk-mark" aria-label={m.name} title={m.name} style:grid-row={4} style:grid-column={`${4 + 2 * j} / span 2`}
-                  on:mousedown|preventDefault
-                  on:click={() => keyEdit((v, a) => addMark(v, a, m.mark))}>
-                  {#if MARK_GLYPH[m.name]}
-                    <span class="gk-mf" aria-hidden="true" lang="grc"><span class="gk-mm">{MARK_GLYPH[m.name]}</span><span class="gk-mb">ι</span></span>
-                  {:else}
-                    <span class="gk-mf" aria-hidden="true" lang="grc">ῳ</span>
-                  {/if}
-                </button>
               {/each}
               <button type="button" class="gk-key gk-space" style:grid-row={5} style:grid-column="2 / span 12" on:mousedown|preventDefault
                 on:click={() => keyEdit((v, a, b) => insertText(v, a, b, ' '))}>space</button>
