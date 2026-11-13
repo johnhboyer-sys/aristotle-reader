@@ -65,7 +65,8 @@ spelling); By grammar for lemma searches (one headword, or several with
 "any"), shaped as round B option 2, headword over its paradigm; otherwise By
 work only. Needs the lemma kept on each reading (stage6 `signature()`), which
 also fixes the noun facets; corpus rebuild after the merge. Open rounds
-(pictures): C keyboard marks
+(pictures; keyboard ruled 12:15: C2-b, dotted-ring faces in a row above the
+letters, no pair keys, all screens):
 (https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV), D Both view compact, F
 proximity editor compact.
 
