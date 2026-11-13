@@ -2051,7 +2051,7 @@
           const speaker = speakersOf(held);
           const unit = unitAtGreek(ix, seg, pos);
           const surface = toks[pos];
-          const inst: Instance = { lang: 'grk', work: r.work, seg: r.meta.id, surface, form: greekFold(surface ?? ''), column: seg.column, line, ref: formatCite(r.work, seg.column, books.get(pair)!.turnFlow ? line : firstLine(unit), sub), html: windows?.length
+          const inst: Instance = { lang: 'grk', work: r.work, seg: r.meta.id, surface, form: greekFold(surface ?? ''), column: seg.column, line, ref: formatCite(r.work, seg.column, line, sub), html: windows?.length
             ? greekKwic(r.work, seg, kept, greekReach, [own[0], own[own.length - 1]], after)
             : greekKwic(r.work, seg, [pos], greekReach),
             toks: own, grkHits: 1, jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, undefined, kept) + (sub ? sub : ''), held, speaker, unit, at: pos };
