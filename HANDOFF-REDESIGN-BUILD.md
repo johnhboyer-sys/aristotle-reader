@@ -1,63 +1,90 @@
 # HANDOFF: redesign build (direction B)
 
-Section 0 rewritten 13 Nov 2026, 17:30. Rewrite this file (don't append) when you hand
+Section 0 rewritten 13 Nov 2026, 17:35. Rewrite this file (don't append) when you hand
 off. The version before this one (11 Nov, with the search mock-up history
 stacked on it) is kept at
 `.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-12.md`.
 
-## 0. State at 17:30, 13 Nov (coordinator, session aristotle-reader-62)
+## 0. State at 17:35, 13 Nov: coordinator's work and the search page
 
-**Build on hold** (John, 14:40) while the search page is redesigned as one page.
-The merged tree was fully green before the hold (`6fefc4f536`: app 130, shared
-1867, scripts 99, svelte-check 0, stage6 pytest 41, build:public 0 broken,
-deploy:dry ok, check-redesign 64/0, search-shots 0 failed, 14 counts unchanged;
-logs `.redesign-shots/notes/d26/final7/`). Not pushed. Push, PR, merge, and
-deploy each need John's yes.
+### 0.1 The coordinator (this file's session) and the other sessions
+- This session (`aristotle-reader-62`) coordinates all UI work. The other sessions report to it, and it pings John only
+  for decisions. John rules on design. Commits on branches are fine; push, PR, merge, and deploy each need John's yes.
+- **Search session** (`aristotle-reader-9c`): worktree `.claude/worktrees/search-build`, branch `claude/search-build`,
+  handoff `HANDOFF-SEARCH-BUILD.md` there (full detail; §0.2 below is the summary).
+- **Reader design session**: this worktree, handoff `HANDOFF-READER-DESIGN.md` (§0.3).
+- **Browser runs:** one full gate run at a time (check-redesign, search-shots, search-counts); single-page shooters
+  are fine. Waiters match `^node .*(check-redesign|search-shots|search-counts)\.mjs`.
+- **Delegation:** pass `model:` on every spawn and label agents with their model; implementation and review never in
+  the same model family; Codex briefs say "Do not launch a browser or run browser gates"
+  (`node ~/.claude/plugins/cache/openai-codex/codex/1.0.6/scripts/codex-companion.mjs task --background --write
+  --fresh --model gpt-6.1-sol --effort medium --prompt-file <brief>`). Grok is benched.
+- **Effort for the reader hill climb** (John asked 16:30): session and Opus agents at high, Codex reviews at medium.
 
-**Search (search session, `HANDOFF-SEARCH-BUILD.md` in the search-build
-worktree, current as of `2e3cecfb9a`).** Full mock-up done, four review
-rounds (Opus, Codex, Opus, Codex): https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X;
-files in search-build `.redesign-shots/notes/search-mock-13nov/`. Ruled today:
-- D6 base (Greek and English side by side on desktop, stacked on the phone); no
-  Greek/English/Both switch (the fields with text decide); options show under a
-  field once it has text; "In all works | authentic works | choose works" as
-  words on the Proximity/Search row.
-- Field options: (a) words on desktop (1152, 961); (b) menus on the phone,
-  upright and sideways (17:08).
-- Phone: H3, labels above, Keyboard and Beta Code beside the Greek label (17:21).
-- Phone one-row options: B1 option 3, Accents and Lemma drawn as words, one tap
-  each (https://claude.ai/artifact/1cC7rocRSVenhgnwiT5s31). Only 2px spare at 360:
-  the build tests it or lets it wrap.
-- F 4b with Search on the footer row; G-3 with switches; no "Not searched yet".
-Open for John: count on a Both search (word hits or passages); Lemma vs "any
-form"; two lines per proximity term upright; name "Keep hits that cross a
-chapter" in the folded line; Group by rows shut; 44px phone keys; sideways fold
-after Search (all four reviewers back the last two).
+### 0.2 The search page
+**Built and merged, then put ON HOLD.** The search build (stages S1–S6 and John's 13 Nov morning rulings) is
+merged here as `6fefc4f536`, and every gate on the merged tree was green: app 130, shared 1867, scripts 99,
+svelte-check 0, stage6 pytest 41, build:public 0 broken links, deploy:dry ok, check-redesign 64/0, search-shots 0
+failed, all 14 search counts unchanged (logs `.redesign-shots/notes/d26/final7/`). At 14:40 John held the build for a
+full mock-up of a new one-page form. Nothing is pushed or deployed; search ships with the rest of the redesign in one
+deploy.
 
-**Reader design (new track, `HANDOFF-READER-DESIGN.md`, current as of
-`68ba3c0515`; read it for the detail).** Rounds 1–3 are ruled:
-https://claude.ai/artifact/6b1rJ55cg3ntyP4Fsy44rY. Ruled: every Bekker line
-stays a line; no stacked layout; quiet bar; Gentium Book Plus 400 for Greek and
-English at today's size (not larger); wrap as a unit on every screen, with the
-phone in parallel (17:27).
+**The new form, ruled 13 Nov afternoon** (mock-up: https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X; files in
+search-build `.redesign-shots/notes/search-mock-13nov/`):
+- D6 base: Greek and English side by side on desktop, stacked on the phone, "and/or" between them (centred in the gap
+  on the phone).
+- No Greek | English | Both switch: the fields that hold text decide. A field's options show only once it has text.
+- Field options: (a) words on desktop (1152, 961); (b) menus on the phone, upright and sideways (17:08).
+- Phone one-row options: B1 option 3 (17:23), Match ▾ and Form ▾ plus Accents and Lemma as words, one tap each
+  (https://claude.ai/artifact/1cC7rocRSVenhgnwiT5s31). 2px spare at 360: the build tests it or lets the row wrap.
+- H3 on the phone (17:21): labels above the fields, Keyboard and Beta Code beside the Greek label.
+- "In all works | authentic works | choose works" as words on the Proximity/Search row.
+- F 4b proximity editor (Add term, In this order, Keep hits, and Search on one foot row; no "Not searched yet");
+  G-3 grammar menus with switches; carried: editor folds after Search, column refs, Accents sets Form, translator
+  switch, keyboard C2-b, Group by per kind of search.
+- Four review rounds (Opus, Codex, Opus, Codex) on the mock: all said the single page is good UX (three with
+  changes), chose H3, and backed the 44px keys and the sideways fold. John overrode their (a) on the phone.
 
-**Plato (queued with the Plato search port, after this build):** phone default
-view → Both (John 16:56). The stacked full-size phone layout is not ruled.
+**Seven questions open for John:** (1) count on a Both search: word hits (now 2,952 for "ἀρετή and virtue" vs 2,394
+for "virtue") or passages; (2) Lemma vs "any form" now that Accents sets Form; (3) two lines per proximity term on
+the upright phone; (4) name "Keep hits that cross a chapter" in the folded line; (5) Group by grammar rows shut
+(recommended); (6) 44px phone keys; (7) sideways fold after Search.
 
-**Alignment: parked by John (17:24).** Branches `claude/int-edghill-realign-2`
-and `claude/sens-reverify` (not pushed), each with `review/README.md` listing
-the three fixes awaiting John and the candidate track. API runs use John's `ant`
-sign-in with `env -u ANTHROPIC_API_KEY` while the dead key is in ~/.zshenv.
-Spent today: $1.15.
+**When John says go, the build needs** (detail in HANDOFF-SEARCH-BUILD.md §0): `lang` derived from the fields (switch,
+`setLang`, `LANGS` go; URLs unchanged); **R-S1's language loop rewritten** (this track's gate; it is live today and
+uses the `.lang-switch` buttons); dark `--go` given a dark value (two reds now); the chapter NOTE before results
+removed (explainer ban); controls under the sideways key sheet taken out of the focus order; segment words as radio
+groups; the 360px count/Save collision; the Beta Code and leftover-word risks.
 
-**Rounds page** (all earlier rounds): https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV.
-Sources of my pages: `.redesign-shots/notes/coordinator-13nov/`.
-`.redesign-shots/` and the root `node_modules/` are now in `.git/info/exclude`.
-The version of this file before today's rewrite:
-`.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-13.md`.
+**Gate changes still unreviewed:** the coordinator's own edits to the gates, `ef3e1911ea` (Opus port to the new
+page), `09ff5e6728` (R-S1 height minus padding), `49715e6876` (R-A3 exempts the `.tr-dot` separator). They need a
+Codex review before the PR.
 
-**Still to raise:** the Codex review of the coordinator's gate changes
-(ef3e1911ea, 09ff5e6728, 49715e6876); at deploy, the Daily Nous pitch.
+### 0.3 Reader design (new track)
+`HANDOFF-READER-DESIGN.md` (current as of `68ba3c0515`). Rounds 1–3 ruled
+(https://claude.ai/artifact/6b1rJ55cg3ntyP4Fsy44rY): every Bekker line stays a line; no stacked layout; quiet bar;
+Gentium Book Plus 400 for Greek and English at today's size; wrap as a unit on every screen, phone in parallel.
+Plato (queued with the Plato search port, after this build): its phone default view becomes Both (John 16:56); its
+stacked full-size phone layout is not ruled.
+
+### 0.4 Alignment (parked by John, 17:24)
+Edghill's On Interpretation and Beare's On Sense were re-aligned by batch ($1.15 in all) and Codex-reviewed, on
+`claude/int-edghill-realign-2` and `claude/sens-reverify` (not pushed). Each branch has `review/README.md` with the
+three fixes awaiting John (Int 19b30 A or B; Int 20b25; Sens's seven June places) and the candidate track (On
+Colours ch. 6, a free check of mapless marker files, then Owen, Bouchier, Butcher, and Roberts, about $16). API: John
+signed in with `ant`; run batches with `env -u ANTHROPIC_API_KEY` while the dead key sits in ~/.zshenv. Three
+superseded agent worktrees (agent-ab522a…, agent-a689b5…, agent-aed39b…) can be removed by John (the classifier
+blocks it here).
+
+### 0.5 Where things are, and what's next
+- Rounds page (all earlier search rounds): https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV. Sources of the
+  coordinator's pages: `.redesign-shots/notes/coordinator-13nov/`.
+- `.redesign-shots/` and the root `node_modules/` are in `.git/info/exclude` (local, all worktrees).
+- The main checkout (`main`) holds about 40 uncommitted files from other tracks (commentary, English, topics,
+  redesign kit, a CLAUDE.md edit). They predate this session and are not this track's.
+- This file before today's rewrite: `.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-13.md`.
+- **Next:** John's answers to the seven search questions, then his go for the search build; a Codex review of the
+  three gate commits; the reader track's next round; at handoff to deploy, the Daily Nous pitch.
 
 
 Branch `claude/redesign-build`, this worktree
