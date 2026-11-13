@@ -58,8 +58,13 @@ mock-up. Rewrite this file (don't append) when you hand off.
   - **John ruled (17:07, final 17:08): options (b), the menus, on the PHONE, upright and sideways; (a), the words,
     on desktop (1152 and 961).** In his words: "except for phone upright, i think a works better" … "and phone
     sideways". Every state that shows options follows that split.
-  - **Known cost of (b) on the phone:** at 390px upright, Accents and Lemma wrap, so (b) takes two rows. A drawing of
-    one-row options (upright 390 and 360, sideways) is in `…/scratchpad/rounds/B1/`, for John.
+  - **One row on the phone: B1 option 3, "switches as words"** (John, 17:23). Match ▾ and Form ▾ stay menus;
+    Accents and Lemma lose the switch track and become words: off is mid on a hairline, on is ink with the red
+    underline (one tap each, as ruling 5). Gaps 20px, 12px below 380px. Pictures and measures:
+    `/private/tmp/claude-501/-Users-johnboyer-Developer-aristotle-reader/fd0fa02b-3cff-421e-a7cc-90c9514c6193/scratchpad/rounds/B1/`
+    (index.html, notes.md, shoot.mjs). It fits on one row at 390, 360 and sideways, but at 360 with the longest
+    values it has only 2px to spare (322 of 324). The build's 360 test must hold that, or let the row wrap rather
+    than clip.
   - **H3 on the phone, upright and sideways** (John, 17:21: "phone (both) H3"): "Greek" and "English" labels above
     the fields, Keyboard and Beta Code beside the Greek label. His reason: he likes H2 better on the empty page and
     Greek only, "it's not working for both mode".
