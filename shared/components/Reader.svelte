@@ -9,6 +9,7 @@
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
   import { touchRecent } from '../lib/resume';
+  import { restoreReaderFonts, type GFont, type EFont } from '../lib/reader-fonts';
   import WordPopup from './WordPopup.svelte';
   import FootnotePopup from './FootnotePopup.svelte';
   import EndnoteSidebar from './EndnoteSidebar.svelte';
@@ -374,29 +375,43 @@
       window.removeEventListener('resize', onResize);
     };
   }
-  // The reader's Greek face (R-R10). GFS Didot's file loads only when picked.
-  type GFont = 'literata' | 'gentium' | 'didot';
+  // Extra reader faces load only when picked or restored.
   const GFONTS: [GFont, string, string][] = [
     ['literata', 'Literata', 'Literata'],
     ['gentium', 'Gentium', '"Gentium Book Plus"'],
-    ['didot', 'Didot', '"GFS Didot"'],
+    ['cardo', 'Cardo', 'Cardo'],
+  ];
+  const EFONTS: [EFont, string, string][] = [
+    ['literata', 'Literata', 'Literata'],
+    ['garamond', 'EB Garamond', '"EB Garamond"'],
   ];
   const GFONT_KEY = 'reader-gfont';
+  const EFONT_KEY = 'reader-efont';
   let gfont: GFont = 'literata';
-  function loadDidot() {
-    if (document.querySelector('link[data-gfs-didot]')) return;
+  let efont: EFont = 'literata';
+  function loadReaderFace(face: 'cardo' | 'garamond') {
+    if (document.querySelector(`link[data-reader-font="${face}"]`)) return;
     const l = document.createElement('link');
     l.rel = 'stylesheet';
-    l.href = 'https://fonts.googleapis.com/css2?family=GFS+Didot&display=swap';
-    l.dataset.gfsDidot = '';
+    l.href = face === 'cardo'
+      ? 'https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&display=swap'
+      : 'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap';
+    l.dataset.readerFont = face;
     document.head.append(l);
   }
   function setGFont(f: GFont) {
     gfont = f;
     try { if (f === 'literata') localStorage.removeItem(GFONT_KEY); else localStorage.setItem(GFONT_KEY, f); } catch {}
-    if (f === 'didot') loadDidot();
+    if (f === 'cardo') loadReaderFace(f);
     const fam = GFONTS.find((g) => g[0] === f)![2];
-    document.fonts?.load(`19px ${fam}`, 'αβγ').then(() => scheduleEven()).catch(() => {});
+    document.fonts?.load(`${f === 'literata' ? 300 : 400} 19px ${fam}`, 'αβγ').then(() => scheduleEven()).catch(() => {});
+  }
+  function setEFont(f: EFont) {
+    efont = f;
+    try { if (f === 'literata') localStorage.removeItem(EFONT_KEY); else localStorage.setItem(EFONT_KEY, f); } catch {}
+    if (f === 'garamond') loadReaderFace(f);
+    const fam = EFONTS.find((e) => e[0] === f)![2];
+    document.fonts?.load(`${f === 'literata' ? 300 : 400} 19px ${fam}`, 'Abc').then(() => scheduleEven()).catch(() => {});
   }
   // The word panel on a desktop (R-R7): beside the text, which keeps the
   // English in view ('push', the default), or over it ('over').
@@ -556,7 +571,7 @@
   let ctxB = { n: '', title: '' };
   let mounted = false;
   $: if (mounted) syncHead(view, trans, compareLeft, compareRight, settingsOpen, pickerOpen, ctxB);
-  $: if (mounted) scheduleEven(view, trans, compareLeft, compareRight, fsScale, colScale, gfont, !!popup, wpOver, vw);
+  $: if (mounted) scheduleEven(view, trans, compareLeft, compareRight, fsScale, colScale, gfont, efont, !!popup, wpOver, vw);
 
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
   $: fsEng   = (FS_ENG_BASE   * fsScale).toFixed(3);
@@ -581,7 +596,7 @@
       localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY);
       localStorage.removeItem(COLW_KEY); localStorage.removeItem(CITE_KEY);
     } catch {}
-    if (b) { setGFont('literata'); setWp(false); }
+    if (b) { setGFont('literata'); setEFont('literata'); setWp(false); }
   }
 
   // ── Citation shown in the controls strip ─────────────────────────────────
@@ -1324,7 +1339,10 @@
       // Mobile emulation can settle after the script's first width read.
       vw = window.innerWidth;
       const savedGf = (() => { try { return localStorage.getItem(GFONT_KEY); } catch { return null; } })();
-      if (savedGf === 'gentium' || savedGf === 'didot') setGFont(savedGf);
+      const savedEf = (() => { try { return localStorage.getItem(EFONT_KEY); } catch { return null; } })();
+      const fonts = restoreReaderFonts(savedGf, savedEf);
+      setGFont(fonts.gfont);
+      setEFont(fonts.efont);
       wpOver = (() => { try { return localStorage.getItem(WP_KEY) === 'over'; } catch { return false; } })();
       bHead();
     }
@@ -1763,6 +1781,7 @@
     data-body={b ? '' : undefined}
     data-view={b ? view : undefined}
     data-gfont={b ? gfont : undefined}
+    data-efont={b ? efont : undefined}
     on:keydown={onTextKey}
     class:busse={busse}
     class:chapter-section={chapterSection}
@@ -2014,6 +2033,12 @@
       <div class="b-seg wide b-gf" role="group" aria-label="Greek font">
         {#each GFONTS as [id, label, fam] (id)}
           <button type="button" aria-pressed={gfont === id} style="font-family:{fam}" on:click={() => setGFont(id)}>{label} <span lang="grc">αβγ</span></button>
+        {/each}
+      </div>
+      <p class="b-mk">English font</p>
+      <div class="b-seg wide b-gf" role="group" aria-label="English font">
+        {#each EFONTS as [id, label, fam] (id)}
+          <button type="button" aria-pressed={efont === id} style="font-family:{fam}" on:click={() => setEFont(id)}>{label} <span lang="en">Abc</span></button>
         {/each}
       </div>
       {#if vw <= 700 && translations.length > 1}

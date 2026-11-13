@@ -177,8 +177,8 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-rh-b:hover, .dir-b .b-bkm[open] > .b-rh-b { color: var(--red-ink); }
 .dir-b .b-bkm > summary { list-style: none; }
 .dir-b .b-bkm > summary::-webkit-details-marker { display: none; }
-.dir-b .b-rh-ch { display: flex; align-items: center; gap: 12px; font: 600 14.5px/1 var(--sans); color: var(--red-ink); white-space: nowrap; }
-.dir-b .b-rh-ch i { font: italic 400 16.5px/1.2 var(--read); color: var(--mid); overflow: hidden; text-overflow: ellipsis; max-width: 360px; }
+.dir-b .b-rh-ch { display: flex; align-items: center; gap: 12px; font: 600 14.5px/1 var(--sans); color: var(--ink); white-space: nowrap; } /* ink: on the reader only chapter numerals and Bekker column labels are red (John, 12 Nov) */
+.dir-b .b-rh-ch i { font: italic 400 16.5px/1.5 var(--read); color: var(--mid); overflow: hidden; text-overflow: ellipsis; max-width: 360px; }
 .dir-b .b-rh-ch i:empty { display: none; }
 .dir-b .b-sp { flex: 1 1 0; min-width: 0; }
 .dir-b .b-seg { display: inline-flex; border: 1px solid var(--line); }
@@ -214,7 +214,8 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-cmps button { min-height: 40px; border: 1px solid var(--line); background: none; padding: 0 11px; color: var(--ink); font: 600 14px/1 var(--sans); cursor: pointer; }
 .dir-b .b-cmps button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .dir-b .b-aa { width: 320px; display: grid; gap: 14px; font-size: 14.5px; }
-.dir-b .b-gf button { min-height: 40px; }
+.dir-b .b-seg.wide.b-gf { flex-wrap: wrap; gap: 6px; border: 0; }
+.dir-b .b-seg.wide.b-gf button { flex: 1 0 auto; min-width: 44px; min-height: 44px; border: 1px solid var(--line); white-space: nowrap; }
 .dir-b .b-sl { display: grid; grid-template-columns: 1fr auto; gap: 0 6px; align-items: center; color: var(--mid); }
 .dir-b .b-sl input { grid-column: 1 / -1; width: 100%; height: 40px; margin: 0; accent-color: var(--red-ink); }
 /* The checkbox is the whole row: a 40px target, its box drawn beside the words. */
@@ -261,7 +262,7 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-text { max-width: none; margin: 0; padding: 10px 72px 120px calc(72px + 36px); background: var(--paper); color: var(--ink); font-family: var(--read); }
 .dir-b .b-bookh { padding: 44px 0 30px; max-width: calc(1240px * var(--cw)); border-bottom: 2px solid var(--ink); }
 .dir-b .b-bk-k { margin: 0 0 14px; font: 650 17px/1 var(--sans); text-transform: uppercase; letter-spacing: .05em; color: var(--ink); }
-.dir-b .b-bk-t { margin: 0; font: var(--tw) 96px/.9 var(--tface); text-transform: uppercase; letter-spacing: .005em; color: var(--red); }
+.dir-b .b-bk-t { margin: 0; font: var(--tw) 96px/.9 var(--tface); text-transform: uppercase; letter-spacing: .005em; color: var(--ink); }
 .dir-b .b-bk-s { font: 400 15px/1.4 var(--sans); color: var(--mid); margin: 18px 0 0; }
 .dir-b .b-bk-s span { font: 400 17px/1 var(--read); color: var(--ink); }
 .dir-b .b-bk-s .fn-marker { font-size: 11px; }
@@ -279,19 +280,37 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-text[data-view="greek"] .b-gc, .dir-b .b-text[data-view="english"] .b-ec { width: auto; max-width: none; margin: 0; }
 .dir-b .b-gc, .dir-b .b-ec { font-size: calc(19.5px * var(--fs)); line-height: calc(1.72 * var(--lh)); color: var(--ink); text-wrap: wrap; }
 .dir-b .b-gc { font-family: var(--read); }
-.dir-b .b-ec { font-family: var(--read); }
+.dir-b .b-ec { font-family: var(--read); font-weight: 300; }
+.dir-b .b-text[data-efont="garamond"] .b-ec { font-family: "EB Garamond", var(--read); font-weight: 400; }
 .dir-b .b-text[data-gfont="gentium"] .b-gc { font-family: "Gentium Book Plus", var(--read); }
-.dir-b .b-text[data-gfont="didot"] .b-gc { font-family: "GFS Didot", var(--read); }
-/* Nothing in the Greek relies on weight or slant (GFS Didot has one weight):
-   a chosen or found word is marked by its background (R-R10). */
-.dir-b .b-gc, .dir-b .b-gc * { font-weight: 400 !important; font-style: normal !important; }
+.dir-b .b-text[data-gfont="cardo"] .b-gc { font-family: "Cardo", var(--read); }
+/* Greek uses background marks for chosen or found words, never bold or italic. */
+.dir-b .b-gc, .dir-b .b-gc * { font-weight: 300 !important; font-style: normal !important; }
+.dir-b .b-text:is([data-gfont="gentium"], [data-gfont="cardo"]) .b-gc,
+.dir-b .b-text:is([data-gfont="gentium"], [data-gfont="cardo"]) .b-gc * { font-weight: 400 !important; }
 .dir-b .b-gl { display: block; position: relative; gap: 0; padding-left: 1em; text-indent: -1em; }
-.dir-b .b-gl.cont .b-lt { padding-left: 0; }
+.dir-b .b-gl.cont .b-lt { padding-left: 2.5em; }
 /* However narrow the formula makes the column, a long word breaks rather
    than run under the English. */
 .dir-b .b-lt { flex: none; white-space: normal; overflow-wrap: anywhere; }
 .dir-b .gw-measure .b-lt, .dir-b .gw-measure .b-lt * { white-space: nowrap !important; }
-.dir-b .b-ln { position: absolute; left: -60px; top: .15em; width: 48px; min-width: 0; text-align: right; font: inherit; color: var(--faint); }
+/* Baseline from a text line's top: Btext = L/2 + (A-D)*T/2.
+   T = 19.5px * --fs (18px on phones), L = T * 1.72 * --lh.
+   Literata A/D = 1177/308 per 1000, hence (A-D)/2 = .4345.
+   Sofia Sans A/D = 900/300 per 1000: its Npx/1 box baseline is
+   N/2 + .3N = .8N. Offset = Btext - .8N - C. C is zero on
+   desktop; the phone rules below set a measured correction for each size.
+   Greek uses top;
+   English's auto static position starts at its line top, so uses margin-top.
+   Metrics: googlefonts/literata sources/Literata.glyphs and
+   lettersoup/Sofia-Sans sources/Normal/SofiaSans.glyphs. */
+.dir-b .b-ln, .dir-b .b-ec .bk-num {
+  --b-number-text-size: calc(19.5px * var(--fs));
+  --b-number-size: 15px;
+  --b-number-correction: 0px;
+  --b-number-top: calc(var(--b-number-text-size) * 1.72 * var(--lh) / 2 + var(--b-number-text-size) * .4345 - var(--b-number-size) * .8 - var(--b-number-correction));
+}
+.dir-b .b-ln { position: absolute; left: -60px; top: var(--b-number-top); width: 48px; min-width: 0; text-align: right; font: 400 var(--b-number-size)/1 var(--sans); font-weight: 400 !important; color: var(--faint); }
 .dir-b .b-ln.col { color: var(--red-ink); }
 .dir-b .b-ln:empty { display: none; }
 .dir-b .b-gc .quotation-sigla { right: calc(100% + 12px); text-indent: 0; }
@@ -308,8 +327,9 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-ec mark { background: var(--hl); color: inherit; border-radius: 0; }
 /* A span in B: Chrome ignores height on a <br>, so the space never drew. */
 .dir-b .b-ec .para-br { display: block; height: .85em; }
+.dir-b .b-text[data-view="both"] .b-ec .para-br { height: 0; }
 .dir-b .b-ec .para-br + .bk-seg::before { width: 1.3em; }
-.dir-b .b-ec .bk-num { position: absolute; left: -48px; width: 38px; transform: none; margin-top: .55em; text-align: right; font: 400 12.5px/1 var(--sans); color: var(--faint); text-indent: 0; }
+.dir-b .b-ec .bk-num { position: absolute; left: -48px; width: 38px; transform: none; margin-top: var(--b-number-top); text-align: right; font: 400 var(--b-number-size)/1 var(--sans); color: var(--faint); text-indent: 0; }
 .dir-b .b-ec .bk-num.approx { font-style: italic; opacity: 1; }
 .dir-b .b-row[style*="--n:1"] .b-ec .bk-num { left: -60px; width: 48px; }
 .dir-b .b-text.busse .bk-num { display: none; }
@@ -400,8 +420,15 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
   /* Beats the live phone shrink (global.css .view-both, 0.9rem). */
   .dir-b .b-text[data-view] .b-gc, .dir-b .b-text[data-view] .b-ec { font-size: calc(18px * var(--fs)); line-height: calc(1.72 * var(--lh)); }
   .dir-b .b-ec { padding-bottom: 6px; border-bottom: 1px solid var(--line2); }
-  .dir-b .b-ln { left: -40px; width: 32px; font-size: 11px; }
-  .dir-b .b-ec .bk-num, .dir-b .b-row[style*="--n:1"] .b-ec .bk-num { left: -40px; width: 32px; font-size: 11px; }
+  /* Phone rules keep the desktop /1 number line box and positioning; only
+     text/number sizes change. No rule here explains the measured residual.
+     Use measured size corrections, not a new T or L coefficient: the gate's
+     11px offsets span -1.2..0px, 12px offsets -2..-.8px with C=1.5px.
+     Their midpoints give C=.9px (11px) and .1px (12px), or
+     C=.9px - .8*(N - 11px). Predicted error: at most .6px across the matrix.
+     Recheck in the browser after any font change. */
+  .dir-b .b-ln { --b-number-text-size: calc(18px * var(--fs)); --b-number-size: 11px; --b-number-correction: calc(.9px - .8 * (var(--b-number-size) - 11px)); left: -40px; width: 32px; }
+  .dir-b .b-ec .bk-num, .dir-b .b-row[style*="--n:1"] .b-ec .bk-num { --b-number-text-size: calc(18px * var(--fs)); --b-number-size: 11px; --b-number-correction: calc(.9px - .8 * (var(--b-number-size) - 11px)); left: -40px; width: 32px; }
   .dir-b .b-side { top: auto; left: 0; width: auto; height: 60%; border-left: 0; border-top: 1px solid var(--ink); box-shadow: 0 -14px 40px rgba(0,0,0,.18); }
   .dir-b .b-side-h { padding: 16px 56px 10px 18px; }
   .dir-b .b-w { font-size: 32px; }
@@ -419,10 +446,10 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
   .dir-b .b-text[data-view="both"] .b-ec { border: 0; padding: 0; color: var(--mid); }
   .dir-b .b-text[data-view="both"] .b-ec + .b-ec { margin-top: 4px; padding-top: 10px; border-top: 1px solid var(--line2); }
   .dir-b .b-text[data-view="both"] .b-row[style*="--n:3"] .b-ec::before { content: attr(data-t); display: block; font: 500 13px/1.4 var(--sans); color: var(--faint); margin-bottom: 2px; }
-  .dir-b .b-text[data-view="both"] .b-ln { left: -28px; width: 22px; font-size: 12px; }
+  .dir-b .b-text[data-view="both"] .b-ln { --b-number-size: 12px; font-size: var(--b-number-size); left: -28px; width: 22px; }
   .dir-b .b-text[data-view="both"] .b-gl:has(.b-ln.col) { margin-top: 1.3em; }
   .dir-b .b-text[data-view="both"] .b-ln.col { top: -1.25em; left: 0; width: auto; text-align: left; text-indent: 0; white-space: nowrap; }
-  .dir-b .b-text[data-view="both"] .b-ec .bk-num { left: auto; right: -20px; width: 18px; text-align: left; font-size: 12px; }
+  .dir-b .b-text[data-view="both"] .b-ec .bk-num { --b-number-size: 12px; left: auto; right: -20px; width: 18px; text-align: left; }
   .dir-b .b-text[data-view="english"] .b-row[style*="--n:2"] { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
 }
 }

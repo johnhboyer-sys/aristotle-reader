@@ -953,9 +953,14 @@ const gates = {
                             const el = document.querySelector(`[data-gate="${i}"]`);
                             el.scrollIntoView({block: 'center'});
                             const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
-                            return [[-18, 0], [18, 0], [0, -18], [0, 18]].filter(([dx, dy]) => document.elementFromPoint(x + dx, y + dy)?.closest('.fn-marker') !== el).map(d => d.join(','));
+                            // Name what answers instead, so a miss says what covers the mark.
+                            const name = h => h ? h.tagName.toLowerCase() + [...h.classList].map(c => '.' + c).join('') : 'nothing';
+                            return [[-18, 0], [18, 0], [0, -18], [0, 18]].map(([dx, dy]) => [dx, dy, document.elementFromPoint(x + dx, y + dy)])
+                                .filter(([, , h]) => h?.closest('.fn-marker') !== el)
+                                .map(([dx, dy, h]) => `${dx},${dy} (${name(h)}${h?.parentElement ? ' in ' + name(h.parentElement) : ''})`)
+                                .concat(`centre=${Math.round(x)},${Math.round(y)}`);
                         }, i);
-                        assert(!miss.length, `${path} ${size} footnote mark ${i} misses its 40px hit area at ${miss.join(' ')}`);
+                        assert(miss.length === 1, `${path} ${size} footnote mark ${i} misses its 40px hit area at ${miss.join(' ')}`);
                         marks++;
                     }
                 }
@@ -1517,7 +1522,7 @@ if(stage>=2) Object.assign(gates, {
  },
 });
 
-// ── Stage 3: the reader (§4.7 R-R1–R-R10, R-A4) ─────────────────────────
+// ── Stage 3: the reader (§4.7 R-R1–R-R10, R-A4; 12 Nov: R-R11–R-R17, R-A5) ─────────────────────────
 // Wait until the reader island has mounted: the Greek's one tab stop exists
 // (or the Greek is hidden), and the head shows the reader's state.
 async function readerReady(page) {
@@ -1585,6 +1590,38 @@ const longLineWork = (() => {
     return best;
 })();
 
+// Line-number baselines (R-R14, R-R15): a zero-height inline-block marker sits
+// on its parent's baseline, so one prepended to the number and one set before the
+// first word of its text line give the two baselines. The English marker shares a
+// nowrap span with that word, so it cannot fall to the end of the line before.
+function readNumberBaselines() {
+ const mk = () => { const m = document.createElement('span'); m.style.cssText = 'display:inline-block;width:0;height:0;margin:0;padding:0;border:0;vertical-align:baseline'; return m; };
+ const pairs = [], undo = [];
+ for (const ln of document.querySelectorAll('.reader-body .b-gl > .b-ln')) {
+  const lt = ln.parentElement.querySelector(':scope > .b-lt');
+  if (!ln.textContent.trim() || !ln.getClientRects().length || !lt?.getClientRects().length) continue;
+  const a = mk(), b = mk(); ln.prepend(a); lt.prepend(b);
+  undo.push(() => { a.remove(); b.remove(); });
+  pairs.push({kind: 'Greek', el: ln, a, b});
+ }
+ for (const num of document.querySelectorAll('.reader-body .b-ec .bk-num')) {
+  if (!num.textContent.trim() || !num.getClientRects().length) continue;
+  const seg = num.parentElement;
+  const w = document.createTreeWalker(seg, NodeFilter.SHOW_TEXT, {acceptNode: t => t.textContent.trim() && !t.parentElement.closest('.bk-num,.fn-marker') ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP});
+  const t = w.nextNode();
+  if (!t) continue;
+  const parent = t.parentNode, word = t.splitText(t.textContent.search(/\S/));
+  word.splitText(word.textContent.search(/\s|$/));
+  const wrap = document.createElement('span'); wrap.style.whiteSpace = 'nowrap';
+  word.before(wrap);
+  const a = mk(), b = mk(); num.prepend(a); wrap.append(b, word);
+  undo.push(() => { a.remove(); wrap.replaceWith(word); parent.normalize(); });
+  pairs.push({kind: 'English', el: num, a, b});
+ }
+ const out = pairs.map(({kind, el, a, b}) => { const s = getComputedStyle(el); return {kind, text: el.textContent.trim(), col: el.classList.contains('col'), d: a.getBoundingClientRect().top - b.getBoundingClientRect().top, size: s.fontSize, family: s.fontFamily, color: s.color}; });
+ undo.forEach(f => f());
+ return out;
+}
 if (stage >= 3) Object.assign(gates, {
  'R-R1': async () => {
   let n = 0;
@@ -1769,18 +1806,36 @@ if (stage >= 3) Object.assign(gates, {
      await setView(p, 'both');
      if (prove && proofCase === 'round-eight' && size === 'W1200' && panel) await style(p, '.dir-b .b-text[data-view="both"] .b-row{grid-template-columns:var(--greek-w,max-content) repeat(calc(var(--n) - 1),minmax(0,1fr))!important}');
      if (id === 'EN' && !trans && !panel && (size === 'D1440' || size === 'S844')) {
-      // The first red Bekker number hangs with the Greek line's indent, as in
-      // the column kit (colw kit-t, B "fb", Both): its ink starts at x45.27 at
-      // both 1440×900 and 844×390, the Greek at x108.
-      if (prove && proofCase === 'ln-margin' && size === 'D1440') await style(p, '.dir-b .b-ln{text-indent:0!important}');
+      // The first red Bekker number (the column label) shares the line
+      // numbers' right edge and their baseline (12 Nov: numbers 15px sans).
+      // Both are read from the page's own numbers, not a pinned x.
+      if (prove && proofCase === 'ln-margin' && size === 'D1440') await style(p, '.dir-b .b-ln.col{left:-70px!important}');
+      if (prove && proofCase === 'ln-shift' && size === 'D1440') await style(p, '.dir-b .b-ln{left:-70px!important}');
+      if (prove && proofCase === 'ln-col-low' && size === 'D1440') await style(p, '.dir-b .b-ln.col{top:calc(var(--b-number-top) + 4px)!important}');
       const ln = await p.evaluate(() => {
-       const el = document.querySelector('.reader-body .b-ln.col');
-       if (!el) return null;
-       const r = document.createRange(); r.selectNodeContents(el);
-       return {ink: r.getBoundingClientRect().left, text: el.textContent};
+       const ink = el => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().right; };
+       const nums = [...document.querySelectorAll('.reader-body .b-gl > .b-ln')].filter(el => el.textContent.trim() && el.getClientRects().length);
+       const col = nums.find(el => el.classList.contains('col'));
+       const plain = nums.filter(el => !el.classList.contains('col')).map(ink);
+       // Each number's gutter: its right ink to the left edge of its own line's Greek.
+       const gaps = nums.map(el => el.parentElement.querySelector(':scope > .b-lt')?.getBoundingClientRect().left - ink(el)).filter(Number.isFinite);
+       return col ? {text: col.textContent, right: ink(col), plain: plain.length, lo: Math.min(...plain), hi: Math.max(...plain), gapLo: Math.min(...gaps), gapHi: Math.max(...gaps), gaps: gaps.length} : null;
       });
-      assert(ln && ln.text, `EN ${size} examined=0 red Bekker margin numbers`);
-      assert(Math.abs(ln.ink - 45.27) <= 1, `EN ${size} first Bekker margin number "${ln.text}" ink starts at x${ln.ink.toFixed(2)}, column kit x45.27`);
+      assert(ln && ln.text && ln.plain > 0, `EN ${size} examined=0 red Bekker margin numbers or plain line numbers`);
+      assert(ln.hi - ln.lo <= 1, `EN ${size} plain Greek line numbers do not share a right edge: x${ln.lo.toFixed(2)}–x${ln.hi.toFixed(2)}`);
+      assert(Math.abs(ln.right - ln.hi) <= 1, `EN ${size} column label "${ln.text}" right ink x${ln.right.toFixed(2)} is ${(ln.hi - ln.right).toFixed(1)}px off the line numbers' right edge x${ln.hi.toFixed(2)}`);
+      // An independent reference: the gutter between each number and its line's
+      // Greek, as built on 12 Nov after John's 15px ruling (measured 12.00px at
+      // D1440 and S844). Moving every .b-ln together keeps the label on the
+      // numbers' edge but breaks this.
+      const GUTTER = 12;
+      assert(ln.gaps > 0, `EN ${size} examined=0 line number gutters`);
+      assert(ln.gapLo >= GUTTER - 1 && ln.gapHi <= GUTTER + 1, `EN ${size} line numbers' gutter to the Greek is ${ln.gapLo.toFixed(1)}–${ln.gapHi.toFixed(1)}px, expected ${GUTTER.toFixed(1)}±1px`);
+      console.log(`R-R5 ${size} gutter (number right ink to Greek left) ${ln.gapLo.toFixed(2)}–${ln.gapHi.toFixed(2)}px over ${ln.gaps} lines`);
+      const level = (await p.evaluate(readNumberBaselines)).find(x => x.kind === 'Greek' && x.col);
+      assert(level, `EN ${size} examined=0 column label baselines`);
+      assert(Math.abs(level.d) <= 1, `EN ${size} column label "${level.text}" baseline ${level.d > 0 ? 'below' : 'above'} its line by ${Math.abs(level.d).toFixed(1)}px`);
+      console.log(`R-R5 ${size} column label "${ln.text}" right x${ln.right.toFixed(2)}, ${ln.plain} line numbers right x${ln.lo.toFixed(2)}–${ln.hi.toFixed(2)}, baseline offset ${level.d.toFixed(2)}px`);
      }
      if (panel) await openWord(p);
      if (prove && ['no-nowrap','narrow-column','late-overlap','small-descendant','nothing-unwrapped'].includes(proofCase)) {
@@ -1928,17 +1983,17 @@ if (stage >= 3) Object.assign(gates, {
    assert(Math.abs(moved - target) < 4, `the clicked word moved ${(moved - target).toFixed(1)}px on panel open`);
    const w0 = await greekW();
    await p.locator('[data-aa]').click();
-   await p.locator('.b-aa button', {hasText: 'Didot'}).click();
+   await p.locator('.b-aa [aria-label="Greek font"] button', {hasText: 'Cardo'}).click();
    await p.waitForFunction(w => document.querySelector('.reader-body').style.getPropertyValue('--greek-w') !== w, w0, {timeout: 8000}).catch(() => {});
    const w1 = await greekW();
-   assert(w1 !== w0, `GFS Didot did not change --greek-w (${w0})`);
+   assert(w1 !== w0, `Cardo did not change --greek-w (${w0})`);
    await p.locator('[data-aa]').click();
    const g1 = await gcol();
    await p.setViewportSize({width: 961, height: 800});
    await p.waitForFunction(g => document.querySelector('.reader-body').style.getPropertyValue('--gcol') !== g, g1, {timeout: 3000}).catch(() => {});
    const g2 = await gcol();
    assert(g2 !== g1, `resize to D961 did not change --gcol (${g1})`);
-   console.log(`R-R6 --gcol ${before} → ${open} (panel) → ${g2} (961); --greek-w ${w0} → ${w1} (Didot); word moved ${(moved - target).toFixed(1)}px`);
+   console.log(`R-R6 --gcol ${before} → ${open} (panel) → ${g2} (961); --greek-w ${w0} → ${w1} (Cardo); word moved ${(moved - target).toFixed(1)}px`);
    return 4;
   } finally { await close(p); }
  },
@@ -2031,15 +2086,21 @@ if (stage >= 3) Object.assign(gates, {
   return n;
  },
  'R-R10': async () => {
+  // 12 Nov: Greek Literata, Gentium, Cardo; English Literata, EB Garamond.
+  // Cardo and EB Garamond load only when picked; GFS Didot is gone.
   let n = 0;
-  const didot = p => p.requests.filter(u => /gfsdidot|GFS\+Didot/i.test(u));
+  const FACES = {Cardo: /family=Cardo\b|\/s\/cardo\//i, 'EB Garamond': /family=EB\+Garamond|\/s\/ebgaramond\//i, 'GFS Didot': /gfsdidot|GFS\+Didot/i};
+  const watch = p => { p.requests = []; p.on('request', r => p.requests.push(r.url())); };
+  const fetched = async (p, face) => p.requests.some(u => FACES[face].test(u)) || p.evaluate(src => performance.getEntriesByType('resource').some(r => new RegExp(src, 'i').test(r.name)), FACES[face].source);
+  const family = (p, sel) => p.locator(sel).first().evaluate(e => getComputedStyle(e).fontFamily);
+  const pressed = (aa, row) => aa.locator(`[aria-label="${row}"] button[aria-pressed="true"]`).allInnerTexts();
   const p = await openReader('D1440', READER + '?hlg=' + encodeURIComponent('ἀγαθόν'));
   try {
-   p.requests = [];
-   p.on('request', r => p.requests.push(r.url()));
+   watch(p);
+   if (prove && proofCase === 'eager-cardo') await p.evaluate(() => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Cardo&display=swap'; document.head.append(l); });
    await p.waitForTimeout(300);
-   assert(didot(p).length === 0 && !(await p.evaluate(() => performance.getEntriesByType('resource').some(r => /gfsdidot|GFS\+Didot/i.test(r.name)))), 'GFS Didot requested on a fresh load');
-   if (prove) await style(p, '.dir-b .b-gc .tok.hit{font-weight:700!important}');
+   for (const face of Object.keys(FACES)) assert(!(await fetched(p, face)), `${face} requested on a fresh load`);
+   if (prove && proofCase === 'bold-hit') await style(p, '.dir-b .b-gc .tok.hit{font-weight:700!important}');
    const greek = await p.evaluate(() => [...document.querySelectorAll('.reader-body .b-gc, .reader-body .b-gc *')].map(e => { const s = getComputedStyle(e); return {w: Number(s.fontWeight), st: s.fontStyle, c: e.className}; }));
    const hits = await p.locator('.b-gc .tok.hit').count();
    assert(greek.length > 0 && hits > 0, `examined=${greek.length} Greek elements, ${hits} hits`);
@@ -2048,28 +2109,54 @@ if (stage >= 3) Object.assign(gates, {
    n += greek.length;
    await p.locator('[data-aa]').click();
    const aa = p.locator('.b-aa');
+   if (prove && proofCase === 'didot-row') await aa.locator('[aria-label="Greek font"]').evaluate(g => g.insertAdjacentHTML('beforeend', '<button type="button" aria-pressed="false">Didot <span lang="grc">αβγ</span></button>'));
+   if (prove && proofCase === 'english-apart') await aa.evaluate(el => { const row = el.querySelector('[aria-label="English font"]'); const label = row.previousElementSibling; el.append(label, row); });
    const text = await aa.textContent();
-   for (const want of ['Greek font', 'Text size', 'Line spacing', 'Column width', 'Word panel', 'Keep English visible', 'Over text', 'Add the citation when I copy Greek', 'Print', 'Reset'])
+   for (const want of ['Greek font', 'English font', 'Text size', 'Line spacing', 'Column width', 'Word panel', 'Keep English visible', 'Over text', 'Add the citation when I copy Greek', 'Print', 'Reset'])
     assert(text.includes(want), `Aa lacks "${want}"`);
    assert(await aa.locator('[aria-label="Reading view"] button').count() === 3, 'Aa lacks the three views');
    const faces = await aa.locator('[aria-label="Greek font"] button').allInnerTexts();
-   assert(faces.length === 3 && /^Literata/.test(faces[0]) && /^Gentium/.test(faces[1]) && /Didot/.test(faces[2]), `Aa Greek fonts ${faces}`);
-   assert(await aa.locator('[aria-label="Greek font"] button').first().getAttribute('aria-pressed') === 'true', 'Literata is not the default');
-   await aa.locator('button', {hasText: 'Didot'}).click();
+   assert(faces.length === 3 && /^Literata/.test(faces[0]) && /^Gentium/.test(faces[1]) && /^Cardo/.test(faces[2]), `Aa Greek fonts ${JSON.stringify(faces)}, expected Literata, Gentium, Cardo`);
+   // The English row comes straight after the Greek one: its label, then its buttons.
+   const order = await aa.evaluate(el => { const g = el.querySelector('[aria-label="Greek font"]'); const a = g?.nextElementSibling, b = a?.nextElementSibling; return [a?.textContent.trim(), b?.getAttribute('aria-label')]; });
+   assert(order[0] === 'English font' && order[1] === 'English font', `the row after the Greek font row is ${JSON.stringify(order)}, expected the English font row`);
+   const efaces = await aa.locator('[aria-label="English font"] button').allInnerTexts();
+   assert(efaces.length === 2 && /^Literata/.test(efaces[0]) && /^EB Garamond/.test(efaces[1]), `Aa English fonts ${JSON.stringify(efaces)}, expected Literata, EB Garamond`);
+   for (const row of ['Greek font', 'English font']) { const on = await pressed(aa, row); assert(on.length === 1 && /^Literata/.test(on[0]), `${row} default ${JSON.stringify(on)}, expected Literata`); }
+   await aa.locator('[aria-label="Greek font"] button', {hasText: 'Cardo'}).click();
+   await aa.locator('[aria-label="English font"] button', {hasText: 'EB Garamond'}).click();
    await p.waitForTimeout(1500);
-   assert(didot(p).length >= 1, 'picking GFS Didot requested no font');
-   assert(await p.locator('.reader-body').getAttribute('data-gfont') === 'didot', 'Didot not applied');
+   assert(await fetched(p, 'Cardo'), 'picking Cardo requested no font');
+   assert(await fetched(p, 'EB Garamond'), 'picking EB Garamond requested no font');
+   const picked = await p.locator('.reader-body').evaluate(e => [e.dataset.gfont, e.dataset.efont]);
+   assert(picked[0] === 'cardo' && /^"?Cardo/.test(await family(p, '.reader-body .b-gc')), `Cardo not applied: data-gfont=${picked[0]} ${await family(p, '.reader-body .b-gc')}`);
+   assert(picked[1] === 'garamond' && /^"?EB Garamond/.test(await family(p, '.reader-body .b-ec')), `EB Garamond not applied: data-efont=${picked[1]} ${await family(p, '.reader-body .b-ec')}`);
    await aa.locator('button', {hasText: 'Reset'}).click();
    await p.waitForTimeout(200);
-   const face = await p.locator('.reader-body .b-gc').first().evaluate(e => getComputedStyle(e).fontFamily);
-   assert(await p.locator('.reader-body').getAttribute('data-gfont') === 'literata' && /^"?Literata/.test(face), `Reset left the Greek in ${face}`);
-   n += 4;
+   const reset = await p.locator('.reader-body').evaluate(e => [e.dataset.gfont, e.dataset.efont]);
+   const gf = await family(p, '.reader-body .b-gc'), ef = await family(p, '.reader-body .b-ec');
+   assert(reset[0] === 'literata' && /^"?Literata/.test(gf), `Reset left the Greek in ${gf} (data-gfont=${reset[0]})`);
+   assert(reset[1] === 'literata' && /^"?Literata/.test(ef), `Reset left the English in ${ef} (data-efont=${reset[1]})`);
+   for (const row of ['Greek font', 'English font']) { const on = await pressed(aa, row); assert(on.length === 1 && /^Literata/.test(on[0]), `after Reset ${row} pressed ${JSON.stringify(on)}`); }
+   assert(!(await fetched(p, 'GFS Didot')), 'GFS Didot requested');
+   n += 8;
   } finally { await close(p); }
+  // A reader who saved GFS Didot before 12 Nov comes back to Literata.
+  const saved = await open('D1440', 'light', READER, {storage: {'reader-gfont': 'didot'}});
+  try {
+   await readerReady(saved);
+   if (prove && proofCase === 'didot-kept') await saved.locator('.reader-body').evaluate(e => { e.dataset.gfont = 'didot'; });
+   const g = await saved.locator('.reader-body').evaluate(e => [e.dataset.gfont, getComputedStyle(e.querySelector('.b-gc')).fontFamily]);
+   assert(g[0] === 'literata' && /^"?Literata/.test(g[1]), `saved reader-gfont=didot: data-gfont=${g[0]} Greek in ${g[1]}, expected Literata`);
+   assert(!(await saved.evaluate(() => performance.getEntriesByType('resource').some(r => /gfsdidot|GFS\+Didot/i.test(r.name)))), 'saved reader-gfont=didot requested GFS Didot');
+   n++;
+  } finally { await close(saved); }
   const phone = await openReader('P390');
   try {
    await phone.locator('[data-aa]').click();
    const text = await phone.locator(".b-aa").textContent();
    assert(!text.includes('Column width') && !text.includes('Word panel') && text.includes('Translation'), 'P390 Aa rows: column width or word panel shown, or translations missing');
+   assert(text.includes('English font'), 'P390 Aa lacks "English font"');
    n++;
   } finally { await close(phone); }
   return n;
@@ -2139,6 +2226,394 @@ if (stage >= 3) Object.assign(gates, {
    assert(note.panel, 'Escape with a footnote open closed the word panel too');
    return 12;
   } finally { await close(p); }
+ },
+ // ── 12 Nov 2026 reader rulings (R-R11–R-R17, R-A5) ──
+ 'R-R11': async () => {
+  // Literata reader text at 300; Gentium, Cardo and EB Garamond at 400.
+  let n = 0;
+  const p = prove && proofCase === 'no-face'
+   ? await open('D1440', 'light', READER, false, false, false, '**/css2?family=Gentium*').then(async p => { await readerReady(p); return p; })
+   : await openReader('D1440');
+  try {
+   if (prove && proofCase === 'english-400') await style(p, '.dir-b .b-ec{font-weight:400!important}');
+   if (prove && proofCase === 'greek-400') await style(p, '.dir-b .b-gc, .dir-b .b-gc *{font-weight:400!important}');
+   const read = () => p.evaluate(() => {
+    const pick = sel => [...document.querySelectorAll(sel)].filter(e => e.getClientRects().length).map(e => { const s = getComputedStyle(e); return {el: e.tagName + '.' + [...e.classList].join('.'), w: Number(s.fontWeight), f: s.fontFamily}; });
+    return {greek: pick('.reader-body .b-gc .b-lt, .reader-body .b-gc .b-lt *'), english: pick('.reader-body .b-ec, .reader-body .b-ec .overlay-prose, .reader-body .b-ec .bk-seg, .reader-body .b-ec .fn-anchor')};
+   });
+   // A face is drawn only when the browser loaded it: Literata 300 for Greek and for Latin.
+   const loaded = (fam, weight) => p.evaluate(([fam, weight]) => {
+    const faces = [...document.fonts].filter(f => f.family.replace(/"/g, '') === fam && f.style === 'normal' && f.status === 'loaded' && f.weight.split(' ').map(Number).some((w, i, a) => a.length === 2 ? weight >= a[0] && weight <= a[1] : w === weight));
+    return {greek: faces.some(f => /U\+(370|1F00)/i.test(f.unicodeRange)), latin: faces.some(f => /U\+0-FF/i.test(f.unicodeRange) || f.unicodeRange === 'U+0-10FFFF')};
+   }, [fam, weight]);
+   const expect = (rows, label, fam, weight) => {
+    assert(rows.length > 0, `${label} examined=0 elements`);
+    const bad = rows.filter(r => r.w !== weight || !new RegExp('^"?' + fam).test(r.f));
+    assert(!bad.length, `${label} ${bad.length} of ${rows.length} elements not ${fam} ${weight}, e.g. ${bad[0]?.el} weight=${bad[0]?.w} family=${bad[0]?.f}`);
+    n += rows.length;
+   };
+   let r = await read();
+   expect(r.greek, 'Literata Greek', 'Literata', 300);
+   expect(r.english, 'Literata English', 'Literata', 300);
+   const lit = await loaded('Literata', 300);
+   assert(lit.greek && lit.latin, `no loaded Literata 300 face for ${!lit.greek ? 'Greek' : 'Latin'}`);
+   await p.locator('[data-aa]').click();
+   const aa = p.locator('.b-aa');
+   for (const [row, face, fam, part, label] of [['Greek font', 'Gentium', 'Gentium Book Plus', 'greek', 'Gentium Greek'], ['Greek font', 'Cardo', 'Cardo', 'greek', 'Cardo Greek'], ['English font', 'EB Garamond', 'EB Garamond', 'english', 'EB Garamond English']]) {
+    await aa.locator(`[aria-label="${row}"] button`, {hasText: face}).click();
+    await p.waitForTimeout(1500);
+    await settleFonts(p);
+    if (prove && proofCase === 'cardo-300' && face === 'Cardo') await style(p, '.dir-b .b-text[data-gfont="cardo"] .b-gc, .dir-b .b-text[data-gfont="cardo"] .b-gc *{font-weight:300!important}');
+    r = await read();
+    expect(r[part], label, fam, 400);
+    const f = await loaded(fam, 400);
+    assert(part === 'greek' ? f.greek : f.latin, `no loaded ${fam} 400 face for ${part === 'greek' ? 'Greek' : 'Latin'}`);
+   }
+   console.log(`R-R11 Literata 300, Gentium/Cardo/EB Garamond 400: elements examined=${n}`);
+   return n;
+  } finally { await close(p); }
+ },
+ 'R-R12': async () => {
+  // Both view: no blank line between English paragraphs; English view keeps .85em.
+  // Every paragraph keeps its 1.3em first-line indent.
+  let n = 0;
+  const p = await openReader('D1440');
+  try {
+   for (const view of ['both', 'english']) {
+    await setView(p, view);
+    if (prove && proofCase === 'both-gap' && view === 'both') await style(p, '.dir-b .b-text[data-view="both"] .b-ec .para-br{height:.85em!important}');
+    if (prove && proofCase === 'english-flat' && view === 'english') await style(p, '.dir-b .b-ec .para-br{height:0!important}');
+    if (prove && proofCase === 'no-indent' && view === 'both') await style(p, '.dir-b .b-ec .para-br + .bk-seg::before{width:0!important}');
+    const r = await p.evaluate(() => {
+     const ok = t => t.textContent.trim() && !t.parentElement.closest('.bk-num,.fn-marker');
+     const charRect = (t, last) => { const s = t.textContent, i = last ? s.search(/\S\s*$/) : s.search(/\S/); const rg = document.createRange(); rg.setStart(t, i); rg.setEnd(t, i + 1); return rg.getBoundingClientRect(); };
+     const out = [];
+     for (const br of document.querySelectorAll('.reader-body .b-ec .para-br')) {
+      if (!br.getClientRects().length) continue;
+      const ec = br.closest('.b-ec'), cs = getComputedStyle(ec), fs = parseFloat(cs.fontSize), lh = parseFloat(cs.lineHeight);
+      const w = document.createTreeWalker(ec, NodeFilter.SHOW_TEXT, {acceptNode: t => ok(t) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP});
+      w.currentNode = br; const prev = w.previousNode();
+      w.currentNode = br; const next = w.nextNode();
+      if (!next) continue;
+      const a = next && charRect(next, false), b = prev && charRect(prev, true);
+      const ecLeft = ec.getBoundingClientRect().left + ec.clientLeft + parseFloat(cs.paddingLeft);
+      out.push({fn: next.textContent.trim().slice(0, 24), h: br.getBoundingClientRect().height, fs, gap: b ? a.top - b.top - lh : null, indent: br.nextElementSibling?.matches('.bk-seg') ? a.left - ecLeft : null});
+     }
+     return out;
+    });
+    assert(r.length > 0, `${view} examined=0 English paragraph breaks`);
+    const gaps = r.filter(x => x.gap !== null), indents = r.filter(x => x.indent !== null);
+    assert(gaps.length > 0 && indents.length > 0, `${view} examined=${gaps.length} gaps, ${indents.length} indents`);
+    const want = view === 'both' ? 0 : .85;
+    for (const x of r) assert(Math.abs(x.h - want * x.fs) <= 1, `${view} paragraph break before "${x.fn}" height=${f1(x.h)}px, expected ${f1(want * x.fs)}`);
+    for (const x of gaps) assert(Math.abs(x.gap - want * x.fs) <= 1, `${view} paragraph "${x.fn}" starts ${f1(x.gap)}px below the line before, expected ${f1(want * x.fs)}`);
+    for (const x of indents) assert(Math.abs(x.indent - 1.3 * x.fs) <= 1, `${view} paragraph "${x.fn}" first line indent=${f1(x.indent)}px, expected 1.3em=${f1(1.3 * x.fs)}`);
+    console.log(`R-R12 ${view} paragraph breaks=${r.length} gaps=${gaps.length} indents=${indents.length}`);
+    n += r.length;
+   }
+   return n;
+  } finally { await close(p); }
+ },
+ 'R-R13': async () => {
+  // A Greek line split by a chapter start (.b-gl.cont, EN 1094a18): its text starts 2.5em in.
+  let n = 0;
+  for (const size of ['D1440', 'P390']) {
+   const p = await openReader(size);
+   try {
+    for (const view of ['greek', 'both']) {
+     await setView(p, view);
+     if (prove && proofCase === 'flush') await style(p, '.dir-b .b-gl.cont .b-lt{padding-left:0!important}');
+     const r = await p.evaluate(() => [...document.querySelectorAll('.reader-body .b-gl.cont')].filter(gl => gl.getClientRects().length).map(gl => {
+      const lt = gl.querySelector(':scope > .b-lt');
+      const w = document.createTreeWalker(lt, NodeFilter.SHOW_TEXT); let t; while ((t = w.nextNode()) && !t.textContent.trim());
+      const i = t.textContent.search(/\S/), rg = document.createRange(); rg.setStart(t, i); rg.setEnd(t, i + 1);
+      return {id: gl.id, inset: rg.getBoundingClientRect().left - gl.getBoundingClientRect().left, em: parseFloat(getComputedStyle(lt).fontSize)};
+     }));
+     assert(r.length > 0, `${size} ${view} examined=0 continued Greek lines`);
+     assert(r.some(x => x.id === 'L1094a-18-c'), `${size} ${view} no continued line at 1094a18: ${r.map(x => x.id)}`);
+     for (const x of r) assert(Math.abs(x.inset - 2.5 * x.em) <= 1, `${size} ${view} continued line ${x.id} text starts ${f1(x.inset)}px in, expected 2.5em=${f1(2.5 * x.em)}`);
+     n += r.length;
+    }
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ 'R-R14': async () => {
+  // Desktop line numbers: 15px sans, faint (column labels red), each number's
+  // baseline within 1px of its line's, at text size and line spacing 80–140%.
+  let n = 0, worst = 0;
+  const t = Object.fromEntries(names.map((k, i) => [k, hexRgb(tokens.light[i])]));
+  const combos = [[1, 1], ...[.75, 1, 1.4].flatMap(fs => [.8, 1, 1.4].map(lh => [fs, lh])).filter(([a, b]) => !(a === 1 && b === 1))];
+  for (const [fs, lh] of combos) {
+   const p = await open('D1440', 'light', READER, {storage: {'reader-fs-EN': String(fs), 'reader-lh-EN': String(lh)}});
+   try {
+    await readerReady(p);
+    const applied = await p.locator('.reader-body').evaluate(e => [e.style.getPropertyValue('--fs'), e.style.getPropertyValue('--lh')]);
+    assert(Number(applied[0]) === fs && Number(applied[1]) === lh, `text size ${fs} line spacing ${lh} not applied: --fs=${applied[0]} --lh=${applied[1]}`);
+    if (prove && proofCase === 'fixed-top') await style(p, '.dir-b .b-ln, .dir-b .b-ec .bk-num{--b-number-top:13.24px!important}');
+    if (prove && proofCase === 'old-greek') await style(p, '.dir-b .b-ln{top:.15em!important;font:inherit!important}');
+    if (prove && proofCase === 'old-english') await style(p, '.dir-b .b-ec .bk-num{margin-top:.55em!important;font-size:12.5px!important}');
+    if (prove && proofCase === 'faint') await style(p, '.dir-b .b-ln:not(.col){color:var(--mid)!important}');
+    if (prove && proofCase === 'col-faint') await style(p, '.dir-b .b-ln.col{color:var(--faint)!important}');
+    if (prove && proofCase === 'small') await style(p, '.dir-b .b-ec .bk-num{font-family:Literata!important}');
+    const bad = [];
+    for (const view of ['greek', 'both', 'english']) {
+     await setView(p, view);
+     const r = await p.evaluate(readNumberBaselines);
+     const kinds = view === 'both' ? ['Greek', 'English'] : view === 'greek' ? ['Greek'] : ['English'];
+     for (const k of kinds) assert(r.some(x => x.kind === k), `fs=${fs} lh=${lh} ${view} examined=0 ${k} line numbers`);
+     for (const x of r) {
+      const what = `${view} ${x.kind} ${x.col ? 'column label' : 'number'} "${x.text}"`;
+      worst = Math.max(worst, Math.abs(x.d));
+      if (Math.abs(x.d) > 1) bad.push(`${what} baseline ${x.d > 0 ? 'below' : 'above'} its line by ${f1(Math.abs(x.d))}px`);
+      if (x.size !== '15px' || !/^"?Sofia Sans/.test(x.family)) bad.push(`${what} ${x.size} ${x.family.split(',')[0]}, expected 15px Sofia Sans`);
+      if (!(x.col ? [t.red, t['red-ink']] : [t.faint]).includes(x.color)) bad.push(`${what} color=${x.color}, expected ${x.col ? 'red' : '--faint'}`);
+     }
+     n += r.length;
+    }
+    // The first number with each kind of fault, so one fault does not hide another.
+    const seen = new Set();
+    const kinds = bad.filter(b => { const k = b.replace(/"[^"]*"/, '').replace(/[\d.]+px/g, ''); return !seen.has(k) && seen.add(k); });
+    assert(!bad.length, `fs=${fs} lh=${lh}: ${bad.length} line numbers wrong: ${kinds.join('; ')}`);
+   } finally { await close(p); }
+  }
+  console.log(`R-R14 numbers examined=${n} over ${combos.length} size/spacing pairs; worst baseline offset ${worst.toFixed(2)}px`);
+  return n;
+ },
+ 'R-R15': async () => {
+  // Phone line numbers stay 11px (12px in Both); level with their line at
+  // text size and line spacing 80–140%, the same matrix as R-R14. Each cell's
+  // offsets are printed, so a fault off 100% shows its size.
+  let n = 0;
+  const exempt = [], failures = [];
+  const combos = [[1, 1], ...[.75, 1, 1.4].flatMap(fs => [.8, 1, 1.4].map(lh => [fs, lh])).filter(([a, b]) => !(a === 1 && b === 1))];
+  for (const [fs, lh] of combos) {
+   const p = await open('P390', 'light', READER, {storage: {'reader-fs-EN': String(fs), 'reader-lh-EN': String(lh)}});
+   const bad = [], spread = [];
+   try {
+    await readerReady(p);
+    const applied = await p.locator('.reader-body').evaluate(e => [e.style.getPropertyValue('--fs'), e.style.getPropertyValue('--lh')]);
+    assert(Number(applied[0]) === fs && Number(applied[1]) === lh, `P390 text size ${fs} line spacing ${lh} not applied: --fs=${applied[0]} --lh=${applied[1]}`);
+    if (prove && proofCase === 'english-size') await style(p, '.dir-b .b-ec .bk-num{font-size:8px!important}');
+    if (prove && proofCase === 'greek-low') await style(p, '.dir-b .b-text[data-view="greek"] .b-ln{top:calc(var(--b-number-top) + 6px)!important}');
+    // Right at 100% (Greek view, 11px numbers), wrong at every other size and spacing.
+    if (prove && proofCase === 'fixed-top') await style(p, '.dir-b .b-ln, .dir-b .b-ec .bk-num{--b-number-top:13px!important}');
+    for (const view of ['greek', 'both', 'english']) {
+     await setView(p, view);
+     const r = await p.evaluate(readNumberBaselines);
+     const kinds = view === 'both' ? ['Greek', 'English'] : view === 'greek' ? ['Greek'] : ['English'];
+     for (const k of kinds) assert(r.some(x => x.kind === k), `fs=${fs} lh=${lh}: P390 ${view} examined=0 ${k} line numbers`);
+     for (const k of kinds) {
+      // Both on a phone sets the column label above its line on purpose (b.css: .b-ln.col top:-1.25em).
+      const xs = r.filter(x => x.kind === k && !(view === 'both' && x.col));
+      if (fs === 1 && lh === 1) exempt.push(...r.filter(x => x.kind === k && view === 'both' && x.col).map(x => x.text));
+      const ds = xs.map(x => x.d);
+      spread.push(`${view} ${k} ${f1(Math.min(...ds))}..${f1(Math.max(...ds))}`);
+      for (const x of xs) {
+       const size = view === 'both' ? '12px' : '11px';
+       if (x.size !== size) bad.push(`${view} ${x.kind} number "${x.text}" font-size=${x.size}, expected ${size}`);
+       if (Math.abs(x.d) > 1) bad.push(`${view} ${x.kind} number "${x.text}" baseline ${x.d > 0 ? 'below' : 'above'} its line by ${f1(Math.abs(x.d))}px`);
+       n++;
+      }
+     }
+    }
+   } finally { await close(p); }
+   console.log(`R-R15 P390 fs=${fs} lh=${lh} baseline offsets px (+ below its line): ${spread.join('; ')}`);
+   // One line per kind of fault, so a fault on one number does not hide another.
+   const seen = new Set();
+   const kinds = bad.filter(b => { const k = b.replace(/"[^"]*"/, '').replace(/[\d.]+px/g, ''); return !seen.has(k) && seen.add(k); });
+   if (bad.length) failures.push(`fs=${fs} lh=${lh}: P390 ${bad.length} line numbers wrong: ${kinds.join('; ')}`);
+  }
+  console.log(`R-R15 P390 numbers examined=${n} over ${combos.length} size/spacing pairs; exempt (Both column labels set above the line)=${exempt.length}`);
+  assert(!failures.length, failures.join(' | '));
+  return n;
+ },
+ 'R-R16': async () => {
+  // A footnote box stays on its marker as the page scrolls, and closes when the marker leaves the screen.
+  const p = await openReader('D1440');
+  try {
+   const trans = await p.locator('.reader-body .b-ec').first().getAttribute('data-trans');
+   assert(trans === 'ostwald', `EN book 1 English is ${trans}, expected Ostwald`);
+   if (prove && proofCase === 'pinned') await p.evaluate(() => window.addEventListener('scroll', e => e.stopImmediatePropagation(), true));
+   if (prove && proofCase === 'stays-open') await p.evaluate(() => window.addEventListener('scroll', e => { if (document.querySelector('[data-gate-fn]').getBoundingClientRect().bottom <= 0) e.stopImmediatePropagation(); }, true));
+   const mark = await p.evaluate(() => {
+    const marks = [...document.querySelectorAll('.reader-body .b-ec .fn-marker[data-fn-trans="ostwald"]')].filter(m => m.getClientRects().length);
+    const m = marks[Math.min(5, marks.length - 1)];
+    if (!m) return {n: 0};
+    m.dataset.gateFn = '';
+    window.scrollTo(0, scrollY + m.getBoundingClientRect().top - 320);
+    return {n: marks.length, fn: m.dataset.fn};
+   });
+   assert(mark.n > 0, 'examined=0 Ostwald footnote markers');
+   await p.waitForTimeout(200);
+   await p.locator('[data-gate-fn]').click();
+   await p.locator('.b-note').waitFor({timeout: 3000});
+   await p.waitForTimeout(300);
+   const read = () => p.evaluate(() => { const m = document.querySelector('[data-gate-fn]').getBoundingClientRect(), b = document.querySelector('.b-note')?.getBoundingClientRect(); return {y: scrollY, mb: m.bottom, bt: b ? b.top : null}; });
+   const settle = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))).then(() => p.waitForTimeout(150));
+   const at = await read();
+   assert(Math.abs(at.bt - at.mb - 8) <= 2, `footnote ${mark.fn} at open: box top=${f1(at.bt)} marker bottom=${f1(at.mb)}, expected an 8px gap`);
+   await p.evaluate(() => window.scrollBy(0, 200));
+   await settle();
+   const moved = await read();
+   assert(moved.y - at.y === 200, `the page scrolled ${moved.y - at.y}px, expected 200`);
+   assert(moved.bt !== null, `footnote ${mark.fn} closed on a 200px scroll with its marker in view`);
+   assert(Math.abs((moved.bt - moved.mb) - (at.bt - at.mb)) <= 2, `footnote ${mark.fn} box left its marker: gap ${f1(at.bt - at.mb)}px at open, ${f1(moved.bt - moved.mb)}px after a 200px scroll`);
+   await p.evaluate(() => window.scrollBy(0, document.querySelector('[data-gate-fn]').getBoundingClientRect().bottom + 40));
+   await settle();
+   const gone = await read();
+   assert(gone.mb < 0, `the marker is still on screen (bottom=${f1(gone.mb)})`);
+   assert(gone.bt === null, `footnote ${mark.fn} box still open with its marker out of view (marker bottom=${f1(gone.mb)}, box top=${f1(gone.bt)})`);
+   console.log(`R-R16 footnote ${mark.fn}: gap ${f1(at.bt - at.mb)}px at open, ${f1(moved.bt - moved.mb)}px after 200px; closed at marker bottom=${f1(gone.mb)}`);
+   return 3;
+  } finally { await close(p); }
+ },
+ 'R-R17': async () => {
+  // Reader red: only chapter numerals, column labels and footnote markers.
+  // The named groups below hold their colours; then every visible text run on
+  // the page (Both view), generated ::before/::after text included, is scanned
+  // for red: --red, --red-ink, or any colour whose red channel leads green and
+  // blue by 90 or more. Allowed red, each by an earlier ruling:
+  const allowedRed = {'.b-chn': 'chapter numerals', '.b-ln.col': 'Bekker column labels', '.fn-marker': 'footnote markers'};
+  let n = 0;
+  for (const theme of ['light', 'dark']) {
+   const t = Object.fromEntries(names.map((k, i) => [k, hexRgb(tokens[theme][i])]));
+   const p = await openReader('D1440', READER, theme);
+   try {
+    if (prove && proofCase === 'title-red' && theme === 'light') await style(p, '.dir-b .b-bk-t{color:var(--red)!important}');
+    if (prove && proofCase === 'head-red' && theme === 'light') await style(p, '.dir-b .b-rh-ch{color:var(--red-ink)!important}');
+    if (prove && proofCase === 'head-title-red' && theme === 'light') await style(p, '.dir-b .b-rh-ch i{color:var(--red-ink)!important}');
+    if (prove && proofCase === 'chn-ink' && theme === 'light') await style(p, '.dir-b .b-chn{color:var(--ink)!important}');
+    if (prove && proofCase === 'cht-red' && theme === 'light') await style(p, '.dir-b .b-cht{color:var(--red)!important}');
+    if (prove && proofCase === 'dark-title' && theme === 'dark') await style(p, '.dir-b .b-bk-t{color:var(--red)!important}');
+    const c = await p.evaluate(() => {
+     const col = sel => [...document.querySelectorAll(sel)].filter(e => e.getClientRects().length).map(e => getComputedStyle(e).color);
+     return {'.b-bk-t': col('.b-bk-t'), '.b-rh-ch [data-ctx-n]': col('.b-rh-ch [data-ctx-n]'), '.b-rh-ch i': col('.b-rh-ch [data-ctx-title]'), '.b-chn': col('.reader-body .b-chn'), '.b-ln.col': col('.reader-body .b-ln.col'), '.fn-marker': col('.reader-body .fn-marker')};
+    });
+    const want = {'.b-bk-t': [[t.ink], '--ink'], '.b-rh-ch [data-ctx-n]': [[t.ink], '--ink'], '.b-rh-ch i': [[t.ink, t.mid], '--ink or --mid'], '.b-chn': [[t.red, t['red-ink']], 'red'], '.b-ln.col': [[t.red, t['red-ink']], 'red'], '.fn-marker': [[t.red, t['red-ink']], 'red']};
+    for (const [sel, [ok, name]] of Object.entries(want)) {
+     assert(c[sel].length > 0, `${theme} examined=0 ${sel}`);
+     const off = c[sel].find(v => !ok.includes(v));
+     assert(!off, `${theme} ${sel} color=${off}, expected ${name}`);
+     n += c[sel].length;
+    }
+    await setView(p, 'both');
+    const scan = await p.evaluate(({allowed, reds}) => {
+     const isRed = c => { if (reds.includes(c)) return true; const m = c.match(/\d+(\.\d+)?/g)?.map(Number); return !!m && m[0] - Math.max(m[1], m[2]) >= 90 && (m[3] ?? 1) > 0; };
+     const tag = el => `${el.tagName}${el.classList.length ? '.' + [...el.classList].join('.') : ''}`;
+     const out = {runs: 0, allowed: {}, off: []};
+     const take = (el, color, text) => {
+      out.runs++;
+      if (!isRed(color)) return;
+      const ok = allowed.find(sel => el.closest(sel));
+      if (ok) out.allowed[ok] = (out.allowed[ok] || 0) + 1;
+      else out.off.push(`${tag(el)} "${text.slice(0, 30)}" color=${color}`);
+     };
+     const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+     for (let t; (t = w.nextNode());) {
+      const el = t.parentElement, s = getComputedStyle(el);
+      if (!t.textContent.trim() || s.visibility !== 'visible') continue;
+      const rg = document.createRange(); rg.selectNodeContents(t);
+      if (![...rg.getClientRects()].some(r => r.width && r.height)) continue;
+      take(el, s.color, t.textContent.trim());
+     }
+     for (const el of document.body.querySelectorAll('*')) {
+      if (!el.getClientRects().length) continue;
+      for (const pseudo of ['::before', '::after']) {
+       const s = getComputedStyle(el, pseudo), text = s.content.match(/^"(.*)"$/)?.[1] ?? (/^attr\(/.test(s.content) ? s.content : '');
+       if (text.trim() && s.display !== 'none' && s.visibility === 'visible') take(el, s.color, `${pseudo} ${text}`);
+      }
+     }
+     return out;
+    }, {allowed: Object.keys(allowedRed), reds: [t.red, t['red-ink']]});
+    assert(scan.runs > 0, `${theme} examined=0 visible text runs`);
+    assert(Object.keys(scan.allowed).length === Object.keys(allowedRed).length, `${theme} red scan found no red in ${Object.keys(allowedRed).filter(k => !scan.allowed[k]).join(', ')}: the scan reads no red at all`);
+    console.log(`R-R17 ${theme} Both: ${scan.runs} visible text runs scanned; red allowed: ${Object.entries(scan.allowed).map(([k, v]) => `${k} (${allowedRed[k]}) ${v}`).join(', ')}`);
+    assert(!scan.off.length, `${theme} red text outside the allowed set: ${scan.off.length} runs, ${scan.off.slice(0, 4).join('; ')}`);
+    n += scan.runs;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ 'R-A5': async () => {
+  // Site-wide: no element that clips (overflow hidden or clip) cuts its own text.
+  // scrollHeight alone misses a clipped descender in Chromium (an italic title at
+  // line-height 1.2 reads scrollHeight 21, clientHeight 20), so each text run's
+  // box is also held inside the element's padding box.
+  // Text nested in child elements is held inside each ancestor that clips it
+  // vertically (overflow-y hidden or clip), up to the nearest scroller, whose
+  // edge scrolls text rather than cutting it. A run wholly outside the box is
+  // hidden content, not a cut glyph, and is only counted. Horizontal clipping
+  // is not checked: the top bar's chapter title (.b-rh-ch i) is cut to one
+  // line with an ellipsis on purpose.
+  let n = 0, nested = 0, hiddenRuns = 0;
+  const exempt = new Set();
+  for (const size of ['D1440', 'P390']) for (const path of ['/', '/EN/', READER]) {
+   const p = path === READER ? await openReader(size) : await open(size, 'light', path);
+   try {
+    for (const view of path === READER ? ['greek', 'both', 'english'] : [null]) {
+     if (view) await setView(p, view);
+     if (prove && proofCase === 'title-1.2') await style(p, '.dir-b .b-rh-ch i{line-height:1.2!important}');
+     // .b-rh-ch holds its text only in child spans: a clip there cuts nested text.
+     if (prove && proofCase === 'nested-clip') await style(p, '.dir-b .b-rh-ch{overflow:hidden!important;height:10px!important;min-height:0!important;max-height:10px!important}');
+     const r = await p.evaluate(() => {
+      const out = {examined: 0, nested: 0, hidden: 0, clipped: [], exempt: []};
+      const tag = el => `${el.tagName}${el.classList.length ? '.' + [...el.classList].join('.') : ''}`;
+      const srOnly = (el, s, box) => box.width <= 1 && box.height <= 1 && (/rect\(0px, 0px, 0px, 0px\)/.test(s.clip) || /inset\(50%\)/.test(s.clipPath));
+      // Nested text: every visible text run, held against each clipping ancestor
+      // above its own parent (the parent's own runs are checked below).
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let t; (t = walker.nextNode());) {
+       if (!t.textContent.trim() || getComputedStyle(t.parentElement).visibility !== 'visible') continue;
+       const rg = document.createRange(); rg.selectNodeContents(t);
+       const rects = [...rg.getClientRects()].filter(r => r.width && r.height);
+       if (!rects.length) continue;
+       for (let a = t.parentElement.parentElement, via = t.parentElement; a && a !== document.documentElement; via = a, a = a.parentElement) {
+        if (getComputedStyle(via).position === 'fixed') break;
+        const s = getComputedStyle(a);
+        if (s.overflowY === 'auto' || s.overflowY === 'scroll') break;
+        if (!(s.overflowY === 'hidden' || s.overflowY === 'clip') || /^(inline|contents|none)$/.test(s.display)) continue;
+        const box = a.getBoundingClientRect();
+        if (srOnly(a, s, box)) break;
+        const top = box.top + a.clientTop, bottom = top + a.clientHeight;
+        out.nested++;
+        const cut = rects.filter(r => r.bottom > top && r.top < bottom);
+        if (!cut.length) { out.hidden++; continue; }
+        const over = Math.max(...cut.map(r => Math.max(top - r.top, r.bottom - bottom)));
+        if (over > 1) out.clipped.push(`${tag(a)} nested text "${t.textContent.trim().slice(0, 40)}" in ${tag(t.parentElement)}: nested text overruns its box by ${over.toFixed(1)}px`);
+       }
+      }
+      for (const el of document.querySelectorAll('body *')) {
+       const s = getComputedStyle(el);
+       if (![s.overflowX, s.overflowY].some(v => v === 'hidden' || v === 'clip')) continue;
+       // overflow does not apply to inline boxes.
+       if (/^(inline|contents|none)$/.test(s.display) || !el.getClientRects().length || s.visibility !== 'visible') continue;
+       const texts = [...el.childNodes].filter(c => c.nodeType === 3 && c.textContent.trim());
+       if (!texts.length) continue;
+       const name = `${tag(el)} "${texts.map(x => x.textContent.trim()).join(' ').slice(0, 40)}"`;
+       const box = el.getBoundingClientRect();
+       // Visually hidden text for screen readers: a 1px box clipped to nothing.
+       if (srOnly(el, s, box)) { out.exempt.push(`${name.replace(/ ".*/, '')} (visually hidden for screen readers)`); continue; }
+       out.examined++;
+       const top = box.top + el.clientTop, bottom = top + el.clientHeight;
+       let over = 0;
+       for (const x of texts) { const rg = document.createRange(); rg.selectNodeContents(x); for (const rr of rg.getClientRects()) over = Math.max(over, top - rr.top, rr.bottom - bottom); }
+       if (el.scrollHeight > el.clientHeight + 1 || over > 1) out.clipped.push(`${name} scrollHeight=${el.scrollHeight} clientHeight=${el.clientHeight}, text overruns its box by ${over.toFixed(1)}px`);
+      }
+      return out;
+     });
+     const label = `${path} ${size}${view ? ' ' + view : ''}`;
+     console.log(`R-A5 ${label} clipping elements with own text examined=${r.examined}${r.examined ? '' : ' (none on this page)'}; nested text runs held against a clipping ancestor=${r.nested} (wholly hidden=${r.hidden})`);
+     r.exempt.forEach(e => exempt.add(e));
+     assert(!r.clipped.length, `${label} clipped text: ${r.clipped.slice(0, 4).join('; ')}`);
+     n += r.examined + r.nested; nested += r.nested; hiddenRuns += r.hidden;
+    }
+   } finally { await close(p); }
+  }
+  console.log(`R-A5 nested text runs examined=${nested}, wholly hidden=${hiddenRuns}; horizontal clipping not checked (exempt by design: .b-rh-ch i, one line with text-overflow: ellipsis)`);
+  console.log(`R-A5 exempt: ${[...exempt].join('; ') || 'none'}`);
+  assert(n > 0, 'R-A5 examined=0 clipping elements with text on every page');
+  return n;
  },
 });
 
@@ -3137,11 +3612,19 @@ const stageThreeProofs = {
     'R-R2': {'kit-wrap': /EN S844 reader head breaks into two rows/, 'pad-overflow': /EN S844 reader head runs \d+\.\dpx into its right padding/},
     'R-R3': {'i-book-i': /EN contents book head "I Book I"/},
     'R-R4': {'stack-s844': /S844 English below Greek: row stacks/},
-    'R-R5': {'nothing-unwrapped': /examined nothing unwrapped/, 'no-nowrap': /EN D1440 Greek column width=80 expected/, 'narrow-column': /EN D1440 Greek column width=80 expected/, 'late-overlap': /EN D1440 \d+ English line boxes overlap Greek words/, 'small-descendant': /EN D1440 reading text under 18px: .*span\.gate-small 12px/, 'small-table': /\/EN\/book\/1 D1440 eng-table fixture reading text under 18px: .*table\.eng-table.*td /, 'table-overflow': /\/EN\/book\/1 P390 eng-table fixture horizontal page overflow:/, 'ln-margin': /EN D1440 first Bekker margin number "1094a" ink starts at x4[7-9]/, 'round-eight':/EN W1200 panel open Greek column width=/, 'phone-shrink': /EN P390 both reading text under 18px:/},
+    'R-R5': {'nothing-unwrapped': /examined nothing unwrapped/, 'no-nowrap': /EN D1440 Greek column width=80 expected/, 'narrow-column': /EN D1440 Greek column width=80 expected/, 'late-overlap': /EN D1440 \d+ English line boxes overlap Greek words/, 'small-descendant': /EN D1440 reading text under 18px: .*span\.gate-small 12px/, 'small-table': /\/EN\/book\/1 D1440 eng-table fixture reading text under 18px: .*table\.eng-table.*td /, 'table-overflow': /\/EN\/book\/1 P390 eng-table fixture horizontal page overflow:/, 'ln-margin': /EN D1440 column label "1094a" right ink x[\d.]+ is 10\.0px off the line numbers' right edge/, 'ln-col-low': /EN D1440 column label "1094a" baseline below its line by 3\.2px/, 'round-eight':/EN W1200 panel open Greek column width=/, 'phone-shrink': /EN P390 both reading text under 18px:/, 'ln-shift': /EN D1440 line numbers' gutter to the Greek is [\d.]+–[\d.]+px, expected 12\.\d+±1px/},
     'R-R6': {'no-rerun': /panel open did not change --gcol/},
     'R-R7': {'late-panel': /D1440 \d+ English line boxes under the panel/, 'round-eight-compare': /D1440 Compare \d+ English line boxes under the panel/},
     'R-R8': {'bottom-sheet': /S844 panel anchored to the bottom/},
-    'R-R10': {'bold-hit': /Greek elements bold or italic/},
+    'R-R10': {'bold-hit': /Greek elements bold or italic/, 'eager-cardo': /Cardo requested on a fresh load/, 'didot-row': /Aa Greek fonts \["Literata αβγ","Gentium αβγ","Cardo αβγ","Didot αβγ"\], expected Literata, Gentium, Cardo/, 'english-apart': /the row after the Greek font row is \["Text size/, 'didot-kept': /saved reader-gfont=didot: data-gfont=didot/},
+    'R-R11': {'english-400': /Literata English \d+ of \d+ elements not Literata 300, e\.g\. DIV\.english-col\.b-ec weight=400/, 'greek-400': /Literata Greek \d+ of \d+ elements not Literata 300, e\.g\. SPAN\.line-text\.b-lt weight=400/, 'cardo-300': /Cardo Greek \d+ of \d+ elements not Cardo 400, .* weight=300/, 'no-face': /no loaded Literata 300 face for Greek/},
+    'R-R12': {'both-gap': /both paragraph break before ".*" height=16\.6px, expected 0/, 'english-flat': /english paragraph break before ".*" height=0px, expected 16\.6/, 'no-indent': /both paragraph ".*" first line indent=0px, expected 1\.3em=25\.4/},
+    'R-R13': {'flush': /D1440 greek continued line L1094a-18-c text starts 0px in, expected 2\.5em=48\.8/},
+    'R-R14': {'fixed-top': /fs=0\.75 lh=0\.8: \d+ line numbers wrong: greek Greek column label "1094a" baseline below its line by [2-9]\.\dpx/, 'old-greek': /fs=1 lh=1: \d+ line numbers wrong: greek Greek column label "1094a" baseline below its line by 2\.9px/, 'old-english': /fs=1 lh=1: \d+ line numbers wrong: both English number "1" baseline above its line by [89]\.\dpx/, 'faint': /fs=1 lh=1: \d+ line numbers wrong: greek Greek number "5" color=rgb\(93, 92, 87\), expected --faint/, 'col-faint': /fs=1 lh=1: \d+ line numbers wrong: greek Greek column label "1094a" color=rgb\(108, 107, 102\), expected red/, 'small': /fs=1 lh=1: .*both English number "1" 15px Literata, expected 15px Sofia Sans/},
+    'R-R15': {'english-size': /english English number "\d+" font-size=8px, expected 11px/, 'greek-low': /greek Greek number "[^"]+" baseline below its line by [6-9](\.\d)?px/, 'fixed-top': /fs=0\.75 lh=0\.8: P390 \d+ line numbers wrong: greek Greek number "[^"]+" baseline below its line by [5-9](\.\d)?px/},
+    'R-R16': {'pinned': /footnote 1\.\d+ box left its marker: gap 8px at open, 208px after a 200px scroll/, 'stays-open': /footnote 1\.\d+ box still open with its marker out of view/},
+    'R-R17': {'title-red': /light \.b-bk-t color=rgb\(226, 56, 46\), expected --ink/, 'head-red': /light \.b-rh-ch \[data-ctx-n\] color=rgb\(180, 36, 25\), expected --ink/, 'head-title-red': /light \.b-rh-ch i color=rgb\(180, 36, 25\), expected --ink or --mid/, 'chn-ink': /light \.b-chn color=rgb\(20, 20, 19\), expected red/, 'cht-red': /light red text outside the allowed set: \d+ runs, .*\.b-cht/, 'dark-title': /dark \.b-bk-t color=rgb\(255, 90, 77\), expected --ink/},
+    'R-A5': {'nested-clip': /\/EN\/book\/1 D1440 greek clipped text: .*SPAN\.b-rh-ch .*nested text overruns its box by [1-9]/, 'title-1.2': /\/EN\/book\/1 D1440 greek clipped text: I "The good as the aim of action" scrollHeight=\d+ clientHeight=20, text overruns its box by [1-9]\.\dpx/},
     'R-A4': {'no-tabindex': /Tab from the head never reached a Greek word/, 'escape-layers': /Escape with Contents open closed the word panel too/, 'escape-help': /Escape with Help open closed the word panel too/, 'escape-note': /Escape with a footnote open closed the word panel too/},
 };
 const stageFourProofs = {

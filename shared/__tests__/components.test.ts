@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Window } from 'happy-dom';
 import Reader from '../components/Reader.svelte';
 import Search from '../components/Search.svelte';
 import type { BookData } from '../lib/data';
@@ -1104,4 +1105,84 @@ it('B refreshes the viewport whenever Aa or the translation picker opens', async
     expect(width.mock.calls.length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByRole('group', { name: 'Text and view settings' })).toBeNull();
   } finally { picker.remove(); }
+});
+
+describe('B reader fonts', () => {
+  let cssLoadingDisabled: boolean;
+  let disabledLoadingSucceeds: boolean;
+  beforeEach(() => {
+    const settings = (window as unknown as Window).happyDOM.settings;
+    cssLoadingDisabled = settings.disableCSSFileLoading;
+    disabledLoadingSucceeds = settings.handleDisabledFileLoadingAsSuccess;
+    settings.disableCSSFileLoading = true;
+    settings.handleDisabledFileLoadingAsSuccess = true;
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('reader-gfont');
+    localStorage.removeItem('reader-efont');
+    document.querySelectorAll('link[data-reader-font]').forEach((link) => link.remove());
+    const settings = (window as unknown as Window).happyDOM.settings;
+    settings.disableCSSFileLoading = cssLoadingDisabled;
+    settings.handleDisabledFileLoadingAsSuccess = disabledLoadingSucceeds;
+  });
+
+  it('shows Greek choices in order, then the English font row, and loads faces only when picked', async () => {
+    const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    const greek = screen.getByRole('group', { name: 'Greek font' });
+    const english = screen.getByRole('group', { name: 'English font' });
+    expect(within(greek).getAllByRole('button').map((button) => button.textContent?.trim()))
+      .toEqual(['Literata αβγ', 'Gentium αβγ', 'Cardo αβγ']);
+    expect(greek.previousElementSibling).toHaveClass('b-mk');
+    expect(greek.previousElementSibling).toHaveTextContent('Greek font');
+    expect(greek.nextElementSibling).toHaveClass('b-mk');
+    expect(greek.nextElementSibling).toHaveTextContent('English font');
+    expect(greek.nextElementSibling?.nextElementSibling).toBe(english);
+    expect(english).toHaveClass('b-seg', 'wide');
+    expect(within(english).getAllByRole('button').map((button) => button.textContent?.trim()))
+      .toEqual(['Literata Abc', 'EB Garamond Abc']);
+    expect(document.querySelector('link[data-reader-font]')).toBeNull();
+    const body = container.querySelector('.reader-body');
+    expect(body).toHaveAttribute('data-gfont', 'literata');
+    expect(body).toHaveAttribute('data-efont', 'literata');
+
+    await fireEvent.click(within(greek).getByRole('button', { name: 'Cardo αβγ' }));
+    await fireEvent.click(within(english).getByRole('button', { name: 'EB Garamond Abc' }));
+    expect(body).toHaveAttribute('data-gfont', 'cardo');
+    expect(body).toHaveAttribute('data-efont', 'garamond');
+    expect(localStorage.getItem('reader-gfont')).toBe('cardo');
+    expect(localStorage.getItem('reader-efont')).toBe('garamond');
+    expect(document.querySelector('link[data-reader-font="cardo"]')).toHaveAttribute('href',
+      'https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&display=swap');
+    expect(document.querySelector('link[data-reader-font="garamond"]')).toHaveAttribute('href',
+      'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+
+    await fireEvent.click(screen.getByRole('button', { name: /Reset/ }));
+    expect(body).toHaveAttribute('data-gfont', 'literata');
+    expect(body).toHaveAttribute('data-efont', 'literata');
+    expect(localStorage.getItem('reader-gfont')).toBeNull();
+    expect(localStorage.getItem('reader-efont')).toBeNull();
+  });
+
+  it('restores and loads saved Cardo and EB Garamond faces once', async () => {
+    localStorage.setItem('reader-gfont', 'cardo');
+    localStorage.setItem('reader-efont', 'garamond');
+    const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-gfont', 'cardo');
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-efont', 'garamond');
+    expect(document.querySelectorAll('link[data-reader-font]')).toHaveLength(2);
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Cardo αβγ' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'EB Garamond Abc' }));
+    expect(document.querySelectorAll('link[data-reader-font]')).toHaveLength(2);
+  });
+
+  it('removes the retired didot preference when restoring Literata', () => {
+    localStorage.setItem('reader-gfont', 'didot');
+    const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-gfont', 'literata');
+    expect(localStorage.getItem('reader-gfont')).toBeNull();
+    expect(document.querySelector('link[data-reader-font]')).toBeNull();
+  });
 });

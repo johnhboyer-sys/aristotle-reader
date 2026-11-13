@@ -5,7 +5,32 @@ off. The version before this one (11 Nov, with the search mock-up history
 stacked on it) is kept at
 `.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-12.md`.
 
-## 1. Where it stands
+## 0. For John, morning of 13 Nov (coordinator's list; filled in overnight)
+
+Search (Track B) rulings, each with the search session's recommendation:
+1. **Accents vs Form.** With Accents on, ἀρετή finds only that spelling (78
+   hits) but Form still reads "any form". A (recommended): Accents on sets
+   Form to "only as I typed". B: keep every form, respect accents within each.
+2. **Phone Filter sheet.** Ruled tonight pending your yes: "This search" lists
+   filters only, matching the Filter badge; display settings show by the red
+   dot on View; Clear all clears filters only.
+3. **/advanced guide order.** Typing Greek (Beta Code) first, ahead of
+   Wildcards (the drawing put Wildcards first). Recommend keeping Greek first.
+4. **Greek-only hits: translator names.** No names switch there (one English,
+   with its translator's name). Recommend leaving it out of this build.
+5. **Old search links under the new wildcard rules** (Plato's syntax now): a
+   few old links open a different search (`g=λόγος.` used to drop the full
+   stop, now it is a wildcard; `g=*λόγος` used to reject ἀνάλογος, now finds
+   it). Recommend keeping the new rules (documented in the guide, links rare,
+   a leading * was meant as a wildcard); the alternative is a compatibility
+   rule for old links. PR notes list it as a known change.
+To look at, not rule: phone and sideways departures from round 34 (sheets have
+Done only over a darker veil; under Both the options sit in one column;
+sideways under 760px takes two rows; the Forms sheet's button reads "Show N
+instances" not "Apply"). Screenshot sheet: path comes with the green tip.
+Later tracks: "Group by grammar" groups by spelling (needs per-word grammar
+data); an opened section's English can start a clause early (alignment).
+
 
 Branch `claude/redesign-build`, this worktree
 (`~/Developer/aristotle-reader/.claude/worktrees/redesign-build`). **Not
@@ -269,6 +294,24 @@ Left on purpose (John has not asked for a commit); keep them:
 8. Rewrite this file.
 
 ## 7. Follow-ups for the PR body (not this PR)
+
+- **Shard the gate suite (John's yes, 12 Nov 23:17).** `check-redesign.mjs
+  --stage 5` takes ~38 min, all gates in sequence in one browser; the gates are
+  independent, so run them across ~4 browsers in parallel (target ~10 min),
+  keeping `--only`/`--prove` and one combined log. Do it after the reader-fix
+  commit, before §6's final run.
+
+- **Reader pages need their own design rounds (John, 12 Nov 22:45: "reader
+  pages need hill climbing too", later).** The reader was built in stage 3 and
+  never went through the home/work rounds. Known so far: the 96px book title,
+  72px chapter numerals and top-bar "Chapter N" are still red (round 9's ink
+  move was scoped to `.pg-home`/`.pg-work`); options shot in
+  `.redesign-shots/notes/d26/redtitles/`. Already fixed on 12 Nov night:
+  fonts (Literata/Gentium/Cardo Greek, Literata/EB Garamond English, Literata
+  at 300), no paragraph gap in Both view, split-line indent, line numbers 15px
+  and level, footnote box anchored, clipped italic descender in the top bar.
+  Proposed method: one review page of every reader state with a note box under
+  each, then rounds.
 
 - Corpus: no lemma page for σωφροσύνη or ἀκούσιος.
 - LSJ track: grammata's Logeion link is 14px tall; `.t8-entry` margin gap on
