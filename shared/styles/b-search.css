@@ -1,0 +1,462 @@
+/* The search page in direction B (round 34): the form, its menus, the works
+   picker, the Greek keyboard and the dictionary-word list. Imported by
+   app/src/pages/search.astro only; every rule sits under the component's
+   root, .search-page. The results, the rail and the proximity editor keep
+   their rules in Search.svelte until stages S3 and S4 rebuild them.
+   Colours are the site's tokens (b.css); the two below are the search
+   page's own and hold in both themes. */
+
+.dir-b .search-page {
+  --veil: rgba(244, 243, 238, .88);
+  --go: #b42419;          /* the Search button: white on this red in both themes */
+  --sq-side: 220px;       /* Greek · English · Both: three 72px buttons and their rules */
+  max-width: 1152px;
+  margin: 0 auto;
+  padding: 28px 72px 48px;
+  font-family: var(--sans);
+  color: var(--ink);
+}
+:root[data-theme="dark"] .dir-b .search-page { --veil: rgba(20, 20, 19, .88); }
+/* The root's face is the form's. What S2 did not rebuild (results and rail,
+   proximity editor, help) inherited the root's face before S2 and keeps a
+   reading face: the English under each hit is reading text, in Literata. */
+.dir-b .search-page :is(.sx-layout, .advanced-body, .help-modal, .narrow-prompt, .search-error, .rt-progress) { font-family: var(--read); }
+
+.search-page .search-form { position: relative; }
+
+/* ── The field ──────────────────────────────────────────────────────────── */
+.search-page .sq { display: flex; align-items: flex-start; gap: 24px; }
+.search-page .sq-fields { flex: 1 1 auto; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 28px; }
+.search-page .sq-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 58px;
+  border-bottom: 2px solid var(--ink);
+  color: var(--mid);
+}
+.search-page .sq-glass { flex: none; width: 22px; height: 22px; margin-left: 2px; }
+.search-page .query-label { flex: none; width: 72px; font: 500 15px/1 var(--sans); color: var(--mid); }
+.search-page .query-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 0 10px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: 400 40px/1.2 var(--read);
+  color: var(--ink);
+}
+.search-page .query-input::placeholder { font-size: 30px; font-style: italic; color: var(--faint); opacity: 1; }
+.search-page .query-input:focus { outline: none; }
+/* The clear button: a thin cross in the ink, not the browser's own. */
+.search-page .query-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-left: 12px;
+  background:
+    linear-gradient(45deg, transparent calc(50% - 1px), var(--ink) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px)),
+    linear-gradient(-45deg, transparent calc(50% - 1px), var(--ink) calc(50% - 1px) calc(50% + 1px), transparent calc(50% + 1px));
+  cursor: pointer;
+}
+.search-page .query-input:disabled { color: var(--ink); -webkit-text-fill-color: var(--ink); opacity: 1; }
+
+/* Keyboard and Beta Code: quiet tools on the field's rule (ruling 7). */
+.search-page .sq-tool {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--mid);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page .sq-tool + .sq-tool { margin-left: 14px; }
+.search-page .sq-tool [lang="grc"] { font: 400 16px/1 var(--read); }
+.search-page .sq-tool:hover:not(:disabled) { color: var(--ink); }
+.search-page .sq-tool:is([aria-pressed="true"], [aria-expanded="true"]) { color: var(--ink); box-shadow: inset 0 -3px 0 var(--red-ink); }
+.search-page .sq-tool:disabled { opacity: .5; cursor: default; }
+
+/* Greek · English · Both: a segmented control. */
+.search-page .lang-switch { flex: none; display: inline-flex; margin-top: 4px; border: 1px solid var(--ink); }
+.search-page .lang-switch button {
+  width: 72px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .lang-switch button:first-child { border-left: 0; }
+.search-page .lang-switch button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+
+/* ── The options ────────────────────────────────────────────────────────── */
+.search-page .sopt:not(.sx-display) { display: flex; align-items: center; gap: 4px 16px; margin-top: 18px; }
+.search-page .sopt:not(.sx-display):not(.sopt-both) > :is(.sopt-g, .sopt-e, .sopt-w) { display: contents; }
+.search-page .sopt.sopt-both { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.search-page .sopt-both > :is(.sopt-g, .sopt-e, .sopt-w) { grid-column: 1; display: flex; align-items: center; gap: 16px; }
+.search-page .sopt-both > .sopt-act { grid-column: 2; grid-row: 3; }
+.search-page .sopt-act { display: inline-flex; align-items: center; gap: 22px; margin-left: auto; flex: none; }
+
+.search-page .search-form .opt > summary,
+.search-page .search-form .opt-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 500 16px/1.3 var(--sans);
+  color: var(--mid);
+  white-space: nowrap;
+  list-style: none;
+  cursor: pointer;
+}
+.search-page .search-form .opt > summary::-webkit-details-marker { display: none; }
+.search-page .search-form .opt b,
+.search-page .search-form .opt-btn b {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 600;
+  color: var(--ink);
+}
+.search-page .search-form .opt > summary:hover b,
+.search-page .search-form .opt-btn:hover b { color: var(--red-ink); border-bottom-color: currentColor; }
+.search-page .search-form .opt-caret { flex: none; color: var(--mid); transition: transform .12s; }
+/* Open: the value underlined in red, the caret turned up. The picker open
+   under In counts as In open. */
+.search-page .search-form .opt:is([open], .picking) > summary b { border-bottom: 2px solid var(--red-ink); padding-bottom: 1px; color: var(--ink); }
+.search-page .search-form .opt:is([open], .picking) > summary .opt-caret { transform: rotate(180deg); }
+.search-page .search-form .opt > summary:focus-visible,
+.search-page .search-form .opt-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* A switch, drawn alone: no state word (ruling 5). */
+.search-page .opt-switch { gap: 8px; }
+.search-page .opt-switch .sw {
+  position: relative;
+  flex: none;
+  width: 30px;
+  height: 18px;
+  border: 1.5px solid var(--mid);
+  border-radius: 10px;
+}
+.search-page .opt-switch .sw::after {
+  content: "";
+  position: absolute;
+  top: 2.5px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--mid);
+  transition: left .15s;
+}
+.search-page .opt-switch[aria-pressed="true"] .sw { border-color: var(--ink); background: var(--ink); }
+.search-page .opt-switch[aria-pressed="true"] .sw::after { left: 14px; background: var(--bg); }
+.search-page .opt-switch:hover .sw { border-color: var(--ink); }
+
+/* Proximity and Search: one block at the right (ruling 4). */
+.search-page .advanced-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 16px/1 var(--sans);
+  color: var(--ink);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page .advanced-trigger .opt-caret { color: var(--ink); transition: transform .12s; }
+.search-page .advanced-trigger[aria-expanded="true"] .opt-caret { transform: rotate(180deg); }
+.search-page .advanced-trigger[aria-expanded="true"] { box-shadow: inset 0 -2px 0 var(--red-ink); }
+.search-page .advanced-trigger:hover { color: var(--red-ink); }
+.search-page .search-btn {
+  height: 46px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: 0;
+  background: var(--go);
+  font: 650 16px/1 var(--sans);
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page .search-btn:hover:not(:disabled) { background: var(--ink); color: var(--bg); }
+.search-page .search-btn:disabled { opacity: .6; cursor: default; }
+.search-page .search-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ── The menus (Match, Form, In, Hits match) ────────────────────────────── */
+/* A panel flush under its trigger, outlined all round (ruling 3), with a veil
+   over the page. The veil is the summary's ::before, so a click on it lands
+   on the summary and shuts the menu, never on what lies under it. */
+.search-page .search-form .opt { position: relative; }
+.search-page .search-form .opt[open] { z-index: 40; }
+.search-page .search-form .opt[open] > summary { position: relative; z-index: 1; }
+.search-page .search-form .opt[open] > summary::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: var(--veil);
+  cursor: default;
+}
+.search-page .search-form .opt-panel {
+  position: absolute;
+  top: calc(100% - 6px);
+  left: 0;
+  z-index: 2;
+  display: block;
+  min-width: 300px;
+  margin: 0;
+  padding: 0 0 8px;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+  color: var(--ink);
+}
+.search-page .search-form .opt-title {
+  float: left;
+  width: 100%;
+  padding: 22px 18px 6px;
+  font: 650 12px/1 var(--sans);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mid);
+}
+.search-page .search-form .opt-row { clear: both; position: relative; padding: 10px 18px; }
+.search-page .search-form .opt-row:hover { background: var(--line2); }
+.search-page .search-form .opt-row.opt-rule { margin-top: 6px; padding-top: 12px; border-top: 1px solid var(--line); }
+.search-page .search-form .opt-panel .ck { display: flex; align-items: center; gap: 12px; font: 500 16px/1.2 var(--sans); color: var(--ink); white-space: nowrap; }
+/* The whole row picks, its gloss too. */
+.search-page .search-form .opt-panel .ck::after { content: ""; position: absolute; inset: 0; }
+.search-page .search-form .opt-panel .ck input {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  border: 1.5px solid var(--mid);
+  border-radius: 50%;
+  background: none;
+}
+.search-page .search-form .opt-panel .ck input:checked { border-color: var(--red-ink); background: radial-gradient(circle, var(--red-ink) 0 4.5px, transparent 5px); }
+.search-page .search-form .opt-panel .ck input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.search-page .search-form .opt-panel .ck:has(input:checked) span { font-weight: 650; }
+.search-page .search-form .opt-gloss { display: block; padding: 2px 0 0 30px; font: 500 14px/1.3 var(--sans); color: var(--mid); white-space: nowrap; }
+.search-page .search-form .opt-gloss [lang="grc"] { font: 600 15px/1.2 var(--read); color: var(--ink); }
+
+/* ── The hint and the empty page ────────────────────────────────────────── */
+.search-page .sx-hint { display: flex; flex-wrap: wrap; gap: 6px 22px; margin: 10px 0 0; }
+.search-page .sx-hint .hk { white-space: nowrap; font: 500 15px/1.4 var(--sans); color: var(--mid); }
+.search-page .sx-hint .hk [lang="grc"] { font-family: var(--read); }
+.search-page .sx-hint code { margin-right: 4px; padding: 2px 6px; background: var(--line2); font: 700 15px/1 var(--sans); color: var(--ink); }
+.search-page .sx-hint .link-btn {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+.search-page .sx-try { margin: 44px 0 40px; padding-top: 18px; border-top: 2px solid var(--ink); }
+.search-page .sx-try h2 { margin: 0 0 14px; font: 700 30px/1 var(--tface); text-transform: uppercase; color: var(--ink); }
+.search-page .sx-try ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 48px; margin: 0; padding: 0; list-style: none; }
+.search-page .sx-try li a { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; min-height: 56px; padding-top: 8px; border-bottom: 1px solid var(--line); color: var(--ink); }
+.search-page .sx-try li a span { font: 400 24px/1.3 var(--read); text-decoration: underline 2px var(--red-ink); text-underline-offset: 7px; }
+.search-page .sx-try li a small { font: 500 15px/1.3 var(--sans); color: var(--mid); text-align: right; }
+.search-page .sx-try li a:hover span { color: var(--red-ink); }
+.search-page .sx-try p { display: flex; gap: 28px; margin: 20px 0 0; font: 600 16px/1 var(--sans); }
+.search-page .sx-try p a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-decoration: underline 2px var(--red-ink); text-underline-offset: 5px; }
+.search-page .sx-try p a:hover { color: var(--red-ink); }
+
+/* ── Dictionary words ───────────────────────────────────────────────────── */
+/* Under the field as a word is typed; with Lemma on, under the options, as
+   wide as the field, the page behind it stepping back. */
+.search-page .sq-row > .gs,
+.search-page .gs-under {
+  position: absolute;
+  left: 0;
+  z-index: 40;
+  margin: 0;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .08);
+}
+.search-page .sq-row > .gs { top: calc(100% + 2px); right: 0; }
+.search-page .gs-under { right: calc(var(--sq-side) + 24px); margin-top: 1px; }
+.search-page .gk > .gs { position: static; margin: 0 0 12px; border: 1px solid var(--ink); background: var(--paper); }
+.search-page .gs { padding: 4px 0; list-style: none; }
+.search-page .gs-under .gs { margin: 0; }
+.search-page .gs-cap { margin: 0; padding: 14px 16px 2px; font: 650 13px/1 var(--sans); letter-spacing: .06em; text-transform: uppercase; color: var(--mid); }
+.search-page .gs li { display: flex; align-items: center; gap: 16px; min-height: 44px; padding: 0 16px; font: 400 20px/1.2 var(--read); color: var(--ink); cursor: pointer; }
+.search-page .gs li:is(:hover, .on) { background: var(--line2); }
+.search-page .gs .gl { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: italic 400 16px/1.2 var(--read); color: var(--mid); }
+.search-page .gs .ct { margin-left: auto; font: 500 14px/1 var(--sans); color: var(--mid); font-variant-numeric: tabular-nums; }
+.dir-b .search-page:has(.gs-under) > :not(.search-form) { opacity: .15; }
+
+/* ── The Greek keyboard ─────────────────────────────────────────────────── */
+/* A panel under the field, as wide as it; the keys in Literata (ruling 6). */
+.search-page .gk { margin: 10px 0 6px; padding: 14px; border: 1px solid var(--line); background: var(--paper); }
+.search-page .gk-keys { display: grid; grid-template-columns: repeat(21, minmax(0, 1fr)); gap: 6px; }
+.search-page .gk-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  background: var(--bg);
+  font: 400 22px/1 var(--read);
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .gk-key:hover { border-color: var(--ink); }
+.search-page .gk-key:is(.gk-space, .gk-bs, .gk-wide) { font: 600 15px/1 var(--sans); }
+.search-page .gk-key.gk-mark { background: var(--soft); font-size: 30px; }
+.search-page .gk-mf { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--read); line-height: 1; }
+.search-page .gk-mm { height: .42em; font-size: 1.15em; font-weight: 600; line-height: 1.05; }
+.search-page .gk-mb { line-height: .8; }
+.search-page .gk.gk-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0; padding: 12px 6px calc(12px + env(safe-area-inset-bottom)); border-width: 1px 0 0; }
+
+/* ── The works picker (In: Choose works…) ───────────────────────────────── */
+.search-page .works-panel { margin-top: 16px; border-top: 1px solid var(--ink); }
+.search-page .works-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 22px; padding: 22px 0 8px; border-bottom: 1px solid var(--ink); }
+.search-page .works-count, .search-page .speaker-count { margin-right: auto; font: 600 15px/1 var(--sans); color: var(--ink); }
+.search-page :is(.works-action, .scope-btn, .retry-btn) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  text-decoration: underline 2px var(--red-ink);
+  text-underline-offset: 5px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.search-page :is(.works-action, .scope-btn):hover:not(:disabled) { color: var(--red-ink); }
+.search-page .works-action:disabled { color: var(--mid); cursor: default; }
+.search-page .works-done { height: 46px; padding: 0 26px; border: 0; border-radius: 0; background: var(--ink); font: 650 16px/1 var(--sans); color: var(--bg); cursor: pointer; }
+.search-page .works-find {
+  display: block;
+  width: min(420px, 100%);
+  height: 50px;
+  margin: 4px 0 12px;
+  padding: 0 2px;
+  border: 0;
+  border-bottom: 1px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  font: 500 17px/1 var(--sans);
+  color: var(--ink);
+}
+.search-page .works-find::placeholder { font-style: italic; color: var(--mid); opacity: 1; }
+.search-page .works-find:focus { outline: none; border-bottom-color: var(--red-ink); }
+.search-page .works-auth { display: flex; flex-wrap: wrap; gap: 6px 22px; }
+.search-page .auth-btn {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: none;
+  font: 600 15px/1 var(--sans);
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .auth-btn.on { border-bottom-color: var(--red-ink); }
+.search-page .auth-btn:hover:not(:disabled) { color: var(--red-ink); }
+.search-page .auth-btn:disabled { color: var(--mid); cursor: default; }
+.search-page .auth-count { margin-left: 4px; font-weight: 500; color: var(--mid); font-variant-numeric: tabular-nums; }
+.search-page .works-group { margin-top: 4px; }
+.search-page .works-group-head { display: flex; align-items: center; gap: 8px 32px; padding: 16px 0 6px; border-bottom: 1px solid var(--line); }
+.search-page .works-group-name { margin-right: auto; font: 700 24px/1.1 var(--tface); text-transform: uppercase; color: var(--ink); }
+.search-page .works-group-scope { display: flex; gap: 32px; }
+.search-page .works-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 24px; }
+.search-page .work-chip {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: none;
+  font: 500 16px/1.25 var(--sans);
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.search-page .work-chip::before { content: ""; flex: none; width: 18px; height: 18px; border: 1.5px solid var(--mid); }
+.search-page .work-chip.on::before { border-color: var(--red-ink); background: var(--red-ink); }
+/* The tick, in the page's own background, so it reads in either theme. */
+.search-page .work-chip.on::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 50%;
+  width: 5px;
+  height: 10px;
+  margin-top: -7px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.search-page .work-chip:hover { color: var(--red-ink); }
+.search-page .work-chip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+/* ── Phone and sideways (S5 rebuilds these) ─────────────────────────────── */
+@media (max-width: 960px) {
+  .dir-b .search-page { padding: 8px 18px 40px; }
+  .search-page .sq { flex-wrap: wrap; gap: 10px; }
+  .search-page .sq-fields { flex-basis: 100%; }
+  .search-page .query-input { font-size: 30px; }
+  .search-page .query-input::placeholder { font-size: 24px; }
+  .search-page .sq-row { gap: 8px; }
+  .search-page .sq-tool + .sq-tool { margin-left: 0; }
+  .search-page .lang-switch { display: flex; width: 100%; margin-top: 0; }
+  .search-page .lang-switch button { flex: 1 1 0; width: auto; }
+  .search-page .sopt:not(.sx-display) { flex-wrap: wrap; }
+  .search-page .sopt-both { display: flex; flex-wrap: wrap; }
+  .search-page .sopt-both > :is(.sopt-g, .sopt-e, .sopt-w) { flex-wrap: wrap; }
+  .search-page .sopt-act { width: 100%; justify-content: space-between; margin-left: 0; }
+  .search-page .search-form .opt-panel { position: fixed; top: auto; bottom: 0; left: 0; right: 0; max-height: 70vh; overflow-y: auto; min-width: 0; }
+  .search-page .search-form .opt-gloss { white-space: normal; }
+  .search-page .gs-under { right: 0; }
+  .search-page .works-chips { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
+  .search-page .sx-try ul { grid-template-columns: 1fr; }
+  .search-page .sx-try { margin-top: 28px; }
+}
+@media (min-width: 961px) and (max-width: 1100px) {
+  /* The options row's labels never wrap: the gaps give way first. */
+  .search-page .sopt:not(.sx-display) { gap: 4px 12px; }
+}

@@ -1114,6 +1114,11 @@ export function getWork(id: string): Work | undefined {
   return BY_ID.get(id);
 }
 
+/** Authentic: no authenticity flag, or 'genuine'. The search's "Authentic
+ * works" is this list, read from the flag, never written out by hand. */
+export const isAuthentic = (w: Work) => !w.authenticity || w.authenticity === 'genuine';
+export const AUTHENTIC_IDS: string[] = WORKS.filter(isAuthentic).map((w) => w.id);
+
 export function bookLabel(work: Work, n: number): string {
   return work.bookLabels[n - 1] ?? String(n);
 }

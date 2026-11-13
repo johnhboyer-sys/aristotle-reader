@@ -312,7 +312,7 @@ describe('Search: the Greek keyboard', () => {
     expect(screen.queryByRole('group', { name: 'Greek keyboard' })).toBeNull();
     expect(document.activeElement).toBe(greekBox());
     await fireEvent.click(kbdButton());
-    await press('close');
+    await press('Close');
     expect(screen.queryByRole('group', { name: 'Greek keyboard' })).toBeNull();
     expect(document.activeElement).toBe(greekBox());
   });
@@ -382,7 +382,7 @@ describe('Search: the Greek keyboard', () => {
     expect(kbdButton()).not.toHaveAttribute('aria-controls');
     await fireEvent.click(kbdButton());
     expect(kbdButton()).toHaveAttribute('aria-controls', pad().id);
-    await press('close');
+    await press('Close');
     expect(kbdButton()).not.toHaveAttribute('aria-controls');
   });
 
@@ -394,7 +394,7 @@ describe('Search: the Greek keyboard', () => {
   });
 });
 
-describe('Search: "Case exact"', () => {
+describe('Search: capitals and accents', () => {
   // The fixture's hits are Σωκράτης (position 0) and σωκράτης (position 1);
   // Σωκρατης (position 2, no accent) is a hit only where a test says so.
   // Each case waits for the hits to draw, so no <mark> means filtered.
@@ -409,78 +409,70 @@ describe('Search: "Case exact"', () => {
   }
   const g = (q: string) => `/search?g=${encodeURIComponent(q)}`;
 
-  it('is off by default: both cases are hits', async () => {
+  it('both cases are hits', async () => {
     expect(await marksFor(g('Σωκράτης'))).toEqual(['Σωκράτης', 'σωκράτης']);
   });
 
-  it('on, a capitalised name finds only the capitalised token', async () => {
-    expect(await marksFor(`${g('Σωκράτης')}&cs=1`)).toEqual(['Σωκράτης']);
-    // The count is the filtered one, said plainly (audit, 2026-11-11).
-    expect(screen.getByRole('status')).toHaveTextContent('1 instance');
-    expect(screen.getByRole('status')).not.toHaveTextContent('before');
+  // Ruling 5 (John, 12 Nov): capitals are always ignored and the control is
+  // gone, so an old address's cs=1 must not apply an invisible setting: it
+  // opens the search it names, and both cases hit.
+  it.each(['Σωκράτης', 'σωκράτης'])('an old cs=1 address for %s still finds both cases', async (q) => {
+    expect(await marksFor(`${g(q)}&cs=1`)).toEqual(['Σωκράτης', 'σωκράτης']);
+    expect(screen.getByRole('status')).toHaveTextContent('2 instances');
   });
 
-  it('on, a lower-case query finds only the lower-case token', async () => {
-    expect(await marksFor(`${g('σωκράτης')}&cs=1`)).toEqual(['σωκράτης']);
+  it.each(['*swkra/ths', 'swkraths', '*sw*'])('reads Beta Code %s with case ignored under cs=1', async (q) => {
+    expect(await marksFor(`${g(q)}&cs=1`)).toEqual(['Σωκράτης', 'σωκράτης']);
   });
 
-  it.each([['*swkra/ths', 'Σωκράτης'], ['swkraths', 'σωκράτης'], ['*sw*', 'Σωκράτης']])(
-    'reads Beta Code %s by its * capital', async (q, want) => {
-      expect(await marksFor(`${g(q)}&cs=1`)).toEqual([want]);
-    });
-
-  it('ignores accents unless they are exact too', async () => {
-    expect(await marksFor(`${g('Σωκρατης')}&cs=1`)).toEqual(['Σωκράτης']);
-  });
-
-  it('with accents exact too, both must hold', async () => {
-    // All three are hits: σωκράτης fails the case, Σωκρατης the accent.
+  it('with cs=1 and accents exact, only the accents filter', async () => {
+    // Σωκρατης fails the accent; σωκράτης's small sigma no longer matters.
     const { search } = await import('../lib/search');
     vi.mocked(search).mockImplementationOnce(async () => ({
       results: [{ work: 'EN', meta: { id: 'seg1', book: 1, column: '70a' }, grkMatch: true, engMatch: false, grkPositions: [0, 1, 2] }],
       failedWorks: [],
     }));
-    expect(await marksFor(`${g('Σωκράτης')}&cs=1&acc=1`)).toEqual(['Σωκράτης']);
+    expect(await marksFor(`${g('Σωκράτης')}&cs=1&acc=1`)).toEqual(['Σωκράτης', 'σωκράτης']);
   });
 
-  it('applies while ignoring an unsupported speaker parameter', async () => {
+  it('ignores an unsupported speaker parameter beside cs=1', async () => {
     const { search } = await import('../lib/search');
-    // The speaker parameter is ignored; case still keeps the capital hit.
-    expect(await marksFor(`${g('Σωκράτης')}&cs=1&sp=only&sn=EN`)).toEqual(['Σωκράτης']);
+    expect(await marksFor(`${g('Σωκράτης')}&cs=1&sp=only&sn=EN`)).toEqual(['Σωκράτης', 'σωκράτης']);
     expect(vi.mocked(search).mock.calls[0][8]).toBeUndefined();
   });
 
-  it('is a one-tap switch beside Accents, on every width, and its choice goes in the address (John, 2026-11-11)', async () => {
+  // Ruling 5 (John, 12 Nov): Capitals is gone, capitals always ignored; a
+  // Lemma switch takes its place. Old addresses with cs=1 search with case
+  // ignored too (the tests above); nothing on the form sets it.
+  it('has no Capitals or Case control; a Lemma switch stands beside Accents in its place', async () => {
     const { search } = await import('../lib/search');
     render(Search);
-    const sw = screen.getByRole('button', { name: /^Case / });
+    expect(screen.queryByRole('button', { name: /^(Case|Capitals)\b/ })).toBeNull();
+    expect(screen.queryByText(/^(Case|Capitals)\b/)).toBeNull();
+    const sw = screen.getByRole('button', { name: 'Lemma' });
     expect(sw.closest('details')).toBeNull();
-    expect(sw.previousElementSibling).toHaveTextContent(/^Accents/);
-    expect(sw).toHaveTextContent('Case ignored');
+    expect(sw.previousElementSibling).toHaveTextContent(/^Accents$/);
     expect(sw).toHaveAttribute('aria-pressed', 'false');
-    expect(sw.querySelector('svg')).toBeNull();
-    expect(screen.queryByRole('checkbox', { name: 'Match case exactly' })).toBeNull();
-    await fireEvent.click(sw);
-    expect(sw).toHaveTextContent('Case exact');
-    expect(sw).toHaveAttribute('aria-pressed', 'true');
     await type('Σωκράτης');
     await key('Escape');
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await vi.waitFor(() => expect(search).toHaveBeenCalled());
-    expect(window.location.search).toBe(`?g=${encodeURIComponent('Σωκράτης')}&cs=1`);
+    expect(window.location.search).toBe(`?g=${encodeURIComponent('Σωκράτης')}`);
   });
 
-  it('Accents is a one-tap switch too, read from the address and written back (John, 2026-11-11)', async () => {
+  it('Accents is a one-tap switch too, drawn alone, read from the address and written back (John, 2026-11-11; ruling 5)', async () => {
     const { search } = await import('../lib/search');
     render(Search);
-    const sw = screen.getByRole('button', { name: /^Accents / });
+    const sw = screen.getByRole('button', { name: 'Accents' });
     expect(sw.closest('details')).toBeNull();
-    expect(sw).toHaveTextContent('Accents ignored');
+    // The switch alone: no state word beside it.
+    expect(sw).toHaveTextContent(/^Accents$/);
+    expect(sw.querySelector('.sw')).not.toBeNull();
     expect(sw).toHaveAttribute('aria-pressed', 'false');
     expect(sw.querySelector('svg')).toBeNull();
     expect(screen.queryByRole('checkbox', { name: 'Match accents exactly' })).toBeNull();
     await fireEvent.click(sw);
-    expect(sw).toHaveTextContent('Accents exact');
+    expect(sw).toHaveTextContent(/^Accents$/);
     expect(sw).toHaveAttribute('aria-pressed', 'true');
     await type('λόγος');
     await key('Escape');
@@ -488,7 +480,7 @@ describe('Search: "Case exact"', () => {
     await vi.waitFor(() => expect(search).toHaveBeenCalled());
     expect(new URLSearchParams(window.location.search).get('acc')).toBe('1');
     await fireEvent.click(sw);
-    expect(sw).toHaveTextContent('Accents ignored');
     expect(sw).toHaveAttribute('aria-pressed', 'false');
   });
+
 });

@@ -234,8 +234,9 @@ describe('Search.svelte in the address bar', () => {
     expect(screen.getByLabelText('English')).toHaveValue('virtue');
     expect(checked('Only as I typed it', 'matchmode')).toBe(true);
     expect(checked('Any form of this word', 'engforms')).toBe(true);
-    expect(screen.getByRole('button', { name: /Accents exact/ })).toBeInTheDocument();
-    expect(checked('Either query')).toBe(true);
+    // Accents is a switch drawn alone (ruling 5); "Hits match" joins the two queries (d20).
+    expect(screen.getByRole('button', { name: 'Accents' })).toHaveAttribute('aria-pressed', 'true');
+    expect(checked('Either language')).toBe(true);
   });
 
   it('runs the command palette hand-off with every default', async () => {

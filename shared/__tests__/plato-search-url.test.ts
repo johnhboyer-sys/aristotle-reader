@@ -76,16 +76,15 @@ describe('search URL', () => {
     expect(encodeSearchUrl(base({ grk: 'yuxh', trans: 'ross' }), ALL)).toBe('g=yuxh');
   });
 
-  // Case exact (PR 6): written only when on, and only beside a Greek query,
-  // as acc is; read back as it was written.
-  it('round-trips case exact as cs=1, written only when on and only with Greek', () => {
-    const s = base({ grk: 'Σωκράτης', caseExact: true });
-    expect(encodeSearchUrl(s, ALL)).toBe(`g=${encodeURIComponent('Σωκράτης')}&cs=1`);
-    expect(roundTrip(s)).toEqual(s);
-    expect(encodeSearchUrl(base({ grk: 'Σωκράτης' }), ALL)).not.toContain('cs=');
-    expect(decodeSearchUrl(`?g=a`, ALL).caseExact).toBe(false);
+  // Capitals are always ignored (ruling 5, 12 Nov 2026): an old cs=1 reads
+  // as if absent, the rest of the address unchanged, and cs is never written.
+  it('reads cs=1 as ignored and never writes cs', () => {
+    const q = `g=${encodeURIComponent('Σωκράτης')}&acc=1&w=EN`;
+    expect(decodeSearchUrl(`?${q}&cs=1`, ALL)).toEqual(decodeSearchUrl(`?${q}`, ALL));
+    expect(decodeSearchUrl(`?${q}&cs=1`, ALL).caseExact).toBe(false);
+    expect(decodeSearchUrl(`?${q}&cs=1`, ALL)).toEqual(base({ grk: 'Σωκράτης', accent: true, works: ['EN'] }));
+    expect(encodeSearchUrl(base({ grk: 'Σωκράτης', caseExact: true }), ALL)).toBe(`g=${encodeURIComponent('Σωκράτης')}`);
     expect(encodeSearchUrl(base({ eng: 'Socrates', caseExact: true }), ALL)).toBe('e=Socrates');
-    expect(roundTrip(base({ grk: 'a', accent: true, caseExact: true }))).toEqual(base({ grk: 'a', accent: true, caseExact: true }));
   });
 
   it('lists the works left out when that is shorter, and omits all', () => {

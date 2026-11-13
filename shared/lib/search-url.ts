@@ -1,4 +1,4 @@
-import { HAS_SPEAKERS } from './works';
+import { AUTHENTIC_IDS, HAS_SPEAKERS } from './works';
 // The search page's state as a query string, so a search can be shared,
 // bookmarked, reloaded and stepped through with the back button.
 //
@@ -17,11 +17,14 @@ import { HAS_SPEAKERS } from './works';
 //            running text, the box a regular expression over it (PR 9)
 //   pu       1 = running text: match punctuation (default: ignored)
 //   acc      1 = match accents exactly
-//   cs       1 = match case exactly
+//   cs       read as absent: capitals are always ignored (ruling 5, 12 Nov
+//            2026), so an old cs=1 link opens with case ignored; never written
 //   xf       Greek forms set aside in the results' form panel: folded keys,
 //            comma-separated (default: none)
 //   op       or (default and: both queries)
-//   w        works: absent = all; "EN,Cat" = these; "-Oec,MM" = all but these
+//   w        works: absent = all; "auth" = the authentic works (works.ts
+//            authenticity unset or genuine); "EN,Cat" = these; "-Oec,MM" =
+//            all but these. Every older spelling still reads as before.
 //   t        the translation the English hits are narrowed to
 //   wf       the work the hits are narrowed to (the results page's Works row)
 //   l        the single-lemma search's picked keys, comma-separated
@@ -116,6 +119,13 @@ const RELATIONS = Object.fromEntries(Object.entries(RELATION_LETTER).map(([k, v]
 // A Greek letter: not Greek punctuation (U+037E, U+0387), and not Coptic.
 const GREEK_LETTER = /(?=\p{L})\p{Script=Greek}/u;
 
+// The named works value: the authentic works, as many as the registry has.
+const AUTH = 'auth';
+const authenticOf = (allWorks: string[]) => {
+  const auth = new Set(AUTHENTIC_IDS);
+  return allWorks.filter(id => auth.has(id));
+};
+
 const list = (s: string | null) => (s ?? '').split(',').map(x => x.trim()).filter(Boolean);
 
 function encodeSlot(slot: UrlComboSlot): string {
@@ -182,14 +192,12 @@ export function encodeSearchUrl(s: UrlSearch, allWorks: string[]): string {
     if (s.lemmas.length) put('l', s.lemmas.join(','));
     else if (grk) {
       put('g', grk);
-      // The running text is one pattern, matched with case folded: no word
-      // match mode and no case switch belong to it.
+      // The running text is one pattern: no word match mode belongs to it.
       const text = s.matchMode === 'text';
       if (s.grkMode !== 'all' && !text) put('gm', s.grkMode);
       if (s.matchMode !== 'lemma' && s.matchMode !== 'headword') put('m', s.matchMode);
       if (s.accent) put('acc', '1');
       if (text && s.punctuation) put('pu', '1');
-      if (s.caseExact && !text) put('cs', '1');
     }
     if ((s.lemmas.length || grk) && s.xforms.length) put('xf', s.xforms.join(','));
     if (eng) {
@@ -215,10 +223,12 @@ export function encodeSearchUrl(s: UrlSearch, allWorks: string[]): string {
   if (s.pageSize !== '40') put('ps', s.pageSize);
   if (s.workFilter) put('wf', s.workFilter);
   const chosen = new Set(s.works);
+  const auth = authenticOf(allWorks);
+  const isAuth = auth.length > 0 && auth.length === chosen.size && auth.every(id => chosen.has(id));
   if (allWorks.some(id => !chosen.has(id))) {
     const inList = allWorks.filter(id => chosen.has(id));
     const outList = allWorks.filter(id => !chosen.has(id));
-    put('w', inList.length && outList.join(',').length < inList.join(',').length
+    put('w', isAuth ? AUTH : inList.length && outList.join(',').length < inList.join(',').length
       ? `-${outList.join(',')}`
       : inList.join(','));
   }
@@ -245,7 +255,7 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
   s.matchMode = m === 'form' || m === 'text' ? m : 'lemma';
   s.accent = p.get('acc') === '1';
   s.punctuation = p.get('pu') === '1';
-  s.caseExact = p.get('cs') === '1';
+  s.caseExact = false;   // cs is ignored: case never matters
   s.langOp = p.get('op') === 'or' ? 'or' : 'and';
   s.engForms = p.get('ef') !== '0';
   s.trans = p.get('t') || null;
@@ -288,7 +298,8 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
   }
 
   const w = p.get('w');
-  if (w !== null) {
+  if (w === AUTH) s.works = authenticOf(allWorks);
+  else if (w !== null) {
     const known = new Set(allWorks);
     const named = new Set(list(w.replace(/^-/, '')).filter(id => known.has(id)));
     s.works = w.startsWith('-')

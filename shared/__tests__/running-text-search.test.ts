@@ -58,18 +58,20 @@ afterEach(() => {
 const formMenu = () => screen.getByText('Form', { selector: 'summary' }).closest('details')!;
 
 describe('Search: running text', () => {
-  it('is the third choice of the Form menu, and brings a Punctuation switch in place of Match and Case', async () => {
+  // Capitals is gone (ruling 5); Lemma took its place, and gives way to
+  // Punctuation here as Case did.
+  it('is the third choice of the Form menu, and brings a Punctuation switch in place of Match and Lemma', async () => {
     render(Search);
     const radios = [...formMenu().querySelectorAll<HTMLInputElement>('input[name="matchmode"]')];
     expect(radios.map((r) => r.closest('label')!.textContent)).toEqual(['Any form of this word', 'Only as I typed it', 'Running text']);
-    expect(screen.queryByRole('button', { name: /^Punctuation / })).toBeNull();
-    expect(screen.getByRole('button', { name: /^Case / })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Punctuation' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Lemma' })).toBeInTheDocument();
     await fireEvent.click(radios[2]);
     expect(formMenu().querySelector('summary')).toHaveTextContent('Form running text');
-    const pu = screen.getByRole('button', { name: /^Punctuation / });
-    expect(pu).toHaveTextContent('Punctuation ignored');
+    const pu = screen.getByRole('button', { name: 'Punctuation' });
+    expect(pu).toHaveTextContent(/^Punctuation$/);
     expect(pu).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.queryByRole('button', { name: /^Case / })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Lemma' })).toBeNull();
     expect(screen.queryByText('Match', { selector: 'summary' })).toBeNull();
   });
 
@@ -117,8 +119,8 @@ describe('Search: running text', () => {
     window.history.replaceState(null, '', '/search?g=aqhnaioi%2C&m=text&pu=1&w=Int');
     render(Search);
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 instance'));
-    const pu = screen.getByRole('button', { name: /^Punctuation / });
-    expect(pu).toHaveTextContent('Punctuation matched');
+    const pu = screen.getByRole('button', { name: 'Punctuation' });
+    expect(pu).toHaveTextContent(/^Punctuation$/);
     expect(pu).toHaveAttribute('aria-pressed', 'true');
     await fireEvent.submit(document.querySelector('form.search-form')!);
     await vi.waitFor(() => expect(window.location.search).toContain('m=text'));
@@ -129,22 +131,22 @@ describe('Search: running text', () => {
     window.history.replaceState(null, '', '/search?g=aqhnaioi%2C&m=text&w=Int');
     render(Search);
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('No passages found.'));
-    const sw = screen.getByRole('button', { name: /^Punctuation / });
+    const sw = screen.getByRole('button', { name: 'Punctuation' });
     expect(sw.closest('details')).toBeNull();
     expect(sw).toHaveClass('opt-btn', 'opt-switch');
-    expect(sw.previousElementSibling).toHaveTextContent(/^Accents/);
-    expect(sw).toHaveTextContent('Punctuation ignored');
+    expect(sw.previousElementSibling).toHaveTextContent(/^Accents$/);
+    expect(sw).toHaveTextContent(/^Punctuation$/);
     expect(sw).toHaveAttribute('aria-pressed', 'false');
     expect(sw.querySelector('svg')).toBeNull();
     expect(screen.queryByRole('checkbox', { name: 'Match punctuation' })).toBeNull();
     await fireEvent.click(sw);
-    expect(sw).toHaveTextContent('Punctuation matched');
+    expect(sw).toHaveTextContent(/^Punctuation$/);
     expect(sw).toHaveAttribute('aria-pressed', 'true');
     await fireEvent.submit(document.querySelector('form.search-form')!);
     await vi.waitFor(() => expect(new URLSearchParams(window.location.search).get('pu')).toBe('1'));
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 instance'));
     await fireEvent.click(sw);
-    expect(sw).toHaveTextContent('Punctuation ignored');
+    expect(sw).toHaveTextContent(/^Punctuation$/);
     expect(sw).toHaveAttribute('aria-pressed', 'false');
     await fireEvent.submit(document.querySelector('form.search-form')!);
     await vi.waitFor(() => expect(new URLSearchParams(window.location.search).get('pu')).toBeNull());

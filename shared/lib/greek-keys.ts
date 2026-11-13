@@ -7,6 +7,10 @@ import { liveGreek, LIVE_RANK } from './betacode';
 
 export const GREEK_KEYS = [...'αβγδεζηθικλμνξοπρστυφχψως'];
 
+// The letter keys as the search page lays them out: Apple's Greek keyboard,
+// three rows, each set half a key right of the one above (ruling 6).
+export const KEY_ROWS = ['ςερτυθιοπ', 'ασδφγηξκλ', 'ζχψωβνμ'];
+
 // `face` is what the key shows: the mark on a vowel, as one precomposed
 // letter. A bare combining mark draws on a dotted circle, or not at all, in
 // many phone fonts.

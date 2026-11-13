@@ -28,8 +28,37 @@
 // so a caller can branch on `line == null` to target the column-level anchor
 // instead of a garbled line-level one.
 
-import { citeLabel } from './data';
-import { getWork } from './works';
+import { getWork, type Work } from './works';
+
+// A work cited by chapter.section (the Athenian Constitution) rides the
+// Isagoge's road: chapter N is the synthetic column "Na" and section S is
+// line S, so anchors, `loc=` and the URL hash keep the column:line machinery.
+// Only what a reader sees changes, and every such place goes through
+// citeLabel/citeLabelOf, which return the old string for every other scheme.
+type Cited = Pick<Work, 'citation'> | null | undefined;
+export function isChapterSection(work: Cited): boolean {
+  return work?.citation?.scheme === 'chapter-section';
+}
+// Not cited by Bekker column:line: no column label, chapter span or Bekker jump.
+export function isNonBekker(work: Cited): boolean {
+  return work?.citation?.scheme === 'busse' || isChapterSection(work);
+}
+
+// "49a" + "3" → "49.3" and "49a" → "49" for a chapter-section work; the
+// column and line run together ("1094a5", the Isagoge's "1a5") for any other.
+export function citeLabel(work: Cited, column: string, line?: string): string {
+  if (!isChapterSection(work)) return `${column}${line ?? ''}`;
+  const chapter = column.replace(/a$/, '');
+  return line ? `${chapter}.${line}` : chapter;
+}
+
+// The same for a cite the reader writes as one string — a URL hash, a saved
+// position, an anchor's cite ("49a3", "49a"). Anything else passes through.
+export function citeLabelOf(work: Cited, cite: string): string {
+  if (!isChapterSection(work)) return cite;
+  const m = /^(\d+a)(\d+)?$/.exec(cite);
+  return m ? citeLabel(work, m[1], m[2]) : cite;
+}
 
 export type SchemeId = 'bekker' | 'busse' | 'stephanus';
 

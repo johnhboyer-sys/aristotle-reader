@@ -42,7 +42,7 @@
     pairGreekWindow, pairEnglishWindow, PAIR_GREEK_LINES, bekkerEnglish, pairContext, pairUnits, sectionEnglish, unitAtEnglish, unitAtGreek, unitEnglish, unitPieces,
     type PairIndex, type PairUnit,
   } from '../lib/paired-hit';
-  import { HAS_SPEAKERS } from '../lib/works';
+  import { AUTHENTIC_IDS, HAS_SPEAKERS } from '../lib/works';
   import { isChapterSection } from '../lib/data';
   import { loadOffsets } from '../lib/search';
   import { engHitCount, hitCount, paginate } from '../lib/search-pages';
@@ -65,7 +65,7 @@
   import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlSearch } from '../lib/search-url';
   import { FULL, addSaved, findSaved, savedAvailable } from '../lib/saved-searches';
   import { betaQueryToGreek, betaToGreek, liveGreek } from '../lib/betacode';
-  import { addMark, deleteBack, GREEK_KEYS, GREEK_MARKS, insertText, type KeyEdit } from '../lib/greek-keys';
+  import { addMark, deleteBack, GREEK_MARKS, insertText, KEY_ROWS, type KeyEdit } from '../lib/greek-keys';
   import { formGroups } from '../lib/form-panel';
   import { lineRenderParts } from '../lib/speakers';
   import WordPopup from './WordPopup.svelte';
@@ -1204,7 +1204,7 @@
   $: comboActive = (comboSearchSlots.length >= 2 && comboSearchSlots[0].relation !== 'not') || grammarAlone;
   let narrowPrompt = false;
   let advancedOpen = false;
-  $: if (comboActive || soloLemmaActive) advancedOpen = true;
+  $: if (comboActive) advancedOpen = true;
   // Whether the tool's <details> is open has to live in component state. Bound
   // one way as open={comboActive}, a panel the reader opened by hand is only
   // ever open in the DOM — the component still thinks it is shut, so the next
@@ -1212,9 +1212,7 @@
   // the auto-open (activating the tool reveals it) while recording the reader's
   // own toggle, so nothing they typed can collapse the panel they typed it in.
   let comboPanelOpen = false;
-  let soloPanelOpen = false;
   $: if (comboActive) comboPanelOpen = true;
-  $: if (soloLemmaActive) soloPanelOpen = true;
   $: comboOptions = {
     window: comboWindow,
     unit: comboUnit,
@@ -1223,8 +1221,10 @@
     speaker: speakerFilter,
   } satisfies ComboOptions;
 
+  // Proximity opens the editor in one click (ruling 2).
   function toggleAdvanced() {
-    advancedOpen = comboActive || soloLemmaActive ? true : !advancedOpen;
+    advancedOpen = comboActive ? true : !advancedOpen;
+    if (advancedOpen) comboPanelOpen = true;
   }
 
   function setComboKind(id: number, kind: SlotKind) {
@@ -1434,10 +1434,11 @@
   }
 
   // Shared option list for the per-language mode selectors.
-  const MODE_OPTS: { v: SearchMode; l: string }[] = [
-    { v: 'all', l: 'All words' },
-    { v: 'any', l: 'Any word' },
-    { v: 'phrase', l: 'Exact phrase' },
+  // Each with the one-line gloss its menu shows under it.
+  const MODE_OPTS: { v: SearchMode; l: string; g: string }[] = [
+    { v: 'all', l: 'All words', g: 'every word, anywhere in the passage' },
+    { v: 'any', l: 'Any word', g: 'at least one of them' },
+    { v: 'phrase', l: 'Exact phrase', g: 'these words, in this order' },
   ];
 
   function toggleWork(id: string) {
@@ -1466,12 +1467,12 @@
   }
 
   // Authenticity scope — quick-filter the selection by authorship status.
-  // "Genuine" = works with no authenticity flag (or explicitly 'genuine'); the
-  // others match the tagged works. Each acts like a division "only": clicking it
+  // "Authentic" = works with no authenticity flag (or explicitly 'genuine');
+  // the others match the tagged works. Each acts like a division "only": clicking it
   // narrows the selection to exactly that class. Empty classes render disabled.
   const AUTH_SCOPES = [
     { key: 'all',      label: 'All',      ids: WORKS.map((w) => w.id) },
-    { key: 'genuine',  label: 'Genuine',  ids: WORKS.filter((w) => !w.authenticity || w.authenticity === 'genuine').map((w) => w.id) },
+    { key: 'genuine',  label: 'Authentic', ids: AUTHENTIC_IDS },
     { key: 'dubious',  label: 'Dubious',  ids: WORKS.filter((w) => w.authenticity === 'dubious').map((w) => w.id) },
     { key: 'spurious', label: 'Spurious', ids: WORKS.filter((w) => w.authenticity === 'spurious').map((w) => w.id) },
   ] as const;
@@ -1489,6 +1490,47 @@
     : selectedWorks.size === 0
       ? 'None selected'
       : `${selectedWorks.size} of ${WORKS.length}`;
+
+  // ── In: all works, the authentic works, or a choice ────────────────────────
+  // A menu like Match (ruling 1). Authentic is a selection like any other,
+  // the one the authenticity flags give; "Choose works…" opens the picker.
+  type WorksScope = 'all' | 'auth' | 'pick';
+  const WORKS_SCOPES: { v: WorksScope; l: string; g: string }[] = [
+    { v: 'all', l: 'All works', g: 'dubious and spurious included' },
+    { v: 'auth', l: 'Authentic works', g: `the ${AUTHENTIC_IDS.length} authentic works only` },
+    { v: 'pick', l: 'Choose works…', g: 'pick works from the list' },
+  ];
+  $: worksScope = (allSelected ? 'all' : activeAuthScope === 'genuine' ? 'auth' : 'pick') as WorksScope;
+  $: worksValue = worksScope === 'all' ? 'all works' : worksScope === 'auth' ? 'authentic works' : lower1(worksSummary);
+  // On click, not change: "Choose works…" is already the checked radio when
+  // the selection is a choice, and must still open the picker.
+  async function setWorksScope(v: WorksScope, e: Event) {
+    if (v === 'all') selectAll();
+    else if (v === 'auth') selectOnly(AUTHENTIC_IDS);
+    else {
+      // The radios follow the selection, which opening the picker has not
+      // changed yet.
+      const menu = (e.currentTarget as HTMLElement).closest('details');
+      menu?.querySelectorAll<HTMLInputElement>('input[type=radio]').forEach((r) => { r.checked = r.value === worksScope; });
+      if (menu) menu.open = false;
+      worksOpen = true;
+      speakerOpen = false;
+      await tick();
+      document.querySelector<HTMLElement>('#works-panel .work-chip')?.focus();
+    }
+  }
+  function closeWorks() {
+    worksOpen = false;
+    document.querySelector<HTMLElement>('.opt-in > summary')?.focus();
+  }
+  // The picker's "Find a work": title or abbreviation, any case.
+  let worksFind = '';
+  function findsWork(id: string, find: string): boolean {
+    const q = find.trim().toLowerCase();
+    if (!q) return true;
+    const w = getWork(id);
+    return !!w && (w.title.toLowerCase().includes(q) || w.abbr.toLowerCase().includes(q) || id.toLowerCase().includes(q));
+  }
 
   // ── Spoken by ──────────────────────────────────────────────────────────────
   //
@@ -2414,7 +2456,13 @@
     engForms = s.engForms;
     selectedWorks = new Set(s.works);
     soloLemma = { ...newComboEditor('lemma'), picked: [...s.lemmas] };
-    fillPickInfo([...s.lemmas, ...(s.combo?.slots.flatMap(slot => slot.picked) ?? [])]);
+    // A dictionary-word search is the Lemma switch on, its word in the box.
+    lemmaOn = s.lemmas.length > 0;
+    if (lemmaOn) grkQuery = lemmaBoxText(s.lemmas);
+    void fillPickInfo([...s.lemmas, ...(s.combo?.slots.flatMap(slot => slot.picked) ?? [])]).then(() => {
+      // The headwords, once known, in place of the keys the box stood in for.
+      if (lemmaOn && s.lemmas.join() === soloLemma.picked.join() && grkQuery === lemmaBoxText(s.lemmas, {})) grkQuery = lemmaBoxText(s.lemmas);
+    });
     const combo = s.combo;
     comboEditors = combo
       ? combo.slots.map(slot => ({ ...newComboEditor(slot.kind), relation: slot.relation, text: slot.text, picked: [...slot.picked], grammar: { ...slot.grammar } }))
@@ -2433,6 +2481,16 @@
     if (SPEAKERS && s.speaker) speakerOpen = true;
   }
 
+  // The empty page's examples: shown once the address is known to hold no
+  // search, so a search arriving in it never flashes them first.
+  let showTry = false;
+  const TRY: { q: string; g: string; href: string; grc: boolean }[] = [
+    { q: 'ἀρετή', g: 'every form of the word', href: `?g=${encodeURIComponent('ἀρετή')}`, grc: true },
+    { q: 'virtue', g: 'in the English translations', href: '?e=virtue', grc: false },
+    { q: 'ἀρετή near ἕξις', g: 'within five words', href: '?c=l:areth&c=l:ecis', grc: true },
+    { q: 'τὸ τί ἦν εἶναι', g: 'an exact phrase', href: `?g=${encodeURIComponent('τὸ τί ἦν εἶναι')}&gm=phrase&m=form`, grc: true },
+  ];
+
   // Runs whatever search the address bar holds; with none, clears the page.
   async function searchFromUrl() {
     popup = null;
@@ -2450,6 +2508,7 @@
     lastSearch = null;
     searched = false;
     narrowPrompt = false;
+    showTry = true;
     // The sheet refined results that are gone; left open, it would cover the
     // next search's.
     sheetOpen = false;
@@ -2497,6 +2556,7 @@
     phoneQuery?.addEventListener?.('change', onPhone);
     const s = decodeSearchUrl(window.location.search, WORK_IDS);
     if (hasSearch(s)) searchFromUrl();
+    else showTry = true;
   });
   onDestroy(() => {
     if (typeof window !== 'undefined') window.removeEventListener('popstate', onPopState);
@@ -2508,8 +2568,15 @@
   async function doSearch(e?: Event, opts: { history?: 'push' | 'none'; trans?: string | null; work?: string | null; xforms?: string[]; facets?: Facets } = {}) {
     e?.preventDefault();
     if (!grkQuery.trim() && !engQuery.trim() && !comboActive && !soloLemmaActive) return;
+    // Lemma on and no word picked yet: the list to pick from, not a search.
+    if (lemmaOn && !soloLemmaActive && grkQuery.trim() && !comboActive) {
+      grkInput?.focus();
+      void suggest(grkQuery);
+      return;
+    }
     popup = null;
     closeSugg();
+    showTry = false;
     const run = ++searchRun;
     lastSearch = currentSearch();
     // Unnarrowed, a lone grammar term asks for the narrowing controls instead
@@ -2934,6 +3001,8 @@
   // redo is left as it restores, though the list follows it.
   function onGreekInput(e: Event) {
     const ie = e as InputEvent;
+    // An edit to a picked dictionary word unpicks it: the box no longer says it.
+    if (soloLemma.picked.length) soloLemma = { ...soloLemma, picked: [] };
     if (ie.isComposing) return;
     if (ie.inputType !== 'historyUndo' && ie.inputType !== 'historyRedo') convertGreekBox(e.currentTarget as HTMLInputElement);
     suggest((e.currentTarget as HTMLInputElement).value);
@@ -2973,13 +3042,40 @@
   }
   // The running text is a pattern, not a word: no dictionary words for it.
   $: if (matchMode === 'text') closeSugg();
+
+  // ── Lemma ──────────────────────────────────────────────────────────────────
+  // The switch alone (ruling 5). On, the Greek box asks for a dictionary word
+  // and its list opens at once; a pick from it is the search (?l=), every
+  // form of that word and no other word that shares a form. Off, the box
+  // searches what it says.
+  let lemmaOn = false;
+  const lemmaBoxText = (keys: string[], info = pickInfo) => keys.map((k) => info[k]?.heads ?? betaToGreek(k)).join(' ');
+  async function toggleLemma() {
+    lemmaOn = !lemmaOn;
+    if (!lemmaOn) {
+      soloLemma = { ...soloLemma, picked: [] };
+      closeSugg();
+      return;
+    }
+    await tick();
+    grkInput?.focus();
+    void suggest(grkQuery);
+  }
+  // Running text has no dictionary words: choosing it turns Lemma off.
+  $: if (matchMode === 'text' && lemmaOn) { lemmaOn = false; soloLemma = { ...soloLemma, picked: [] }; }
   // A pick puts the headword in the box in place of the word typed, caret
   // after it, and leaves the search to the Search button (John, 2026-11-11).
   // The Greek keyboard shuts on a pick, as it did when a pick searched.
   async function pickSuggestion(m: LemmaMatch) {
     closeSugg();
     kbdOpen = false;
-    grkQuery = m.candidates[0]?.h ?? m.key;
+    if (lemmaOn) {
+      // Lemma on: the pick is the search, every form of this dictionary word.
+      const slug = m.candidates.find((c) => c.s)?.s;
+      pickInfo = { ...pickInfo, [m.key]: { heads: lemmaHeads(m), slug, count: m.count } };
+      soloLemma = { ...soloLemma, picked: [m.key] };
+      grkQuery = lemmaHeads(m);
+    } else grkQuery = m.candidates[0]?.h ?? m.key;
     await tick();
     grkInput?.focus();
     grkInput?.setSelectionRange(grkQuery.length, grkQuery.length);
@@ -3006,6 +3102,11 @@
   // the suggestions all see them. Under the box on a wide screen; a sheet
   // from the bottom on a phone, by the site's phone rule (global.css).
   const PHONE = '(max-width: 680px), (orientation: landscape) and (max-height: 500px)';
+  // A mark key shows its mark large over a bare ι: Literata's own breathings
+  // read as dots at key size. The subscript key shows ῳ (ruling 6).
+  const MARK_GLYPH: Record<string, string> = {
+    'smooth breathing': '᾿', 'rough breathing': '῾', acute: '΄', grave: '`', circumflex: '῀', diaeresis: '¨',
+  };
   let kbdOpen = false;
   let kbdSheet = false;
   let phoneQuery: MediaQueryList | undefined;
@@ -3168,7 +3269,8 @@
 
   <!-- The Greek box's dictionary words. Under the box; inside the open
        keyboard panel instead, so the list never covers its keys. -->
-  {#snippet suggestList(items: LemmaMatch[], active: number, glosses: Record<string, string[]>)}
+  {#snippet suggestList(items: LemmaMatch[], active: number, glosses: Record<string, string[]>, lemma: boolean)}
+    {#if lemma}<p class="gs-cap" aria-hidden="true">Lemma · Dictionary words</p>{/if}
     <ul id="grk-suggest" class="gs" role="listbox" aria-label="Dictionary words">
       {#each items as m, i (m.key)}
         {@const slug = m.candidates.find((c) => c.s)?.s}
@@ -3185,6 +3287,8 @@
     </ul>
   {/snippet}
 
+  {#snippet caret()}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg>{/snippet}
+
 <svelte:window on:keydown={onWindowKey} on:click={onWindowClick} on:beforeprint={openForPrint} on:afterprint={closeAfterPrint} />
 
 <main class="search-page">
@@ -3192,223 +3296,256 @@
 
     <!-- One field and the switch for what it searches: Greek, English, or Both
          (two fields). The box out of view is kept empty (setLang), and a URL or
-         a step back that fills it brings it into view. -->
+         a step back that fills it brings it into view. Keyboard and Beta Code
+         sit on the Greek field's rule, quiet tools, not buttons. -->
     <div class="sq">
-      <div class="sq-row" hidden={lang === 'english'}>
-        <svg class="sq-glass" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-        <label class="query-label" class:sr-only={lang !== 'both'} for="grk-input">Greek</label>
-        <input
-          id="grk-input"
-          class="query-input greek-input"
-          lang="grc"
-          type="search"
-          placeholder="τέχνη or texnh, fronhsis*, …"
-          role="combobox"
-          aria-autocomplete="list"
-          aria-expanded={sugg.length > 0}
-          aria-controls={sugg.length ? 'grk-suggest' : undefined}
-          aria-activedescendant={suggActive >= 0 ? `grk-sugg-${suggActive}` : undefined}
-          inputmode={kbdOpen ? 'none' : undefined}
-          bind:value={grkQuery}
-          bind:this={grkInput}
-          on:input={onGreekInput}
-          on:compositionend={(e) => { convertGreekBox(e.currentTarget); suggest(e.currentTarget.value); }}
-          on:keydown={onGreekKey}
-          on:blur={closeSugg}
-          autocomplete="off"
-          autocorrect="off"
-          autocapitalize="none"
-          spellcheck="false"
-          disabled={comboActive || soloLemmaActive}
-        />
-        <button type="button" class="gk-toggle" aria-label="Greek keyboard" aria-expanded={kbdOpen} aria-controls={kbdOpen && lang !== 'english' ? 'grk-keys' : undefined}
-          disabled={comboActive || soloLemmaActive} on:click={toggleKbd}>
-          <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="0.7" y="0.7" width="20.6" height="14.6"/><path d="M4 4.5h2M8 4.5h2M12 4.5h2M16 4.5h2M4 8h2M8 8h2M12 8h2M16 8h2M6 11.5h10"/></svg>
-        </button>
-        {#if sugg.length && !(kbdOpen && !kbdSheet)}{@render suggestList(sugg, suggActive, lemmaGlosses)}{/if}
-      </div>
-      {#if kbdOpen && lang !== 'english'}
-        <div id="grk-keys" class="gk" class:gk-sheet={kbdSheet} role="group" aria-label="Greek keyboard">
-          {#if sugg.length && !kbdSheet}{@render suggestList(sugg, suggActive, lemmaGlosses)}{/if}
-          <div class="gk-keys">
-            {#each GREEK_KEYS as k}
-              <button type="button" class="gk-key" lang="grc" on:mousedown|preventDefault
-                on:click={() => keyEdit((v, a, b) => insertText(v, a, b, k))}>{k}</button>
-            {/each}
-            {#each GREEK_MARKS as m}
-              <button type="button" class="gk-key gk-mark" aria-label={m.name} title={m.name} on:mousedown|preventDefault
-                on:click={() => keyEdit((v, a) => addMark(v, a, m.mark))}><span aria-hidden="true" lang="grc">{m.face}</span></button>
-            {/each}
-            <button type="button" class="gk-key gk-bs" aria-label="backspace" title="backspace" on:mousedown|preventDefault
-              on:click={() => keyEdit(deleteBack)}><span aria-hidden="true">⌫</span></button>
-            <button type="button" class="gk-key gk-space" on:mousedown|preventDefault
-              on:click={() => keyEdit((v, a, b) => insertText(v, a, b, ' '))}>space</button>
-            <button type="button" class="gk-key gk-wide" on:click={closeKbd}>close</button>
-          </div>
+      <div class="sq-fields">
+        <div class="sq-row" hidden={lang === 'english'}>
+          <svg class="sq-glass" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+          <label class="query-label" class:sr-only={lang !== 'both'} for="grk-input">Greek</label>
+          <input
+            id="grk-input"
+            class="query-input greek-input"
+            lang="grc"
+            type="search"
+            placeholder={lemmaOn ? 'a dictionary word, then pick it below' : 'e.g. τέχνη'}
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded={sugg.length > 0}
+            aria-controls={sugg.length ? 'grk-suggest' : undefined}
+            aria-activedescendant={suggActive >= 0 ? `grk-sugg-${suggActive}` : undefined}
+            inputmode={kbdOpen ? 'none' : undefined}
+            bind:value={grkQuery}
+            bind:this={grkInput}
+            on:input={onGreekInput}
+            on:compositionend={(e) => { convertGreekBox(e.currentTarget); suggest(e.currentTarget.value); }}
+            on:keydown={onGreekKey}
+            on:blur={closeSugg}
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="none"
+            spellcheck="false"
+            disabled={comboActive}
+          />
+          <button type="button" class="sq-tool gk-toggle" aria-label="Greek keyboard" aria-expanded={kbdOpen} aria-controls={kbdOpen && lang !== 'english' ? 'grk-keys' : undefined}
+            disabled={comboActive} on:click={toggleKbd}>
+            <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="0.7" y="0.7" width="20.6" height="14.6"/><path d="M4 4.5h2M8 4.5h2M12 4.5h2M16 4.5h2M4 8h2M8 8h2M12 8h2M16 8h2M6 11.5h10"/></svg>
+            <span class="sq-tool-l" aria-hidden="true">Keyboard</span>
+          </button>
+          {#if lang !== 'english'}
+            <button type="button" class="sq-tool tog" aria-pressed={betaMode} on:click={toggleBeta} title="Type Beta Code, see Greek: lo/gos becomes λόγος as you type"><span lang="grc">β</span> Beta Code</button>
+          {/if}
+          {#if sugg.length && !lemmaOn && !(kbdOpen && !kbdSheet)}{@render suggestList(sugg, suggActive, lemmaGlosses, false)}{/if}
         </div>
-      {/if}
-      <div class="sq-row" hidden={lang === 'greek'}>
-        <svg class="sq-glass" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-        <label class="query-label" class:sr-only={lang !== 'both'} for="eng-input">English</label>
-        <input
-          id="eng-input"
-          class="query-input"
-          type="search"
-          placeholder="virtue, happiness, …"
-          bind:value={engQuery}
-          on:keydown={onEnter}
-          autocomplete="off"
-          disabled={comboActive}
-        />
+        {#if kbdOpen && lang !== 'english'}
+          <!-- Apple's Greek layout, each row half a key right of the one above;
+               the marks on a row of their own, each drawn over a bare ι (the
+               subscript as ῳ); space, ⌫ and Close at the foot (ruling 6). -->
+          <div id="grk-keys" class="gk" class:gk-sheet={kbdSheet} role="group" aria-label="Greek keyboard">
+            {#if sugg.length && !kbdSheet && !lemmaOn}{@render suggestList(sugg, suggActive, lemmaGlosses, false)}{/if}
+            <div class="gk-keys">
+              {#each KEY_ROWS as row, r}
+                {#each [...row] as k, j}
+                  <button type="button" class="gk-key" lang="grc" style:grid-row={r + 1} style:grid-column={`${r + 2 + 2 * j} / span 2`}
+                    on:mousedown|preventDefault
+                    on:click={() => keyEdit((v, a, b) => insertText(v, a, b, k))}>{k}</button>
+                {/each}
+              {/each}
+              {#each GREEK_MARKS as m, j}
+                <button type="button" class="gk-key gk-mark" aria-label={m.name} title={m.name} style:grid-row={4} style:grid-column={`${4 + 2 * j} / span 2`}
+                  on:mousedown|preventDefault
+                  on:click={() => keyEdit((v, a) => addMark(v, a, m.mark))}>
+                  {#if MARK_GLYPH[m.name]}
+                    <span class="gk-mf" aria-hidden="true" lang="grc"><span class="gk-mm">{MARK_GLYPH[m.name]}</span><span class="gk-mb">ι</span></span>
+                  {:else}
+                    <span class="gk-mf" aria-hidden="true" lang="grc">ῳ</span>
+                  {/if}
+                </button>
+              {/each}
+              <button type="button" class="gk-key gk-space" style:grid-row={5} style:grid-column="2 / span 12" on:mousedown|preventDefault
+                on:click={() => keyEdit((v, a, b) => insertText(v, a, b, ' '))}>space</button>
+              <button type="button" class="gk-key gk-bs" aria-label="backspace" title="backspace" style:grid-row={5} style:grid-column="14 / span 3" on:mousedown|preventDefault
+                on:click={() => keyEdit(deleteBack)}><span aria-hidden="true">⌫</span></button>
+              <button type="button" class="gk-key gk-wide" style:grid-row={5} style:grid-column="17 / span 4" on:click={closeKbd}>Close</button>
+            </div>
+          </div>
+        {/if}
+        <div class="sq-row" hidden={lang === 'greek'}>
+          <svg class="sq-glass" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+          <label class="query-label" class:sr-only={lang !== 'both'} for="eng-input">English</label>
+          <input
+            id="eng-input"
+            class="query-input"
+            type="search"
+            placeholder="e.g. virtue"
+            bind:value={engQuery}
+            on:keydown={onEnter}
+            autocomplete="off"
+            disabled={comboActive}
+          />
+        </div>
       </div>
       <div class="lang-switch" role="group" aria-label="Search in">
         {#each LANGS as l}
           <button type="button" aria-pressed={lang === l.v} on:click={() => setLang(l.v)}>{l.l}</button>
         {/each}
-        {#if lang !== 'english'}
-          <button type="button" class="tog" aria-pressed={betaMode} on:click={toggleBeta} title="Type Beta Code, see Greek: lo/gos becomes λόγος as you type"><span lang="grc">β</span> Beta Code</button>
-        {/if}
       </div>
     </div>
 
-    <!-- The options, as one line of menus: text on a dotted underline. -->
-    <div class="sopt">
+    <!-- The options: menus on a hairline underline, the switches alone, and
+         Proximity with Search as one block at the right (ruling 4). Under Both,
+         three rows: Greek, English, then what joins them and where. -->
+    <div class="sopt" class:sopt-both={lang === 'both'}>
       {#if lang !== 'english'}
-        {#if matchMode !== 'text'}
-        <details class="opt" on:toggle={closeOtherOpts}>
-          <summary>{lang === 'both' ? 'Greek match' : 'Match'} <b>{lower1(modeLabel(grkMode))}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg></b></summary>
-          <fieldset class="opt-panel">
-            <legend class="sr-only">Greek match</legend>
-            {#each MODE_OPTS as opt}
-              <label class="ck"><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} /><span>{opt.l}</span></label>
-            {/each}
-          </fieldset>
-        </details>
-        {/if}
-        <details class="opt" on:toggle={closeOtherOpts}>
-          <summary>{lang === 'both' ? 'Greek form' : 'Form'} <b>{matchMode === 'text' ? 'running text' : matchMode === 'lemma' ? 'any form' : 'as typed'}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg></b></summary>
-          <fieldset class="opt-panel" title="Any form: type the word as it stands on the page and every form of it is found. Only as I typed it: the spelling you gave, and no other. Running text: a pattern over the text, which may run across words or stop inside one.">
-            <legend class="sr-only">Greek form</legend>
-            <label class="ck"><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} /><span>Any form of this word</span></label>
-            <label class="ck"><input type="radio" name="matchmode" value="form" bind:group={matchMode} /><span>Only as I typed it</span></label>
-            <label class="ck"><input type="radio" name="matchmode" value="text" bind:group={matchMode} /><span>Running text</span></label>
-          </fieldset>
-        </details>
-        <!-- One choice, so one tap: a switch, not a menu (John, 2026-11-11). -->
-        <button type="button" class="opt-btn opt-switch" aria-pressed={accentSensitive}
-          title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens."
-          on:click={() => (accentSensitive = !accentSensitive)}>Accents <b>{accentSensitive ? 'exact' : 'ignored'}</b></button>
-        {#if matchMode === 'text'}
-        <button type="button" class="opt-btn opt-switch" aria-pressed={punctuation}
-          title="Match the stops between words: , . ; and · (typed · or :). Off, each break between words is one space."
-          on:click={() => (punctuation = !punctuation)}>Punctuation <b>{punctuation ? 'matched' : 'ignored'}</b></button>
-        {:else}
-        <button type="button" class="opt-btn opt-switch" aria-pressed={caseExact}
-          title="Match capitals exactly: Σωκράτης and σωκράτης become different queries."
-          on:click={() => (caseExact = !caseExact)}>Case <b>{caseExact ? 'exact' : 'ignored'}</b></button>
-        {/if}
+        <div class="sopt-g">
+          {#if matchMode !== 'text'}
+          <details class="opt" on:toggle={closeOtherOpts}>
+            <summary>{lang === 'both' ? 'Greek match' : 'Match'} <b>{lower1(modeLabel(grkMode))}{@render caret()}</b></summary>
+            <fieldset class="opt-panel">
+              <legend class="opt-title">{lang === 'both' ? 'Greek match' : 'Match'}</legend>
+              {#each MODE_OPTS as opt}
+                <div class="opt-row">
+                  <label class="ck"><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} aria-describedby={`gm-${opt.v}`} /><span>{opt.l}</span></label>
+                  <small class="opt-gloss" id={`gm-${opt.v}`}>{opt.g}</small>
+                </div>
+              {/each}
+            </fieldset>
+          </details>
+          {/if}
+          <details class="opt" on:toggle={closeOtherOpts}>
+            <summary>{lang === 'both' ? 'Greek form' : 'Form'} <b>{matchMode === 'text' ? 'running text' : matchMode === 'lemma' ? 'any form' : 'as typed'}{@render caret()}</b></summary>
+            <fieldset class="opt-panel">
+              <legend class="opt-title">{lang === 'both' ? 'Greek form' : 'Form'}</legend>
+              <div class="opt-row">
+                <label class="ck"><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} aria-describedby="gf-lemma" /><span>Any form of this word</span></label>
+                <small class="opt-gloss" id="gf-lemma"><span lang="grc">ἀρετή</span> finds <span lang="grc">ἀρετῆς</span> and <span lang="grc">ἀρετάς</span></small>
+              </div>
+              <div class="opt-row">
+                <label class="ck"><input type="radio" name="matchmode" value="form" bind:group={matchMode} aria-describedby="gf-form" /><span>Only as I typed it</span></label>
+                <small class="opt-gloss" id="gf-form">this spelling and no other</small>
+              </div>
+              <div class="opt-row">
+                <label class="ck"><input type="radio" name="matchmode" value="text" bind:group={matchMode} aria-describedby="gf-text" /><span>Running text</span></label>
+                <small class="opt-gloss" id="gf-text"><span lang="grc">λογ</span> finds <span lang="grc">λόγος</span> and <span lang="grc">ἀναλογία</span></small>
+              </div>
+            </fieldset>
+          </details>
+          <!-- One choice, so one tap: a switch, drawn alone (ruling 5). -->
+          <button type="button" class="opt-btn opt-switch" aria-pressed={accentSensitive}
+            title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens."
+            on:click={() => (accentSensitive = !accentSensitive)}>Accents<span class="sw" aria-hidden="true"></span></button>
+          {#if matchMode === 'text'}
+          <button type="button" class="opt-btn opt-switch" aria-pressed={punctuation}
+            title="Match the stops between words: , . ; and · (typed · or :). Off, each break between words is one space."
+            on:click={() => (punctuation = !punctuation)}>Punctuation<span class="sw" aria-hidden="true"></span></button>
+          {:else}
+          <!-- Capitals is gone (ruling 5): capitals are always ignored. Lemma
+               takes its place: on, the box asks for a dictionary word. -->
+          <button type="button" class="opt-btn opt-switch opt-lemma" aria-pressed={lemmaOn}
+            title="Search one dictionary word in all its forms: type it, then pick it from the list"
+            on:click={toggleLemma}>Lemma<span class="sw" aria-hidden="true"></span></button>
+          {/if}
+        </div>
       {/if}
       {#if lang !== 'greek'}
-        <details class="opt" on:toggle={closeOtherOpts}>
-          <summary>{lang === 'both' ? 'English match' : 'Match'} <b>{lower1(modeLabel(engMode))}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg></b></summary>
+        <div class="sopt-e">
+          <details class="opt" on:toggle={closeOtherOpts}>
+            <summary>{lang === 'both' ? 'English match' : 'Match'} <b>{lower1(modeLabel(engMode))}{@render caret()}</b></summary>
+            <fieldset class="opt-panel">
+              <legend class="opt-title">{lang === 'both' ? 'English match' : 'Match'}</legend>
+              {#each MODE_OPTS as opt}
+                <div class="opt-row">
+                  <label class="ck"><input type="radio" name="engmode" value={opt.v} bind:group={engMode} aria-describedby={`em-${opt.v}`} /><span>{opt.l}</span></label>
+                  <small class="opt-gloss" id={`em-${opt.v}`}>{opt.g}</small>
+                </div>
+              {/each}
+            </fieldset>
+          </details>
+          <details class="opt" on:toggle={closeOtherOpts}>
+            <summary>{lang === 'both' ? 'English form' : 'Form'} <b>{engForms ? 'any form' : 'as typed'}{@render caret()}</b></summary>
+            <fieldset class="opt-panel" title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
+              <legend class="opt-title">{lang === 'both' ? 'English form' : 'Form'}</legend>
+              <div class="opt-row"><label class="ck"><input type="radio" name="engforms" value={true} bind:group={engForms} /><span>Any form of this word</span></label></div>
+              <div class="opt-row"><label class="ck"><input type="radio" name="engforms" value={false} bind:group={engForms} /><span>Only as I typed it</span></label></div>
+            </fieldset>
+          </details>
+        </div>
+      {/if}
+      <div class="sopt-w">
+        <!-- A picked headword is the Greek side too, with the Greek box empty. -->
+        {#if lang === 'both' || (soloLemmaActive && engQuery.trim())}
+          <details class="opt" on:toggle={closeOtherOpts}>
+            <summary>Hits match <b>{langOp === 'and' ? 'both languages' : 'either language'}{@render caret()}</b></summary>
+            <fieldset class="opt-panel op-group">
+              <legend class="opt-title">Hits match</legend>
+              <div class="opt-row"><label class="ck" title="Only passages matching both queries"><input type="radio" name="op" value="and" bind:group={langOp} /><span>Both languages</span></label></div>
+              <div class="opt-row"><label class="ck" title="Passages matching either query"><input type="radio" name="op" value="or" bind:group={langOp} /><span>Either language</span></label></div>
+            </fieldset>
+          </details>
+        {/if}
+        <!-- In: all works, the authentic ones (works.ts authenticity), or a
+             choice from the works picker, which shows In open while it is. -->
+        <details class="opt opt-in" class:picking={worksOpen} on:toggle={closeOtherOpts}>
+          <summary>In <b>{worksValue}{@render caret()}</b></summary>
           <fieldset class="opt-panel">
-            <legend class="sr-only">English match</legend>
-            {#each MODE_OPTS as opt}
-              <label class="ck"><input type="radio" name="engmode" value={opt.v} bind:group={engMode} /><span>{opt.l}</span></label>
+            <legend class="opt-title">In</legend>
+            {#each WORKS_SCOPES as sc}
+              <div class="opt-row" class:opt-rule={sc.v === 'pick'}>
+                <label class="ck"><input type="radio" name="worksscope" value={sc.v} checked={worksScope === sc.v} on:click={(e) => setWorksScope(sc.v, e)} aria-describedby={`ws-${sc.v}`} /><span>{sc.l}</span></label>
+                <small class="opt-gloss" id={`ws-${sc.v}`}>{sc.g}</small>
+              </div>
             {/each}
           </fieldset>
         </details>
-        <details class="opt" on:toggle={closeOtherOpts}>
-          <summary>{lang === 'both' ? 'English form' : 'Form'} <b>{engForms ? 'any form' : 'as typed'}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg></b></summary>
-          <fieldset class="opt-panel" title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
-            <legend class="sr-only">English form</legend>
-            <label class="ck"><input type="radio" name="engforms" value={true} bind:group={engForms} /><span>Any form of this word</span></label>
-            <label class="ck"><input type="radio" name="engforms" value={false} bind:group={engForms} /><span>Only as I typed it</span></label>
-          </fieldset>
-        </details>
-      {/if}
-      <!-- A picked headword is the Greek side too, with the Greek box empty. -->
-      {#if lang === 'both' || (soloLemmaActive && engQuery.trim())}
-        <details class="opt" on:toggle={closeOtherOpts}>
-          <summary>Combine <b>{langOp === 'and' ? 'both queries' : 'either query'}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg></b></summary>
-          <fieldset class="opt-panel op-group">
-            <legend class="sr-only">Greek + English</legend>
-            <label class="ck" title="Only passages matching both queries"><input type="radio" name="op" value="and" bind:group={langOp} /><span>Both queries</span></label>
-            <label class="ck" title="Passages matching either query"><input type="radio" name="op" value="or" bind:group={langOp} /><span>Either query</span></label>
-          </fieldset>
-        </details>
-      {/if}
-      <button
-        type="button"
-        class="works-trigger opt-btn"
-        aria-expanded={worksOpen}
-        aria-controls="works-panel"
-        on:click={() => { worksOpen = !worksOpen; if (worksOpen) speakerOpen = false; }}
-      >In <b>{lower1(worksSummary)}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg></b></button>
-      {#if SPEAKERS}
-      <button
-        type="button"
-        class="works-trigger opt-btn"
-        aria-expanded={speakerOpen}
-        aria-controls="speaker-panel"
-        on:click={() => { speakerOpen = !speakerOpen; if (speakerOpen) worksOpen = false; }}
-      >Spoken by <b>{lower1(speakerSummary)}<svg class="opt-caret" width="8" height="5" viewBox="0 0 10 6" aria-hidden="true" fill="currentColor"><path d="M0 0l5 6 5-6z"/></svg></b></button>
-      {/if}
-      <button
-        type="button"
-        class="advanced-trigger"
-        aria-expanded={advancedOpen}
-        aria-controls="advanced-tools"
-        on:click={toggleAdvanced}
-      >Advanced<span class="sr-only"> search</span> <span aria-hidden="true">{advancedOpen ? '▴' : '▾'}</span></button>
-      <button type="submit" class="search-btn" disabled={loading}>
-        {loading ? 'Searching…' : 'Search'}
-      </button>
+        {#if SPEAKERS}
+        <button
+          type="button"
+          class="works-trigger opt-btn"
+          aria-expanded={speakerOpen}
+          aria-controls="speaker-panel"
+          on:click={() => { speakerOpen = !speakerOpen; if (speakerOpen) worksOpen = false; }}
+        >Spoken by <b>{lower1(speakerSummary)}{@render caret()}</b></button>
+        {/if}
+      </div>
+      <div class="sopt-act">
+        <button
+          type="button"
+          class="advanced-trigger"
+          aria-expanded={advancedOpen}
+          aria-controls="advanced-tools"
+          on:click={toggleAdvanced}
+        >Proximity<span class="sr-only"> search</span>{@render caret()}</button>
+        <button type="submit" class="search-btn" disabled={loading}>
+          {loading ? 'Searching…' : 'Search'}
+        </button>
+      </div>
     </div>
+    {#if lemmaOn && sugg.length}
+      <!-- Lemma on: the dictionary words open under the options, so the
+           choice is in view, and the results step back behind them. -->
+      <div class="gs-under">{@render suggestList(sugg, suggActive, lemmaGlosses, true)}</div>
+    {/if}
 
     {#if loading && rtProgress}
       <p class="rt-progress">Searching {rtProgress.done} of {rtProgress.total} work{rtProgress.total === 1 ? '' : 's'}…</p>
     {/if}
-    <p class="sx-hint">
-      {#if matchMode === 'text' && lang !== 'english'}
-      <code>.</code> one letter · <code>.*</code> any run · <code>|</code> or ·
-      {:else}
-      <code>*</code> any letters · <code>?</code> one letter ·
-      {/if}
-      Greek or <button type="button" class="link-btn" on:click={openHelp} aria-haspopup="dialog" title="How to type Greek">Beta Code</button>
-      (<code>texnh</code> = <span lang="grc">τέχνη</span>) ·
-      <a class="guide-link" href={`${BASE_URL}/advanced#wildcards`} target="_blank" rel="noreferrer">How search works</a> ·
-      <a class="guide-link" href={`${BASE_URL}/saved`}>Saved searches</a>
-    </p>
+    {#if !searched && !advancedOpen}
+      <p class="sx-hint">
+        {#if matchMode === 'text' && lang !== 'english'}
+        <span class="hk"><code>.</code> one letter</span>
+        <span class="hk"><code>.*</code> any run</span>
+        <span class="hk"><code>|</code> or</span>
+        {:else}
+        <span class="hk"><code>*</code> any letters</span>
+        <span class="hk"><code>?</code> one letter</span>
+        {/if}
+        <span class="hk"><code>texnh</code> → <span lang="grc">τέχνη</span>, in <button type="button" class="link-btn" on:click={openHelp} aria-haspopup="dialog" title="How to type Greek">Beta Code</button></span>
+      </p>
+    {/if}
 
     {#if advancedOpen}
       <div id="advanced-tools" class="advanced-body">
         <p class="advanced-guide"><a class="guide-link" href={`${BASE_URL}/advanced`} target="_blank" rel="noreferrer">What these tools do</a></p>
-          <details class="lemma-panel" bind:open={soloPanelOpen}>
-            <summary>
-              <span class="n" aria-hidden="true">Α</span>
-              <span class="t">Single lemma</span> <span class="d">every form of one dictionary word</span>
-              {#if soloLemmaActive}<span class="combo-active">{soloLemma.picked.length} picked</span>{/if}
-              <span class="tog" aria-hidden="true">{soloPanelOpen ? 'Close ▴' : 'Open ▾'}</span>
-            </summary>
-            <p class="lemma-panel-note">
-              Every occurrence of one dictionary word, in all its forms. Pick the
-              headword rather than typing a spelling, so you get the word you
-              meant and not the ones that merely look like it.
-              <a class="guide-link" href={`${BASE_URL}/advanced#lemma`} target="_blank" rel="noreferrer">What is this?</a>
-              Picking more than one asks for any of them.
-              This searches on its own — it ignores the Greek box above.
-            </p>
-            {@render lemmaPicker(soloLemma, 'the single lemma search', lemmaGlosses)}
-            {#if soloLemmaActive}
-              <button
-                type="button"
-                class="lemma-panel-clear"
-                on:click={() => { soloLemma.picked = []; soloLemma = soloLemma; }}
-              >Clear picked words</button>
-            {/if}
-          </details>
-
           <details class="combo-panel" bind:open={comboPanelOpen}>
             <summary>
               <span class="n" aria-hidden="true">Β</span>
@@ -3563,13 +3700,19 @@
       </div>
     {/if}
 
+    <!-- The works picker, opened from In's "Choose works…". -->
     <div id="works-panel" class="works-panel" role="group" aria-label="Works to search" hidden={!worksOpen}>
       {#if worksOpen}
         <div class="works-body">
           <div class="works-actions">
+            <span class="works-count">{selectedWorks.size} of {WORKS.length} works</span>
             <button type="button" class="works-action" on:click={selectAll} disabled={allSelected}>Select all</button>
             <button type="button" class="works-action" on:click={clearWorks} disabled={selectedWorks.size === 0}>Clear</button>
+            <button type="button" class="works-done" on:click={closeWorks}>Done</button>
           </div>
+
+          <input type="search" class="works-find" placeholder="Find a work" aria-label="Find a work" bind:value={worksFind}
+            autocomplete="off" spellcheck="false" />
 
           <div class="works-auth" role="group" aria-label="Filter works by authorship status">
             {#each AUTH_SCOPES as s}
@@ -3586,17 +3729,18 @@
           </div>
 
           {#each WORK_GROUPS as grp}
-            {@const gs = groupState(grp.ids)}
+            {@const shown = grp.ids.filter(id => findsWork(id, worksFind))}
+            {#if shown.length}
             <div class="works-group">
               <div class="works-group-head">
                 <span class="works-group-name">{grp.ref}. {grp.label}</span>
                 <span class="works-group-scope">
-                  <button type="button" class="scope-btn" class:on={gs === 'all'} on:click={() => selectOnly(grp.ids)} title="Search only this division">only</button>
-                  <button type="button" class="scope-btn" on:click={() => addGroup(grp.ids)} title="Add this division to the selection">+ add</button>
+                  <button type="button" class="scope-btn" on:click={() => selectOnly(grp.ids)} title="Search only this division">Only these {grp.ids.length}</button>
+                  <button type="button" class="scope-btn" on:click={() => addGroup(grp.ids)} title="Add this division to the selection">Add these {grp.ids.length}</button>
                 </span>
               </div>
               <div class="works-chips">
-                {#each grp.ids as id}
+                {#each shown as id}
                   {@const w = getWork(id)}
                   {#if w}
                     <button
@@ -3605,12 +3749,13 @@
                       class:on={selectedWorks.has(id)}
                       aria-pressed={selectedWorks.has(id)}
                       on:click={() => toggleWork(id)}
-                      title={w.title}
-                    >{w.abbr} · {w.title}</button>
+                      title={`${w.abbr} · ${w.title}`}
+                    >{w.title}</button>
                   {/if}
                 {/each}
               </div>
             </div>
+            {/if}
           {/each}
         </div>
       {/if}
@@ -3777,6 +3922,21 @@
        added with its text already in it is usually not announced, and the
        visible count is rebuilt with every search. -->
   <p class="sr-only" role="status" aria-live="polite">{loading ? 'Searching…' : searched && !error ? countText : ''}</p>
+
+  {#if showTry && !searched && !loading && !error && !narrowPrompt}
+    <section class="sx-try" aria-labelledby="sx-try-h">
+      <h2 id="sx-try-h">Try</h2>
+      <ul>
+        {#each TRY as t}
+          <li><a href={`${BASE_URL}/search/${t.href}`}><span lang={t.grc ? 'grc' : 'en'}>{t.q}</span><small>{t.g}</small></a></li>
+        {/each}
+      </ul>
+      <p>
+        <a href={`${BASE_URL}/advanced`}>How search works</a>
+        <a href={`${BASE_URL}/saved`}>Saved searches</a>
+      </p>
+    </section>
+  {/if}
 
   {#if error}
     <p class="search-error">{error}</p>
@@ -4334,95 +4494,10 @@
      and Spoken-by panels, and the results on ruled rows. House rules: square
      corners, rules not boxes, Gentium for everything read, Geologica Light only
      in capitals, colour from the tokens, the highlight #d9e2f4 for search marks. */
-  .search-page {
-    max-width: 80rem;
-    margin: 0 auto;
-    padding: 3rem 3.5rem 3rem;
-    font-family: var(--font-english);
-    color: var(--text);
-  }
-
-  /* ── The field ──────────────────────────────────────────────────────────── */
-  .sq {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 0.75rem 1.5rem;
-  }
-  .sq-row {
-    grid-column: 1;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    height: 4rem;
-    border-bottom: 2px solid var(--text);
-    color: var(--text-mid);
-  }
-  .sq-row[hidden] { display: none; }
-  .sq-row:focus-within { border-bottom-color: var(--accent); }
-  .sq-glass { flex: none; }
-  .query-label {
-    flex: none;
-    width: 4.5rem;
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--text-mid);
-  }
-  .query-input {
-    flex: 1;
-    min-width: 0;
-    height: 100%;
-    padding: 0;
-    border: none;
-    border-radius: 0;
-    background: none;
-    font-family: var(--font-greek);
-    font-size: 1.875rem;
-    color: var(--text);
-  }
-  .query-input::placeholder { color: var(--text-mid); opacity: 1; }
-  .query-input:focus { outline: none; }
-  .query-input:disabled { opacity: 0.5; }
-  /* Greek · English · Both: capitals, a 2px underline under the current one. */
-  .lang-switch { grid-column: 2; grid-row: 1; display: flex; gap: 0.875rem; }
-  .lang-switch button {
-    padding: 0 0 0.1875rem;
-    border: none;
-    border-bottom: 2px solid transparent;
-    border-radius: 0;
-    background: none;
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.75rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--text-mid);
-    cursor: pointer;
-  }
-  .lang-switch button:hover { color: var(--accent); }
-  .lang-switch [aria-pressed="true"] { color: var(--text); border-bottom-color: var(--text); }
-  /* Same face as the language tabs. β stays in the Greek face; the label does not wrap. */
-  .lang-switch .tog { white-space: nowrap; }
-  /* The tabs are set in capitals; β must stay lower case, or it reads as a Latin B. */
-  .lang-switch .tog span { font-family: var(--font-greek); text-transform: none; letter-spacing: 0; }
-
-  /* ── The options line ───────────────────────────────────────────────────── */
-  /* Menus read as text on a dotted underline; their panels open under the line,
-     from its left edge, never wider than it. */
-  .sopt {
-    position: relative;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.75rem 1.75rem;
-    margin-top: 0.875rem;
-    font-size: 1rem;
-    color: var(--text-mid);
-  }
-  .opt > summary, .opt-btn {
+  /* The search form, its field, menus and hint live in shared/styles/
+     b-search.css (S2). What stays here is shared with the results' own
+     menus over the hits, scoped to them. */
+  .sx-display .opt > summary {
     padding: 0;
     border: none;
     background: none;
@@ -4431,16 +4506,13 @@
     list-style: none;
     cursor: pointer;
   }
-  .opt > summary::-webkit-details-marker { display: none; }
-  .opt b, .opt-btn b { font-weight: 400; color: var(--text); border-bottom: 1px dotted var(--text); }
-  .opt > summary:hover b, .opt-btn:hover b,
-  .opt[open] > summary b, .opt-btn[aria-expanded="true"] b { color: var(--accent); border-bottom-color: var(--accent); }
-  .opt > summary:focus-visible, .opt-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  /* A switch's tap target is 40px tall, the line it sits on unchanged. */
-  .opt-switch { position: relative; }
-  .opt-switch::after { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: max(100%, 40px); transform: translateY(-50%); }
-  .opt-caret { margin-left: 0.3125rem; vertical-align: 0.1em; color: var(--text-mid); }
-  .opt-panel {
+  .sx-display .opt > summary::-webkit-details-marker { display: none; }
+  .sx-display .opt b { font-weight: 400; color: var(--text); border-bottom: 1px dotted var(--text); }
+  .sx-display .opt > summary:hover b,
+  .sx-display .opt[open] > summary b { color: var(--accent); border-bottom-color: var(--accent); }
+  .sx-display .opt > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .sx-display .opt-caret { margin-left: 0.3125rem; vertical-align: 0.1em; color: var(--text-mid); }
+  .sx-display .opt-panel {
     position: absolute;
     top: calc(100% + 0.5rem);
     left: 0;
@@ -4476,53 +4548,24 @@
     background: linear-gradient(var(--accent), var(--accent)) center / 0.5rem 0.5rem no-repeat;
   }
   .ck input:focus-visible, .combo-check input:focus-visible, .mode-group input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .advanced-trigger {
-    margin-left: auto;
-    padding: 0;
-    border: none;
-    background: none;
-    font: inherit;
-    color: var(--accent);
-    cursor: pointer;
+  .sopt.sx-display {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.75rem 1.75rem;
+    font-size: 1rem;
+    color: var(--text-mid);
   }
-  .advanced-trigger:hover { text-decoration: underline; text-underline-offset: 0.2em; }
-  /* The primary button: an ink fill with stone text. */
-  .search-btn {
-    padding: 0.625rem 1.25rem;
-    border: 1px solid var(--text);
-    border-radius: 0;
-    background: var(--text);
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.75rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--page-bg);
-    cursor: pointer;
-  }
-  .search-btn:hover:not(:disabled) { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-  .search-btn:disabled { opacity: 0.6; cursor: default; }
-
-  .sx-hint { max-width: 42.5rem; margin: 0.75rem 0 0; font-size: 0.875rem; color: var(--text-mid); }
   .search-page code, .help-modal code { font-family: var(--font-english); font-style: italic; font-size: 1em; color: var(--text); }
-  .link-btn {
-    padding: 0;
-    border: none;
-    border-bottom: 1px solid var(--accent);
-    background: none;
-    font: inherit;
-    color: var(--accent);
-    cursor: pointer;
-  }
   .guide-link { color: var(--text-mid); text-decoration: none; border-bottom: 1px solid var(--border); }
   .guide-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
-  /* ── Advanced: Α Single lemma, Β Words near each other ─────────────────── */
+  /* ── Proximity: words near each other ───────────────────────────────── */
   .advanced-body { margin-top: 1.375rem; }
   .advanced-guide { margin: 0; text-align: right; font-size: 0.875rem; }
-  .lemma-panel, .combo-panel { margin-top: 1.375rem; padding-top: 0.875rem; border-top: 1px solid var(--text); }
-  .lemma-panel + .combo-panel { margin-top: 1.625rem; }
-  .lemma-panel > summary, .combo-panel > summary {
+  .combo-panel { margin-top: 1.375rem; padding-top: 0.875rem; border-top: 1px solid var(--text); }
+  .combo-panel > summary {
     display: flex;
     flex-wrap: wrap;
     align-items: baseline;
@@ -4530,11 +4573,10 @@
     list-style: none;
     cursor: pointer;
   }
-  .lemma-panel > summary::-webkit-details-marker, .combo-panel > summary::-webkit-details-marker { display: none; }
-  .lemma-panel > summary:focus-visible, .combo-panel > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .combo-panel > summary::-webkit-details-marker { display: none; }
+  .combo-panel > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
   summary .n { font-family: var(--font-caps); font-weight: 300; font-size: 1.375rem; color: var(--accent); }
   summary .t { font-size: 1.3125rem; }
-  .lemma-panel .d { font-size: 0.875rem; font-style: italic; color: var(--text-mid); }
   summary .tog, .combo-active {
     font-family: var(--font-caps);
     font-weight: 300;
@@ -4544,8 +4586,8 @@
   }
   summary .tog { margin-left: auto; color: var(--text-mid); }
   .combo-active { color: var(--accent); }
-  .lemma-panel-note, .combo-note { max-width: 42.5rem; margin: 0.625rem 0 0; font-size: 0.9375rem; line-height: 1.55; color: var(--text-mid); }
-  .lemma-panel-clear, .combo-add, .works-action, .retry-btn {
+  .combo-note { max-width: 42.5rem; margin: 0.625rem 0 0; font-size: 0.9375rem; line-height: 1.55; color: var(--text-mid); }
+  .combo-add, .retry-btn {
     padding: 0;
     border: none;
     background: none;
@@ -4553,8 +4595,7 @@
     color: var(--accent);
     cursor: pointer;
   }
-  .lemma-panel-clear { margin-top: 0.75rem; }
-  .lemma-panel-clear:hover, .combo-add:hover, .works-action:hover:not(:disabled), .retry-btn:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+  .combo-add:hover, .retry-btn:hover { text-decoration: underline; text-underline-offset: 0.2em; }
 
   /* The headword picker: an underlined field; its list is the one floating
      panel here (1px ink edge, a small shadow); a pick reads headword, gloss,
@@ -4707,70 +4748,7 @@
   .combo-window input:focus { outline: none; border-bottom-color: var(--accent); }
   .combo-window input:disabled { opacity: 0.5; }
 
-  /* ── Works and Spoken by: panels under the options line ────────────────── */
-  .works-panel { margin-top: 1.125rem; padding-top: 0.875rem; border-top: 1px solid var(--text); }
-  .works-panel[hidden] { display: none; }
-  .works-actions { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1.25rem; }
-  .works-action, .scope-btn, .speaker-count {
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-  .works-action:disabled { color: var(--text-mid); opacity: 0.5; cursor: default; }
-  .speaker-count { color: var(--text-mid); }
-  /* Authorship: a capitals switch, the current scope underlined. */
-  .works-auth { display: flex; flex-wrap: wrap; gap: 0.5rem 1.25rem; margin-top: 0.875rem; }
-  .auth-btn {
-    padding: 0 0 0.1875rem;
-    border: none;
-    border-bottom: 2px solid transparent;
-    background: none;
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-mid);
-    cursor: pointer;
-  }
-  .auth-btn:hover:not(:disabled) { color: var(--accent); }
-  .auth-btn.on { color: var(--text); border-bottom-color: var(--text); }
-  .auth-btn:disabled { opacity: 0.4; cursor: default; }
-  .auth-count { margin-left: 0.3125rem; font-variant-numeric: tabular-nums; }
-  .works-group { margin-top: 1rem; }
-  .works-group-head { display: flex; align-items: baseline; gap: 1rem; padding-bottom: 0.375rem; border-bottom: 1px solid var(--border); }
-  .works-group-name { font-size: 1.0625rem; }
-  .works-group-scope { display: flex; gap: 1rem; margin-left: auto; }
-  .scope-btn { padding: 0; border: none; background: none; color: var(--text-mid); cursor: pointer; }
-  .scope-btn:hover, .scope-btn.on { color: var(--accent); }
-  /* Each work a square check and its name: no chips. */
-  .works-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)); gap: 0.125rem 1rem; margin-top: 0.5rem; }
-  .work-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem 0;
-    border: none;
-    background: none;
-    font: inherit;
-    font-size: 0.9375rem;
-    text-align: left;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .work-chip::before {
-    content: '';
-    flex: none;
-    box-sizing: border-box;
-    width: 0.9375rem;
-    height: 0.9375rem;
-    border: 1.5px solid var(--text);
-  }
-  .work-chip.on::before { background: linear-gradient(var(--accent), var(--accent)) center / 0.5rem 0.5rem no-repeat; }
-  .work-chip:hover { color: var(--accent); }
-  .work-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  /* The works picker and the Spoken-by panel: shared/styles/b-search.css. */
   .speaker-turns { margin-left: 0.25rem; font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
   .mode-group { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1.5rem; margin: 0; padding: 0; border: none; }
   .mode-group legend {
@@ -5459,24 +5437,13 @@
 
   /* ── Phones ────────────────────────────────────────────────────────────── */
   @media (max-width: 680px) {
-    .search-page { padding: 1.5rem 1.25rem 2.5rem; }
-    .sq { grid-template-columns: minmax(0, 1fr); }
-    .sq-row { height: 3.125rem; }
-    .query-input { font-size: 1.25rem; }
-    .lang-switch { grid-column: 1; grid-row: auto; display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
-    .lang-switch .tog { grid-column: 1 / -1; }
-    .lang-switch button { border-bottom-color: var(--border); padding-bottom: 0.375rem; }
-    .lang-switch [aria-pressed="true"] { border-bottom-color: var(--text); }
-    .sopt { gap: 0.625rem 1.25rem; font-size: 0.9375rem; }
-    .advanced-trigger { margin-left: 0; }
-    .search-btn { width: 100%; }
-    .opt-panel { position: fixed; top: auto; bottom: 0; left: 0; right: 0; max-height: 70vh; overflow-y: auto; }
+    .sopt.sx-display { gap: 0.625rem 1.25rem; font-size: 0.9375rem; }
+    .sx-display .opt-panel { position: fixed; top: auto; bottom: 0; left: 0; right: 0; max-height: 70vh; overflow-y: auto; }
     .lplist { position: static; margin-top: 0.375rem; box-shadow: none; }
     .lplist button { grid-template-columns: 6.875rem minmax(0, 1fr) 3.125rem; padding: 0.5rem 0.625rem; }
     .lplist .hw { font-size: 1.0625rem; }
     .lp-field input, .combo-text-field input, .lpsel { font-size: 1.1875rem; }
     .combo-grammar-grid { grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); }
-    .works-chips { grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
     .sx-note { grid-template-columns: minmax(0, 1fr); gap: 0.125rem; }
     .instance, .sx-results.by-work .instance { grid-template-columns: minmax(0, 1fr); gap: 0.375rem; }
     .inst-ref, .inst-body, .inst-speaker, .inst-oneof { grid-column: 1; grid-row: auto; }
