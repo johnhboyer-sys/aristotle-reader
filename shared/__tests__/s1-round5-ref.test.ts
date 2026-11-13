@@ -1,5 +1,7 @@
 // S1 round 5: a Greek hit cites its own line, not its Bekker-tick span's
-// start; an English-only hit keeps its span's line. Real corpus only.
+// start; an English-only hit cites its column (John, 13 Nov: "for now the
+// column. once every work is properly aligned, the line"), its link the
+// span's line. Real corpus only.
 import { render, fireEvent, screen } from '@testing-library/svelte';
 import { resolve } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
@@ -46,6 +48,26 @@ it.skipIf(!dataPresent)('a Greek hit is labelled, linked, and exported at its ow
   page.unmount();
 }, 240000);
 
+it.skipIf(!dataPresent)('an English row under a Greek hit exports its column (needs the built corpus)', async () => {
+  // Both languages: a Greek and an English hit in one unit are one instance,
+  // cited at the Greek line; its English rows cite the column (John, 13 Nov).
+  const page = await real('g=ἀρετή&e=virtue&w=EN');
+  let csv: Blob | undefined;
+  URL.createObjectURL = vi.fn(blob => { csv = blob as Blob; return 'blob:test'; });
+  URL.revokeObjectURL = vi.fn();
+  vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+  await fireEvent.click(screen.getByRole('button', { name: 'Export results as CSV' }));
+  await vi.waitFor(() => expect(csv).toBeDefined(), { timeout: 120000 });
+  const content = await new Promise<string>(res => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.readAsText(csv!); });
+  const rows = content.replace(/^\uFEFF/, '').split('\r\n').map(line => line.match(/("([^"]|"")*"|[^,]*)(,|$)/g)!.map(c => c.replace(/,$/, '').replace(/^"|"$/g, '').replace(/""/g, '"')));
+  const greek = rows.filter(r => r[4] === 'Greek');
+  const english = rows.filter(r => r[4] === 'English');
+  expect(greek.some(r => /^\d{1,4}[ab]\d/.test(r[3]))).toBe(true);
+  expect(english.length).toBeGreaterThan(0);
+  for (const r of english) expect(r[3]).toMatch(/^\d{1,4}[ab]$/);
+  page.unmount();
+}, 240000);
+
 it.skipIf(!dataPresent)('a Greek hit on a lettered line keeps its letter (needs the built corpus)', async () => {
   // Categories 2b5 and 2b6b both hold ὑποκειμέναις. At three lines 2b5 draws
   // lines 4, 5, 6 and 2b6b draws 6a, 6b, 6c: no line is shared, so they are
@@ -62,10 +84,11 @@ it.skipIf(!dataPresent)('a Greek hit on a lettered line keeps its letter (needs 
   page.unmount();
 }, 240000);
 
-it.skipIf(!dataPresent)('an English-only hit keeps its span line (needs the built corpus)', async () => {
+it.skipIf(!dataPresent)('an English-only hit cites its column and links its span line (needs the built corpus)', async () => {
   const page = await real('e=virtue&w=Cat');
   const labels = refs(page.container).map(a => shown(a));
   console.log('ROUND5 e=virtue&w=Cat first five: ' + labels.slice(0, 5).join(', '));
-  expect(labels.slice(0, 4)).toEqual(['2b15', '5a25', '5b15', '6b15']);
+  expect(labels.slice(0, 4)).toEqual(['2b', '5a', '5b', '6b']);
+  expect(refs(page.container)[0].getAttribute('href')).toMatch(/loc=2b:15(&|$)/);
   page.unmount();
 }, 240000);

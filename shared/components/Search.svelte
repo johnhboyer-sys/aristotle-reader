@@ -668,6 +668,13 @@
   // A group by form spans works, so its citations name theirs.
   // The work and its place never part; a range of lines may break after
   // its dash (the template's <wbr>), so "1095b29–33" fits the column.
+  // An English hit cites its column, as the old Search did: the English is
+  // not yet aligned line by line in every work (John, 13 Nov: "for now the
+  // column. once every work is properly aligned, the line"). A
+  // chapter-section work keeps its section ("49.3"). The link still opens
+  // the reader at the line.
+  const englishCiteLine = (work: string, turnFlow: unknown, line: number) =>
+    !turnFlow && isChapterSection(getWork(work)) ? line : undefined;
   const citeText = (inst: Instance, v: ResultView) =>
     v === 'form' || v === 'grammar' ? `${getWork(inst.work)?.abbr ?? inst.work}\u00a0${inst.ref}` : inst.ref;
 
@@ -2626,7 +2633,7 @@
             // same lines in each translator's words.
             let inst = engByUnit.get(unit);
             if (!inst) {
-              inst = { lang: 'eng', work: r.work, book: r.meta.book, column: unit.section, line, ref: formatCite(r.work, unit.section, books.get(pair)!.turnFlow ? undefined : line), html: '', jumpUrl: '', rows: [], unit, at: unit.first, pairGreek: books.get(pair)!.turnFlow ? undefined : pairGreekHtml(r.work, seg, greekWindow, true) };
+              inst = { lang: 'eng', work: r.work, book: r.meta.book, column: unit.section, line, ref: formatCite(r.work, unit.section, englishCiteLine(r.work, books.get(pair)!.turnFlow, line)), html: '', jumpUrl: '', rows: [], unit, at: unit.first, pairGreek: books.get(pair)!.turnFlow ? undefined : pairGreekHtml(r.work, seg, greekWindow, true) };
               engByUnit.set(unit, inst);
               made.push({ work: r.work, book: r.meta.book, inst });
             }
@@ -3523,10 +3530,13 @@
               '', stripHtml(inst.html), origin + inst.jumpUrl,
             ]);
           }
+          // An English row cites its column (John, 13 Nov), even under a
+          // Greek hit, whose own row keeps its line.
+          const engRef = inst.lang === 'eng' || isChapterSection(w) ? inst.ref : formatCite(g.work, inst.column);
           for (const row of inst.rows ?? []) {
             const t = translationRef(g.work, row.translation);
             rows.push([
-              workTitle, String(book), g.chapter, inst.ref, 'English',
+              workTitle, String(book), g.chapter, engRef, 'English',
               t?.short ?? row.translation, stripHtml(row.html), origin + row.jumpUrl,
             ]);
           }
