@@ -11,17 +11,18 @@ export const GREEK_KEYS = [...'αβγδεζηθικλμνξοπρστυφχψω�
 // three rows, each set half a key right of the one above (ruling 6).
 export const KEY_ROWS = ['ςερτυθιοπ', 'ασδφγηξκλ', 'ζχψωβνμ'];
 
-// `face` is what the key shows: the mark on a vowel, as one precomposed
-// letter. A bare combining mark draws on a dotted circle, or not at all, in
-// many phone fonts.
+// `face` is what the key shows: Literata's own spacing form of the mark,
+// drawn over (the subscript under) a dotted ring the page draws. A bare
+// combining mark falls back to another font, where it drifts or draws as a
+// box; Literata as served has neither those marks nor the dotted circle.
 export const GREEK_MARKS: { mark: string; name: string; face: string }[] = [
-  { mark: '\u0313', name: 'smooth breathing', face: 'ἀ' },
-  { mark: '\u0314', name: 'rough breathing', face: 'ἁ' },
-  { mark: '\u0301', name: 'acute', face: 'ά' },
-  { mark: '\u0300', name: 'grave', face: 'ὰ' },
-  { mark: '\u0342', name: 'circumflex', face: 'ᾶ' },
-  { mark: '\u0308', name: 'diaeresis', face: 'ϊ' },
-  { mark: '\u0345', name: 'iota subscript', face: 'ᾳ' },
+  { mark: '\u0313', name: 'smooth breathing', face: '\u1FBF' },
+  { mark: '\u0314', name: 'rough breathing', face: '\u1FFE' },
+  { mark: '\u0301', name: 'acute', face: '\u1FFD' },
+  { mark: '\u0300', name: 'grave', face: '\u1FEF' },
+  { mark: '\u0342', name: 'circumflex', face: '\u1FC0' },
+  { mark: '\u0308', name: 'diaeresis', face: '\u00A8' },
+  { mark: '\u0345', name: 'iota subscript', face: '\u037A' },
 ];
 
 export interface KeyEdit { value: string; caret: number }

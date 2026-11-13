@@ -344,10 +344,14 @@
 }
 .search-page .gk-key:hover { border-color: var(--ink); }
 .search-page .gk-key:is(.gk-space, .gk-bs, .gk-wide) { font: 600 15px/1 var(--sans); }
-.search-page .gk-key.gk-mark { background: var(--soft); font-size: 30px; }
-.search-page .gk-mf { display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--read); line-height: 1; }
-.search-page .gk-mm { height: .42em; font-size: 1.15em; font-weight: 600; line-height: 1.05; }
-.search-page .gk-mb { line-height: .8; }
+/* A mark key: Literata's spacing mark over a ring drawn as a dotted circle
+   (the subscript under it); the pair lowered so it sits centred in the key. */
+.search-page .gk-key.gk-mark { background: var(--soft); font-size: 34px; }
+.search-page .gk-face { display: inline-flex; align-items: center; position: relative; top: .12em; font-family: var(--read); line-height: 1; }
+.search-page .gk-o { display: inline-block; width: .48em; height: .48em; border: 2px dotted var(--mid); border-radius: 50%; }
+.search-page .gk-mk { display: inline-flex; justify-content: center; width: .48em; margin-left: -.48em; position: relative; top: -.22em; font-weight: 600; }
+.search-page .gk-face.gk-sub { top: 0; }
+.search-page .gk-face.gk-sub .gk-mk { top: -.12em; }
 .search-page .gk.gk-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 50; margin: 0; padding: 12px 6px calc(12px + env(safe-area-inset-bottom)); border-width: 1px 0 0; }
 
 /* ── The works picker (In: Choose works…) ───────────────────────────────── */

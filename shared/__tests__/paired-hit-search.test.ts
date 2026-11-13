@@ -111,11 +111,10 @@ describe('Search.svelte: a Greek hit shows its English', () => {
     expect(pair).toHaveAttribute('lang', 'en');
     // Not the whole section ("One two three. Four five"), nor the whole turn.
     expect(text(pair!.querySelector('.inst-pair-text'))).toBe('Four five');
-    // The translator's short name under it, plain: one translation, no
-    // choice to offer (ruling 18).
+    // Each available translation has a switch under the English.
     const label = pair!.querySelector('.tr-names')!;
-    expect(label).toHaveTextContent(/^Rackham$/);
-    expect(label.querySelector('button, a')).toBeNull();
+    expect([...label.querySelectorAll('button')].map(text)).toEqual(['Rackham', 'Ross']);
+    expect(label.querySelector('button[aria-pressed="true"]')).toHaveTextContent('Rackham');
     expect(label.previousElementSibling).toBe(pair!.querySelector('.inst-pair-text'));
     expect(pair!.querySelector('mark')).toBeNull();
   });
@@ -139,8 +138,8 @@ describe('Search.svelte: a Greek hit shows its English', () => {
     })];
     const url = `/search?g=${encodeURIComponent('α')}&e=four+cuatro&em=any`;
     const plain = await instances(url, results, 3);
-    // The English, then its translator's name under it (ruling 18).
-    expect(text(plain.list[0].querySelector('.inst-pair'))).toBe('One two three. Rackham');
+    expect(text(plain.list[0].querySelector('.inst-pair-text'))).toBe('One two three.');
+    expect(plain.list[0].querySelector('.inst-pair button[aria-pressed="true"]')).toHaveTextContent('Rackham');
     // The English hit is one instance for the unit, one translation shown and
     // a switch for each translation with hits there, in the side column's order.
     expect(plain.list).toHaveLength(2);
@@ -150,7 +149,8 @@ describe('Search.svelte: a Greek hit shows its English', () => {
 
     const chip = await instances(`${url}&t=ross`, results, 2);
     const pair = chip.list[0].querySelector('.inst-pair')!;
-    expect(text(pair)).toBe('Uno dos. Ross');
+    expect(text(pair.querySelector('.inst-pair-text'))).toBe('Uno dos.');
+    expect(pair.querySelector('button[aria-pressed="true"]')).toHaveTextContent('Ross');
     // The reference opens the reader at the hit.
     expect(chip.list[0].querySelector('.inst-ref')!.getAttribute('href')).toContain('loc=70a');
   });

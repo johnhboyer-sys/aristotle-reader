@@ -286,11 +286,11 @@ describe('Search.svelte: context', () => {
     // The citation names every Greek hit of the section.
     expect(a.querySelector('.inst-ref')!.getAttribute('href')).toContain('hlt=70a:0,3');
     // A Greek search: the section's English, unmarked, in the reference translation.
-    expect(text(a.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham');
+    expect(text(a.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham· Ross');
     expect(a.querySelector('.inst-pair mark')).toBeNull();
     expect(text(b.querySelector('.inst-snippet.greek'))).toBe('ζ η θ ι κ');
     expect(marks(b)).toEqual(['η']);
-    expect(text(b.querySelector('.inst-pair'))).toBe('six seven eight Nine ten. Eleven Rackham');
+    expect(text(b.querySelector('.inst-pair'))).toBe('six seven eight Nine ten. Eleven Rackham· Ross');
     // No "more" on a whole section.
     expect(container.querySelector('.inst-more')).toBeNull();
   });
@@ -326,7 +326,7 @@ describe('Search.svelte: context', () => {
       expect(text(d.querySelector('.inst-snippet.greek'))).toBe('α β γ δ ε');
       expect(marks(d)).toEqual(['δ']);
       expect(d.querySelector('.inst-rows')).toBeNull();
-      expect(text(d.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham');
+      expect(text(d.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham· Ross');
       expect(marks(h)).toEqual(['η']);
       expect(status()).toHaveTextContent('6 instances');
       // The work view: one instance per section, as before.
@@ -376,7 +376,7 @@ describe('Search.svelte: context', () => {
     expect(a.querySelector('.inst-ohead button')).toHaveTextContent('Show less');
     expect(text(a.querySelector('.inst-snippet.greek'))).toBe('α β γ δ ε');
     expect(marks(a)).toEqual(['α', 'δ']);
-    expect(text(a.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham');
+    expect(text(a.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham· Ross');
     expect(b.innerHTML).toBe(before[1]);
     expect(window.location.search).not.toContain('ctx');
     await fireEvent.click(a.querySelector('.inst-ohead button')!);
@@ -670,7 +670,7 @@ describe('Search.svelte: a proximity hit', () => {
     const zeta = li.querySelectorAll('mark')[1].closest('button')!;
     expect([zeta.dataset.s, zeta.dataset.i]).toEqual(['1:70b', '0']);
     // The English goes as far as the Greek.
-    expect(text(li.querySelector('.inst-pair'))).toBe('One two three. Four five 70b six seven eight Nine ten. Eleven Rackham');
+    expect(text(li.querySelector('.inst-pair'))).toBe('One two three. Four five 70b six seven eight Nine ten. Eleven Rackham· Ross');
     expect(status()).toHaveTextContent('1 instance');
   });
 
@@ -683,8 +683,8 @@ describe('Search.svelte: a proximity hit', () => {
     await vi.waitFor(() => expect(container.querySelector('.sec-on')).not.toBeNull());
     const views = items(container).map(li => [text(li.querySelector('.inst-snippet.greek')), text(li.querySelector('.inst-pair'))]);
     expect(views).toEqual([
-      ['α β γ δ ε', 'One two three. Four five Rackham'],
-      ['α β γ δ ε 70b ζ η θ ι κ', 'One two three. Four five 70b six seven eight Nine ten. Eleven Rackham'],
+      ['α β γ δ ε', 'One two three. Four five Rackham· Ross'],
+      ['α β γ δ ε 70b ζ η θ ι κ', 'One two three. Four five 70b six seven eight Nine ten. Eleven Rackham· Ross'],
     ]);
   });
 

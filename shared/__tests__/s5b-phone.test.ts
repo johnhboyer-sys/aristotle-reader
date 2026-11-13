@@ -168,7 +168,6 @@ describe('no target under 44px, at any width', () => {
     '.search-page .sq-glass', // the field's magnifier, drawn
     '.search-page .opt-switch .sw', '.search-page .opt-switch .sw::after', // a switch's track and knob; the switch is the target
     '.search-page :is(.search-form, .sx-display) .opt-panel .ck input', // a radio inside its 44px label
-    '.search-page .gk-mm', // a mark drawn over its key
     '.search-page .work-chip::before', '.search-page .work-chip.on::after', // a work's tick, drawn
     '.search-page .advanced-trigger .prox-dot', // the dot on Proximity
     '.search-page .prox-lock input', '.search-page .prox-lock input:checked::after', // a tick box inside its label
