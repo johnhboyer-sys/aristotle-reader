@@ -63,7 +63,7 @@
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'plato-saved-searches.json';
+    a.download = 'aristotle-saved-searches.json';
     // Firefox ignores a click on a link outside the document.
     document.body.appendChild(a);
     a.click();

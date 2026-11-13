@@ -83,15 +83,19 @@ afterEach(async () => {
 
 describe('Search.svelte: Save beside the count', () => {
   it('sits in the count row and turns to Saved ✓, keeping the page URL', async () => {
+    // "Save search" on a desktop (r34-02); the narrow count row hides "search".
     const { container } = await open(G);
-    const save = screen.getByRole('button', { name: 'Save' });
+    const save = screen.getByRole('button', { name: 'Save search' });
     expect(save.closest('.result-bar')).toBe(container.querySelector('.result-count')!.closest('.result-bar'));
     expect(save.previousElementSibling).toBe(container.querySelector('.result-count'));
+    expect(screen.queryByRole('link', { name: 'In Saved searches' })).toBeNull();
     await fireEvent.click(save);
     expect(save).toHaveTextContent('Saved ✓');
     expect(save).not.toBeDisabled();
     expect(listSaved()!.map((e) => e.url)).toEqual([window.location.pathname + window.location.search]);
     expect(listSaved()![0].name).toBe('ψυχή');
+    // Under the count, the way to the list (d23).
+    expect(within(container.querySelector('.sx-head') as HTMLElement).getByRole('link', { name: 'In Saved searches' })).toHaveAttribute('href', '/saved');
   });
 
   it('shows Saved ✓ at once for a URL already saved', async () => {
@@ -104,7 +108,7 @@ describe('Search.svelte: Save beside the count', () => {
     const { search, speakerRoster } = await import('../lib/search');
     vi.mocked(speakerRoster).mockResolvedValue([{ work: 'EN', loaded: true, speakers: [{ name: 'Socrates', turns: 1 }] }] as never);
     const first = await open(SOC);
-    await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Save search' }));
     first.unmount();
     const saved = listSaved()![0];
     expect(saved.name).toBe('ψυχή · spoken by Socrates');
@@ -230,7 +234,8 @@ describe('SavedSearches.svelte: the Saved page', () => {
     // Removed and revoked a moment later, not in the click's own turn: Safari
     // and some Firefox versions cancel a download whose URL is revoked at once.
     expect(revoke).not.toHaveBeenCalled();
-    expect(document.querySelector('a[download]')).not.toBeNull();
+    // Named for this site, not the reader it was ported from.
+    expect(document.querySelector('a[download]')).toHaveAttribute('download', 'aristotle-saved-searches.json');
     await vi.waitFor(() => expect(revoke).toHaveBeenCalledWith('blob:x'), { timeout: 3000 });
     expect(document.querySelector('a[download]')).toBeNull();
   });
@@ -251,14 +256,14 @@ describe('SavedSearches.svelte: the Saved page', () => {
 describe('Search.svelte: Save, review fixes', () => {
   it('a search reached by ?q= saves once, named from the query', async () => {
     await open('/search?q=soul');
-    await fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'Save search' }));
     expect(screen.getByRole('button', { name: 'Saved ✓' })).toBeInTheDocument();
     expect(listSaved()!.map((e) => [e.url, e.name])).toEqual([['/search?e=soul', 'soul']]);
   });
 
   it('Save keeps focus, stays enabled, and announces', async () => {
     const { container } = await open(G);
-    const save = screen.getByRole('button', { name: 'Save' });
+    const save = screen.getByRole('button', { name: 'Save search' });
     save.focus();
     await fireEvent.click(save);
     expect(save).toHaveTextContent('Saved ✓');
@@ -271,7 +276,7 @@ describe('Search.svelte: Save, review fixes', () => {
   it('a full store: Save is offered, and a failed save says so', async () => {
     fill();
     const { container } = await open(G);
-    const save = screen.getByRole('button', { name: 'Save' });
+    const save = screen.getByRole('button', { name: 'Save search' });
     await fireEvent.click(save);
     expect(save).toHaveTextContent('Not saved — browser storage full');
     expect(container.querySelector('.sx-save-live')).toHaveTextContent('Not saved — browser storage full');

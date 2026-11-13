@@ -350,13 +350,11 @@
   // can narrow it to one translator and back without searching again.
   let allResults: SearchResult[] = [];
   let transFilter: string | null = null;   // a TranslationRef id, or every translation
-  let transListOpen = false;
   // Translations the English query could not be asked of (their index did
   // not load), as "Jowett (Meno)".
   let unsearched: string[] = [];
   // Greek words searched only as typed: the headword map did not load.
   let unresolved: string[] = [];
-  const TRANS_CHIPS = 8;                    // shown before "more"
 
   function translationsOf(work: string): TranslationRef[] {
     const w = getWork(work);
@@ -715,8 +713,6 @@
   // of the works further on. Counted under the translation filter, so the
   // counts add up to the total shown.
   let workFilter: string | null = null;    // a work id, or every work
-  let workListOpen = false;
-  const WORK_CHIPS = 5;                    // shown before "more"
   function narrowWork(results: SearchResult[], id: string | null): SearchResult[] {
     return id ? results.filter(r => r.work === id) : results;
   }
@@ -731,8 +727,6 @@
       .sort((a, b) => b.n - a.n || (WORK_ORDER.get(a.id) ?? 0) - (WORK_ORDER.get(b.id) ?? 0));
   })();
   $: workChoice = workFilter !== null || workCounts.length > 1;
-  // Past the first few: the chosen work is shown, so it is not among them.
-  $: worksHidden = workCounts.filter((wc, i) => i >= WORK_CHIPS && wc.id !== workFilter).length;
 
   $: countText = totalInstances === 0
     ? 'No passages found.'
@@ -982,6 +976,12 @@
     if (sheetOpen && !sheetEl?.contains(document.activeElement)) sheetEl?.focus();
   }
   $: shownForms = formKeys.filter(f => !excludedForms.has(f)).length;
+  // The hits with every form back in, for "of 967 · restore all forms" under
+  // the count while some are set aside (d21).
+  $: allFormsTotal = excludedForms.size
+    ? narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set(), grammar: hitGrammar ?? undefined, facets }, searchCtx.langOp), transFilter, searchCtx), workFilter)
+      .reduce((n, r) => n + hitCount(r), 0)
+    : totalInstances;
   $: hitsLabel = `Show ${totalInstances} hit${totalInstances === 1 ? '' : 's'}`;
   // The page behind an open sheet stays where it is: a wheel or swipe over
   // the backdrop would otherwise scroll it, and shutting the sheet would
@@ -2998,6 +2998,7 @@
   // Focus that was in the sheet goes to what stands for it there: the menus
   // over the hits for the sort sheet, the column for the filter.
   const onWide = async (e: MediaQueryListEvent) => {
+    wide = e.matches;
     if (!e.matches || !sheetOpen) return;
     const had = !!sheetEl?.contains(document.activeElement);
     const kind = sheetKind;
@@ -3007,11 +3008,15 @@
     (kind === 'sort' ? document.querySelector<HTMLElement>('.sx-display summary') ?? sheetEl : sheetEl)?.focus();
   };
   let wideQuery: MediaQueryList | undefined;
+  // A desktop width (round 34, 961px and up): the rail beside the hits, and
+  // the word card in the rail's column.
+  let wide = false;
   onMount(() => {
     window.addEventListener('popstate', onPopState);
     canSave = savedAvailable();
     pageUrl = here();
-    wideQuery = window.matchMedia?.('(min-width: 1100px)');
+    wideQuery = window.matchMedia?.('(min-width: 961px)');
+    wide = !!wideQuery?.matches;
     wideQuery?.addEventListener?.('change', onWide);
     phoneQuery = window.matchMedia?.(PHONE);
     phoneQuery?.addEventListener?.('change', onPhone);
@@ -3158,8 +3163,6 @@
       workFilter = work && results.some(r => r.work === work) ? work : null;
       lastSearch.workFilter = workFilter;
       if ((trans && !transFilter) || (work && !workFilter)) writeUrl(lastSearch, 'replace');
-      transListOpen = false;
-      workListOpen = false;
       searched = true;
       // The readings of the hits, for the grammar view or the facets. Like
       // the forms, the first page waits for them only if a facet is ticked.
@@ -3331,7 +3334,24 @@
   // analyses itself on first use. The page's segments are kept so a click can
   // hand it the book's own token.
   let pageSegs = new Map<string, Segment>();   // work:segment id
-  let popup: { work: string; token: Token; anchor: { x: number; y: number } } | null = null;
+  let popup: { work: string; token: Token; anchor: { x: number; y: number }; el?: HTMLElement } | null = null;
+  // The word clicked stays marked while its card is open (d24).
+  let picked: HTMLElement | null = null;
+  function markPicked(el: HTMLElement | null) {
+    if (picked === el) return;
+    picked?.classList.remove('gw-on');
+    el?.classList.add('gw-on');
+    picked = el;
+  }
+  $: markPicked(popup?.el ?? null);
+  // Close and Esc give the focus back to the word.
+  function closeWord() {
+    const el = popup?.el;
+    popup = null;
+    if (el?.isConnected) el.focus({ preventScroll: true });
+  }
+  // On a desktop the card takes the rail's column (ruling 12, d24).
+  $: railWord = wide && !!popup;
   // One listener on the results, not one per word.
   function wordClicks(node: HTMLElement) {
     const onClick = (e: MouseEvent) => {
@@ -3342,7 +3362,7 @@
       const token = seg ? segTokens(seg)[Number(i)] : undefined;
       if (!w || !token) return;
       const rect = el.getBoundingClientRect();
-      popup = { work: w, token, anchor: { x: rect.left, y: rect.bottom } };
+      popup = { work: w, token, anchor: { x: rect.left, y: rect.bottom }, el };
     };
     node.addEventListener('click', onClick);
     return { destroy: () => node.removeEventListener('click', onClick) };
@@ -4498,19 +4518,20 @@
       <button type="button" on:click={() => openNarrower('word')}>Add a word near or not near</button>
     </div>
   {:else if searched}
-    <!-- The controls of the results in one place: a column beside the hits on
-         a wide screen, held under the site header; on a narrow one a sheet
-         opened from the icons on the count row (John, 2026-11-09: "Controls +
-         summary"; 2026-11-10: P4). -->
+    <!-- The controls of the results in one place: on a desktop the rail beside
+         the hits (round 34, §5.6); on a narrow screen a sheet opened from the
+         icons on the count row (John, 2026-11-10: P4; S5 redraws it). -->
     <div class="sx-layout">
-      <div class="sx-side">
-        <!-- One row on a narrow screen: the count, which shrinks to fit, then
-             the pager's arrows (not on a phone), the filter and the sort. -->
+      <div class="sx-side" class:wp-open={railWord}>
+        <div class="sx-head">
+        <!-- On a desktop: the count, large, with Save search beside it. On a
+             narrow screen one row: the count, which shrinks to fit, then the
+             pager's arrows (not on a phone), the filter and the sort. -->
         <div class="result-bar" class:paged={pages.length > 1}>
-          <p class="result-count" style="--n: {countText.length}" title={countText}>{countText}</p>
+          <p class="result-count" style="--n: {countText.length}" title={countText}>{#if totalInstances === 0}{countText}{:else}<span class="rc-n">{totalInstances}</span>{' '}<span class="rc-w">{totalInstances === 1 ? 'instance' : 'instances'}</span>{#if pages.length > 1}<span class="rc-p">{` · page ${pageIdx + 1} of ${pages.length}`}</span>{/if}{/if}</p>
           {#if canSave}
             <!-- Not disabled once saved: that would drop the focus. -->
-            <button type="button" class="sx-save" on:click={saveSearch}>{savedNow ? 'Saved ✓' : saveFailed ? FULL : 'Save'}</button>
+            <button type="button" class="sx-save" class:saved={savedNow} on:click={saveSearch}>{#if savedNow}Saved ✓{:else if saveFailed}{FULL}{:else}Save<span class="sx-save-w">{' '}search</span>{/if}</button>
           {/if}
           {#if pages.length > 1}
             <button type="button" class="sx-icon sx-arrow" aria-label="Previous page" on:click={() => goPage(pageIdx - 1)} disabled={pageIdx === 0 || pageLoading}>
@@ -4532,10 +4553,36 @@
             </button>
           {/if}
         </div>
+        <!-- Under the count on a desktop (d21, d23, r34-05); on a narrow
+             screen these are in the sheet. -->
+        {#if !sheetOpen}
+          <div class="sx-head-more">
+            {#if excludedForms.size && allFormsTotal !== totalInstances}
+              <p class="sx-of">of {allFormsTotal} · <button type="button" class="sx-link" on:click={restoreForms}>restore all forms</button></p>
+            {/if}
+            {#if savedNow}<a class="sx-link" href={`${BASE_URL}/saved`}>In Saved searches</a>{/if}
+            {#if totalInstances > 0}
+              <button type="button" class="sx-link export-btn" on:click={exportCsv} disabled={csvBusy}>
+                {csvBusy ? 'Preparing CSV…' : 'Export results as CSV'}
+              </button>
+            {/if}
+            {#if canWiden && !variantsShown}
+              <button type="button" class="sx-link" on:click={() => findVariants()} disabled={variantBusy}
+                title="ἦν δ’ ἐγώ also stands as ἦ δ’ ὅς — one formula, different endings">
+                {variantBusy ? 'Looking…' : 'Find this phrase in any inflection'}
+              </button>
+            {/if}
+          </div>
+        {/if}
+        </div>
         {#if canSave}<span class="sr-only sx-save-live" aria-live="polite">{saveNote}</span>{/if}
         {#if sheetOpen}
           <!-- svelte-ignore a11y-click-events-have-key-events a11y-no-static-element-interactions -->
           <div class="sx-scrim" on:click={closeSheet}></div>
+        {/if}
+        <!-- The word clicked, in the rail's place while it is open (d24). -->
+        {#if railWord && popup}
+          <WordPopup rail work={popup.work} token={popup.token} onClose={closeWord} />
         {/if}
         <aside class="sx-panel" class:open={sheetOpen} bind:this={sheetEl} aria-label={sheetLabel} tabindex="-1"
           data-screen={sheetOpen ? (sheetKind === 'sort' ? 'sort' : sheetScreen) : undefined}
@@ -4583,7 +4630,9 @@
           <!-- What narrows or changes the results, each undone by its ×. On
                the sheet, at the head of its menu, and only when there is
                something in it. -->
-          {#if !sheetOpen || (sheetScreen === 'menu' && chosen.length)}
+          <!-- On the sheet's menu only: on a desktop each filter is undone where
+               it is set (round 34 has no summary in the rail). -->
+          {#if sheetOpen && sheetScreen === 'menu' && chosen.length}
           <div class="sx-sum" role="group" aria-labelledby="sx-sum-k" tabindex="-1" bind:this={sumEl}>
             <span class="k" id="sx-sum-k">This search</span>
             {#if chosen.length}
@@ -4626,42 +4675,32 @@
               {/if}
             </div>
           {/if}
-          <!-- Where the hits fall: plain items, each with its count. Choosing one
-               narrows the results to it; choosing it again lifts the narrowing. -->
+          <!-- Where the hits fall, most first, each list whole in a box of its
+               own that scrolls (§8 item 5). Choosing one narrows the results
+               to it, drawn as an ink bar with its ×; choosing it again lifts
+               the narrowing. -->
           {#if workChoice && (!sheetOpen || sheetScreen === 'works')}
-            <div class="sx-row" role="group" aria-label="Show hits from one work">
-              <span class="k">Works</span>
-              {#each workCounts as wc, i}
-                {#if i < WORK_CHIPS || workListOpen || wc.id === workFilter}
+            <div class="sx-row sx-works" role="group" aria-label="Show hits from one work">
+              <span class="k">Works with hits <small>by count</small></span>
+              <div class="sx-list">
+                {#each workCounts as wc}
                   <button type="button" class="i" class:on={workFilter === wc.id} aria-pressed={workFilter === wc.id}
                     title={`Show only hits in the ${wc.title}${workFilter === wc.id ? ' (again for all)' : ''}`}
-                    on:click={() => setWorkFilter(wc.id)}>{wc.title}<small>{wc.n}</small></button>
-                {/if}
-              {/each}
-              {#if worksHidden}
-                <button type="button" class="more" aria-expanded={workListOpen}
-                  on:click={() => (workListOpen = !workListOpen)}>
-                  {workListOpen ? 'fewer' : `${worksHidden} more`}
-                </button>
-              {/if}
+                    on:click={() => setWorkFilter(wc.id)}><span class="i-t">{wc.title}</span><small>{wc.n}</small>{#if workFilter === wc.id}<span class="i-x" aria-hidden="true">×</span>{/if}</button>
+                {/each}
+              </div>
             </div>
           {/if}
           {#if transChoice && (!sheetOpen || sheetScreen === 'trans')}
-            <div class="sx-row" role="group" aria-label="Show English hits from one translation">
-              <span class="k">Translations</span>
-              {#each transCounts as tc, i}
-                {#if i < TRANS_CHIPS || transListOpen || tc.id === transFilter}
+            <div class="sx-row sx-trans" role="group" aria-label="Show English hits from one translation">
+              <span class="k">Translations <small>by count</small></span>
+              <div class="sx-list">
+                {#each transCounts as tc}
                   <button type="button" class="i" class:on={transFilter === tc.id} aria-pressed={transFilter === tc.id}
                     title={`Show only hits in ${tc.short}’s translation${transFilter === tc.id ? ' (again for all)' : ''}`}
-                    on:click={() => setTransFilter(tc.id)}>{tc.short}<small>{tc.n}</small></button>
-                {/if}
-              {/each}
-              {#if transCounts.length > TRANS_CHIPS}
-                <button type="button" class="more" aria-expanded={transListOpen}
-                  on:click={() => (transListOpen = !transListOpen)}>
-                  {transListOpen ? 'fewer' : `${transCounts.length - TRANS_CHIPS} more`}
-                </button>
-              {/if}
+                    on:click={() => setTransFilter(tc.id)}><span class="i-t">{tc.short}</span><small>{tc.n}</small>{#if transFilter === tc.id}<span class="i-x" aria-hidden="true">×</span>{/if}</button>
+                {/each}
+              </div>
               {#if secondScope}<span class="note">{secondScope}</span>{/if}
             </div>
           {/if}
@@ -4717,7 +4756,7 @@
               {/each}
             </div>
           {/if}
-          {#if ((canWiden && !variantsShown) || totalInstances > 0) && (!sheetOpen || sheetScreen === 'menu')}
+          {#if ((canWiden && !variantsShown) || totalInstances > 0) && sheetOpen && sheetScreen === 'menu'}
             <div class="sx-tools">
             {#if canWiden && !variantsShown}
               <button type="button" class="export-btn" on:click={() => findVariants()} disabled={variantBusy}
@@ -4973,8 +5012,8 @@
   {/if}
 </main>
 
-{#if popup}
-  <WordPopup work={popup.work} token={popup.token} anchor={popup.anchor} onClose={() => (popup = null)} />
+{#if popup && !wide}
+  <WordPopup work={popup.work} token={popup.token} anchor={popup.anchor} onClose={closeWord} />
 {/if}
 <style>
   /* The search page in the chosen design and the "Search features" tab of the
@@ -5109,409 +5148,7 @@
   .sx-note .k { color: var(--text-mid); }
   .sx-note.warn .k { color: var(--accent-2); }
   .sx-note .a { padding: 0; border: none; background: none; color: var(--accent); cursor: pointer; }
-  /* The hits and their controls. On a wide screen the controls are a column
-     beside the hits; on a narrow one a sheet, opened from the bar over them. */
-  /* Paging scrolls here: clear of the site header. */
-  .sx-layout { margin-top: 1.375rem; scroll-margin-top: 5rem; }
-  .result-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; }
-  .result-count { margin: 0; font-size: 1.25rem; }
-  /* The count row's icons: no box round them, a 44px target each, and they
-     keep their size while the count gives way. */
-  .sx-icon {
-    position: relative;
-    display: inline-flex;
-    flex: none;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.75rem;
-    padding: 0;
-    border: none;
-    background: none;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .sx-icon:last-child { margin-right: -0.4375rem; }
-  .sx-icon:hover:not(:disabled) { color: var(--accent); }
-  .sx-icon:disabled { color: var(--text-mid); opacity: 0.45; cursor: default; }
-  .sx-icon:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-  .sx-arrow { width: 2rem; }
-  .sx-badge {
-    position: absolute;
-    top: 0.125rem;
-    right: 0.125rem;
-    min-width: 1.125rem;
-    height: 1.125rem;
-    padding: 0 0.25rem;
-    border-radius: 1rem;
-    background: var(--accent);
-    color: var(--page-bg);
-    font: 600 0.6875rem/1.125rem system-ui, sans-serif;
-    text-align: center;
-  }
-  /* The forms' buttons sit in the row beside a wide screen's list; on the
-     sheet they are its foot. */
-  .fx-foot { display: contents; }
-  .sx-panel:focus, .sx-sum:focus { outline: none; }
-  .export-btn {
-    padding: 0;
-    border: none;
-    background: none;
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--accent);
-    cursor: pointer;
-  }
-  .export-btn:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 0.2em; }
-  .export-btn:disabled { color: var(--text-mid); cursor: default; }
-  .result-guide { font-size: 0.875rem; }
-  /* The summary: what this search narrows or changes, a ruled line each. */
-  .sx-sum { margin-top: 0.875rem; padding: 0.75rem 0 0.75rem; border-top: 1px solid var(--text); }
-  .sx-sum ul { margin: 0.25rem 0 0; padding: 0; list-style: none; }
-  .sx-sum li {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    min-height: 2.5rem;
-    border-bottom: 1px solid var(--border);
-    color: var(--accent);
-  }
-  .sx-sum .x {
-    flex: none;
-    width: 2.5rem;
-    height: 2.5rem;
-    margin-right: -0.75rem;
-    padding: 0;
-    border: none;
-    background: none;
-    font: inherit;
-    font-size: 1.25rem;
-    line-height: 1;
-    color: var(--text-mid);
-    cursor: pointer;
-  }
-  .sx-sum .x:hover { color: var(--accent); }
-  .sx-clear {
-    min-height: 2.5rem;
-    padding: 0;
-    border: none;
-    background: none;
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--accent);
-    cursor: pointer;
-  }
-  .sx-clear:hover { text-decoration: underline; text-underline-offset: 0.2em; }
-  /* Each control a block: its label above, its options below. */
-  .sx-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    margin: 0;
-    padding: 0.75rem 0;
-    border-top: 1px solid var(--border);
-    font-size: 1rem;
-  }
-  .sx-row .k, .sx-sum .k, .sx-sheet-head .k, .sx-seg .k {
-    display: block;
-    flex: 0 0 100%;
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--text-mid);
-  }
-  .sx-row .i, .sx-row .more {
-    padding: 0;
-    border: none;
-    background: none;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-  /* Works and Translations: a list, the name left and its count right. */
-  .sx-row .i {
-    display: flex;
-    flex: 0 0 100%;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.75rem;
-    min-height: 2.5rem;
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--border);
-    color: var(--text);
-  }
-  .sx-row .i:hover { color: var(--accent); }
-  .sx-row .i small { font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
-  .sx-row .i.on { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
-  .sx-row .i.on small { color: var(--accent); }
-  .sx-row .more { min-height: 2.5rem; margin-right: 1.25rem; color: var(--accent); white-space: nowrap; }
-  .sx-row .note { flex: 0 0 100%; margin-top: 0.375rem; font-size: 0.8125rem; font-style: italic; color: var(--text-mid); }
-  /* The form panel: under each headword a tick box per form, each a 40px
-     target; under them all, "more", Select all and Apply on one line. */
-  /* Centred, not on the baseline: a form's label would take its baseline from
-     its tick box, and the headwords would sit below the forms. */
-  .sx-forms { align-items: center; }
-  .sx-forms .fx-group { display: flex; flex: 0 0 100%; flex-direction: column; }
-  /* Every form, in a box about six and a half rows high: the half row at the
-     cut shows there is more. Each headword stays at the top while its forms
-     scroll under it. */
-  /* A rule under the box, so a row cut by it reads as cut: where the system
-     hides scroll bars, that row is all that says the list goes on. */
-  /* Its own stacking context: the headwords pinned in it would otherwise
-     paint over the sheet's pinned header as the box passes under it. */
-  .fx-list { flex: 0 0 100%; max-height: 16.5rem; overflow-y: auto; isolation: isolate; border-bottom: 1px solid var(--border); }
-  .fx-list .fx-group:last-child .fx:last-child { border-bottom: none; }
-  .sx-forms .fx-head { position: sticky; top: 0; z-index: 1; margin-top: 0.5rem; background: var(--page-bg); font-family: var(--font-greek); font-style: italic; color: var(--text-mid); }
-  .sx-forms .fx {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    min-height: 2.5rem;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-  }
-  .sx-forms .fx { font-family: var(--font-greek); }
-  .sx-forms .fx input { flex: none; width: 1.125rem; height: 1.125rem; margin: 0; accent-color: var(--accent); }
-  .sx-forms .fx small { margin-left: auto; font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
-  .sx-forms .fx-apply:disabled { color: var(--text-mid); cursor: default; }
-  /* Grammar: a line per category, its name in a column of its own, then its
-     values as chips that wrap, each a 40px target. */
-  .sx-facets .gx-group { display: flex; flex: 0 0 100%; align-items: baseline; padding: 0.3125rem 0; border-bottom: 1px solid var(--border); }
-  .sx-facets .gx-head { flex: 0 0 4.25rem; font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; letter-spacing: 0.08em; color: var(--text-mid); }
-  .gx-chips { display: flex; flex: 1 1 0; flex-wrap: wrap; gap: 0.125rem 0.875rem; }
-  .gx-chip { position: relative; display: inline-flex; align-items: center; gap: 0.3125rem; min-height: 2.5rem; cursor: pointer; }
-  /* The tick box stays in the tab order, unseen: the chip shows its state. */
-  .gx-chip input { position: absolute; width: 1px; height: 1px; margin: 0; opacity: 0; }
-  .gx-chip:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .gx-chip:hover { color: var(--accent); }
-  .gx-chip small { font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
-  .gx-chip.on { color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
-  .gx-chip.on small { color: var(--accent); }
-  /* Forced colours drop the accent and the shadow that underlines a ticked
-     value, so there it is underlined in the text itself. */
-  @media (forced-colors: active) {
-    .gx-chip.on { text-decoration: underline; text-decoration-thickness: 2px; text-underline-offset: 0.2em; }
-  }
-  /* Export and the inflection search, at the foot of the column. */
-  .sx-tools { display: flex; flex-direction: column; align-items: flex-start; padding: 0.5rem 0; border-top: 1px solid var(--border); }
-  .sx-tools .export-btn { min-height: 2.5rem; text-align: left; }
-  .sx-tools .result-guide { display: inline-flex; align-items: center; min-height: 2.5rem; }
-  @media (min-width: 1100px) {
-    /* Round 34: a 264px rail, 48px from the hits (S4a, so the menus over the
-       hits fit their row; S4b rebuilds the rail). */
-    .sx-layout { display: grid; grid-template-columns: 264px minmax(0, 1fr); column-gap: 48px; align-items: start; }
-    /* Held under the site header (4rem and its rule) while the hits scroll,
-       with a scroll of its own when it is taller than the window. */
-    .sx-side {
-      position: sticky;
-      top: calc(4rem + 1px + 1.5rem);
-      max-height: calc(100vh - 4rem - 1px - 3rem);
-      overflow-y: auto;
-      overscroll-behavior: contain;
-    }
-    .sx-icon { display: none; }
-    .sx-main > :first-child { margin-top: 0; }
-  }
-  @media (max-width: 1099.98px) {
-    /* No rule of its own: the first heading's rule is under it, as on a wide
-       screen. */
-    /* One row, never wrapped: the count's size comes from the row's width
-       and its own length (--n letters, about 0.46em each, digits being the
-       widest), less the icons. Below 13px it stops shrinking and is cut,
-       its whole text in its title. */
-    .result-bar {
-      --icons: 3.375rem;
-      flex-wrap: nowrap;
-      gap: 0;
-      container-type: inline-size;
-    }
-    .result-count {
-      flex: 1 1 auto;
-      min-width: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      font-size: max(0.8125rem, min(1.25rem, calc((100cqi - var(--icons) - var(--save, 0rem)) / (var(--n) * 0.46))));
-    }
-    /* The display menus are in the sort sheet. */
-    .sopt.sx-display { display: none; }
-    .sx-panel { display: none; }
-    /* The sheet: as the option menus' on a phone, from the foot of the page. */
-    .sx-panel.open {
-      position: fixed;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      z-index: 1001;
-      display: block;
-      max-width: 40rem;
-      max-height: 85vh;
-      margin: 0 auto;
-      padding: 0 1.25rem 1.5rem;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      border: 1px solid var(--text);
-      border-bottom: none;
-      background: var(--page-bg);
-      box-shadow: 0 -12px 40px -14px rgba(0, 0, 0, 0.45);
-      color: var(--text);
-    }
-    .sx-scrim { position: fixed; inset: 0; z-index: 1000; background: rgba(0, 0, 0, 0.45); }
-    .sx-sheet-head {
-      position: sticky;
-      top: 0;
-      z-index: 1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid var(--text);
-      background: var(--page-bg);
-    }
-    .sx-sheet-head .k { flex: none; }
-    .sx-close {
-      min-height: 3rem;
-      padding: 0 0 0 1rem;
-      border: none;
-      background: none;
-      font-family: var(--font-caps);
-      font-weight: 300;
-      font-size: 0.75rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--accent);
-      cursor: pointer;
-    }
-    .sx-sum { margin-top: 0; border-top: none; }
-    /* With a foot, the foot holds the sheet's last edge. */
-    .sx-panel.open:not([data-screen="sort"]) { padding-bottom: 0; }
-    /* A filter's own screen fills the window under the site header. */
-    .sx-panel.open:is([data-screen="works"], [data-screen="trans"], [data-screen="forms"], [data-screen="grammar"]) {
-      top: 3.25rem;
-      max-height: none;
-    }
-    /* Its foot at the bottom of the window even when its list is short. */
-    .sx-panel.open:is([data-screen="works"], [data-screen="trans"], [data-screen="grammar"]) { display: flex; flex-direction: column; }
-    .sx-panel.open:is([data-screen="works"], [data-screen="trans"], [data-screen="grammar"]) .sx-row { flex: 1 0 auto; align-content: flex-start; border-top: none; }
-    /* The forms screen does not scroll: its list fills it and scrolls, and
-       the foot stays under it. */
-    .sx-panel.open[data-screen="forms"] {
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-    .sx-panel.open[data-screen="forms"] .sx-forms {
-      flex: 1 1 auto;
-      flex-direction: column;
-      flex-wrap: nowrap;
-      align-items: stretch;
-      min-height: 0;
-      padding-bottom: 0;
-      border-top: none;
-    }
-    .sx-panel.open[data-screen="forms"] .sx-forms > .k { flex: none; padding-top: 0.75rem; }
-    .sx-panel.open[data-screen="forms"] .fx-list { flex: 1 1 auto; min-height: 0; max-height: none; border-bottom: none; }
-    .sx-panel.open .sx-foot {
-      position: sticky;
-      bottom: 0;
-      z-index: 1;
-      display: flex;
-      flex: none;
-      align-items: center;
-      gap: 1.25rem;
-      margin: 0 -1.25rem;
-      padding: 0.75rem 1.25rem calc(0.75rem + env(safe-area-inset-bottom));
-      border-top: 1px solid var(--text);
-      background: var(--page-bg);
-    }
-    .sx-panel.open .sx-foot .more { margin-right: 0; }
-    .sx-show {
-      flex: 1;
-      min-height: 2.75rem;
-      padding: 0 1rem;
-      border: 1px solid var(--text);
-      background: var(--text);
-      font-family: var(--font-caps);
-      font-weight: 300;
-      font-size: 0.75rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--page-bg);
-      cursor: pointer;
-    }
-    .sx-clear:disabled { color: var(--text-mid); text-decoration: none; cursor: default; }
-    .sx-back {
-      min-height: 3rem;
-      padding: 0 1rem 0 0;
-      border: none;
-      background: none;
-      font-family: var(--font-caps);
-      font-weight: 300;
-      font-size: 0.75rem;
-      letter-spacing: 0.16em;
-      text-transform: uppercase;
-      color: var(--accent);
-      cursor: pointer;
-    }
-    /* The menu: a line per filter, what it is set to at the right. */
-    .sx-nav {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      width: 100%;
-      min-height: 3.5rem;
-      padding: 0;
-      border: none;
-      border-bottom: 1px solid var(--border);
-      background: none;
-      font: inherit;
-      font-size: 1.0625rem;
-      color: var(--text);
-      text-align: left;
-      cursor: pointer;
-    }
-    .sx-nav:hover { color: var(--accent); }
-    .sx-nav small { flex: 1 1 auto; min-width: 0; overflow: hidden; font-size: 0.9375rem; color: var(--text-mid); text-align: right; white-space: nowrap; text-overflow: ellipsis; }
-    .sx-nav .gt { flex: none; color: var(--text-mid); font-size: 1.125rem; }
-    .sx-menu + .sx-tools { border-top: none; }
-    /* The display settings: a block each, its square boxes under its name. */
-    .sx-seg { display: flex; flex-wrap: wrap; gap: 0 1.5rem; min-width: 0; margin: 0; padding: 0.875rem 0 0.5rem; border: none; border-bottom: 1px solid var(--border); }
-    .sx-seg legend { float: left; width: 100%; padding: 0; }
-    .sx-seg .ck { min-height: 2.75rem; }
-  }
-  /* A tablet keeps the pager's arrows on the count row; a phone has only the
-     pager under the hits. */
-  @media (min-width: 600px) and (max-width: 1099.98px) {
-    .result-bar.paged { --icons: 7.375rem; }
-  }
-  @media (max-width: 599.98px) {
-    .sx-arrow { display: none; }
-  }
-  /* The side column with a mouse: rows of about 30px, not 40. A finger, and
-     the sheet, keep the 40px targets. */
-  @media (min-width: 1100px) and (pointer: fine) {
-    .sx-panel .sx-row { padding: 0.5rem 0; }
-    .sx-panel .sx-row .i { min-height: 0; padding: 0.25rem 0; line-height: 1.375; }
-    .sx-panel .sx-row .more { min-height: 1.875rem; }
-    .sx-panel .fx { min-height: 1.875rem; line-height: 1.375; }
-    .sx-panel .fx input { width: 1rem; height: 1rem; }
-    .sx-panel .fx-head { margin-top: 0.375rem; }
-    .sx-panel .fx-list { max-height: 12.5rem; }
-    .sx-panel .gx-chip { min-height: 1.875rem; }
-    .sx-panel .sx-sum { padding: 0.5rem 0; }
-    .sx-panel .sx-sum li { min-height: 1.875rem; }
-    .sx-panel .sx-sum .x { width: 1.875rem; height: 1.875rem; margin-right: -0.5rem; font-size: 1.125rem; }
-    .sx-panel .sx-clear { min-height: 1.875rem; }
-    .sx-panel .sx-tools .export-btn { min-height: 1.875rem; }
-  }
+  /* The rail and the narrow screen's sheet: shared/styles/b-search.css. */
 
   /* ── Phones ────────────────────────────────────────────────────────────── */
   @media (max-width: 680px) {

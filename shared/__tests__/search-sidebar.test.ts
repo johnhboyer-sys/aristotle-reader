@@ -1,8 +1,9 @@
 // The results page's side column (John, 2026-11-09: "Controls + summary").
 // The controls sit in one place, labelled "Refine results": a column beside
 // the hits on a wide screen, a sheet opened by the filter icon on a narrow
-// one. At its head, "This search" lists what narrows or changes the results,
-// each with a button that undoes it. The controls themselves are tested where
+// one. "This search" lists what narrows or changes the results, each with a
+// button that undoes it: since S4b (round 34) only at the head of the sheet's
+// menu, as the rail has no summary. The controls themselves are tested where
 // they were before (result-views-search, form-panel-search, ...); this file
 // tests the column, the summary and the sheet.
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
@@ -106,8 +107,23 @@ async function open(url: string, results: SearchResult[] = RESULTS) {
 const status = () => screen.getByRole('status');
 const text = (el: Element | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
 const summary = () => screen.getByRole('group', { name: 'This search' });
-const chosen = () => [...summary().querySelectorAll('li')].map(li => text(li.querySelector('span')));
+const chosen = () => [...(screen.queryByRole('group', { name: 'This search' })?.querySelectorAll('li') ?? [])].map(li => text(li.querySelector('span')));
 const remove = (what: string) => within(summary()).getByRole('button', { name: `Remove ${what}` });
+// The summary is the Filter sheet's: open it, and shut it to read the rail.
+async function openSheet() {
+  if (screen.queryByRole('dialog', { name: 'Filter' })) return;
+  await fireEvent.click(screen.getByRole('button', { name: /^Filter/ }));
+  await screen.findByRole('dialog', { name: 'Filter' });
+}
+// A new search shuts the sheet; read the summary with the sheet open again.
+async function sheetChosen() {
+  await openSheet();
+  return chosen();
+}
+async function shutSheet() {
+  await fireEvent.click(within(screen.getByRole('dialog', { name: 'Filter' })).getByRole('button', { name: 'Close' }));
+  await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+}
 // What a control has chosen: its pressed buttons, or, in a display menu, its
 // checked radio by its label.
 const pressed = (group: string) =>
@@ -119,7 +135,7 @@ describe('Search.svelte: the side column', () => {
   // The display settings are not in it: they are the menus over the hits
   // (set B, John 2026-11-10; search-display-bar.test.ts).
   it('holds every filter of the results in one landmark, "Refine results"', async () => {
-    await open(`${G}&v=grammar`);
+    const { container } = await open(`${G}&v=grammar`);
     await screen.findByRole('group', { name: 'Greek forms found' });
     await screen.findByRole('group', { name: 'Narrow by grammar' });
     const side = screen.getByRole('complementary', { name: 'Refine results' });
@@ -129,29 +145,65 @@ describe('Search.svelte: the side column', () => {
     for (const name of ['Group by', 'Sort', 'Context', 'Per page']) {
       expect(within(side).queryByRole('group', { name })).toBeNull();
     }
-    expect(within(side).getByRole('button', { name: 'Export results as CSV' })).toBeInTheDocument();
+    // Export is under the count, at the rail's head (r34-02), not among the filters.
+    expect(within(side).queryByRole('button', { name: 'Export results as CSV' })).toBeNull();
+    expect(container.querySelector('.sx-head')!.contains(screen.getByRole('button', { name: 'Export results as CSV' }))).toBe(true);
     // The hits are not in it.
     expect(side.querySelector('.group-head')).toBeNull();
   });
 
   it('shows the count once, and the status region still announces it', async () => {
-    await open(G);
+    const { container } = await open(G);
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
-    const shown = screen.getAllByText('6 instances').filter(el => el.getAttribute('role') !== 'status');
+    // The number and its word are spans of one line (r34-02: the number large).
+    const shown = container.querySelectorAll('.result-count');
     expect(shown).toHaveLength(1);
+    expect(text(shown[0])).toBe('6 instances');
+    expect(text(shown[0].querySelector('.rc-n'))).toBe('6');
+    expect(text(shown[0].querySelector('.rc-w'))).toBe('instances');
     expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+
+  it('says "of N · restore all forms" under the count while forms are set aside, and restores them', async () => {
+    const { search } = await import('../lib/search');
+    const { container } = await open(`${G}&xf=ths`);
+    await vi.waitFor(() => expect(status()).toHaveTextContent('4 instances'));
+    const of = container.querySelector('.sx-head .sx-of')!;
+    expect(text(of)).toBe('of 6 · restore all forms');
+    await fireEvent.click(within(of as HTMLElement).getByRole('button', { name: 'restore all forms' }));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    expect(window.location.search).not.toContain('xf=');
+    expect(container.querySelector('.sx-of')).toBeNull();
+    expect(search).toHaveBeenCalledTimes(1);
+  });
+
+  it('lists every translation with hits, by count, in a box of its own', async () => {
+    await open(`${G}&e=one`, BILINGUAL);
+    const trans = screen.getByRole('group', { name: 'Show English hits from one translation' });
+    expect(text(trans.querySelector('.k'))).toBe('Translations by count');
+    const box = trans.querySelector(':scope > .sx-list')!;
+    expect(box.querySelectorAll('button.i')).toHaveLength(3);
+    expect(within(trans).queryByRole('button', { name: /more$|^fewer$/ })).toBeNull();
+    await fireEvent.click(within(trans).getByRole('button', { name: /^Rackham/ }));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('4 instances'));
+    expect(within(trans).getByRole('button', { pressed: true }).querySelector('.i-x')).toHaveTextContent('×');
   });
 });
 
 describe('Search.svelte: "This search"', () => {
-  it('lists nothing for a plain search', async () => {
+  it('is not in the rail, and is not on the sheet for a plain search', async () => {
     await open(G);
-    expect(chosen()).toEqual([]);
-    expect(within(summary()).queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
+    await openSheet();
+    expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
   });
 
   it('lists exactly what narrows or changes the results, in the order of the controls', async () => {
     await open(`${G}&e=one&t=rackham&wf=EN&xf=tais&gf=case.gen&v=form&so=form&ctx=1&ps=20&sp=only&sn=EN`, BILINGUAL);
+    await vi.waitFor(() => expect(status()).toHaveTextContent(/\d+ instances?/));
+    // Round 34: the rail undoes each where it is set, with no summary.
+    expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
+    await openSheet();
     await vi.waitFor(() => expect(chosen()).toEqual([
       'Nicomachean Ethics', 'Rackham', '1 form set aside', 'Case gen', 'By form', 'Forms A–Z', '1 line', '20 a page',
     ]));
@@ -161,11 +213,13 @@ describe('Search.svelte: "This search"', () => {
 
   it('names the other choices as their controls do', async () => {
     await open(`${G}&wf=EN&ps=c&ctx=s&sp=except&sn=EN,Socrates`);
+    await openSheet();
     await vi.waitFor(() => expect(chosen()).toEqual(['Nicomachean Ethics', 'Whole section', 'Citations only']));
   });
 
   it('offers no "Clear all" for one thing', async () => {
     await open(`${G}&wf=EN`);
+    await openSheet();
     expect(chosen()).toEqual(['Nicomachean Ethics']);
     expect(within(summary()).queryByRole('button', { name: 'Clear all' })).toBeNull();
   });
@@ -223,11 +277,14 @@ describe('Search.svelte: "This search"', () => {
       await open(c.url, c.results);
       await vi.waitFor(() => expect(status()).toHaveTextContent(c.before));
       expect(window.location.search).toContain(c.param);
+      await openSheet();
       const others = chosen().filter(w => w !== c.what);
       await fireEvent.click(remove(c.what));
       await vi.waitFor(() => expect(status()).toHaveTextContent(c.after));
       expect(window.location.search).not.toContain(c.param);
       expect(chosen()).toEqual(others);
+      // The control, in the rail again once the sheet is shut.
+      await shutSheet();
       c.control();
       expect(search).toHaveBeenCalledTimes(1);
     });
@@ -237,6 +294,7 @@ describe('Search.svelte: "This search"', () => {
     const { search } = await import('../lib/search');
     await open(`${G}&wf=EN&xf=tais&v=grammar&gf=case.gen&so=form&ctx=1&ps=20`);
     await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
+    await openSheet();
     await fireEvent.click(within(summary()).getByRole('button', { name: 'Clear all' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     expect(chosen()).toEqual([]);
@@ -474,11 +532,20 @@ describe('the side column\'s rules', () => {
   }
   const rules = (css: string) => [...css.matchAll(/([^{}]*)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim(), body: m[2] }));
 
-  it('is sticky on a wide screen, with its own scroll', () => {
-    const side = rules(block(style, /@media \(min-width: 1100px\)/)).find(r => r.sel.split(',').map(s => s.trim()).includes('.sx-side'));
-    expect(side?.body).toMatch(/position:\s*sticky/);
-    expect(side?.body).toMatch(/overflow-y:\s*auto/);
-    expect(side?.body).toMatch(/max-height:\s*calc\(100vh/);
+  // Since S4b the rail's rules are in b-search.css. The rail scrolls with the
+  // page, as round 34 draws it, and runs the results' height; the word card
+  // in it is what stays in view, with its own scroll.
+  it('holds the word card in view on a desktop, with its own scroll', () => {
+    const B = readFileSync(resolve(here, '../styles/b-search.css'), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+    const desk = [...B.matchAll(/@media \(min-width: 961px\) \{/g)].map(m => block(B.slice(m.index), /@media/)).join(' ');
+    const card = rules(desk).find(r => r.sel === '.search-page .word-rail');
+    expect(card?.body).toMatch(/position:\s*sticky/);
+    expect(card?.body).toMatch(/overflow-y:\s*auto/);
+    expect(card?.body).toMatch(/max-height:\s*calc\(100vh/);
+    const side = rules(desk).find(r => r.sel === '.search-page .sx-side');
+    expect(side?.body).not.toMatch(/position:\s*sticky|align-self|max-height/);
+    expect(rules(desk).find(r => r.sel === '.search-page .sx-layout')?.body).not.toMatch(/align-items/);
+    expect(style).not.toMatch(/\.sx-side/);
   });
 
   it.skip('does not print', () => {
@@ -564,11 +631,11 @@ describe('Search.svelte: the sidebar and widened results', () => {
     vi.mocked(searchPhraseVariants).mockResolvedValueOnce(widened as never);
     await widen();
     await vi.waitFor(() => expect(searchPhraseVariants).toHaveBeenCalledTimes(1));
-    await vi.waitFor(() => expect(chosen()).toEqual(['By form', '1 line']));
+    await vi.waitFor(async () => expect(await sheetChosen()).toEqual(['By form', '1 line']));
     vi.mocked(searchPhraseVariants).mockResolvedValueOnce(widened as never);
     await fireEvent.click(within(summary()).getByRole('button', { name: 'Clear all' }));
     expect(searchPhraseVariants).toHaveBeenCalledTimes(1);
-    await vi.waitFor(() => expect(chosen()).toEqual([]));
+    await vi.waitFor(async () => expect(await sheetChosen()).toEqual([]));
     expect(window.location.search).toBe(`?g=${encodeURIComponent('τῆς ἐστι')}`);
   });
 });
@@ -581,14 +648,18 @@ describe('Search.svelte: removing the chapter limit', () => {
     vi.mocked(searchCombo).mockResolvedValue({ results: BILINGUAL, failedWorks: [] });
     window.history.replaceState(null, '', CX + extra);
     const page = render(Search);
-    await screen.findByRole('button', {name: 'Remove Within a chapter'});
+    // "Within a chapter" is undone from the sheet's summary (S4b).
+    await vi.waitFor(async () => {
+      await openSheet();
+      expect(screen.getByRole('button', { name: 'Remove Within a chapter' })).toBeInTheDocument();
+    });
     await vi.waitFor(() => expect(page.container.querySelector('li.instance')).not.toBeNull());
     return page;
   }
   it('keeps work, translation and display filters', async () => {
     await chapter('&e=one&wf=EN&t=rackham&ctx=1&ps=100');
     await fireEvent.click(remove('Within a chapter'));
-    await vi.waitFor(() => expect(chosen()).toEqual(['Nicomachean Ethics', 'Rackham', '1 line', '100 a page']));
+    await vi.waitFor(async () => expect(await sheetChosen()).toEqual(['Nicomachean Ethics', 'Rackham', '1 line', '100 a page']));
     await vi.waitFor(() => expect(new URLSearchParams(location.search).get('t')).toBe('rackham'));
     expect(new URLSearchParams(location.search).get('wf')).toBe('EN');
   });
@@ -605,16 +676,16 @@ describe('Search.svelte: removing the chapter limit', () => {
   it('does not show a chip for an unsubmitted checkbox edit', async () => {
     await chapter();
     await fireEvent.click(remove('Within a chapter'));
-    await vi.waitFor(() => expect(chosen()).toEqual([]));
+    await vi.waitFor(async () => expect(await sheetChosen()).toEqual([]));
     // The editor is shut on a proximity search from the address (S3).
     await fireEvent.click(screen.getByRole('button', {name:'Change'}));
     await fireEvent.click(screen.getByRole('checkbox', {name:'Keep hits that cross a chapter'}));
-    expect(chosen()).toEqual([]);
+    expect(await sheetChosen()).toEqual([]);
   });
   it('clear all resets the chapter checkbox and address', async () => {
     await chapter('&wf=EN&ctx=1');
     await fireEvent.click(within(summary()).getByRole('button',{name:'Clear all'}));
-    await vi.waitFor(() => expect(chosen()).toEqual([]));
+    await vi.waitFor(async () => expect(await sheetChosen()).toEqual([]));
     await fireEvent.click(screen.getByRole('button', {name:'Change'}));
     expect(screen.getByRole('checkbox',{name:'Keep hits that cross a chapter'})).toBeChecked();
     expect(location.search).not.toContain('cx='); expect(location.search).not.toContain('wf=');
@@ -630,7 +701,7 @@ describe('Search.svelte: removing the chapter limit', () => {
     await chapter('&gf=case.gen');
     await fireEvent.click(remove('Within a chapter'));
     await vi.waitFor(() => expect(location.search).toContain('gf=case.gen'));
-    await vi.waitFor(() => expect(chosen()).toContain('Case gen'));
+    await vi.waitFor(async () => expect(await sheetChosen()).toContain('Case gen'));
   });
   it('does not apply kept filters to a newer search', async () => {
     await chapter('&wf=EN');
@@ -643,9 +714,9 @@ describe('Search.svelte: removing the chapter limit', () => {
     // shows the terms, read-only), so the search goes through the form.
     await fireEvent.submit(document.querySelector('form.search-form')!);
     await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(3));
-    await vi.waitFor(() => expect(chosen()).toEqual([]));
+    await vi.waitFor(async () => expect(await sheetChosen()).toEqual([]));
     done({results:BILINGUAL,failedWorks:[]});
     await new Promise(resolve => setTimeout(resolve,30));
-    expect(chosen()).toEqual([]); expect(location.search).not.toContain('wf=');
+    expect(await sheetChosen()).toEqual([]); expect(location.search).not.toContain('wf=');
   });
 });

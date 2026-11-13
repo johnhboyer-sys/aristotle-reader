@@ -39,7 +39,18 @@ export function grammarWords(query: GrammarQuery): string {
     .join(' ');
 }
 
-const usable = (t: SentenceTerm) =>
+/** A parse as the analyses write it, in words, its order kept, a word not
+ *  known kept as it is: "fem nom/voc sg" → "feminine nominative or vocative
+ *  singular"; "neut nom/voc/acc sg" → "neuter nominative, vocative, or
+ *  accusative singular". The word card on the search page (d24). */
+export function parseInWords(parse: string): string {
+  return parse.split(/\s+/).filter(Boolean).map((part) => {
+    const words = part.split('/').map((p) => GRAMMAR_WORDS[p] ?? p);
+    return words.length < 3 ? words.join(' or ') : `${words.slice(0, -1).join(', ')}, or ${words.at(-1)}`;
+  }).join(' ');
+}
+
+const usable =(t: SentenceTerm) =>
   t.kind === 'grammatical' ? Object.keys(t.grammar).length > 0 : t.kind === 'lemma' ? t.picked.length > 0 : !!t.text.trim();
 
 /** One term as the sentence names it; `heads` turns a picked key into its headword. */

@@ -21,7 +21,7 @@ export interface SavedSearch {
   date: string;  // ISO 8601, when it was saved
 }
 
-export const SAVED_KEY = 'plato-saved-searches';
+export const SAVED_KEY = 'aristotle-saved-searches';
 
 // What a failed write says, on the Save button and the Saved page.
 export const FULL = 'Not saved — browser storage full';
@@ -135,7 +135,7 @@ export const deleteSaved = (id: string): boolean => change(id, () => null);
 
 // The export file: a small versioned wrapper round the list.
 export function exportSaved(list: SavedSearch[]): string {
-  return JSON.stringify({ kind: 'plato-saved-searches', version: 1, searches: list }, null, 2);
+  return JSON.stringify({ kind: 'aristotle-saved-searches', version: 1, searches: list }, null, 2);
 }
 
 // Adds the entries of an export file (or a bare array of entries). Bad

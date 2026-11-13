@@ -22,6 +22,11 @@ vi.mock('../lib/data', async original => ({ ...await original<typeof import('../
  lookupWord: vi.fn(async () => ({ analyses: [{ lemma: 'logos', gloss: 'word', parse: 'noun nom sg', lsj: ['logos'] }], lsj: [] })),
 }));
 afterEach(() => { vi.clearAllMocks(); window.history.replaceState(null, '', '/'); });
+// The chosen filters are summed up on the Filter sheet (S4b: the rail has no summary).
+const openSheet = async () => {
+ if (!screen.queryByRole('dialog', { name: 'Filter' })) await fireEvent.click(await screen.findByRole('button', { name: /^Filter/ }));
+ await screen.findByRole('dialog', { name: 'Filter' });
+};
 it('sizes chapter pages by phrase windows, including when offsets fail', () => {
  const results = [1,2,3].map(book => ({ work: 'EN', meta: { id: `${book}:1094a`, book, column: '1094a' }, grkMatch: true, engMatch: false, grkPositions: [0,1,2,3], windows: [[0,1,2,3]] } as SearchResult));
  expect(paginate(results, new Map(), 3).pages).toEqual([results]);
@@ -33,6 +38,7 @@ it('shows cx=0 as a chapter control and removable chosen filter', async () => {
  await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
  const checkbox = await screen.findByRole('checkbox', { name: 'Keep hits that cross a chapter' });
  expect(checkbox).not.toBeChecked();
+ await openSheet();
  await fireEvent.click(await screen.findByRole('button', { name: 'Remove Within a chapter' }));
  expect(checkbox).toBeChecked();
 });
@@ -99,12 +105,14 @@ it('keeps cx chip tied to the submitted search', async () => {
  await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
  const box = await screen.findByRole('checkbox', { name: 'Keep hits that cross a chapter' });
  await fireEvent.click(box);
+ await openSheet();
  expect(screen.queryByRole('button', { name: 'Remove Within a chapter' })).toBeNull();
 });
 it('keeps cx removal filters and submitted slots', async () => {
  const { searchCombo } = await import('../lib/search');
  window.history.replaceState(null, '', '/search?c=f:logos&c=f:logos&cx=0&w=EN,Pol&wf=EN&ctx=1');
  render(Search);
+ await openSheet();
  await screen.findByRole('button', { name: 'Remove Within a chapter' });
  await fireEvent.click(screen.getByRole('button', { name: 'Remove Within a chapter' }));
  await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(2));

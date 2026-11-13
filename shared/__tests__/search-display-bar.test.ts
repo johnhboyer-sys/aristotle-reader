@@ -1,10 +1,9 @@
 // The results page, set B (John, 2026-11-10): the four display settings
 // (Group by, Sort, Context, Per page) leave the side column for a bar of
-// one-line menus over the hits, built as the search form's menus are; Works
-// and Forms are shorter to scan (five works, then "more"; the forms in a box
-// of their own height that scrolls); the Grammar row follows Forms, each
-// category a line of chips; and the side column's rows are tighter on a wide
-// screen with a mouse.
+// one-line menus over the hits, built as the search form's menus are; the
+// Grammar row follows Forms, each category a line of chips. Since S4b (round
+// 34) the rail lists every work and form, each list in a box of its own that
+// scrolls, at full-size rows; "This search" is the narrow screen's sheet's.
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -103,8 +102,15 @@ async function open(url: string, results: SearchResult[] = RESULTS, forms: HitFo
 }
 const status = () => screen.getByRole('status');
 const text = (el: Element | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
+// "This search" is at the head of the Filter sheet's menu (round 34 has no
+// summary in the rail), and only while something is chosen.
+async function openSheet() {
+  if (screen.queryByRole('dialog', { name: 'Filter' })) return;
+  await fireEvent.click(screen.getByRole('button', { name: /^Filter/ }));
+  await screen.findByRole('dialog', { name: 'Filter' });
+}
 const summary = () => screen.getByRole('group', { name: 'This search' });
-const chosen = () => [...summary().querySelectorAll('li')].map(li => text(li.querySelector('span')));
+const chosen = () => [...(screen.queryByRole('group', { name: 'This search' })?.querySelectorAll('li') ?? [])].map(li => text(li.querySelector('span')));
 const remove = (what: string) => within(summary()).getByRole('button', { name: `Remove ${what}` });
 const MENUS = ['Group by', 'Sort', 'Context', 'Per page'];
 const menu = (legend: string) => screen.getByRole('group', { name: legend }).closest('details')!;
@@ -160,6 +166,9 @@ describe('Search.svelte: the display bar', () => {
       expect(value(c.legend)).toBe(c.b);
       // Shut after a choice.
       expect(menu(c.legend).open).toBe(false);
+      // Not summed up in the rail; on the sheet.
+      expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
+      await openSheet();
       expect(chosen()).toEqual([c.entry]);
       expect(search).toHaveBeenCalledTimes(1);
       await fireEvent.click(remove(c.entry));
@@ -262,8 +271,8 @@ describe('Search.svelte: the count row', () => {
 
   it('holds the count, Save, the arrows, the filter icon and the sort icon, in that order', async () => {
     const { container } = await open(`${G}&ps=20`, WIDE, WIDE_FORMS);
-    expect(names(container)).toEqual(['28 instances · page 1 of 2', 'Save', 'Previous page', 'Next page', 'Filter, 1 chosen', 'Sort and display']);
-    // Save (PR 8) is a word; the rest are icons.
+    expect(names(container)).toEqual(['28 instances · page 1 of 2', 'Save search', 'Previous page', 'Next page', 'Filter, 1 chosen', 'Sort and display']);
+    // Save (PR 8) is words; the rest are icons.
     for (const b of bar(container).querySelectorAll('button:not(.sx-save)')) expect(b.querySelector('svg')).not.toBeNull();
     // The pager over the hits names its arrows the same way (S4a): these are the count row's.
     const row = within(bar(container) as HTMLElement);
@@ -277,7 +286,7 @@ describe('Search.svelte: the count row', () => {
 
   it('has no arrows for one page', async () => {
     const { container } = await open(G);
-    expect(names(container)).toEqual(['6 instances', 'Save', 'Filter', 'Sort and display']);
+    expect(names(container)).toEqual(['6 instances', 'Save search', 'Filter', 'Sort and display']);
   });
 
   it('tells the count how long it is, so it can shrink to fit', async () => {
@@ -288,22 +297,33 @@ describe('Search.svelte: the count row', () => {
   });
 });
 
-describe('Search.svelte: shorter lists', () => {
-  it('Works shows five, then "N more"', async () => {
+describe('Search.svelte: the rail\'s lists', () => {
+  // Round 34 (§8 item 5): the list whole, in a box that scrolls; no "more".
+  it('Works lists every work with hits, by count, in a box of its own', async () => {
     await open(G, WIDE, WIDE_FORMS);
     const works = screen.getByRole('group', { name: 'Show hits from one work' });
-    expect(within(works).getAllByRole('button', { pressed: false }).filter(b => b.classList.contains('i'))).toHaveLength(5);
-    const more = within(works).getByRole('button', { name: '2 more' });
-    await fireEvent.click(more);
+    expect(text(works.querySelector('.k'))).toBe('Works with hits by count');
+    const box = works.querySelector(':scope > .sx-list')!;
+    expect(box.querySelectorAll('button.i')).toHaveLength(7);
     expect(works.querySelectorAll('button.i')).toHaveLength(7);
-    expect(text(more)).toBe('fewer');
+    expect(within(works).queryByRole('button', { name: /more$|^fewer$/ })).toBeNull();
   });
 
-  it('counts a chosen work past the fifth as shown, not as more', async () => {
+  it('draws the chosen work in its place, with its ×, and choosing it again lifts it', async () => {
+    const { search } = await import('../lib/search');
     await open(`${G}&wf=Meta`, WIDE, WIDE_FORMS);
     const works = screen.getByRole('group', { name: 'Show hits from one work' });
-    expect(works.querySelectorAll('button.i')).toHaveLength(6);
-    expect(within(works).getByRole('button', { name: '1 more' })).toBeInTheDocument();
+    expect(works.querySelectorAll('button.i')).toHaveLength(7);
+    const on = within(works).getByRole('button', { pressed: true });
+    expect(text(on.querySelector('.i-t'))).toBe('Metaphysics');
+    expect(on.querySelector('.i-x')).toHaveTextContent('×');
+    expect(on.querySelector('.i-x')).toHaveAttribute('aria-hidden', 'true');
+    expect(works.querySelectorAll('.i-x')).toHaveLength(1);
+    await fireEvent.click(on);
+    await vi.waitFor(() => expect(status()).toHaveTextContent('28 instances'));
+    expect(window.location.search).not.toContain('wf=');
+    expect(works.querySelectorAll('.i-x')).toHaveLength(0);
+    expect(search).toHaveBeenCalledTimes(1);
   });
 
   it('Forms lists every form in a box of its own, with Deselect all and Apply outside it', async () => {
@@ -367,83 +387,111 @@ describe('set B\'s rules', () => {
   }
   const rules = (css: string) => [...css.matchAll(/([^{}]*)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim(), body: m[2] }));
   const find = (css: string, sel: string) => rules(css).filter(r => r.sel.split(',').map(s => s.trim()).includes(sel));
-  const TIGHT = /@media \(min-width: 1100px\) and \(pointer: fine\)/;
+  // The rail and the sheet live in b-search.css since S4b; several @media
+  // blocks share a query there, so a query's rules are all of its blocks.
+  const B = readFileSync(resolve(here, '../styles/b-search.css'), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+  function blocks(css: string, query: RegExp): string {
+    const g = new RegExp(query.source, 'g');
+    const found = [...css.matchAll(g)].map(m => block(css.slice(m.index), query));
+    if (!found.length) throw new Error(`no ${query}`);
+    return found.join(' ');
+  }
+  const DESK = /@media \(min-width: 961px\) \{/;
+  const NARROW = /@media \(max-width: 960px\) \{/;
 
-  it('tightens the side column only on a wide screen with a fine pointer', () => {
-    const tight = block(style, TIGHT);
-    expect(find(tight, '.sx-panel .sx-row').some(r => /padding:\s*0\.5rem 0/.test(r.body))).toBe(true);
-    expect(find(tight, '.sx-panel .sx-row .i').some(r => /min-height:\s*0/.test(r.body))).toBe(true);
-    expect(find(tight, '.sx-panel .fx').some(r => /min-height:\s*1\.875rem/.test(r.body))).toBe(true);
-    expect(find(tight, '.sx-panel .sx-sum .x').some(r => /width:\s*1\.875rem/.test(r.body) && /height:\s*1\.875rem/.test(r.body))).toBe(true);
-    // Elsewhere the rows keep their 40px targets.
-    const base = topLevel(style);
-    expect(find(base, '.sx-row .i').some(r => /min-height:\s*2\.5rem/.test(r.body))).toBe(true);
-    expect(find(base, '.sx-sum .x').some(r => /width:\s*2\.5rem/.test(r.body))).toBe(true);
-    // No 30px target outside that block.
-    const small = /(min-height|width|height):\s*1\.875rem/g;
-    expect(style.match(small)!.length).toBe((tight.match(small) ?? []).length);
+  it('keeps every row of the rail a full-size target, and leaves none of its rules in the component', () => {
+    const desk = blocks(B, DESK);
+    expect(find(desk, '.search-page .sx-row .i').some(r => /min-height:\s*42px/.test(r.body))).toBe(true);
+    expect(find(desk, '.search-page .sx-forms .fx').some(r => /min-height:\s*44px/.test(r.body))).toBe(true);
+    expect(find(desk, '.search-page .sx-forms .fx-foot .more').some(r => /min-height:\s*44px/.test(r.body))).toBe(true);
+    expect(find(desk, '.search-page .sx-head-more .sx-link').some(r => /min-height:\s*44px/.test(r.body))).toBe(true);
+    // The 30px rows a mouse once had are gone (round 34 draws 42px and 44px).
+    expect(B).not.toMatch(/1\.875rem/);
+    expect(B).not.toMatch(/pointer: fine/);
+    // The sheet's targets stay 40px.
+    expect(find(topLevel(B), '.search-page .sx-row .i').some(r => /min-height:\s*2\.5rem/.test(r.body))).toBe(true);
+    expect(find(topLevel(B), '.search-page .sx-sum .x').some(r => /width:\s*2\.5rem/.test(r.body))).toBe(true);
+    for (const sel of ['.sx-row .i', '.sx-layout', '.result-count', '.fx-list', '.sx-side']) expect(find(style, sel)).toEqual([]);
   });
 
-  it('gives the forms a box of set height that scrolls', () => {
-    const list = rules(style).filter(r => r.sel.split(',').map(s => s.trim()).some(s => /\.fx-list$/.test(s)));
-    expect(list.some(r => /overflow-y:\s*auto/.test(r.body))).toBe(true);
-    expect(list.some(r => /overscroll-behavior/.test(r.body))).toBe(false);
-    // A height in both places, each about six and a half of its rows.
-    expect(find(topLevel(style), '.fx-list').some(r => /max-height:\s*16\.5rem/.test(r.body))).toBe(true);
-    expect(find(block(style, TIGHT), '.sx-panel .fx-list').some(r => /max-height:\s*12\.5rem/.test(r.body))).toBe(true);
+  it('gives each rail list a box of set height that scrolls, shaded where more is hidden', () => {
+    const desk = blocks(B, DESK);
+    const box = rules(desk).filter(r => r.sel === '.search-page :is(.sx-list, .sx-forms .fx-list)').map(r => r.body).join(';');
+    expect(box).toMatch(/overflow-y:\s*auto/);
+    // The page goes on scrolling when a list ends.
+    expect(box).not.toMatch(/overscroll-behavior/);
+    // Two covers that travel with the list, two shades that stay at its edges.
+    expect(box.match(/no-repeat local/g)).toHaveLength(2);
+    expect(box.match(/radial-gradient\([^;]*?no-repeat scroll/g)).toHaveLength(2);
+    expect(find(desk, '.search-page .sx-list').some(r => /max-height:\s*294px/.test(r.body))).toBe(true);
+    expect(find(desk, '.search-page .sx-forms .fx-list').some(r => /max-height:\s*330px/.test(r.body))).toBe(true);
     // Unbounded only on the forms screen of the narrow sheet, which then
     // does not scroll itself: the list fills it, and no list scrolls inside
     // a sheet that also scrolls.
-    const narrow = block(style, /@media \(max-width: 1099\.98px\)/);
+    const narrow = blocks(B, NARROW);
+    const list = rules(B).filter(r => r.sel.split(',').map(x => x.trim()).some(x => /\.fx-list$/.test(x)));
     const unbounded = list.filter(r => /max-height:\s*none/.test(r.body));
-    expect(unbounded.map(r => r.sel)).toEqual(['.sx-panel.open[data-screen="forms"] .fx-list']);
+    expect(unbounded.map(r => r.sel)).toEqual(['.search-page .sx-panel.open[data-screen="forms"] .fx-list']);
     expect(narrow).toContain(unbounded[0].sel);
-    expect(find(narrow, '.sx-panel.open[data-screen="forms"]').some(r => /overflow:\s*hidden/.test(r.body))).toBe(true);
+    expect(find(narrow, '.search-page .sx-panel.open[data-screen="forms"]').some(r => /overflow:\s*hidden/.test(r.body))).toBe(true);
     // The headword holds the top of the box, and the box keeps it to itself:
     // without its own stacking context the headword paints over the sheet's
     // pinned header when the box passes under it.
-    expect(find(topLevel(style), '.sx-forms .fx-head').some(r => /position:\s*sticky/.test(r.body) && /top:\s*0/.test(r.body))).toBe(true);
-    expect(find(topLevel(style), '.fx-list').some(r => /isolation:\s*isolate/.test(r.body))).toBe(true);
+    expect(find(topLevel(B), '.search-page .sx-forms .fx-head').some(r => /position:\s*sticky/.test(r.body) && /top:\s*0/.test(r.body))).toBe(true);
+    expect(find(topLevel(B), '.search-page .fx-list').some(r => /isolation:\s*isolate/.test(r.body))).toBe(true);
   });
 
-  it('lays the count row out as one line below 1100px, the text giving way', () => {
-    const narrow = block(style, /@media \(max-width: 1099\.98px\)/);
-    expect(find(narrow, '.result-bar').some(r => /flex-wrap:\s*nowrap/.test(r.body) && /container-type:\s*inline-size/.test(r.body))).toBe(true);
-    const count = find(narrow, '.result-count').map(r => r.body).join(';');
+  it('draws the rail at 264px, 48px from the hits, the count in Oswald and red', () => {
+    const desk = blocks(B, DESK);
+    expect(find(desk, '.search-page .sx-layout').some(r => /grid-template-columns:\s*264px minmax\(0, 1fr\)/.test(r.body) && /column-gap:\s*48px/.test(r.body))).toBe(true);
+    const n = find(desk, '.search-page .rc-n').map(r => r.body).join(';');
+    expect(n).toMatch(/font:\s*700 56px\/\.95 var\(--tface\)/);
+    expect(n).toMatch(/color:\s*var\(--red-ink\)/);
+    // The pager is over the hits there, so the count does not repeat it.
+    expect(find(desk, '.search-page .rc-p').some(r => /display:\s*none/.test(r.body))).toBe(true);
+    // The word card replaces the lists while it is open.
+    expect(find(desk, '.search-page .sx-side.wp-open > .sx-panel').some(r => /display:\s*none/.test(r.body))).toBe(true);
+  });
+
+  it('lays the count row out as one line up to 960px, the text giving way', () => {
+    const narrow = blocks(B, NARROW);
+    expect(find(narrow, '.search-page .result-bar').some(r => /flex-wrap:\s*nowrap/.test(r.body) && /container-type:\s*inline-size/.test(r.body))).toBe(true);
+    const count = find(narrow, '.search-page .result-count').map(r => r.body).join(';');
     expect(count).toMatch(/white-space:\s*nowrap/);
     expect(count).toMatch(/min-width:\s*0/);
     expect(count).toMatch(/font-size:\s*max\(0\.8125rem,\s*min\(1\.25rem,\s*calc\(\(100cqi - var\(--icons\) - var\(--save, 0rem\)\) \/ \(var\(--n\) \* 0\.46\)\)\)\)/);
     // Cut, not shrunk past reading, it says so.
     expect(count).toMatch(/text-overflow:\s*ellipsis/);
-    // The display menus are in the sort sheet there.
-    expect(find(narrow, '.sopt.sx-display').some(r => /display:\s*none/.test(r.body))).toBe(true);
+    // The display menus are in the sort sheet there, and what the rail holds
+    // under the count is in the filter sheet.
+    expect(find(narrow, '.search-page .sopt.sx-display').some(r => /display:\s*none/.test(r.body))).toBe(true);
+    expect(rules(narrow).filter(r => r.sel === '.search-page :is(.sx-head-more, .sx-save-w)').some(r => /display:\s*none/.test(r.body))).toBe(true);
     // The icons: no box, a 44px target, never shrunk.
-    const icon = find(topLevel(style), '.sx-icon').map(r => r.body).join(';');
+    const icon = find(topLevel(B), '.search-page .sx-icon').map(r => r.body).join(';');
     expect(icon).toMatch(/border:\s*none/);
     expect(icon).toMatch(/height:\s*2\.75rem/);
     expect(icon).toMatch(/flex:\s*none/);
-    // A wide screen has its column and its menus, so no icons.
-    expect(find(block(style, /@media \(min-width: 1100px\)/), '.sx-icon').some(r => /display:\s*none/.test(r.body))).toBe(true);
+    // A desktop has its rail and its menus, so no icons.
+    expect(find(blocks(B, DESK), '.search-page .sx-icon').some(r => /display:\s*none/.test(r.body))).toBe(true);
     // A phone has no pager at the top: only the one under the hits.
-    expect(find(block(style, /@media \(max-width: 599\.98px\)/), '.sx-arrow').some(r => /display:\s*none/.test(r.body))).toBe(true);
+    expect(find(block(B, /@media \(max-width: 599\.98px\)/), '.search-page .sx-arrow').some(r => /display:\s*none/.test(r.body))).toBe(true);
   });
 
   it('gives a hit’s reference a narrow column in By work, where it is only the section', () => {
     // John, 2026-11-10: "too much blank space" beside "2a". S4a moved the
     // results' rules to b-search.css, at round 34's widths: 84px by work,
     // 104px where the place names its work, 20px to the text.
-    const B = readFileSync(resolve(here, '../styles/b-search.css'), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
     expect(find(topLevel(B), '.search-page .instance').some(r => /grid-template-columns:\s*104px minmax\(0, 1fr\)/.test(r.body) && /column-gap:\s*20px/.test(r.body))).toBe(true);
     expect(find(topLevel(B), '.search-page .sx-results.by-work .instance').some(r => /grid-template-columns:\s*84px minmax\(0, 1fr\)/.test(r.body))).toBe(true);
     // A phone keeps one column, the reference over the text, in every view.
-    expect(find(block(B, /@media \(max-width: 960px\)/), '.search-page .sx-results.by-work .instance').some(r => /grid-template-columns:\s*minmax\(0, 1fr\)/.test(r.body))).toBe(true);
+    expect(find(blocks(B, NARROW), '.search-page .sx-results.by-work .instance').some(r => /grid-template-columns:\s*minmax\(0, 1fr\)/.test(r.body))).toBe(true);
     // None of it is left in the component.
     expect(find(style, '.instance')).toEqual([]);
   });
 
   it('marks a ticked grammar value without colour where colours are forced', () => {
-    const forced = block(style, /@media \(forced-colors: active\)/);
-    expect(find(forced, '.gx-chip.on').some(r => /text-decoration:\s*underline/.test(r.body))).toBe(true);
+    const forced = block(B, /@media \(forced-colors: active\)/);
+    expect(find(forced, '.search-page .gx-chip.on').some(r => /text-decoration:\s*underline/.test(r.body))).toBe(true);
   });
 
   it.skip('does not print the menus', () => {

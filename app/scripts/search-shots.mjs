@@ -79,7 +79,7 @@ const MENUS = [
   ['d18-keyboard', '/search', D, [opens(btn('.gk-toggle'), '#grk-keys')]],
   ['d19-beta-code', '/search', D, [opens(btn('.sq-row .tog'), '.sq-row .tog[aria-pressed="true"]'), opens(typeIn('.query-input', 'a)reth/'), ARETH)]],
   ['d20-both', `/search?g=${e('ἀρετή')}&e=virtue`, D, []],
-  ['d21-forms-untick', AR, D, [{ ...btn('.fx input[type=checkbox] >> nth=1'), want: false }, opens(btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ instances/), '.fx-apply[disabled]'), top]],
+  ['d21-forms-untick', AR, D, [{ ...btn('.fx input[type=checkbox] >> nth=1'), want: false }, opens(btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ instances/), { sel: '.sx-of', text: 'restore all forms' }), top]],
   ['d23-save', AR, D, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
   ['d24-word-click', AR, D, [opens(btn('.instance mark'), WORD)]],
   ['d27-word-card', AR + '#zcard', D, [opens(btn('.instance mark'), WORD)]],
