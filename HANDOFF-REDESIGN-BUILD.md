@@ -7,6 +7,47 @@ stacked on it) is kept at
 
 ## 0. For John, morning of 13 Nov (coordinator's list; filled in overnight)
 
+**Where it stands.** Both tracks are built, committed, and merged on this
+branch. Not pushed. Three commits tonight:
+- `f5f3b4a07f`: round 9, home and work pages, dark plates, and review fixes.
+- `f638f9fb79`: the reader fixes from your 12 Nov notes: fonts, weight 300,
+  line numbers, footnotes, and red.
+- `5d79e12b36`: the search build, merged cleanly.
+
+Final checks on the merged tree are green:
+- tests: app 130, shared 1782, scripts 99; svelte-check 0 errors;
+- build:public with 0 broken links; deploy:dry ok;
+- search's 140 screenshots pass, and all 14 hit counts match.
+
+8 old gates were written for the old search page and timed out on the new
+one. An Opus agent ported them; the full run is now 60 pass, 4 fail. The 4
+are real faults in the new search page:
+- tap targets under 40px: hit refs, menu radio rows, works picker, and
+  proximity editor;
+- no focus ring on the Greek box;
+- dimmed Match and Form labels at 3.7:1 contrast.
+
+All three went to the search session to fix (13 Nov 05:05). Log:
+`.redesign-shots/notes/d26/final6/searchport/`.
+
+**One ruling for you: English search refs.** The new page cites English hits
+to the line ("1095b25"). An earlier ruling in the gates says English hits cite
+the column ("1095b"), as the old search did, because the translation doesn't
+follow Bekker lines exactly. Which?
+
+After the search fixes, and a green run, the next step is your yes to push
+and open the PR (not merge, not deploy).
+
+**Search screenshot sheet** (build beside round 34, light and dark):
+https://claude.ai/artifact/3CZPdw9xaQbTnBeNEgFtJQ
+
+**Reader: still open** (your "hill climbing" track, later; not this PR):
+- design rounds: one review page of every reader state, a note box under
+  each;
+- the phone line-number offset is an empirical correction with no known
+  cause. It holds within 1px across the 3×3 text-size × spacing matrix (gate
+  R-R15).
+
 Search (Track B) rulings, each with the search session's recommendation:
 1. **Accents vs Form.** With Accents on, ἀρετή finds only that spelling (78
    hits) but Form still reads "any form". A (recommended): Accents on sets
@@ -27,26 +68,27 @@ Search (Track B) rulings, each with the search session's recommendation:
 To look at, not rule: phone and sideways departures from round 34 (sheets have
 Done only over a darker veil; under Both the options sit in one column;
 sideways under 760px takes two rows; the Forms sheet's button reads "Show N
-instances" not "Apply"). Screenshot sheet: path comes with the green tip.
+instances" not "Apply"). All are in the screenshot sheet above.
 Later tracks: "Group by grammar" groups by spelling (needs per-word grammar
 data); an opened section's English can start a clause early (alignment).
 
 
 Branch `claude/redesign-build`, this worktree
 (`~/Developer/aristotle-reader/.claude/worktrees/redesign-build`). **Not
-pushed.** 152 commits ahead of `main`; `main` has not moved since, so no merge
-is due.
+pushed.** 183 commits ahead of `main`; `main` has not moved (checked 13 Nov 04:00), so
+no merge is due.
 
 | Part | State |
 |---|---|
 | Stages 1–5 (home, work pages, reader, search, lexicon in B) | built, committed, gates and screenshot judges passed (`ae65fb23b4` … `4129016580`) |
 | OG cards, gate fixes, merge of main (PR #194) | committed (`c6a276c90c`, `e98749a8a3`, `fa39aef88b`) |
-| Home and work pages | **Round 9 is built, UNCOMMITTED (12 Nov 22:10)**, waiting on John's yes to commit. Done: desktop, phone, sideways, On Youth plate, gates rewritten (each with a `--prove` case), spec updated, desktop edition rows 40px (John 12 Nov: round 9's 36 failed the 40px target floor), tool links red underline (John), per-theme dark plates (below), Codex review (7 findings, all fixed: report `.redesign-shots/notes/d26/build9/review/`). Comparison page for John: https://claude.ai/artifact/RqdqPvLasvcgYGLLwrmVHd (source `.redesign-shots/notes/d26/compare/`). |
+| Home and work pages | **Round 9 built and committed, `f5f3b4a07f`.** Done: desktop, phone, sideways, On Youth plate, gates rewritten (each with a `--prove` case), spec updated, desktop edition rows 40px (John 12 Nov: round 9's 36 failed the 40px target floor), tool links red underline (John), per-theme dark plates (below), Codex review (7 findings, all fixed: report `.redesign-shots/notes/d26/build9/review/`). Comparison page for John: https://claude.ai/artifact/RqdqPvLasvcgYGLLwrmVHd (source `.redesign-shots/notes/d26/compare/`). |
 | Dark plates | **Built.** John ruled all 48 (picker https://claude.ai/artifact/KKa82v6pQudmzSw5dv6Bq6, db `picks`; unpicked plates took the page's proposal, John's yes 12 Nov 20:17; MM dimmed): 18 cut to outline, 20 dimmed, 10 light lines. Baked WebPs in `app/public/plates/dark/{desk,phone}/` from `.redesign-shots/notes/d26/darkplates/make_dark_assets.py` (`final-picks.json`; cut-outs from `recut/recut.py` + `recut/cfg.json`, which uses FULL-PLATE pixel coordinates). Two `<picture>`s per plate, both lazy, inactive one `display:none`, so each theme fetches only its file; gate R-P4. Unicorn face and tail re-cut 12 Nov; John: "it's good". Left as is: mane hair ends, hoof notches, ground strip point and top hatching. |
-| Ship plan | **John, 12 Nov 22:05: search lands together with the rest of the UI work, in one deploy.** Commit Track A on his yes, then wait for Track B to finish before §6. |
-| Search page | stage 4 built the old search in B. **The new design (round 34) is NOT built**; its own spec is `HANDOFF-SEARCH-BUILD.md`. |
-| Tests | after round 9 and the review fixes: app 130, shared 745, svelte-check 0 errors; final gate run log `.redesign-shots/notes/d26/build9/gates/final2/` |
-| build:public, deploy:dry | green before D26; re-run before the PR |
+| Ship plan | **John, 12 Nov 22:05: search lands together with the rest of the UI work, in one deploy.** Both tracks committed and merged; §6 checks run on the merged tree (13 Nov, logs `.redesign-shots/notes/d26/final6/`). |
+| Search page | **The new design (round 34) is built** (search session, `HANDOFF-SEARCH-BUILD.md`) and merged here as `5d79e12b36`. |
+| Reader | 12 Nov fixes committed, `f638f9fb79`; reader gates R-R5, R-R10–R-R17, R-A5 written and proved. |
+| Tests | merged tree, 13 Nov: app 130, shared 1782 (8 skipped), test:scripts 99, svelte-check 0 errors |
+| build:public, deploy:dry | green on the merged tree, 13 Nov (0 broken links of 414,159) |
 
 ## 2. Two tracks; pick the one John names
 
@@ -303,10 +345,9 @@ Left on purpose (John has not asked for a commit); keep them:
 
 - **Reader pages need their own design rounds (John, 12 Nov 22:45: "reader
   pages need hill climbing too", later).** The reader was built in stage 3 and
-  never went through the home/work rounds. Known so far: the 96px book title,
-  72px chapter numerals and top-bar "Chapter N" are still red (round 9's ink
-  move was scoped to `.pg-home`/`.pg-work`); options shot in
-  `.redesign-shots/notes/d26/redtitles/`. Already fixed on 12 Nov night:
+  never went through the home/work rounds. Red, ruled 12 Nov: the book title
+  and top-bar chapter are ink; chapter numerals, column labels, and footnote
+  markers stay red (gate R-R17). Already fixed on 12 Nov night:
   fonts (Literata/Gentium/Cardo Greek, Literata/EB Garamond English, Literata
   at 300), no paragraph gap in Both view, split-line indent, line numbers 15px
   and level, footnote box anchored, clipped italic descender in the top bar.

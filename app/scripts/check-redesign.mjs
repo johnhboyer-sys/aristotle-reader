@@ -1,4 +1,4 @@
-import { expandSearch, settleFonts, readSearchRefs, searchRefOnOneLine, searchRefBeforeColumn, readControlBoxes, measureGreekLines, readReadingSizes, searchRefFormat, rawGlossaryBodies, readReaderOverlaps, readFootnoteTargets } from './redesign-browser.mjs';
+import { openSearchGroups, settleFonts, readInstanceRefs, searchRefUnbroken, searchRefBeforeColumn, searchRefLocator, readControlBoxes, measureGreekLines, readReadingSizes, rawGlossaryBodies, readReaderOverlaps, readFootnoteTargets } from './redesign-browser.mjs';
 import { Window } from 'happy-dom';
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -174,9 +174,48 @@ async function checkSearchHashes(page, label) {
     const count = await page.locator('a[href="#"]').count();
     assert(count === 0, `${label} search href="#" count=${count}`);
 }
-async function searchReady(page) {
-    await page.waitForFunction(() => document.querySelector('.b-search-page')?.dataset.searchBusy === 'false' && !!document.querySelector('.b-sr-big'), null, {timeout: 120000});
+// The search page (Search.svelte) is settled when no search and no page of
+// hits is in flight, its count is drawn, and the hits under a non-zero count
+// are drawn with their text: the same signals app/scripts/search-shots.mjs
+// waits on (checkRender), plus the status line and pager that say a request is
+// running. An error, a "narrow the search" prompt, or a passages-did-not-load
+// warning is a settled page that cannot be gated, and fails here by name.
+function searchState() {
+    const main = document.querySelector('main.search-page');
+    if (!main) return {done: false, why: 'no main.search-page'};
+    const shown = el => el.checkVisibility();
+    const error = main.querySelector('.search-error');
+    if (error) return {done: true, error: `search error: ${error.textContent.trim()}`};
+    if (main.querySelector('.narrow-prompt')) return {done: true, error: 'the page asks to narrow the search (.narrow-prompt) and shows no results'};
+    const warn = [...main.querySelectorAll('.search-note.warn')].find(shown);
+    if (warn) return {done: true, error: `passages did not load: ${warn.textContent.replace(/\s+/g, ' ').trim()}`};
+    const status = main.querySelector('p.sr-only[role="status"]')?.textContent.trim() ?? '';
+    if (!status || status === 'Searching…') return {done: false, why: `status line reads ${JSON.stringify(status)}`};
+    if (main.querySelector('.rt-progress')) return {done: false, why: 'running-text search in progress'};
+    if ([...main.querySelectorAll('.pager-status')].some(el => /Loading/.test(el.textContent))) return {done: false, why: 'a page of hits is loading'};
+    const count = [...main.querySelectorAll('.result-count')].find(shown);
+    if (!count) return {done: false, why: 'no visible .result-count'};
+    const text = count.textContent.trim();
+    const m = /^(\d[\d,]*) instances?\b|^No passages found\./.exec(text);
+    if (!m) return {done: false, why: `result count reads ${JSON.stringify(text)}`};
+    if (!m[1]) return {done: true, count: text, hits: 0};
+    const hits = [...main.querySelectorAll('.instance, .cite-list .cite')].filter(el => shown(el)
+        && (el.classList.contains('cite') ? el : el.querySelector('.inst-snippet, .inst-pair-text'))?.textContent.trim()).length;
+    if (!hits) return {done: false, why: `count reads ${JSON.stringify(text)} but no hit with its text is drawn`};
+    return {done: true, count: text, hits};
+}
+async function searchReady(page, timeout = 120000) {
+    let last = {why: 'never evaluated'};
+    const t0 = Date.now();
+    for (;;) {
+        last = await page.evaluate(searchState);
+        if (last.done) break;
+        if (Date.now() - t0 > timeout) throw Error(failureMessage(`search page never settled in ${timeout / 1000}s: ${last.why}`));
+        await page.waitForTimeout(150);
+    }
+    if (last.error) throw Error(failureMessage(`search page settled unusable: ${last.error}`));
     await settleFonts(page);
+    return last;
 }
 const close = page => page.context().close();
 const style = (page, css) => page.addStyleTag({ content: css });
@@ -236,32 +275,65 @@ async function* accessStates(page, size) {
 async function* accessStatesInner(page, size) {
     if (await page.locator('.b-rh').count()) { yield* readerStates(page, size); return; }
     yield {name: 'closed', root: '.dir-b'};
-    if (await page.locator('.b-search-page').count()) {
-        await expandSearch(page);
+    if (await page.locator('main.search-page').count()) {
+        // The search page (Search.svelte), its menus and panels opened in turn
+        // as app/scripts/search-shots.mjs opens them. A phone folds the form's
+        // options under Options (.opts-toggle); a desktop draws them open.
+        // The old page's Beta Code help (search-help) has no trigger once a
+        // search has run (the hint that opens it shows on an empty page only).
+        const waitFor = async (selector, what) => {
+            try { await page.locator(selector).first().waitFor({state: 'visible', timeout: 5000}); }
+            catch { assert(false, `${size} ${what}: ${selector} not shown`); }
+        };
+        const options = page.locator('.opts-toggle');
+        const narrow = await options.isVisible();
+        const setOptions = async open => {
+            if (narrow && (await options.getAttribute('aria-expanded') === 'true') !== open) await options.click();
+            if (narrow && open) await waitFor('.opts-toggle[aria-expanded="true"]', 'Options did not open');
+        };
+        const shutMenus = () => page.locator('.search-form details.opt[open]').evaluateAll(els => els.forEach(el => { el.open = false; }));
+        await openSearchGroups(page);
         yield {name:'search-hits',root:'.dir-b'};
-        await page.locator('.b-options-toggle').click();
+        await setOptions(true);
+        await page.locator('.search-form details.opt > summary', {hasText: 'Match'}).first().click();
+        await waitFor('.search-form details.opt[open] > summary', 'Match menu did not open');
         yield {name:'search-options',root:'.dir-b'};
-        await page.locator('.works-trigger').click();
+        await shutMenus();
+        await page.locator('.opt-in > summary').click();
+        await waitFor('details.opt-in[open]', 'In menu did not open');
+        await page.locator('.opt-in label', {hasText: 'Choose works'}).click();
+        await waitFor('#works-panel', 'works picker did not open');
         yield {name:'search-works',root:'.dir-b'};
-        await page.locator('.works-trigger').click();
+        await page.locator('.works-done').click();
+        await page.locator('#works-panel').waitFor({state: 'hidden', timeout: 5000});
+        await setOptions(true);
+        await page.locator('.opt-lemma').click();
+        await waitFor('.opt-lemma[aria-pressed="true"]', 'Lemma did not switch on');
+        // Lemma on opens the dictionary words under the options at once (§5.4)
+        // and steps the results back behind them (b-search.css: opacity .15):
+        // the state's root is the form in front, as a panel's is its panel.
+        await waitFor('.gs-under', 'Lemma did not open its dictionary words');
+        yield {name:'search-lemma',root:'.search-form',modal:false};
+        // By key: the dictionary list Lemma opens can lie over the switch.
+        await page.locator('.opt-lemma').press('Enter');
+        await waitFor('.opt-lemma[aria-pressed="false"]', 'Lemma did not switch off');
+        await setOptions(false);
         await page.locator('.advanced-trigger').click();
-        yield {name:'search-advanced',root:'.dir-b'};
-        await page.locator('.lemma-panel > summary').click();
-        yield {name:'search-lemma',root:'.dir-b'};
-        await page.locator('.lemma-panel > summary').click();
-        await page.locator('.combo-panel > summary').click();
-        yield {name:'search-combo',root:'.dir-b'};
+        await waitFor('.prox-terms', 'proximity editor did not open');
+        yield {name:'search-proximity',root:'.dir-b'};
         await page.getByLabel('Kind for term 2',{exact:true}).selectOption('grammatical');
+        await waitFor('.prox-chips', 'grammar chips not drawn');
         yield {name:'search-grammar',root:'.dir-b'};
-        await page.locator('.combo-proximity select').selectOption('line');
-        yield {name:'search-window-disabled',root:'.dir-b'};
-        await page.locator('.combo-proximity select').selectOption('words');
-        await page.locator('.combo-panel > summary').click();
+        await page.getByLabel('Distance measured in',{exact:true}).selectOption('line');
+        await page.locator('.prox-win').waitFor({state: 'detached', timeout: 5000});
+        yield {name:'search-same-line',root:'.dir-b'};
+        await page.getByLabel('Distance measured in',{exact:true}).selectOption('words');
         await page.locator('.advanced-trigger').click();
-        await page.locator('.b-search-options .help-btn:visible').click();
-        yield {name:'search-help',root:'.help-modal'};
-        await page.keyboard.press('Escape');
-        await page.locator('.b-options-toggle').click();
+        await page.locator('.prox-terms').waitFor({state: 'hidden', timeout: 5000});
+        // The top Search comes back under the pointer; leave it unhovered, so
+        // no colour transition is caught half-way in the states that follow.
+        await page.mouse.move(1, 1);
+        await page.waitForTimeout(300);
     }
     if (await page.locator('.b-bk').count()) {
         await page.locator('[data-books-open]').click();
@@ -388,9 +460,10 @@ const gates = {
         if(stage>=4){
             const p=await open('D1440','light',SEARCH);
             try {
-                if(prove&&proofCase==='search')await style(p,'.dir-b .b-sr-big{color:black!important}');
-                const color=await p.locator('.b-sr-big').evaluate(el=>getComputedStyle(el).color);
-                assert(color==='rgb(226, 56, 46)',`search .b-sr-big color=${color}`);n++;
+                // The count's number is drawn in the red token, --red-ink (HANDOFF-SEARCH-BUILD §5.6, §5 tokens).
+                if(prove&&proofCase==='search')await style(p,'.dir-b .rc-n{color:black!important}');
+                const color=await p.locator('.rc-n').evaluate(el=>getComputedStyle(el).color);
+                assert(color==='rgb(180, 36, 25)',`search .rc-n color=${color}`);n++;
             }finally{await close(p);}
         }
         if(stage>=5) {
@@ -897,10 +970,11 @@ const gates = {
         for(const path of accessPages) for (const size of ['D1440', 'S844', 'P390']) {
             const p = await open(size,'light',path);
             try {
-                if (prove && !['fn-hit','chapter-fn','late-fn','reading-button','search-target','search-link-no-after','search-link-no-pointer'].includes(proofCase))
+                if (prove && !['fn-hit','chapter-fn','late-fn','reading-button','search-target'].includes(proofCase))
                     await style(p, '.dir-b [data-theme-toggle]{width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important}');
                 if (prove && proofCase === 'fn-hit' && path === READER) await style(p, '.dir-b .fn-marker::after{content:none!important}');
-                if(prove&&proofCase==='search-target'&&path===SEARCH)await style(p,'.dir-b [data-search-language=Greek]{min-width:34px!important;min-height:34px!important;width:34px!important;height:34px!important;padding:0!important}');
+                if(prove&&proofCase==='search-target'&&path===SEARCH)await p.locator('.lang-switch button',{hasText:'Greek'}).evaluate(el=>el.classList.add('gate-lang'));
+                if(prove&&proofCase==='search-target'&&path===SEARCH)await style(p,'.dir-b .gate-lang{min-width:34px!important;min-height:34px!important;width:34px!important;height:34px!important;max-width:34px!important;flex:none!important;padding:0!important;overflow:hidden!important}');
                 if (prove && path === READER) {
                     if (proofCase === 'reading-button') await p.locator('.b-ec').first().evaluate(el => el.insertAdjacentHTML('afterbegin','<button style="width:20px;height:20px;min-width:0;min-height:0;padding:0">Gate reading button</button>'));
                     if (['chapter-fn','late-fn'].includes(proofCase)) {
@@ -916,28 +990,20 @@ const gates = {
                         await style(p, '.gate-miss.fn-marker::after{content:none!important}');
                     }
                 }
-                let linkMutated = false;
                 for await (const state of accessStates(p, size)) {
-                    if (prove && path === SEARCH && proofCase.startsWith('search-link-no-') && !linkMutated) {
-                        const baseline = await p.locator(state.root).locator(controls).and(p.locator(':not(.grammata-mount *)')).evaluateAll(readControlBoxes);
-                        const small = baseline.filter(c => c.w < 39.99 || c.h < 39.99);
-                        assert(!small.length, `R-A1 search link proof baseline has undersized controls: ${JSON.stringify(small)}`);
-                        const links = p.locator('.b-sr-l a').filter({hasText: 'Lexicon'});
-                        assert(await links.count() > 0, 'R-A1 search link proof has no Lexicon link');
-                        await links.first().evaluate(el => el.classList.add('gate-search-link'));
-                        await style(p, proofCase === 'search-link-no-after'
-                            ? '.gate-search-link::after{content:none!important}'
-                            : '.gate-search-link::after{pointer-events:none!important}');
-                        linkMutated = true;
-                    }
                     // Exempt tokens and running-text links; footnote marks get
                     // their own hit test below, including chapter-title marks.
-                    // LemmaPage.astro's grammata script contract forbids styling
-                    // inside the mount; its controls belong to the widget.
+                    // The search hits' words (.gw) are its tokens, as .tok is
+                    // the reader's. LemmaPage.astro's grammata script contract
+                    // forbids styling inside the mount; its controls belong to
+                    // the widget. A closed <details> keeps its content's boxes
+                    // in Chrome but draws none of it: that is not a target.
                     exempt += await p.locator(state.root).locator(controls).evaluateAll(els =>
                         els.filter(el => el.closest('.grammata-mount')).length);
-                    const got = await p.locator(state.root).locator(controls)
-                        .and(p.locator(':not(.grammata-mount *)')).evaluateAll(readControlBoxes);
+                    // On the search page a box inside a label is the label's to
+                    // hit (.ck, .fx): the label is measured in its place.
+                    const got = await p.locator(state.root).locator(`${controls},main.search-page label:has(input)`)
+                        .and(p.locator(':not(.grammata-mount *, main.search-page .gw, main.search-page label input, details:not([open]) > :not(summary), details:not([open]) > :not(summary) *)')).evaluateAll(readControlBoxes);
                     assert(got.length > 0, `${size} ${state.name} examined=0 controls`);
                     for (const control of got) {
                         assert(control.w >= 39.99 && control.h >= 39.99, `${size} ${control.tag} ${control.text} ${control.w}×${control.h} state=${state.name}`);
@@ -977,7 +1043,7 @@ const gates = {
             try {
                 if (prove && (proofCase === 'search' || proofCase === 'default'))
                     await style(p, '.dir-b .b-search input:focus-visible{outline:none!important;box-shadow:none!important}');
-                if(prove&&proofCase==='search-query'&&path===SEARCH)await style(p,'.dir-b .b-sq-f input:focus-visible{outline:none!important;box-shadow:none!important}');
+                if(prove&&proofCase==='search-query'&&path===SEARCH)await style(p,'.dir-b .query-input:focus-visible{outline:none!important;box-shadow:none!important}');
                 if (prove && proofCase === 'panel-ring' && path === READER) await style(p, '.dir-b .b-side:focus-visible{outline:none!important}');
                 if (prove && proofCase === 'help-ring' && path === READER) await style(p, '.dir-b .help-modal:focus-visible{outline:none!important}');
                 if (prove && proofCase === 'reader-token' && path === READER) await style(p, '.dir-b .tok:focus-visible{outline:none!important}');
@@ -1045,7 +1111,7 @@ const gates = {
             const p = await open(size, theme,path);
             try {
                 if (prove && !['reader-ln','search-small-red'].includes(proofCase)) await style(p, '.dir-b .b-sub.sub-label{color:var(--red)!important}');
-                if(prove&&proofCase==='search-small-red'&&path===SEARCH)await style(p,'.dir-b .b-sq-o .b-options-toggle{color:var(--red)!important}');
+                if(prove&&proofCase==='search-small-red'&&path===SEARCH)await style(p,'.dir-b .advanced-trigger{color:var(--red)!important}');
                 if (prove && proofCase === 'reader-ln' && path === READER) await style(p, '.dir-b .b-ln{color:#c8c8c8!important}');
                 for await (const state of accessStates(p, size)) {
                     const result = await p.evaluate(root => {
@@ -1077,12 +1143,13 @@ const gates = {
                         while (node=walker.nextNode()) {
                             if (!node.textContent.trim()) continue;
                             const el=node.parentElement;
-                            if (el.closest('script,style,[hidden]') || getComputedStyle(el).visibility==='hidden') continue;
+                            // A closed <details> keeps its content's boxes in Chrome but draws none of it.
+                            if (el.closest('script,style,[hidden],details:not([open]) > :not(summary)') || getComputedStyle(el).visibility==='hidden') continue;
                             const range=document.createRange(); range.selectNodeContents(node);
                             if (range.getBoundingClientRect().width) examine(el,node.textContent);
                         }
                         for (const el of host.querySelectorAll('input[placeholder],textarea[placeholder]')) {
-                            if (!el.value && el.getClientRects().length && getComputedStyle(el).visibility!=='hidden') examine(el,el.placeholder,true);
+                            if (!el.value && el.getClientRects().length && getComputedStyle(el).visibility!=='hidden' && !el.closest('details:not([open]) > :not(summary)')) examine(el,el.placeholder,true);
                         }
                         return out;
                     }, state.root);
@@ -1154,11 +1221,11 @@ const gates = {
             const p=await open(size,'light',SEARCH);
             try {
                 for await(const state of accessStates(p,size)) {
-                    if(prove&&proofCase==='search-copy'&&state.name==='closed')await p.locator('.b-sq').evaluate(el=>el.insertAdjacentHTML('beforeend','<p>In this mockup</p>'));
+                    if(prove&&proofCase==='search-copy'&&state.name==='closed')await p.locator('.sq').evaluate(el=>el.insertAdjacentHTML('beforeend','<p>In this mockup</p>'));
                     const text=await p.locator(state.root).innerText();
                     const hit=forbidden.filter(f=>text.includes(f));
                     assert(!hit.length,`${SEARCH} ${size} ${state.name} explainer text: ${hit.join(', ')}`);
-                    const empty=await p.locator(state.root).locator('.b-sg h2,.b-sch h3').evaluateAll(heads=>heads.filter(h=>!h.textContent.trim()||(!h.querySelector('[aria-expanded="false"]')&&!h.nextElementSibling?.textContent.trim())).map(h=>h.textContent));
+                    const empty=await p.locator(state.root).locator('.book-header,.sx-book,.sx-chap').evaluateAll(heads=>heads.filter(h=>!h.textContent.trim()||(!h.querySelector('[aria-expanded="false"]')&&!h.nextElementSibling?.textContent.trim())).map(h=>h.textContent));
                     assert(!empty.length,`${SEARCH} ${size} empty headings: ${empty.join(', ')}`);
                     readerExamined++;
                 }
@@ -1201,10 +1268,11 @@ const gates = {
                     await p.evaluate(() => { const el = document.createElement('div'); el.className = 'reader-tip'; el.role = 'status'; el.textContent = 'First visit tip'; el.style.cssText = 'position:fixed;left:16px;bottom:16px;padding:12px;background:#fff'; document.body.append(el); });
                 await p.waitForTimeout(3000);
                 const bad = await p.evaluate(() => {
-                    const visible = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth && getComputedStyle(el).visibility !== 'hidden'; };
+                    // A closed <details> keeps its content's boxes in Chrome but draws none of it.
+                    const visible = el => { const r = el.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth && getComputedStyle(el).visibility !== 'hidden' && !el.closest('details:not([open]) > :not(summary)'); };
                     const alerts = [...document.querySelectorAll('[role="status"],[role="alert"],[role="dialog"],[aria-live],.reader-tip')].filter(el => visible(el) && getComputedStyle(el).clip !== 'rect(0px, 0px, 0px, 0px)' && el.textContent.trim());
                     // These are the existing reader header, its contents bar and the site's nav.
-                    const allow = ['.page-header', '.simple-header', '.reader-controls', '.b-nav', '.b-rh', '.pg-search .b-sr-w']; // Search's required sticky work index is page content.
+                    const allow = ['.page-header', '.simple-header', '.reader-controls', '.b-nav', '.b-rh', '.pg-search .sx-forms .fx-head']; // Search's sticky form heads, in the rail's own scrolling Forms box, are page content.
                     const fixed = [...document.querySelectorAll('body *')].filter(el => visible(el) && ['fixed', 'sticky'].includes(getComputedStyle(el).position) && !allow.some(s => el.matches(s)));
                     return [...alerts, ...fixed].map(el => el.tagName + '.' + el.className + ' ' + el.textContent.replace(/\s+/g, ' ').trim().slice(0, 70));
                 });
@@ -3349,139 +3417,167 @@ if(stage>=4) Object.assign(gates, {
         return files.length;
     },
     'R-S1': async()=>{
+        // Ported 13 Nov 2026 to the search page built from round 34
+        // (Search.svelte). Retired from the stage-4 gate, each covered
+        // elsewhere: the "XXXVIII.10" book.chapter prefix on a ref (ruling 17
+        // draws book and chapter as heading lines; s4a-results.test.ts); the
+        // 18px ref-to-Greek gap and the 1080px hit width exercised at D1920
+        // (round 34's rail and results column; search-shots r34-02-greek); the
+        // sticky work index and the phone's scrolling work strip (the rail and
+        // the Filter sheet; search-sidebar.test.ts, search-shots p03, q07); a
+        // language tab that searches by itself, and Greek keeping its query
+        // after English (the tabs search on Search, and English drops the Greek:
+        // s4a-lang-lemma.test.ts).
         let n=0;
-        // This query reaches XXXVIII.10 967b20, wider than the kit's 90px track.
+        const formatErrors=[];
+        const schemeOf=work=>registry.getWork(work)?.citation?.scheme||'bekker';
+        const refs=p=>p.locator('main.search-page .instance').evaluateAll(readInstanceRefs);
+        const pageCount=async p=>Number((await p.locator('main.search-page .result-count').first().textContent()).match(/page \d+ of (\d+)/)?.[1]||1);
+        // From page i+1 to page i+2: the count names the page as soon as it is
+        // asked for, and searchReady waits for its hits.
+        const nextPage=async(p,i)=>{
+            await p.locator('main.search-page :is(.pager-next, .sx-arrow[aria-label="Next page"]):visible').first().click();
+            await p.waitForFunction(want=>/page (\d+) of/.exec(document.querySelector('main.search-page .result-count')?.textContent||'')?.[1]===String(want),i+2,{timeout:30000})
+                .catch(()=>assert(false,`next page did not open page ${i+2}`));
+            await searchReady(p);
+        };
         for(const size of ['D1920','D1440','P390']) {
             const p=await open(size,'light','/search?q=κριθὰς&w=Prob');
             try {
-                await expandSearch(p);
+                await openSearchGroups(p);
                 await checkSearchHashes(p, `${size} Problemata`);
-                const hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
-                assert(hits.some(h=>h.text==='XXXVIII.10 967b20'),`${size} Problemata sample missed XXXVIII.10 967b20`);
+                const hits=await refs(p);
+                // This query reaches 967b20–21 in Book 38, chapter 10: a range, the widest ref it draws.
+                const place=await p.evaluate(()=>{
+                    const li=[...document.querySelectorAll('main.search-page .instance')].find(li=>li.querySelector('.inst-ref')?.textContent.trim().startsWith('967b20'));
+                    if(!li)return null;
+                    let book='',chapter='';
+                    for(let el=li.closest('ul').previousElementSibling;el;el=el.previousElementSibling){
+                        if(!chapter&&el.matches('.sx-chap'))chapter=el.textContent.trim();
+                        if(!book&&el.matches('.sx-book'))book=el.textContent.trim();
+                    }
+                    return {book,chapter};
+                });
+                assert(place&&/^Book 38\b/.test(place.book)&&/^Chapter 10\b/.test(place.chapter),`${size} Problemata sample missed 967b20 in Book 38, chapter 10: ${JSON.stringify(place)}`);
                 for(const h of hits) {
-                    assert(searchRefOnOneLine(h),`${size} hit ref wraps: ${h.text}`);
+                    assert(searchRefUnbroken(h),`${size} hit ref wraps: ${h.text} lines=${h.lines} before-dash=${h.leadLines}`);
                     assert(searchRefBeforeColumn(h),`${size} hit ref overlaps column: ${h.text} right=${h.refRight} column-left=${h.columnLeft}`);
                     n++;
                 }
-                const layout=await p.locator('.b-sg[data-result-work="Prob"]').evaluate(group=>({
-                    width:group.getBoundingClientRect().width,
-                    hits:[...group.querySelectorAll('.b-hit')].map(hit=>{
-                        const ref=hit.querySelector('.b-hr').getBoundingClientRect();
-                        const greek=hit.querySelector('.b-hg').getBoundingClientRect();
-                        const box=hit.getBoundingClientRect();
-                        return {left:greek.left,gap:greek.left-ref.right,width:box.width,right:greek.right,hitRight:box.right};
-                    }),
+                const layout=await p.locator('main.search-page .instance').evaluateAll(lis=>lis.map(li=>{
+                    const body=li.querySelector('.inst-body').getBoundingClientRect(), box=li.getBoundingClientRect();
+                    return {left:body.left,width:box.width,right:body.right,hitRight:box.right};
                 }));
-                assert(layout.hits.length>1,`${size} Problemata examined<2 hits`);
-                for(const h of layout.hits) {
+                assert(layout.length>1,`${size} Problemata examined<2 hits`);
+                for(const h of layout) {
                     assert(h.width<=1080.5&&h.right<=h.hitRight+.5,`${size} hit content exceeds 1080px cap: ${JSON.stringify(h)}`);
-                    if(size!=='P390') {
-                        assert(Math.abs(h.gap-18)<.5,`${size} Problemata gap=${h.gap}`);
-                        assert(Math.abs(h.left-layout.hits[0].left)<.5,`${size} Problemata Greek columns differ`);
-                    }
+                    if(size!=='P390')assert(Math.abs(h.left-layout[0].left)<.5,`${size} Problemata Greek columns differ`);
                 }
-                if(size==='D1920')assert(layout.width>1080&&layout.hits.every(h=>Math.abs(h.width-1080)<.5),`${size} 1080px cap not exercised: ${JSON.stringify(layout)}`);
                 console.log(`R-S1 ${size} Problemata query=κριθὰς refs=${hits.length}`);
             } finally {await close(p);}
         }
         for(const size of ['D1440','P390']) {
             const p=await open(size,'light',SEARCH);
             try {
-                const color=await p.locator('.b-sr-big').evaluate(el=>getComputedStyle(el).color);
-                assert(color==='rgb(226, 56, 46)',`${size} search count color=${color}`);n++;
-                const layout=await p.locator('.b-sr-w').evaluate(el=>({position:getComputedStyle(el).position,direction:getComputedStyle(el).flexDirection,overflow:getComputedStyle(el).overflowX}));
-                assert(size==='P390' ? layout.direction==='row'&&['auto','scroll'].includes(layout.overflow) : layout.position==='sticky',`${size} work index layout=${JSON.stringify(layout)}`);n++;
-                if(prove&&proofCase==='hash-link')await p.locator('.b-sq-o a').first().evaluate(el=>el.setAttribute('href','#'));
-                // Every page and every collapsed group, not only the first visible hit.
-                const status=await p.locator('.pager-status').count() ? await p.locator('.pager-status').first().textContent() : '';
-                const pageCount=Number(status.match(/of (\d+)/)?.[1]||1);
-                let refs=0, wrappedRefInjected=false, overlapRefInjected=false;
-                const invalidRefs=[];
-                for(let pageIdx=0;pageIdx<pageCount;pageIdx++) {
-                    await expandSearch(p);
-                    if (prove && proofCase === 'late-hash' && pageIdx === 1) await p.locator('.b-hr').first().evaluate(el => el.setAttribute('href','#'));
-                    await checkSearchHashes(p, `${size} page ${pageIdx+1}`);
-                    let hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                // The count's number in the red token, --red-ink (HANDOFF-SEARCH-BUILD §5.6).
+                const color=await p.locator('.rc-n').evaluate(el=>getComputedStyle(el).color);
+                assert(color==='rgb(180, 36, 25)',`${size} search count color=${color}`);n++;
+                if(prove&&proofCase==='hash-link')await p.locator('main.search-page a[href]').first().evaluate(el=>el.setAttribute('href','#'));
+                // Every page and every shut group, not only the first visible hit.
+                const pages=await pageCount(p);
+                let count=0, wrappedRefInjected=false, overlapRefInjected=false;
+                for(let i=0;i<pages;i++) {
+                    await openSearchGroups(p);
+                    if (prove && proofCase === 'late-hash' && i === 1) await p.locator('main.search-page .inst-ref').first().evaluate(el => el.setAttribute('href','#'));
+                    await checkSearchHashes(p, `${size} page ${i+1}`);
+                    let hits=await refs(p);
                     if(prove&&proofCase==='overlap-ref'&&!overlapRefInjected&&size==='D1440') {
-                        // Keep nowrap and the 18px gap; shrink only the ref track.
-                        const target=hits.find(h=>h.visible&&h.lines===1&&h.textWidth>78);
+                        // Keep the 20px gap and the ref's own breaks; shrink only the ref track.
+                        const target=hits.find(h=>h.visible&&h.lines===1&&!h.dash&&h.textWidth>44);
                         if(target) {
-                            await p.locator('.b-hit').nth(target.index).evaluate(el=>{
-                                el.style.gridTemplateColumns='60px minmax(0,1fr)';
-                            });
+                            await p.locator('main.search-page .instance').nth(target.index).evaluate(el=>{ el.style.gridTemplateColumns='20px minmax(0,1fr)'; });
                             await settleFonts(p);
-                            hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                            hits=await refs(p);
                             overlapRefInjected=true;
                         }
                     }
                     if(prove&&proofCase==='wrapped-ref'&&!wrappedRefInjected) {
-                        // Early Categories refs can fit inside 60px. Keep the exact
-                        // mutation, but choose a measured ref that exceeds its width.
-                        const target=hits.find(h=>h.visible&&h.lines===1&&h.textWidth>60&&/\s/.test(h.text));
+                        // A place broken inside itself, before any dash.
+                        const target=hits.find(h=>h.visible&&h.lines===1&&h.textWidth>24);
                         if(target) {
-                            await p.locator('.b-hit .b-hr').nth(target.index).evaluate(el=>{
+                            await p.locator('main.search-page .instance').nth(target.index).locator('.inst-ref').evaluate(el=>{
                                 el.dataset.wrapProof='true';
-                                el.style.cssText='display:block;white-space:normal;width:60px;min-width:0;min-height:0;height:auto';
+                                el.style.cssText='display:block;word-break:break-all;width:16px;min-width:0';
                             });
                             await settleFonts(p);
-                            hits=await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                            hits=await refs(p);
                             assert(hits.filter(h=>h.proof).length===1,`${size} wrapped-ref proof lost its target before measurement`);
                             wrappedRefInjected=true;
                         }
                     }
-                    assert(hits.length>0,`${size} page ${pageIdx+1} examined=0 hit refs`);
+                    assert(hits.length>0,`${size} page ${i+1} examined=0 hit refs`);
                     for(const h of hits) {
-                        if(h.scheme !== (registry.getWork(h.work)?.citation?.scheme || 'bekker') || !searchRefFormat(h))invalidRefs.push(`${h.scheme}: ${h.text}`);
-                        assert(searchRefOnOneLine(h),`${size} hit ref wraps: ${h.text} lines=${h.lines} height=${h.height} line-height=${h.lineHeight} visible=${h.visible} proof=${h.proof}`);
+                        if(!searchRefLocator(h,schemeOf(h.work)))formatErrors.push(`${size} ${h.work} ${h.lang} ${schemeOf(h.work)}: ${h.text}`);
+                        assert(searchRefUnbroken(h),`${size} hit ref wraps: ${h.text} lines=${h.lines} before-dash=${h.leadLines} height=${h.height} line-height=${h.lineHeight} visible=${h.visible} proof=${h.proof}`);
                         assert(searchRefBeforeColumn(h),`${size} hit ref overlaps column: ${h.text} right=${h.refRight} column-left=${h.columnLeft}`);
-                        refs++;
+                        count++;
                     }
-                    if(pageIdx+1<pageCount){await p.locator('.pager').first().getByRole('button',{name:'Next ›'}).click();await searchReady(p);}
+                    if(i+1<pages)await nextPage(p,i);
                 }
-                if(prove&&proofCase==='overlap-ref'&&size==='D1440')assert(overlapRefInjected,`${size} overlap-ref proof has no ref wide enough to mutate (>78px)`);
-                if(prove&&proofCase==='wrapped-ref')assert(wrappedRefInjected,`${size} wrapped-ref proof has no ref wide enough to mutate (>60px)`);
-                console.log(`R-S1 ${size} pages=${pageCount} refs=${refs}`);n+=refs;
-                const before=await p.locator('.b-sg').evaluateAll(els=>els.map(el=>el.dataset.resultWork).join(','));
-                const filters=p.locator('[data-work-filter]');
+                if(prove&&proofCase==='overlap-ref'&&size==='D1440')assert(overlapRefInjected,`${size} overlap-ref proof has no ref wide enough to mutate (>44px)`);
+                if(prove&&proofCase==='wrapped-ref')assert(wrappedRefInjected,`${size} wrapped-ref proof has no ref wide enough to mutate (>24px)`);
+                console.log(`R-S1 ${size} pages=${pages} refs=${count}`);n+=count;
+                // A work chosen from the rail (a phone's Filter sheet, Works) narrows the hits to it.
+                const shownWorks=()=>p.locator('main.search-page .sx-results .work-name').evaluateAll(els=>els.map(el=>el.textContent.trim()).join('|'));
+                const before=await shownWorks();
+                if(size==='P390') {
+                    await p.locator('.sx-filter').click();
+                    await p.locator('.sx-panel.open[data-screen="menu"]').waitFor({timeout:5000});
+                    await p.locator('.sx-panel .sx-nav',{hasText:'Works'}).click();
+                    await p.locator('.sx-panel.open[data-screen="works"]').waitFor({timeout:5000});
+                }
+                const filters=p.locator('.sx-works .i:not(.i-all)');
                 assert(await filters.count()>1,`${size} examined<2 work filters`);
                 // Pick a work absent on this page, when possible, to prove content changes.
-                const ids=await filters.evaluateAll(els=>els.map(el=>el.dataset.workFilter));
-                const target=ids.find(id=>!before.split(',').includes(id))||ids[ids.length-1];
-                const filter=p.locator(`[data-work-filter="${target}"]`);
+                const titles=await filters.evaluateAll(els=>els.map(el=>el.querySelector('.i-t').textContent.trim()));
+                const target=titles.find(t=>!before.split('|').includes(t))||titles[titles.length-1];
+                const filter=filters.nth(titles.indexOf(target));
                 if(prove&&proofCase==='dead-filter')await filter.evaluate(el=>el.addEventListener('click',e=>e.stopImmediatePropagation(),true));
-                await filter.click();await searchReady(p);
+                await filter.click();
+                if(await p.locator('.sx-panel.open').count())await p.locator('.sx-panel.open .sx-close').click();
+                // A filter, not a new search: wait for the hits to change, then for the page to settle.
+                await p.waitForFunction(b=>[...document.querySelectorAll('main.search-page .sx-results .work-name')].map(el=>el.textContent.trim()).join('|')!==b,before,{timeout:15000}).catch(()=>{});
+                await searchReady(p);
                 await checkSearchHashes(p, `${size} filtered`);
-                const after=await p.locator('.b-sg').evaluateAll(els=>els.map(el=>el.dataset.resultWork).join(','));
-                assert(before!==after&&after.split(',').every(id=>id===target),`${size} work filter did not change hits: before=${before} after=${after}`);n++;
-                const greekQuery=await p.getByRole('searchbox',{name:'Search Greek',exact:true}).inputValue();
+                const after=await shownWorks();
+                assert(before!==after&&after.split('|').every(t=>t===target),`${size} work filter did not change hits: before=${before} after=${after}`);n++;
+                // Each tab keeps its own query and searches its own language.
+                const grk=p.locator('#grk-input'), eng=p.locator('#eng-input');
+                const greekQuery=await grk.inputValue();
                 let englishQuery='';
-                for(const language of ['English','Both','Greek','English','Both']) {
-                    const button=p.locator(`[data-search-language="${language}"]`);
+                for(const language of ['Both','English','Greek']) {
+                    const button=p.locator('.lang-switch').getByRole('button',{name:language,exact:true});
                     if(prove&&proofCase==='dead-language'&&language==='English')await button.evaluate(el=>el.addEventListener('click',e=>e.stopImmediatePropagation(),true));
                     await button.click();
-                    await p.waitForFunction(()=>document.querySelector('.b-search-page')?.dataset.searchBusy==='false');
                     await checkSearchHashes(p, `${size} ${language} switched`);
-                    const mode=await p.locator('.b-search-page').getAttribute('data-query-mode');
-                    assert(mode===language&&await button.getAttribute('aria-pressed')==='true',`${size} language ${language} did not change live query mode: ${mode}`);
+                    assert(await button.getAttribute('aria-pressed')==='true',`${size} language ${language} did not change live query mode: aria-pressed=${await button.getAttribute('aria-pressed')}`);
                     if(language==='English') {
-                        const input=p.getByRole('searchbox',{name:'Search English',exact:true});
-                        if(prove&&proofCase==='copy-language')await input.fill(greekQuery);
-                        assert(await input.inputValue()===englishQuery,`${size} language English copied a query across languages or lost its own query`);
-                        if(!englishQuery) {
-                            englishQuery='virtue';await input.fill(englishQuery);
-                            await p.locator('.b-sq-f button[type=submit]').first().click();
-                        }
-                    } else {
-                        assert(await p.getByRole('searchbox',{name:'Search Greek',exact:true}).inputValue()===greekQuery,`${size} language ${language} lost its Greek query`);
-                        if(language==='Both')assert(await p.getByRole('searchbox',{name:'Search English',exact:true}).inputValue()===englishQuery,`${size} language Both lost its English query`);
-                    }
+                        if(prove&&proofCase==='copy-language')await eng.fill(greekQuery);
+                        assert(await eng.inputValue()===englishQuery,`${size} language English copied a query across languages or lost its own query`);
+                    } else if(language==='Both') {
+                        assert(await grk.inputValue()===greekQuery,`${size} language Both lost its Greek query`);
+                        assert(await eng.inputValue()===englishQuery,`${size} language Both copied a query across languages or lost its English query`);
+                        englishQuery='virtue';await eng.fill(englishQuery);
+                    } else await grk.fill(greekQuery); // English dropped it (s4a-lang-lemma.test.ts); type it again.
+                    const want=language==='English' ? {e:englishQuery,g:null} : language==='Greek' ? {g:greekQuery,e:null} : {g:greekQuery,e:englishQuery};
+                    const holds=w=>{const u=new URLSearchParams(location.search);return Object.entries(w).every(([k,v])=>v===null?!u.has(k):u.get(k)===v);};
+                    await p.locator('main.search-page .search-btn:visible').first().click();
+                    await p.waitForFunction(holds,want,{timeout:30000}).catch(()=>{});
                     await searchReady(p);
                     await checkSearchHashes(p, `${size} ${language}`);
                     const url=new URL(p.url());
-                    const valid=language==='English' ? url.searchParams.get('e')===englishQuery&&!url.searchParams.has('g') : language==='Greek' ? url.searchParams.get('g')===greekQuery&&!url.searchParams.has('e') : url.searchParams.get('g')===greekQuery&&url.searchParams.get('e')===englishQuery;
-                    assert(valid,`${size} language ${language} did not change live query mode: ${mode} ${url.search}`);n++;
+                    assert(await p.evaluate(holds,want),`${size} language ${language} did not change live query mode: ${url.search}`);n++;
                 }
-                assert(!invalidRefs.length,`${size} citation ref format: ${invalidRefs.slice(0,12).join('; ')}`);
             }finally{await close(p);}
         }
         const schemes = new Set();
@@ -3490,27 +3586,30 @@ if(stage>=4) Object.assign(gates, {
                 const query = language === 'grk' ? (work.id === 'Isa' ? 'γένος' : 'πολιτεία') : (work.id === 'Isa' ? 'genus' : 'constitution');
                 const p = await open('D1440','light',`/search?${language === 'grk' ? 'g' : 'e'}=${encodeURIComponent(query)}&w=${work.id}`);
                 try {
-                    const status = await p.locator('.pager-status').count() ? await p.locator('.pager-status').first().textContent() : '';
-                    const pages = Number(status.match(/of (\d+)/)?.[1] || 1);
+                    const pages = await pageCount(p);
                     for (let i=0; i<pages; i++) {
-                        await expandSearch(p);
+                        await openSearchGroups(p);
                         await checkSearchHashes(p, `D1440 ${work.id} ${language} page ${i+1}`);
-                        if (prove && proofCase === 'non-bekker-ref') await p.locator('.b-hr').first().evaluate(el => el.textContent = 'I.1 wrong');
-                        const hits = await p.locator('.b-hit').evaluateAll(readSearchRefs);
+                        if (prove && proofCase === 'non-bekker-ref') await p.locator('main.search-page .inst-ref').first().evaluate(el => el.textContent = 'I.1 wrong');
+                        const hits = await refs(p);
                         assert(hits.length > 0, `${work.id} ${language} examined=0 non-Bekker refs`);
                         for (const h of hits) {
-                            assert(h.scheme === work.citation.scheme && searchRefFormat(h), `${work.id} ${language} non-Bekker ref format: ${h.text}`);
-                            assert(searchRefOnOneLine(h), `D1440 hit ref wraps: ${h.text}`);
+                            assert(h.work === work.id, `${work.id} ${language} hit cites another work: ${h.work} ${h.text}`);
+                            if (!searchRefLocator(h, work.citation.scheme)) formatErrors.push(`${work.id} ${h.lang} non-Bekker ref format: ${h.text}`);
+                            assert(searchRefUnbroken(h), `D1440 hit ref wraps: ${h.text}`);
                             assert(searchRefBeforeColumn(h), `D1440 hit ref overlaps column: ${h.text}`);
-                            schemes.add(h.scheme); n++;
+                            schemes.add(work.citation.scheme); n++;
                         }
-                        if(i+1<pages) { await p.locator('.pager').first().getByRole('button',{name:'Next ›'}).click(); await searchReady(p); }
+                        if(i+1<pages) await nextPage(p,i);
                     }
                 } finally { await close(p); }
             }
         }
         console.log(`R-S1 non-Bekker schemes covered=${[...schemes].join(', ')}`);
         assert(schemes.has('busse') && schemes.has('chapter-section'), 'R-S1 missing non-Bekker scheme coverage');
+        // Last, so every other check has run: one line for every ref out of format.
+        const kinds=Object.entries(formatErrors.reduce((k,e)=>(k[e.split(':')[0]]=(k[e.split(':')[0]]||0)+1,k),{})).map(([k,v])=>`${k} ×${v}`).join(', ');
+        assert(!formatErrors.length,`citation ref format: ${formatErrors.length} refs (${kinds}): ${formatErrors.slice(0,12).join('; ')}`);
         return n;
     },
 });
@@ -3629,12 +3728,12 @@ const stageThreeProofs = {
 };
 const stageFourProofs = {
     ...stageThreeProofs,
-    'R-C1': {...stageThreeProofs['R-C1'],search:/search \.b-sr-big color=rgb\(0, 0, 0\)/},
+    'R-C1': {...stageThreeProofs['R-C1'],search:/search \.rc-n color=rgb\(0, 0, 0\)/},
     'R-C1-static': {'svelte-style':/B selectors in Svelte style:.*\.dir-b, \.b-rh/, 'no-styles':/examined=0 Svelte style blocks/},
     'R-S1': {'overlap-ref':/D1440 hit ref overlaps column:/,'wrapped-ref':/D1440 hit ref wraps:/,'dead-filter':/D1440 work filter did not change hits:/,'dead-language':/D1440 language English did not change live query mode:/,'copy-language':/D1440 language English copied a query across languages/,'hash-link':/D1440 page 1 search href="#" count=1/,'non-bekker-ref':/non-Bekker ref format: I\.1 wrong/,'late-hash':/D1440 page 2 search href="#" count=1/},
-    'R-A1': {...stageThreeProofs['R-A1'],'search-target':/D1440 BUTTON Greek 34×34/,'search-link-no-after':/D1440 A Lexicon [0-9.]+×[0-9.]+ state=/,'search-link-no-pointer':/D1440 A Lexicon [0-9.]+×[0-9.]+ state=/},
-    'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <input.*aria-label="Search Greek"/},
-    'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.b-options-toggle.*"More options" ratio=.*color=rgb\(226, 56, 46\)/},
+    'R-A1': {...stageThreeProofs['R-A1'],'search-target':/D1440 BUTTON Greek 34×34/},
+    'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <input[^>]*id="grk-input"/},
+    'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},
     'R-E2': {'reader-tip':/unsolicited overlay:.*reader-tip/,'search-toast':/search\?q=ἀρετή D1440 unsolicited overlay:.*reader-tip/},
 };

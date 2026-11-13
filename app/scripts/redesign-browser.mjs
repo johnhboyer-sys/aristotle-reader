@@ -157,6 +157,92 @@ export function searchRefFormat(ref) {
     return false;
 }
 
+// The search page built on 13 Nov (Search.svelte): the helpers above read the
+// stage-4 page (.b-sg, .b-hit, .b-hr) and are kept for their unit tests.
+// Every group starts open; open any that is shut, so every hit is in the page.
+export async function openSearchGroups(page, cap = 1000) {
+    const selector = 'main.search-page .group-head[aria-expanded="false"]';
+    const shut = page.locator(selector);
+    let count = await shut.count(), clicks = 0;
+    while (count) {
+        if (clicks++ >= cap) throw Error(`openSearchGroups exceeded ${cap} clicks: ${selector}, shut=${count}`);
+        await shut.first().click({timeout: 5000});
+        try {
+            await page.waitForFunction(({selector, before}) => document.querySelectorAll(selector).length < before, {selector, before: count}, {timeout: 3000});
+        } catch {
+            throw Error(`openSearchGroups shut count did not drop: before=${count}, after=${await shut.count()}`);
+        }
+        count = await shut.count();
+    }
+    await settleFonts(page);
+}
+
+// Self-contained for evaluateAll over li.instance: a.inst-ref, then
+// .inst-body. A ref may break only after its dash (the template's <wbr>, so
+// "1095b29–33" fits its column), so the text up to the dash is measured apart.
+// The work is the first step of the ref's reader link; an English hit is one
+// drawn with .inst-hit-en.
+export function readInstanceRefs(hits) {
+    return hits.map((hit, index) => {
+        const ref = hit.querySelector('.inst-ref');
+        if (!ref) return {index, text: '', visible: false, lines: 0, leadLines: 0};
+        const lineCount = rects => {
+            const lines = [];
+            for (const rect of rects) {
+                const bottom = rect.top + rect.height;
+                const line = lines.find(line => rect.top < line.bottom - 1 && bottom > line.top + 1);
+                if (line) { line.top = Math.min(line.top, rect.top); line.bottom = Math.max(line.bottom, bottom); }
+                else lines.push({top: rect.top, bottom});
+            }
+            return lines.length;
+        };
+        const walker = document.createTreeWalker(ref, 4 /* SHOW_TEXT */);
+        const rects = [], lead = [];
+        let node, beforeDash = true;
+        while (node = walker.nextNode()) {
+            const range = document.createRange(); range.selectNodeContents(node);
+            const boxes = [...range.getClientRects()].filter(r => r.width > 0 && r.height > 0);
+            rects.push(...boxes);
+            if (beforeDash) lead.push(...boxes);
+            if (node.textContent.includes('–')) beforeDash = false;
+        }
+        const text = ref.textContent.trim();
+        const column = hit.querySelector('.inst-body');
+        const path = new URL(ref.getAttribute('href') || '', location.href).pathname.split('/').filter(Boolean);
+        return {
+            index, text, work: path[0], lang: hit.querySelector('.inst-hit-en') ? 'eng' : 'grk', dash: text.includes('–'),
+            sideBySide: getComputedStyle(hit).gridTemplateColumns.split(' ').length > 1,
+            refRight: Math.max(ref.getBoundingClientRect().right, ...rects.map(r => r.right)),
+            columnLeft: column ? column.getBoundingClientRect().left : NaN,
+            height: ref.offsetHeight, lineHeight: parseFloat(getComputedStyle(ref).lineHeight),
+            lines: lineCount(rects), leadLines: lineCount(lead),
+            textWidth: rects.length ? Math.max(...rects.map(r => r.right)) - Math.min(...rects.map(r => r.left)) : 0,
+            visible: ref.isConnected && ref.getClientRects().length > 0 && rects.length > 0,
+            proof: ref.dataset.wrapProof === 'true',
+        };
+    });
+}
+// One line, or two when a range breaks after its dash; never a break inside
+// the place itself.
+export function searchRefUnbroken(ref) {
+    return ref.visible && ref.leadLines === 1 && (ref.lines === 1 || (ref.dash && ref.lines === 2))
+        && Number.isFinite(ref.lineHeight) && ref.lineHeight > 0 && ref.height <= (ref.lines + .5) * ref.lineHeight;
+}
+// searchRefFormat's locator rules, for a ref that is the place alone: the book
+// and chapter are heading lines over the hits (ruling 17), and a Greek hit
+// over several lines cites their range (Search.svelte citeText). John's
+// rulings stand: Bekker pages start at 1; English hits cite the column.
+export function searchRefLocator(ref, scheme) {
+    const t = ref.text;
+    if (/[\r\n]/.test(t)) return false;
+    if (scheme === 'chapter-section') return /^\d+\.\d+[a-z]?$/.test(t);
+    if (scheme === 'bekker')
+        return (ref.lang === 'eng' ? /^\d{1,4}[ab]$/ : /^\d{1,4}[ab]\d{1,2}(–(\d{1,4}[ab])?\d{1,2})?$/).test(t);
+    if (scheme === 'busse')
+        return (ref.lang === 'eng' ? /^\d+[ab]$/ : /^\d+[ab]\d+[a-z]?(–(\d+[ab])?\d+[a-z]?)?$/).test(t);
+    return false;
+}
+
 // Read Markdown separately from the site's glossary renderer and body resolver.
 export function rawGlossaryBodies(markdown, slug) {
     const fold = text => text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/[^a-z0-9]/g, '');
