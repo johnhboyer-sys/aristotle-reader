@@ -243,7 +243,7 @@ describe('the phone rules in b-search.css', () => {
     expect(bar).toMatch(/bottom:\s*0/);
     expect(bar).toMatch(/left:\s*0/);
     expect(bar).toMatch(/right:\s*0/);
-    expect(rule(narrow, '.search-page .prox:has(.prox-go)')).toMatch(/padding-bottom:\s*76px/);
+    expect(rule(narrow, '.search-page .prox:has(.prox-go)')).toMatch(/padding-bottom:\s*var\(--prox-bar-height/);
     expect(rule(narrow, '.search-page .prox-go .prox-search')).toMatch(/height:\s*48px/);
   });
 

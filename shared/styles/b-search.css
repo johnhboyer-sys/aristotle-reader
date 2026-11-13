@@ -1754,12 +1754,11 @@
     -webkit-line-clamp: 2;
     text-align: center;
   }
-  .search-page .prox:has(.prox-go) { padding-bottom: 76px; }
-  .search-page .prox:has(.prox-pend) { padding-bottom: 136px; }
+  .search-page .prox:has(.prox-go) { padding-bottom: var(--prox-bar-height, 0px); }
 }
 /* The page's own foot is kept clear of the bar too. */
 @media (max-width: 960px) {
-  .frame.dir-b:has(.search-page .prox-go) { padding-bottom: 76px; }
+  .frame.dir-b:has(.search-page .prox-go) { padding-bottom: var(--prox-bar-height, 0px); }
 }
 /* The hits, until S5b draws the phone's: one column, their type kept. */
 @media (max-width: 960px) {

@@ -992,24 +992,24 @@
   // here, or the page would stay held with nothing to let it go.
   $: if (sheetOpen && (error || !searched)) sheetOpen = false;
   // Escape shuts the sheet; Tab stays inside it while it is open.
-  function onSheetKey(e: KeyboardEvent) {
-    if (!sheetOpen || !sheetEl) return;
+  function onSheetKey(e: KeyboardEvent, root = sheetOpen ? sheetEl : null, close = closeSheet) {
+    if (!root) return;
     if (e.key === 'Escape') {
       e.preventDefault();
-      closeSheet();
+      close();
       return;
     }
     if (e.key !== 'Tab') return;
     // A radio group is one stop: its checked radio, or its first if none is.
-    const els = [...sheetEl.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled])')].filter(el => {
+    const els = [...root.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled])')].filter(el => {
       if (!(el instanceof HTMLInputElement) || el.type !== 'radio' || !el.name) return true;
-      const group = [...sheetEl!.querySelectorAll<HTMLInputElement>(`input[type="radio"][name="${el.name}"]:not([disabled])`)];
+      const group = [...root.querySelectorAll<HTMLInputElement>(`input[type="radio"][name="${el.name}"]:not([disabled])`)];
       return el.checked || (!group.some(r => r.checked) && group[0] === el);
     });
     if (!els.length) return;
     const first = els[0], last = els[els.length - 1];
     const at = document.activeElement;
-    if (!sheetEl.contains(at) || (e.shiftKey && (at === first || at === sheetEl)) || (!e.shiftKey && at === last)) {
+    if (!root.contains(at) || (e.shiftKey && (at === first || at === root)) || (!e.shiftKey && at === last)) {
       e.preventDefault();
       (e.shiftKey ? last : first).focus();
     }
@@ -1284,7 +1284,7 @@
   $: comboReady = (comboGroupsNow.length >= 2 && comboGroupsNow[0].relation !== 'not') || grammarAlone;
   // The page is in proximity: a proximity search is what it shows (set when
   // one runs or arrives in the address, cleared by Turn off), or the editor
-  // is open. Either way, Search runs the editor's terms once they make one.
+  // is open. Opening Options keeps a filled editor active until Turn off.
   let proxOn = false;
   let advancedOpen = false;
   $: comboActive = comboReady && (advancedOpen || proxOn);
@@ -1352,10 +1352,13 @@
   let optsOpen = false;
   function toggleOpts() {
     optsOpen = !optsOpen;
-    if (optsOpen) advancedOpen = false;
+    if (optsOpen) {
+      if (advancedOpen && comboReady) proxOn = true;
+      advancedOpen = false;
+    }
     else for (const m of document.querySelectorAll<HTMLDetailsElement>('.sopt:not(.sx-display) .opt[open]')) m.open = false;
   }
-  $: optsLine = optionWords(lang, grkMode, engMode, matchMode, engForms, accentSensitive, punctuation, lemmaOn, langOp, soloLemmaActive && !!engQuery.trim(), worksValue);
+  $: optsLine = optionWords(lang, soloLemmaActive ? 'any' : grkMode, engMode, soloLemmaActive ? 'lemma' : matchMode, engForms, accentSensitive, punctuation, lemmaOn, langOp, soloLemmaActive && !!engQuery.trim(), worksValue);
   function optionWords(lang: Lang, gm: SearchMode, em: SearchMode, form: MatchMode | 'text', engAny: boolean, accents: boolean,
     stops: boolean, lemma: boolean, op: LangOp, joined: boolean, works: string): string[] {
     const g = lang !== 'english', en = lang !== 'greek';
@@ -1386,6 +1389,7 @@
     proxTrigger?.focus();
   }
   async function openEditor() {
+    optsOpen = false;
     advancedOpen = true;
     await tick();
     document.querySelector<HTMLElement>('#advanced-tools .combo-slot :is(input, select, button)')?.focus();
@@ -1399,6 +1403,19 @@
       return;
     }
     proxOn = true;
+  }
+  // Measure the whole bar, including wrapped text, border and safe area.
+  // Both reserves inherit this value; only the narrow layout uses it.
+  function reserveProxBar(node: HTMLElement) {
+    const frame = node.closest<HTMLElement>('.frame.dir-b') ?? node.closest<HTMLElement>('.search-page');
+    const measure = () => frame?.style.setProperty('--prox-bar-height', `${node.getBoundingClientRect().height}px`);
+    const observer = new ResizeObserver(measure);
+    observer.observe(node, { box: 'border-box' });
+    measure();
+    return { destroy() {
+      observer.disconnect();
+      frame?.style.removeProperty('--prox-bar-height');
+    } };
   }
   // Turn off: back to the search the boxes hold, or to the empty page.
   async function turnOffProximity() {
@@ -3709,10 +3726,29 @@
 
   // The option menus are <details>: one open at a time, closed by a click
   // elsewhere or by Escape, which hands focus back to the menu's own button.
-  function closeOtherOpts(e: Event) {
+  let optSheetHead = '';
+  function optSheetAttrs(head: string, active: string, narrow: boolean) {
+    const modal = narrow && active === head;
+    return {
+      role: modal ? 'dialog' as const : undefined,
+      'aria-modal': modal ? 'true' as const : undefined,
+      'aria-labelledby': head,
+      tabindex: modal ? -1 : undefined,
+    };
+  }
+  async function closeOtherOpts(e: Event) {
     const el = e.currentTarget as HTMLDetailsElement;
-    if (!el.open) return;
+    const head = el.querySelector('.sheet legend')?.id ?? '';
+    if (!el.open) {
+      if (optSheetHead === head) optSheetHead = '';
+      return;
+    }
+    optSheetHead = head;
     for (const m of document.querySelectorAll<HTMLDetailsElement>('.sopt .opt[open]')) if (m !== el) m.open = false;
+    if (narrowScreen) {
+      await tick();
+      if (el.open) el.querySelector<HTMLElement>('.sheet')?.focus();
+    }
   }
   // The form's menus stay open after a choice; the results' menus shut, their
   // choice applied at once, and focus goes back to the menu's own button.
@@ -3737,13 +3773,22 @@
   }
   function onWindowClick(e: MouseEvent) {
     for (const m of document.querySelectorAll<HTMLDetailsElement>('.sopt .opt[open]')) {
-      if (!m.contains(e.target as Node)) m.open = false;
+      if (!m.contains(e.target as Node)) {
+        m.open = false;
+        if (narrowScreen && m.querySelector('.sheet')) m.querySelector('summary')?.focus();
+      }
     }
   }
   function onWindowKey(e: KeyboardEvent) {
     onKbdKey(e);
-    onSheetKey(e);
+    const opt = narrowScreen ? document.querySelector<HTMLDetailsElement>('.search-form .opt[open]:has(.sheet)') : null;
+    if (opt) onSheetKey(e, opt.querySelector<HTMLElement>('.sheet'), () => {
+      opt.open = false;
+      opt.querySelector('summary')?.focus();
+    });
+    else onSheetKey(e);
     onHelpKey(e);
+    if (e.defaultPrevented) return;
     if (e.key !== 'Escape') return;
     const m = document.querySelector<HTMLDetailsElement>('.sopt .opt[open]');
     if (m) {
@@ -4014,8 +4059,8 @@
           {#if matchMode !== 'text'}
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>{lang === 'both' ? 'Greek match' : 'Match'} <b>{lower1(modeLabel(grkMode))}{@render caret()}</b></summary>
-            <fieldset class="opt-panel sheet">
-              <legend class="opt-title sheet-head">{lang === 'both' ? 'Greek match' : 'Match'}</legend>
+            <fieldset class="opt-panel sheet" {...optSheetAttrs('grk-match-head', optSheetHead, narrowScreen)}>
+              <legend class="opt-title sheet-head" id="grk-match-head">{lang === 'both' ? 'Greek match' : 'Match'}</legend>
               {#each MODE_OPTS as opt}
                 <div class="opt-row">
                   <label class="ck"><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} aria-describedby={`gm-${opt.v}`} /><span>{opt.l}</span></label>
@@ -4028,8 +4073,8 @@
           {/if}
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>{lang === 'both' ? 'Greek form' : 'Form'} <b>{matchMode === 'text' ? 'running text' : matchMode === 'lemma' ? 'any form' : 'as typed'}{@render caret()}</b></summary>
-            <fieldset class="opt-panel sheet">
-              <legend class="opt-title sheet-head">{lang === 'both' ? 'Greek form' : 'Form'}</legend>
+            <fieldset class="opt-panel sheet" {...optSheetAttrs('grk-form-head', optSheetHead, narrowScreen)}>
+              <legend class="opt-title sheet-head" id="grk-form-head">{lang === 'both' ? 'Greek form' : 'Form'}</legend>
               <div class="opt-row">
                 <label class="ck"><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} aria-describedby="gf-lemma" /><span>Any form of this word</span></label>
                 <small class="opt-gloss" id="gf-lemma"><span lang="grc">ἀρετή</span> finds <span lang="grc">ἀρετῆς</span> and <span lang="grc">ἀρετάς</span></small>
@@ -4066,8 +4111,8 @@
         <div class="sopt-e">
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>{lang === 'both' ? 'English match' : 'Match'} <b>{lower1(modeLabel(engMode))}{@render caret()}</b></summary>
-            <fieldset class="opt-panel sheet">
-              <legend class="opt-title sheet-head">{lang === 'both' ? 'English match' : 'Match'}</legend>
+            <fieldset class="opt-panel sheet" {...optSheetAttrs('eng-match-head', optSheetHead, narrowScreen)}>
+              <legend class="opt-title sheet-head" id="eng-match-head">{lang === 'both' ? 'English match' : 'Match'}</legend>
               {#each MODE_OPTS as opt}
                 <div class="opt-row">
                   <label class="ck"><input type="radio" name="engmode" value={opt.v} bind:group={engMode} aria-describedby={`em-${opt.v}`} /><span>{opt.l}</span></label>
@@ -4079,8 +4124,8 @@
           </details>
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>{lang === 'both' ? 'English form' : 'Form'} <b>{engForms ? 'any form' : 'as typed'}{@render caret()}</b></summary>
-            <fieldset class="opt-panel sheet" title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
-              <legend class="opt-title sheet-head">{lang === 'both' ? 'English form' : 'Form'}</legend>
+            <fieldset class="opt-panel sheet" {...optSheetAttrs('eng-form-head', optSheetHead, narrowScreen)} title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
+              <legend class="opt-title sheet-head" id="eng-form-head">{lang === 'both' ? 'English form' : 'Form'}</legend>
               <div class="opt-row"><label class="ck"><input type="radio" name="engforms" value={true} bind:group={engForms} /><span>Any form of this word</span></label></div>
               <div class="opt-row"><label class="ck"><input type="radio" name="engforms" value={false} bind:group={engForms} /><span>Only as I typed it</span></label></div>
               {@render sheetDone()}
@@ -4093,8 +4138,8 @@
         {#if lang === 'both' || (soloLemmaActive && engQuery.trim())}
           <details class="opt" on:toggle={closeOtherOpts}>
             <summary>Hits match <b>{langOp === 'and' ? 'both languages' : 'either language'}{@render caret()}</b></summary>
-            <fieldset class="opt-panel sheet op-group">
-              <legend class="opt-title sheet-head">Hits match</legend>
+            <fieldset class="opt-panel sheet op-group" {...optSheetAttrs('hits-match-head', optSheetHead, narrowScreen)}>
+              <legend class="opt-title sheet-head" id="hits-match-head">Hits match</legend>
               <div class="opt-row"><label class="ck" title="Only passages matching both queries"><input type="radio" name="op" value="and" bind:group={langOp} /><span>Both languages</span></label></div>
               <div class="opt-row"><label class="ck" title="Passages matching either query"><input type="radio" name="op" value="or" bind:group={langOp} /><span>Either language</span></label></div>
               {@render sheetDone()}
@@ -4105,8 +4150,8 @@
              choice from the works picker, which shows In open while it is. -->
         <details class="opt opt-in" class:picking={worksOpen} on:toggle={closeOtherOpts}>
           <summary>In <b>{worksValue}{@render caret()}</b></summary>
-          <fieldset class="opt-panel sheet">
-            <legend class="opt-title sheet-head">In</legend>
+          <fieldset class="opt-panel sheet" {...optSheetAttrs('works-scope-head', optSheetHead, narrowScreen)}>
+            <legend class="opt-title sheet-head" id="works-scope-head">In</legend>
             {#each WORKS_SCOPES as sc}
               <div class="opt-row" class:opt-rule={sc.v === 'pick'}>
                 <label class="ck"><input type="radio" name="worksscope" value={sc.v} checked={worksScope === sc.v} on:click={(e) => setWorksScope(sc.v, e)} aria-describedby={`ws-${sc.v}`} /><span>{sc.l}</span></label>
@@ -4328,7 +4373,7 @@
           <!-- Aristotle's own: a match may stand across a chapter break, or not
                (cx=0). Round 34, drawn on Plato, has no chapters to keep. -->
           <label class="prox-lock"><input type="checkbox" bind:checked={comboCrossChapter} /> Keep hits that cross a chapter</label>
-          <div class="prox-go">
+          <div class="prox-go" use:reserveProxBar>
             <button type="submit" class="search-btn prox-search" disabled={loading} on:click={searchEditor}>{loading ? 'Searching…' : 'Search'}</button>
             {#if pendingSentence}<p class="prox-pend">Not searched yet: {pendingSentence}</p>
             {:else if comboAsked}<p class="prox-pend" role="status">{comboAsked}</p>{/if}
