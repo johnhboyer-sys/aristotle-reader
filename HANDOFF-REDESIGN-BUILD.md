@@ -61,7 +61,7 @@ page), `09ff5e6728` (R-S1 height minus padding), `49715e6876` (R-A3 exempts the 
 Codex review before the PR.
 
 ### 0.3 Reader design (new track)
-`HANDOFF-READER-DESIGN.md` (current as of `68ba3c0515`). Rounds 1–3 ruled
+`HANDOFF-READER-DESIGN.md` (current as of `6c7fd17db9`). Rounds 1–3 ruled
 (https://claude.ai/artifact/6b1rJ55cg3ntyP4Fsy44rY): every Bekker line stays a line; no stacked layout; quiet bar;
 Gentium Book Plus 400 for Greek and English at today's size; wrap as a unit on every screen, phone in parallel.
 Plato (queued with the Plato search port, after this build): its phone default view becomes Both (John 16:56); its
