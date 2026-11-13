@@ -64,7 +64,7 @@ Rewritten 13 Nov 2026, 17:30, before a restart. Rewrite this file (don't append)
 ### Where the mock-up lives
 - **Published:** https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X (Track A's copy, defaults H3 and (a)).
 - **On disk, untracked:** `.redesign-shots/notes/search-mock-13nov/` in this worktree, 183 MB. **Never git-add
-  `.redesign-shots`**: it is in no ignore file. It holds:
+  `.redesign-shots`**; since 13 Nov 17:26 it is in `.git/info/exclude` (local, all worktrees). It holds:
   - `mock/`: index.html, shots, measures.json, notes.md (every choice and measure), and scripts.
   - `mock-r0` to `mock-r2`: snapshots of each round.
   - `mock-review/`: LOG.md (four rounds, verdicts, disagreements), R1–R4, and the fix lists.
