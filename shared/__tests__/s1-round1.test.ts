@@ -29,6 +29,8 @@ it('sizes chapter pages by phrase windows, including when offsets fail', () => {
 it('shows cx=0 as a chapter control and removable chosen filter', async () => {
  window.history.replaceState(null, '', '/search?c=f:logos&c=f:logos&cx=0');
  render(Search);
+ // The editor is shut on a proximity search from the address; Change opens it (S3).
+ await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
  const checkbox = await screen.findByRole('checkbox', { name: 'Keep hits that cross a chapter' });
  expect(checkbox).not.toBeChecked();
  await fireEvent.click(await screen.findByRole('button', { name: 'Remove Within a chapter' }));
@@ -94,6 +96,7 @@ it('counts an AthPol English phrase once in its row and header', async () => {
 it('keeps cx chip tied to the submitted search', async () => {
  window.history.replaceState(null, '', '/search?c=f:logos&c=f:logos');
  render(Search);
+ await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
  const box = await screen.findByRole('checkbox', { name: 'Keep hits that cross a chapter' });
  await fireEvent.click(box);
  expect(screen.queryByRole('button', { name: 'Remove Within a chapter' })).toBeNull();

@@ -28,9 +28,15 @@ import { AUTHENTIC_IDS, HAS_SPEAKERS } from './works';
 //   t        the translation the English hits are narrowed to
 //   wf       the work the hits are narrowed to (the results page's Works row)
 //   l        the single-lemma search's picked keys, comma-separated
-//   c        one per proximity slot: kind letter, optional relation letter
-//            (b before, a after, n not near; none = near), colon, payload —
-//            "f:λόγος", "la:logos,areth", "g:case.gen,number.pl"
+//   c        one per proximity slot: kind letter, then either "o" (joined
+//            to the slot before by "or": one term with it, taking its
+//            relation and target) or an optional relation letter (b before,
+//            a after, n not near; none = near) and the 1-based number of the
+//            earlier term it is measured from (none = term 1); colon,
+//            payload — "f:λόγος", "la:logos,areth", "g:case.gen,number.pl",
+//            "lo:hdonh" (or the term before), "lb2:luph" (before term 2).
+//            A link written before joiners and targets reads as it did:
+//            every slot joined by "and", every term measured from term 1
 //   cw, cu   proximity window (default 5) and unit (default words)
 //   co, cx   co=1: in this order; cx=0: drop hits that cross a chapter
 //   sp, sn   the speaker filter: sp=only | except, sn the names, comma-separated
@@ -45,6 +51,7 @@ import { AUTHENTIC_IDS, HAS_SPEAKERS } from './works';
 //   ps       hits per results page: 20 | 100 | c, citations only (default 40)
 
 import {
+  COMBO_TERMS_MAX,
   COMBO_WINDOW_DEFAULT,
   COMBO_WINDOW_MAX,
   type GrammarQuery,
@@ -64,6 +71,8 @@ import {
 export interface UrlComboSlot {
   kind: SlotKind;
   relation: SlotRelation;
+  or?: true;             // joined to the slot before by "or"
+  target?: number;       // the earlier slot it is measured from (0-based); absent = 0
   text: string;          // phrase / form
   picked: string[];      // lemma
   grammar: GrammarQuery; // grammatical
@@ -134,7 +143,8 @@ function encodeSlot(slot: UrlComboSlot): string {
     : slot.kind === 'grammatical'
       ? Object.entries(slot.grammar).map(([k, v]) => `${k}.${v}`).join(',')
       : slot.text.trim();
-  return `${KIND_LETTER[slot.kind]}${RELATION_LETTER[slot.relation]}:${payload}`;
+  const head = slot.or ? 'o' : `${RELATION_LETTER[slot.relation]}${slot.target ? slot.target + 1 : ''}`;
+  return `${KIND_LETTER[slot.kind]}${head}:${payload}`;
 }
 
 // The old pos category is retired. Aristotle's marker (word class) remains
@@ -143,24 +153,61 @@ const RETIRED_GRAMMAR = new Set(['pos']);
 
 // null: not a slot. 'retired': a grammar term that asked only a retired
 // category, so cannot be asked any more.
-function decodeSlot(raw: string): UrlComboSlot | null | 'retired' {
-  const m = /^([pflg])([ban]?):(.*)$/s.exec(raw);
+// A slot that asks nothing is `empty`: dropped, but its joiner and target are
+// read so the slots after it keep theirs (decodeSlots).
+function decodeSlot(raw: string): UrlComboSlot | null | 'retired' | { empty: UrlComboSlot } {
+  const m = /^([pflg])(?:(o)|([ban]?)([1-9]\d{0,2})?):(.*)$/s.exec(raw);
   if (!m) return null;
-  const slot: UrlComboSlot = { kind: KINDS[m[1]], relation: RELATIONS[m[2]], text: '', picked: [], grammar: {} };
-  if (slot.kind === 'lemma') slot.picked = list(m[3]);
+  const slot: UrlComboSlot = { kind: KINDS[m[1]], relation: RELATIONS[m[3] ?? ''], text: '', picked: [], grammar: {} };
+  if (m[2]) slot.or = true;
+  if (m[4]) slot.target = Number(m[4]) - 1;
+  const payload = m[5];
+  if (slot.kind === 'lemma') slot.picked = list(payload);
   else if (slot.kind === 'grammatical') {
     let retired = false;
-    for (const pair of list(m[3])) {
+    for (const pair of list(payload)) {
       const [k, v] = pair.split('.');
       if (k && v && RETIRED_GRAMMAR.has(k)) retired = true;
       else if (k && v) slot.grammar[k] = v;
     }
     if (retired && !Object.keys(slot.grammar).length) return 'retired';
-  } else slot.text = m[3].trim();
+  } else slot.text = payload.trim();
   const empty = slot.kind === 'lemma' ? !slot.picked.length
     : slot.kind === 'grammatical' ? !Object.keys(slot.grammar).length
     : !slot.text;
-  return empty ? null : slot;
+  return empty ? { empty: slot } : slot;
+}
+
+// The slots that ask something, with each target re-read as an index among
+// them: one measured from a dropped slot is measured from what that one was;
+// one naming no earlier slot, from the first. A first slot joins nothing; an
+// "or" slot after a dropped term takes that term's place, relation and target.
+function decodeSlots(raw: ReturnType<typeof decodeSlot>[]): UrlComboSlot[] {
+  const out: UrlComboSlot[] = [];
+  const at: number[] = [];   // URL slot index -> the kept slot standing for it
+  let dropped: { relation: SlotRelation; target: number } | null = null;
+  raw.forEach((r, i) => {
+    if (r === null || r === 'retired') { at.push(0); return; }
+    const slot = 'empty' in r ? r.empty : r;
+    const t = slot.target ?? 0;
+    const target = t > 0 && t < i ? at[t] : 0;
+    const joined = !!slot.or && i > 0;
+    if ('empty' in r) {
+      if (!joined) dropped = { relation: slot.relation, target };
+      at.push(joined ? at[i - 1] : target);
+      return;
+    }
+    const kept: UrlComboSlot = { kind: slot.kind, relation: slot.relation, text: slot.text, picked: slot.picked, grammar: slot.grammar };
+    if (joined && dropped) {
+      kept.relation = dropped.relation;
+      if (dropped.target) kept.target = dropped.target;
+    } else if (joined && out.length) kept.or = true;
+    else if (target > 0) kept.target = target;
+    if (!joined || dropped) dropped = null;
+    at.push(out.length);
+    out.push(kept);
+  });
+  return out;
 }
 
 // Percent-encoded as a query string, but with commas and colons left bare:
@@ -265,14 +312,14 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
   s.xforms = list(p.get('xf'));
 
   const decoded = p.getAll('c').map(decodeSlot);
-  const slots = decoded.filter((x): x is UrlComboSlot => x !== null && x !== 'retired');
+  const slots = decodeSlots(decoded).slice(0, COMBO_TERMS_MAX);
   // A first slot of NOT has nothing to stand apart from: no proximity search.
   // A combo with a term that can no longer be asked is not run as another.
   if (!decoded.includes('retired') && comboKept(slots)) {
     // Clamped as the window box clamps what is typed into it.
     const win = Number(p.get('cw'));
     s.combo = {
-      slots: slots.slice(0, 4),
+      slots,
       window: win > 0 ? Math.max(1, Math.min(win, COMBO_WINDOW_MAX)) : COMBO_WINDOW_DEFAULT,
       unit: pick(p.get('cu'), UNITS, 'words'),
       ordered: p.get('co') === '1',

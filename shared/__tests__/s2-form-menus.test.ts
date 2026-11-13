@@ -347,7 +347,8 @@ describe('the form', () => {
     expect(prox).toHaveAttribute('aria-expanded', 'false');
     await fireEvent.click(prox);
     expect(prox).toHaveAttribute('aria-expanded', 'true');
-    expect((container.querySelector('details.combo-panel') as HTMLDetailsElement).open).toBe(true);
+    // S3: the editor itself, no inner panel to open.
+    expect(container.querySelector('#advanced-tools')).toContainElement(screen.getByRole('group', { name: 'Proximity search' }));
     expect(container.querySelector('.lemma-panel')).toBeNull();
   });
 

@@ -15,8 +15,12 @@
     greekScript,
     englishQueryUnits,
     englishWords,
+    COMBO_TERMS_MAX,
     COMBO_WINDOW_DEFAULT,
     COMBO_WINDOW_MAX,
+    comboGroups,
+    lemmaOptions,
+    type ComboGroup,
     type SpeakerFilter,
     type SpeakerRosterEntry,
     type SearchMode,
@@ -62,7 +66,8 @@
   } from '../lib/data';
   import { WORKS, getWork, workPath, WORK_ORDER, SEARCH_GROUPS, searchableTranslations, type TranslationRef } from '../lib/works';
   import { formatCite, formatLocValue, schemeFor } from '../lib/citation';
-  import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlSearch } from '../lib/search-url';
+  import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlCombo, type UrlSearch } from '../lib/search-url';
+  import { grammarWords, proximitySentence, termWords } from '../lib/proximity-sentence';
   import { FULL, addSaved, findSaved, savedAvailable } from '../lib/saved-searches';
   import { betaQueryToGreek, betaToGreek, liveGreek } from '../lib/betacode';
   import { addMark, deleteBack, GREEK_MARKS, insertText, KEY_ROWS, type KeyEdit } from '../lib/greek-keys';
@@ -1088,16 +1093,25 @@
   ];
   // Aristotle's grammar dictionary retains Morpheus's word-class tags.
 
-  // ── Combo search ──────────────────────────────────────────────────────────
-  // No jargon on the control: a reader who knows what a lemma is loses nothing
-  // by being told "in any of its forms", and a reader who does not is stopped
-  // dead by "lemma". Same words as the phrase index uses.
+  // ── Combo search: the proximity editor ────────────────────────────────────
+  // Each term a word in any of its forms, a word as typed, an exact phrase,
+  // or a grammatical description; each after the first joined to the one
+  // before by "and" or "or" (an or-joined term is one term with it), and
+  // placed near, before, after, or not near an earlier term (ruling 8-10).
   const SLOT_KINDS: { v: SlotKind; l: string }[] = [
-    { v: 'form', l: 'Word as written' },
-    { v: 'lemma', l: 'Word in any of its forms' },
-    { v: 'phrase', l: 'Exact phrase' },
-    { v: 'grammatical', l: 'Grammatical description' },
+    { v: 'lemma', l: 'any form' },
+    { v: 'form', l: 'as typed' },
+    { v: 'phrase', l: 'exact phrase' },
+    { v: 'grammatical', l: 'by grammar' },
   ];
+  const RELATIONS: { v: SlotRelation; l: string }[] = [
+    { v: 'near', l: 'near' },
+    { v: 'before', l: 'before' },
+    { v: 'after', l: 'after' },
+    { v: 'not', l: 'not near' },
+  ];
+  // An empty term's example, so it never reads as entered.
+  const TERM_EXAMPLES = ['ἀρετή', 'ἕξις', 'ἡδονή', 'λύπη'];
 
   interface LemmaMatch {
     key: string;
@@ -1117,6 +1131,8 @@
     lemmaError: string;
     lemmaRequest: number;
     relation: SlotRelation;
+    or: boolean;                 // joined to the term before by "or"
+    targetId: number | null;     // the editor it is measured from; null = term 1
   }
 
   let nextComboId = 1;
@@ -1135,10 +1151,12 @@
       lemmaError: '',
       lemmaRequest: 0,
       relation: 'near',
+      or: false,
+      targetId: null,
     };
   }
 
-  let comboEditors: ComboEditor[] = [newComboEditor('lemma'), newComboEditor('form')];
+  let comboEditors: ComboEditor[] = [newComboEditor('lemma'), newComboEditor('lemma')];
 
   // One dictionary word on its own. Combo could express it with a single slot,
   // but asking for every occurrence of a lemma is the commonest scholarly
@@ -1163,35 +1181,46 @@
   let lemmaGlosses: Record<string, string[]> = {};
   const lemmaGlossLoading = new Set<string>();
 
-  // `ordered` is passed in rather than read from scope so the reactive
-  // statement below re-runs when the order lock is toggled.
-  function comboSlot(editor: ComboEditor, ordered: boolean): ComboSlot | null {
-    // The order lock is a whole-query constraint, so it supersedes the per-slot
-    // relations rather than combining with them (the two can contradict).
-    // "Not near" is no position, so it stands under the lock.
-    const relation = ordered && editor.relation !== 'not' ? 'near' : editor.relation;
-    if (editor.kind === 'grammatical') {
-      return Object.keys(editor.grammar).length
-        ? { kind: editor.kind, query: { ...editor.grammar }, relation }
-        : null;
-    }
-    if (editor.kind === 'lemma') {
-      return editor.picked.length
-        ? { kind: editor.kind, terms: [...editor.picked], relation }
-        : null;
-    }
-    const text = editor.text.trim();
-    if (!text) return null;
-    return {
-      kind: editor.kind,
-      terms: editor.kind === 'phrase' ? text.split(/\s+/) : [text],
-      relation,
-    };
+  const editorUsable = (ed: ComboEditor) =>
+    ed.kind === 'grammatical' ? Object.keys(ed.grammar).length > 0 : ed.kind === 'lemma' ? ed.picked.length > 0 : !!ed.text.trim();
+  // The editors as the engine and the address read them: terms that ask
+  // nothing left out, or-runs joined, each target an index among the rest
+  // (comboGroups). `ordered` comes in rather than from scope, so the
+  // reactive statements below re-run when the lock is toggled.
+  function editorGroups(editors: ComboEditor[]) {
+    return comboGroups(editors.map((editor, i) => {
+      const t = editor.targetId === null ? 0 : editors.findIndex(ed => ed.id === editor.targetId);
+      return { editor, or: i > 0 && editor.or, relation: editor.relation, target: t > 0 && t < i ? t : 0 };
+    }), j => editorUsable(j.editor));
   }
+  // Before or after set the order themselves: the lock then binds nothing
+  // (the editor says "Order set by before or after" in its place).
+  const orderSet = (editors: ComboEditor[]) => editors.some((ed, i) =>
+    i > 0 && !ed.or && (ed.relation === 'before' || ed.relation === 'after'));
+  // The groups flattened back into slots, the first of each group carrying
+  // its relation and target, the rest joined by "or".
+  function flatSlots<T>(groups: ComboGroup<{ editor: ComboEditor }>[], make: (ed: ComboEditor) => T): (T & { relation: SlotRelation; or?: true; target?: number })[] {
+    const first: number[] = [];
+    let n = 0;
+    for (const g of groups) { first.push(n); n += g.members.length; }
+    return groups.flatMap(g => g.members.map((m, k) => ({
+      ...make(m.editor),
+      relation: g.relation,
+      ...(k > 0 ? { or: true as const } : first[g.target] > 0 && k === 0 ? { target: first[g.target] } : {}),
+    })));
+  }
+  function engineSlot(ed: ComboEditor): ComboSlot {
+    if (ed.kind === 'grammatical') return { kind: ed.kind, query: { ...ed.grammar } };
+    if (ed.kind === 'lemma') return { kind: ed.kind, terms: [...ed.picked] };
+    const text = ed.text.trim();
+    return { kind: ed.kind, terms: ed.kind === 'phrase' ? text.split(/\s+/) : [text] };
+  }
+  const urlSlot = (ed: ComboEditor) => ({ kind: ed.kind, text: ed.text, picked: [...ed.picked], grammar: { ...ed.grammar } });
 
-  $: comboSearchSlots = comboEditors
-    .map((editor) => comboSlot(editor, comboOrdered))
-    .filter((slot): slot is ComboSlot => slot !== null);
+  $: comboGroupsNow = editorGroups(comboEditors);
+  $: comboSearchSlots = flatSlots(comboGroupsNow, engineSlot);
+  $: comboOrderSet = orderSet(comboEditors);
+  $: comboLocked = comboOrdered && !comboOrderSet;
   // A search whose first term is NOT has nothing for it to stand apart from,
   // so it is no proximity search, as with one term.
   // Grammar alone (ruling 3, John, 2026-11-10): one grammar term and no other
@@ -1199,41 +1228,146 @@
   // a speaker (a second term makes it an ordinary combo). Unnarrowed, Search
   // stays enabled and pressing it shows the narrowing controls (option C2),
   // with no sentence of explanation; searchCombo refuses it in any case.
-  $: grammarAlone = comboSearchSlots.length === 1 && comboSearchSlots[0].kind === 'grammatical'
-    && comboSearchSlots[0].relation !== 'not';
-  $: comboActive = (comboSearchSlots.length >= 2 && comboSearchSlots[0].relation !== 'not') || grammarAlone;
-  let narrowPrompt = false;
+  $: grammarAlone = comboGroupsNow.length === 1 && comboGroupsNow[0].relation !== 'not'
+    && comboGroupsNow[0].members.every(m => m.editor.kind === 'grammatical');
+  $: comboReady = (comboGroupsNow.length >= 2 && comboGroupsNow[0].relation !== 'not') || grammarAlone;
+  // The page is in proximity: a proximity search is what it shows (set when
+  // one runs or arrives in the address, cleared by Turn off), or the editor
+  // is open. Either way, Search runs the editor's terms once they make one.
+  let proxOn = false;
   let advancedOpen = false;
-  $: if (comboActive) advancedOpen = true;
-  // Whether the tool's <details> is open has to live in component state. Bound
-  // one way as open={comboActive}, a panel the reader opened by hand is only
-  // ever open in the DOM — the component still thinks it is shut, so the next
-  // render that re-applies the attribute slams it closed under them. This keeps
-  // the auto-open (activating the tool reveals it) while recording the reader's
-  // own toggle, so nothing they typed can collapse the panel they typed it in.
-  let comboPanelOpen = false;
-  $: if (comboActive) comboPanelOpen = true;
+  $: comboActive = comboReady && (advancedOpen || proxOn);
+  let narrowPrompt = false;
   $: comboOptions = {
     window: comboWindow,
     unit: comboUnit,
-    ordered: comboOrdered,
+    ordered: comboLocked,
     crossChapter: comboCrossChapter,
     speaker: speakerFilter,
   } satisfies ComboOptions;
 
-  // Proximity opens the editor in one click (ruling 2).
+  // The editor's search as the address would write it; null until its terms
+  // make one. Read against the last search's to tell a pending edit.
+  function editorCombo(editors: ComboEditor[], window: number, unit: WindowUnit, locked: boolean, crossChapter: boolean): UrlCombo | null {
+    const groups = editorGroups(editors);
+    const ready = (groups.length >= 2 && groups[0].relation !== 'not')
+      || (groups.length === 1 && groups[0].relation !== 'not' && groups[0].members.every(m => m.editor.kind === 'grammatical'));
+    return ready ? { slots: flatSlots(groups, urlSlot), window, unit, ordered: locked, crossChapter } : null;
+  }
+  $: comboNow = editorCombo(comboEditors, comboWindow, comboUnit, comboLocked, comboCrossChapter);
+  const comboKey = (c: UrlCombo | null | undefined) => (c ? JSON.stringify(c) : '');
+  // What the proximity search shown is, in one sentence; and the editor's,
+  // when it differs and is not yet searched (d28).
+  $: proxLive = proxOn && !!lastSearch?.combo;
+  $: comboPending = advancedOpen && !!comboNow && comboKey(comboNow) !== comboKey(lastSearch?.combo);
+  const headsOf = (info: typeof pickInfo) => (key: string) => info[key]?.heads.split(' · ')[0] ?? key;
+  // The In value of a search's works: none for all works.
+  const sameSet = (a: string[], b: Set<string>) => a.length === b.size && a.every(id => b.has(id));
+  const inValue = (works: string[], chosen: Set<string>, label: string) =>
+    works.length === WORK_IDS.length ? null
+      : sameSet(works, new Set(AUTHENTIC_IDS)) ? 'authentic works'
+      : sameSet(works, chosen) ? label
+      : `${works.length} works`;
+  $: proxSentence = proxLive && lastSearch?.combo
+    ? proximitySentence(lastSearch.combo.slots, lastSearch.combo, headsOf(pickInfo), inValue(lastSearch.works, selectedWorks, worksValue)) : '';
+  $: pendingSentence = comboPending && comboNow
+    ? proximitySentence(comboNow.slots, comboNow, headsOf(pickInfo), inValue(WORK_IDS.filter(id => selectedWorks.has(id)), selectedWorks, worksValue)) : '';
+
+  // Proximity opens the editor in one click (ruling 2), and shuts it.
+  let proxTrigger: HTMLButtonElement | undefined;
   function toggleAdvanced() {
-    advancedOpen = comboActive ? true : !advancedOpen;
-    if (advancedOpen) comboPanelOpen = true;
+    advancedOpen = !advancedOpen;
+    if (advancedOpen) void seedFromQuery();
+  }
+  async function closeEditor() {
+    advancedOpen = false;
+    await tick();
+    proxTrigger?.focus();
+  }
+  async function openEditor() {
+    advancedOpen = true;
+    await tick();
+    document.querySelector<HTMLElement>('#advanced-tools .combo-slot :is(input, select, button)')?.focus();
+  }
+  // The editor's Search: the page is in proximity from now on.
+  function searchEditor() {
+    proxOn = true;
+  }
+  // Turn off: back to the search the boxes hold, or to the empty page.
+  async function turnOffProximity() {
+    proxOn = false;
+    advancedOpen = false;
+    comboEditors = [newComboEditor('lemma'), newComboEditor('lemma')];
+    comboWindow = COMBO_WINDOW_DEFAULT;
+    comboUnit = 'words';
+    comboOrdered = false;
+    comboCrossChapter = true;
+    await tick();
+    if (grkQuery.trim() || engQuery.trim() || soloLemmaActive) await doSearch();
+    else {
+      window.history.pushState(null, '', window.location.pathname);
+      pageUrl = here();
+      await searchFromUrl();
+    }
+    await tick();
+    proxTrigger?.focus();
+  }
+
+  // Term 1 takes the page's query when the editor opens on one (the mock-up's
+  // empty term 1 was a defect): each typed word a term in turn, as the Form
+  // menu reads it (any form: the dictionary word it is a form of), or the
+  // whole query one phrase. Only into an editor nobody has filled.
+  async function seedFromQuery() {
+    if (comboEditors.some(editorUsable) || comboEditors.some(ed => ed.lemmaInput.trim())) return;
+    const ids = comboEditors.map(ed => ed.id).join();
+    let fill: ComboEditor[];
+    if (soloLemmaActive) {
+      fill = [{ ...newComboEditor('lemma'), picked: [...soloLemma.picked] }];
+    } else {
+      const query = lang === 'english' ? '' : grkQuery.trim();
+      if (!query) return;
+      const words = query.split(/\s+/).map(w => (greekScript(w) ? w : betaQueryToGreek(w)));
+      if (grkMode === 'phrase' && words.length > 1) {
+        fill = [{ ...newComboEditor('phrase'), text: words.join(' ') }];
+      } else if (matchMode === 'form') {
+        fill = words.slice(0, COMBO_TERMS_MAX).map(w => ({ ...newComboEditor('form'), text: w }));
+      } else {
+        fill = await Promise.all(words.slice(0, COMBO_TERMS_MAX).map(async w => {
+          const ed = newComboEditor('lemma');
+          const keys = await headwordKeys(w);
+          if (keys.length) ed.picked = keys;
+          else ed.lemmaInput = w;
+          return ed;
+        }));
+      }
+    }
+    // Filled meanwhile, or rebuilt: leave it.
+    if (comboEditors.map(ed => ed.id).join() !== ids || comboEditors.some(editorUsable)) return;
+    comboEditors = [...fill, ...comboEditors.slice(fill.length)];
+    if (comboEditors.length < 2) comboEditors = [...comboEditors, newComboEditor('lemma')];
+    void fillPickInfo(fill.flatMap(ed => ed.picked));
+    for (const ed of fill) if (ed.lemmaInput) void searchLemmaChoices(ed.id, ed.lemmaInput);
+  }
+  // The picker's keys for a typed word: itself when it is a dictionary word,
+  // else the dictionary words the corpus map files it under.
+  async function headwordKeys(word: string): Promise<string[]> {
+    const fold = greekFold(word);
+    if (!fold) return [];
+    const has = async (key: string) => {
+      try { return Object.hasOwn(await fetchLemmaPickerShard(/^[a-z]/.test(key) ? key[0] : '_'), key); } catch { return false; }
+    };
+    if (await has(fold)) return [fold];
+    const heads = (await lemmaOptions([fold]))?.[0] ?? [];
+    const found = await Promise.all(heads.map(async h => ((await has(h)) ? h : '')));
+    return found.filter(Boolean);
   }
 
   function setComboKind(id: number, kind: SlotKind) {
     const index = comboEditors.findIndex((slot) => slot.id === id);
     if (index < 0 || comboEditors[index].kind === kind) return;
-    const relation = comboEditors[index].relation;   // not kind-specific; keep it
-    comboEditors[index] = newComboEditor(kind);
-    comboEditors[index].id = id;
-    comboEditors[index].relation = relation;
+    // The joiner, relation and target are the term's place, not its kind.
+    const { relation, or, targetId } = comboEditors[index];
+    comboEditors[index] = { ...newComboEditor(kind), id, relation, or, targetId };
     comboEditors = [...comboEditors];
   }
 
@@ -1241,6 +1375,23 @@
     const editor = comboEditors.find((slot) => slot.id === id);
     if (!editor) return;
     editor.relation = relation;
+    // A NOT term is no word of the match: what was measured from it is
+    // measured from what it is measured from.
+    if (relation === 'not') for (const ed of comboEditors) if (ed.targetId === id) ed.targetId = editor.targetId;
+    comboEditors = [...comboEditors];
+  }
+
+  function setComboJoin(id: number, or: boolean) {
+    const editor = comboEditors.find((slot) => slot.id === id);
+    if (!editor) return;
+    editor.or = or;
+    comboEditors = [...comboEditors];
+  }
+
+  function setComboTarget(id: number, targetId: number | null) {
+    const editor = comboEditors.find((slot) => slot.id === id);
+    if (!editor) return;
+    editor.targetId = targetId;
     comboEditors = [...comboEditors];
   }
 
@@ -1250,6 +1401,44 @@
     editor.text = text;
     comboEditors = [...comboEditors];
   }
+
+  // The earlier terms a term may be measured from: the first of each
+  // or-run, never a NOT term, named by its word ("term 2" while empty).
+  function targetChoices(editors: ComboEditor[], index: number, info: typeof pickInfo): { id: number | null; label: string }[] {
+    const out: { id: number | null; label: string }[] = [];
+    for (let i = 0; i < index; i++) {
+      const ed = editors[i];
+      if (i > 0 && (ed.or || ed.relation === 'not')) continue;
+      const run = [ed];
+      for (let k = i + 1; k < editors.length && editors[k].or; k++) run.push(editors[k]);
+      const names = run.map(r => (editorUsable(r) ? termWords({ ...r }, headsOf(info)) : '')).filter(Boolean);
+      out.push({ id: i === 0 ? null : ed.id, label: names.length ? names.join(' or ') : `term ${i + 1}` });
+    }
+    return out;
+  }
+  // What a term is measured from, as its select shows it: the editor named,
+  // unless that one is now an or-joined term (then the first of its run) or
+  // a NOT term (then what that one is measured from), as comboGroups reads it.
+  function shownTarget(editors: ComboEditor[], index: number): number | null {
+    let id = editors[index].targetId;
+    for (let guard = 0; id !== null && guard < editors.length; guard++) {
+      let t = editors.findIndex(ed => ed.id === id);
+      if (t < 1 || t >= index) return null;
+      while (t > 0 && editors[t].or) t--;
+      if (t === 0) return null;
+      if (editors[t].relation !== 'not') return editors[t].id;
+      id = editors[t].targetId;
+    }
+    return null;
+  }
+  // The chips' short names, as round 34 sets them.
+  const CHIP_NAMES: Record<string, string> = { imperat: 'imper', futperf: 'fut perf', mp: 'mid/pass', irreg_comp: 'irreg' };
+  // The term number of the first of an or-run, for "as term n".
+  const runHead = (editors: ComboEditor[], index: number) => {
+    let i = index;
+    while (i > 0 && editors[i].or) i--;
+    return i + 1;
+  };
 
   // Shown in place of results; the focus goes to the first button when the
   // reader pressed Search, so a screen reader hears where they are.
@@ -1282,6 +1471,7 @@
         free = comboEditors[comboEditors.length - 1];
       }
       target = `[aria-labelledby="combo-slot-${free.id}"]`;
+      advancedOpen = true;
     }
     await tick();
     const panel = document.querySelector<HTMLElement>(target);
@@ -1297,19 +1487,35 @@
     field?.focus({ preventScroll: true });
   }
 
-  function addComboEditor() {
-    if (comboEditors.length < 4) comboEditors = [...comboEditors, newComboEditor('form')];
+  // A fresh empty term, any form, near term 1 (it copies nothing: the
+  // mock-up's copy of the last term was a defect).
+  async function addComboEditor() {
+    if (comboEditors.length >= COMBO_TERMS_MAX) return;
+    const ed = newComboEditor('lemma');
+    comboEditors = [...comboEditors, ed];
+    await tick();
+    document.getElementById(`lemma-${ed.id}`)?.focus();
   }
 
+  // What was measured from a removed term is measured from what it was; an
+  // or-run's next term takes its place.
   function removeComboEditor(id: number) {
-    if (comboEditors.length > 2) comboEditors = comboEditors.filter((slot) => slot.id !== id);
+    const index = comboEditors.findIndex((slot) => slot.id === id);
+    if (index < 1) return;
+    const gone = comboEditors[index];
+    const next = comboEditors[index + 1];
+    const heir = next?.or && !gone.or ? next : null;
+    if (heir) Object.assign(heir, { or: false, relation: gone.relation, targetId: gone.targetId });
+    for (const ed of comboEditors) if (ed.targetId === id) ed.targetId = heir ? heir.id : gone.targetId;
+    comboEditors = comboEditors.filter((slot) => slot.id !== id);
   }
 
+  // One value per category: a chip picks it, the chosen chip unpicks it.
   function setComboGrammar(id: number, key: string, value: string) {
     const editor = comboEditors.find((slot) => slot.id === id);
     if (!editor) return;
     const next = { ...editor.grammar };
-    if (value) next[key] = value; else delete next[key];
+    if (value && next[key] !== value) next[key] = value; else delete next[key];
     editor.grammar = next;
     comboEditors = [...comboEditors];
   }
@@ -1385,6 +1591,20 @@
       editor.lemmaCapped = false;
     }
     commitEditor(id);
+  }
+
+  // A pick from the list: the focus goes to its Change, the field being gone.
+  async function pickComboLemma(id: number, key: string, info: { heads: string; slug?: string; count: number }) {
+    toggleComboLemma(id, key, info);
+    await tick();
+    document.querySelector<HTMLElement>(`[aria-labelledby="combo-slot-${id}"] .lpsel .x`)?.focus();
+  }
+
+  // Change: the pick goes, and the focus to the field it leaves.
+  async function changeComboLemma(id: number, key: string) {
+    toggleComboLemma(id, key);
+    await tick();
+    document.getElementById(`lemma-${id}`)?.focus();
   }
 
   // Picks restored from the address bar arrive as bare keys. Read each one's
@@ -2395,12 +2615,7 @@
       workFilter: null,
       xforms: [],
       lemmas: [...soloLemma.picked],
-      combo: comboActive ? {
-        slots: comboEditors.filter(ed => comboSlot(ed, comboOrdered)).map(ed => ({
-          kind: ed.kind, relation: ed.relation, text: ed.text, picked: [...ed.picked], grammar: { ...ed.grammar },
-        })),
-        window: comboWindow, unit: comboUnit, ordered: comboOrdered, crossChapter: comboCrossChapter,
-      } : null,
+      combo: comboActive ? comboNow : null,
       speaker: speakerFilter ?? null,
       view,
       facets: {},
@@ -2464,13 +2679,19 @@
       if (lemmaOn && s.lemmas.join() === soloLemma.picked.join() && grkQuery === lemmaBoxText(s.lemmas, {})) grkQuery = lemmaBoxText(s.lemmas);
     });
     const combo = s.combo;
-    comboEditors = combo
-      ? combo.slots.map(slot => ({ ...newComboEditor(slot.kind), relation: slot.relation, text: slot.text, picked: [...slot.picked], grammar: { ...slot.grammar } }))
-      : [newComboEditor('lemma'), newComboEditor('form')];
+    const eds = combo
+      ? combo.slots.map(slot => ({ ...newComboEditor(slot.kind), relation: slot.relation, or: !!slot.or, text: slot.text, picked: [...slot.picked], grammar: { ...slot.grammar } }))
+      : [newComboEditor('lemma'), newComboEditor('lemma')];
+    combo?.slots.forEach((slot, i) => { if (slot.target) eds[i].targetId = eds[slot.target]?.id ?? null; });
+    // An older link with the order lock beside before or after: the lock won
+    // there, the relations reading as near (the old editor's rule).
+    if (combo?.ordered && orderSet(eds)) for (const ed of eds) if (ed.relation === 'before' || ed.relation === 'after') ed.relation = 'near';
+    comboEditors = eds;
     comboWindow = combo?.window ?? COMBO_WINDOW_DEFAULT;
     comboUnit = combo?.unit ?? 'words';
     comboOrdered = combo?.ordered ?? false;
     comboCrossChapter = combo?.crossChapter ?? true;
+    proxOn = !!combo;
     view = s.view;
     context = s.context;
     sort = s.sort;
@@ -2578,6 +2799,7 @@
     closeSugg();
     showTry = false;
     const run = ++searchRun;
+    proxOn = comboActive;
     lastSearch = currentSearch();
     // Unnarrowed, a lone grammar term asks for the narrowing controls instead
     // (ruling 3, C2). The query is still recorded and any search in flight
@@ -3198,34 +3420,44 @@
     onHelpKey(e);
     if (e.key !== 'Escape') return;
     const m = document.querySelector<HTMLDetailsElement>('.sopt .opt[open]');
-    if (!m) return;
-    m.open = false;
-    m.querySelector('summary')?.focus();
+    if (m) {
+      m.open = false;
+      m.querySelector('summary')?.focus();
+      return;
+    }
+    // Nothing else took the Escape: it shuts the proximity editor, and the
+    // focus goes back to Proximity.
+    if (!e.defaultPrevented && advancedOpen) {
+      e.preventDefault();
+      void closeEditor();
+    }
   }
 </script>
 
   <!-- `glosses` is passed in, not read from scope: a snippet re-renders for a
        change to what it is handed, and the glosses arrive after the list. -->
-  {#snippet lemmaPicker(editor: ComboEditor, groupLabel: string, glosses: Record<string, string[]>)}
+  {#snippet lemmaPicker(editor: ComboEditor, groupLabel: string, glosses: Record<string, string[]>, example: string)}
     <div class="lp">
       {#each editor.picked as key}
         {@const info = pickInfo[key]}
-        <!-- A picked word reads as headword, gloss and count; Change drops it
-             and returns to the field. -->
+        <!-- A picked word reads as headword, count and Change, the gloss in
+             italic under it; Change drops it and returns to the field. -->
         <div class="lpsel">
           <span class="hw" lang="grc">{info?.heads ?? key}</span>
-          {#if info?.slug && glosses[info.slug]?.length}<i class="gl">{glosses[info.slug].slice(0, 2).join('; ')}</i>{/if}
           {#if info}<span class="ct">{info.count.toLocaleString('en')}</span>{/if}
           <button type="button" class="x" aria-label={`Change ${info?.heads ?? key} in ${groupLabel}`}
-            on:click={() => toggleComboLemma(editor.id, key)}>Change</button>
+            on:click={() => changeComboLemma(editor.id, key)}>Change</button>
         </div>
+        {#if info?.slug && glosses[info.slug]?.length}<i class="gl">{glosses[info.slug].slice(0, 2).join('; ')}</i>{/if}
       {/each}
-      <label class="lp-field" for={`lemma-${editor.id}`}>
-        <span>{editor.picked.length ? 'Add another dictionary word' : 'Find a dictionary word'}</span>
+      {#if !editor.picked.length}
         <input
           id={`lemma-${editor.id}`}
+          class="prox-field"
           lang="grc"
           type="search"
+          placeholder={`e.g. ${example}`}
+          aria-label={`${groupLabel}: a dictionary word`}
           value={editor.lemmaInput}
           on:input={(e) => searchLemmaChoices(editor.id, e.currentTarget.value)}
           autocomplete="off"
@@ -3233,7 +3465,7 @@
           autocapitalize="none"
           spellcheck="false"
         />
-      </label>
+      {/if}
       {#if editor.lemmaLoading}
         <p class="lp-status" aria-live="polite">Loading dictionary words…</p>
       {:else if editor.lemmaError}
@@ -3251,7 +3483,7 @@
             {@const slug = match.candidates.find((c) => c.s)?.s}
             <li class:on={editor.picked.includes(match.key)} use:glossOnMount={slug}>
               <button type="button" aria-pressed={editor.picked.includes(match.key)}
-                on:click={() => toggleComboLemma(editor.id, match.key, { heads, slug, count: match.count })}>
+                on:click={() => pickComboLemma(editor.id, match.key, { heads, slug, count: match.count })}>
                 <span class="hw" lang="grc">{heads}</span>
                 <span class="gl">{#if !match.candidates.length}no headword recorded{:else if match.candidates.length > 1}searched together — the index cannot separate them{:else if slug && glosses[slug]?.length}{glosses[slug].slice(0, 2).join('; ')}{/if}</span>
                 <span class="ct">{match.count.toLocaleString('en')}</span>
@@ -3291,7 +3523,7 @@
 
 <svelte:window on:keydown={onWindowKey} on:click={onWindowClick} on:beforeprint={openForPrint} on:afterprint={closeAfterPrint} />
 
-<main class="search-page">
+<main class="search-page" class:prox-pending={comboPending && searched}>
   <form class="search-form" on:submit={doSearch} novalidate>
 
     <!-- One field and the switch for what it searches: Greek, English, or Both
@@ -3395,7 +3627,7 @@
     <!-- The options: menus on a hairline underline, the switches alone, and
          Proximity with Search as one block at the right (ruling 4). Under Both,
          three rows: Greek, English, then what joins them and where. -->
-    <div class="sopt" class:sopt-both={lang === 'both'}>
+    <div class="sopt" class:sopt-both={lang === 'both'} class:prox-editing={advancedOpen}>
       {#if lang !== 'english'}
         <div class="sopt-g">
           {#if matchMode !== 'text'}
@@ -3513,11 +3745,15 @@
           class="advanced-trigger"
           aria-expanded={advancedOpen}
           aria-controls="advanced-tools"
+          bind:this={proxTrigger}
           on:click={toggleAdvanced}
-        >Proximity<span class="sr-only"> search</span>{@render caret()}</button>
-        <button type="submit" class="search-btn" disabled={loading}>
-          {loading ? 'Searching…' : 'Search'}
-        </button>
+        >{#if proxLive}<span class="prox-dot" aria-hidden="true"></span>{/if}Proximity<span class="sr-only"> search{proxLive ? ', on' : ''}</span>{@render caret()}</button>
+        <!-- With the editor open, its own Search is the one. -->
+        {#if !advancedOpen}
+          <button type="submit" class="search-btn" disabled={loading}>
+            {loading ? 'Searching…' : 'Search'}
+          </button>
+        {/if}
       </div>
     </div>
     {#if lemmaOn && sugg.length}
@@ -3543,160 +3779,161 @@
       </p>
     {/if}
 
-    {#if advancedOpen}
-      <div id="advanced-tools" class="advanced-body">
-        <p class="advanced-guide"><a class="guide-link" href={`${BASE_URL}/advanced`} target="_blank" rel="noreferrer">What these tools do</a></p>
-          <details class="combo-panel" bind:open={comboPanelOpen}>
-            <summary>
-              <span class="n" aria-hidden="true">Β</span>
-              <span class="t">Words near each other</span>
-              {#if comboActive}<span class="combo-active">{comboSearchSlots.length} term{comboSearchSlots.length === 1 ? '' : 's'} ready</span>{/if}
-              <span class="tog" aria-hidden="true">{comboPanelOpen ? 'Close ▴' : 'Open ▾'}</span>
-            </summary>
-
-            <div class="combo-slots">
-              {#each comboEditors as slot, slotIndex (slot.id)}
-                <section class="combo-slot" aria-labelledby={`combo-slot-${slot.id}`}>
-                  <div class="combo-slot-head">
-                    <span id={`combo-slot-${slot.id}`} class="combo-slot-number">Term {slotIndex + 1}</span>
-                    <label class="combo-kind">
-                      <span>Kind</span>
-                      <select
-                        value={slot.kind}
-                        aria-label={`Kind for term ${slotIndex + 1}`}
-                        on:change={(e) => setComboKind(slot.id, e.currentTarget.value as SlotKind)}
-                      >
-                        {#each SLOT_KINDS as k}<option value={k.v}>{k.l}</option>{/each}
+    <!-- Proximity (§5.5): the search in one sentence while it is live, with
+         Turn off · Close (Change when shut) · Guide; the editor under it. -->
+    {#if proxLive || advancedOpen}
+      <div id="advanced-tools" class="prox">
+        {#if proxLive}
+          <p class="prox-sum" class:prox-was={comboPending}>{#if comboPending}<span class="prox-last">Last search ·</span>{' '}{/if}{proxSentence}</p>
+          <p class="prox-links">
+            <button type="button" class="prox-link" on:click={turnOffProximity}>Turn off</button>
+            {#if advancedOpen}
+              <button type="button" class="prox-link" on:click={closeEditor}>Close</button>
+            {:else}
+              <button type="button" class="prox-link prox-change" aria-expanded="false" on:click={openEditor}>Change</button>
+            {/if}
+            <a class="prox-link" href={`${BASE_URL}/advanced#combo`}>Guide</a>
+          </p>
+        {/if}
+        {#if advancedOpen}
+          <div class="prox-terms" role="group" aria-label="Proximity search">
+            {#each comboEditors as slot, i (slot.id)}
+              {@const n = i + 1}
+              {@const inRun = i > 0 && (slot.or || !!comboEditors[i + 1]?.or) || (i === 0 && !!comboEditors[1]?.or)}
+              <section class="combo-slot" class:prox-run={inRun} aria-labelledby={`combo-slot-${slot.id}`}>
+                {#if i === 0}
+                  <span class="prox-colh prox-c1" id={`combo-slot-${slot.id}`}>Term 1</span>
+                  <span class="prox-colh prox-c2" aria-hidden="true">Relation</span>
+                  <span class="prox-colh prox-c3" aria-hidden="true">Kind</span>
+                  <span class="prox-colh prox-c4" aria-hidden="true">Distance</span>
+                {:else}
+                  <div class="prox-head prox-c1">
+                    <span class="prox-sel">
+                      <span class="prox-selv" aria-hidden="true">{slot.or ? 'or' : 'and'}</span>
+                      <select class="prox-join" aria-label={`Join term ${n} to term ${i}`} value={slot.or ? 'or' : 'and'}
+                        on:change={(e) => setComboJoin(slot.id, e.currentTarget.value === 'or')}>
+                        <option value="and">and</option>
+                        <option value="or">or</option>
                       </select>
-                    </label>
-                    {#if slotIndex > 0}
-                      <!-- Placed against term 1, not against the term above it, so
-                           each answers "before or after the word I am studying?".
-                           The order lock is the stronger whole-query constraint and
-                           supersedes these; under it a term is in order or not near. -->
-                      <label class="combo-kind">
-                        <span>Relative to term 1</span>
-                        <select
-                          value={comboOrdered && slot.relation !== 'not' ? 'near' : slot.relation}
-                          aria-label={`Position of term ${slotIndex + 1} relative to term 1`}
-                          on:change={(e) => setComboRelation(slot.id, e.currentTarget.value as SlotRelation)}
-                        >
-                          {#if comboOrdered}
-                            <option value="near">In order</option>
-                          {:else}
-                            <option value="near">Near</option>
-                            <option value="before">Before</option>
-                            <option value="after">After</option>
-                          {/if}
-                          <option value="not">Not near</option>
-                        </select>
-                      </label>
-                    {/if}
-                    <button
-                      type="button"
-                      class="combo-remove"
-                      disabled={comboEditors.length <= 2}
-                      aria-label={`Remove term ${slotIndex + 1}`}
-                      on:click={() => removeComboEditor(slot.id)}
-                    >Remove</button>
+                    </span>
+                    <span class="prox-tn" id={`combo-slot-${slot.id}`}>Term {n}</span>
                   </div>
+                {/if}
 
-                  {#if slot.kind === 'phrase'}
-                    <label class="combo-text-field" for={`combo-text-${slot.id}`}>
-                      <span>The words, in order</span>
-                      <input
-                        id={`combo-text-${slot.id}`}
-                        lang="grc"
-                        type="text"
-                        value={slot.text}
-                        on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
-                        autocomplete="off"
-                        autocorrect="off"
-                        autocapitalize="none"
-                        spellcheck="false"
-                      />
-                    </label>
-                  {:else if slot.kind === 'form'}
-                    <label class="combo-text-field" for={`combo-text-${slot.id}`}>
-                      <span>The word as written</span>
-                      <input
-                        id={`combo-text-${slot.id}`}
-                        lang="grc"
-                        type="text"
-                        value={slot.text}
-                        on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
-                        autocomplete="off"
-                        autocorrect="off"
-                        autocapitalize="none"
-                        spellcheck="false"
-                      />
-                    </label>
-                  {:else if slot.kind === 'lemma'}
-                    {@render lemmaPicker(slot, `term ${slotIndex + 1}`, lemmaGlosses)}
+                <div class="prox-word prox-c1">
+                  {#if slot.kind === 'lemma'}
+                    {@render lemmaPicker(slot, `Term ${n}`, lemmaGlosses, TERM_EXAMPLES[i] ?? 'ἀρετή')}
+                  {:else if slot.kind === 'grammatical'}
+                    <span class="prox-gram" class:prox-empty={!Object.keys(slot.grammar).length}>{Object.keys(slot.grammar).length ? grammarWords(slot.grammar) : 'any word'}</span>
                   {:else}
-                    <div class="combo-grammar-grid">
-                      {#each GRAMMAR_CATEGORIES as cat}
-                        <label class="grammar-field">
-                          <span>{cat.label}</span>
-                          <select
-                            value={slot.grammar[cat.key] ?? ''}
-                            on:change={(e) => setComboGrammar(slot.id, cat.key, e.currentTarget.value)}
-                          >
-                            <option value="">any</option>
-                            {#each cat.values as v}<option value={v}>{cat.names?.[v] ?? v}</option>{/each}
-                          </select>
-                        </label>
-                      {/each}
-                    </div>
+                    <input
+                      id={`combo-text-${slot.id}`}
+                      class="prox-field"
+                      lang="grc"
+                      type="text"
+                      placeholder={slot.kind === 'phrase' ? 'e.g. τὸ τί ἦν εἶναι' : `e.g. ${TERM_EXAMPLES[i] ?? 'ἀρετή'}`}
+                      aria-label={`Term ${n}: ${slot.kind === 'phrase' ? 'the words, in order' : 'the word as written'}`}
+                      value={slot.text}
+                      on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
+                      autocomplete="off"
+                      autocorrect="off"
+                      autocapitalize="none"
+                      spellcheck="false"
+                    />
                   {/if}
-                </section>
-              {/each}
-            </div>
+                </div>
 
-            <button
-              type="button"
-              class="combo-add"
-              disabled={comboEditors.length >= 4}
-              on:click={addComboEditor}
-            >Add term</button>
+                {#if i > 0}
+                  <div class="prox-rel prox-c2">
+                    {#if slot.or}
+                      <span class="prox-as">as term {runHead(comboEditors, i)}</span>
+                    {:else}
+                      {@const choices = targetChoices(comboEditors, i, pickInfo)}
+                      {@const shown = shownTarget(comboEditors, i)}
+                      <span class="prox-relw">
+                        <span class="prox-sel">
+                          <span class="prox-selv" aria-hidden="true">{RELATIONS.find(r => r.v === slot.relation)?.l}</span>
+                          <select aria-label={`Relation of term ${n}`} value={slot.relation}
+                          on:change={(e) => setComboRelation(slot.id, e.currentTarget.value as SlotRelation)}>
+                          {#each RELATIONS as r}<option value={r.v}>{r.l}</option>{/each}
+                          </select>
+                        </span>
+                      </span>
+                      <span class="prox-sel">
+                        <span class="prox-selv prox-targetv" aria-hidden="true" lang="grc">{choices.find(c => c.id === shown)?.label ?? choices[0]?.label}</span>
+                        <select class="prox-target" aria-label={`Term ${n} is measured from`} value={String(shown ?? '')}
+                          on:change={(e) => setComboTarget(slot.id, e.currentTarget.value ? Number(e.currentTarget.value) : null)}>
+                          {#each choices as c}<option value={String(c.id ?? '')} lang="grc">{c.label}</option>{/each}
+                        </select>
+                      </span>
+                    {/if}
+                  </div>
+                {/if}
 
-            <div class="combo-proximity">
-              <label class="combo-option combo-window">
-                <span>Window (words)</span>
-                <input
-                  type="number"
-                  min="1"
-                  max={COMBO_WINDOW_MAX}
-                  bind:value={comboWindow}
-                  disabled={comboUnit !== 'words'}
-                  on:blur={clampComboWindow}
-                />
-              </label>
-              <label class="combo-option">
-                <span>Measured in</span>
-                <select bind:value={comboUnit}>
-                  <option value="words">Words</option>
-                  <option value="line">Same line of Greek</option>
-                  <option value="chapter">Same chapter</option>
-                  {#if SPEAKERS}<option value="turn">Same speech</option>{/if}
-                </select>
-              </label>
-              <label class="combo-check"><input type="checkbox" bind:checked={comboOrdered} /> In this order</label>
-              <label class="combo-check"><input type="checkbox" bind:checked={comboCrossChapter} /> Keep hits that cross a chapter</label>
-            </div>
+                <div class="prox-kindc prox-c3">
+                  <span class="prox-sel">
+                    <span class="prox-selv" aria-hidden="true">{SLOT_KINDS.find(k => k.v === slot.kind)?.l}</span>
+                    <select class="prox-kind" aria-label={`Kind for term ${n}`} value={slot.kind}
+                      on:change={(e) => setComboKind(slot.id, e.currentTarget.value as SlotKind)}>
+                      {#each SLOT_KINDS as k}<option value={k.v}>{k.l}</option>{/each}
+                    </select>
+                  </span>
+                </div>
 
-            <p class="combo-note">
-              This runs on its own and ignores the Greek and English boxes.
-              <a class="guide-link" href={`${BASE_URL}/advanced#combo`} target="_blank" rel="noreferrer">What is this?</a>
-              A grammatical description on its own runs once you choose works,
-              or a word near or not near it. Every term after
-              the first can be placed near, before or after term 1; the order
-              lock is stronger and overrides those. A window never spans a book
-              boundary. Where a term rests on an ambiguous parse, the hit is
-              reported as one of several readings.
-              <a class="guide-link" href={`${BASE_URL}/advanced#honesty`} target="_blank" rel="noreferrer">What is this?</a>
-            </p>
-          </details>
+                {#if i === 0}
+                  <div class="prox-dist prox-c4">
+                    {#if comboUnit === 'words'}
+                      <span>within</span>
+                      <input type="number" class="prox-win" min="1" max={COMBO_WINDOW_MAX} aria-label="Distance in words"
+                        bind:value={comboWindow} on:blur={clampComboWindow} />
+                    {:else}
+                      <span>in</span>
+                    {/if}
+                    <span class="prox-sel">
+                      <span class="prox-selv" aria-hidden="true">{comboUnit === 'words' ? 'words' : comboUnit === 'line' ? 'the same line' : 'the same chapter'}</span>
+                      <select aria-label="Distance measured in" bind:value={comboUnit}>
+                        <option value="words">words</option>
+                        <option value="line">the same line</option>
+                        {#if comboUnit === 'chapter'}<option value="chapter">the same chapter</option>{/if}
+                      </select>
+                    </span>
+                  </div>
+                {:else}
+                  <button type="button" class="prox-remove prox-c5" aria-label={`Remove term ${n}`} on:click={() => removeComboEditor(slot.id)}>Remove</button>
+                {/if}
+
+                {#if slot.kind === 'grammatical'}
+                  <!-- Every category at once, as rows of chips; one value each. -->
+                  <div class="combo-grammar-grid prox-chips">
+                    {#each GRAMMAR_CATEGORIES as cat}
+                      <span class="prox-chiph" class:prox-chiph-wide={cat.key === 'marker'} id={`g-${slot.id}-${cat.key}`}>{cat.label}</span>
+                      <div class="prox-chipset" class:prox-chipset-wide={cat.key === 'marker'} role="group" aria-labelledby={`g-${slot.id}-${cat.key}`}>
+                        {#each cat.values as v}
+                          <button type="button" class="prox-chip" aria-pressed={slot.grammar[cat.key] === v}
+                            on:click={() => setComboGrammar(slot.id, cat.key, v)}>{CHIP_NAMES[v] ?? v}</button>
+                        {/each}
+                      </div>
+                    {/each}
+                  </div>
+                {/if}
+              </section>
+            {/each}
+          </div>
+
+          <button type="button" class="prox-add" disabled={comboEditors.length >= COMBO_TERMS_MAX} on:click={addComboEditor}>Add term</button>
+          {#if comboOrderSet}
+            <p class="prox-order">Order set by before or after</p>
+          {:else}
+            <label class="prox-lock"><input type="checkbox" bind:checked={comboOrdered} /> In this order</label>
+          {/if}
+          <!-- Aristotle's own: a match may stand across a chapter break, or not
+               (cx=0). Round 34, drawn on Plato, has no chapters to keep. -->
+          <label class="prox-lock"><input type="checkbox" bind:checked={comboCrossChapter} /> Keep hits that cross a chapter</label>
+          <div class="prox-go">
+            <button type="submit" class="search-btn prox-search" disabled={loading} on:click={searchEditor}>{loading ? 'Searching…' : 'Search'}</button>
+            {#if pendingSentence}<p class="prox-pend">Not searched yet: {pendingSentence}</p>{/if}
+          </div>
+        {/if}
       </div>
     {/if}
 
@@ -4532,8 +4769,8 @@
      is painted on the box, not put inside it: a box with a child takes its
      baseline from the child, and in a row aligned by baseline (the speaker
      filter's) the chosen box then sits lower than the empty ones. */
-  .ck, .combo-check, .mode-group label { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text); cursor: pointer; }
-  .ck input, .combo-check input, .mode-group input {
+  .ck, .mode-group label { display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text); cursor: pointer; }
+  .ck input, .mode-group input {
     appearance: none;
     flex: none;
     width: 0.9375rem;
@@ -4544,10 +4781,10 @@
     background: none;
     cursor: pointer;
   }
-  .ck input:checked, .combo-check input:checked, .mode-group input:checked {
+  .ck input:checked, .mode-group input:checked {
     background: linear-gradient(var(--accent), var(--accent)) center / 0.5rem 0.5rem no-repeat;
   }
-  .ck input:focus-visible, .combo-check input:focus-visible, .mode-group input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .ck input:focus-visible, .mode-group input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   .sopt.sx-display {
     position: relative;
     display: flex;
@@ -4561,33 +4798,7 @@
   .guide-link { color: var(--text-mid); text-decoration: none; border-bottom: 1px solid var(--border); }
   .guide-link:hover { color: var(--accent); border-bottom-color: var(--accent); }
 
-  /* ── Proximity: words near each other ───────────────────────────────── */
-  .advanced-body { margin-top: 1.375rem; }
-  .advanced-guide { margin: 0; text-align: right; font-size: 0.875rem; }
-  .combo-panel { margin-top: 1.375rem; padding-top: 0.875rem; border-top: 1px solid var(--text); }
-  .combo-panel > summary {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.25rem 0.75rem;
-    list-style: none;
-    cursor: pointer;
-  }
-  .combo-panel > summary::-webkit-details-marker { display: none; }
-  .combo-panel > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-  summary .n { font-family: var(--font-caps); font-weight: 300; font-size: 1.375rem; color: var(--accent); }
-  summary .t { font-size: 1.3125rem; }
-  summary .tog, .combo-active {
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-  summary .tog { margin-left: auto; color: var(--text-mid); }
-  .combo-active { color: var(--accent); }
-  .combo-note { max-width: 42.5rem; margin: 0.625rem 0 0; font-size: 0.9375rem; line-height: 1.55; color: var(--text-mid); }
-  .combo-add, .retry-btn {
+  .retry-btn {
     padding: 0;
     border: none;
     background: none;
@@ -4595,158 +4806,8 @@
     color: var(--accent);
     cursor: pointer;
   }
-  .combo-add:hover, .retry-btn:hover { text-decoration: underline; text-underline-offset: 0.2em; }
-
-  /* The headword picker: an underlined field; its list is the one floating
-     panel here (1px ink edge, a small shadow); a pick reads headword, gloss,
-     count and "Change". */
-  .lp { position: relative; display: grid; gap: 0.5rem; max-width: 42.5rem; margin-top: 0.75rem; }
-  .lp-field { display: grid; gap: 0.25rem; }
-  .lp-field > span, .combo-text-field > span, .grammar-field > span {
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-mid);
-  }
-  .lp-field input, .combo-text-field input {
-    height: 2.75rem;
-    padding: 0;
-    border: none;
-    border-bottom: 2px solid var(--text);
-    border-radius: 0;
-    background: none;
-    font-family: var(--font-greek);
-    font-size: 1.375rem;
-    color: var(--text);
-  }
-  .lp-field input:focus, .combo-text-field input:focus { outline: none; border-bottom-color: var(--accent); }
-  .lp-status { margin: 0; font-size: 0.875rem; font-style: italic; color: var(--text-mid); }
-  /* top: 100% puts it under the field: an absolute child of a grid with no
-     offset sits at the grid's top, over the field it serves. */
-  .lplist {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    z-index: 25;
-    max-height: 18rem;
-    overflow-y: auto;
-    margin: 0.25rem 0 0;
-    padding: 0;
-    list-style: none;
-    border: 1px solid var(--text);
-    background: var(--page-bg);
-    box-shadow: 0 10px 24px -12px rgba(0, 0, 0, 0.4);
-  }
-  .lplist li { border-bottom: 1px solid var(--border); }
-  .lplist li:last-child { border-bottom: 0; }
-  .lplist li.on { background: var(--greek-active); }
-  .lplist button, .lpsel .x {
-    padding: 0;
-    border: none;
-    background: none;
-    font: inherit;
-    color: inherit;
-    text-align: left;
-    cursor: pointer;
-  }
-  .lplist button {
-    display: grid;
-    grid-template-columns: 9.375rem minmax(0, 1fr) 4.375rem;
-    gap: 0.75rem;
-    align-items: baseline;
-    width: 100%;
-    padding: 0.5rem 0.875rem;
-    font-size: 0.9375rem;
-    color: var(--text);
-  }
-  .lplist button:hover .hw, .lplist button:focus-visible .hw { color: var(--accent); }
-  .lplist button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-  .lplist .hw, .lpsel .hw { font-family: var(--font-greek); }
-  .lplist .hw { font-size: 1.1875rem; }
-  .lplist .gl, .lpsel .gl { font-style: italic; color: var(--text-mid); }
-  .lplist .ct, .lpsel .ct { font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
-  .lplist .ct { text-align: right; }
-  .lpsel { display: flex; align-items: baseline; gap: 0.875rem; min-height: 2.75rem; border-bottom: 2px solid var(--text); font-size: 1.375rem; }
-  .lpsel .gl { font-size: 1rem; }
-  .lpsel .x {
-    margin-left: auto;
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-
-  /* Words near each other: one ruled row per term. */
-  .combo-slots { margin-top: 0.5rem; }
-  .combo-slot { padding: 0.75rem 0; border-bottom: 1px solid var(--border); }
-  .combo-slot-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem 1.5rem; }
-  .combo-slot-number {
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .combo-kind, .combo-option { display: inline-flex; align-items: baseline; gap: 0.375rem; font-size: 0.9375rem; color: var(--text-mid); }
-  /* Selects read as menus: text on a dotted underline with a small caret. */
-  .combo-kind select, .grammar-field select, .combo-option select {
-    padding: 0 0.875rem 0 0;
-    border: none;
-    border-bottom: 1px dotted var(--text);
-    border-radius: 0;
-    background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2359616c'/%3E%3C/svg%3E") no-repeat right 0.0625rem center;
-    font: inherit;
-    color: var(--text);
-    cursor: pointer;
-    appearance: none;
-  }
-  :global(:root[data-theme="dark"]) .combo-kind select,
-  :global(:root[data-theme="dark"]) .grammar-field select,
-  :global(:root[data-theme="dark"]) .combo-option select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%2398a1ad'/%3E%3C/svg%3E");
-  }
-  .combo-kind select:disabled { color: var(--text-mid); border-bottom-color: transparent; }
-  .combo-kind select:focus-visible, .grammar-field select:focus-visible, .combo-option select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .combo-remove {
-    margin-left: auto;
-    padding: 0;
-    border: none;
-    background: none;
-    font-family: var(--font-caps);
-    font-weight: 300;
-    font-size: 0.6875rem;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-mid);
-    cursor: pointer;
-  }
-  .combo-remove:hover:not(:disabled) { color: var(--accent); }
-  .combo-remove:disabled { opacity: 0.4; cursor: default; }
-  .combo-text-field { display: grid; gap: 0.25rem; max-width: 42.5rem; margin-top: 0.625rem; }
-  .combo-grammar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); gap: 0.75rem 1rem; margin-top: 0.75rem; }
-  .grammar-field { display: grid; gap: 0.125rem; font-size: 0.9375rem; }
-  .combo-add { margin-top: 0.75rem; }
-  .combo-add:disabled { color: var(--text-mid); opacity: 0.6; cursor: default; }
-  .combo-proximity { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem 1.875rem; padding-top: 1rem; font-size: 1rem; }
-  .combo-window input {
-    width: 2.75rem;
-    padding: 0;
-    border: none;
-    border-bottom: 2px solid var(--text);
-    border-radius: 0;
-    background: none;
-    font: inherit;
-    text-align: center;
-    color: var(--text);
-  }
-  .combo-window input:focus { outline: none; border-bottom-color: var(--accent); }
-  .combo-window input:disabled { opacity: 0.5; }
+  .retry-btn:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+  /* The proximity editor: shared/styles/b-search.css. */
 
   /* The works picker and the Spoken-by panel: shared/styles/b-search.css. */
   .speaker-turns { margin-left: 0.25rem; font-family: var(--font-caps); font-weight: 300; font-size: 0.75rem; color: var(--text-mid); font-variant-numeric: tabular-nums; }
@@ -5439,11 +5500,6 @@
   @media (max-width: 680px) {
     .sopt.sx-display { gap: 0.625rem 1.25rem; font-size: 0.9375rem; }
     .sx-display .opt-panel { position: fixed; top: auto; bottom: 0; left: 0; right: 0; max-height: 70vh; overflow-y: auto; }
-    .lplist { position: static; margin-top: 0.375rem; box-shadow: none; }
-    .lplist button { grid-template-columns: 6.875rem minmax(0, 1fr) 3.125rem; padding: 0.5rem 0.625rem; }
-    .lplist .hw { font-size: 1.0625rem; }
-    .lp-field input, .combo-text-field input, .lpsel { font-size: 1.1875rem; }
-    .combo-grammar-grid { grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr)); }
     .sx-note { grid-template-columns: minmax(0, 1fr); gap: 0.125rem; }
     .instance, .sx-results.by-work .instance { grid-template-columns: minmax(0, 1fr); gap: 0.375rem; }
     .inst-ref, .inst-body, .inst-speaker, .inst-oneof { grid-column: 1; grid-row: auto; }

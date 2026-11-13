@@ -30,6 +30,12 @@ const queries = [
   ['Genitive plural near virtue', [['c', 'g:case.gen,number.pl'], ['c', 'l:areth'], ['cw', '10']]],
   ['Authentic works', { g: 'ἀρετή', w: 'auth' }],
   ['Mock-up authentic list (Isagoge kept)', { g: 'ἀρετή', w: '-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl' }],
+  // S3's proof queries over the two Ethics; each count is checked against a
+  // brute-force scan in shared/__tests__/s3-proximity-corpus.test.ts.
+  ['Or: either pleasure or pain near virtue (EN, EE; 17)', [['c', 'l:areth'], ['c', 'l:hdonh'], ['c', 'lo:luph'], ['w', 'EN,EE']]],
+  ['Term from term: pain near pleasure near virtue (EN, EE; 7)', [['c', 'l:areth'], ['c', 'l:hdonh'], ['c', 'l2:luph'], ['w', 'EN,EE']]],
+  ['Not near: pleasure before virtue, no pain (EN, EE; 6)', [['c', 'l:areth'], ['c', 'lb:hdonh'], ['c', 'ln:luph'], ['cw', '10'], ['w', 'EN,EE']]],
+  ['Before: habit before virtue (EN, EE; 11)', [['c', 'l:areth'], ['c', 'lb:ecis'], ['w', 'EN,EE']]],
 ];
 const browser = await resolvePlaywright().chromium.launch({ headless: true });
 const results = [];

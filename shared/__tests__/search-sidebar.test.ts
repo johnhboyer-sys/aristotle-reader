@@ -606,6 +606,8 @@ describe('Search.svelte: removing the chapter limit', () => {
     await chapter();
     await fireEvent.click(remove('Within a chapter'));
     await vi.waitFor(() => expect(chosen()).toEqual([]));
+    // The editor is shut on a proximity search from the address (S3).
+    await fireEvent.click(screen.getByRole('button', {name:'Change'}));
     await fireEvent.click(screen.getByRole('checkbox', {name:'Keep hits that cross a chapter'}));
     expect(chosen()).toEqual([]);
   });
@@ -613,6 +615,7 @@ describe('Search.svelte: removing the chapter limit', () => {
     await chapter('&wf=EN&ctx=1');
     await fireEvent.click(within(summary()).getByRole('button',{name:'Clear all'}));
     await vi.waitFor(() => expect(chosen()).toEqual([]));
+    await fireEvent.click(screen.getByRole('button', {name:'Change'}));
     expect(screen.getByRole('checkbox',{name:'Keep hits that cross a chapter'})).toBeChecked();
     expect(location.search).not.toContain('cx='); expect(location.search).not.toContain('wf=');
   });
