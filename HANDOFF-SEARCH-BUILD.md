@@ -3,58 +3,54 @@
 Written 12 Nov 2026, 13:20, at the end of the session that refined the search
 mock-up. Rewrite this file (don't append) when you hand off.
 
-## 0. State (13 Nov 06:30): BUILD DONE, merged by the coordinator
+## 0. State (13 Nov 13:10): John's review rulings being built; tip goes to the coordinator
 
-- **Every stage is built and committed** on `claude/search-build` (worktree
-  `.claude/worktrees/search-build`, from 73007670f2, unpushed): S1 engine, S1b
-  running text, S2 form and menus, S3 proximity (plain pairwise distance), S4a
-  results, S4b rail / Save / `/saved` / word panel, S5a phone form and editor,
-  S5b phone results, sheets and sideways, S6 the `/advanced` guide. Each stage
-  had a Codex review (R1–R9) and its fixes are in. **Tip e987866002.**
-- **Gates at the tip:** shared 1,719 passed (corpus tests included), app 116,
-  svelte-check 0 errors, verify-shared-imports 0 broken, `astro build` complete,
-  check-redesign 17/17, the search screenshot gate 140 shot / 0 failed (both
-  themes, phone and sideways; d04 and d22 retired), all 14 search-counts totals
-  unchanged (967, 2394, 1514, 102, 55, 78, 5398, 768, 736, 736, 17, 7, 6, 11).
-- **Screenshot sheet** (self-contained, beside its round-34 twins):
-  `~/.claude/reviews/search-build/shots-final/index.html`.
-- **Merging:** John made the Track A session (home/work/reader on
-  `claude/redesign-build`) coordinator, 13 Nov 01:07. It merges this tip in its
-  own worktree and runs HANDOFF-REDESIGN-BUILD.md §6 (build:public, deploy:dry,
-  link check, leak check). A trial merge against its f5f3b4a07f had no
-  conflicts; this branch never touches b.css, BFonts.astro or Reader.svelte.
-  One deploy for the whole redesign (John's ruling (a)). Nothing is pushed.
-- **After §6 (13 Nov 05:00–06:30):** Track A ported its check-redesign gates
-  to the new page; they found three accessibility defects, fixed in
-  ead5584589 (b-search.css only: 40px tap boxes, a red-underline focus mark
-  on the three text fields, Match/Form values mid instead of opacity .78;
-  Codex R10/R10b closed). Track A merged it as 53535ede1c; its full run is
-  63 pass, 1 fail: R-S1, which waits on John (below, 6).
-- **For John (morning of 13 Nov), with recommendations:** (1) Accents vs Form —
-  turning Accents on should set Form to "only as I typed"; (2) confirm the phone
-  "This search" lists filters only, matching the Filter badge, Clear all keeping
-  the view; (3) the guide puts Typing Greek first; (4) no translator-names
-  switch on Greek-only hits for now; (5) old links under Plato's wildcard
-  syntax (`λόγος.`, `*λόγος`) open a different search — keep the new rules.
-  (6) English hits cite the line ("Cat 2b15") as Plato's stack does, or the
-  column ("Cat 2b") as the old site did and as the ruling recorded in
-  redesign-browser.mjs `searchRefFormat` says. No ruling chose line-level; it
-  came with the S1 port. If column: Search.svelte's English formatCite and the
-  s1-round3-real / s1-round5-ref tests change. Track A relays the answer.
-  Plus his look at the phone/sideways departures in the sheet.
-- **Follow-ups (not blockers):** the desktop app mounts the new Search
-  unstyled (needs b.css tokens and b-search.css); "Group by grammar" groups by
-  spelling (needs per-word grammar data); an opened section's English can start
-  a clause early (corpus alignment); proximity-editor controls under 44px on
-  desktop (`.prox-sel`, `.prox-win`, `.prox-chip`, the field's clear button, held
-  in the 44px test's allow-list); b.css still uses `max-width: 960px` elsewhere;
-  after "Find this phrase in any inflection" the address keeps the old
-  sp/sn/wf; /saved is not in check-redesign's contrast list (checked separately,
-  PASS); dead code from the port (`groupState`, corpus-tools, inscription,
-  sect-ticks, speaker-colors); the 6-term proximity cap's speed test; the
-  running.json files in `build/dist` came from a one-off backfill and
-  `npm run build:public` regenerates them through stage 6. Then the port of
-  the design fixes to plato-reader (§1).
+- **Built and merged before 13 Nov:** stages S1–S6 (Codex R1–R9), tip e987866002;
+  the redesign gates' a11y fixes ead5584589 (R10). Track A (home/work/reader on
+  `claude/redesign-build`) is coordinator: it merges this branch and runs the
+  release gates (build:public, deploy:dry, link and leak checks). One deploy for
+  the whole redesign. Nothing is pushed.
+- **John's rulings of 13 Nov, built and committed on `claude/search-build`
+  (each with a Codex review, R11–R14):**
+  - English hits cite the column ("Cat 2b"), links still go to the line; "for
+    now the column. once every work is properly aligned, the line"
+    (55159aa136; `englishCiteLine` holds the rule).
+  - The proximity editor folds after its Search (cd9221f2dc).
+  - Rulings 1–5: (1) Accents on sets Form to "Only as I typed it" (not in
+    Running text) — built; (2) the phone "This search" lists filters only, Clear
+    all keeps the view — as built; (3) the guide keeps Typing Greek first — as
+    built; (4) superseded by (a); (5) keep the new wildcard rules; the PR lists
+    the change for old links.
+  - (a) A translation switch on Greek-only hits and opened sections, the work's
+    own order, reference first (8e7a2bedf1 on the side branch).
+  - Keyboard: the seven mark keys above the first letter row, CSS dotted ring
+    under Literata's spacing marks ("c2: b for all", bd62434c9f).
+  - Group by (1e7738c278): form key = spelling with every accent off, breathing,
+    subscript, diaeresis kept; phrase/running text keyed on the whole phrase;
+    By form only for one word / phrase / running text (lemma off), By grammar
+    only for lemma searches, else By work only; By grammar = headword over its
+    paradigm (round B opt 2); stage6 `signature()` carries each reading's lemma,
+    and the client keeps only the searched headwords' readings. **Needs the
+    corpus rebuild** (Track A, build:public after merge) before the grammar rows
+    and facets lose the homograph's parses.
+  - Shot d27 retired (word card option b dropped).
+  - Merge of the side branch `claude/search-build-b`: b024fb2ba2.
+- **Waiting on John (pictures on his rounds page, folders in the session
+  scratchpad `rounds/`):** D (Both view compact: D5b vs his two-column D6;
+  phone and/or centred in its own gap, letters centred, D7); F (proximity editor
+  = opt-4b, one line per term, footer on one row) after G (grammar chips:
+  G-3 one menu per category + switches recommended); H (phone query width: H2
+  tools under the rule recommended); Group by: rows open or shut, the data size
+  (grammar-dict EN gz 7.7 → 87 KB), facets lemma-only. Track A relays rulings.
+- **Follow-ups (not blockers):** the Forms rail needs an accents stream for
+  Aristotle (pipeline), then its tick boxes split by case; until then ἀρετή and
+  ἀρετῇ are two groups in the results but one row (αρετη) in the rail. Also:
+  the desktop app mounts the new Search unstyled; an opened section's English
+  can start a clause early; b.css still uses `max-width: 960px` elsewhere; after
+  "Find this phrase in any inflection" the address keeps the old sp/sn/wf; dead
+  code from the port (`groupState`, corpus-tools, inscription, sect-ticks,
+  speaker-colors); the 6-term proximity cap's speed test; R-A3 exempts `.tr-dot`
+  by name (Track A's gate). Then the port of the design fixes to plato-reader (§1).
 
 ## 1. What this track is
 

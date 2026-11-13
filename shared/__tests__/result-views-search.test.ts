@@ -124,29 +124,34 @@ const facetRow = () => screen.getByRole('group', { name: 'Narrow by grammar' });
 const formRows = (panel: HTMLElement) => [...panel.querySelectorAll('label')].map(label =>
   `${text(label)}${(label.querySelector('input') as HTMLInputElement).checked ? ' ✓' : ''}`);
 const G = `/search?g=${encodeURIComponent('εἰμί')}`;
+// A dictionary-word search, the one Group by grammar is offered for (John,
+// 13 Nov); one word typed (G) is offered By form instead.
+const L = '/search?l=eimi';
 
 describe('Search.svelte: views', () => {
-  it('shows the same hits in every view, and marks the view in force', async () => {
-    const { container } = await open(G);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
-    expect(viewButton('By work')).toBeChecked();
-    expectAllOpen(container);
-    const shown = hitsShown(container);
-    expect(shown).toHaveLength(6);
-    expect(new Set(shown).size).toBe(6);
-    for (const name of ['By form', 'By grammar', 'By work']) {
-      await fireEvent.click(viewButton(name));
-      await vi.waitFor(() => expect(viewButton(name)).toBeChecked());
-      // The menu's own value follows the view in force, not the click.
-      expect(text(viewButton(name).closest('details')!.querySelector('summary b'))).toBe(name.replace(/^By /, ''));
-      for (const other of ['By work', 'By form', 'By grammar'].filter(n => n !== name)) {
-        expect(viewButton(other)).not.toBeChecked();
-      }
+  for (const [url, views] of [[G, ['By form', 'By work']], [L, ['By grammar', 'By work']]] as const) {
+    it(`shows the same hits in every view, and marks the view in force (${url})`, async () => {
+      const { container } = await open(url);
+      await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+      expect(viewButton('By work')).toBeChecked();
       expectAllOpen(container);
-      expect(hitsShown(container)).toEqual(shown);
-    }
-    expect(status()).toHaveTextContent('6 instances');
-  });
+      const shown = hitsShown(container);
+      expect(shown).toHaveLength(6);
+      expect(new Set(shown).size).toBe(6);
+      for (const name of views) {
+        await fireEvent.click(viewButton(name));
+        await vi.waitFor(() => expect(viewButton(name)).toBeChecked());
+        // The menu's own value follows the view in force, not the click.
+        expect(text(viewButton(name).closest('details')!.querySelector('summary b'))).toBe(name.replace(/^By /, ''));
+        for (const other of views.filter(n => n !== name)) {
+          expect(viewButton(other)).not.toBeChecked();
+        }
+        await vi.waitFor(() => expectAllOpen(container));
+        await vi.waitFor(() => expect(hitsShown(container)).toEqual(shown));
+      }
+      expect(status()).toHaveTextContent('6 instances');
+    });
+  }
 
   it('detects a changed citation URL or snippet even when token ids stay the same', async () => {
     const { container } = await open(G);
@@ -163,8 +168,9 @@ describe('Search.svelte: views', () => {
   it('by form: a group per form, its spellings and count, and every citation names its work', async () => {
     const { container } = await open(G);
     await fireEvent.click(viewButton('By form'));
+    // One spelling heads each group, its commonest (John, 13 Nov).
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'ἐστί · ἐστι 3 instances', 'τῆς 2 instances', 'ταῖς 1 instance',
+      'ἐστί 3 instances', 'τῆς 2 instances', 'ταῖς 1 instance',
     ]));
     expect(window.location.search).toContain('v=form');
     expectAllOpen(container);
@@ -224,26 +230,34 @@ describe('Search.svelte: views', () => {
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     expect(viewButton('By work')).toBeChecked();
     expect(within(screen.getByRole('group', { name: 'Group by' })).getAllByRole('radio').map(r => r.closest('label')!.textContent!.trim()))
-      .toEqual(['By work', 'By form', 'By grammar']);
+      .toEqual(['By work', 'By form']);
     expect([...container.querySelectorAll('.book-header .work-name')].map(text)).toEqual(['De Interpretatione', 'Nicomachean Ethics']);
   });
 
-  it('grammar: each group prints its readings, and the facets list what is present with counts', async () => {
+  // Round B, option 2 (John, 13 Nov): the headword over its paradigm. These
+  // readings name no headword (data built before they did), so each row says
+  // every reading its spelling has, as the old fold did.
+  it('grammar: the headword over its paradigm, and the facets list what is present with counts', async () => {
     const { greekHitGrammar } = await import('../lib/search');
-    const { container } = await open(G);
+    const { container } = await open(L);
     expect(greekHitGrammar).not.toHaveBeenCalled();
     await fireEvent.click(viewButton('By grammar'));
-    // Each form's readings fold under their count, under its heading (d12).
-    const analyses = () => [...container.querySelectorAll<HTMLButtonElement>('button.sx-analyses')];
-    await vi.waitFor(() => expect(analyses().map(b => b.getAttribute('aria-expanded'))).toEqual(['false', 'false', 'false']));
-    expect(heads(container)).toEqual(['ἐστί · ἐστι 3 instances', 'τῆς 2 instances', 'ταῖς 1 instance']);
-    expect(analyses().map(b => text(b).replace(/[▸▾]/, ''))).toEqual(['1 analysis', '2 analyses', '1 analysis']);
-    expect(container.querySelector('.group-readings')).toBeNull();
-    for (const b of analyses()) await fireEvent.click(b);
-    expect(analyses().map(b => b.getAttribute('aria-expanded'))).toEqual(['true', 'true', 'true']);
-    expect([...container.querySelectorAll('.group-readings')].map(text)).toEqual([
-      'sg pres ind act 3rd', 'gen sg fem · dat sg fem', 'dat pl fem',
-    ]);
+    await vi.waitFor(() => expect(heads(container)).toEqual([
+      'ειμι 6 instances',
+      'Genitive or dative singular τῆς 2 instances',
+      'Dative plural ταῖς 1 instance',
+      'Present active indicative, third singular ἐστί 3 instances',
+    ]));
+    // The headword is a level-two heading, each row a level three, and the
+    // parse and the spelling are told apart.
+    expect([...container.querySelectorAll('.sx-results h2 .group-label')].map(text)).toEqual(['ειμι']);
+    expect([...container.querySelectorAll('.sx-results h3 .sx-para-sp')].map(text)).toEqual(['τῆς', 'ταῖς', 'ἐστί']);
+    expect(container.querySelector('.sx-analyses')).toBeNull();
+    // A row shuts its hits alone.
+    const dative = container.querySelectorAll<HTMLButtonElement>('h3 .group-head')[1];
+    await fireEvent.click(dative);
+    expect(dative).toHaveAttribute('aria-expanded', 'false');
+    expect(container.querySelectorAll('li.instance .inst-snippet.greek mark')).toHaveLength(5);
     expect(greekHitGrammar).toHaveBeenCalledWith(RESULTS);
     const row = facetRow();
     const runs = [...row.querySelectorAll('.gx-group')].map(run);
@@ -258,11 +272,13 @@ describe('Search.svelte: views', () => {
 describe('Search.svelte: grammar facets', () => {
   it('narrows the hits and every count at once, writes gf, and searches nothing', async () => {
     const { search } = await import('../lib/search');
-    const { container } = await open(`${G}&v=grammar`);
+    const { container } = await open(`${L}&v=grammar`);
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     await fireEvent.click(within(facetRow()).getByRole('checkbox', { name: 'Gender fem' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
-    await vi.waitFor(() => expect(heads(container)).toEqual(['τῆς 2 instances', 'ταῖς 1 instance']));
+    await vi.waitFor(() => expect(heads(container)).toEqual([
+      'ειμι 3 instances', 'Genitive or dative singular τῆς 2 instances', 'Dative plural ταῖς 1 instance',
+    ]));
     const works = screen.getByRole('group', { name: 'Show hits from one work' });
     expect(within(works).getAllByRole('button').map(text)).toEqual(['Nicomachean Ethics2', 'De Interpretatione1']);
     expect(formRows(screen.getByRole('group', { name: 'Greek forms found' }))).toEqual(['της 2 ✓', 'ταις 1 ✓']);
@@ -310,16 +326,16 @@ describe('Search.svelte: grammar facets', () => {
   });
 
   it('keeps the facets across a change of view', async () => {
-    const { container } = await open(`${G}&v=grammar`);
+    const { container } = await open(`${L}&v=grammar`);
     await vi.waitFor(() => expect(facetRow()).toBeTruthy());
     await fireEvent.click(within(facetRow()).getByRole('checkbox', { name: 'Case gen' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
-    await fireEvent.click(viewButton('By form'));
-    await vi.waitFor(() => expect(heads(container)).toEqual(['τῆς 2 instances']));
+    await fireEvent.click(viewButton('By work'));
+    await vi.waitFor(() => expect(heads(container)).toEqual(['De Interpretatione 1 instance', 'Nicomachean Ethics 1 instance']));
     expect(status()).toHaveTextContent('2 instances');
     expect(within(facetRow()).getByRole('checkbox', { name: 'Case gen' })).toBeChecked();
     const p = new URLSearchParams(window.location.search);
-    expect([p.get('v'), p.get('gf')]).toEqual(['form', 'case.gen']);
+    expect([p.get('v'), p.get('gf')]).toEqual([null, 'case.gen']);
   });
 
   it('restores the view and the facets from the address bar', async () => {
@@ -336,7 +352,7 @@ describe('Search.svelte: grammar facets', () => {
     // What the engine returns under the filter: Socrates' ἐστί and τῆς.
     const spoken = [{ ...at('EN', '70a', [0, 1]), speakers: ['Socrates', 'Socrates'] }];
     const grammar: HitGrammar = { byResult: new Map([['EN:1:70a', [ESTI, THS]]]), failedWorks: [] };
-    const { container } = await open(`${G}&sp=only&sn=Socrates&v=grammar`, { results: spoken, grammar });
+    const { container } = await open(`${L}&sp=only&sn=Socrates&v=grammar`, { results: spoken, grammar });
     await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
     expect(vi.mocked(search).mock.calls[0][8]).toBeUndefined();
     await vi.waitFor(() => expect(run(facetRow().querySelector('.gx-group'))).toBe('Case dat 1 gen 1'));
@@ -371,18 +387,19 @@ describe('Search.svelte: grammar facets', () => {
 
   it('names the works whose grammar did not load', async () => {
     const grammar: HitGrammar = { byResult: new Map([...GRAMMAR.byResult].filter(([k]) => k.startsWith('EN'))), failedWorks: ['Int'] };
-    const { container } = await open(`${G}&v=grammar`, { grammar });
+    const { container } = await open(`${L}&v=grammar`, { grammar });
     await vi.waitFor(() => expect(container.querySelector('.sx-note.warn')).toHaveTextContent('The grammar in De Interpretatione did not load.'));
   });
 
+  // Of several words only the forms are looked up unasked: By grammar, the
+  // other lookup that could be out, is a dictionary word's, which cannot be
+  // widened (John, 13 Nov).
   it('keeps a lookup that a widening which found nothing passed by', async () => {
-    const { search, greekHitForms, greekHitGrammar, searchPhraseVariants } = await import('../lib/search');
+    const { search, greekHitForms, searchPhraseVariants } = await import('../lib/search');
     vi.mocked(search).mockResolvedValueOnce({ results: RESULTS, failedWorks: [] });
     let formsIn!: (forms: HitForms) => void;
-    let grammarIn!: (grammar: HitGrammar) => void;
     vi.mocked(greekHitForms).mockReturnValueOnce(new Promise(resolve => { formsIn = resolve; }));
-    vi.mocked(greekHitGrammar).mockReturnValueOnce(new Promise(resolve => { grammarIn = resolve; }));
-    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('τῆς ἐστι')}&v=grammar`);
+    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('τῆς ἐστι')}`);
     render(Search);
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     // Both lookups are still out when the reader asks to widen, and widening
@@ -391,10 +408,8 @@ describe('Search.svelte: grammar facets', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Find this phrase in any inflection' }));
     await vi.waitFor(() => expect(searchPhraseVariants).toHaveBeenCalled());
     formsIn(FORMS);
-    grammarIn(GRAMMAR);
-    // Their forms and readings still arrive.
+    // Their forms still arrive.
     await screen.findByRole('group', { name: 'Greek forms found' });
-    expect(within(await screen.findByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case dat' })).toBeInTheDocument();
   });
 });
 

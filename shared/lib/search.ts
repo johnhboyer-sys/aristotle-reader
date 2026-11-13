@@ -54,7 +54,10 @@ export interface Offsets {
 
 // A morphological reading: category → the values it licenses. A reading with
 // more than one value for a category is syncretic ("fem nom/voc sg"), which is
-// as genuinely ambiguous as two separate analyses.
+// as genuinely ambiguous as two separate analyses. Data built since 13 Nov also
+// names, under "lemma", the headwords (folded, as the lemma index keys them)
+// whose analyses give the reading; it is no category, and older data has none
+// (lib/result-views ownReadings).
 export type Reading = Record<string, string[]>;
 
 // Signature dictionary + packed column. sigs[id] is the distinct readings a

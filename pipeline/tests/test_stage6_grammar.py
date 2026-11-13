@@ -129,6 +129,9 @@ class TestSignature:
             )
 
     def test_collapses_analyses_that_differ_only_by_dialect_or_lemma(self):
+        # One parse is one reading, whoever's it is: the reading count is what
+        # the ambiguity rates and a grammatical hit's "certain" are built on.
+        # Its headwords ride along on it (below).
         sig = signature(
             [
                 {"parse": "fem nom/voc sg (attic epic ionic)", "lemma": "a"},
@@ -136,6 +139,42 @@ class TestSignature:
             ]
         )
         assert len(sig) == 1
+        assert dict(sig[0])["lemma"] == ("a", "b")
+
+    def test_each_reading_names_the_headwords_it_belongs_to(self):
+        # ἀρετῇ: the noun's dative and a verb form of ἀρετάω share a spelling.
+        # A search for the noun must be able to drop the verb's readings, so
+        # each reading carries its headwords, folded as the lemma index keys
+        # them (fold_lemma: no diacritics, no homograph digit).
+        sig = signature(
+            [
+                {"parse": "fem dat sg (attic epic ionic)", "lemma": "a)reth/"},
+                {"parse": "pres subj act 2nd sg (attic epic doric)", "lemma": "a)reta/w"},
+                {"parse": "pres ind act 2nd sg", "lemma": "a)reta/w"},
+            ]
+        )
+        by_lemma = {}
+        for reading in sig:
+            r = dict(reading)
+            for lemma in r["lemma"]:
+                by_lemma.setdefault(lemma, []).append(r)
+        assert sorted(by_lemma) == ["aretaw", "areth"]
+        assert [r["case"] for r in by_lemma["areth"]] == [("dat",)]
+        assert all("mood" in r for r in by_lemma["aretaw"])
+        assert len(by_lemma["aretaw"]) == 2
+        assert dict(signature([{"parse": "pres ind act 1st sg", "lemma": "ei)mi/1"}])[0])["lemma"] == ("eimi",)
+
+    def test_a_reading_without_a_headword_carries_no_lemma_key(self):
+        # An analysis with no lemma says nothing about whose it is; the
+        # reader keeps such a reading under any headword.
+        sig = signature([{"parse": "masc nom sg", "lemma": ""}, {"parse": "fem acc pl"}])
+        assert all("lemma" not in dict(r) for r in sig)
+        assert len(sig) == 2
+
+    def test_a_lemma_alone_is_no_reading(self):
+        # A headword with no usable parse adds nothing: the token stays
+        # unanalysed, as before, so no count moves.
+        assert signature([{"parse": "epic", "lemma": "a)reth/"}]) == ()
 
     def test_is_order_independent(self):
         a = signature([{"parse": "masc nom sg"}, {"parse": "fem acc pl"}])

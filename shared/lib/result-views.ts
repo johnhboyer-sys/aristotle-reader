@@ -2,13 +2,39 @@
 // from greekHitGrammar and the forms from greekHitForms (lib/search); this
 // file only matches, counts, filters and groups, from the result set, so
 // ticking a facet or changing the view asks the network for nothing.
-import { BOTH_AT_ONCE, type HitForms, type HitGrammar, type LangOp, type Reading, type SearchResult } from './search';
+import { BOTH_AT_ONCE, greekFold, type HitForms, type HitGrammar, type LangOp, type Reading, type SearchResult } from './search';
 
 /** How the hits of one results page are grouped: 'page' is by work, the
  * default (its id kept from the Stephanus page view it replaced); an old
  * address's v=work falls back to it. */
 export type ResultView = 'page' | 'form' | 'grammar';
 export const RESULT_VIEWS: readonly ResultView[] = ['page', 'form', 'grammar'];
+/** What a search asks for, as far as grouping its hits goes: a dictionary
+ * word (the Lemma switch: one headword or several, always any of them), one
+ * word as spelled, a phrase or running text, several words, a proximity
+ * search, or English alone. */
+export type SearchKind = 'lemma' | 'word' | 'phrase' | 'words' | 'proximity' | 'english';
+/** The parts of a search (search-url's UrlSearch) its kind is read from. */
+export interface SearchShape { grk: string; grkMode: string; matchMode: string; lemmas: string[]; combo: unknown }
+export function searchKind(s: SearchShape): SearchKind {
+  if (s.combo) return 'proximity';
+  if (s.lemmas.length) return 'lemma';
+  const words = s.grk.trim().split(/\s+/).filter(Boolean).length;
+  if (!words) return 'english';
+  if (s.matchMode === 'text') return 'phrase';
+  if (words === 1) return 'word';
+  return s.grkMode === 'phrase' ? 'phrase' : 'words';
+}
+/** The groupings a kind of search is offered (John, 13 Nov): by form for one
+ * word or a phrase as spelled, by grammar for a dictionary word, and by work
+ * always. A phrase is grouped on the whole of it; several words, or words
+ * near each other, have no one form to group on. */
+export function viewsOffered(kind: SearchKind): ResultView[] {
+  if (kind === 'lemma') return ['page', 'grammar'];
+  if (kind === 'word' || kind === 'phrase') return ['page', 'form'];
+  return ['page'];
+}
+
 /** How much text a hit shows: a line's worth, three, or its whole section. */
 export type ResultContext = '1' | '3' | 's';
 export const RESULT_CONTEXTS: readonly ResultContext[] = ['1', '3', 's'];
@@ -29,7 +55,9 @@ const CATEGORY_ORDER = ['pos', 'case', 'number', 'gender', 'tense', 'mood', 'voi
 // Morpheus's raw word-class tags (`marker`) are still in the index but never
 // shown: part of speech replaced them (option A1), and some are wrong
 // (ἀλλά tagged an adverb). Not printed, not offered as a facet.
-export const NOT_SHOWN = new Set(['marker']);
+// The headwords a reading belongs to (`lemma`, stage6 signature()) are not
+// a category either: they narrow the readings to the word searched (ownReadings).
+export const NOT_SHOWN = new Set(['marker', 'lemma']);
 const rank = (category: string) => {
   const i = CATEGORY_ORDER.indexOf(category);
   return i < 0 ? CATEGORY_ORDER.length : i;
@@ -87,6 +115,33 @@ export function ambiguityNote(readings: Reading[], facets: Facets): string | und
     const values = new Set(readings.flatMap(r => licensed(r, category)));
     return `${category} ${[...values].sort().join(' or ')}`;
   }).join(' · ');
+}
+
+/** The readings of a word that belong to the headwords searched: a spelling
+ * two words share (ἀρετῇ, the noun's dative and a verb form of ἀρετάω) has
+ * both words' readings, and a search for the noun is owed the noun's alone.
+ * A reading that names no headword is kept, and so is every reading of data
+ * built before readings named theirs; `heads` null keeps all. */
+export function ownReadings(readings: Reading[], heads: ReadonlySet<string> | null): Reading[] {
+  if (!heads?.size) return readings;
+  return readings.filter(r => !Object.hasOwn(r, 'lemma') || r.lemma.some(h => heads.has(h)));
+}
+
+/** `grammar` with each hit's readings narrowed to the headwords searched
+ * (ownReadings); the same object where nothing is narrowed, so data that
+ * names no headword is read exactly as before. */
+export function ownGrammar(grammar: HitGrammar, heads: ReadonlySet<string> | null): HitGrammar {
+  if (!heads?.size) return grammar;
+  let named = false;
+  const byResult = new Map<string, Reading[][]>();
+  for (const [key, words] of grammar.byResult) {
+    byResult.set(key, words.map(readings => {
+      const own = ownReadings(readings, heads);
+      if (own.length !== readings.length || readings.some(r => Object.hasOwn(r, 'lemma'))) named = true;
+      return own;
+    }));
+  }
+  return named ? { ...grammar, byResult } : grammar;
 }
 
 /** A reading as a line: "nom/voc pl masc". A word's parts of speech hold at
@@ -262,35 +317,228 @@ export function orderHits<T extends { work: string; form?: string; hits: number 
   });
 }
 
+// -- Group by form ------------------------------------------------------------
+//
+// A form is its spelling, lower-cased, with the accents taken off and the
+// rest kept: breathings, iota subscript, diaeresis and the elision mark (John,
+// 13 Nov). So ἀρετή and ἀρετὴ are one form and the dative ἀρετῇ another,
+// while an accent that moves within one form (ἐστίν, ἔστιν; πρᾶξίς before an
+// enclitic) leaves it one. Searching stays blind to all of these
+// (greekFold); this key only groups the hits found.
+const ACCENTS = /[\u0300\u0301\u0342]/g;
+const ELISION = /[\u2019\u02bc]/g;
+/** The form key of a spelling; of each word, for a phrase, joined by a space. */
+export function formKey(spelling: string): string {
+  return spelling.trim().split(/\s+/).map(w => w.normalize('NFD').toLowerCase().replace(ACCENTS, '').replace(ELISION, "'").normalize('NFC')).join(' ');
+}
+/** A spelling as a heading counts it: a grave as the acute, never shown, and
+ * a word's second accent (thrown back by an enclitic: πρᾶξίς) dropped. */
+export function headingSpelling(spelling: string): string {
+  return spelling.trim().split(/\s+/).map(w => {
+    const d = w.normalize('NFD').replace(/\u0300/g, '\u0301');
+    const accents = [...d.matchAll(/[\u0301\u0342]/g)];
+    if (accents.length < 2) return d.normalize('NFC');
+    const last = accents.at(-1)!.index!;
+    return (d.slice(0, last) + d.slice(last + 1)).normalize('NFC');
+  }).join(' ');
+}
+/** The one spelling a group of hits is headed by: the commonest among them,
+ * counted as headingSpelling counts it; a tie goes to one in `prefer` (the
+ * headword's own spelling), else to the first met. */
+export function commonSpelling(spellings: string[], prefer?: ReadonlySet<string>): string {
+  const counts = new Map<string, number>();
+  for (const s of spellings) { const h = headingSpelling(s); counts.set(h, (counts.get(h) ?? 0) + 1); }
+  let best = '';
+  let n = 0;
+  for (const [h, c] of counts) {
+    if (c > n || (c === n && !prefer?.has(best) && prefer?.has(h))) { best = h; n = c; }
+  }
+  return best;
+}
+
 export interface FormGroupOf<T> {
-  /** The folded form; null for the hits with no Greek, grouped last. */
+  /** The form key (formKey); null for the hits with no Greek, grouped last. */
+  key: string | null;
+  /** Its letters folded (greekFold), which order the groups by form. */
   form: string | null;
-  /** Its accented spellings among the items, in the order met. */
-  surfaces: string[];
+  /** The one spelling the group is headed by (commonSpelling); "" for the English. */
+  heading: string;
   items: T[];
   count: number;
   /** Its Greek hits, which order the groups: an item's `grk`, else its `hits`. */
   grk: number;
 }
 
-/** The items grouped by form, most Greek hits first (an item's `grk`, where
- * it carries English hits too) and then by form in Greek order (compareForms,
- * as orderHits), each group keeping the items' order;
- * the items without a form in one group at the end. */
-export function formGroupsOf<T extends { form?: string; surface?: string; surfaces?: string[]; hits: number; grk?: number }>(items: T[]): FormGroupOf<T>[] {
-  const byForm = new Map<string | null, FormGroupOf<T>>();
+/** The items grouped by form key (`group`), most Greek hits first (an
+ * item's `grk`, where it carries English hits too) and then in Greek order
+ * (compareForms, as orderHits), each group keeping the items' order; the
+ * items without a key in one group at the end. Each item's `spellings` are
+ * the hits it holds, as printed, one apiece. */
+export function formGroupsOf<T extends { group?: string; spellings?: string[]; hits: number; grk?: number }>(
+  items: T[],
+  prefer?: ReadonlySet<string>,
+): FormGroupOf<T>[] {
+  const byKey = new Map<string | null, FormGroupOf<T> & { spellings: string[] }>();
   for (const item of items) {
-    const form = item.form ?? null;
-    const g = byForm.get(form) ?? byForm.set(form, { form, surfaces: [], items: [], count: 0, grk: 0 }).get(form)!;
+    const key = item.group ?? null;
+    const g = byKey.get(key) ?? byKey.set(key, { key, form: key === null ? null : greekFold(key), heading: '', items: [], count: 0, grk: 0, spellings: [] }).get(key)!;
     g.items.push(item);
     g.count += item.hits;
     g.grk += item.grk ?? item.hits;
-    // An item of several hits of one form (hits merged into one passage)
-    // names each spelling it holds.
-    for (const surface of item.surfaces ?? [item.surface]) if (surface && !g.surfaces.includes(surface)) g.surfaces.push(surface);
+    g.spellings.push(...(item.spellings ?? []));
   }
-  const english = byForm.get(null);
-  byForm.delete(null);
-  const groups = [...byForm.values()].sort((a, b) => b.grk - a.grk || compareForms(a.form!, b.form!));
-  return english ? [...groups, english] : groups;
+  const english = byKey.get(null);
+  byKey.delete(null);
+  const groups = [...byKey.values()]
+    .sort((a, b) => b.grk - a.grk || compareForms(a.form!, b.form!) || (a.key! < b.key! ? -1 : a.key! > b.key! ? 1 : 0));
+  return [...groups, ...(english ? [english] : [])].map(({ spellings, ...g }) => ({ ...g, heading: g.key === null ? '' : commonSpelling(spellings, prefer) }));
+}
+
+// -- Group by grammar ---------------------------------------------------------
+//
+// Round B, option 2 (John, 13 Nov): the headword once, with its hits, and
+// under it each spelling as a row headed by its parse in words, the rows in
+// the order of a paradigm. A spelling whose readings give two parses says
+// both in one row: the data parses spellings, not each word in its sentence,
+// so its hits cannot be split between them.
+
+const ORDER: Record<string, string[]> = {
+  case: ['nom', 'gen', 'dat', 'acc', 'voc'],
+  number: ['sg', 'dual', 'pl'],
+  gender: ['masc', 'fem', 'neut'],
+  tense: ['pres', 'imperf', 'fut', 'aor', 'perf', 'plup', 'futperf'],
+  voice: ['act', 'mid', 'pass', 'mp'],
+  mood: ['ind', 'subj', 'opt', 'imperat', 'inf', 'part'],
+  person: ['1st', '2nd', '3rd'],
+  degree: ['comp', 'superl', 'irreg_comp'],
+};
+const WORDS: Record<string, string> = {
+  nom: 'nominative', gen: 'genitive', dat: 'dative', acc: 'accusative', voc: 'vocative',
+  sg: 'singular', dual: 'dual', pl: 'plural', masc: 'masculine', fem: 'feminine', neut: 'neuter',
+  pres: 'present', imperf: 'imperfect', fut: 'future', aor: 'aorist', perf: 'perfect', plup: 'pluperfect', futperf: 'future perfect',
+  act: 'active', mid: 'middle', pass: 'passive', mp: 'middle or passive',
+  ind: 'indicative', subj: 'subjunctive', opt: 'optative', imperat: 'imperative', inf: 'infinitive', part: 'participle',
+  '1st': 'first', '2nd': 'second', '3rd': 'third', comp: 'comparative', superl: 'superlative', irreg_comp: 'comparative',
+};
+const sorted = (category: string, values: string[]) => {
+  const at = (v: string) => { const i = ORDER[category]?.indexOf(v) ?? -1; return i < 0 ? 99 : i; };
+  return [...values].sort((a, b) => at(a) - at(b) || a.localeCompare(b));
+};
+const said = (r: Reading, category: string) => sorted(category, licensed(r, category)).map(v => WORDS[v] ?? v).join(' or ');
+
+// A reading in words, as its verb part ("present active indicative") and its
+// noun part ("genitive singular"), the case kept apart so readings that
+// differ only in case can share one ("genitive or dative singular").
+function partsOf(r: Reading, gender: boolean) {
+  const mood = licensed(r, 'mood');
+  const verb = mood.length ? [said(r, 'tense'), said(r, 'voice'), said(r, 'mood')].filter(Boolean).join(' ') : '';
+  const cases = sorted('case', licensed(r, 'case'));
+  const finite = mood.length && !cases.length;
+  const rest = (finite ? [said(r, 'person'), said(r, 'number')] : [said(r, 'number'), gender ? said(r, 'gender') : '', said(r, 'degree')])
+    .filter(Boolean).join(' ');
+  return { verb, cases, rest };
+}
+
+/** A spelling's parse in words, its readings joined by "or": "Genitive
+ * singular or accusative plural", "Present active indicative, third
+ * singular". `gender` names the gender, for a headword whose forms differ in
+ * it. "" where the readings say nothing a reader is shown. */
+export function parseLabel(readings: Reading[], gender: boolean): string {
+  const phrases: { verb: string; cases: string[]; rest: string }[] = [];
+  for (const r of [...readings].sort((a, b) => compareRanks(paradigmRank([a]), paradigmRank([b])))) {
+    const p = partsOf(r, gender);
+    const same = p.cases.length ? phrases.find(q => q.cases.length && q.verb === p.verb && q.rest === p.rest) : undefined;
+    if (same) { for (const c of p.cases) if (!same.cases.includes(c)) same.cases.push(c); same.cases = sorted('case', same.cases); }
+    else phrases.push(p);
+  }
+  const text = phrases.map(p => {
+    const noun = [p.cases.map(c => WORDS[c] ?? c).join(' or '), p.rest].filter(Boolean).join(' ');
+    return [p.verb, noun].filter(Boolean).join(', ');
+  }).filter(Boolean);
+  const out = [...new Set(text)].join(' or ');
+  return out ? out[0].toUpperCase() + out.slice(1) : '';
+}
+
+/** Where readings stand in a paradigm, to order rows by: the forms of a noun
+ * or adjective first, by number then case (then gender); a verb's by tense,
+ * voice, mood, number and person, a participle's then by case and gender.
+ * Of several readings, the first. Nothing to say, last. */
+export function paradigmRank(readings: Reading[]): number[] {
+  const at = (r: Reading, c: string) => Math.min(99, ...licensed(r, c).map(v => { const i = ORDER[c]?.indexOf(v) ?? -1; return i < 0 ? 98 : i; }));
+  const ranks = readings.map(r => {
+    if (licensed(r, 'mood').length) return [1, ...['tense', 'voice', 'mood', 'number', 'person', 'case', 'gender'].map(c => at(r, c))];
+    if (licensed(r, 'case').length) return [0, ...['degree', 'number', 'case', 'gender'].map(c => at(r, c))];
+    return [2];
+  });
+  return ranks.length ? ranks.sort(compareRanks)[0] : [3];
+}
+function compareRanks(a: number[], b: number[]): number {
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const d = (a[i] ?? -1) - (b[i] ?? -1);
+    if (d) return d;
+  }
+  return 0;
+}
+
+export interface ParadigmRow<T> {
+  key: string;
+  /** The parse in words (parseLabel); "" where there is none. */
+  label: string;
+  /** The one spelling of the row (commonSpelling). */
+  heading: string;
+  items: T[];
+  count: number;
+  grk: number;
+}
+export interface ParadigmBlock<T> { head: string; rows: ParadigmRow<T>[]; items: T[]; count: number }
+
+/** The items of a dictionary-word search as paradigms: one block for each
+ * headword searched (`heads`, in the order picked) that has hits, its rows
+ * one for each form key (`group`), in paradigm order, then by hits, then as
+ * met. An item's `readings` are those of the words it holds; it is filed
+ * under the headwords its readings name, else those its form belongs to
+ * (`formHeads`, from the lemma map), else the first searched. The English
+ * items come back apart. */
+export function paradigmOf<T extends { group?: string; spellings?: string[]; hits: number; grk?: number; readings?: Reading[]; formHeads?: string[] }>(
+  items: T[],
+  heads: string[],
+  prefer?: ReadonlySet<string>,
+): { blocks: ParadigmBlock<T>[]; english: T[] } {
+  const english: T[] = [];
+  if (!heads.length) heads = [''];
+  const rows = new Map<string, Map<string, { items: T[]; readings: Map<string, Reading>; spellings: string[]; count: number; grk: number }>>(heads.map(h => [h, new Map()]));
+  for (const item of items) {
+    if (item.group === undefined) { english.push(item); continue; }
+    const named = heads.filter(h => item.readings?.some(r => Object.hasOwn(r, 'lemma') && r.lemma.includes(h)));
+    const mapped = heads.filter(h => item.formHeads?.includes(h));
+    const own = named.length ? named : mapped.length ? mapped : heads.slice(0, 1);
+    for (const h of own) {
+      const block = rows.get(h)!;
+      const row = block.get(item.group) ?? block.set(item.group, { items: [], readings: new Map(), spellings: [], count: 0, grk: 0 }).get(item.group)!;
+      row.items.push(item);
+      row.count += item.hits;
+      row.grk += item.grk ?? item.hits;
+      row.spellings.push(...(item.spellings ?? []));
+      for (const r of ownReadings(item.readings ?? [], new Set([h]))) {
+        const { lemma: _, ...parse } = r;
+        const id = JSON.stringify(Object.keys(parse).sort().map(c => [c, parse[c]]));
+        if (!row.readings.has(id)) row.readings.set(id, parse);
+      }
+    }
+  }
+  const blocks: ParadigmBlock<T>[] = [];
+  for (const [head, block] of rows) {
+    if (!block.size) continue;
+    const list = [...block.entries()].map(([key, row]) => ({ key, row, readings: [...row.readings.values()] }));
+    // A gender is named where the headword's forms differ in it.
+    const genders = new Set(list.flatMap(x => x.readings.map(r => sorted('gender', licensed(r, 'gender')).join('/')).filter(Boolean)));
+    const out = list.map((x, i) => ({ i, rank: paradigmRank(x.readings), row: {
+      key: `${head}\u0000${x.key}`, label: parseLabel(x.readings, genders.size > 1), heading: commonSpelling(x.row.spellings, prefer),
+      items: x.row.items, count: x.row.count, grk: x.row.grk,
+    } }));
+    out.sort((a, b) => compareRanks(a.rank, b.rank) || b.row.grk - a.row.grk || a.i - b.i);
+    const rowsOut = out.map(x => x.row);
+    blocks.push({ head, rows: rowsOut, items: [...new Set(rowsOut.flatMap(r => r.items))], count: rowsOut.reduce((n, r) => n + r.count, 0) });
+  }
+  return { blocks, english };
 }

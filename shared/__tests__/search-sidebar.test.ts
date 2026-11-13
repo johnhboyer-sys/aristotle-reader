@@ -130,12 +130,15 @@ const pressed = (group: string) =>
   [...screen.getByRole('group', { name: group }).querySelectorAll('button[aria-pressed="true"], input[type="radio"]:checked')]
     .map(el => text(el.closest('label') ?? el));
 const G = `/search?g=${encodeURIComponent('εἰμί')}`;
+// A dictionary-word search: the one Group by grammar is offered for (John,
+// 13 Nov), and so the one whose grammar facets show unasked.
+const L = '/search?l=eimi';
 
 describe('Search.svelte: the side column', () => {
   // The display settings are not in it: they are the menus over the hits
   // (set B, John 2026-11-10; search-display-bar.test.ts).
   it('holds every filter of the results in one landmark, "Refine results"', async () => {
-    const { container } = await open(`${G}&v=grammar`);
+    const { container } = await open(`${L}&v=grammar`);
     await screen.findByRole('group', { name: 'Greek forms found' });
     await screen.findByRole('group', { name: 'Narrow by grammar' });
     const side = screen.getByRole('complementary', { name: 'Refine results' });
@@ -245,7 +248,7 @@ describe('Search.svelte: "This search"', () => {
       },
     },
     {
-      what: 'Case gen', url: `${G}&v=grammar&gf=case.gen`, before: '2 instances', after: '6 instances', param: 'gf=',
+      what: 'Case gen', url: `${L}&v=grammar&gf=case.gen`, before: '2 instances', after: '6 instances', param: 'gf=',
       control: () => {
         expect((within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case gen' }) as HTMLInputElement).checked).toBe(false);
         // The view, also chosen, stays.
@@ -274,7 +277,7 @@ describe('Search.svelte: "This search"', () => {
 
   it('clears every filter at once, without a new search, and leaves the display as it is', async () => {
     const { search } = await import('../lib/search');
-    await open(`${G}&wf=EN&xf=tais&v=grammar&gf=case.gen&so=form&ctx=1&ps=20`);
+    await open(`${L}&wf=EN&xf=tais&v=grammar&gf=case.gen&so=form&ctx=1&ps=20`);
     await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
     await openSheet();
     await fireEvent.click(within(summary()).getByRole('button', { name: 'Clear all' }));
@@ -381,7 +384,7 @@ describe('Search.svelte: the Filter sheet', () => {
   });
 
   it('lists the filters as a menu, each with what is set, and no filter itself', async () => {
-    await open(`${G}&v=grammar`);
+    await open(`${L}&v=grammar`);
     await fireEvent.click(filter());
     const sheet = await screen.findByRole('dialog', { name: 'Filter' });
     const rows = within(sheet).getAllByRole('button', { name: /›$/ }).map(text);
@@ -479,7 +482,7 @@ describe('Search.svelte: the Filter sheet', () => {
   });
 
   it('clears the grammar from its screen', async () => {
-    await open(`${G}&v=grammar`);
+    await open(`${L}&v=grammar`);
     await fireEvent.click(filter());
     await fireEvent.click(within(await screen.findByRole('dialog', { name: 'Filter' })).getByRole('button', { name: /^Grammar/ }));
     const sheet = await screen.findByRole('dialog', { name: 'Grammar' });
@@ -517,8 +520,9 @@ describe('Search.svelte: the View sheet', () => {
     for (const fs of sheet.querySelectorAll('fieldset')) {
       for (const r of fs.querySelectorAll('input[type="radio"]')) expect(r.closest('label')).toHaveClass('ck');
     }
+    // One word as spelled: By grammar is a dictionary word's (John, 13 Nov).
     expect([...sheet.querySelectorAll('fieldset')].map(fs => [...fs.querySelectorAll('label')].map(text))).toEqual([
-      ['By work', 'By form', 'By grammar'],
+      ['By work', 'By form'],
       ['Bekker order', 'Works A–Z', 'Forms A–Z', 'Commonest form'],
       ['1 line', '3 lines', 'Whole section'],
       ['20', '40', '100', 'Citations only'],
@@ -712,7 +716,7 @@ describe('Search.svelte: the sidebar and widened results', () => {
   // settings stay in the address.
   it('widened, lists none of the old filters and keeps View\'s settings', async () => {
     const { searchPhraseVariants } = await import('../lib/search');
-    await open(`${PHRASE}&sp=only&sn=EN&wf=EN&v=form&ctx=1`);
+    await open(`${PHRASE}&gm=phrase&sp=only&sn=EN&wf=EN&v=form&ctx=1`);
     vi.mocked(searchPhraseVariants).mockResolvedValueOnce(widened as never);
     await widen();
     await vi.waitFor(() => expect(searchPhraseVariants).toHaveBeenCalledTimes(1));

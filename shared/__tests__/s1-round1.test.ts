@@ -79,7 +79,8 @@ it('places a Bekker English hit in its chapter and exports the Aristotle CSV col
  const content = await new Promise<string>(resolve => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result)); reader.readAsText(csv!); });
  const [header, row] = content.replace(/^\uFEFF/, '').split('\r\n');
  expect(header).toBe('Work,Book,Chapter,Bekker,Language,Translation,Snippet,URL');
- expect(row).toMatch(/^Nicomachean Ethics,I,2,1094a18,English,Rackham,.*virtue.*,http.*loc=1094a:18/);
+ // An English hit cites its column, its link the line (John, 13 Nov).
+ expect(row).toMatch(/^Nicomachean Ethics,I,2,1094a,English,Rackham,.*virtue.*,http.*loc=1094a:18/);
 });
 it('counts an AthPol English phrase once in its row and header', async () => {
  const { search } = await import('../lib/search');

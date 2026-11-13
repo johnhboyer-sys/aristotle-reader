@@ -117,7 +117,7 @@ describe('Options, folded', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Accents' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Lemma' }));
     await fireEvent.click(opts());
-    expect(line()).toBe('all words · any form · accents observed · by lemma · in all works');
+    expect(line()).toBe('all words · as typed · accents observed · by lemma · in all works');
   });
 
   it('shuts a menu left open when the options are folded', async () => {
@@ -154,11 +154,13 @@ describe('Options, folded', () => {
   });
 
   it('names the settings of the results that are not their defaults, in red', async () => {
-    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('ἀρετή')}&v=grammar&ps=c`);
+    // By form: one word as spelled is not offered By grammar (John, 13 Nov),
+    // and its v=grammar would give way to By work once the search ran.
+    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('ἀρετή')}&v=form&ps=c`);
     render(Search);
     await vi.waitFor(() => expect(document.querySelectorAll('.sopt-sum-v')).toHaveLength(2));
-    expect([...document.querySelectorAll('.sopt-sum-v')].map((x) => x.textContent)).toEqual(['grouped by grammar', 'citations only']);
-    expect(line()).toBe('all words · any form · accents ignored · in all works · grouped by grammar · citations only');
+    expect([...document.querySelectorAll('.sopt-sum-v')].map((x) => x.textContent)).toEqual(['grouped by form', 'citations only']);
+    expect(line()).toBe('all words · any form · accents ignored · in all works · grouped by form · citations only');
   });
 
   it('gives way to the sentence of a live proximity search', async () => {

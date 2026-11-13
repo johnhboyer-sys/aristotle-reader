@@ -250,6 +250,8 @@ describe('the editor', () => {
     await vi.waitFor(async () => expect((await lastSlots())[2]).toEqual({ kind: 'lemma', terms: ['hdonh'], relation: 'near', target: 1 }));
     expect(new URLSearchParams(location.search).getAll('c')).toEqual(['l:areth', 'l:ecis', 'l2:hdonh']);
     // A NOT term is no word of the match: it is never offered as a target.
+    // The search folded the editor (John, 13 Nov): Change opens it again.
+    await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
     await pick('Relation of term 2', 'not');
     expect([...select('Term 3 is measured from').options].map((o) => o.textContent)).toEqual(['ἀρετή']);
   });

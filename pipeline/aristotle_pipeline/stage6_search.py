@@ -174,16 +174,30 @@ def signature(entries: list[dict]) -> tuple:
     Whole readings are kept rather than a per-category union, so correlations
     survive: analyses {masc nom sg, fem acc pl} must not satisfy a query for
     masc + acc + sg, which a flattened union would wrongly allow.
+
+    Each reading also names the headwords whose analyses give it, under
+    "lemma", folded as the lemma index keys them: a spelling shared by two
+    words (ἀρετῇ, the noun's dative and a verb form of ἀρετάω) otherwise lends
+    the verb's parses to a search for the noun. One parse stays one reading
+    whatever its headwords, so the reading counts the ambiguity rates and a
+    grammatical hit's certainty rest on do not move. "lemma" is not a
+    category: no query or facet asks for it. An analysis with no lemma adds
+    none, and a reading with none carries no "lemma" key.
     """
-    readings = []
+    lemmas: dict[tuple, set[str]] = {}
     for entry in entries:
         reading = parse_reading(entry.get("parse") or "")
         if not reading:
             continue
         key = tuple((c, tuple(v)) for c, v in sorted(reading.items()))
-        if key not in readings:
-            readings.append(key)
-    return tuple(sorted(readings))
+        heads = lemmas.setdefault(key, set())
+        folded = fold_lemma(entry["lemma"]) if entry.get("lemma") else ""
+        if folded:
+            heads.add(folded)
+    return tuple(sorted(
+        tuple(sorted(key + ((("lemma", tuple(sorted(heads))),) if heads else ())))
+        for key, heads in lemmas.items()
+    ))
 
 
 def remap_word_index(line_text: str, tokens: list[dict], word_index: int) -> int | None:
