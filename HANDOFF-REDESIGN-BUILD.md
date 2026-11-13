@@ -15,7 +15,7 @@ logs `.redesign-shots/notes/d26/final7/`). Not pushed. Push, PR, merge, and
 deploy each need John's yes.
 
 **Search (search session, `HANDOFF-SEARCH-BUILD.md` in the search-build
-worktree, committed `f7e3355c1a` and after).** Full mock-up done, four review
+worktree, current as of `2e3cecfb9a`).** Full mock-up done, four review
 rounds (Opus, Codex, Opus, Codex): https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X;
 files in search-build `.redesign-shots/notes/search-mock-13nov/`. Ruled today:
 - D6 base (Greek and English side by side on desktop, stacked on the phone); no
@@ -34,10 +34,12 @@ form"; two lines per proximity term upright; name "Keep hits that cross a
 chapter" in the folded line; Group by rows shut; 44px phone keys; sideways fold
 after Search (all four reviewers back the last two).
 
-**Reader design (new track, `HANDOFF-READER-DESIGN.md`, committed `3f1b1e9409`).**
-Round 2 waits for John: https://claude.ai/artifact/6b1rJ55cg3ntyP4Fsy44rY.
-Ruled: every Bekker line stays a line; no stacked layout; quiet bar; Gentium
-Book Plus for Greek and English.
+**Reader design (new track, `HANDOFF-READER-DESIGN.md`, current as of
+`68ba3c0515`; read it for the detail).** Rounds 1–3 are ruled:
+https://claude.ai/artifact/6b1rJ55cg3ntyP4Fsy44rY. Ruled: every Bekker line
+stays a line; no stacked layout; quiet bar; Gentium Book Plus 400 for Greek and
+English at today's size (not larger); wrap as a unit on every screen, with the
+phone in parallel (17:27).
 
 **Plato (queued with the Plato search port, after this build):** phone default
 view → Both (John 16:56). The stacked full-size phone layout is not ruled.
