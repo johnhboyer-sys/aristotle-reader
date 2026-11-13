@@ -68,7 +68,7 @@
   import { formatCite, formatLocValue, schemeFor } from '../lib/citation';
   import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlCombo, type UrlSearch } from '../lib/search-url';
   import { grammarWords, proximitySentence, proximityTerms, termWords } from '../lib/proximity-sentence';
-  import { FULL, addSaved, findSaved, savedAvailable } from '../lib/saved-searches';
+  import { FULL, addSaved, findSaved, savedAvailable, summarizeSearch } from '../lib/saved-searches';
   import { betaQueryToGreek, betaToGreek, liveGreek } from '../lib/betacode';
   import { addMark, deleteBack, GREEK_MARKS, insertText, KEY_ROWS, type KeyEdit } from '../lib/greek-keys';
   import { formGroups } from '../lib/form-panel';
@@ -791,9 +791,10 @@
   }
 
   // ── The side column ────────────────────────────────────────────────────────
-  // What this search narrows or changes from the default, in the order of the
-  // controls below it, each with the way to undo it. All but the speaker
-  // filter are filters on the results in hand; that one is part of the search.
+  // What narrows this search's hits, in the order of the controls below it,
+  // each with the way to undo it. All but the speaker filter are filters on
+  // the results in hand; that one is part of the search. How the hits are
+  // shown (Group by, Sort, Context, Per page) is View's, not listed here.
   type Chosen = { key: string; label: string; remove: () => void | Promise<void> };
   $: chosen = ((): Chosen[] => {
     const out: Chosen[] = [];
@@ -815,22 +816,11 @@
       const names = listNames(sp.names);
       out.push({ key: 'sp', label: sp.mode === 'only' ? `${names} only` : `Anyone but ${names}`, remove: dropSpeaker });
     }
-    if (view !== 'page') {
-      out.push({ key: 'v', label: view === 'grammar' ? 'By grammar' : VIEWS.find(v => v.id === view)?.label ?? view, remove: () => setView('page') });
-    }
-    if (sort !== 'page') {
-      out.push({ key: 'so', label: SORTS.find(so => so.id === sort)?.label ?? sort, remove: () => setSort('page') });
-    }
-    if (context !== '3') out.push({ key: 'ctx', label: CONTEXTS.find(c => c.id === context)?.label ?? context, remove: () => setContext('3') });
-    if (pageSize !== '40') {
-      out.push({ key: 'ps', label: pageSize === 'c' ? 'Citations only' : `${pageSize} a page`, remove: () => setPageSize('40') });
-    }
     return out;
   })();
-  // What narrows the hits, counted on Filter; how they are shown is View's,
-  // which a red dot marks while it is not the default (§5.7).
-  const DISPLAY_KEYS = new Set(['v', 'so', 'ctx', 'ps']);
-  $: filtersOn = chosen.filter(c => !DISPLAY_KEYS.has(c.key)).length;
+  // Counted on Filter; how the hits are shown is View's, which a red dot
+  // marks while it is not the default (§5.7).
+  $: filtersOn = chosen.length;
   // Every form back in, as ticking them all and Apply would.
   function restoreForms() {
     excludedForms = new Set();
@@ -844,8 +834,8 @@
     // The search as it was submitted, less its speaker: the box may hold a
     // word typed since and never searched for, and that is not what the
     // results on screen, or the line being removed, are about.
-    // The settings of the results stay as they now are (Clear all has just
-    // reset them; applySearch would put the submitted ones back).
+    // The settings of the results stay as they now are (applySearch would
+    // put the submitted ones back).
     const now = { view, sort, context, pageSize };
     // The results may be the widened ones ("any inflection"), a step taken
     // from the search: lifting the speaker must widen again for everyone, not
@@ -897,17 +887,13 @@
     await doSearch(undefined, keep);
     if (searchRun === mine && lastSearch && searched) writeUrl({ ...lastSearch, trans: transFilter, workFilter, xforms: [...excludedForms], view, facets, context, sort, pageSize }, 'replace');
   }
-  // Everything at once, with one new search at most.
+  // Every filter at once, with one new search at most; View's settings stay.
   async function clearChosen() {
     workFilter = null;
     transFilter = null;
     excludedForms = new Set();
     resetFormTicks();
     facets = {};
-    view = 'page';
-    sort = 'page';
-    context = '3';
-    pageSize = '40';
     comboCrossChapter = true;
     if (lastSearch?.combo?.crossChapter === false) {
       await dropChapter();
@@ -2527,8 +2513,12 @@
             ? greekKwic(r.work, seg, kept, greekReach, [own[0], own[own.length - 1]], after)
             : greekKwic(r.work, seg, [pos], greekReach),
             toks: own, grkHits: 1, jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, undefined, kept) + (sub ? sub : ''), held, speaker, unit, at: pos };
-          if (!books.get(pair)!.turnFlow && seg.english?.bekker?.length && !isChapterSection(getWork(r.work))) {
-            const win = pairGreekWindow(seg, unit, line, context);
+          // Drawn by whole lines, a window runs on to its last word's line;
+          // a window that runs on into the next section keeps its words.
+          const last = own[own.length - 1];
+          if (!books.get(pair)!.turnFlow && seg.english?.bekker?.length && !isChapterSection(getWork(r.work))
+            && last < segTokens(seg).length) {
+            const win = pairGreekWindow(seg, unit, line, context, windows?.length ? last : undefined);
             inst.html = pairGreekHtml(r.work, seg, win, true, new Set(own));
             // By whole lines: the stretch is the lines it touches.
             const span = lineTokens(seg);
@@ -2759,7 +2749,17 @@
     // and under the whole-section context the instance itself, one for each
     // section and holding all its hits, so the Greek and the English widen
     // together (John, 2026-11-09: "Both, to the section").
-    const placed = made.filter(m => !merged.has(m.inst));
+    // A hit's chapter, as the page groups it.
+    const chapterOf = (work: string, book: number, inst: Instance) => lookups.get(`${work}:${book}`)!(inst.column, inst.line ?? 1);
+    // Under Whole section a section is one instance, so it holds only the
+    // hits of this page's chapters: a section that runs over a chapter break
+    // whose chapters are on two pages shows on each with that page's hits.
+    const onPage = (work: string, book: number, inst: Instance) => {
+      if (allPages || context !== 's') return true;
+      const source = results.find(r => r.work === work && r.meta.book === book && r.meta.column === inst.column);
+      return !source || pageOf(source, chapterOf(work, book, inst).chapter) === pageIdx;
+    };
+    const placed = made.filter(m => !merged.has(m.inst) && onPage(m.work, m.book, m.inst));
     const bySection = new Map<string, { work: string; book: number; column: string; insts: Instance[] }>();
     for (const { work, book, inst } of placed) {
       const key = `${work}:${book}:${inst.column}`;
@@ -2845,7 +2845,8 @@
           pair: k || !rows.length ? unmarkedFor(held.flatMap(g => g.toks ?? [g.at!])) : undefined,
         }));
       }
-      add(work, book, lookups.get(pair)!(column, line), inst);
+      // Filed under the first chapter its hits are in.
+      add(work, book, insts.map(i => chapterOf(work, book, i)).reduce((a, b) => (b.order < a.order ? b : a)), inst);
     }
     if (context !== 's') {
       for (const { work, book, inst } of placed) add(work, book, lookups.get(`${work}:${book}`)!(inst.column, inst.line), inst);
@@ -2857,7 +2858,11 @@
     return { groups: out, failed: [...new Set(failed)], segs: segMap };
   }
 
+  // Each render of a page takes a number; only the latest may write, so a
+  // slow render (a Context change, say) cannot draw over a newer one.
+  let renderSeq = 0;
   async function renderPage(i: number) {
+    const seq = ++renderSeq;
     // The card is a word of the hits on screen: it goes with them.
     popup = null;
     pageIdx = i;
@@ -2869,7 +2874,7 @@
     // the layout is checked as well as the pages.
     const set = pages;
     const layout = layoutRun;
-    const stale = () => set !== pages || layout !== layoutRun;
+    const stale = () => seq !== renderSeq || set !== pages || layout !== layoutRun;
     if (pageSize === 'c') {
       groups = [];
       citeList = citationsFor(set[i] ?? [], searchCtx, pageOffsets);
@@ -2959,7 +2964,10 @@
   $: pageUrl, (saveNote = ''), (saveFailed = false);
   function saveSearch() {
     if (savedNow) return;
-    saveFailed = !addSaved(pageUrl);
+    // A proximity search is named with the sentence the page shows.
+    const name = lastSearch?.combo
+      ? summarizeSearch(pageUrl, headsOf(pickInfo), inValue(lastSearch.works, selectedWorks, worksValue)) : undefined;
+    saveFailed = !addSaved(pageUrl, name);
     savedNow = !saveFailed;
     saveNote = saveFailed ? `${FULL}.` : 'Search saved.';
   }
@@ -4083,8 +4091,8 @@
       {#if sideways}
       <details class="opt lang-menu" on:toggle={closeOtherOpts}>
         <summary>{LANGS.find(l => l.v === lang)?.l}<span class="sr-only">{' search'}</span>{@render caret()}</summary>
-        <fieldset class="opt-panel sheet">
-          <legend class="opt-title sheet-head">Search in</legend>
+        <fieldset class="opt-panel sheet" {...optSheetAttrs('lang-menu-head', optSheetHead, narrowScreen)}>
+          <legend class="opt-title sheet-head" id="lang-menu-head">Search in</legend>
           {#each LANGS as l}
             <div class="opt-row">
               <label class="ck"><input type="radio" name="lang-m" value={l.v} checked={lang === l.v} on:keydown={optKey}
@@ -4803,7 +4811,7 @@
               <button type="button" class="sheet-done" on:click={closeSheet}>Done</button>
             </div>
           {:else}
-          <!-- What narrows or changes the results, each undone by its ×. On
+          <!-- What narrows the results, each undone by its ×. On
                the sheet, at the head of its menu, and only when there is
                something in it. -->
           <!-- On the sheet's menu only: on a desktop each filter is undone where

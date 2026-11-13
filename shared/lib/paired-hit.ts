@@ -379,13 +379,23 @@ export function pairGreekText(unit: PairUnit): string {
   return lines.slice(0, PAIR_GREEK_LINES).join(' ') + (lines.length > PAIR_GREEK_LINES ? ' …' : '');
 }
 
-/** The context control counts Greek lines, centred on the hit's line. */
-export function pairGreekWindow(seg: Segment, unit: PairUnit, line: number, context: '1' | '3' | 's'): PairUnit {
+/** The context control counts Greek lines, centred on the hit's line. A hit
+ * of several words (a proximity window) names its last word's place in the
+ * segment as `lastTok`, and the lines run on to that word's: none is cut. */
+export function pairGreekWindow(seg: Segment, unit: PairUnit, line: number, context: '1' | '3' | 's', lastTok?: number): PairUnit {
   if (context === 's') return unit;
   const count = Number(context);
   const at = Math.max(0, seg.greek.findIndex(l => l.n >= line));
   const from = Math.max(0, Math.min(at - Math.floor(count / 2), seg.greek.length - count));
-  return { ...unit, greek: seg.greek.slice(from, from + count).map(l => ({ n: l.n, from: 0, to: l.text.length, text: l.text })) };
+  let to = from + count;
+  if (lastTok !== undefined) {
+    let n = 0;
+    for (let i = 0; i < seg.greek.length; i++) {
+      n += seg.greek[i].tokens.length;
+      if (lastTok < n) { to = Math.max(to, i + 1); break; }
+    }
+  }
+  return { ...unit, greek: seg.greek.slice(from, to).map(l => ({ n: l.n, from: 0, to: l.text.length, text: l.text })) };
 }
 
 /** English window within the aligned span. A hit supplies its character

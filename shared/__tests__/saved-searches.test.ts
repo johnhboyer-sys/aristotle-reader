@@ -116,8 +116,27 @@ describe('saved-searches store', () => {
     expect(summarizeSearch('/search?g=λόγος&e=reason&op=or')).toBe('λόγος or reason');
     expect(summarizeSearch('/search?g=ψυχή&sp=except&sn=Socrates,Glaucon&w=-Meta,EE'))
       .toBe('ψυχή · not spoken by Socrates, Glaucon · not in Meta, EE');
-    expect(summarizeSearch('/search?c=f:λόγος&c=la:logos')).toBe('λόγος near logos');
+    expect(summarizeSearch('/search?c=f:λόγος&c=la:logos')).toBe('logos after λόγος as typed, within 5 words');
     expect(summarizeSearch('/search')).toBe('Search');
+  });
+});
+
+// Finding 5 of Codex's review R8: a proximity search is named with the
+// sentence the page shows (proximity-sentence.ts), relations and distance
+// included, never "near" for every term.
+describe('a saved proximity search\'s name', () => {
+  const heads = (k: string) => ({ areth: 'ἀρετή', hdonh: 'ἡδονή', luph: 'λύπη', ecis: 'ἕξις' } as Record<string, string>)[k] ?? k;
+  it('says each relation and the distance', () => {
+    expect(summarizeSearch('/search?c=l:areth&c=lb:hdonh&cw=10', heads)).toBe('ἡδονή before ἀρετή, within 10 words');
+    expect(summarizeSearch('/search?c=l:areth&c=ln:luph&cw=10', heads)).toBe('λύπη not near ἀρετή, within 10 words');
+    expect(summarizeSearch('/search?c=l:areth&c=l:ecis&c=lb:hdonh&cu=line', heads)).toBe('ἕξις near ἀρετή, ἡδονή before ἀρετή, in the same line');
+    expect(summarizeSearch('/search?c=l:areth&c=l:ecis&co=1', heads)).toBe('ἕξις near ἀρετή, within 5 words, in this order');
+  });
+  it('keeps the speaker, and takes the works as the page words them', () => {
+    expect(summarizeSearch('/search?c=l:areth&c=l:ecis&w=auth', heads, 'authentic works'))
+      .toBe('ἕξις near ἀρετή, within 5 words, in authentic works');
+    expect(summarizeSearch('/search?c=l:areth&c=l:ecis&sp=only&sn=Socrates', heads))
+      .toBe('ἕξις near ἀρετή, within 5 words · spoken by Socrates');
   });
 });
 

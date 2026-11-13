@@ -10,6 +10,7 @@
 // Entries are compared by a canonical URL, the one search-url.ts writes for
 // the search, so ?q=soul, ?e=soul and ?e=soul& are one search.
 
+import { proximitySentence } from './proximity-sentence';
 import { decodeSearchUrl, encodeSearchUrl } from './search-url';
 import { WORKS } from './works';
 
@@ -170,8 +171,11 @@ export function importSaved(text: string): { imported: number; skipped: number }
 }
 
 // A default name read off the URL (canonical, so ?q= reads as g or e): the query, then the speaker filter and
-// the works, e.g. "ψυχή · spoken by Socrates · in Republic".
-export function summarizeSearch(url: string): string {
+// the works, e.g. "ψυχή · spoken by Socrates · in Republic". A proximity search
+// is its sentence, as the page says it (proximity-sentence.ts): `heads` names
+// a picked word, and `works`, the page's In value, closes the sentence in
+// place of the works read off the URL (null: all works).
+export function summarizeSearch(url: string, heads: (key: string) => string = (k) => k, works?: string | null): string {
   let p: URLSearchParams;
   try {
     p = new URL(canonicalUrl(url), 'https://x.invalid').searchParams;
@@ -179,13 +183,13 @@ export function summarizeSearch(url: string): string {
     return 'Search';
   }
   const list = (v: string | null) => (v ?? '').split(',').filter(Boolean).join(', ');
+  const combo = decodeSearchUrl(p, WORK_IDS).combo;
   const terms = [p.get('g'), p.get('e'), list(p.get('l'))].filter((t): t is string => !!t?.trim());
-  const slots = p.getAll('c').map((c) => c.slice(c.indexOf(':') + 1)).filter(Boolean);
-  const query = [terms.join(p.get('op') === 'or' ? ' or ' : ' and '), slots.join(' near ')].filter(Boolean).join(' near ');
+  const query = combo ? proximitySentence(combo.slots, combo, heads, works ?? null) : terms.join(p.get('op') === 'or' ? ' or ' : ' and ');
   const parts = [query || 'Search'];
   const sn = list(p.get('sn'));
   if (sn) parts.push(p.get('sp') === 'except' ? `not spoken by ${sn}` : `spoken by ${sn}`);
   const w = p.get('w');
-  if (w) parts.push(w.startsWith('-') ? `not in ${list(w.slice(1))}` : `in ${list(w)}`);
+  if (w && !(combo && works !== undefined)) parts.push(w.startsWith('-') ? `not in ${list(w.slice(1))}` : `in ${list(w)}`);
   return parts.join(' · ');
 }

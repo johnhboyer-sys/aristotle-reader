@@ -198,14 +198,16 @@ describe('Search.svelte: "This search"', () => {
     expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
   });
 
-  it('lists exactly what narrows or changes the results, in the order of the controls', async () => {
+  // Ruling (finding 2 of Codex's review R7): the list is the filters, as the
+  // Filter badge counts them; display settings are View's.
+  it('lists exactly what narrows the results, in the order of the controls', async () => {
     await open(`${G}&e=one&t=rackham&wf=EN&xf=tais&gf=case.gen&v=form&so=form&ctx=1&ps=20&sp=only&sn=EN`, BILINGUAL);
     await vi.waitFor(() => expect(status()).toHaveTextContent(/\d+ instances?/));
     // Round 34: the rail undoes each where it is set, with no summary.
     expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
     await openSheet();
     await vi.waitFor(() => expect(chosen()).toEqual([
-      'Nicomachean Ethics', 'Rackham', '1 form set aside', 'Case gen', 'By form', 'Forms A–Z', '1 line', '20 a page',
+      'Nicomachean Ethics', 'Rackham', '1 form set aside', 'Case gen',
     ]));
     for (const what of chosen()) expect(remove(what)).toHaveTextContent('×');
     expect(within(summary()).getByRole('button', { name: 'Clear all' })).toBeInTheDocument();
@@ -214,7 +216,7 @@ describe('Search.svelte: "This search"', () => {
   it('names the other choices as their controls do', async () => {
     await open(`${G}&wf=EN&ps=c&ctx=s&sp=except&sn=EN,Socrates`);
     await openSheet();
-    await vi.waitFor(() => expect(chosen()).toEqual(['Nicomachean Ethics', 'Whole section', 'Citations only']));
+    await vi.waitFor(() => expect(chosen()).toEqual(['Nicomachean Ethics']));
   });
 
   it('offers no "Clear all" for one thing', async () => {
@@ -250,26 +252,6 @@ describe('Search.svelte: "This search"', () => {
         expect(pressed('Group by')).toEqual(['By grammar']);
       },
     },
-    {
-      what: 'By form', url: `${G}&v=form`, before: '6 instances', after: '6 instances', param: 'v=',
-      control: () => expect(pressed('Group by')).toEqual(['By work']),
-    },
-    {
-      what: 'Forms A–Z', url: `${G}&so=form`, before: '6 instances', after: '6 instances', param: 'so=',
-      control: () => expect(pressed('Sort')).toEqual(['Bekker order']),
-    },
-    {
-      what: '1 line', url: `${G}&ctx=1`, before: '6 instances', after: '6 instances', param: 'ctx=',
-      control: () => expect(pressed('Context')).toEqual(['3 lines']),
-    },
-    {
-      what: '20 a page', url: `${G}&ps=20`, before: '6 instances', after: '6 instances', param: 'ps=',
-      control: () => expect(pressed('Per page')).toEqual(['40']),
-    },
-    {
-      what: 'Citations only', url: `${G}&ps=c`, before: '6 instances', after: '6 instances', param: 'ps=',
-      control: () => expect(pressed('Per page')).toEqual(['40']),
-    },
   ];
   for (const c of cases) {
     it(`undoes "${c.what}" alone, without a new search`, async () => {
@@ -290,7 +272,7 @@ describe('Search.svelte: "This search"', () => {
     });
   }
 
-  it('clears everything at once, without a new search', async () => {
+  it('clears every filter at once, without a new search, and leaves the display as it is', async () => {
     const { search } = await import('../lib/search');
     await open(`${G}&wf=EN&xf=tais&v=grammar&gf=case.gen&so=form&ctx=1&ps=20`);
     await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
@@ -298,9 +280,13 @@ describe('Search.svelte: "This search"', () => {
     await fireEvent.click(within(summary()).getByRole('button', { name: 'Clear all' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     expect(chosen()).toEqual([]);
-    expect(window.location.search).toBe(`?g=${encodeURIComponent('εἰμί')}`);
-    expect(pressed('Group by')).toEqual(['By work']);
-    expect(pressed('Per page')).toEqual(['40']);
+    expect(window.location.search).not.toMatch(/[?&](wf|xf|gf)=/);
+    expect(window.location.search).toMatch(/[?&]v=grammar(&|$)/);
+    expect(window.location.search).toMatch(/[?&]so=form(&|$)/);
+    expect(window.location.search).toMatch(/[?&]ctx=1(&|$)/);
+    expect(window.location.search).toMatch(/[?&]ps=20(&|$)/);
+    expect(pressed('Group by')).toEqual(['By grammar']);
+    expect(pressed('Per page')).toEqual(['20']);
     expect(search).toHaveBeenCalledTimes(1);
   });
 
@@ -323,6 +309,34 @@ describe('Search.svelte: the Filter sheet', () => {
     expect(text(filter().querySelector('.sx-badge'))).toBe('1');
     expect(viewBtn()).toHaveAccessibleName('View, grouped by form');
     expect(viewBtn().querySelector('.sx-dot')).not.toBeNull();
+  });
+
+  // Finding 2 of Codex's review R7: the badge counts what "This search"
+  // lists, and Clear all clears those and nothing of View's.
+  it('counts on its badge exactly what "This search" lists, and Clear all leaves the view', async () => {
+    await open(`${G}&wf=EN&v=form&xf=tais`);
+    expect(filter()).toHaveAccessibleName('Filter, 2 chosen');
+    expect(text(filter().querySelector('.sx-badge'))).toBe('2');
+    await fireEvent.click(filter());
+    const sum = await screen.findByRole('group', { name: 'This search' });
+    const listed = [...sum.querySelectorAll('li > span')].map(text);
+    expect(listed).toEqual(['Nicomachean Ethics', '1 form set aside']);
+    await fireEvent.click(within(sum).getByRole('button', { name: 'Clear all' }));
+    await vi.waitFor(() => expect(window.location.search).not.toContain('wf='));
+    expect(window.location.search).toMatch(/[?&]v=form(&|$)/);
+    expect(filter()).toHaveAccessibleName('Filter');
+    expect(viewBtn()).toHaveAccessibleName('View, grouped by form');
+  });
+
+  it('with one filter and a changed view: badge 1, one line, the view kept', async () => {
+    await open(`${G}&wf=EN&v=form`);
+    expect(text(filter().querySelector('.sx-badge'))).toBe('1');
+    await fireEvent.click(filter());
+    const sum = await screen.findByRole('group', { name: 'This search' });
+    expect([...sum.querySelectorAll('li > span')].map(text)).toEqual(['Nicomachean Ethics']);
+    await fireEvent.click(within(sum).getByRole('button', { name: 'Remove Nicomachean Ethics' }));
+    await vi.waitFor(() => expect(window.location.search).not.toContain('wf='));
+    expect(window.location.search).toMatch(/[?&]v=form(&|$)/);
   });
 
   it('has no badge and no dot when nothing is chosen, and each icon carries its label', async () => {
@@ -693,18 +707,19 @@ describe('Search.svelte: the sidebar and widened results', () => {
     await vi.waitFor(() => expect(sheet.contains(document.activeElement)).toBe(true));
   });
 
-  it('"Clear all" leaves none of the old filters in the address bar', async () => {
+  // "This search" lists filters only (finding 2 of Codex's review R7): the
+  // widening drops the old ones, so nothing is left to clear, and View's
+  // settings stay in the address.
+  it('widened, lists none of the old filters and keeps View\'s settings', async () => {
     const { searchPhraseVariants } = await import('../lib/search');
     await open(`${PHRASE}&sp=only&sn=EN&wf=EN&v=form&ctx=1`);
     vi.mocked(searchPhraseVariants).mockResolvedValueOnce(widened as never);
     await widen();
     await vi.waitFor(() => expect(searchPhraseVariants).toHaveBeenCalledTimes(1));
-    await vi.waitFor(async () => expect(await sheetChosen()).toEqual(['By form', '1 line']));
-    vi.mocked(searchPhraseVariants).mockResolvedValueOnce(widened as never);
-    await fireEvent.click(within(summary()).getByRole('button', { name: 'Clear all' }));
-    expect(searchPhraseVariants).toHaveBeenCalledTimes(1);
     await vi.waitFor(async () => expect(await sheetChosen()).toEqual([]));
-    expect(window.location.search).toBe(`?g=${encodeURIComponent('τῆς ἐστι')}`);
+    expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
+    const q = new URLSearchParams(window.location.search);
+    expect([q.get('v'), q.get('ctx')]).toEqual(['form', '1']);
   });
 });
 
@@ -727,9 +742,11 @@ describe('Search.svelte: removing the chapter limit', () => {
   it('keeps work, translation and display filters', async () => {
     await chapter('&e=one&wf=EN&t=rackham&ctx=1&ps=100');
     await fireEvent.click(remove('Within a chapter'));
-    await vi.waitFor(async () => expect(await sheetChosen()).toEqual(['Nicomachean Ethics', 'Rackham', '1 line', '100 a page']));
+    await vi.waitFor(async () => expect(await sheetChosen()).toEqual(['Nicomachean Ethics', 'Rackham']));
     await vi.waitFor(() => expect(new URLSearchParams(location.search).get('t')).toBe('rackham'));
     expect(new URLSearchParams(location.search).get('wf')).toBe('EN');
+    expect(new URLSearchParams(location.search).get('ctx')).toBe('1');
+    expect(new URLSearchParams(location.search).get('ps')).toBe('100');
   });
   it('runs the submitted slots after an input edit', async () => {
     await chapter();

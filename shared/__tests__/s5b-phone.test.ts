@@ -203,6 +203,24 @@ describe('no target under 44px, at any width', () => {
   });
 });
 
+// Finding 5 of Codex's review R8: Save names a proximity search with the
+// sentence the page shows, its relation and distance included.
+describe('a proximity search saved from the page', () => {
+  afterEach(() => { try { localStorage.clear(); } catch { /* blocked */ } });
+  it('is named with the page\'s sentence', async () => {
+    sized(1152, 900);
+    const { searchCombo } = await import('../lib/search');
+    vi.mocked(searchCombo).mockResolvedValue({ results: RESULTS, failedWorks: [] });
+    window.history.replaceState(null, '', '/search?c=l:areth&c=lb:ecis&cw=10');
+    render(Search);
+    await vi.waitFor(() => expect(text(document.querySelector('.prox-sum'))).toBe('ἕξις before ἀρετή, within 10 words'));
+    await fireEvent.click(await screen.findByRole('button', { name: 'Save search' }));
+    const { SAVED_KEY } = await import('../lib/saved-searches');
+    const [entry] = JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]');
+    expect(entry?.name).toBe('ἕξις before ἀρετή, within 10 words');
+  });
+});
+
 // Sideways (s01, r34-13): Greek · English · Both is a menu on the field's row.
 describe('the language menu, sideways', () => {
   it('is drawn only on a screen narrow and short, and switches the language', async () => {
@@ -219,6 +237,28 @@ describe('the language menu, sideways', () => {
     expect(within(document.querySelector<HTMLElement>('.lang-switch')!).getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true');
     expect(text(menu.querySelector('summary'))).toBe('English search');
     expect(menu.open).toBe(false);
+  });
+
+  // Finding 1 of Codex's review R7: the sheet is a named modal, as the
+  // other option sheets are, and the focus goes into it on open.
+  it('opens as a named modal sheet with the focus in it, and gives the focus back', async () => {
+    sized(844, 390);
+    render(Search);
+    const menu = document.querySelector<HTMLDetailsElement>('details.lang-menu')!;
+    const opener = menu.querySelector('summary')!;
+    opener.focus();
+    menu.open = true;
+    await fireEvent(menu, new Event('toggle'));
+    const dialog = screen.getByRole('dialog', { name: 'Search in' });
+    expect(dialog).toBe(menu.querySelector('fieldset.sheet'));
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
+    expect(dialog).toHaveAttribute('tabindex', '-1');
+    expect(dialog.contains(document.activeElement)).toBe(true);
+    await fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+    expect(menu.open).toBe(false);
+    expect(opener).toHaveFocus();
+    await fireEvent(menu, new Event('toggle'));
+    expect(screen.queryByRole('dialog', { name: 'Search in' })).toBeNull();
   });
 
   it('is not drawn upright, nor on a desktop', async () => {

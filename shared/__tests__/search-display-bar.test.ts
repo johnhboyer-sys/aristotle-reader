@@ -102,16 +102,12 @@ async function open(url: string, results: SearchResult[] = RESULTS, forms: HitFo
 }
 const status = () => screen.getByRole('status');
 const text = (el: Element | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
-// "This search" is at the head of the Filter sheet's menu (round 34 has no
-// summary in the rail), and only while something is chosen.
+// The Filter sheet, with "This search" at its head while a filter is chosen.
 async function openSheet() {
   if (screen.queryByRole('dialog', { name: 'Filter' })) return;
   await fireEvent.click(screen.getByRole('button', { name: /^Filter/ }));
   await screen.findByRole('dialog', { name: 'Filter' });
 }
-const summary = () => screen.getByRole('group', { name: 'This search' });
-const chosen = () => [...(screen.queryByRole('group', { name: 'This search' })?.querySelectorAll('li') ?? [])].map(li => text(li.querySelector('span')));
-const remove = (what: string) => within(summary()).getByRole('button', { name: `Remove ${what}` });
 const MENUS = ['Group by', 'Sort', 'Context', 'Per page'];
 const menu = (legend: string) => screen.getByRole('group', { name: legend }).closest('details')!;
 const value = (legend: string) => text(menu(legend).querySelector('summary b'));
@@ -150,7 +146,7 @@ describe('Search.svelte: the display bar', () => {
     { legend: 'Per page', label: 'Citations only', b: 'citations only', param: 'ps=c', entry: 'Citations only', back: '40', backB: '40' },
   ];
   for (const c of cases) {
-    it(`"${c.legend}": a radio applies at once, without a new search, and the summary's × sets it back`, async () => {
+    it(`"${c.legend}": a radio applies at once, without a new search, and the menu sets it back`, async () => {
       const { search } = await import('../lib/search');
       const { container } = await open(G);
       expect(value(c.legend)).toBe(c.backB);
@@ -166,16 +162,20 @@ describe('Search.svelte: the display bar', () => {
       expect(value(c.legend)).toBe(c.b);
       // Shut after a choice.
       expect(menu(c.legend).open).toBe(false);
-      // Not summed up in the rail; on the sheet.
+      // A display setting, not a filter (finding 2 of Codex's review R7): not
+      // in "This search", in the rail or on the Filter sheet; View's dot marks it.
       expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
+      expect(screen.getByRole('button', { name: /^View/ }).querySelector('.sx-dot')).not.toBeNull();
       await openSheet();
-      expect(chosen()).toEqual([c.entry]);
+      expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
+      await fireEvent.click(within(screen.getByRole('dialog', { name: 'Filter' })).getByRole('button', { name: 'Close' }));
+      await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
       expect(search).toHaveBeenCalledTimes(1);
-      await fireEvent.click(remove(c.entry));
+      menu(c.legend).open = true;
+      await fireEvent.click(radio(c.legend, c.back));
       await vi.waitFor(() => expect(window.location.search).not.toContain(c.param));
       expect(checked(c.legend)).toEqual([c.back]);
       expect(value(c.legend)).toBe(c.backB);
-      expect(chosen()).toEqual([]);
       expect(search).toHaveBeenCalledTimes(1);
     });
   }
