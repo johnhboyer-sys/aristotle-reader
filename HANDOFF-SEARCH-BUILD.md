@@ -55,9 +55,11 @@ mock-up. Rewrite this file (don't append) when you hand off.
   (notes.md has every choice and measure). The four review rounds and their log are in `…/scratchpad/mock-review/`.
   - **Reviews:** Opus and Codex alternating. All four chose H3 and (a) words, and said adopt the 44px keyboard and the
     sideways fold after Search.
-  - **John ruled (17:07): options (b), the menus, in every state that shows them** (Greek typed, English typed,
-    grouped by grammar, keyboard). This overrides the reviewers' (a).
-  - **Known cost of (b):** at 961 and on phones, Accents and Lemma wrap, so (b) takes two rows.
+  - **John ruled (17:07, refined 17:08): options (b), the menus, on the UPRIGHT PHONE only** ("except for phone
+    upright, i think a works better"); (a), the words, at 1152, 961 and sideways. Every state that shows options
+    follows that split.
+  - **Known cost of (b) upright:** at 390px, Accents and Lemma wrap, so (b) takes two rows. A drawing of one-row
+    options for 390 and 360 is in `…/scratchpad/rounds/B1/`, for John.
   - **H2 vs H3:** not yet ruled; H3 recommended.
   - **Still open for John:** the count on a Both search (it adds Greek and English word hits, `hitCount` in
     search-pages.ts); what Lemma does beyond "any form"; two lines per term in the upright editor; naming
