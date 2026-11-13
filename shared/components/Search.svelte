@@ -113,9 +113,9 @@
     // in the same aligned unit: one instance, each side with its marks.
     rows?: TransRow[];
     // The other language's side of the hit, from the same aligned unit
-    // (lib/paired-hit): the English of a Greek hit, in one translation, or the
+    // (lib/paired-hit): the English of a Greek hit in each translation, or the
     // Greek of an English one. Neither is marked: no word of it matched.
-    pairEnglish?: { text: string; label: string; title: string; jumpUrl: string };
+    pairEnglish?: PairEnglish[];
     pairGreek?: string;   // HTML: its words are buttons, as a hit's are
     // The unit the hit stands in, and where in its section, for merging and
     // for order within a line.
@@ -149,14 +149,15 @@
   interface HeldTok { pos: number; surface: string; oneOf?: string; speaker?: string }
   // A whole Stephanus section: its Greek with every Greek hit of the page
   // there marked (`held`), and its English in each translation that matched there,
-  // marked; or, with none, one translation's unmarked.
+  // marked; or, with none, each translation's unmarked.
   interface SectionView {
     seg: string;      // the section's segment id, for its words' readings
     greek: string;
     held: HeldTok[];
     rows: TransRow[];
-    pair?: { text: string; label: string; title: string; jumpUrl: string };
+    pair?: PairEnglish[];
   }
+  type PairEnglish = Pick<TransRow, 'translation' | 'label' | 'title' | 'jumpUrl'> & { text: string };
   interface TransRow {
     translation: string;   // TranslationRef id
     // The translator's short name, shown on every row: a reader is owed whose
@@ -557,7 +558,7 @@
   // another under it, for that instance alone.
   let shownTrans = new Map<Instance, string>();
   $: transOrder = new Map(transCounts.map((t, i) => [t.id, i]));
-  const orderedRows = (rows: TransRow[], order: Map<string, number>) =>
+  const orderedRows = <T extends { translation: string }>(rows: T[], order: Map<string, number>) =>
     [...rows].sort((a, b) => (order.get(a.translation) ?? Infinity) - (order.get(b.translation) ?? Infinity));
   function shownRow(inst: Instance, rows: TransRow[] | undefined, order: Map<string, number>, chosen: Map<Instance, string>): TransRow | undefined {
     if (!rows?.length) return undefined;
@@ -2748,31 +2749,34 @@
     }
     for (const { work, book, inst } of made) {
       if (merged.has(inst)) continue;
-      // A Greek hit shows its unit's English, once: under the first hit of the
-      // unit. In the translation the reader narrowed to, else the reference
-      // translation, which may borrow from the turn beside it in the section.
+      // Each translation's English goes under the unit's first Greek hit.
+      // Only the reference may borrow from the turn beside it.
       if (inst.lang === 'grk' && (!inst.rows || inst.forms?.some(f => !f.rows)) && (!books.get(`${work}:${book}`)!.turnFlow || firstGrk.get(inst.unit!) === inst)) {
         const ix = pairsOf(`${work}:${book}`, work);
         const ts = translationsOf(work);
         const ref = ts.find(t => t.slot === 'english') ?? ts[0];
-        const chip = ts.find(t => t.id === transFilter);
-        for (const [t, near] of [[chip, false], [ref, false], [ref, true]] as const) {
-          const seg = books.get(`${work}:${book}`)!.segments.find(s => s.column === inst.column)!;
-          const display = pairContext(ix, seg, inst.unit!, context);
-          const paired = unitEnglish(ix, display, t?.id ?? '', near);
-          const greekWindow = pairGreekWindow(seg, display, inst.line ?? firstLine(inst.unit!), context, undefined, inst.sub);
-          const text = t ? (context === 's' ? plainEnglish(paired) : pairEnglishWindow(seg, t, { ...display, english: { ...display.english, [t.id]: paired } }, inst.line ?? firstLine(inst.unit!),
-            greekWindow.greek.reduce((n, l) => n + l.text.split(/\s+/).length, 0))) : '';
-          if (!t || !text) continue;
-          const pairEnglish = {
-            text, label: t.short, title: t.name,
-            jumpUrl: jumpFor(work, book, inst.unit!.section, firstLine(inst.unit!), ts.length > 1 ? t.id : undefined),
+        const seg = books.get(`${work}:${book}`)!.segments.find(s => s.column === inst.column)!;
+        const display = pairContext(ix, seg, inst.unit!, context);
+        const greekWindow = pairGreekWindow(seg, display, inst.line ?? firstLine(inst.unit!), context, undefined, inst.sub);
+        const words = greekWindow.greek.reduce((n, l) => n + l.text.split(/\s+/).length, 0);
+        const pairEnglish: PairEnglish[] = [];
+        for (const t of ts) {
+          const textFor = (near: boolean) => {
+            const paired = unitEnglish(ix, display, t.id, near);
+            return context === 's' ? plainEnglish(paired) : pairEnglishWindow(seg, t,
+              { ...display, english: { ...display.english, [t.id]: paired } }, inst.line ?? firstLine(inst.unit!), words);
           };
+          const text = textFor(false) || (t === ref ? textFor(true) : '');
+          if (!text) continue;
+          pairEnglish.push({
+            translation: t.id, text, label: t.short, title: t.name,
+            jumpUrl: jumpFor(work, book, inst.unit!.section, firstLine(inst.unit!), ts.length > 1 ? t.id : undefined),
+          });
+        }
+        if (pairEnglish.length) {
           if (!inst.rows) inst.pairEnglish = pairEnglish;
-          // A merged hit filed under each of its forms: the forms without the
-          // English rows show the passage's English as a Greek hit does.
+          // Forms without English hits show the same unmarked passage.
           for (const f of inst.forms ?? []) if (!f.rows) f.pairEnglish = pairEnglish;
-          break;
         }
       }
     }
@@ -2813,23 +2817,18 @@
         jumpUrl: jumpFor(work, book, column, line, ts.length > 1 ? t.id : undefined),
         hits: matched.get(t.id)!,
       }));
-      // The section's English unmarked: as under a Greek hit, in the
-      // translator chip in force, else the reference.
-      // As far as the Greek it goes under: the sections `marked` reaches.
-      // The cited section's own English must be there, or the next
-      // translation is tried; a later section with none is left out.
+      // Each translation's unmarked English, as far as the Greek reaches.
+      // The cited section must have text; later empty sections stay out.
       const unmarkedFor = (marked: number[]): SectionView['pair'] => {
-        const ref = ts.find(t => t.slot === 'english') ?? ts[0];
-        const chip = ts.find(t => t.id === transFilter);
-        for (const t of [chip, ref]) {
-          if (!t) continue;
-          const parts = wholeSections(books.get(pair)!.segments, seg, marked)
-            .map(({ seg: s }) => ({ column: s.column, text: plainEnglish(sectionEnglish(ix, s, t)).trim() }));
+        const sections = wholeSections(books.get(pair)!.segments, seg, marked);
+        const entries: PairEnglish[] = [];
+        for (const t of ts) {
+          const parts = sections.map(({ seg: s }) => ({ column: s.column, text: plainEnglish(sectionEnglish(ix, s, t)).trim() }));
           if (!parts[0].text) continue;
           const text = parts.filter(p => p.text).map((p, k) => (k ? `${p.column} ` : '') + p.text).join(' ');
-          return { text, label: t.short, title: t.name, jumpUrl: jumpFor(work, book, column, line, ts.length > 1 ? t.id : undefined) };
+          entries.push({ translation: t.id, text, label: t.short, title: t.name, jumpUrl: jumpFor(work, book, column, line, ts.length > 1 ? t.id : undefined) });
         }
-        return undefined;
+        return entries.length ? entries : undefined;
       };
       const unmarked = unmarkedFor(positions);
       const heldOf = (list: Instance[]) => list.flatMap(inst => inst.held ?? []).sort((a, b) => a.pos - b.pos);
@@ -3996,7 +3995,7 @@
        18): the one shown bold and underlined; a click shows another's
        English, its hits marked, in this instance only. One translation is
        its name alone. -->
-  {#snippet names(inst: Instance, rows: TransRow[], current: string, order: Map<string, number>)}
+  {#snippet names(inst: Instance, rows: Pick<TransRow, 'translation' | 'label' | 'title'>[], current: string, order: Map<string, number>)}
     {@const list = orderedRows(rows, order)}
     {#if list.length === 1}
       <p class="tr-names"><span class="tr-name">{list[0].label}</span></p>
@@ -4178,7 +4177,10 @@
           <!-- One choice, so one tap: a switch, drawn alone (ruling 5). -->
           <button type="button" class="opt-btn opt-switch" aria-pressed={accentSensitive}
             title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens."
-            on:click={() => (accentSensitive = !accentSensitive)}>Accents<span class="sw" aria-hidden="true"></span></button>
+            on:click={() => {
+              accentSensitive = !accentSensitive;
+              if (accentSensitive && matchMode !== 'text') matchMode = 'form';
+            }}>Accents<span class="sw" aria-hidden="true"></span></button>
           {#if matchMode === 'text'}
           <button type="button" class="opt-btn opt-switch" aria-pressed={punctuation}
             title="Match the stops between words: , . ; and · (typed · or :). Off, each break between words is one space."
@@ -5170,7 +5172,12 @@
                         {@const opened = !inst.isSection && more.has(inst)}
                         {@const whole = inst.isSection || opened ? inst.whole : undefined}
                         {@const rows = whole ? whole.rows : inst.rows}
-                        {@const pair = whole ? whole.pair : inst.pairEnglish}
+                        {@const pairs = whole ? whole.pair : inst.pairEnglish}
+                        {@const ts = translationsOf(inst.work)}
+                        {@const ref = ts.find(t => t.slot === 'english') ?? ts[0]}
+                        {@const pair = pairs?.find(p => p.translation === shownTrans.get(inst))
+                          ?? pairs?.find(p => p.translation === transFilter)
+                          ?? pairs?.find(p => p.translation === ref?.id) ?? pairs?.[0]}
                         {@const shown = shownRow(inst, rows, transOrder, shownTrans)}
                         <li class="instance" class:open={opened}>
                           <a class="inst-ref" href={inst.lang === 'eng' && shown ? shown.jumpUrl : inst.jumpUrl} target="_blank" rel="noopener" title="Open in reader (new tab)">{#each citeText(inst, view).split('–') as part, i}{#if i}–<wbr>{/if}{part}{/each}</a>
@@ -5198,7 +5205,7 @@
                             {:else if pair}
                               <div class="inst-en inst-pair" lang="en">
                                 <span class="inst-pair-text">{pair.text}</span>
-                                <p class="tr-names"><span class="tr-name">{pair.label}</span></p>
+                                {@render names(inst, pairs ?? [], pair.translation, new Map())}
                               </div>
                             {/if}
                             {#if !whole && inst.lang === 'eng' && rows?.length && inst.pairGreek}

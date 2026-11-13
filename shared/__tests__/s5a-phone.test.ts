@@ -117,7 +117,7 @@ describe('Options, folded', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Accents' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Lemma' }));
     await fireEvent.click(opts());
-    expect(line()).toBe('all words · any form · accents observed · by lemma · in all works');
+    expect(line()).toBe('all words · as typed · accents observed · by lemma · in all works');
   });
 
   it('shuts a menu left open when the options are folded', async () => {
