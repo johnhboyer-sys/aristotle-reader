@@ -7,6 +7,14 @@ import { WORKS, CATEGORIES } from '@shared/lib/works';
 const root = resolve(import.meta.dirname, '../..');
 const json = (p: string) => JSON.parse(readFileSync(resolve(root, p), 'utf8'));
 const manifest = () => existsSync(resolve(root, 'src/data/plates.json')) ? json('src/data/plates.json') : {};
+const validHttpUrl = (href: unknown): boolean => {
+    if (typeof href !== 'string' || !/^https?:\/\/[^\s]+$/.test(href)) return false;
+    try { return Boolean(new URL(href).hostname); } catch { return false; }
+};
+const validPlateUrl = (url: unknown): boolean => typeof url === 'string'
+    ? validHttpUrl(url)
+    : Array.isArray(url) && url.length > 0 && url.every(source =>
+        source && typeof source.part === 'string' && source.part.trim().length > 0 && validHttpUrl(source.href));
 const count = (id: string, n: number) => { console.log(`${id} examined=${n}`); expect(n).toBeGreaterThan(0); };
 test('R-P1 source hashes, JPEG dimensions, ids, no masks', () => {
     const files = ['desk', 'phone'].flatMap(b => existsSync(resolve(root, `public/plates/${b}`)) ? readdirSync(resolve(root, `public/plates/${b}`)).map(f => `${b}/${f}`) : []);
@@ -54,7 +62,7 @@ test('R-P2 manifest schema and ids', () => {
         expect(0 <= x0 && x0 < x1 && x1 <= 1280 && 0 <= y0 && y0 < y1 && y1 <= 914, `${id} ink ${p.ink}`).toBe(true);
         for (const k of ['alt', 'who', 'what', 'when', 'how', 'where', 'lic', 'url'])
             expect(p, id).toHaveProperty(k);
-        expect(p.url, id).toMatch(/^https?:\/\//);
+        expect(validPlateUrl(p.url), id).toBe(true);
         for (const k of ['pick', 'desk', 'phone'])
             expect(p, id).not.toHaveProperty(k);
     }
@@ -62,6 +70,51 @@ test('R-P2 manifest schema and ids', () => {
     expect([sides('left'), sides('right')]).toEqual([22, 25]);
     expect(m.home.place).toBe('left');
     expect([m.GC.place, m.Mete.place, m.MA.place, m.Isa.place]).toEqual(['right', 'left', 'left', 'left']);
+});
+test('R-P2 plate URLs reject joined strings and accept separate sources', () => {
+    expect(validPlateUrl('https://example.com/a ; https://example.com/b')).toBe(false);
+    expect(validPlateUrl('https://example.com/a')).toBe(true);
+    expect(validPlateUrl([
+        {part: 'heart', href: 'https://example.com/a'},
+        {part: 'lungs', href: 'http://example.com/b'},
+    ])).toBe(true);
+});
+test('R-P2 plate URLs check every composite href', () => {
+    for (const href of ['', 'ftp://example.com/b', 'https://example.com/b ; https://example.com/c']) {
+        expect(validPlateUrl([
+            {part: 'heart', href: 'https://example.com/a'},
+            {part: 'lungs', href},
+        ]), href).toBe(false);
+    }
+    expect(validPlateUrl([])).toBe(false);
+    expect(validPlateUrl([{part: '', href: 'https://example.com/a'}])).toBe(false);
+});
+test('R-P3 built Juv credits link both source records', () => {
+    const html = readFileSync(resolve(root, 'dist/picture-credits/index.html'), 'utf8');
+    const doc = new DOMParser().parseFromString(html.match(/<li data-plate="Juv"[\s\S]*?<\/li>/)![0], 'text/html');
+    const row = doc.querySelector('[data-plate="Juv"]');
+    expect(row).not.toBeNull();
+    const links = [...row!.querySelectorAll('a[data-record]')];
+    expect(links).toHaveLength(2);
+    expect(links.map(a => [a.textContent, a.getAttribute('href')])).toEqual([
+        ['heart', 'https://wellcomecollection.org/works/cr44ptdy'],
+        ['lungs', 'https://archive.org/details/b3045279x/page/n113'],
+    ]);
+    expect(row!.textContent).toContain('Records: heart, lungs');
+});
+// Round 9: the home page's built HTML stays under 60,000 bytes.
+const homeWeightProblem = (bytes: number | null): string | null =>
+    bytes === null ? 'dist/index.html is missing: examined nothing' : bytes >= 60000 ? `dist/index.html is ${bytes} bytes, round 9 allows under 60000` : null;
+test('R-H11 home weight', () => {
+    const file = resolve(root, 'dist/index.html');
+    const bytes = existsSync(file) ? readFileSync(file).length : null;
+    count('R-H11', bytes ?? 0);
+    expect(homeWeightProblem(bytes)).toBeNull();
+});
+test('R-H11 home weight fails a heavy or missing page', () => {
+    expect(homeWeightProblem(60000)).toMatch(/60000 bytes/);
+    expect(homeWeightProblem(null)).toMatch(/examined nothing/);
+    expect(homeWeightProblem(59999)).toBeNull();
 });
 // The ink box each page cuts its plate to is re-measured from the image itself.
 test('R-P2 ink boxes match the desk plates', () => {

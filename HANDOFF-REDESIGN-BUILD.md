@@ -16,9 +16,11 @@ is due.
 |---|---|
 | Stages 1–5 (home, work pages, reader, search, lexicon in B) | built, committed, gates and screenshot judges passed (`ae65fb23b4` … `4129016580`) |
 | OG cards, gate fixes, merge of main (PR #194) | committed (`c6a276c90c`, `e98749a8a3`, `fa39aef88b`) |
-| Home and work pages | **D26 is built** (WIP commits `0ee48bd0bc`, `b883eac61b`; reviewers scored it 5–5.5). **Round 9 is ruled, NOT built** (§3). |
+| Home and work pages | **Round 9 is built, UNCOMMITTED (12 Nov 22:10)**, waiting on John's yes to commit. Done: desktop, phone, sideways, On Youth plate, gates rewritten (each with a `--prove` case), spec updated, desktop edition rows 40px (John 12 Nov: round 9's 36 failed the 40px target floor), tool links red underline (John), per-theme dark plates (below), Codex review (7 findings, all fixed: report `.redesign-shots/notes/d26/build9/review/`). Comparison page for John: https://claude.ai/artifact/RqdqPvLasvcgYGLLwrmVHd (source `.redesign-shots/notes/d26/compare/`). |
+| Dark plates | **Built.** John ruled all 48 (picker https://claude.ai/artifact/KKa82v6pQudmzSw5dv6Bq6, db `picks`; unpicked plates took the page's proposal, John's yes 12 Nov 20:17; MM dimmed): 18 cut to outline, 20 dimmed, 10 light lines. Baked WebPs in `app/public/plates/dark/{desk,phone}/` from `.redesign-shots/notes/d26/darkplates/make_dark_assets.py` (`final-picks.json`; cut-outs from `recut/recut.py` + `recut/cfg.json`, which uses FULL-PLATE pixel coordinates). Two `<picture>`s per plate, both lazy, inactive one `display:none`, so each theme fetches only its file; gate R-P4. Unicorn face and tail re-cut 12 Nov; John: "it's good". Left as is: mane hair ends, hoof notches, ground strip point and top hatching. |
+| Ship plan | **John, 12 Nov 22:05: search lands together with the rest of the UI work, in one deploy.** Commit Track A on his yes, then wait for Track B to finish before §6. |
 | Search page | stage 4 built the old search in B. **The new design (round 34) is NOT built**; its own spec is `HANDOFF-SEARCH-BUILD.md`. |
-| Tests | app 115/115, shared 735/735, scripts 99/99, svelte-check 0 errors, before the round 9 work |
+| Tests | after round 9 and the review fixes: app 130, shared 745, svelte-check 0 errors; final gate run log `.redesign-shots/notes/d26/build9/gates/final2/` |
 | build:public, deploy:dry | green before D26; re-run before the PR |
 
 ## 2. Two tracks; pick the one John names

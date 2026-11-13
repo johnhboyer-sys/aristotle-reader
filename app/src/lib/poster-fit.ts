@@ -165,6 +165,7 @@ export function fitPoster(el: HTMLElement) {
     const poster = el.closest<HTMLElement>('.b-po')!;
     const phone = matchMedia('(max-width: 960px)').matches;
     const home = poster.classList.contains('hp-p-side');
+    if (!phone && el.closest('.b-returning')) return;
     const style = getComputedStyle(el);
     // Sideways work titles keep the kit's upright-phone setting (John, J4).
     const W = !home && phone && matchMedia('(min-width: 701px)').matches ? 354 : el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
@@ -190,6 +191,7 @@ export function fitPoster(el: HTMLElement) {
         const widest = Math.max(...lines.map(x => measure(x.text) * x.f / 100 + .01 * x.f * (x.text.length - 1)));
         for (const x of lines) x.f *= W / widest;
     }
+    if (phone && !home) for (const line of lines) line.f = Math.min(64, line.f);
     const textH = lines.reduce((n, x) => n + x.f * .88, 0);
     const gap = phone && lines.length > 1 ? Math.max(0, Math.min((H - textH) / (lines.length - 1), .12 * Math.min(...lines.map(x => x.f)))) : 0;
     el.replaceChildren(...lines.map(x => {
@@ -200,7 +202,7 @@ export function fitPoster(el: HTMLElement) {
         return span;
     }));
     el.style.gap = `${gap.toFixed(1)}px`;
-    el.style.alignItems = lines.length === 1 && measure(lines[0].text) * lines[0].f / 100 < W * .9 ? 'center' : '';
+    el.style.alignItems = !(phone && !home) && lines.length === 1 && measure(lines[0].text) * lines[0].f / 100 < W * .9 ? 'center' : '';
     el.dataset.set = lines.map(x => Math.round(x.f)).join(',');
     el.dataset.fitWidth = String(W);
     // Oswald's capitals start .097em under the top of a .88 line. The home
@@ -233,34 +235,69 @@ function fitLine(el: HTMLElement) {
     }
     el.dataset.fitWidth = String(W);
 }
-// All work-poster cap arithmetic lives here, after the fonts and intro settle.
+// Desktop uses natural word wrapping, with comma phrases kept whole.
+function fitDesktopWork(el: HTMLElement) {
+    const title = el.dataset.title || '';
+    el.classList.add('b-natural-title');
+    el.classList.remove('b-title-three');
+    el.style.cssText = '';
+    el.replaceChildren(...title.split(/(?<=,)\s+/).flatMap((phrase, i) => {
+        const span = document.createElement('span');
+        span.textContent = phrase;
+        if (title.includes(',')) span.className = 'b-title-phrase';
+        return i ? [document.createTextNode(' '), span] : [span];
+    }));
+    const floor = title.includes(',') ? 32 : 38;
+    const best = (n: number) => {
+        for (let size = 60; size >= floor; size -= .5) {
+            el.style.setProperty('--title-size', `${size}px`);
+            if (el.scrollWidth <= el.clientWidth + 1 && el.getBoundingClientRect().height <= size * .91 * n + 1) return size;
+        }
+        return 0;
+    };
+    const one = best(1), two = best(2), three = best(3);
+    const size = one && one >= .84 * Math.max(two, three) ? one
+        : two && two >= .84 * three ? Math.min(two, 50) : three ? Math.min(three, 42) : two || floor;
+    el.style.setProperty('--title-size', `${size}px`);
+    if (el.getBoundingClientRect().height > size * .91 * 2.5) el.classList.add('b-title-three');
+    el.dataset.fs = String(size);
+    el.dataset.lines = String(Math.round(el.getBoundingClientRect().height / (size * .88)));
+    document.documentElement.classList.remove('poster-fitting');
+}
+// Keep the title intact. A short screen may put the button below the fold.
+export function phonePlateHeight(screenHeight: number, titleBlockHeight: number, buttonHeight: number, naturalHeight: number, minimum = 120): number {
+    return Math.min(naturalHeight, Math.max(minimum, screenHeight - titleBlockHeight - buttonHeight));
+}
 function fitWorkPoster(el: HTMLElement) {
     const poster = el.closest<HTMLElement>('.b-po')!;
     const phone = matchMedia('(max-width: 960px)').matches;
+    if (phone) el.classList.remove('b-natural-title', 'b-title-three');
     if (!phone) {
-        // From 961px the title is a column of the top block (b.css): no caps.
         poster.style.removeProperty('--poster-height');
         poster.style.removeProperty('--plate-height');
         delete poster.dataset.titleHeight;
-        fitPoster(el);
+        fitDesktopWork(el);
         return;
     }
-    const sideways = matchMedia('(min-width: 701px)').matches;
-    poster.style.setProperty('--poster-height', `${poster.clientWidth * 652 / 1440}px`);
-    poster.style.setProperty('--plate-height', `${poster.clientWidth * 558 / 640}px`);
     delete poster.dataset.titleHeight;
-    fitPoster(el);
-    const start = document.querySelector<HTMLElement>('[data-start]')!;
-    const nav = document.querySelector<HTMLElement>('.b-nav')!;
-    const rect = poster.getBoundingClientRect();
-    const tail = start.getBoundingClientRect().bottom - rect.bottom;
-    const budget = Math.max(1, sideways ? innerHeight - nav.offsetHeight : innerHeight - (rect.top + scrollY) - tail - 16);
-    if (el.offsetHeight >= budget) {
-        poster.dataset.titleHeight = String(Math.max(14, (budget - 44) * .6));
-        fitPoster(el);
+    const sideways = matchMedia('(max-height: 500px)').matches;
+    if (sideways) {
+        el.style.cssText = '';
+        el.textContent = el.dataset.title || '';
+        el.dataset.set = '44';
+        poster.style.removeProperty('--plate-height');
+        return;
     }
-    // Never enlarge a plate beyond its full-width natural cut.
-    const height = Math.min(poster.clientWidth * 558 / 640, Math.max(1, budget - el.offsetHeight));
+    fitPoster(el);
+    const top = poster.closest<HTMLElement>('.b-top')!;
+    // Two pictures, one per theme; measure the one on show.
+    const picture = [...poster.querySelectorAll<HTMLElement>('picture')].find(el => el.getClientRects().length)!;
+    const greek = top.querySelector<HTMLElement>('.b-wk-gt');
+    const button = top.querySelector<HTMLElement>('[data-resume], [data-start]')!;
+    // Include the page header, breadcrumb, titles, 20px before the plate,
+    // 18px before the buttons and 16px below the main button.
+    const titleBlock = (greek || el).getBoundingClientRect().bottom + scrollY + 20;
+    const height = phonePlateHeight(innerHeight, titleBlock, button.offsetHeight + 18 + 16, picture.clientWidth * 558 / 640);
     poster.style.setProperty('--plate-height', `${height}px`);
 }
 export async function initPosters() {

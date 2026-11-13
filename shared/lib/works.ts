@@ -998,7 +998,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'dowdall', name: 'L. D. Dowdall (Oxford, 1909)', short: 'Dowdall', slot: 'english' },
     ],
-    blurb: 'A short spurious collection of about 178 reported marvels.',
+    blurb: 'A short spurious collection of 178 reported marvels.',
   },
   {
     id: 'Rhet',

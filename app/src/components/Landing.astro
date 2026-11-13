@@ -20,7 +20,7 @@ import {
 import { sanitizeHtml } from '../lib/html';
 import { isChapterSection } from '@shared/lib/data';
 import { jsonLdSafe } from '../lib/jsonld';
-import { bookSpan, translatorName } from '../lib/nav';
+import { translatorName } from '../lib/nav';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
@@ -53,6 +53,7 @@ const editions = visibleTranslations(work);
 const primary = editions.find((t) => t.id === work.defaultTranslation)
   ?? editions.find((t) => t.slot === 'english') ?? editions[0];
 
+editions.sort((a,b) => Number(b.id === primary?.id) - Number(a.id === primary?.id));
 const translatorNames = editions.map((t) => translatorName(t.name));
 const commentaries = (work.commentaries ?? [])
   .map((id) => getWork(id))
@@ -72,6 +73,22 @@ const division = CATEGORIES.find(c => [...(c.works || []), ...(c.subcategories |
 const divisionName = division ? DIVISION_NAMES[division.title] : 'Commentary';
 const chapterTitle = (book: number, chapter: string) => (titles[String(book)]?.[chapter] || `Chapter ${chapter}`).replace(/\[\^[^\]]*\]/g, '');
 const chapterLink = (book: number, chapter: string) => `${base}${workPath(workId, book)}#ch-${book}-${chapter}`;
+const numbered = (b: BookOutline) => !b.chapters.some(c => titles[String(b.book)]?.[c.chapter]);
+const plainRange = (range: string) => range.replace(/^(.+)–\1$/, '$1').replace(/^(\d+[ab])(\d+)–\2$/, '$1$2');
+const bookRange = (b: BookOutline) => {
+  const first = b.chapters[0], last = b.chapters.at(-1);
+  if (!first || !last || !usesBekker) return '';
+  const end = last.bekker.split('–').at(-1)!;
+  return plainRange(`${first.column}${first.line}–${/^\d+[ab]/.test(end) ? end : last.column + end}`);
+};
+const hangs = (text = '') => /^[\u1F08-\u1F0F\u1F18-\u1F1D\u1F28-\u1F2F\u1F38-\u1F3F\u1F48-\u1F4D\u1F59-\u1F5F\u1F68-\u1F6F\u1FEC]/.test(text);
+const printGroups = [...new Set(reading.map(r => r.kind))].map(kind => {
+  const entries = reading.filter(r => r.kind === kind);
+  const label = kind === 'translation' ? (entries.length > 1 ? 'Other translations' : 'Another translation')
+    : kind === 'collection' ? (entries.length > 1 ? 'The translations read here' : 'The translation read here')
+    : entries.length > 1 ? 'Commentaries' : 'Commentary';
+  return { label, entries };
+});
 const plate = plates[workId as keyof typeof plates];
 // ── SEO ─────────────────────────────────────────────────────────────────────
 const pageTitle = `${work.title} — ${author}, in Greek & English`;
@@ -157,52 +174,64 @@ const breadcrumbLd = Astro.site
         <p class="b-crumb"><a href={`${base}/`}>Works</a> / <span>{divisionName}</span></p>
         <div class={`b-top pl-${plate.place}`} style={`--ix:${plate.ink[0]};--iy:${plate.ink[1]};--iw:${plate.ink[2] - plate.ink[0]};--ih:${plate.ink[3] - plate.ink[1]}`}>
         <section class="b-po work pl dp-paper tp-side" data-tp="side" data-ts="1" data-work={workId}>
-          <picture><source media="(max-width: 960px)" srcset={`${base}/plates/phone/${workId}.jpg`} width="640" height="558"/><img src={`${base}/plates/desk/${workId}.jpg`} width="1280" height="914" alt={plate.alt} decoding="async"/></picture>
-          <h1 class="b-po-t" data-fit="poster" data-title={work.title}>{work.title}</h1>
+          <picture class="th-light"><source media="(max-width: 960px)" srcset={`${base}/plates/phone/${workId}.jpg`} width="640" height="558"/><img src={`${base}/plates/desk/${workId}.jpg`} width="1280" height="914" alt={plate.alt} loading="lazy" decoding="async"/></picture><picture class="th-dark"><source media="(max-width: 960px)" srcset={`${base}/plates/dark/phone/${workId}.webp`} width="640" height="558"/><img src={`${base}/plates/dark/desk/${workId}.webp`} width="1280" height="914" alt={plate.alt} loading="lazy" decoding="async"/></picture>
+          <h1 class="b-po-t b-natural-title" data-fit="poster" data-title={work.title}>{work.title.split(/(?<=,)\s+/).map((phrase,i) => <>{i > 0 && " "}<span class:list={[{"b-title-phrase": work.title.includes(",")}]}>{phrase}</span></>)}</h1>
         </section>
         <div class="b-po-below">
-          {work.greekTitle && <p class="b-wk-gt" lang="grc" data-fit="line">{work.greekTitle}</p>}
+          {work.greekTitle && <p class:list={["b-wk-gt", {"b-greek-hang": hangs(work.greekTitle)}]} lang="grc" data-fit="line">{work.greekTitle}</p>}
           <div class="b-ctas" data-work={workId} data-books={JSON.stringify(work.bookLabels)} data-chapters={JSON.stringify(allChapters)}>
             <a class="b-btn pri" data-start href={primary ? readHref(`?trans=${primary.id}`) : readHref()}>Start reading</a>
             <span id="work-resume-slot"></span>
             <a class="b-btn" data-greek href={readHref('?view=greek')}>Greek only</a>
-            {editions.length >= 2 && <a class="b-btn" data-compare href={readHref('?trans=compare')}>Compare translations</a>}
+            {editions.length >= 2 && <a class="b-btn b-compare-mobile" data-compare href={readHref('?trans=compare')}>Compare translations</a>}
+            <p class="b-reading-mode">Greek and English · {primary?.short}</p>
           </div>
           <div class="b-words">
-            <p class="b-wk-blurb">{work.blurb}{work.authenticity && work.authenticity !== 'genuine' && <span class="b-tag">{AUTHENTICITY_LABEL[work.authenticity]}</span>}</p>
+            <p class="b-wk-blurb">{work.blurb}{work.authenticity && work.authenticity !== 'genuine' && <span class:list={["b-tag", {"b-redundant-tag": work.blurb.toLowerCase().includes(AUTHENTICITY_LABEL[work.authenticity].toLowerCase())}]}>{AUTHENTICITY_LABEL[work.authenticity]}</span>}</p>
             {work.related?.map(r => getWork(r.id) && <p class="b-cred b-related"><a href={`${base}${workLanding(r.id)}`}>{r.label}</a></p>)}
             <section class="b-wk" data-section="facts">
               <dl class="b-facts">
-                <dt>Greek</dt><dd>{work.greekSource.short}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
-                <dt>English</dt><dd>{editions.map(t => { const reviser = t.name.match(/, rev\. (?:\S+ )*(\S+) \(/)?.[1]; const imprint = t.name.match(/\(.*\)$/)?.[0]; return <><div><span data-english-entry><a href={readHref(`?trans=${t.id}`)}>{t.short}</a>{reviser && `, rev. ${reviser}`}{imprint && ` ${imprint}`}</span>{editions.length > 1 && primary?.id === t.id && <>{' '}<small>opens first</small></>}</div>{workId === 'EN' && t.id === 'ostwald' && <div data-english-entry><a href={`${base}/EN/glossary`}>glossary</a></div>}</>; })}</dd>
+                <dt>Greek text</dt><dd>{work.greekSource.short}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
+                <dt>Open Greek and English with</dt><dd>{editions.map(t => {
+                  const reviser = t.name.match(/, rev\. (?:\S+ )*(\S+) \(/)?.[1];
+                  const imprint = t.name.match(/\(.*\)$/)?.[0];
+                  return <a class="b-edition-row" href={readHref(`?trans=${t.id}`)}><span><span class="b-translator">{t.short}</span>{reviser && `, rev. ${reviser}`}{imprint && ` ${imprint}`}</span>{editions.length > 1 && primary?.id === t.id && <small class="b-opens-first">opens first</small>}</a>;
+                })}
+                <div class="b-edition-tools">
+                  {editions.length >= 2 && <a class="b-compare-tool" href={readHref('?trans=compare')}>Compare translations</a>}
+                  {workId === 'EN' && <a href={`${base}/EN/glossary`}>Glossary</a>}
+                </div></dd>
               </dl>
             </section>
           </div>
         </div>
         </div>
         <section class="b-sec" data-section="books">
-          <h2 class="b-h2">{work.books > 1 ? 'Books and chapters' : 'Chapters'}</h2>
-          {ostwaldTitles && <p class="b-note3">Chapter titles are Ostwald’s.</p>}
-          {work.books > 1 && <p class="b-bkall"><button type="button" data-books-open>Open all books</button><button type="button" data-books-close>Close all</button></p>}
-          <div class={work.books > 1 ? 'b-bks' : undefined}>
+          <div class="b-contents-head">
+            <h2 class="b-h2">{work.books > 1 ? 'Books and chapters' : 'Chapters'}</h2>
+            {ostwaldTitles && <p class="b-note3">Chapter titles are Ostwald’s.</p>}
+            {work.books > 1 && <p class="b-bkall"><button type="button" data-books-open>Open all books</button><button type="button" data-books-close>Close all</button></p>}
+            {work.books === 1 && numbered(outline[0]) && totalChapters > 40 && <form class="b-chapter-go">
+              <label for="chapter-go">Chapter or Bekker number</label><input id="chapter-go" autocomplete="off" placeholder="12 or 831b1"/><button type="submit" class="b-btn">Go</button>
+            </form>}
+          </div>
+          <div class:list={[work.books > 1 && "b-bks", {"b-untitled-books": outline.every(numbered)}]}>
           {outline.map(b => {
-            const rows = <ol class="b-chs">{b.chapters.map(c => <li><a href={chapterLink(b.book,c.chapter)} data-book={b.book} data-chapter={c.chapter}><span class="b-cn">{c.chapter}</span><span class="b-ct">{chapterTitle(b.book,c.chapter)}</span><span class="b-cb">{usesBekker ? c.bekker : ''}</span></a></li>)}</ol>;
+            const rows = <ol class:list={["b-chs", {"b-numbered": numbered(b), "b-chapter-tens": numbered(b) && b.chapters.length > 40}]}>{b.chapters.map(c => <li><a href={chapterLink(b.book,c.chapter)} data-book={b.book} data-chapter={c.chapter}><span class="b-cn">{c.chapter}</span><span class="b-ct">{chapterTitle(b.book,c.chapter)}</span><span class="b-cb">{usesBekker ? plainRange(c.bekker) : ''}</span></a></li>)}</ol>;
             return work.books > 1 ? <>
-              <details class="b-bk" data-book={b.book}><summary><span class="b-bkn" lang={/[α-ωΑ-Ω]/.test(b.label) ? 'grc' : 'en'}><span class="b-bkw">Book </span>{b.label}</span><span class="b-bkf">{titles[String(b.book)]?.[b.chapters[0]?.chapter] ? chapterTitle(b.book,b.chapters[0].chapter) : <span class="b-bks2">{usesBekker ? bookSpan(b.chapters).split(' · ')[1] ?? '' : ''}</span>}</span><span class="b-bkc">{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</span></summary>{rows}</details>
+              <details class="b-bk" data-book={b.book}><summary><span class="b-bkn" lang={/[α-ωΑ-Ω]/.test(b.label) ? 'grc' : 'en'}><span class="b-bkw">Book </span>{b.label}</span><span class="b-bkf">{titles[String(b.book)]?.[b.chapters[0]?.chapter] ? chapterTitle(b.book,b.chapters[0].chapter) : <span class="b-bks2">{usesBekker ? bookRange(b) : ''}</span>}</span><span class="b-bkc">{!numbered(b) && <span class="b-book-range">{bookRange(b)}</span>}{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</span></summary>{rows}</details>
             </> : rows;
           })}
           </div>
         </section>
         <section class="b-sec b-two" data-section="reference">
           {(reading.length > 0 || resources.length > 0) && <div>
-            {reading.length > 0 && <section data-section="print"><h2 class="b-h2">In print</h2><ul class="b-print">{reading.map(r => <li><small>{r.kind === 'collection' ? 'In print' : r.kind === 'translation' ? 'Translation' : 'Commentary'}</small><span><a data-citation href={inPrintHref(r)} target="_blank" rel="noopener nofollow" set:html={sanitizeHtml(r.cite)}/></span></li>)}</ul></section>}
+            {reading.length > 0 && <section data-section="print"><h2 class="b-h2">In print</h2><ul class="b-print b-print-mobile">{reading.map(r => <li><small>{r.kind === 'collection' ? 'In print' : r.kind === 'translation' ? 'Translation' : 'Commentary'}</small><span><a data-citation href={inPrintHref(r)} target="_blank" rel="noopener nofollow" set:html={sanitizeHtml(r.cite)}/></span></li>)}</ul><div class="b-print-groups">{printGroups.map(group => <div><h3>{group.label}</h3>{group.entries.map(r => <p><a data-citation href={inPrintHref(r)} target="_blank" rel="noopener nofollow" set:html={sanitizeHtml(r.cite)}/></p>)}</div>)}</div></section>}
             {resources.length > 0 && <section data-section="resources"><h2 class="b-h2">Resources</h2><ul class="b-print">{resources.map(r => <li><span><a href={r.url} target="_blank" rel="noopener">{r.label}</a>{' — '}{r.blurb}{r.exercises && <> See {r.exercises}, relevant to this work.</>}{' '}Developed by <a href={r.authorUrl} target="_blank" rel="noopener">{r.authorName}</a>.</span></li>)}</ul></section>}
           </div>}
           <div>
             {commentaries.length > 0 && <section data-section="commentary"><h2 class="b-h2">Commentary</h2><ul class="b-trs">{commentaries.map(c => <li><a href={`${base}${workLanding(c.id)}`}><span>{c.author}, <i>{c.title}</i></span><small>{c.blurb}</small></a></li>)}</ul></section>}
-            <section data-section="sources"><h2 class="b-h2">Sources</h2><p class="b-cred"><a href={`${base}/attribution`}>Texts &amp; licences</a></p>
 
-            </section>
           </div>
         </section>
       </main>
@@ -214,6 +243,80 @@ const breadcrumbLd = Astro.site
     import { resumeFor } from '@shared/lib/resume';
     import { parseBekker } from '@shared/lib/data';
     initPosters();
+    // Phone furniture lives in the client so desktop markup stays unchanged.
+    const phoneBand = matchMedia('(max-width: 960px)');
+    const phoneFurniture = () => {
+      const top = document.querySelector<HTMLElement>('.b-top')!;
+      const facts = top.querySelector<HTMLElement>('[data-section="facts"]')!;
+      const books = document.querySelector<HTMLElement>('[data-section="books"]')!;
+      const words = top.querySelector<HTMLElement>('.b-words')!;
+      const controls = top.querySelector<HTMLElement>('.b-ctas')!;
+      const mode = controls.querySelector<HTMLElement>('.b-reading-mode')!;
+      const blurb = document.querySelector<HTMLElement>('.b-wk-blurb')!;
+      if (phoneBand.matches) {
+        books.id = 'contents';
+        if (!facts.querySelector('.b-editions-fold')) {
+          const fold = document.createElement('details'); fold.className = 'b-editions-fold';
+          const label = document.createElement('summary'); label.textContent = 'Editions and tools';
+          fold.append(label, ...facts.childNodes); facts.append(fold);
+        }
+        if (!controls.querySelector('.b-contents-button')) {
+          const button = document.createElement('a'); button.className = 'b-btn b-contents-button';
+          button.href = '#contents'; button.textContent = 'Contents'; controls.append(button);
+        }
+        if (controls.classList.contains('b-resumed')) {
+          let after = document.querySelector<HTMLElement>('.b-after-contents');
+          if (!after) { after = document.createElement('div'); after.className = 'b-after-contents'; books.after(after); }
+          after.append(blurb);
+        } else if (!mode.querySelector('.b-contents-link')) {
+          const text = document.createElement('span'); text.textContent = mode.textContent;
+          const link = document.createElement('a'); link.className = 'b-contents-link';
+          link.href = '#contents'; link.textContent = 'Contents'; mode.replaceChildren(text, link);
+        }
+      } else {
+        const fold = facts.querySelector('.b-editions-fold');
+        if (fold) fold.replaceWith(...[...fold.childNodes].slice(1));
+        controls.querySelector('.b-contents-button')?.remove();
+        mode.querySelector('.b-contents-link')?.remove();
+        const text = mode.querySelector('span'); if (text) mode.replaceChildren(...text.childNodes);
+        words.prepend(blurb); document.querySelector('.b-after-contents')?.remove();
+        books.removeAttribute('id');
+      }
+    };
+    phoneBand.addEventListener('change', phoneFurniture);
+    const go = document.querySelector<HTMLFormElement>('.b-chapter-go');
+    go?.addEventListener('submit', event => {
+      event.preventDefault();
+      const value = go.querySelector('input')!.value.trim();
+      const links = [...document.querySelectorAll<HTMLAnchorElement>('.b-chs a')];
+      const ref = parseBekker(value.replace(/\s+/g, '').toLowerCase());
+      const key = (column: string, line: number) => Number(column.slice(0,-1))*10000 + (column.endsWith('b') ? 1000 : 0) + line;
+      const target = ref ? links.filter(a => {
+        const start = parseBekker(a.querySelector('.b-cb')!.textContent!.split('–')[0]);
+        return start && key(start.column,start.line) <= key(ref.column,ref.line);
+      }).at(-1) : /^\d+$/.test(value) ? links[Number(value)-1] : null;
+      if (target) location.href = target.href;
+    });
+    // The plate can outgrow the words on a very short work. Measure only this
+    // optional tuck; the title, editions and contents already come from Astro.
+    const tuck = () => {
+      const section = document.querySelector<HTMLElement>('[data-section="books"]')!;
+      section.classList.remove('b-contents-tuck'); section.style.marginTop = ''; section.style.minHeight = '';
+      if (!matchMedia('(min-width: 961px)').matches) return;
+      const bottom = (selector: string) => document.querySelector(selector)?.getBoundingClientRect().bottom || 0;
+      // The words grid cell stretches to the plate; measure its content instead.
+      const textBottom = Math.max(bottom('.b-ctas'), bottom('.b-words .b-facts'), bottom('.b-words .b-edition-tools'), bottom('.b-reading-mode'));
+      // Two pictures, one per theme; measure the one on show.
+      const over = ([...document.querySelectorAll('.b-top picture')].find(el => el.getClientRects().length)?.getBoundingClientRect().bottom || 0) - textBottom;
+      if (over > 90 && section.offsetHeight < over + 150) {
+        section.classList.add('b-contents-tuck'); section.style.marginTop = `${-(over + 4)}px`; section.style.minHeight = `${over + 30}px`;
+      }
+    };
+    document.fonts.ready.then(() => {
+      requestAnimationFrame(tuck);
+      new ResizeObserver(tuck).observe(document.querySelector('.b-top')!);
+    });
+    window.addEventListener('resize', tuck);
     for (const button of document.querySelectorAll<HTMLButtonElement>('[data-books-open],[data-books-close]')) button.addEventListener('click', () => {
       for (const book of document.querySelectorAll<HTMLDetailsElement>('.b-bk')) book.open = button.hasAttribute('data-books-open');
     });
@@ -234,9 +337,24 @@ const breadcrumbLd = Astro.site
       const link = document.createElement('a'); link.className = 'b-btn'; link.dataset.resume = '';
       const base = import.meta.env.BASE_URL.replace(/\/$/,'');
       link.href = `${base}/${id}/book/${book}${saved.cite ? `#${saved.cite}` : ''}`;
-      link.textContent = `Resume at ${labels.length > 1 ? `Book ${labels[book-1]}` : ''}${chapter ? `${labels.length > 1 ? ', ' : ''}chapter ${chapter.chapter}` : labels.length === 1 ? 'the saved place' : ''}`;
+      link.textContent = `Continue at ${labels.length > 1 ? `Book ${labels[book-1]}` : ''}${chapter ? `${labels.length > 1 ? ', ' : ''}chapter ${chapter.chapter}` : labels.length === 1 ? 'the saved place' : ''}`;
       document.getElementById('work-resume-slot')!.append(link);
+      {
+        link.classList.add('pri'); controls.classList.add('b-resumed'); controls.prepend(link);
+        document.getElementById('work-resume-slot')!.remove();
+        const start = controls.querySelector<HTMLAnchorElement>('[data-start]')!;
+        start.classList.remove('pri'); start.textContent = 'From the start';
+        link.after(controls.querySelector('.b-reading-mode')!);
+        const count = document.querySelector(`.b-bk[data-book="${book}"] .b-bkc`);
+        if (count && chapter) {
+          const note = document.createElement('span'); note.className = 'b-saved-chapter';
+          note.textContent = `saved at chapter ${chapter.chapter}`;
+          const range = count.querySelector('.b-book-range');
+          if (range) range.after(note); else count.prepend(note);
+        }
+      }
     }
+    if (phoneBand.matches) phoneFurniture();
   </script>
 </body>
 </html>

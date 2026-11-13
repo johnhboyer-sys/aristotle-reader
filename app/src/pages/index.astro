@@ -28,10 +28,12 @@ const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href 
 // Each card row becomes a single tappable card; the editions/translations live
 // on the work's landing page (/<work>).
 const divisions = buildDivisions(CATEGORIES);
+const hangs = (text = '') => /^[\u1F08-\u1F0F\u1F18-\u1F1D\u1F28-\u1F2F\u1F38-\u1F3F\u1F48-\u1F4D\u1F59-\u1F5F\u1F68-\u1F6F\u1FEC]/.test(text);
+const subjectRanges = ['1–184', '184–980', '980–1093', '1094–1353', '1354–1462'];
 // The bust is cut to its ink box in the desk plate (scripts/measure-plate-ink.mjs).
 const ink = plates.home.ink;
 const extent = (w: Work) => {
-  const chapters: Record<string, unknown[]> = JSON.parse(readFileSync(fileURLToPath(new URL(`data/${w.id}/chapters.json`, publicDir)), 'utf8'));
+  const chapters: Record<string, {chapter: string; column: string; line: string}[]> = JSON.parse(readFileSync(fileURLToPath(new URL(`data/${w.id}/chapters.json`, publicDir)), 'utf8'));
   const n = Object.values(chapters).reduce((sum, book) => sum + book.length, 0);
   return `${w.books > 1 ? `${w.books} books, ` : ''}${n} chapter${n === 1 ? '' : 's'}`;
 };
@@ -42,6 +44,7 @@ const extent = (w: Work) => {
 // carry the long-tail "<work> greek & english" queries. Absolute URLs need
 // Astro.site (set in config); emitted only when present.
 const builtWorks = builtWorkCards(divisions);
+const extents = Object.fromEntries(builtWorks.map(c => [c.work.id, extent(c.work)]));
 const structuredData = Astro.site
   ? [
       {
@@ -110,12 +113,12 @@ const structuredData = Astro.site
       <main>
         <div class="b-top">
         <section class="b-po hero pl dp-paper tp-side pl-l hp-p-side" data-tp="side" data-ts="1" aria-label="The complete works of Aristotle" style={`--ix:${ink[0]};--iy:${ink[1]};--iw:${ink[2] - ink[0]};--ih:${ink[3] - ink[1]}`}>
-          <picture><source media="(max-width: 960px)" srcset={`${base}/plates/phone/home.jpg`} width="640" height="558"/><img src={`${base}/plates/desk/home.jpg`} width="1280" height="914" alt={plates.home.alt} decoding="async"/></picture>
+          <picture class="th-light"><source media="(max-width: 960px)" srcset={`${base}/plates/phone/home.jpg`} width="640" height="558"/><img src={`${base}/plates/desk/home.jpg`} width="1280" height="914" alt={plates.home.alt} loading="lazy" decoding="async"/></picture><picture class="th-dark"><source media="(max-width: 960px)" srcset={`${base}/plates/dark/phone/home.webp`} width="640" height="558"/><img src={`${base}/plates/dark/desk/home.webp`} width="1280" height="914" alt={plates.home.alt} loading="lazy" decoding="async"/></picture>
           <h1 class="b-po-t" data-fit="poster" data-title="The complete works of Aristotle">The complete works of Aristotle</h1>
-          <p class="b-gt" lang="grc" data-fit="line" data-fill>Ἀριστοτέλους ἅπαντα τὰ σῳζόμενα</p>
+          <p class="b-gt b-greek-hang" lang="grc" data-fit="line" data-fill>Ἀριστοτέλους ἅπαντα τὰ σῳζόμενα</p>
         </section>
         <section class="b-intro">
-          <p class="b-lead">Parallel Greek–English editions of every work of Aristotle. <span id="touch-verb">Click</span> any Greek word to parse it and see its definition. Search the corpus in Greek and English.</p>
+          <p class="b-lead">Read and search every work of Aristotle in Greek and English. <span id="touch-verb">Click</span> any Greek word to parse and define it.</p>
           <div class="b-intro-r">
             <div id="resume-slot" data-works={JSON.stringify(Object.fromEntries(builtWorks.map(c => [c.work.id,{title:c.work.title,books:c.work.books,bookLabels:c.work.bookLabels}])))}></div>
             <form class="b-search" action={`${base}/search`} method="get" role="search">
@@ -123,15 +126,20 @@ const structuredData = Astro.site
               <input name="q" autocomplete="off" spellcheck="false" placeholder="φύσις, justice, ἀρετή …" aria-label="Search the corpus"/><button type="submit">Search</button>
             </form>
           </div>
+          <div class="b-resume-work" hidden>
+            <a class="b-resume-title"></a><p class="b-resume-location"></p><a class="b-btn pri">Continue reading</a>
+          </div>
+          <a class="b-resume-passage" hidden><p lang="grc"></p><p lang="en"></p></a>
         </section>
         </div>
-        {divisions.map(d => <section class="b-div" data-division={d.numeral}>
+        <nav class="b-subjects" aria-label="Subjects">{divisions.map((d,i) => <a href={`#division-${d.numeral}`}><span>{DIVISION_NAMES[d.title]}</span><span class="b-subject-range">{subjectRanges[i]}</span></a>)}</nav>
+        {divisions.map(d => <section id={`division-${d.numeral}`} class="b-div" data-division={d.numeral}>
           <h2 class="b-dh">{DIVISION_NAMES[d.title]}</h2>
           <div class="b-dw">{d.groups.map(g => <>
             {g.label && <h3 class="b-sub sub-label">{g.label}</h3>}
             <ul class="b-works">{g.cards.filter(c => c.kind === 'work' && c.work.id !== 'Isa').map(c => c.kind === 'work' && <li><a href={`${base}${workLanding(c.work.id)}`} data-work={c.work.id}>
               <span class="b-wt">{c.work.title}{c.work.authenticity && c.work.authenticity !== 'genuine' && <span class="b-tag">{AUTHENTICITY_LABEL[c.work.authenticity]}</span>}</span>
-              <span class="b-wg" lang="grc">{c.work.greekTitle}</span><span class="b-we">{extent(c.work)}</span>
+              <span class:list={["b-wg", {"b-greek-hang": hangs(c.work.greekTitle)}]} lang="grc">{c.work.greekTitle}</span><span class="b-we">{extents[c.work.id]}</span>
             </a></li>)}</ul>
           </>)}</div>
         </section>)}
@@ -143,63 +151,77 @@ const structuredData = Astro.site
     if (matchMedia('(hover: none) and (pointer: coarse)').matches) document.getElementById('touch-verb').textContent = 'Tap';
   </script>
   <script>
-    import { initPosters } from '../lib/poster-fit';
-    import { lastRead } from '@shared/lib/resume';
-    import { parseBekker } from '@shared/lib/data';
-    initPosters();
+    import { fitPoster, initPosters } from '../lib/poster-fit';
+    import { lastRead, resumeFor } from '@shared/lib/resume';
+    import { fetchBook } from '@shared/lib/data';
+    import { initReturningLayout, updateTouchVerb, resolveHomePlace } from '../lib/home-resume';
+
     const base = import.meta.env.BASE_URL.replace(/\/$/, '');
     const slot = document.getElementById('resume-slot');
-    const roman = (n: number) => {
-      let text = '';
-      for (const [value, letters] of [[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']] as [number,string][]) {
-        while (n >= value) { text += letters; n -= value; }
-      }
-      return text;
-    };
-    const citeKey = (cite: string) => {
-      const ref = parseBekker(cite);
-      if (!ref) return null;
-      return Number(ref.column.slice(0,-1)) * 100000 + (ref.column.endsWith('b') ? 10000 : 0) + ref.line * 100 + (ref.sub ? ref.sub.charCodeAt(0) - 96 : 0);
-    };
+    const phoneBand = matchMedia('(max-width: 960px)');
+    const touchVerb = () => updateTouchVerb(document, phoneBand.matches);
+    touchVerb();
+    phoneBand.addEventListener('change', touchVerb);
     async function resume() {
       if (!slot) return;
       const works = JSON.parse(slot.dataset.works || '{}');
-      const last = lastRead(w => Object.hasOwn(works,w));
+      const last = lastRead(w => Object.hasOwn(works,w)) ?? (matchMedia('(min-width: 961px)').matches ? Object.keys(works).map(work => {
+        const pos = resumeFor(work); return pos ? { work, ...pos } : null;
+      }).find(Boolean) : null);
       if (!last) return;
       const w = works[last.work];
-      const book = Math.min(Math.max(1,last.book),w.books);
-      const card = document.createElement('p');
-      card.className = 'b-cont'; card.id = 'resume-card';
-      const link = document.createElement('a'); link.id = 'resume-link';
-      link.href = `${base}/${last.work}/book/${book}${last.cite ? `#${last.cite}` : ''}`;
-      const title = document.createElement('i'); title.textContent = w.title;
-      const label = w.bookLabels[book - 1];
-      const place = document.createTextNode(w.books > 1 ? `, Book ${/^[IVXLCDM]+$/.test(label) ? label : roman(book)}` : '');
-      // The link is the 40px target (inline-flex, which would drop the space
-      // after "reading"); the span carries the text and the kit's underline.
-      const text = document.createElement('span'); text.className = 'b-cont-t';
-      text.append('Continue reading ', title, place); link.append(text); card.append(link); slot.append(card);
-      if (!last.cite) return;
-      try {
-        const response = await fetch(`${base}/data/${last.work}/chapters.json`);
-        if (!response.ok) return;
-        const chapters = await response.json();
-        const point = citeKey(last.cite);
-        if (point === null) return;
-        for (const chapter of chapters[String(book)] || []) {
-          const start = citeKey(`${chapter.column}${chapter.line}`);
-          const endText = String(chapter.bekker).split(/[–—]/).pop()!.trim();
-          const end = citeKey(/^\d+[ab]/.test(endText) ? endText : `${chapter.column}${endText}`);
-          // A plain end-line number includes its lettered parts.
-          const limit = end === null ? null : end + (/\d$/.test(endText) ? 99 : 0);
-          if (start !== null && limit !== null && point >= start && point <= limit) {
-            place.textContent += `, chapter ${chapter.chapter}`;
-            break;
+      let book = Math.min(Math.max(1,last.book),w.books);
+      let cite = last.cite;
+      let chapter: string | undefined;
+      if (cite) {
+        try {
+          const [chaptersResponse, columnsResponse] = await Promise.all([
+            fetch(`${base}/data/${last.work}/chapters.json`),
+            fetch(`${base}/data/${last.work}/columns.json`),
+          ]);
+          if (!chaptersResponse.ok || !columnsResponse.ok) throw new Error('Missing saved-place data');
+          const place = resolveHomePlace(book, cite, await chaptersResponse.json(), await columnsResponse.json());
+          ({ book, cite, chapter } = place);
+        } catch { cite = null; }
+      }
+      {
+        const top = document.querySelector<HTMLElement>('.b-top')!;
+        initReturningLayout(top, phoneBand, () => fitPoster(top.querySelector<HTMLElement>('h1')!));
+        const resume = top.querySelector<HTMLElement>('.b-resume-work')!;
+        const href = `${base}/${last.work}/book/${book}${cite ? `#${cite}` : ''}`;
+        const title = resume.querySelector<HTMLAnchorElement>('.b-resume-title')!;
+        title.href = href; title.textContent = w.title;
+        const location = resume.querySelector('.b-resume-location')!;
+        const showLocation = (chapter?: string) => {
+          location.textContent = [
+            w.books > 1 ? `Book ${w.bookLabels[book-1]}${chapter ? `, chapter ${chapter}` : ''}` : chapter ? `Chapter ${chapter}` : '', cite,
+          ].filter(Boolean).join(' · ');
+        };
+        showLocation(chapter);
+        const button = resume.querySelector<HTMLAnchorElement>('.b-btn')!;
+        button.href = href; button.setAttribute('aria-label', `Continue reading ${w.title}`);
+        resume.hidden = false;
+        if (cite) try {
+          const [data, { resumePassage }, { getWork }] = await Promise.all([
+            fetchBook(last.work, book),
+            import('@shared/lib/resume-passage'),
+            import('@shared/lib/works'),
+          ]);
+          const work = getWork(last.work);
+          const passage = work && resumePassage(data, work, cite);
+          if (passage) {
+            const link = top.querySelector<HTMLAnchorElement>('.b-resume-passage')!;
+            link.href = href; link.querySelector('[lang="grc"]')!.textContent = passage.greek;
+            const english = link.querySelector<HTMLElement>('[lang="en"]')!;
+            english.textContent = passage.english; english.hidden = !passage.english;
+            link.hidden = false;
           }
-        }
-      } catch { /* The book remains useful when chapter data is unavailable. */ }
+        } catch { /* Keep the card alone when the book cannot load. */ }
+        return;
+      }
     }
     void resume();
+    initPosters();
   </script>
 </body>
 </html>

@@ -79,6 +79,9 @@ const accessPages = stage >= 2 ? [...publicPages,'/EN/',...(stage >= 3 ? ['/EN/b
 // Stage 3: the reader.
 const READER = '/EN/book/1';
 const SEARCH = '/search?q=ἀρετή';
+// Round 9's returning reader: Nicomachean Ethics, Book II at 1104b3 (chapter 3); a second saved work, Politics.
+const r9Seed = () => ({storage: {'reader-book-EN': '2', 'reader-loc-EN': '1104b3', 'reader-recent': JSON.stringify({EN: Date.now()})}});
+const r9SeedTwo = () => ({storage: {...r9Seed().storage, 'reader-book-Pol': '1', 'reader-loc-Pol': '1252a1', 'reader-recent': JSON.stringify({EN: Date.now(), Pol: Date.now() - 60000})}});
 const plates = JSON.parse(readFileSync(new URL('../src/data/plates.json',import.meta.url),'utf8'));
 const chaptersOf = id => JSON.parse(readFileSync(join(app,'public/data',id,'chapters.json'),'utf8'));
 const divisionName = id => {
@@ -107,13 +110,16 @@ const sizes = { D1440: [1440, 900], D1920: [1920, 1080], G1440: [1440, 1400], D1
     // D26: the two windows the home and work designs were drawn at, and the widths spec §8.10 names for the grid.
     D1525: [1525, 896], D1152: [1152, 663], D1024: [1024, 700], D1366: [1366, 768] };
 let browser;
-async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false, stubPosterResize = false) {
+async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false, stubPosterResize = false, block = null) {
     gateContext = {path, size, theme};
     gatePage = null;
     browser ||= await resolvePlaywright().chromium.launch();
     const [width, height] = sizes[size];
     const touch = /^[SP]/.test(size);
     const context = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch, colorScheme: theme });
+    // block: a URL glob whose requests fail, set before the first request.
+    let blocked = 0;
+    if (block) await context.route(block, route => { blocked++; return route.abort(); });
     await context.addInitScript(({ theme, seed, fresh, stubPosterResize }) => {
         if (stubPosterResize) {
             window.ResizeObserver = class {
@@ -123,7 +129,9 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
             };
         }
         if (!fresh) localStorage.setItem('ne-theme', theme);
-        if (seed) {
+        // {storage: {...}} seeds raw localStorage entries (round 9: several saved works).
+        if (seed?.storage) for (const [key, value] of Object.entries(seed.storage)) localStorage.setItem(key, value);
+        else if (seed) {
             const saved = typeof seed === 'object' ? seed : {work:'EN',book:1,cite:'1095b30'};
             localStorage.setItem('reader-recent',JSON.stringify({[saved.work]:Date.now()}));
             localStorage.setItem(`reader-book-${saved.work}`,String(saved.book));
@@ -131,15 +139,18 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
         }
     }, { theme, seed, fresh, stubPosterResize });
     const page = await context.newPage();
+    page.blockedRequests = () => blocked;
     gatePage = page;
     page.fontFileRequests = [];
     page.fontSheetReads = [];
     page.fontFailures = [];
+    page.imageRequests = [];
     page.on('requestfailed', request => {
         if (['font','stylesheet'].includes(request.resourceType())) page.fontFailures.push(`${request.url()}: ${request.failure()?.errorText}`);
     });
     page.on('request', request => {
         if (request.resourceType() === 'font') page.fontFileRequests.push(request.url());
+        if (request.resourceType() === 'image') page.imageRequests.push(request.url());
     });
     page.on('response', response => {
         if (['font','stylesheet'].includes(response.request().resourceType()) && response.status() >= 400) page.fontFailures.push(`${response.url()}: HTTP ${response.status()}`);
@@ -150,8 +161,10 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
     await page.goto(BASE + path, { waitUntil: 'networkidle' });
     // Wait for the title fitter only where there is a poster, so the gates can
     // also run against the old design (the failing-first runs).
+    // Round 9: desktop work titles mark data-fs, not data-set, and the
+    // returning desktop home masthead is not fitted at all.
     if (await page.locator('.b-po-t').count())
-        await page.waitForFunction(() => document.querySelector('.b-po-t')?.dataset.set);
+        await page.waitForFunction(() => { const t = document.querySelector('.b-po-t'); return !document.documentElement.classList.contains('poster-fitting') && !!(t?.dataset.set || t?.dataset.fs || t?.closest('.b-returning')); });
     if (stage >= 4 && path.startsWith('/search?')) await searchReady(page);
     else await settleFonts(page);
     if (stage >= 5 && await page.locator('.b-wp').count()) await page.waitForFunction(() => document.querySelector('.b-wp')?.dataset.fitted === 'true');
@@ -169,7 +182,8 @@ const close = page => page.context().close();
 const style = (page, css) => page.addStyleTag({ content: css });
 async function geometry(page) {
     return page.evaluate(() => {
-        const title = document.querySelector('.b-po-t'), img = document.querySelector('.b-po img'), po = document.querySelector('.b-po');
+        // Two pictures, one per theme: measure the plate on show.
+        const title = document.querySelector('.b-po-t'), img = [...document.querySelectorAll('.b-po img')].find(el => el.getClientRects().length), po = document.querySelector('.b-po');
         const t = title.getBoundingClientRect(), image = img.getBoundingClientRect(), p = po.getBoundingClientRect();
         const isWork = po.classList.contains('work');
         const css=getComputedStyle(img);
@@ -186,7 +200,7 @@ async function geometry(page) {
         const expectedWidth=Math.min(p.width-598,p.height*1280/914);
         const paddingLeft = parseFloat(getComputedStyle(title).paddingLeft);
         const contentWidth = title.clientWidth - paddingLeft - parseFloat(getComputedStyle(title).paddingRight);
-        return {gap:desktopWork?i.left-t.right:t.left+paddingLeft-image.right,titleLeft:t.left,titleBottom:t.bottom,imageTop:i.top,width:title.clientWidth,right:p.right-t.right,fit:css.objectFit,position:css.objectPosition,phone:img.currentSrc.includes('/plates/phone/'),overflow:[...title.querySelectorAll('.ln')].filter(l=>l.scrollWidth>contentWidth+1).map(l=>l.textContent),plateLeft:desktopWork?i.left:image.left,titleTop:t.top,plateTop:i.top,plateRight:i.right,plateWidth:i.width,plateHeight:i.height,expectedPlateLeft:p.right-expectedWidth,expectedPlateRight:p.right,expectedPlateTop:p.top+(p.height-expectedWidth*914/1280)/2,expectedPlateWidth:expectedWidth};
+        return {gap:desktopWork?i.left-t.right:t.left+paddingLeft-image.right,titleLeft:t.left,titleBottom:t.bottom,imageTop:i.top,width:title.clientWidth,right:p.right-t.right,fit:css.objectFit,position:css.objectPosition,phone:/\/plates\/(dark\/)?phone\//.test(img.currentSrc),overflow:[...title.querySelectorAll('.ln')].filter(l=>l.scrollWidth>contentWidth+1).map(l=>l.textContent),plateLeft:desktopWork?i.left:image.left,titleTop:t.top,plateTop:i.top,plateRight:i.right,plateWidth:i.width,plateHeight:i.height,expectedPlateLeft:p.right-expectedWidth,expectedPlateRight:p.right,expectedPlateTop:p.top+(p.height-expectedWidth*914/1280)/2,expectedPlateWidth:expectedWidth};
     });
 }
 const controls = 'a[href],button,summary,input,select,textarea,[role="button"],[tabindex="0"]';
@@ -252,7 +266,8 @@ async function* accessStatesInner(page, size) {
     if (await page.locator('.b-bk').count()) {
         await page.locator('[data-books-open]').click();
         yield {name:'books-open',root:'.dir-b'};
-        await page.locator('[data-books-close]').click();
+        // Round 9 draws no "Close all" button; close the books as a reader would, one by one.
+        await page.locator('.b-bk').evaluateAll(els => els.forEach(el => { el.open = false; }));
     }
     if (size === 'P390' || size === 'S844') {
         const menu = page.locator('.b-sm summary');
@@ -275,12 +290,6 @@ const names = ['bg', 'paper', 'ink', 'mid', 'faint', 'line', 'line2', 'red', 're
 const gates = {
     'R-T1-home': async () => {
         const golden = JSON.parse(readFileSync(join(app, 'scripts/fixtures/poster-golden.json'), 'utf8')).home;
-        if (prove && proofCase === 'golden-line') {
-            // Change only this in-memory copy; never rewrite the reference file.
-            const lines = golden.phone.lines;
-            assert(lines.length > 1, 'phone golden needs at least two lines for proof');
-            lines.splice(0, 2, lines[0] + ' ' + lines[1], '');
-        }
         let examined = 0;
         // D26: from 961px the title stands in one list column (spec §3.2): four lines
         // at 82.5px in a 1525 window and 70.3px in a 1152 window. The old poster's
@@ -314,6 +323,8 @@ const gates = {
             assert(expectedSizes.length === expected.lines.length && expectedSizes.every(n => Number.isFinite(n) && n > 0), `${kind} invalid golden sizes`);
             const page = await open(viewport);
             try {
+                // Break the page, never the fixture: join the first two drawn lines.
+                if (prove && proofCase === 'golden-line') await page.locator('.b-po-t').evaluate(el => { const [a, b] = el.querySelectorAll('.ln'); a.textContent += ' ' + b.textContent; b.remove(); });
                 const actual = await page.locator('.b-po-t').evaluate(el => ({
                     lines: [...el.querySelectorAll('.ln')].map(line => line.textContent),
                     set: el.dataset.set,
@@ -488,35 +499,100 @@ const gates = {
     },
     'R-F2': async () => {
         let n = 0;
-        for (const theme of ['light', 'dark']) {
-            const p = await open('D1440', theme);
-            if (prove)
-                await style(p, '.frame.dir-b{--bg:#ffffff!important}');
-            const got = await p.locator('.frame.dir-b').evaluate((el, names) => names.map(k => getComputedStyle(el).getPropertyValue('--' + k).trim()), names);
-            await close(p);
-            names.forEach((key, i) => { assert(got[i] === tokens[theme][i], `${theme} --${key}=${got[i]} expected ${tokens[theme][i]}`); n++; });
+        // Round 9 (r9.css, "Dark: one red. Rules a step lighter"): the home and work pages set
+        // three dark tokens of their own. Every other page keeps the base set; the reader shows it.
+        const r9Dark = {'line': '#45433f', 'line2': '#302f2c', 'red-ink': '#e0574b'};
+        const pages = [['/', true], ...(stage >= 2 ? [['/Cat/', true]] : []), ...(stage >= 3 ? [[READER, false]] : [])];
+        for (const theme of ['light', 'dark']) for (const [path, homeOrWork] of pages) {
+            const p = await open('D1440', theme, path);
+            try {
+                if (prove && ['bg','default'].includes(proofCase) && theme === 'light' && path === '/') await style(p, '.frame.dir-b{--bg:#ffffff!important}');
+                if (prove && proofCase === 'dark-line' && theme === 'dark' && path === '/Cat/') await style(p, '.frame.dir-b{--line:#2d2c29!important}');
+                if (prove && proofCase === 'reader-line' && theme === 'dark' && path === READER) await style(p, '.frame.dir-b{--line:#45433f!important}');
+                const got = await p.locator('.frame.dir-b').evaluate((el, names) => names.map(k => getComputedStyle(el).getPropertyValue('--' + k).trim()), names);
+                names.forEach((key, i) => {
+                    const want = theme === 'dark' && homeOrWork && r9Dark[key] || tokens[theme][i];
+                    assert(got[i] === want, `${theme} ${path} --${key}=${got[i]} expected ${want}`); n++;
+                });
+            } finally { await close(p); }
         }
         return n;
     },
     'R-P4': async () => {
+        // Each theme shows its own plate file (dark plates ruled 12 Nov): light the JPEG, dark the
+        // WebP with its tone baked in, which no filter, blend, mask or fade may touch. The dark
+        // plate stands in the light plate's box, a page fetches only its own theme's plate, and
+        // the moon button swaps the plate without a reload.
         let n = 0;
-        for(const path of (stage>=2?['/',...workIds.map(id=>`/${id}/`)]:['/'])) for (const size of ['D1440', 'P390'])
+        const shown = page => page.evaluate(() => [...document.querySelectorAll('.b-po img')].filter(el => el.getClientRects().length).map(el => {
+            const s = getComputedStyle(el), pic = el.closest('picture'), ps = getComputedStyle(pic);
+            let opacity = 1;
+            for (let e = el; e; e = e.parentElement) opacity *= Number(getComputedStyle(e).opacity);
+            // In page coordinates: a scroll is not a layout move.
+            const r = el.getBoundingClientRect(), q = pic.getBoundingClientRect(), x = scrollX, y = scrollY;
+            return {src: el.currentSrc, loaded: el.complete && el.naturalWidth > 0, mask: s.maskImage, blend: s.mixBlendMode, pictureBlend: ps.mixBlendMode, filter: s.filter, pictureFilter: ps.filter, opacity, scroll: y, box: [r.left + x, r.top + y, r.width, r.height, q.left + x, q.top + y, q.width, q.height]};
+        }));
+        const settle = page => page.waitForFunction(() => [...document.querySelectorAll('.b-po img')].filter(el => el.getClientRects().length).every(el => el.complete), null, {timeout: 15000});
+        const check = (label, got, theme, band, id) => {
+            assert(got.length === 1, `${label}/${theme} examined=${got.length} plates shown, expected 1`);
+            const s = got[0], src = new URL(s.src || 'about:blank').pathname, want = theme === 'dark' ? `/plates/dark/${band}/${id}.webp` : `/plates/${band}/${id}.jpg`;
+            assert(src.endsWith(want), `${label}/${theme} plate src=${src}, expected ${want}`);
+            assert(s.loaded, `${label}/${theme} plate failed to load`);
+            assert(s.mask === 'none', `${label}/${theme} mask=${s.mask}`);
+            assert(s.filter === 'none' && s.pictureFilter === 'none', `${label}/${theme} filter=${s.filter} picture filter=${s.pictureFilter}`);
+            assert(s.blend === (theme === 'dark' ? 'normal' : 'multiply'), `${label}/${theme} blend=${s.blend}`);
+            if (theme === 'dark') assert(s.pictureBlend === 'normal' && Math.abs(s.opacity - 1) < .001, `${label}/dark picture blend=${s.pictureBlend} opacity=${s.opacity}`);
+            return s;
+        };
+        const sameBox = (label, a, b) => assert(a.box.every((v, i) => Math.abs(v - b.box[i]) <= 1), `${label} dark plate box=${b.box.map(f1)} differs from light box=${a.box.map(f1)} (scrollY ${a.scroll}, ${b.scroll})`);
+        // Every page at D1440 and P390; the sideways phone and D1152 on the owner's shot list.
+        const sample = ['/', '/EN/', '/GA/', '/Mirab/', '/APr/', '/Juv/', '/Poet/', '/MM/'];
+        const runs = stage >= 2 ? [...['D1440', 'P390'].flatMap(size => ['/', ...workIds.map(id => `/${id}/`)].map(path => [path, size])), ...['D1152', 'S844'].flatMap(size => sample.map(path => [path, size]))] : [['/', 'D1440'], ['/', 'P390']];
+        for (const [path, size] of runs) {
+            const id = path === '/' ? 'home' : path.slice(1, -1), band = sizes[size][0] <= 960 ? 'phone' : 'desk', label = `${path} ${size}`;
+            const got = {};
             for (const theme of ['light', 'dark']) {
-                const p = await open(size, theme,path);
-                if (prove && theme === 'dark')
-                    await style(p, '.dir-b .b-po.pl img{filter:invert(1)!important}');
-                const got = await p.locator('.b-po img').evaluateAll(els => els.map(el => { const s = getComputedStyle(el); return { mask: s.maskImage, blend: s.mixBlendMode, filter: s.filter, loaded: el.complete && el.naturalWidth > 0 }; }));
-                await close(p);
-                assert(got.length===1,`${path} ${size} examined=${got.length} plates, expected 1`);
-                for (const s of got) {
-                    assert(s.loaded, `${size}/${theme} image failed to load`);
-                    assert(s.mask === 'none', `${size}/${theme} mask=${s.mask}`);
-                    assert(s.blend === (theme === 'dark' ? 'normal' : 'multiply'), `${size}/${theme} blend=${s.blend}`);
-                    assert(s.filter === (theme === 'dark' ? 'sepia(0.45) brightness(0.76) contrast(1.06)' : 'none'), `${size}/${theme} filter=${s.filter}`);
+                const p = await open(size, theme, path);
+                try {
+                    const proof = c => prove && proofCase === c;
+                    if (proof('no-plate') && path === '/' && size === 'D1440' && theme === 'light') await p.evaluate(() => document.querySelectorAll('.b-po picture').forEach(el => el.remove()));
+                    if ((proof('sepia') || proof('default')) && path === '/' && size === 'D1440' && theme === 'dark') await style(p, '.dir-b .b-po.pl img{filter:sepia(.45) brightness(.76) contrast(1.06)!important}');
+                    if (proof('light-in-dark') && path === '/EN/' && size === 'D1440' && theme === 'dark') await style(p, ':root[data-theme="dark"] .dir-b .b-po picture.th-light{display:block!important}:root[data-theme="dark"] .dir-b .b-po picture.th-dark{display:none!important}');
+                    if (proof('eager-light') && path === '/Juv/' && size === 'P390' && theme === 'dark') {
+                        await p.evaluate(() => document.querySelector('.b-po picture.th-light img').removeAttribute('loading'));
+                        await p.waitForFunction(() => document.querySelector('.b-po picture.th-light img').complete);
+                    }
+                    if (proof('box-moved') && path === '/Mirab/' && size === 'D1152' && theme === 'dark') await style(p, '.dir-b .b-po picture.th-dark{margin-top:12px!important}');
+                    await settle(p);
+                    got[theme] = check(label, await shown(p), theme, band, id);
+                    const stray = p.imageRequests.filter(u => u.includes('/plates/') && (theme === 'dark') !== u.includes('/plates/dark/'));
+                    assert(!stray.length, `${label}/${theme} fetched the other theme's plate: ${stray.map(u => new URL(u).pathname).join(', ')}`);
+                    n++;
+                } finally { await close(p); }
+            }
+            sameBox(label, got.light, got.dark);
+        }
+        // The moon button: light to dark and back, no reload.
+        if (stage >= 2) for (const [path, size] of [['/', 'D1440'], ['/EN/', 'D1440'], ['/', 'P390'], ['/EN/', 'P390']]) {
+            const id = path === '/' ? 'home' : path.slice(1, -1), band = sizes[size][0] <= 960 ? 'phone' : 'desk', label = `${path} ${size} toggled`;
+            const p = await open(size, 'light', path);
+            try {
+                await p.evaluate(() => { window.__noReload = true; });
+                await settle(p);
+                const light = check(label, await shown(p), 'light', band, id);
+                for (const theme of ['dark', 'light']) {
+                    await p.locator('[data-theme-toggle]:visible').first().click();
+                    await p.waitForFunction(t => document.documentElement.dataset.theme === t, theme);
+                    if (prove && proofCase === 'toggle-stale' && path === '/EN/' && size === 'P390' && theme === 'dark') await style(p, ':root[data-theme="dark"] .dir-b .b-po picture.th-light{display:flex!important}:root[data-theme="dark"] .dir-b .b-po picture.th-dark{display:none!important}');
+                    await settle(p);
+                    const now = check(label, await shown(p), theme, band, id);
+                    sameBox(label, light, now);
+                    assert(await p.evaluate(() => window.__noReload === true), `${label}/${theme} the page reloaded`);
                     n++;
                 }
-            }
-        assert(n===(stage>=2?192:4),`plate count=${n}`);
+            } finally { await close(p); }
+        }
+        assert(n === (stage >= 2 ? 2 * (2 * (workIds.length + 1) + 2 * sample.length) + 8 : 4), `plate count=${n}`);
         return n;
     },
     'R-T3': async () => {
@@ -543,7 +619,7 @@ const gates = {
             try {
                 if (prove && proofCase === 'home-plate' && size === 'D1525' && theme === 'light') await style(p, '.dir-b.pg-home .b-top > .b-po picture{top:60px!important}');
                 if (prove && proofCase === 'dark-bust' && size === 'D1152' && theme === 'dark') await style(p, '.dir-b.pg-home .b-top > .b-po picture{top:30px!important}');
-                const box = await p.locator('.b-top .b-po picture').evaluate(el => { const r = el.getBoundingClientRect(); return {w: r.width, h: r.height}; });
+                const box = await p.locator('.b-top .b-po picture:visible').evaluate(el => { const r = el.getBoundingClientRect(); return {w: r.width, h: r.height}; });
                 assert(Math.abs(box.w - w) <= 1 && Math.abs(box.w / box.h - .592) <= .004 && Math.abs(box.h - specH) <= 2, `${size}/${theme} / bust size=${box.w.toFixed(1)}×${box.h.toFixed(1)}, spec says ${w}×${specH} at aspect .592`);
                 console.log(`R-T3 ${size}/${theme} bust ${box.w.toFixed(1)}×${box.h.toFixed(1)}; spec ${w}×${specH}`);
                 n++;
@@ -557,7 +633,7 @@ const gates = {
                 if (prove && proofCase === 'plate-origin' && id === 'MA') await style(p, '.dir-b.pg-work .b-top .b-po.tp-side img{left:0!important}');
                 const [x0, y0, x1, y1] = plates[id].ink, iw = x1 - x0, ih = y1 - y0, col = gridAt(1525).col;
                 const w = Math.min(col, col * iw / ih), h = w * ih / iw;
-                const box = await p.locator('.b-top .b-po picture').evaluate(el => { const r = el.getBoundingClientRect(), i = el.querySelector('img').getBoundingClientRect(); return {w: r.width, h: r.height, dx: i.left - r.left, dy: i.top - r.top, iw: i.width}; });
+                const box = await p.locator('.b-top .b-po picture:visible').evaluate(el => { const r = el.getBoundingClientRect(), i = el.querySelector('img').getBoundingClientRect(); return {w: r.width, h: r.height, dx: i.left - r.left, dy: i.top - r.top, iw: i.width}; });
                 assert(Math.abs(box.w - w) <= 1 && Math.abs(box.h - h) <= 1, `D1525 /${id}/ plate size=${box.w.toFixed(1)}×${box.h.toFixed(1)}, plates.json ink box gives ${w.toFixed(1)}×${h.toFixed(1)}`);
                 // The image sits so the ink box's corner is the frame's corner, at the frame's scale (Grok, 10 Nov: the origin was unchecked).
                 const k = w / iw;
@@ -682,22 +758,40 @@ const gates = {
                 await close(p);
             }
         }
-        if(stage>=2)for(const size of ['S844','S960'])for(const id of ['Cat','EN','Int','AthPol']){
-            const p=await open(size,'light',`/${id}/`);
+        // Round 9 sideways (max-height 500px; S960 is now an upright phone): the plate is a
+        // right-hand column, the title is set at 44px and wraps rather than shrink under 32px,
+        // and Start reading, Greek only and Contents share one row; a returning reader gets a
+        // full-width Continue above that row.
+        if(stage>=2)for(const [id,seed] of [['EN',false],['Juv',false],['Cat',false],['Int',false],['AthPol',false],['EN',r9Seed()]]){
+            const p=await open('S844','light',`/${id}/`,seed);
+            const label=`${id} S844${seed?' returning':''}`;
             try{
-                if(prove&&proofCase==='wide-title'&&id==='Cat'&&size==='S844'){
-                    const source=readFileSync(join(app,'src/lib/poster-fit.ts'),'utf8').replace('? 354 :','? el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight) :');
-                    const js=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}}).outputText;
-                    await p.evaluate(async js=>{const url=URL.createObjectURL(new Blob([js],{type:'text/javascript'}));try{const mod=await import(url);mod.fitPoster(document.querySelector('.b-po-t'));}finally{URL.revokeObjectURL(url);}},js);
-                }
-                if(prove&&proofCase==='short-plate'&&id==='Cat'&&size==='S844')await style(p,'.dir-b.pg-work .b-po.work img{height:80px!important;width:auto!important}');
-                const phone=await open('P390','light',`/${id}/`);
-                let upright;try{upright=(await phone.locator('.b-po-t').getAttribute('data-set')).split(',').map(Number);}finally{await close(phone);}
-                const actual=(await p.locator('.b-po-t').getAttribute('data-set')).split(',').map(Number);
-                assert(actual.length===upright.length&&actual.every((value,i)=>Math.abs(value-upright[i])<=1),`${id} ${size} title sizes=${actual} P390=${upright}`);
-                const g=await geometry(p);assert(g.titleBottom<=g.imageTop+1,`${id} ${size} title overlaps plate`);assert(g.phone,`${id} ${size} desktop plate loaded`);assert(!g.overflow.length,`${id} ${size} title overflow: ${g.overflow}`);
-                const plateHeight=await p.locator('.b-po img').evaluate(el=>el.getBoundingClientRect().height);
-                if(size==='S844')assert(plateHeight>=120,`${id} S844 plate height=${plateHeight} below 120`);
+                if(seed)await p.waitForFunction(()=>document.querySelector('[data-resume]')?.textContent.includes('chapter'));
+                if(prove&&proofCase==='plate-left'&&id==='Cat')await style(p,'.dir-b.pg-work .b-top .b-po.work picture{grid-column:1!important;grid-row:auto!important}');
+                if(prove&&proofCase==='buttons-stack'&&id==='EN'&&!seed)await style(p,'.dir-b.pg-work .b-ctas .b-btn{flex:0 0 100%!important}');
+                if(prove&&proofCase==='juv-below'&&id==='Juv')await style(p,'.dir-b.pg-work .b-top .b-po-t{padding-top:120px!important}');
+                if(prove&&proofCase==='title-shrunk'&&id==='Juv')await style(p,'.dir-b.pg-work .b-top .b-po-t{font-size:28px!important}');
+                if(prove&&proofCase==='resume-short'&&seed)await style(p,'.dir-b.pg-work .b-ctas .b-btn[data-resume]{flex:0 0 auto!important}');
+                const r=await p.evaluate(()=>{
+                    const box=el=>{const b=el.getBoundingClientRect();return {left:b.left,right:b.right,top:b.top,bottom:b.bottom,width:b.width,height:b.height};};
+                    const t=document.querySelector('.b-po-t'), ctas=document.querySelector('.b-ctas');
+                    const buttons=[...ctas.querySelectorAll('.b-btn')].filter(el=>el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden').map(el=>({text:el.textContent.trim(),...box(el)}));
+                    return {buttons,ctas:box(ctas),plate:box(document.querySelector('.b-top picture')),title:box(t),size:parseFloat(getComputedStyle(t).fontSize),overflow:t.scrollWidth>t.clientWidth+1,height:innerHeight};
+                });
+                const want=[...(seed?['Continue at Book II, chapter 3','From the start']:['Start reading']),'Greek only','Contents'];
+                assert(r.buttons.length>0,`${label} examined=0 buttons`);
+                assert(JSON.stringify(r.buttons.map(b=>b.text))===JSON.stringify(want),`${label} buttons=${JSON.stringify(r.buttons.map(b=>b.text))} expected ${JSON.stringify(want)}`);
+                const row=seed?r.buttons.slice(1):r.buttons;
+                assert(row.every(b=>near(b.top,row[0].top,2)),`${label} buttons not in one row: tops=${row.map(b=>f1(b.top))}`);
+                if(seed)assert(near(r.buttons[0].width,r.ctas.width,1)&&r.buttons[0].bottom<=row[0].top,`${label} Continue at width=${f1(r.buttons[0].width)} of ${f1(r.ctas.width)}: not full width above the row`);
+                const right=Math.max(...row.map(b=>b.right));
+                assert(r.plate.width>0&&r.plate.left>right,`${label} plate left=${f1(r.plate.left)} is not right of the buttons' right edge=${f1(right)}`);
+                if(id==='Juv')for(const b of row)assert(b.bottom<=r.height,`${label} button bottom=${f1(b.bottom)} is below the first screen ${r.height}`);
+                assert(r.size>=32,`${label} title font-size=${r.size} under 32px`);
+                assert(!r.overflow,`${label} title overflows its column`);
+                if(id==='Juv')assert(r.title.height>=1.9*r.size,`${label} title drawn on one line (height=${f1(r.title.height)} at ${r.size}px)`);
+                const g=await geometry(p);assert(g.phone,`${label} desktop plate loaded`);
+                assert(r.plate.height>=120,`${label} plate height=${f1(r.plate.height)} below 120`);
                 n++;
             }finally{await close(p);}
         }
@@ -715,13 +809,15 @@ const gates = {
             const desktopLinks = await p.locator('.b-links > a:not(.b-only-s)').evaluateAll(els => els.filter(el => el.getClientRects().length).length);
             assert(desktopLinks === (size === 'P390' ? 0 : 5), `${size} visible desktop nav links=${desktopLinks}`);
             assert(await p.locator('[data-theme-toggle]').count() === 1, 'theme control count');
-            const expected = `Parallel Greek–English editions of every work of Aristotle. ${size === 'P390' ? 'Tap' : 'Click'} any Greek word to parse it and see its definition. Search the corpus in Greek and English.`;
-            assert(await p.locator('.b-lead').textContent() === expected, `${size} home line mismatch`);
-            assert(await p.locator('#resume-card').count() === 0, `${size} resume with empty storage`);
+            // Round 9's sentence (John's wording); a no-break space keeps "it." off a line of its own.
+            const expected = `Read and search every work of Aristotle in Greek and English. ${size === 'P390' ? 'Tap' : 'Click'} any Greek word to parse and define\u00a0it.`;
+            { const lead = await p.locator(".b-lead").textContent(); assert(lead === expected, `${size} home line mismatch: "${lead}"`); }
+            assert(!(await p.locator('.b-resume-work').isVisible()), `${size} resume with empty storage`);
+            // Round 9 keeps the card's empty template in the page, hidden.
             const resumeNodes = await p.evaluate(() => {
                 const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
                 let node; let count = 0;
-                while (node = walker.nextNode()) if (!node.parentElement.closest('script,style') && node.textContent.includes('Continue reading')) count++;
+                while (node = walker.nextNode()) if (!node.parentElement.closest('script,style,[hidden]') && node.textContent.includes('Continue reading')) count++;
                 return count;
             });
             assert(resumeNodes === 0, `${size} Continue reading exists in empty-storage DOM`);
@@ -735,17 +831,15 @@ const gates = {
             await close(p);
             n++;
         }
+        // Round 9: the saved place is a card (title, location, button); 1095b30 is Book I, chapter 5.
         const p = await open('D1440', 'light', '/', true);
-        assert(await p.locator('#resume-card').isVisible(), 'seeded resume absent');
-        await p.waitForFunction(() => document.querySelector('#resume-link')?.textContent.includes('chapter'));
-        // innerText is the text as drawn: textContent kept a space that
-        // inline-flex layout dropped on screen ("Continue readingNicomachean").
-        const label = await p.locator('#resume-link').innerText();
-        assert(label === 'Continue reading Nicomachean Ethics, Book I, chapter 5', `resume label ${label}`);
-        assert(await p.locator('#resume-link i').textContent() === 'Nicomachean Ethics', 'resume work title is not italic');
-        const href = await p.locator('#resume-link').getAttribute('href');
-        assert((await p.request.get(BASE + href)).status() === 200, `resume link ${href}`);
-        await close(p);
+        try {
+            await resumeReady(p);
+            assert(await p.locator('.b-resume-work').isVisible(), 'seeded resume absent');
+            const card = await p.locator('.b-resume-work').evaluate(el => ({title: el.querySelector('.b-resume-title').innerText, location: el.querySelector('.b-resume-location').innerText, button: el.querySelector('.b-btn').innerText, href: el.querySelector('.b-btn').getAttribute('href')}));
+            assert(card.title === 'Nicomachean Ethics' && card.location === 'Book I, chapter 5 · 1095b30' && card.button === 'Continue reading', `resume card ${JSON.stringify(card)}`);
+            assert((await p.request.get(BASE + card.href)).status() === 200, `resume link ${card.href}`);
+        } finally { await close(p); }
         return n + 1;
     },
     'R-H2': async () => {
@@ -1124,7 +1218,6 @@ if(stage>=2) Object.assign(gates, {
    const p=await open('D1440','light',`/${id}/`);
    try{
     if(prove&&proofCase==='crumb'&&id==='AthPol')await p.locator('.b-crumb span').evaluate(el=>el.textContent='Rhetoric and poetics');
-    if(prove&&proofCase==='english-facts'&&id==='Cat')await p.locator('[data-english-entry]').first().evaluate(el=>el.textContent='W. D. Ross (Oxford, 1908)');
     if(prove&&proofCase==='crumb-height'&&id==='Cat')await style(p,'.dir-b .b-crumb a{display:inline-flex!important;min-height:40px!important}');
     const crumbHeight=await p.locator('.b-crumb').evaluate(el=>el.offsetHeight);
     assert(crumbHeight<=16,`${id} D1440 crumb height=${crumbHeight}`);
@@ -1132,18 +1225,41 @@ if(stage>=2) Object.assign(gates, {
     const crumb=(await p.locator('.b-crumb').textContent()).replace(/\s+/g,' ').trim();
     const literalCrumbs={AthPol:'Works / Ethics and politics',MM:'Works / Ethics and politics',Cat:'Works / Logic',Isa:'Works / Commentary'};
     assert(crumb===(literalCrumbs[id]||`Works / ${divisionName(id)}`),`${id} crumb=${crumb}`);
-    if(prove&&proofCase==='peters-year'&&id==='EN')await p.locator('[data-english-entry]').filter({hasText:'F. H. Peters'}).evaluate(el=>el.textContent='F. H. Peters, Kegan Paul, rev. ed. 1893');
-    if(prove&&proofCase==='ellis-year'&&id==='Pol')await p.locator('[data-english-entry]').filter({hasText:'William Ellis'}).evaluate(el=>el.textContent='William Ellis, 1776; rev., 1912');
-    if(prove&&proofCase==='no-english'&&id==='Cat')await p.locator('[data-english-entry]').evaluateAll(els=>els.forEach(el=>el.remove()));
-    const english=await p.locator('[data-english-entry]').allTextContents();
-    assert(english.length>0,`${id} examined=0 English facts`);
-    for(const text of english)assert(/^[^,()]+(, [^,()]+)*$/.test(text),`${id} English facts form: ${text}`);
-    if(id==='EN')assert(english.some(text=>text.includes('rev. ed., 1893')),'EN Peters facts must contain rev. ed., 1893');
-    if(id==='Pol')assert(english.some(text=>text.includes('1776; rev. 1912')),'Pol Ellis facts must contain 1776; rev. 1912');
+    // Round 9: "Greek text", then "Open Greek and English with" over one 40px row per translation (round 9 drew 36; John, 12 Nov: 40, the target floor)
+    // (works.ts order, the default first). Only the translator's short name is underlined; "opens
+    // first" tags the default row when there are two or more; the tools row follows.
+    if(prove&&proofCase==='no-english'&&id==='Cat')await p.locator('.b-edition-row').evaluateAll(els=>els.forEach(el=>el.remove()));
+    if(prove&&proofCase==='row-height'&&id==='EN')await style(p,'.dir-b.pg-work .b-edition-row{min-height:36px!important}');
+    if(prove&&proofCase==='imprint-underlined'&&id==='Cat')await style(p,'.dir-b.pg-work .b-edition-row > span{text-decoration:underline!important}');
+    if(prove&&proofCase==='opens-first-single'&&id==='Mete')await p.locator('.b-edition-row').first().evaluate(el=>el.insertAdjacentHTML('beforeend','<small class="b-opens-first">opens first</small>'));
+    if(prove&&proofCase==='missing-glossary')await p.locator('.b-edition-tools a').filter({hasText:/^Glossary$/}).evaluateAll(links=>links.forEach(link=>link.remove()));
+    const editions=registry.visibleTranslations(work), first=editions.find(t=>t.id===work.defaultTranslation)||editions.find(t=>t.slot==='english')||editions[0];
+    const ordered=[first,...editions.filter(t=>t!==first)].filter(Boolean);
+    const facts=await p.locator('[data-section="facts"]').evaluate(el=>{
+     const underlined=e=>{for(let a=e;a&&a!==el;a=a.parentElement)if(getComputedStyle(a).textDecorationLine.includes('underline'))return true;return false;};
+     const texts=e=>{const out=[];const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);let t;while(t=w.nextNode())if(t.textContent.trim())out.push({text:t.textContent.trim(),underlined:underlined(t.parentElement),tag:t.parentElement.className});return out;};
+     return {labels:[...el.querySelectorAll('dt')].map(d=>d.textContent),rows:[...el.querySelectorAll('.b-edition-row')].map(a=>({href:a.getAttribute('href'),height:a.getBoundingClientRect().height,texts:texts(a)})),tools:[...el.querySelectorAll('.b-edition-tools a')].filter(a=>a.getClientRects().length).map(a=>({text:a.textContent,href:a.getAttribute('href')}))};
+    });
+    assert(JSON.stringify(facts.labels)==='["Greek text","Open Greek and English with"]',`${id} facts labels=${JSON.stringify(facts.labels)}`);
+    assert(facts.rows.length>0,`${id} examined=0 English facts`);
+    assert(facts.rows.length===ordered.length,`${id} edition rows=${facts.rows.length}, works.ts has ${ordered.length}`);
+    facts.rows.forEach((row,i)=>{
+     const t=ordered[i], url=new URL(row.href,BASE);
+     assert(url.pathname===`/${id}/book/1`&&url.searchParams.get('trans')===t.id,`${id} edition row ${i+1} href=${row.href}, expected ${t.id}`);
+     assert(near(row.height,40,1),`${id} edition row ${t.short} height=${f1(row.height)}, expected 40±1`);
+     const marked=row.texts.filter(x=>x.underlined).map(x=>x.text);
+     assert(JSON.stringify(marked)===JSON.stringify([t.short]),`${id} edition row ${t.short} underlines ${JSON.stringify(marked)}, expected only the translator`);
+     const tag=row.texts.filter(x=>x.text==='opens first');
+     const wantTag=editions.length>1&&t===first;
+     assert(tag.length===(wantTag?1:0),`${id} edition row ${t.short} "opens first"=${tag.length}, expected ${wantTag?1:0}`);
+    });
+    const wantTools=[...(editions.length>=2?[['Compare translations',`/${id}/book/1?trans=compare`]]:[]),...(id==='EN'?[['Glossary','/EN/glossary']]:[])];
+    assert(JSON.stringify(facts.tools.map(x=>[x.text,new URL(x.href,BASE).pathname+new URL(x.href,BASE).search]))===JSON.stringify(wantTools),`${id} tools row=${JSON.stringify(facts.tools)}, expected ${JSON.stringify(wantTools)}`);
     const sections=[['print',registry.furtherReading(id).length>0],['resources',registry.resourcesFor(id).length>0],['commentary',id==='Cat']];
     for(const [section,wanted]of sections)assert(await p.locator(`[data-section="${section}"]`).count()===(wanted?1:0),`${id} ${section} presence mismatch`);
     // D26: source order is the order of the columns (spec §3.4): title, Greek title, buttons, then blurb and details.
-    const selectors=['.b-nav','.b-crumb','.b-po',...(work.greekTitle?['.b-wk-gt']:[]),'.b-ctas','.b-wk-blurb','[data-section="facts"]','[data-section="books"]',...sections.filter(([,yes])=>yes).map(([section])=>`[data-section="${section}"]`),'[data-section="sources"]','.b-foot'];
+    // Round 9 dropped the Sources section (the footer's "Texts & licences" link stays).
+    const selectors=['.b-nav','.b-crumb','.b-po',...(work.greekTitle?['.b-wk-gt']:[]),'.b-ctas','.b-wk-blurb','[data-section="facts"]','[data-section="books"]',...sections.filter(([,yes])=>yes).map(([section])=>`[data-section="${section}"]`),'.b-foot'];
     const order=await p.evaluate(selectors=>{
      const els=selectors.map(selector=>document.querySelector(selector));
      return els.every((el,i)=>el&&(!i||Boolean(els[i-1].compareDocumentPosition(el)&Node.DOCUMENT_POSITION_FOLLOWING)));
@@ -1152,14 +1268,7 @@ if(stage>=2) Object.assign(gates, {
     assert(await p.locator('.b-po-t').getAttribute('data-title')===work.title,`${id} title mismatch`);
     assert((await p.locator('.b-wk-blurb').textContent()).startsWith(work.blurb),`${id} blurb mismatch`);
     assert(await p.locator('.support-card').count()===0,`${id} old support card remains`);
-    assert(await p.locator('[data-section="sources"] a[href="/attribution"]').count()===1,`${id} Sources link absent`);
     if(id==='Cat')assert(await p.locator('[data-section="commentary"] a').getAttribute('href')==='/Isa','Cat commentary must link to Isa');
-    if(id==='EN'){
-     const facts=p.locator('.b-facts dd').nth(1);
-     const glossary=facts.locator('a').filter({hasText:/^glossary$/});
-     if(prove&&proofCase==='missing-glossary')await glossary.evaluateAll(links=>links.forEach(link=>link.remove()));
-     assert(await glossary.count()===1&&/\/EN\/glossary\/?$/.test(await glossary.getAttribute('href')),'EN English facts glossary link missing or invalid');
-    }
     for(const resource of registry.resourcesFor(id)){
      const section=p.locator('[data-section="resources"]');
      const text=await section.textContent();
@@ -1167,11 +1276,9 @@ if(stage>=2) Object.assign(gates, {
      assert(links.includes(resource.url)&&links.includes(resource.authorUrl)&&text.includes(resource.label)&&text.includes(resource.blurb)&&text.includes(resource.authorName),`${id} live resource content/link was lost`);
      if(resource.exercises)assert(text.includes(resource.exercises),`${id} resource exercises were lost`);
     }
-    const heading=await p.locator('[data-section="books"] > h2').textContent();
+    // Round 9 sets the heading in .b-contents-head with its note and buttons.
+    const heading=await p.locator('[data-section="books"] .b-contents-head > h2').textContent();
     assert(heading===(work.books>1?'Books and chapters':'Chapters'),`${id} books heading=${heading}`);
-    const totals=Object.values(chaptersOf(id)).reduce((sum,chapters)=>sum+chapters.length,0);
-    const extent=`${work.books>1?`${work.books} books, `:''}${totals} chapter${totals===1?'':'s'}`;
-    assert((await p.locator('.b-facts dd').last().textContent())===extent,`${id} extent mismatch`);
     const titlePath=join(app,'public/data',id,'third-titles.json');
     const source=existsSync(titlePath)?JSON.parse(readFileSync(titlePath,'utf8')):{};
     const primary=registry.visibleTranslations(work).find(t=>t.id===work.defaultTranslation)||registry.visibleTranslations(work).find(t=>t.slot==='english')||registry.visibleTranslations(work)[0];
@@ -1181,9 +1288,9 @@ if(stage>=2) Object.assign(gates, {
    }finally{await close(p);}
    const phone=await open('P390','light',`/${id}/`);
    try{if(prove&&proofCase==='crumb-height-phone'&&id==='Cat')await style(phone,'.dir-b .b-crumb a{display:inline-flex!important;min-height:40px!important}');const height=await phone.locator('.b-crumb').evaluate(el=>el.offsetHeight);assert(height<=16,`${id} P390 crumb height=${height}`);
-    // D26: the source order changed (buttons before blurb); the phone must still draw the old order.
+    // Round 9 phone order: title, Greek title, plate, buttons, then the summary and the editions.
     if(prove&&proofCase==='phone-order'&&id==='Cat')await style(phone,'.dir-b.pg-work .b-ctas{order:-1!important}');
-    const phoneSel=['.b-crumb','.b-po',...(registry.getWork(id).greekTitle?['.b-wk-gt']:[]),'.b-wk-blurb','.b-ctas','[data-section="facts"]'];
+    const phoneSel=['.b-crumb','.b-po-t',...(registry.getWork(id).greekTitle?['.b-wk-gt']:[]),'.b-top picture','.b-ctas','.b-wk-blurb','[data-section="facts"]'];
     const tops=await phone.evaluate(sel=>sel.map(s=>document.querySelector(s)?.getBoundingClientRect().top),phoneSel);
     assert(tops.every(Number.isFinite)&&tops.every((t,i)=>!i||t>=tops[i-1]),`${id} P390 visual order ${phoneSel.join(' < ')}: tops=${tops.map(t=>Math.round(t))}`);n++;}finally{await close(phone);}
   }return n;
@@ -1224,7 +1331,7 @@ if(stage>=2) Object.assign(gates, {
   for(const id of workIds){
    const p=await open('D1440','light',`/${id}/`);
    try{
-    if(prove&&id==='Cat')await p.locator('[data-start]').evaluate(el=>el.href='/EN/book/1');
+    if(prove&&proofCase==='default'&&id==='Cat')await p.locator('[data-start]').evaluate(el=>el.href='/EN/book/1');
     const work=registry.getWork(id), editions=registry.visibleTranslations(work);
     const primary=editions.find(t=>t.id===work.defaultTranslation)||editions.find(t=>t.slot==='english')||editions[0];
     const href=await p.locator('[data-start]').getAttribute('href');
@@ -1249,8 +1356,11 @@ if(stage>=2) Object.assign(gates, {
    try{
     const link=saved.locator('[data-resume]');
     const work=registry.getWork(id);
-    const expected=`Resume at ${work.books>1?`Book ${work.bookLabels[0]}, `:''}chapter ${chapter.chapter}`;
+    if(prove&&proofCase==='resume-label'&&id==='Cat')await link.evaluate(el=>el.textContent='Resume at chapter 1');
+    // Round 9: "Continue at …" takes the main button's place; Start reading becomes "From the start".
+    const expected=`Continue at ${work.books>1?`Book ${work.bookLabels[0]}, `:''}chapter ${chapter.chapter}`;
     assert(await link.textContent()===expected,`${id} resume label=${await link.textContent()}`);
+    assert(await saved.locator('[data-start]').textContent()==='From the start',`${id} saved place: start button=${await saved.locator('[data-start]').textContent()}`);
     assert(new URL(await link.getAttribute('href'),BASE).pathname===`/${id}/book/1`,`${id} saved link points elsewhere`);
     n++;
    }finally{await close(saved);}
@@ -1272,11 +1382,12 @@ if(stage>=2) Object.assign(gates, {
     if(work.books>1){
      const labels=await p.locator('.b-bkn').allTextContents();
      assert(JSON.stringify(labels)===JSON.stringify(work.bookLabels.map(label=>'Book '+label)),`${id} Book labels=${labels}`);
-     // D26: colour B. The book numerals are --red-ink on the work page (spec §4).
-     const red=await p.locator('.b-bkn').evaluateAll((els,want)=>els.every(el=>getComputedStyle(el).color===want),RGB.redInk);
-     assert(red,`${id} book numbers are not --red-ink`);
+     // Round 9: the book numerals are --ink (b.css "Desktop home and work pages, round 9"), and
+     // there is no "Close all" button any more; a reader closes a book by its own row.
+     const ink=await p.locator('.b-bkn').evaluateAll((els,want)=>els.every(el=>getComputedStyle(el).color===want),RGB.ink);
+     assert(ink,`${id} book numbers are not --ink`);
      await p.locator('[data-books-open]').click();assert(await p.locator('.b-bk[open]').count()===work.books,`${id} Open all books failed`);
-     await p.locator('[data-books-close]').click();assert(await p.locator('.b-bk[open]').count()===0,`${id} Close all failed`);
+     await p.locator('.b-bk summary').first().click();assert(await p.locator('.b-bk[open]').count()===work.books-1,`${id} a book row did not close`);
     }
     const links=await p.locator('.b-chs a').evaluateAll(els=>els.map(a=>({href:a.href,book:a.dataset.book,chapter:a.dataset.chapter})));
     const expected=Object.entries(chapters).flatMap(([book,cs])=>cs.map(c=>({book,chapter:c.chapter})));
@@ -1314,8 +1425,9 @@ if(stage>=2) Object.assign(gates, {
     assert(!text.replaceAll('...', '…').includes('..'),`${id} credits doubled full stop`);
     assert(text.includes(`(${data.lic})`),`${id} credits licence must be in parentheses`);
     if(id==='Isa')assert(await row.locator(':scope > a').textContent()==='Porphyry, Isagoge','Isa credits title mismatch');
-    const record=await row.locator('[data-record]').getAttribute('href');
-    assert(record===data.url,`${id} Record href=${record} expected=${data.url}`);
+    const expectedRecords=Array.isArray(data.url)?data.url:[{part:'Record',href:data.url}];
+    const records=await row.locator('[data-record]').evaluateAll(els=>els.map(el=>({part:el.textContent,href:el.getAttribute('href')})));
+    assert(JSON.stringify(records)===JSON.stringify(expectedRecords),`${id} Records=${JSON.stringify(records)} expected=${JSON.stringify(expectedRecords)}`);
     for(const field of ['who','what','when','how','where'])assert(await row.locator(`[data-credit-part="${field}"]`).textContent()===(field==='where'&&data.credit===null?data[field].replace(/\.\s*$/,''):data[field]),`${id} ${field} mismatch`);
     assert(await row.locator('[data-licence]').textContent()===data.lic,`${id} licence mismatch`);
     assert(await row.locator('[data-holder-credit]').count()===(data.credit===null?0:1),`${id} holder credit presence mismatch`);
@@ -1327,22 +1439,42 @@ if(stage>=2) Object.assign(gates, {
   }finally{await close(p);}
  },
  'R-T1':async()=>{
-  // D26: the desktop golden is for a title one list column wide (362.67px at G1440, spec §5.1),
-  // not the old poster's 470px: same lines, sizes scaled by 362.67/470 (spec §3.4: GC 66, Meteorology 60.5, Movement of Animals 80.9). Phone entries are unchanged.
+  // Round 9. From 961px the title wraps naturally (no fitted lines) at 32–60px, 38–60px when it
+  // has no comma (poster-fit.ts fitDesktopWork). On the phone the lines are the golden's, but no
+  // line is set over 64px: sizes are min(64, golden). The title is never shrunk to make room for
+  // the plate, so the golden's own sizes under 64 (NICOMACHEAN 58) must hold.
   const golden=JSON.parse(readFileSync(join(app,'scripts/fixtures/poster-golden.json'),'utf8')).works;
-  if(prove&&proofCase!=='drawn-size'){const lines=golden.Cat.desktop.lines;lines.splice(0,1,lines[0].slice(0,3),lines[0].slice(3));}
   let n=0;
   for(const id of ['Cat',...workIds.filter(id=>id!=='Cat')])for(const [size,kind] of [['G1440','desktop'],['P390','phone']]){
    const p=await open(size,'light',`/${id}/`);
    try{
-    // Grok, 10 Nov: data-set is the fitter's own note; a rule that redraws the lines left it true.
-    if(prove&&proofCase==='drawn-size'&&id==='Cat'&&size==='G1440')await style(p,'.dir-b .b-po-t .ln{font-size:12px!important}');
+    const title=registry.getWork(id).title;
+    if(kind==='desktop'){
+     if(prove&&proofCase==='desktop-small'&&id==='Cat')await style(p,'.dir-b.pg-work .b-top .b-po-t{font-size:30px!important}');
+     if(prove&&proofCase==='desktop-lines'&&id==='Cat')await p.locator('.b-po-t').evaluate(el=>{el.innerHTML='<span class="ln">CATEGO</span><span class="ln">RIES</span>';});
+     const r=await p.locator('.b-po-t').evaluate(el=>({lines:el.querySelectorAll('.ln').length,text:el.textContent.replace(/\s+/g,' ').trim(),size:parseFloat(getComputedStyle(el).fontSize),overflow:el.scrollWidth>el.clientWidth+1}));
+     const floor=title.includes(',')?32:38;
+     assert(r.lines===0&&r.text===title,`${id} ${size} title is not natural: ${r.lines} fitted lines, text="${r.text}", works.ts "${title}"`);
+     assert(r.size>=floor&&r.size<=60,`${id} ${size} title font-size=${r.size} outside ${floor}–60`);
+     assert(!r.overflow,`${id} ${size} title overflows its column`);
+     n++;continue;
+    }
+    // Break the page, never the fixture: split Cat's first drawn line in two.
+    if(prove&&proofCase==='golden-line'&&id==='Cat')await p.locator('.b-po-t .ln').first().evaluate(el=>{const tail=el.cloneNode();tail.textContent=el.textContent.slice(3);el.textContent=el.textContent.slice(0,3);el.after(tail);});
+    if(prove&&proofCase==='drawn-size'&&id==='Cat')await style(p,'.dir-b .b-po-t .ln{font-size:12px!important}');
+    if(prove&&proofCase==='no-cap'&&id==='Top'){
+     const cap='if (phone && !home) for (const line of lines) line.f = Math.min(64, line.f);';
+     const source=readFileSync(join(app,'src/lib/poster-fit.ts'),'utf8');
+     assert(source.includes(cap),'R-T1 no-cap proof: the 64px cap is not in poster-fit.ts');
+     const js=ts.transpileModule(source.replace(cap,''),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ESNext}}).outputText;
+     await p.evaluate(async js=>{const url=URL.createObjectURL(new Blob([js],{type:'text/javascript'}));try{const mod=await import(url);mod.fitPoster(document.querySelector('.b-po-t'));}finally{URL.revokeObjectURL(url);}},js);
+    }
     const actual=await p.locator('.b-po-t').evaluate(el=>({lines:[...el.querySelectorAll('.ln')].map(l=>l.textContent),set:el.dataset.set,drawn:[...el.querySelectorAll('.ln')].map(l=>parseFloat(getComputedStyle(l).fontSize))}));
     const expected=golden[id][kind];
     assert(actual.lines.length>0&&JSON.stringify(actual.lines)===JSON.stringify(expected.lines),`${id} ${size} poster lines=${JSON.stringify(actual.lines)} expected=${JSON.stringify(expected.lines)}`);
-    const sizes=actual.set.split(',').map(Number), target=expected.set.split(',').map(Number);
-    assert(sizes.length===target.length&&sizes.every((v,i)=>Math.abs(v-target[i])<=1),`${id} ${size} poster sizes=${actual.set} expected=${expected.set}`);
-    assert(actual.drawn.length===target.length&&actual.drawn.every((v,i)=>Math.abs(v-target[i])<=1),`${id} ${size} drawn sizes=${actual.drawn.map(v=>v.toFixed(1))} expected=${expected.set}`);n++;
+    const sizes=actual.set.split(',').map(Number), target=expected.set.split(',').map(v=>Math.min(64,Number(v)));
+    assert(sizes.length===target.length&&sizes.every((v,i)=>Math.abs(v-target[i])<=1),`${id} ${size} poster sizes=${actual.set} expected=${target}`);
+    assert(actual.drawn.length===target.length&&actual.drawn.every((v,i)=>Math.abs(v-target[i])<=1),`${id} ${size} drawn sizes=${actual.drawn.map(v=>v.toFixed(1))} expected=${target}`);n++;
    }finally{await close(p);}
   }assert(n===94,`poster golden count=${n}`);return n;
  },
@@ -1359,8 +1491,10 @@ if(stage>=2) Object.assign(gates, {
      const css=getComputedStyle(img);
      const width=parseFloat(css.width)-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight)-parseFloat(css.borderLeftWidth)-parseFloat(css.borderRightWidth);
      const height=parseFloat(css.height)-parseFloat(css.paddingTop)-parseFloat(css.paddingBottom)-parseFloat(css.borderTopWidth)-parseFloat(css.borderBottomWidth);
-     return {startDoc:start.bottom+scrollY,height:innerHeight,bottom:start.bottom,posterHeight:poster.height,navHeight:document.querySelector('.b-nav').offsetHeight,titleHeight:title.clientHeight,fit:css.objectFit,ratio:width/height,phone:matchMedia('(max-width:960px)').matches};
+     // Round 9: on the phone .b-po.work is display:contents; the plate is the picture.
+     return {startDoc:start.bottom+scrollY,height:innerHeight,bottom:start.bottom,posterHeight:document.querySelector('.b-top picture').getBoundingClientRect().height,navHeight:document.querySelector('.b-nav').offsetHeight,titleHeight:title.clientHeight,fit:css.objectFit,ratio:width/height,phone:matchMedia('(max-width:960px)').matches};
     });
+    assert(box.posterHeight>0,`${id} ${size} examined=0: plate height=${box.posterHeight}`);
     if(size==='S844')assert(box.posterHeight<=box.height-box.navHeight+1,`${id} ${size} poster height=${box.posterHeight} exceeds viewport minus nav`);
     else assert(box.bottom<=box.height-16+1,`${id} ${size} Start reading bottom=${box.bottom} viewport=${box.height}`);
     const expected=box.phone?640/558:1280/914;
@@ -1368,12 +1502,13 @@ if(stage>=2) Object.assign(gates, {
     const wantFit=box.phone?'contain':'fill';
     assert(box.fit===wantFit,`${id} ${size} object-fit=${box.fit} expected ${wantFit}`);
     assert(Math.abs(box.ratio/expected-1)<=.01,`${id} ${size} plate ratio=${box.ratio} expected ${expected}`);
-    // D26: only the phone and sideways posters still budget their height from scrollY, so this proof runs at P390, on Long, whose long title makes its budget bind.
-    if(prove&&proofCase==='scroll-budget'&&id==='Long'&&size==='P390')await p.evaluate(()=>Object.defineProperty(window,'scrollY',{get:()=>0,configurable:true}));
+    // Round 9: only the upright phone plate budgets its height from scrollY; on Juv, whose
+    // four-line title makes the budget bind (On Length's plate now keeps its natural height).
+    if(prove&&proofCase==='scroll-budget'&&id==='Juv'&&size==='P390')await p.evaluate(()=>Object.defineProperty(window,'scrollY',{get:()=>0,configurable:true}));
     await p.evaluate(()=>{window.scrollTo(0,600);window.dispatchEvent(new Event('resize'));});
     await p.waitForTimeout(150);
     // D26: on desktop .b-po.work is display:contents, so the layout to hold still is the buttons' place on the page.
-    const after=await p.evaluate(desktop=>desktop?document.querySelector('[data-start]').getBoundingClientRect().bottom+scrollY:document.querySelector('.b-po.work').offsetHeight,!box.phone&&size!=='S844');
+    const after=await p.evaluate(desktop=>desktop?document.querySelector('[data-start]').getBoundingClientRect().bottom+scrollY:document.querySelector('.b-top picture').getBoundingClientRect().height,!box.phone&&size!=='S844');
     const before=(!box.phone&&size!=='S844')?box.startDoc:box.posterHeight;
     assert(Math.abs(after-before)<=1,`${id} ${size} scroll changed poster height ${before} → ${after}`);
     n++;
@@ -2022,7 +2157,7 @@ const near = (a, b, tol) => Math.abs(a - b) <= tol;
 const f1 = x => Math.round(x * 10) / 10;
 // The Continue line is built by script after load (spec §6).
 async function resumeReady(page) {
-    await page.waitForFunction(() => document.querySelector('#resume-link')?.textContent.includes('chapter'));
+    await page.waitForFunction(() => document.querySelector('.b-resume-location')?.textContent.includes('chapter'));
     await settleFonts(page);
     await page.waitForTimeout(150);
 }
@@ -2042,27 +2177,30 @@ const SPEC_LIST = [
 const SPEC_TAGS = {DM: 'spurious', Spir: 'spurious', Col: 'spurious', Aud: 'spurious', Phgn: 'spurious', Plant: 'spurious', Mirab: 'spurious', Mech: 'spurious', Prob: 'dubious', Lin: 'spurious', Vent: 'spurious', MXG: 'spurious', MM: 'dubious', VV: 'spurious', Oec: 'dubious', RhetAl: 'spurious'};
 const OPUSCULA = ['Col', 'Aud', 'Phgn', 'Plant', 'Mirab', 'Mech', 'Prob', 'Lin', 'Vent', 'MXG'];
 if (stage >= 2) Object.assign(gates, {
- // Check 1. The list shows on the first screen.
+ // Check 1, round 9. The subject strip now stands between the masthead and the list, so the
+ // sixth work no longer shows on a 663px screen. What round 9 pins instead: at 1152×663 the list
+ // starts at y=453 for a new reader and y=361 for a returning one, with one saved work or two.
  'R-H4': async () => {
   const logic = registry.CATEGORIES[0];
   assert(registry.DIVISION_NAMES[logic.title] === 'Logic' && logic.works.length === 6, `works.ts: first division is ${registry.DIVISION_NAMES[logic.title]} with ${logic.works?.length} works, expected Logic with 6`);
   let n = 0;
-  for (const size of ['D1525', 'D1152']) {
-   const p = await open(size, 'light', '/');
+  for (const [label, seed, want] of [['new', false, 453], ['returning', r9Seed(), 361], ['two saved', r9SeedTwo(), 361]]) {
+   const p = await open('D1152', 'light', '/', seed);
    try {
-    if (prove && proofCase === 'tall-top' && size === 'D1525') await style(p, '.dir-b.pg-home .b-top{padding-bottom:300px!important}');
-    if (prove && proofCase === 'one-column') await style(p, '.dir-b.pg-home .b-works{grid-template-columns:minmax(0,1fr)!important}');
-    if (prove && proofCase === 'scrolled' && size === 'D1152') await p.evaluate(() => scrollTo(0, 120));
+    if (seed) await resumeReady(p);
+    if (prove && proofCase === 'tall-top' && !seed) await style(p, '.dir-b.pg-home .b-top{padding-bottom:60px!important}');
+    if (prove && proofCase === 'returning-gap' && label === 'two saved') await style(p, '.dir-b.pg-home .b-top.b-returning .b-intro-r{margin-bottom:60px!important}');
+    if (prove && proofCase === 'scrolled' && !seed) await p.evaluate(() => scrollTo(0, 120));
     const r = await p.evaluate(() => {
-     const rows = [...document.querySelectorAll('.b-works li')];
      const first = document.querySelector('.b-div');
-     return {count: rows.length, bottom: rows[5]?.getBoundingClientRect().bottom, height: innerHeight, scrollY, inFirst: rows[5] ? first.contains(rows[5]) : false, inFirstCount: first.querySelectorAll('.b-works li').length};
+     return {top: first?.getBoundingClientRect().top, rows: first ? first.querySelectorAll('.b-works li').length : 0, head: first?.querySelector('.b-dh')?.textContent, scrollY, returning: document.querySelector('.b-top').classList.contains('b-returning')};
     });
-    assert(r.count >= 6 && r.inFirst, `${size} examined=${r.count} work rows; the sixth must be in the first division`);
-    assert(r.inFirstCount === logic.works.length, `${size} first division lists ${r.inFirstCount} works, works.ts has ${logic.works.length}`);
-    assert(r.scrollY === 0, `${size} scrollY=${r.scrollY}, must be 0 (empty storage, no scroll)`);
-    assert(r.bottom <= r.height, `${size} sixth work row bottom=${f1(r.bottom)} is below the window height=${r.height}`);
-    console.log(`R-H4 ${size} sixth work row bottom=${f1(r.bottom)} window=${r.height}`);
+    assert(r.rows > 0, `D1152 ${label} reader examined=0 work rows in the first division`);
+    assert(r.head === 'Logic' && r.rows === logic.works.length, `D1152 ${label} reader first division ${r.head} lists ${r.rows} works, works.ts has Logic with ${logic.works.length}`);
+    assert(r.returning === Boolean(seed), `D1152 ${label} reader returning masthead=${r.returning}`);
+    assert(r.scrollY === 0, `D1152 ${label} reader scrollY=${r.scrollY}, must be 0`);
+    assert(near(r.top, want, 6), `D1152 ${label} reader works list top=${f1(r.top)}, round 9 draws ${want}±6`);
+    console.log(`R-H4 D1152 ${label} reader list top=${f1(r.top)} (round 9: ${want})`);
     n++;
    } finally { await close(p); }
   }
@@ -2095,109 +2233,152 @@ if (stage >= 2) Object.assign(gates, {
    const p = await open(size, 'light', `/${id}/`);
    try {
     if (prove && proofCase === 'work-title-narrow' && size === 'D1525' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-po.tp-side .b-po-t{width:300px!important}');
+    if (prove && proofCase === 'work-title-moved' && size === 'D1152' && id === 'Mete') await style(p, '.dir-b.pg-work .b-top .b-po.tp-side .b-po-t{position:relative!important;left:349px!important}');
     const r = await p.evaluate(() => { const b = document.querySelector('.b-po-t').getBoundingClientRect(); return {vw: document.documentElement.clientWidth, left: b.left, width: b.width}; });
-    const g = gridAt(r.vw), place = plates[id].place;
-    assert(place === 'left' || place === 'right', `${id} plates.json place=${place}`);
+    const g = gridAt(r.vw);
+    // Round 9: the title stands in column 1 whichever side plates.json gives (the plate is always column 3, R-W5).
     assert(near(r.width, g.col, 1), `${id} ${size} work title width=${f1(r.width)}, expected one third of (content ${f1(g.content)} − 80) = ${f1(g.col)}`);
-    assert(near(r.left, g.colLeft(place === 'right' ? 0 : 1), 1), `${id} ${size} work title left=${f1(r.left)}, plate ${place} so expected column ${place === 'right' ? 1 : 2} at ${f1(g.colLeft(place === 'right' ? 0 : 1))}`);
+    assert(near(r.left, g.colLeft(0), 1), `${id} ${size} work title left=${f1(r.left)}, expected column 1 at ${f1(g.colLeft(0))}`);
     n++;
    } finally { await close(p); }
   }
   return n;
  },
- // Check 3. The home block ends on one foot line; the list starts 44px under it.
+ // Check 3, round 9. A new reader's masthead still ends on one foot line (bust and search), and
+ // the subject strip stands between it and the list: five links, one per division, each with
+ // the Bekker range round 9 prints, each to its division. The returning masthead is short now
+ // (the bust no longer meets the search), so its list top is pinned in R-H4 instead.
  'R-H6': async () => {
   let n = 0;
-  const cases = [['D1525', false], ['D1152', false], ['D1525', true]];
-  for (const [size, returning] of cases) {
-   const p = await open(size, 'light', '/', returning);
+  const ranges = ['1–184', '184–980', '980–1093', '1094–1353', '1354–1462'];
+  const divisions = registry.CATEGORIES.map(c => ({numeral: c.numeral, name: registry.DIVISION_NAMES[c.title]})).filter(d => d.name);
+  assert(divisions.length === 5, `works.ts names ${divisions.length} divisions, expected 5`);
+  for (const size of ['D1525', 'D1152']) {
+   const p = await open(size, 'light', '/');
    try {
-    if (returning) await resumeReady(p);
-    const label = `${size} ${returning ? 'returning' : 'new'} reader`;
-    if (prove && proofCase === 'bust-short' && size === 'D1525' && !returning) await style(p, '.dir-b.pg-home .b-top > .b-po picture{bottom:30px!important}');
-    if (prove && proofCase === 'list-gap' && size === 'D1152') await style(p, '.dir-b.pg-home .b-top{padding-bottom:70px!important}');
-    if (prove && proofCase === 'returning-bust-short' && returning) await style(p, '.dir-b.pg-home .b-top > .b-po picture{bottom:30px!important}');
+    if (prove && proofCase === 'bust-short' && size === 'D1525') await style(p, '.dir-b.pg-home .b-top > .b-po picture{bottom:30px!important}');
+    if (prove && proofCase === 'range-wrong' && size === 'D1152') await p.locator('.b-subject-range').nth(2).evaluate(el => { el.textContent = '980–1094'; });
+    if (prove && proofCase === 'dead-anchor' && size === 'D1152') await p.locator('.b-subjects a').nth(3).evaluate(el => el.setAttribute('href', '#division-VI'));
+    if (prove && proofCase === 'strip-below' && size === 'D1525') await style(p, '.dir-b.pg-home .b-subjects{order:9;position:relative!important;top:300px!important}');
     const r = await p.evaluate(() => {
      const b = sel => document.querySelector(sel)?.getBoundingClientRect();
-     return {bust: b('.b-top .b-po picture')?.bottom, search: b('.b-top form.b-search')?.bottom, div: b('.b-div')?.top, cont: !!document.querySelector('#resume-link'), scrollY};
+     const strip = b('.b-subjects');
+     const links = [...document.querySelectorAll('.b-subjects a')].map(a => {
+      const id = a.getAttribute('href')?.replace(/^#/, ''), target = id && document.getElementById(id);
+      return {name: a.firstElementChild?.textContent, range: a.querySelector('.b-subject-range')?.textContent, href: a.getAttribute('href'), target: target ? target.querySelector('.b-dh')?.textContent : null, shown: a.getClientRects().length > 0};
+     });
+     return {bust: b('.b-top .b-po picture')?.bottom, search: b('.b-top form.b-search')?.bottom, div: b('.b-div')?.top, stripTop: strip?.top, stripBottom: strip?.bottom, links, returning: document.querySelector('.b-top').classList.contains('b-returning')};
     });
+    const label = `${size} new reader`;
     assert([r.bust, r.search, r.div].every(Number.isFinite), `${label} examined=0: bust=${r.bust} search=${r.search} first division=${r.div}`);
-    assert(r.cont === returning, `${label} Continue line present=${r.cont}`);
+    assert(!r.returning, `${label} drew the returning masthead`);
     assert(near(r.bust, r.search, 2), `${label} bust bottom=${f1(r.bust)} and search bottom=${f1(r.search)} differ by more than 2px`);
-    for (const [what, y] of [['bust', r.bust], ['search', r.search]])
-     assert(near(r.div - y, 44, 2), `${label} first division starts ${f1(r.div - y)}px under the ${what} bottom, expected 44±2`);
-    console.log(`R-H6 ${label} bust=${f1(r.bust)} search=${f1(r.search)} list=${f1(r.div)}`);
-    n++;
+    assert(r.links.length > 0, `${label} examined=0 subject links`);
+    const got = r.links.map(l => [l.name, l.range, l.href, l.target, l.shown]);
+    const want = divisions.map((d, i) => [d.name, ranges[i], `#division-${d.numeral}`, d.name, true]);
+    assert(JSON.stringify(got) === JSON.stringify(want), `${label} subject strip=${JSON.stringify(got)}\n expected ${JSON.stringify(want)}`);
+    assert(r.stripTop >= Math.max(r.bust, r.search) - 1 && r.stripBottom <= r.div + 1, `${label} subject strip ${f1(r.stripTop)}–${f1(r.stripBottom)} is not between the foot line ${f1(r.bust)} and the list ${f1(r.div)}`);
+    console.log(`R-H6 ${label} bust=${f1(r.bust)} search=${f1(r.search)} strip=${f1(r.stripTop)}–${f1(r.stripBottom)} list=${f1(r.div)}`);
+    n += r.links.length;
    } finally { await close(p); }
   }
   return n;
  },
- // Check 4. A work block ends on one foot line; the books heading starts 44px under it.
+ // Check 4, round 9. The first column of a work page stacks the title, the Greek title in ink
+ // straight under it, the buttons, and "Greek and English · <translator>" 6px under them. At
+ // 1152×663 round 9 puts the main button's left edge at x=72 and its top at the y values below,
+ // and the Nicomachean Ethics contents at y=516 (round 9's 500 plus 4px on each of four 40px edition rows). (The D26 foot line and 44px gap are gone.)
  'R-W4': async () => {
   let n = 0;
-  for (const size of ['D1525', 'D1152']) for (const id of ['GC', 'Mete', 'MA', 'Juv']) {
+  const tops = {Cat: 253, Mete: 245, EN: 289, Mirab: 267, Mem: 253, APr: 289, Juv: 358};
+  for (const size of ['D1152', 'D1440', 'D1525']) for (const id of Object.keys(tops)) {
    const p = await open(size, 'light', `/${id}/`);
    try {
-    if (prove && proofCase === 'ctas-high' && size === 'D1525' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-ctas{align-self:start!important}');
-    if (prove && proofCase === 'ctas-lifted' && size === 'D1152' && id === 'Juv') await style(p, '.dir-b.pg-work .b-top .b-ctas{margin-bottom:30px!important}');
-    if (prove && proofCase === 'books-gap' && size === 'D1525' && id === 'Mete') await style(p, '.dir-b.pg-work .b-top{padding-bottom:70px!important}');
-    // A cross-family read (Grok, 10 Nov) found the first version comparing the buttons with a
-    // maximum that held the buttons themselves, and with .b-words, which stretches to the foot.
-    if (prove && proofCase === 'ctas-dropped' && size === 'D1525' && id === 'Mete') await style(p, '.dir-b.pg-work .b-top .b-ctas{position:relative!important;top:40px!important}');
-    if (prove && proofCase === 'ctas-padded' && size === 'D1525' && id === 'GC') await style(p, '.dir-b.pg-work .b-top .b-ctas{margin-top:160px!important}');
-    // Each column's own content: the plate; the last thing in the words column (.b-words
-    // itself stretches); the title column as it would stand alone, which is the Greek title
-    // (or the title), the 28px the build keeps above the buttons, and the buttons' height.
+    if (prove && proofCase === 'button-moved' && size === 'D1152' && id === 'Cat') await style(p, '.dir-b.pg-work .b-top .b-ctas{margin-top:40px!important}');
+    if (prove && proofCase === 'greek-red' && size === 'D1440' && id === 'Mete') await style(p, '.dir-b.pg-work .b-top .b-wk-gt{color:var(--red-ink)!important}');
+    if (prove && proofCase === 'greek-apart' && size === 'D1525' && id === 'Mirab') await style(p, '.dir-b.pg-work .b-top .b-wk-gt{margin-top:40px!important}');
+    if (prove && proofCase === 'mode-gap' && size === 'D1152' && id === 'Juv') await style(p, '.dir-b.pg-work .b-reading-mode{margin-top:10px!important}');
+    if (prove && proofCase === 'contents-low' && size === 'D1152' && id === 'EN') await style(p, '.dir-b.pg-work [data-section="books"]{margin-top:40px!important}');
+    if (prove && proofCase === 'wrong-translator' && size === 'D1440' && id === 'APr') await p.locator('.b-reading-mode').evaluate(el => { el.textContent = 'Greek and English · Owen'; });
     const r = await p.evaluate(() => {
-     const b = sel => document.querySelector(sel)?.getBoundingClientRect();
-     const last = document.querySelector('.b-top .b-words')?.lastElementChild?.getBoundingClientRect();
-     const ctas = b('.b-top .b-ctas');
-     return {plate: b('.b-top .b-po picture')?.bottom, words: last?.bottom, over: (b('.b-top .b-wk-gt') || b('.b-top .b-po-t'))?.bottom, ctasHeight: ctas?.height, ctas: ctas?.bottom, books: b('section[data-section="books"] > h2.b-h2')?.top, scrollY};
+     const box = sel => { const e = document.querySelector(sel); if (!e) return null; const b = e.getBoundingClientRect(); return {left: b.left, right: b.right, top: b.top, bottom: b.bottom}; };
+     return {vw: document.documentElement.clientWidth, title: box('.b-po-t'), greek: box('.b-wk-gt'), start: box('[data-start]'), ctas: box('.b-ctas .b-btn'), mode: box('.b-reading-mode'), modeText: document.querySelector('.b-reading-mode')?.textContent, greekColor: document.querySelector('.b-wk-gt') && getComputedStyle(document.querySelector('.b-wk-gt')).color, books: box('[data-section="books"]'), scrollY};
     });
-    assert(Object.values(r).every(Number.isFinite), `${id} ${size} examined=0: ${JSON.stringify(r)}`);
-    const titleColumn = r.over + 28 + r.ctasHeight;
-    const low = Math.max(r.plate, r.words, titleColumn);
-    const sets = r.plate === low ? 'plate' : r.words === low ? 'words' : 'title column';
-    assert(near(r.ctas, low, 1), `${id} ${size} .b-ctas bottom=${f1(r.ctas)} but the lowest part ends at ${f1(low)} (plate ${f1(r.plate)}, words ${f1(r.words)}, title column ${f1(titleColumn)})`);
-    assert(near(r.books - low, 44, 2), `${id} ${size} books heading starts ${f1(r.books - low)}px under the foot line, expected 44±2`);
-    // Spec §3.4, "Measured results": which column sets the foot in the three frames drawn at 1525.
-    const drawn = {'GC/D1525': 'plate', 'Mete/D1525': 'words', 'MA/D1525': 'plate'}[`${id}/${size}`];
-    assert(!drawn || sets === drawn, `${id} ${size} foot line set by the ${sets}, spec §3.4 says the ${drawn}`);
-    console.log(`R-W4 ${id} ${size} foot=${f1(low)} set by ${sets} (plate ${f1(r.plate)}, words ${f1(r.words)}, title column ${f1(titleColumn)}); buttons bottom=${f1(r.ctas)}; books heading=${f1(r.books)}`);
-    // Spec §3.4 "Measured results": the foot line and the books heading, in page pixels.
-    const spec = {'GC/D1525': [486, 530], 'Mete/D1525': [434, 478], 'MA/D1525': [473, 517], 'GC/D1152': [446, 490], 'Mete/D1152': [450, 494]}[`${id}/${size}`];
-    // Printed, not asserted: the build sits 2.5px under the spec's page y at GC 1525 (report, do not widen a tolerance).
-    if (spec) console.log(`R-W4 ${id} ${size} spec §3.4 foot=${spec[0]} books heading=${spec[1]}; built ${f1(r.ctas)} and ${f1(r.books)}`);
+    const label = `${id} ${size}`;
+    assert(r.title && r.greek && r.start && r.mode && r.books, `${label} examined=0: ${JSON.stringify(r)}`);
+    const g = gridAt(r.vw), work = registry.getWork(id), editions = registry.visibleTranslations(work);
+    const primary = editions.find(t => t.id === work.defaultTranslation) || editions.find(t => t.slot === 'english') || editions[0];
+    assert(r.greekColor === RGB.ink, `${label} Greek title color=${r.greekColor}, expected --ink ${RGB.ink}`);
+    assert(r.greek.top - r.title.bottom >= 0 && r.greek.top - r.title.bottom <= 16 && near(r.greek.left, r.title.left, 1), `${label} Greek title at ${f1(r.greek.left)},${f1(r.greek.top)} is not straight under the title (bottom ${f1(r.title.bottom)}, left ${f1(r.title.left)})`);
+    assert(r.start.top >= r.greek.bottom && r.start.top - r.greek.bottom <= 40, `${label} Start reading top=${f1(r.start.top)} is not under the Greek title (bottom ${f1(r.greek.bottom)})`);
+    assert(near(r.start.left, g.colLeft(0), 1), `${label} Start reading left=${f1(r.start.left)}, expected column 1 at ${f1(g.colLeft(0))}`);
+    assert(r.modeText === `Greek and English · ${primary.short}`, `${label} reading line="${r.modeText}", expected "Greek and English · ${primary.short}"`);
+    assert(near(r.mode.top - r.start.bottom, 6, 1), `${label} reading line starts ${f1(r.mode.top - r.start.bottom)}px under the buttons, round 9 draws 6`);
+    if (size === 'D1152') {
+     assert(r.scrollY === 0, `${label} scrollY=${r.scrollY}`);
+     assert(near(r.start.top, tops[id], 4), `${label} Start reading top=${f1(r.start.top)}, round 9 draws ${tops[id]}±4`);
+     if (id === 'EN') assert(near(r.books.top, 516, 6), `${label} contents top=${f1(r.books.top)}, expected 516±6`);
+    }
+    console.log(`R-W4 ${label} button ${f1(r.start.left)},${f1(r.start.top)} reading line +${f1(r.mode.top - r.start.bottom)} contents ${f1(r.books.top)}`);
     n++;
    } finally { await close(p); }
   }
   return n;
  },
- // Check 5. The plate stands on the side plates.json gives; the crumb on the content column's left edge.
+ // Check 5, round 9. The plate always stands in column 3 (plates.json's side no longer moves it),
+ // with no caption: no text near the plate carries its record's who or when. The crumb stands on
+ // the content column's left edge. Every plate at 1525; a sample upright and sideways.
  'R-W5': async () => {
   const ids = Object.keys(plates).filter(id => id !== 'home');
   assert(ids.length === 47, `plates.json holds ${ids.length} work plates, expected 47`);
   let n = 0;
+  const caption = (p, id) => p.evaluate(({who, when}) => {
+   const pic = document.querySelector('.b-top picture').getBoundingClientRect();
+   const band = {left: pic.left - 20, right: pic.right + 20, top: pic.top - 60, bottom: pic.bottom + 60};
+   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+   let node, examined = 0; const hits = [];
+   while (node = walker.nextNode()) {
+    if (!node.textContent.trim() || node.parentElement.closest('script,style,[hidden]')) continue;
+    examined++;
+    const range = document.createRange(); range.selectNodeContents(node);
+    const r = range.getBoundingClientRect();
+    if (!r.width || r.right < band.left || r.left > band.right || r.bottom < band.top || r.top > band.bottom) continue;
+    if (node.textContent.includes(who) || node.textContent.includes(when)) hits.push(node.textContent.trim().slice(0, 60));
+   }
+   return {examined, hits, figcaptions: document.querySelectorAll('.b-top figcaption').length};
+  }, {who: plates[id].who, when: plates[id].when});
   for (const id of ids) {
    const p = await open('D1525', 'light', `/${id}/`);
    try {
-    if (prove && proofCase === 'class-flip' && n === 0) await p.evaluate(() => { const t = document.querySelector('.b-top'); t.classList.toggle('pl-left'); t.classList.toggle('pl-right'); });
+    if (prove && proofCase === 'plate-left' && n === 0) await style(p, '.dir-b.pg-work .b-top .b-po.work picture{grid-column:1!important}');
     if (prove && proofCase === 'plate-middle' && n === 1) await style(p, '.dir-b.pg-work .b-top .b-po.work picture{grid-column:2!important}');
     if (prove && proofCase === 'crumb-indent' && n === 2) await style(p, '.dir-b.pg-work .b-crumb{margin-left:24px!important}');
     // Grok, 10 Nov: "centre somewhere in the column" let a plate slide 150px.
     if (prove && proofCase === 'plate-shifted' && n === 3) await style(p, '.dir-b.pg-work .b-top .b-po.work picture{position:relative!important;left:60px!important}');
+    if (prove && proofCase === 'caption' && n === 4) await p.locator('.b-top picture:visible').evaluate((el, who) => el.insertAdjacentHTML('beforeend', `<span class="gate-cap" style="display:block">${who}</span>`), plates[id].who);
     const r = await p.evaluate(() => { const b = sel => document.querySelector(sel)?.getBoundingClientRect(); const pic = b('.b-top .b-po picture'); return {vw: document.documentElement.clientWidth, plateCentre: pic && pic.left + pic.width / 2, plateWidth: pic?.width, crumb: b('p.b-crumb')?.left}; });
     assert(Number.isFinite(r.plateCentre) && Number.isFinite(r.crumb) && r.plateWidth > 0, `${id} examined=0: ${JSON.stringify(r)}`);
-    const g = gridAt(r.vw), place = plates[id].place;
-    assert(place === 'left' || place === 'right', `${id} plates.json place=${place}`);
-    const col = place === 'left' ? 0 : 2, lo = g.colLeft(col);
-    assert(r.plateCentre >= lo && r.plateCentre <= lo + g.col, `${id} plate centre x=${f1(r.plateCentre)} is not in the ${place} column [${f1(lo)}, ${f1(lo + g.col)}] that plates.json gives`);
-    assert(near(r.plateCentre, lo + g.col / 2, 1) && r.plateWidth <= g.col + 1, `${id} plate centre x=${f1(r.plateCentre)} width=${f1(r.plateWidth)}: not centred on the ${place} column (centre ${f1(lo + g.col / 2)}, width ${f1(g.col)})`);
+    const g = gridAt(r.vw), lo = g.colLeft(2);
+    assert(r.plateCentre >= lo && r.plateCentre <= lo + g.col, `${id} plate centre x=${f1(r.plateCentre)} is not in column 3 [${f1(lo)}, ${f1(lo + g.col)}]`);
+    assert(near(r.plateCentre, lo + g.col / 2, 1) && r.plateWidth <= g.col + 1, `${id} plate centre x=${f1(r.plateCentre)} width=${f1(r.plateWidth)}: not centred on column 3 (centre ${f1(lo + g.col / 2)}, width ${f1(g.col)})`);
     assert(near(r.crumb, g.left, 1), `${id} crumb left=${f1(r.crumb)}, content column left=${f1(g.left)}`);
+    const c = await caption(p, id);
+    assert(c.examined > 0, `${id} D1525 examined=0 text nodes`);
+    assert(!c.hits.length && !c.figcaptions, `${id} D1525 plate caption: ${JSON.stringify(c.hits)} figcaptions=${c.figcaptions}`);
     n++;
    } finally { await close(p); }
   }
-  console.log(`R-W5 plates examined=${n}: ${ids.filter(id => plates[id].place === 'left').length} left, ${ids.filter(id => plates[id].place === 'right').length} right`);
+  for (const size of ['P390', 'S844']) for (const id of ['Juv', 'EN', 'Mete', 'Cat']) {
+   const p = await open(size, 'light', `/${id}/`);
+   try {
+    if (prove && proofCase === 'caption-phone' && size === 'P390' && id === 'EN') await p.locator('.b-top picture:visible').evaluate((el, when) => el.insertAdjacentHTML('afterend', `<p class="gate-cap" style="order:3">${when}</p>`), plates[id].when);
+    const c = await caption(p, id);
+    assert(c.examined > 0, `${id} ${size} examined=0 text nodes`);
+    assert(!c.hits.length && !c.figcaptions, `${id} ${size} plate caption: ${JSON.stringify(c.hits)} figcaptions=${c.figcaptions}`);
+    n++;
+   } finally { await close(p); }
+  }
+  console.log(`R-W5 plates examined=${n}`);
   return n;
  },
  // Check 6. Colour B: no --red on home or work pages at desktop widths.
@@ -2210,7 +2391,8 @@ if (stage >= 2) Object.assign(gates, {
     if (prove && proofCase === 'red-border' && theme === 'light' && path === '/GC/') await style(p, '.dir-b .b-bk{border-bottom:3px solid var(--red)!important}');
     if (prove && proofCase === 'red-dark' && theme === 'dark' && path === '/Mete/') await style(p, '.dir-b .b-crumb a{color:var(--red)!important}');
     if (prove && proofCase === 'faded-title' && theme === 'light' && path === '/MA/') await style(p, '.dir-b .b-po-t{opacity:.82!important}');
-    const red = theme === 'light' ? RGB.red : RGB.darkRed, accent = theme === 'light' ? RGB.redInk : RGB.darkRedInk;
+    // Round 9 (r9.css "Dark: one red"): home and work pages use #e0574b as the dark --red-ink.
+    const red = theme === 'light' ? RGB.red : RGB.darkRed, accent = theme === 'light' ? RGB.redInk : hexRgb('#e0574b');
     const r = await p.evaluate(({red, accent}) => {
      const hits = [], seen = new Set(); let examined = 0, accents = 0;
      for (const el of document.querySelectorAll('.b-page, .b-page *')) {
@@ -2317,20 +2499,299 @@ if (stage >= 2) Object.assign(gates, {
  },
 });
 
+// Round 9 gates (home and work pages as rebuilt on 12 Nov). Expected values are round 9's
+// measured design numbers (the orchestrator's brief), works.ts, chapters.json or plates.json.
+const MID = hexRgb(tokens.light[3]);
+if (stage >= 2) Object.assign(gates, {
+ // Home, first visit: the Greek line τὰ σῳζόμενα on desktop, none on the upright phone.
+ // Home, returning reader on the phone: bust and full title, no site sentence, one card, its
+ // button to the right of the work title, top-aligned with it, not full width.
+ 'R-H9': async () => {
+  let n = 0;
+  for (const size of ['D1152', 'P390']) {
+   const p = await open(size, 'light', '/');
+   try {
+    if (prove && proofCase === 'greek-gone' && size === 'D1152') await p.locator('.b-gt').evaluate(el => { el.textContent = 'Ἀριστοτέλους ἅπαντα'; });
+    if (prove && proofCase === 'phone-greek' && size === 'P390') await style(p, '.dir-b.pg-home .b-gt{display:block!important}');
+    const r = await p.evaluate(() => { const el = document.querySelector('.b-gt'); return el && {text: el.textContent, shown: el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden'}; });
+    assert(r, `${size} examined=0: no .b-gt`);
+    if (size === 'D1152') assert(r.shown && r.text.includes('τὰ σῳζόμενα'), `${size} home Greek line="${r.text}" shown=${r.shown}, expected τὰ σῳζόμενα`);
+    else assert(!r.shown, `${size} home Greek line is visible on the upright phone`);
+    n++;
+   } finally { await close(p); }
+  }
+  const p = await open('P390', 'light', '/', r9SeedTwo());
+  try {
+   await resumeReady(p);
+   if (prove && proofCase === 'phone-two-cards') await p.locator('.b-resume-work').evaluate(el => el.after(el.cloneNode(true)));
+   if (prove && proofCase === 'phone-sentence') await p.locator('.b-intro').evaluate(el => el.insertAdjacentHTML('afterbegin', '<p class="b-lead">Read and search every work of Aristotle in Greek and English.</p>'));
+   if (prove && proofCase === 'phone-button-full') await style(p, '.dir-b.pg-home .b-resume-work .b-btn{grid-column:1 / -1!important;grid-row:3!important}');
+   const r = await p.evaluate(() => {
+    const shown = el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+    const box = el => { const b = el.getBoundingClientRect(); return {left: b.left, right: b.right, top: b.top, bottom: b.bottom, width: b.width, height: b.height}; };
+    const cards = [...document.querySelectorAll('.b-resume-work')].filter(shown);
+    const card = cards[0];
+    return {cards: cards.length, bust: box(document.querySelector('.b-top picture')), lines: [...document.querySelectorAll('.b-po-t .ln')].map(l => l.textContent).join(' '),
+     lead: [...document.querySelectorAll('.b-lead')].filter(shown).length, card: card && box(card), title: card && box(card.querySelector('.b-resume-title')), button: card && box(card.querySelector('.b-btn')), buttonText: card?.querySelector('.b-btn').textContent};
+   });
+   const label = 'P390 returning reader';
+   assert(r.cards > 0, `${label} examined=0 resume cards`);
+   assert(r.cards === 1, `${label} cards=${r.cards}, expected exactly one with two saved works`);
+   assert(r.bust.height > 0 && r.lines === 'THE COMPLETE WORKS OF ARISTOTLE', `${label} bust height=${f1(r.bust.height)} title="${r.lines}"`);
+   assert(r.lead === 0, `${label} site sentence shown ${r.lead} times`);
+   assert(r.buttonText === 'Continue reading', `${label} button="${r.buttonText}"`);
+   assert(r.button.left >= r.title.right && near(r.button.top, r.title.top, 1) && r.button.width < r.card.width - 1, `${label} Continue reading at ${f1(r.button.left)},${f1(r.button.top)} width ${f1(r.button.width)} is not right of the title (right ${f1(r.title.right)}, top ${f1(r.title.top)}) and narrower than the card (${f1(r.card.width)})`);
+   n++;
+  } finally { await close(p); }
+  return n;
+ },
+ // Home, returning reader at 1152×663: short masthead; the search box across the intro's width
+ // above ONE card (two works saved); the card's sizes; beside it, a link to the saved passage in
+ // Greek (16px) and in the default translation, Ostwald (14px). With the book's data blocked the
+ // card still shows and the passage link stays hidden.
+ 'R-H10': async () => {
+  let n = 0;
+  const p = await open('D1152', 'light', '/', r9SeedTwo());
+  try {
+   await resumeReady(p);
+   await p.waitForFunction(() => !document.querySelector('.b-resume-passage')?.hidden, null, {timeout: 10000}).catch(() => {});
+   if (prove && proofCase === 'two-cards') await p.locator('.b-resume-work').evaluate(el => el.after(el.cloneNode(true)));
+   if (prove && proofCase === 'button-small') await style(p, '.dir-b.pg-home .b-resume-work .b-btn{height:36px!important}');
+   if (prove && proofCase === 'no-name') await p.locator('.b-resume-work .b-btn').evaluate(el => el.removeAttribute('aria-label'));
+   if (prove && proofCase === 'search-narrow') await style(p, '.dir-b.pg-home .b-top.b-returning .b-intro-r{grid-column:1!important}');
+   if (prove && proofCase === 'passage-english') await p.locator('.b-resume-passage [lang="en"]').evaluate(el => { el.textContent = 'Now we must take as a sign of states of character the pleasure or pain that ensues on acts.'; });
+   if (prove && proofCase === 'same-wrong-target') await p.locator('.b-resume-work .b-btn, .b-resume-passage').evaluateAll(els => els.forEach(el => el.setAttribute('href', '/EN/book/1')));
+   const r = await p.evaluate(() => {
+    const shown = el => el && el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden' && !el.closest('[hidden]');
+    const box = el => { if (!el) return null; const b = el.getBoundingClientRect(); return {left: b.left, right: b.right, top: b.top, bottom: b.bottom, width: b.width, height: b.height}; };
+    const fs = el => el && parseFloat(getComputedStyle(el).fontSize);
+    const cards = [...document.querySelectorAll('.b-resume-work')].filter(shown);
+    const card = cards[0], passage = document.querySelector('.b-resume-passage');
+    const grc = passage?.querySelector('[lang="grc"]'), en = passage?.querySelector('[lang="en"]');
+    return {cards: cards.length, masthead: [...document.querySelectorAll('.b-po-t .b-masthead-line')].map(s => s.textContent), lead: shown(document.querySelector('.b-lead')),
+     intro: box(document.querySelector('.b-intro')), search: box(document.querySelector('.b-intro .b-search')), card: box(card),
+     titleSize: fs(card?.querySelector('.b-resume-title')), title: card?.querySelector('.b-resume-title').textContent, locationSize: fs(card?.querySelector('.b-resume-location')),
+     button: box(card?.querySelector('.b-btn')), buttonSize: fs(card?.querySelector('.b-btn')), buttonHref: card?.querySelector('.b-btn').getAttribute('href'),
+     passage: shown(passage) ? {box: box(passage), href: passage.getAttribute('href'), grc: grc?.textContent, grcSize: fs(grc), en: en?.textContent, enSize: fs(en), enShown: shown(en)} : null};
+   });
+   const label = 'D1152 returning reader';
+   assert(r.cards > 0, `${label} examined=0 resume cards`);
+   assert(r.cards === 1, `${label} cards=${r.cards}, expected exactly one with two saved works`);
+   assert(JSON.stringify(r.masthead) === '["The","Complete","Works of","Aristotle"]' && !r.lead, `${label} masthead=${JSON.stringify(r.masthead)} sentence shown=${r.lead}`);
+   assert(near(r.search.left, r.intro.left, 1) && near(r.search.right, r.intro.right, 1) && r.search.bottom <= r.card.top, `${label} search box ${f1(r.search.left)}–${f1(r.search.right)} (bottom ${f1(r.search.bottom)}) is not across the intro ${f1(r.intro.left)}–${f1(r.intro.right)} above the card (top ${f1(r.card.top)})`);
+   assert(r.title === 'Nicomachean Ethics' && r.titleSize === 24 && r.locationSize === 15, `${label} card title "${r.title}" ${r.titleSize}px, location ${r.locationSize}px; round 9: Nicomachean Ethics 24px, location 15px`);
+   assert(near(r.button.height, 44, .5) && r.buttonSize === 14, `${label} button height=${f1(r.button.height)} text ${r.buttonSize}px; round 9: 44px, 14px`);
+   const named = await p.getByRole('link', {name: 'Continue reading Nicomachean Ethics', exact: true}).count();
+   assert(named === 1, `${label} links with the accessible name "Continue reading Nicomachean Ethics"=${named}`);
+   assert(r.passage, `${label} passage link hidden`);
+   // The target comes from the seed, not the page: both links share one href in index.astro.
+   const seeded = r9SeedTwo().storage, want = `/EN/book/${seeded['reader-book-EN']}#${seeded['reader-loc-EN']}`;
+   assert(r.buttonHref === want, `${label} card button href=${r.buttonHref}, expected ${want} from the seed`);
+   assert(r.passage.href === want, `${label} passage link href=${r.passage.href}, expected ${want} from the seed`);
+   assert(r.passage.box.left >= r.card.right && r.passage.box.top < r.card.bottom && r.passage.box.bottom > r.card.top, `${label} passage link is not beside the card`);
+   assert(r.passage.grcSize === 16 && r.passage.grc.startsWith('Σημεῖον δὲ δεῖ ποιεῖσθαι'), `${label} Greek paragraph ${r.passage.grcSize}px "${r.passage.grc?.slice(0, 40)}"`);
+   assert(r.passage.enShown && r.passage.enSize === 14 && r.passage.en.startsWith('An index to our characteristics'), `${label} English paragraph ${r.passage.enSize}px "${r.passage.en?.slice(0, 40)}", expected Ostwald's "An index to our characteristics"`);
+   assert(!/Rackham/.test(r.passage.en), `${label} passage names Rackham`);
+   n++;
+  } finally { await close(p); }
+  // The passage needs the book's data; the card must not.
+  const blocked = await open('D1152', 'light', '/', r9Seed(), false, false, '**/data/EN/book-*.json');
+  try {
+   await resumeReady(blocked);
+   await blocked.waitForTimeout(500);
+   if (prove && proofCase === 'blocked-passage') await blocked.locator('.b-resume-passage').evaluate(el => { el.hidden = false; el.querySelector('[lang="grc"]').textContent = 'Σημεῖον'; });
+   assert(blocked.blockedRequests() > 0, 'D1152 returning reader, book data blocked: examined=0 blocked requests');
+   const r = await blocked.evaluate(() => ({card: document.querySelector('.b-resume-work').getClientRects().length > 0 && !document.querySelector('.b-resume-work').hidden, passage: !document.querySelector('.b-resume-passage').hidden}));
+   assert(r.card && !r.passage, `D1152 returning reader, book data blocked: card shown=${r.card} passage link shown=${r.passage}`);
+   n++;
+  } finally { await close(blocked); }
+  return n;
+ },
+ // Book rows of titled books show the Bekker range beside the chapter count (1094a1–1103a10 for
+ // Nicomachean Ethics I); a returning reader's saved book shows "saved at chapter N", beside the
+ // count on desktop and on its own line on the phone.
+ 'R-W8': async () => {
+  let n = 0;
+  const chapters = chaptersOf('EN'), work = registry.getWork('EN');
+  for (const [size, seed] of [['D1152', false], ['D1152', r9Seed()], ['P390', r9Seed()]]) {
+   const p = await open(size, 'light', '/EN/', seed);
+   const label = `EN ${size}${seed ? ' returning' : ''}`;
+   try {
+    if (seed) await p.waitForFunction(() => document.querySelector('.b-saved-chapter'), null, {timeout: 10000}).catch(() => {});
+    if (prove && proofCase === 'range-missing' && !seed) await p.locator('.b-bk[data-book="1"] .b-book-range').evaluate(el => el.remove());
+    if (prove && proofCase === 'range-wrong' && !seed) await p.locator('.b-bk[data-book="1"] .b-book-range').evaluate(el => { el.textContent = '1094a1–1103a9'; });
+    if (prove && proofCase === 'saved-elsewhere' && seed && size === 'D1152') await p.locator('.b-saved-chapter').evaluate(el => document.querySelector('.b-bk[data-book="1"] .b-bkc').prepend(el));
+    if (prove && proofCase === 'saved-inline' && size === 'P390') await style(p, '.dir-b.pg-work .b-bkc{flex-wrap:nowrap!important}.dir-b.pg-work .b-saved-chapter{flex:0 0 auto!important;order:0!important}');
+    if (prove && proofCase === 'range-below' && !seed) await style(p, '.dir-b.pg-work .b-book-range{display:block!important}');
+    const rows = await p.locator('.b-bk').evaluateAll(els => els.map(el => {
+     const count = el.querySelector('.b-bkc'), range = count.querySelector('.b-book-range'), saved = count.querySelector('.b-saved-chapter');
+     const text = [...count.childNodes].filter(x => x.nodeType === 3 && x.textContent.trim()).at(-1);
+     const r = text && document.createRange(); r?.selectNodeContents(text);
+     const box = e => { const b = e.getBoundingClientRect(); return {top: b.top, bottom: b.bottom, left: b.left, right: b.right}; };
+     return {book: el.dataset.book, count: text?.textContent.trim(), countBox: r && box(r), range: range?.textContent, rangeBox: range && box(range), saved: saved?.textContent, savedBox: saved && box(saved)};
+    }));
+    assert(rows.length > 0, `${label} examined=0 book rows`);
+    assert(rows.length === work.books, `${label} book rows=${rows.length}, works.ts has ${work.books}`);
+    for (const row of rows) {
+     const cs = chapters[row.book];
+     assert(row.count === `${cs.length} chapter${cs.length === 1 ? '' : 's'}`, `${label} Book ${row.book} count="${row.count}", chapters.json has ${cs.length}`);
+     assert(/^\d+[ab]\d+–\d+[ab]\d+$/.test(row.range || '') && row.range.startsWith(cs[0].column + cs[0].line + '–'), `${label} Book ${row.book} range="${row.range}", chapters.json starts it at ${cs[0].column}${cs[0].line}`);
+     if (row.book === '1') assert(row.range === '1094a1–1103a10', `${label} Book I range="${row.range}", round 9 prints 1094a1–1103a10`);
+     assert(near(row.rangeBox.top, row.countBox.top, 2) && row.rangeBox.right <= row.countBox.left + 1, `${label} Book ${row.book} range is not beside the chapter count`);
+     const wantSaved = seed && row.book === '2' ? 'saved at chapter 3' : undefined;
+     assert(row.saved === wantSaved, `${label} Book ${row.book} saved note="${row.saved}", expected ${wantSaved ?? 'none'}`);
+     if (wantSaved && size === 'P390') assert(row.savedBox.top >= Math.max(row.rangeBox.bottom, row.countBox.bottom) - 1, `${label} "saved at chapter 3" is not on its own line`);
+     if (wantSaved && size !== 'P390') assert(near(row.savedBox.top, row.countBox.top, 2), `${label} "saved at chapter 3" is not beside the count`);
+     n++;
+    }
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ // A short work beside a tall plate: on /Mem the contents start above the plate's bottom and stay
+ // left of the plate; on /EN, /Cat, /Mete, /Juv and /Sens the contents start under the plate.
+ 'R-W9': async () => {
+  let n = 0;
+  for (const size of ['D1152', 'D1440']) for (const id of ['Mem', 'EN', 'Cat', 'Mete', 'Juv', 'Sens']) {
+   const p = await open(size, 'light', `/${id}/`);
+   try {
+    if (prove && proofCase === 'no-tuck' && id === 'Mem' && size === 'D1152') await style(p, '.dir-b.pg-work [data-section="books"]{margin-top:0!important}');
+    if (prove && proofCase === 'overlap' && id === 'Mem' && size === 'D1440') await style(p, '.dir-b.pg-work .b-contents-tuck{padding-right:0!important}.dir-b.pg-work .b-contents-tuck .b-numbered{grid-template-columns:repeat(2,minmax(0,1fr))!important}');
+    if (prove && proofCase === 'tucked' && id === 'Sens' && size === 'D1152') await style(p, '.dir-b.pg-work [data-section="books"]{margin-top:-120px!important}');
+    const r = await p.evaluate(() => {
+     const sec = document.querySelector('[data-section="books"]'), pic = document.querySelector('.b-top picture').getBoundingClientRect();
+     const parts = [...sec.querySelectorAll('.b-contents-head > *, .b-chs li, .b-bk summary')].filter(e => e.getClientRects().length);
+     return {top: sec.getBoundingClientRect().top, right: Math.max(...parts.map(e => e.getBoundingClientRect().right)), parts: parts.length, plateBottom: pic.bottom, plateLeft: pic.left};
+    });
+    const label = `${id} ${size}`;
+    assert(r.parts > 0, `${label} examined=0 contents parts`);
+    if (id === 'Mem') {
+     assert(r.top < r.plateBottom, `${label} contents top=${f1(r.top)} is not above the plate's bottom ${f1(r.plateBottom)}`);
+     assert(r.right <= r.plateLeft, `${label} contents right=${f1(r.right)} runs under the plate (left ${f1(r.plateLeft)})`);
+    } else assert(r.top >= r.plateBottom, `${label} contents top=${f1(r.top)} tucks beside the plate (bottom ${f1(r.plateBottom)})`);
+    n += r.parts;
+   } finally { await close(p); }
+  }
+  return n;
+ },
+ // The upright phone work page: the main button inside the first screen and a plate of at least
+ // 120px; "Editions and tools" folded; a new reader's Contents link at the end of the line under
+ // the buttons. A returning reader: no Contents link, a full-width "Continue at Book II, chapter 3",
+ // then "From the start" and "Greek only" side by side, and the summary below the contents.
+ 'R-W10': async () => {
+  let n = 0;
+  for (const id of ['EN', 'Cat', 'Top', 'Mem', 'Mirab', 'Juv']) {
+   const p = await open('P390', 'light', `/${id}/`);
+   try {
+    if (prove && proofCase === 'button-low' && id === 'Juv') await style(p, '.dir-b.pg-work .b-top .b-po-t{padding-top:200px!important}');
+    if (prove && proofCase === 'plate-small' && id === 'Top') await style(p, '.dir-b.pg-work .b-top .b-po.work picture{height:100px!important}');
+    if (prove && proofCase === 'no-contents-link' && id === 'EN') await p.locator('.b-contents-link').evaluate(el => el.remove());
+    if (prove && proofCase === 'fold-open' && id === 'Cat') await p.locator('.b-editions-fold').evaluate(el => { el.open = true; });
+    const r = await p.evaluate(() => {
+     const box = el => { if (!el) return null; const b = el.getBoundingClientRect(); return {left: b.left, right: b.right, top: b.top, bottom: b.bottom, height: b.height}; };
+     const fold = document.querySelector('.b-editions-fold'), link = document.querySelector('.b-reading-mode .b-contents-link');
+     const shown = link && link.getClientRects().length > 0 && getComputedStyle(link).display !== 'none';
+     return {start: box(document.querySelector('[data-start]')), plate: box(document.querySelector('.b-top picture')), height: innerHeight, fold: fold && {label: fold.querySelector('summary').textContent, open: fold.open},
+      link: shown ? {box: box(link), href: link.getAttribute('href'), target: document.getElementById('contents')?.dataset.section} : null, mode: box(document.querySelector('.b-reading-mode'))};
+    });
+    const label = `${id} P390`;
+    assert(r.start && r.plate, `${label} examined=0: ${JSON.stringify(r)}`);
+    assert(r.start.bottom <= r.height, `${label} Start reading bottom=${f1(r.start.bottom)} is below the first screen ${r.height}`);
+    assert(r.plate.height >= 120, `${label} plate height=${f1(r.plate.height)} below 120`);
+    assert(r.fold?.label === 'Editions and tools' && !r.fold.open, `${label} editions fold=${JSON.stringify(r.fold)}, expected "Editions and tools", closed`);
+    assert(r.link && r.link.href === '#contents' && r.link.target === 'books' && near(r.link.box.right, r.mode.right, 1), `${label} Contents link=${JSON.stringify(r.link)} is not at the end of the line under the buttons (right ${f1(r.mode.right)})`);
+    n++;
+   } finally { await close(p); }
+  }
+  const p = await open('P390', 'light', '/EN/', r9Seed());
+  try {
+   await p.waitForFunction(() => document.querySelector('[data-resume]')?.textContent.includes('chapter'));
+   if (prove && proofCase === 'returning-link') await style(p, '.dir-b.pg-work .b-contents-button{display:inline-flex!important}');
+   if (prove && proofCase === 'resume-half') await style(p, '.dir-b.pg-work .b-ctas .b-btn[data-resume]{flex:0 0 auto!important}');
+   if (prove && proofCase === 'summary-top') await p.evaluate(() => document.querySelector('.b-ctas').after(document.querySelector('.b-wk-blurb')));
+   const r = await p.evaluate(() => {
+    const box = el => { const b = el.getBoundingClientRect(); return {left: b.left, right: b.right, top: b.top, bottom: b.bottom, width: b.width}; };
+    const shown = el => el.getClientRects().length > 0 && getComputedStyle(el).visibility !== 'hidden';
+    const ctas = document.querySelector('.b-ctas');
+    return {buttons: [...ctas.querySelectorAll('.b-btn')].filter(shown).map(el => ({text: el.textContent.trim(), ...box(el)})), ctas: box(ctas),
+     contents: [...document.querySelectorAll('a[href="#contents"]')].filter(shown).length, blurb: box(document.querySelector('.b-wk-blurb')), books: box(document.querySelector('[data-section="books"]')),
+     fold: box(document.querySelector('.b-editions-fold'))};
+   });
+   const label = 'EN P390 returning';
+   assert(r.buttons.length > 0, `${label} examined=0 buttons`);
+   assert(JSON.stringify(r.buttons.map(b => b.text)) === '["Continue at Book II, chapter 3","From the start","Greek only"]', `${label} buttons=${JSON.stringify(r.buttons.map(b => b.text))}`);
+   const [cont, from, greek] = r.buttons;
+   assert(near(cont.width, r.ctas.width, 1) && cont.bottom <= from.top && near(from.top, greek.top, 2), `${label} Continue at width=${f1(cont.width)} of ${f1(r.ctas.width)}; From the start top=${f1(from.top)}, Greek only top=${f1(greek.top)}: expected a full-width Continue over one row`);
+   assert(r.contents === 0, `${label} shows ${r.contents} Contents links`);
+   assert(r.blurb.top >= r.books.bottom, `${label} summary top=${f1(r.blurb.top)} is above the contents' end ${f1(r.books.bottom)}`);
+   assert(r.fold.bottom <= r.books.top, `${label} editions fold moved below the contents`);
+   n++;
+  } finally { await close(p); }
+  return n;
+ },
+ // Untitled chapter lists on the phone: two to a row, each with its whole Bekker range from
+ // chapters.json; on Mirab a heavier (--mid) rule under every fifth row and the "Chapter or
+ // Bekker number" form before the list.
+ 'R-W11': async () => {
+  let n = 0;
+  for (const id of ['Mirab', 'Mem', 'Cat']) {
+   const p = await open('P390', 'light', `/${id}/`);
+   try {
+    if (prove && proofCase === 'one-column' && id === 'Cat') await style(p, '.dir-b.pg-work .b-numbered{grid-template-columns:minmax(0,1fr)!important}');
+    if (prove && proofCase === 'range-cut' && id === 'Mem') await style(p, '.dir-b.pg-work .b-numbered .b-cb{max-width:40px!important;overflow:hidden!important}');
+    if (prove && proofCase === 'rule-missing' && id === 'Mirab') await style(p, '.dir-b.pg-work .b-chapter-tens li a{border-top-width:0!important}');
+    if (prove && proofCase === 'form-after' && id === 'Mirab') await p.evaluate(() => document.querySelector('.b-chs').after(document.querySelector('.b-chapter-go')));
+    const items = await p.locator('.b-chs li').evaluateAll(els => els.map(li => {
+     const b = li.getBoundingClientRect(), cb = li.querySelector('.b-cb'), cr = cb.getBoundingClientRect(), a = li.querySelector('a'), css = getComputedStyle(a);
+     return {top: b.top, left: b.left, right: b.right, range: cb.textContent, cut: cb.scrollWidth > cb.clientWidth + 1 || cr.right > b.right + 1 || !cr.width, rule: parseFloat(css.borderTopWidth) >= 1 && css.borderTopStyle !== 'none' ? css.borderTopColor : null};
+    }));
+    const raw = Object.values(chaptersOf(id)).flat();
+    assert(items.length > 0, `${id} P390 examined=0 chapters`);
+    assert(items.length === raw.length, `${id} P390 chapters=${items.length}, chapters.json has ${raw.length}`);
+    items.forEach((it, i) => {
+     const row = Math.floor(i / 2), mate = items[i ^ 1];
+     if (mate) assert(near(it.top, mate.top, 1) && (i % 2 ? it.left > mate.left : it.left < mate.left), `${id} P390 chapter ${i + 1} is not two to a row`);
+     if (i >= 2) assert(it.top > items[i - 2].top, `${id} P390 chapter ${i + 1} is not on row ${row + 1}`);
+     // A chapter of one line prints that one reference ("830a5–5" is 830a5).
+     const want = raw[i].bekker.replace(/^(.+)–\1$/, '$1').replace(/^(\d+[ab])(\d+)–\2$/, '$1$2');
+     assert(!it.cut && it.range === want, `${id} P390 chapter ${i + 1} range="${it.range}" cut=${it.cut}, chapters.json has ${raw[i].bekker}`);
+     if (id === 'Mirab') {
+      const want = row > 0 && row % 5 === 0 ? MID : null;
+      assert(it.rule === want, `${id} P390 chapter ${i + 1} (row ${row + 1}) top rule=${it.rule}, expected ${want ?? 'none'}`);
+     }
+     n++;
+    });
+    if (id === 'Mirab') {
+     const form = await p.evaluate(() => { const f = document.querySelector('.b-chapter-go'); return f && {label: f.querySelector('label')?.textContent, bottom: f.getBoundingClientRect().bottom, shown: f.getClientRects().length > 0, first: document.querySelector('.b-chs li').getBoundingClientRect().top}; });
+     assert(form?.shown && form.label === 'Chapter or Bekker number' && form.bottom <= form.first, `${id} P390 chapter form=${JSON.stringify(form)}, expected "Chapter or Bekker number" before the list`);
+    }
+   } finally { await close(p); }
+  }
+  return n;
+ },
+});
+const r9Proofs = {
+ 'R-H9': {'greek-gone': /D1152 home Greek line="Ἀριστοτέλους ἅπαντα" shown=true, expected τὰ σῳζόμενα/, 'phone-greek': /P390 home Greek line is visible on the upright phone/, 'phone-two-cards': /P390 returning reader cards=2, expected exactly one/, 'phone-sentence': /P390 returning reader site sentence shown 1 times/, 'phone-button-full': /P390 returning reader Continue reading at .* is not right of the title/},
+ 'R-H10': {'two-cards': /D1152 returning reader cards=2, expected exactly one/, 'button-small': /D1152 returning reader button height=36 text 14px/, 'no-name': /D1152 returning reader links with the accessible name "Continue reading Nicomachean Ethics"=0/, 'search-narrow': /D1152 returning reader search box .* is not across the intro/, 'passage-english': /D1152 returning reader English paragraph 14px "Now we must take as a sign/, 'same-wrong-target': /D1152 returning reader card button href=\/EN\/book\/1, expected \/EN\/book\/2#1104b3 from the seed/, 'blocked-passage': /D1152 returning reader, book data blocked: card shown=true passage link shown=true/},
+ 'R-W8': {'range-missing': /EN D1152 Book 1 range="undefined"/, 'range-wrong': /EN D1152 Book I range="1094a1–1103a9", round 9 prints 1094a1–1103a10/, 'saved-elsewhere': /EN D1152 returning Book 1 saved note="saved at chapter 3", expected none/, 'saved-inline': /EN P390 returning "saved at chapter 3" is not on its own line/, 'range-below': /EN D1152 Book 1 range is not beside the chapter count/},
+ 'R-W9': {'no-tuck': /Mem D1152 contents top=[\d.]+ is not above the plate's bottom/, 'overlap': /Mem D1440 contents right=[\d.]+ runs under the plate/, 'tucked': /Sens D1152 contents top=[\d.]+ tucks beside the plate/},
+ 'R-W10': {'button-low': /Juv P390 Start reading bottom=[\d.]+ is below the first screen 844/, 'plate-small': /Top P390 plate height=100 below 120/, 'no-contents-link': /EN P390 Contents link=null is not at the end of the line/, 'fold-open': /Cat P390 editions fold=.*"open":true/, 'returning-link': /EN P390 returning buttons=.*"Contents"/, 'resume-half': /EN P390 returning Continue at width=[\d.]+ of [\d.]+;.*expected a full-width Continue/, 'summary-top': /EN P390 returning summary top=[\d.]+ is above the contents' end/},
+ 'R-W11': {'one-column': /Cat P390 chapter 1 is not two to a row/, 'range-cut': /Mem P390 chapter 1 range=".*" cut=true/, 'rule-missing': /Mirab P390 chapter 11 \(row 6\) top rule=null, expected rgb\(93, 92, 87\)/, 'form-after': /Mirab P390 chapter form=.*before the list/},
+};
+
 // A proof is valid only when its own mutation causes the named assertion.
 const proofMessages = {
     'R-W1': /AthPol crumb=Works \/ Rhetoric and poetics/,
     'R-W1-text': /Cat raw footnote marker in work text/,
     'R-W2': /Cat Start reading target=\/EN\/book\/1/,
     'R-W3': /Cat wrong chapter target:/,
-    'R-K1': /EN Record href=#/,
-    'R-T1': /Cat G1440 poster lines=/,
+    'R-T1': /Cat P390 poster lines=/,
     'R-T2': /Cat D1440 Start reading bottom=/,
     'R-C1': /home title color=rgb\(0, 0, 0\)/,
     'R-C2': /legacy width token:.*injected fixture/,
     'R-F1': /screen font Anton/,
-    'R-F2': /light --bg=#ffffff expected #f4f4f1/,
-    'R-P4': /dark filter=invert\(1\)/,
+    'R-F2': /light \/ --bg=#ffffff expected #f4f4f1/,
+    'R-P4': /\/ D1440\/dark filter=sepia\(0\.45\) brightness\(0\.76\) contrast\(1\.06\)/,
     'R-T3': /D1525 \/ bust size=.*, spec says 189 wide at aspect \.592/,
     'R-T4': /P390\/light object-fit=contain/,
     'R-H1': /P390 home line mismatch/,
@@ -2343,32 +2804,36 @@ const proofMessages = {
     'R-E2': /unsolicited overlay:.*reader-tip/,
 };
 const stageTwoProofs = {
-    'R-W1': {'crumb': /AthPol crumb=Works \/ Rhetoric and poetics/, 'english-facts': /Cat English facts form: W\. D\. Ross \(Oxford, 1908\)/, 'missing-glossary': /EN English facts glossary link missing or invalid/, 'crumb-height': /Cat D1440 crumb height=/, 'crumb-height-phone': /Cat P390 crumb height=/, 'phone-order': /Cat P390 visual order /, 'no-english': /Cat examined=0 English facts/, 'peters-year': /EN Peters facts must contain rev\. ed\., 1893/, 'ellis-year': /Pol Ellis facts must contain 1776; rev\. 1912/},
+    'R-W2': {'default': /Cat Start reading target=\/EN\/book\/1/, 'resume-label': /Cat resume label=Resume at chapter 1/},
+    'R-F2': {'bg': /light \/ --bg=#ffffff expected #f4f4f1/, 'dark-line': /dark \/Cat\/ --line=#2d2c29 expected #45433f/},
+    'R-W1': {'crumb': /AthPol crumb=Works \/ Rhetoric and poetics/, 'missing-glossary': /EN tools row=.*expected .*Glossary/, 'crumb-height': /Cat D1440 crumb height=/, 'crumb-height-phone': /Cat P390 crumb height=/, 'phone-order': /Cat P390 visual order /, 'no-english': /Cat examined=0 English facts/, 'row-height': /EN edition row Ostwald height=3\d(\.\d)?, expected 40±1/, 'imprint-underlined': /Cat edition row Edghill underlines \["Edghill","\(Oxford, 1928\)"\]/, 'opens-first-single': /Mete edition row Webster "opens first"=1, expected 0/},
     'R-T3': {'title-faded': /D1440\/light \/ title opacity=0\.82 expected 1/, 'home-plate': /D1525\/light \/ bust size=.*, spec says 189×320 at aspect \.592/, 'dark-bust': /D1152\/dark \/ bust size=.*, spec says 161×272 at aspect \.592/, 'work-plate': /D1525 \/GC\/ plate size=200\.0×.*, plates\.json ink box gives 362\.7×358\.6/, 'plate-origin': /D1525 \/MA\/ plate image offset=0\.0,/},
-    'R-T2': {'cap': /Cat D1440 Start reading bottom=/, 'scroll-budget': /Long P390 scroll changed poster height/, 'crop': /Cat D1440 object-fit=cover expected fill/},
-    'R-K1': {'record': /EN Record href=#/, 'punctuation': /home credits doubled full stop/, 'licence': /home credits licence must be in parentheses/, 'licence-stop': /home credits stop before licence/},
-    'R-W3': {'chapter-target': /Cat wrong chapter target:/, 'numeral-red': /Phys book numbers are not --red-ink/},
+    'R-T2': {'cap': /Cat D1440 Start reading bottom=/, 'scroll-budget': /Juv P390 scroll changed poster height/, 'crop': /Cat D1440 object-fit=cover expected fill/},
+    'R-K1': {'record': /EN Records=\[\{"part":"Record","href":"#"\}\] expected=\[\{"part":"Record","href":"https:/, 'punctuation': /home credits doubled full stop/, 'licence': /home credits licence must be in parentheses/, 'licence-stop': /home credits stop before licence/},
+    'R-W3': {'chapter-target': /Cat wrong chapter target:/, 'numeral-red': /Phys book numbers are not --ink/},
     'R-W1-bekker': {'short-end': /Meta invalid book-header Bekker range: 980a21–29/, 'backwards': /Meta backwards book-header Bekker range: 993a29–980a21/},
     'R-W1-scheme': {'synthetic': /Isa synthetic range in non-Bekker work: 1a3–16/},
     'R-E1': {'copy': /examined=6 violations=6; HTML fixture In this mockup/, 'no-headings': /\/Cat\/ examined=0 section headings/, 'empty-heading': /\/Cat\/ empty headings:/},
-    'R-T5': {'desktop-poster': /S844 home gap=/, 'two-columns': /S844 .*works grid has more than one column/, 'wide-title': /Cat S844 title sizes=/, 'short-plate': /Cat S844 plate height=.*below 120/},
+    'R-T5': {'desktop-poster': /S844 home gap=/, 'two-columns': /S844 .*works grid has more than one column/, 'plate-left': /Cat S844 plate left=[\d.]+ is not right of the buttons/, 'buttons-stack': /EN S844 buttons not in one row/, 'juv-below': /Juv S844 button bottom=[\d.]+ is below the first screen/, 'title-shrunk': /Juv S844 title font-size=28 under 32px/, 'resume-short': /EN S844 returning Continue at width=.*not full width/},
 };
 // D26 gates: each proof is a deliberate break that must trip the gate's own assertion.
 const d26Proofs = {
-    'R-T1': {'golden-line': /Cat G1440 poster lines=/, 'drawn-size': /Cat G1440 drawn sizes=12\.0 expected=/},
-    'R-H4': {'tall-top': /D1525 sixth work row bottom=[\d.]+ is below the window height=896/, 'one-column': /D1525 sixth work row bottom=[\d.]+ is below the window height=896/, 'scrolled': /D1152 scrollY=120, must be 0/},
-    'R-H5': {'title-wide': /D1525 home title width=[\d.]+ but list column width=/, 'title-shifted': /D1152 home title left=[\d.]+ but list column 2 left=/, 'work-title-narrow': /GC D1525 work title width=300, expected one third of/},
-    'R-H6': {'bust-short': /D1525 new reader bust bottom=[\d.]+ and search bottom=[\d.]+ differ by more than 2px/, 'list-gap': /D1152 new reader first division starts [\d.]+px under the bust bottom, expected 44±2/, 'returning-bust-short': /D1525 returning reader bust bottom=[\d.]+ and search bottom=[\d.]+ differ by more than 2px/},
-    'R-W4': {'ctas-high': /GC D1525 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'ctas-lifted': /Juv D1152 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'books-gap': /Mete D1525 books heading starts [\d.]+px under the foot line, expected 44±2/, 'ctas-dropped': /Mete D1525 \.b-ctas bottom=[\d.]+ but the lowest part ends at/, 'ctas-padded': /GC D1525 \.b-ctas bottom=[\d.]+ but the lowest part ends at/},
-    'R-W5': {'class-flip': /plate centre x=[\d.]+ is not in the (left|right) column/, 'plate-middle': /plate centre x=[\d.]+ is not in the (left|right) column/, 'crumb-indent': /crumb left=[\d.]+, content column left=/, 'plate-shifted': /plate centre x=[\d.]+ width=[\d.]+: not centred on the (left|right) column/},
+    'R-P4': {'no-plate': /\/ D1440\/light examined=0 plates shown, expected 1/, 'sepia': /\/ D1440\/dark filter=sepia\(0\.45\) brightness\(0\.76\) contrast\(1\.06\) picture filter=none/, 'light-in-dark': /\/EN\/ D1440\/dark plate src=.*\/plates\/desk\/EN\.jpg, expected \/plates\/dark\/desk\/EN\.webp/, 'eager-light': /\/Juv\/ P390\/dark fetched the other theme's plate: .*\/plates\/phone\/Juv\.jpg/, 'box-moved': /\/Mirab\/ D1152 dark plate box=.* differs from light box=/, 'toggle-stale': /\/EN\/ P390 toggled\/dark plate src=.*\/plates\/phone\/EN\.jpg, expected \/plates\/dark\/phone\/EN\.webp/},
+    'R-T1': {'golden-line': /Cat P390 poster lines=\["CAT","EGORIES"\] expected=\["CATEGORIES"\]/, 'drawn-size': /Cat P390 drawn sizes=12\.0 expected=/, 'no-cap': /Top P390 poster sizes=117 expected=64/, 'desktop-small': /Cat G1440 title font-size=30 outside 38–60/, 'desktop-lines': /Cat G1440 title is not natural: 2 fitted lines/},
+    'R-H4': {'tall-top': /D1152 new reader works list top=[\d.]+, round 9 draws 453±6/, 'returning-gap': /D1152 two saved reader works list top=[\d.]+, round 9 draws 361±6/, 'scrolled': /D1152 new reader scrollY=120, must be 0/},
+    'R-H5': {'title-wide': /D1525 home title width=[\d.]+ but list column width=/, 'title-shifted': /D1152 home title left=[\d.]+ but list column 2 left=/, 'work-title-narrow': /GC D1525 work title width=300, expected one third of/, 'work-title-moved': /Mete D1152 work title left=[\d.]+, expected column 1 at 72/},
+    'R-H6': {'bust-short': /D1525 new reader bust bottom=[\d.]+ and search bottom=[\d.]+ differ by more than 2px/, 'range-wrong': /D1152 new reader subject strip=.*980–1094/, 'dead-anchor': /D1152 new reader subject strip=.*"#division-VI",null/, 'strip-below': /D1525 new reader subject strip [\d.]+–[\d.]+ is not between the foot line/},
+    'R-W4': {'button-moved': /Cat D1152 Start reading top=[\d.]+, round 9 draws 253±4/, 'greek-red': /Mete D1440 Greek title color=rgb\(180, 36, 25\), expected --ink/, 'greek-apart': /Mirab D1525 Greek title at .* is not straight under the title/, 'mode-gap': /Juv D1152 reading line starts [\d.]+px under the buttons, round 9 draws 6/, 'contents-low': /EN D1152 contents top=[\d.]+, expected 516±6/, 'wrong-translator': /APr D1440 reading line="Greek and English · Owen", expected "Greek and English · Jenkinson"/},
+    'R-W5': {'plate-left': /plate centre x=[\d.]+ is not in column 3/, 'plate-middle': /plate centre x=[\d.]+ is not in column 3/, 'crumb-indent': /crumb left=[\d.]+, content column left=/, 'plate-shifted': /plate centre x=[\d.]+ width=[\d.]+: not centred on column 3/, 'caption': /D1525 plate caption: \[".+"\]/, 'caption-phone': /EN P390 plate caption: \[".+"\]/},
     'R-C3': {'red-title': /\/ light uses --red rgb\(226, 56, 46\): h1\.b-po-t color/, 'red-border': /\/GC\/ light uses --red rgb\(226, 56, 46\): .*border-bottom-color/, 'red-dark': /\/Mete\/ dark uses --red rgb\(255, 90, 77\): .*color/, 'faded-title': /\/MA\/ title opacity=0\.82, expected 1/},
     'R-H7': {'old-heading': /a division head reads "Dubious and spurious works"/, 'duplicate': /data-work listed twice: Cat/, 'tag-lost': /tags=15, expected 16/, 'prob-moved': /Minor works \(Opuscula\) holds Prob,Col,/, 'isa': /(the Isagoge is on the home list|list differs from spec)/},
     'R-H8': {'wraps': /D1525 Greek line is drawn on [2-9] lines/, 'wrong-red': /D1152 Greek line color=rgb\(226, 56, 46\), expected --red-ink/, 'short': /D961 Greek line text width=[\d.]+ but its column is/},
 };
 Object.assign(stageTwoProofs, d26Proofs);
+Object.assign(stageTwoProofs, r9Proofs);
 const homeTitleProofs = {
     'desktop-size': /D1525 home line 1 size=\d+ expected=82\.5 ±1px|D1525 home line 1 drawn size=60 expected=82\.5/,
-    'golden-line': /P390 home lines=/,
+    'golden-line': /P390 home lines=\["THE COMPLETE","WORKS OF","ARISTOTLE"\] expected=\["THE","COMPLETE","WORKS OF","ARISTOTLE"\]/,
     'resize-observer': /S844 → S960 fitter did not re-fit/,
 };
 const sidewaysProofs = {
@@ -2662,6 +3127,7 @@ const assetProofs = {'no-css': /R-C2 missing built assets: CSS files=0 JS files=
 const stageThreeProofs = {
     'R-C2': assetProofs,
     ...stageTwoProofs,
+    'R-F2': {...stageTwoProofs['R-F2'], 'reader-line': /dark \/EN\/book\/1 --line=#45433f expected #2d2c29/},
     'R-C1': {'aux-css': /404\.html B CSS sentinel missing:/, 'home': /home title color=rgb\(0, 0, 0\)/, 'reader': /reader \.b-rh height=/},
     'R-A1': {'reading-button': /D1440 BUTTON Gate reading button /, 'chapter-fn': /D1440 footnote mark \d+ misses its 40px hit area/, 'late-fn': /D1440 footnote mark \d+ misses its 40px hit area/, 'theme-toggle': /D1440 BUTTON.*34×34/, 'fn-hit': /\/EN\/book\/1 D1440 footnote mark \d+ misses its 40px hit area/},
     'R-A2': {'search': /focus missing .*b-search|focus missing .*name="q"/, 'reader-token': /focus missing <span class="tok/, 'panel-ring': /D1440 word panel opened by keyboard: no focus ring/, 'help-ring': /D1440 Help opened by keyboard: no focus ring/},

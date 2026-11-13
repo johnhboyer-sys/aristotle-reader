@@ -267,17 +267,26 @@
   },
   "Juv": {
     "place": "right",
-    "ink": [32, 138, 1280, 787],
-    "alt": "Two front views of the lungs with the larynx and ringed windpipe above, the left with the heart's place between the lobes, the right with the lobes drawn aside from a central sac.",
-    "who": "Bartolomeo Eustachi (author); the holder names no engraver",
-    "what": "Tab. XV, six figures of the lungs with the larynx and trachea (figures I and IV used), in Tabulae anatomicae",
-    "when": "Rome, Francesco Gonzaga, 1714",
-    "how": "Printed figure (the holder does not name the process)",
-    "where": "Wellcome Library, via the Internet Archive",
-    "lic": "Public Domain Mark (the Internet Archive record states: 'available under the Creative Commons, Public Domain Mark')",
-    "url": "https://archive.org/details/b3045279x/page/n113",
-    "credit": null,
-    "creditChecked": "2026-11-08"
+    "ink": [178, 100, 1101, 814],
+    "alt": "A whole heart with its great vessels and coronary arteries at left; the lungs with the larynx and ringed windpipe at right.",
+    "who": "Thomas Milton (engraver), heart; Bartolomeo Eustachi (author), lungs, the holder names no engraver",
+    "what": "Composite of two prints: Human heart, Anatomy, Viscera, Plate IV, fig. 1 (Milton); Tab. XV, fig. I, lungs with larynx and trachea, in Tabulae anatomicae (Eustachi)",
+    "when": "London, 1 August 1814 (heart); Rome, Francesco Gonzaga, 1714 (lungs)",
+    "how": "Engraving (heart); printed figure, process not named by the holder (lungs)",
+    "where": "Wellcome Collection (heart); Wellcome Library, via the Internet Archive (lungs)",
+    "lic": "Public Domain Mark (both)",
+    "url": [
+      {
+        "part": "heart",
+        "href": "https://wellcomecollection.org/works/cr44ptdy"
+      },
+      {
+        "part": "lungs",
+        "href": "https://archive.org/details/b3045279x/page/n113"
+      }
+    ],
+    "credit": "Human heart: four figures. Engraving by T. Milton, 1814. Wellcome Collection. Public Domain Mark. Source: Wellcome Collection.",
+    "creditChecked": "2026-11-12"
   },
   "HA": {
     "place": "right",
