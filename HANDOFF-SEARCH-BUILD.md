@@ -61,7 +61,8 @@ mock-up. Rewrite this file (don't append) when you hand off.
   - **Known cost of (b) on the phone:** at 390px upright, Accents and Lemma wrap, so (b) takes two rows. A drawing of
     one-row options (upright 390 and 360, sideways) is in `…/scratchpad/rounds/B1/`, for John.
   - **H3 on the phone, upright and sideways** (John, 17:21: "phone (both) H3"): "Greek" and "English" labels above
-    the fields, Keyboard and Beta Code beside the Greek label.
+    the fields, Keyboard and Beta Code beside the Greek label. His reason: he likes H2 better on the empty page and
+    Greek only, "it's not working for both mode".
   - **Still open for John:** the count on a Both search (it adds Greek and English word hits, `hitCount` in
     search-pages.ts); what Lemma does beyond "any form"; two lines per term in the upright editor; naming
     "Keep hits that cross a chapter" in the folded line; paradigm rows shut.
