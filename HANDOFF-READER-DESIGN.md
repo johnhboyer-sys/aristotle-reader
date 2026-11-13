@@ -8,17 +8,20 @@ session `aristotle-reader-62`: report to it, and it pings John for decisions. Jo
 "the look of the plato reader's reader pages is very easy on the eyes. aristotle reader pages? i'm not so sure it's
 cut out for long sessions." Then: hill-climb the reader page.
 
-## State at 17:25, 13 Nov
+## State at 17:28, 13 Nov (wrapped for a restart)
 
-Flip page: https://claude.ai/artifact/6b1rJ55cg3ntyP4Fsy44rY (Round 1 and Round 2 tabs; Desktop, Phone, Sideways;
-Light, Dark; each option flips against its round's start, Now, and Plato). Source, shooters, shots, and reviews:
-`.redesign-shots/notes/reader/r1/` (`index.html`, `shoot-r1.mjs`, `shoot-r2.mjs`, `img/` = round 1, `img2/` =
-round 2, `probe2.mjs` + `probe2.json` = the measurements, `review-brief.md`, `opus-review-r1.md`,
-`codex-review-r1.md`, `align.mjs`, `shoot-r3p.mjs`, `img3/` = round 3). Everything from the session's scratchpad,
-including raw shots and the probe output, is copied to `.redesign-shots/notes/reader/work/`. Options are CSS injected into the built page (`app/dist` on 127.0.0.1:4331) before the
-reader measures; no app code is touched. Every shot is Ethics I at 1094b1, Both view.
+Flip page: https://claude.ai/artifact/6b1rJ55cg3ntyP4Fsy44rY. Tabs: Round 1, Round 2, Round 3 · phone; Desktop,
+Phone, Sideways; Light, Dark. Each option flips against its round's start, Now (this branch), Live
+(aristotle.johnhboyer.com), and Plato; letters are fixed per round. Source in `.redesign-shots/notes/reader/r1/`:
+`index.html`; shooters `shoot-r1.mjs`, `shoot-r2.mjs`, `shoot-r3p.mjs`; shots `img/` (round 1), `img2/` (round 2),
+`img3/` (round 3); `probe2.mjs` + `probe2.json` (the measurements); `align.mjs` (phone-parallel alignment check);
+`review-brief.md`, `opus-review-r1.md`, `codex-review-r1.md`. All scratch work (raw shots, probes, contact sheets) is
+in `.redesign-shots/notes/reader/work/`. Shooters inject CSS into the built page (`app/dist` served on 127.0.0.1:4331,
+a server this track did not start) before the reader measures; no app code is touched. Every shot is Ethics I at
+1094b1, Both view. Run a shooter as `node <shooter> <outdir> [option ...]` from any directory; it resolves
+Playwright from `app/`.
 
-Rounds 1–3 are on the page; round 3 (phone parallel, with and without wrap as a unit) waits for John's look.
+Round 3 (phone parallel: start, wrap as a unit; the larger-Gentium entries are marked out) waits for John's look.
 
 ### What the measurements found (probe2.json)
 
@@ -62,18 +65,24 @@ Gentium's smaller apparent size at the same px; hence round 2's "Gentium larger"
 the sideways bar (57 of 390px). Codex's "missing line numbers" finding came from my brief's wording (the site numbers
 every fifth line); set aside. The Opus review is in-family (I built the mocks on Opus); Codex is the cross-family read.
 
-### Round 2 (start = Gentium both + quiet bar with underlined chosen view)
+### Rounds 2 and 3
 
-Options: Gentium larger · wrap as a unit · narrow margins · whole lines (510px; 562px with Gentium larger) · less
-glare · phone English in ink · shorter sideways bar (44px) · All of these · All, Gentium larger.
+Round 2 (start = Gentium both + quiet bar with underlined chosen view): Gentium larger (out) · wrap as a unit (kept
+sideways) · narrow margins (kept) · whole lines · less glare (kept, sitewide) · phone English in ink · shorter
+sideways bar · two combinations. Round 3 (phone only): parallel Both at Gentium 18px, quiet bar, English in ink with
+its Bekker numbers in the right margin, column label in the left margin; option: wrap as a unit.
 
 ## Next
 
-1. John's verdicts on round 2 (comments on the page or in chat). Then round 3 from what he keeps, and one Opus and
-   one Codex review of it.
-2. Gentium's line-number baseline: the `.b-ln` offset formula uses Literata metrics (.4345); check numbers against
+1. John's look at round 3: does wrap as a unit stay on the upright phone in parallel?
+2. Still unruled from round 2: whole lines on desktop (Greek 510px; English narrows), phone English in ink (moot if
+   parallel puts both in ink, as round 3 does), shorter sideways bar (44px). Ask, or show them again combined.
+3. Round 4: everything kept, combined, on all screens; then one Opus and one Codex review of it (fresh agents,
+   findings only; brief pattern in `review-brief.md`; say the site numbers every fifth line).
+4. Show the sitewide less-glare colours on home, work, search, and lexicon pages before any build.
+5. Gentium's line-number baseline: the `.b-ln` offset formula uses Literata metrics (.4345); check numbers against
    Gentium baselines before any build.
-3. Not yet shown: chapter openings, footnote markers, Greek-only and English-only views, and the book head (BOOK I).
+6. Not yet shown: chapter openings, footnote markers, Greek-only and English-only views, and the book head (BOOK I).
 
 ## Standing rules
 
