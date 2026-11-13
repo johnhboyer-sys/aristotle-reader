@@ -1,115 +1,61 @@
 # HANDOFF: redesign build (direction B)
 
-Rewritten 12 Nov 2026, 13:45. Rewrite this file (don't append) when you hand
+Section 0 rewritten 13 Nov 2026, 17:30. Rewrite this file (don't append) when you hand
 off. The version before this one (11 Nov, with the search mock-up history
 stacked on it) is kept at
 `.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-12.md`.
 
-## 0. For John, morning of 13 Nov (coordinator's list; filled in overnight)
+## 0. State at 17:30, 13 Nov (coordinator, session aristotle-reader-62)
 
-**Where it stands.** Both tracks are built, committed, and merged on this
-branch. Not pushed. Three commits tonight:
-- `f5f3b4a07f`: round 9, home and work pages, dark plates, and review fixes.
-- `f638f9fb79`: the reader fixes from your 12 Nov notes: fonts, weight 300,
-  line numbers, footnotes, and red.
-- `5d79e12b36`: the search build, merged cleanly.
+**Build on hold** (John, 14:40) while the search page is redesigned as one page.
+The merged tree was fully green before the hold (`6fefc4f536`: app 130, shared
+1867, scripts 99, svelte-check 0, stage6 pytest 41, build:public 0 broken,
+deploy:dry ok, check-redesign 64/0, search-shots 0 failed, 14 counts unchanged;
+logs `.redesign-shots/notes/d26/final7/`). Not pushed. Push, PR, merge, and
+deploy each need John's yes.
 
-Final checks on the merged tree are green:
-- tests: app 130, shared 1782, scripts 99; svelte-check 0 errors;
-- build:public with 0 broken links; deploy:dry ok;
-- search's 140 screenshots pass, and all 14 hit counts match.
+**Search (search session, `HANDOFF-SEARCH-BUILD.md` in the search-build
+worktree, committed `f7e3355c1a` and after).** Full mock-up done, four review
+rounds (Opus, Codex, Opus, Codex): https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X;
+files in search-build `.redesign-shots/notes/search-mock-13nov/`. Ruled today:
+- D6 base (Greek and English side by side on desktop, stacked on the phone); no
+  Greek/English/Both switch (the fields with text decide); options show under a
+  field once it has text; "In all works | authentic works | choose works" as
+  words on the Proximity/Search row.
+- Field options: (a) words on desktop (1152, 961); (b) menus on the phone,
+  upright and sideways (17:08).
+- Phone: H3, labels above, Keyboard and Beta Code beside the Greek label (17:21).
+- Phone one-row options: B1 option 3, Accents and Lemma drawn as words, one tap
+  each (https://claude.ai/artifact/1cC7rocRSVenhgnwiT5s31). Only 2px spare at 360:
+  the build tests it or lets it wrap.
+- F 4b with Search on the footer row; G-3 with switches; no "Not searched yet".
+Open for John: count on a Both search (word hits or passages); Lemma vs "any
+form"; two lines per proximity term upright; name "Keep hits that cross a
+chapter" in the folded line; Group by rows shut; 44px phone keys; sideways fold
+after Search (all four reviewers back the last two).
 
-8 old gates were written for the old search page and timed out on the new
-one. An Opus agent ported them; the full run is now 60 pass, 4 fail. The 4
-are real faults in the new search page:
-- tap targets under 40px: hit refs, menu radio rows, works picker, and
-  proximity editor;
-- no focus ring on the Greek box;
-- dimmed Match and Form labels at 3.7:1 contrast.
+**Reader design (new track, `HANDOFF-READER-DESIGN.md`, committed `3f1b1e9409`).**
+Round 2 waits for John: https://claude.ai/artifact/6b1rJ55cg3ntyP4Fsy44rY.
+Ruled: every Bekker line stays a line; no stacked layout; quiet bar; Gentium
+Book Plus for Greek and English.
 
-The search session fixed all three (`ead5584589`, merged as `53535ede1c`).
-Full run after the merge: 63 pass, 1 fail. The one failure is R-S1, the
-English ref format below; it clears once you rule. Logs:
-`.redesign-shots/notes/d26/final6/searchport/` (`check-redesign-full2.log`).
+**Plato (queued with the Plato search port, after this build):** phone default
+view → Both (John 16:56). The stacked full-size phone layout is not ruled.
 
-**English search refs, ruled (John, 13 Nov 11:39, in the search session):**
-"for now the column. once every work is properly aligned, the line." English
-hits cite the column ("1095b"); their links still go to the line;
-chapter-section works keep "49.3". **Proximity editor, ruled (John, 13 Nov
-11:38, comment on the sheet):** after a search it collapses to its one-line
-summary. The search session is building both; one tip comes back for merge.
+**Alignment: parked by John (17:24).** Branches `claude/int-edghill-realign-2`
+and `claude/sens-reverify` (not pushed), each with `review/README.md` listing
+the three fixes awaiting John and the candidate track. API runs use John's `ant`
+sign-in with `env -u ANTHROPIC_API_KEY` while the dead key is in ~/.zshenv.
+Spent today: $1.15.
 
-After the search fixes, and a green run, the next step is your yes to push
-and open the PR (not merge, not deploy).
+**Rounds page** (all earlier rounds): https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV.
+Sources of my pages: `.redesign-shots/notes/coordinator-13nov/`.
+`.redesign-shots/` and the root `node_modules/` are now in `.git/info/exclude`.
+The version of this file before today's rewrite:
+`.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-13.md`.
 
-**Latest (13 Nov 14:13):** search tip `153603d79a` merged as `6fefc4f536`
-(column refs, proximity collapse, Accents→Form, translator switch, keyboard
-C2-b, Group by with lemma on readings). Full checks on the merged tree all
-green: app 130, shared 1867, scripts 99, svelte-check 0, stage6 pytest 41,
-build:public 0 broken, deploy:dry ok, check-redesign 64/0, search-shots 0
-failed, 14 counts unchanged. Logs `.redesign-shots/notes/d26/final7/`. Rounds
-page: https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV. **John 14:40: build ON HOLD for a
-full mock-up.** Ruled: G-3 + switches; F 4b with Search on the footer row and
-no "Not searched yet" line; single search page (no Greek/English/Both switch:
-the fields with text decide; options show only under a field with text; D2
-lines, D7 and/or; In moves out of the form); H2 vs H3 open, so the mock-up has
-both. The search session builds the mock-up and hill-climbs it (Opus UX review
-and Codex code review, alternating, up to 4 rounds); reviewers answer whether
-the single page is good UX. Still open: Group by rows shut (mocked shut), data
-size, facets lemma-only.
-
-**Search screenshot sheet** (build beside round 34, light and dark):
-https://claude.ai/artifact/3CZPdw9xaQbTnBeNEgFtJQ
-
-**Reader: still open** (your "hill climbing" track, later; not this PR):
-- design rounds: one review page of every reader state, a note box under
-  each;
-- the phone line-number offset is an empirical correction with no known
-  cause. It holds within 1px across the 3×3 text-size × spacing matrix (gate
-  R-R15).
-
-**Search rulings 1–5: ruled (John, 13 Nov 11:54: "yes" to the
-recommendations).** 1 A (Accents on sets Form to "only as I typed it"); 2
-yes; 3 Greek first; 4 replaced: build the translator switch on Greek-only
-hits (Both view's names switch, the work's order, reference first); 5 keep
-the new wildcard rules. Also ruled on the sheet: proximity editor collapses
-after Search; form groups keyed with all accents stripped, breathing and
-subscript kept, one spelling shown; word card option a; all uncommented shots
-approved. **Group by (John, 12:04, this PR):** By form for one word or an
-exact phrase / running text with lemma off (a phrase keyed on its whole
-spelling); By grammar for lemma searches (one headword, or several with
-"any"), shaped as round B option 2, headword over its paradigm; otherwise By
-work only. Needs the lemma kept on each reading (stage6 `signature()`), which
-also fixes the noun facets; corpus rebuild after the merge. Open rounds
-(pictures; keyboard ruled 12:15: C2-b, dotted-ring faces in a row above the
-letters, no pair keys, all screens):
-(https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV), D Both view compact (exploring D5/D6: John's two-column layout), F proximity
-editor = option 4 (John 12:19; footer controls on one row), waiting on G
-(grammar chips without boxes).
-
-The questions as they were put:
-1. **Accents vs Form.** With Accents on, ἀρετή finds only that spelling (78
-   hits) but Form still reads "any form". A (recommended): Accents on sets
-   Form to "only as I typed". B: keep every form, respect accents within each.
-2. **Phone Filter sheet.** Ruled tonight pending your yes: "This search" lists
-   filters only, matching the Filter badge; display settings show by the red
-   dot on View; Clear all clears filters only.
-3. **/advanced guide order.** Typing Greek (Beta Code) first, ahead of
-   Wildcards (the drawing put Wildcards first). Recommend keeping Greek first.
-4. **Greek-only hits: translator names.** No names switch there (one English,
-   with its translator's name). Recommend leaving it out of this build.
-5. **Old search links under the new wildcard rules** (Plato's syntax now): a
-   few old links open a different search (`g=λόγος.` used to drop the full
-   stop, now it is a wildcard; `g=*λόγος` used to reject ἀνάλογος, now finds
-   it). Recommend keeping the new rules (documented in the guide, links rare,
-   a leading * was meant as a wildcard); the alternative is a compatibility
-   rule for old links. PR notes list it as a known change.
-To look at, not rule: phone and sideways departures from round 34 (sheets have
-Done only over a darker veil; under Both the options sit in one column;
-sideways under 760px takes two rows; the Forms sheet's button reads "Show N
-instances" not "Apply"). All are in the screenshot sheet above.
-Later tracks: "Group by grammar" groups by spelling (needs per-word grammar
-data); an opened section's English can start a clause early (alignment).
+**Still to raise:** the Codex review of the coordinator's gate changes
+(ef3e1911ea, 09ff5e6728, 49715e6876); at deploy, the Daily Nous pitch.
 
 
 Branch `claude/redesign-build`, this worktree
