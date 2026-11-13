@@ -51,8 +51,8 @@ mock-up. Rewrite this file (don't append) when you hand off.
     declined word, mood → verb, marker → the rest. The mood decides a verb's menus.
 
   The full mock-up is published at https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X. Source:
-  `/private/tmp/claude-501/-Users-johnboyer-Developer-aristotle-reader/fd0fa02b-3cff-421e-a7cc-90c9514c6193/scratchpad/mock/`
-  (notes.md has every choice and measure). The four review rounds and their log are in `…/scratchpad/mock-review/`.
+  `.redesign-shots/notes/search-mock-13nov/mock/`
+  (notes.md has every choice and measure). The four review rounds and their log are in `.redesign-shots/notes/search-mock-13nov/mock-review/`.
   - **Reviews:** Opus and Codex alternating. All four chose H3 and (a) words, and said adopt the 44px keyboard and the
     sideways fold after Search.
   - **John ruled (17:07, final 17:08): options (b), the menus, on the PHONE, upright and sideways; (a), the words,
@@ -61,13 +61,23 @@ mock-up. Rewrite this file (don't append) when you hand off.
   - **One row on the phone: B1 option 3, "switches as words"** (John, 17:23). Match ▾ and Form ▾ stay menus;
     Accents and Lemma lose the switch track and become words: off is mid on a hairline, on is ink with the red
     underline (one tap each, as ruling 5). Gaps 20px, 12px below 380px. Pictures and measures:
-    `/private/tmp/claude-501/-Users-johnboyer-Developer-aristotle-reader/fd0fa02b-3cff-421e-a7cc-90c9514c6193/scratchpad/rounds/B1/`
+    `.redesign-shots/notes/search-mock-13nov/rounds/B1/`
     (index.html, notes.md, shoot.mjs). It fits on one row at 390, 360 and sideways, but at 360 with the longest
     values it has only 2px to spare (322 of 324). The build's 360 test must hold that, or let the row wrap rather
     than clip.
   - **H3 on the phone, upright and sideways** (John, 17:21: "phone (both) H3"): "Greek" and "English" labels above
     the fields, Keyboard and Beta Code beside the Greek label. His reason: he likes H2 better on the empty page and
     Greek only, "it's not working for both mode".
+  - **Where it all is** (copied from the session scratchpad on 13 Nov, 17:25, on John's "commit whatever so it
+    doesn't get lost"): `.redesign-shots/notes/search-mock-13nov/` in this worktree, on disk and untracked. NEVER
+    git-add `.redesign-shots` (183 MB of shots; it is not in any ignore file). It holds:
+    - `mock/`: the flip page, shots, measures and scripts.
+    - `mock-r0` to `mock-r2`: snapshots of each round.
+    - `mock-review/`: LOG.md, R1 to R4, and the fix lists.
+    - `rounds/`: B through H, plus D6–D8 and B1.
+    - `briefs/`, `reports/` (Codex verifies R11–R14c), `r2-failcase/` and `r3-failcase/`.
+
+    Three shoot scripts still name the old scratchpad path, so fix that before rerunning them.
   - **Still open for John:** the count on a Both search (it adds Greek and English word hits, `hitCount` in
     search-pages.ts); what Lemma does beyond "any form"; two lines per term in the upright editor; naming
     "Keep hits that cross a chapter" in the folded line; paradigm rows shut.
