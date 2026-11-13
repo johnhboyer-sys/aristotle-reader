@@ -67,8 +67,9 @@ work only. Needs the lemma kept on each reading (stage6 `signature()`), which
 also fixes the noun facets; corpus rebuild after the merge. Open rounds
 (pictures; keyboard ruled 12:15: C2-b, dotted-ring faces in a row above the
 letters, no pair keys, all screens):
-(https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV), D Both view compact, F
-proximity editor compact.
+(https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV), D Both view compact (exploring D5/D6: John's two-column layout), F proximity
+editor = option 4 (John 12:19; footer controls on one row), waiting on G
+(grammar chips without boxes).
 
 The questions as they were put:
 1. **Accents vs Form.** With Accents on, ἀρετή finds only that spelling (78
