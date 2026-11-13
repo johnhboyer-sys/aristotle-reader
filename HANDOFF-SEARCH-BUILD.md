@@ -29,6 +29,10 @@ Rewritten 13 Nov 2026, 17:30, before a restart. Rewrite this file (don't append)
 - **Since the merge, this branch has only handoff commits** (no source changes).
 
 ### The new form design, ruled 13 Nov afternoon. BUILD ON HOLD until John says go
+**Where §§4–8 below (the 12 Nov spec, drawn from round 34) conflict with this section, this section wins.** The
+form parts are superseded: §5.1 (the desktop form and its language switch), §5.4 (Accents and Lemma as switches
+become words on the phone; tools placement), §5.5 (the proximity editor, now F 4b with G-3) and §5.7 (the phone
+form, now H3). The rendered target for those parts is the 13 Nov mock-up, not the round-34 shots.
 - **Base:** D6. Greek and English side by side on desktop, stacked on the phone, with and/or between them.
 - **No Greek | English | Both switch** (D8). The fields that hold text decide the search. A field's options show only
   once it has text, as one compact row.
@@ -565,11 +569,10 @@ The design needs these; the mock-up only drew them.
 
 ## 8. After the build: John's open questions (tweaks, not blockers)
 
-1. One Search or two while the proximity editor is open (Opus wants the top
-   one kept beside Proximity).
-2. Phone: Keyboard and Beta Code stay on the field's line with the query
-   scrolling, or drop under it for a long query (today: drop; I lean to that,
-   for the reader who needs to see the whole query).
+1. ~~One Search or two while the proximity editor is open~~ — settled 13 Nov by F 4b: Search on the editor's
+   foot row.
+2. ~~Phone: Keyboard and Beta Code on the field's line or under it~~ — settled 13 Nov by H3: beside the "Greek"
+   label above the field.
 3. The View sheet's Close and Done: choices apply at once, so the labels
    might say so.
 4. Short descriptions in the phone sheets, against "no explainer text".
