@@ -21,7 +21,7 @@ a server this track did not start) before the reader measures; no app code is to
 1094b1, Both view. Run a shooter as `node <shooter> <outdir> [option ...]` from any directory; it resolves
 Playwright from `app/`.
 
-Round 3 (phone parallel: start, wrap as a unit; the larger-Gentium entries are marked out) waits for John's look.
+Round 3 is ruled: phone parallel with wrap as a unit.
 
 ### What the measurements found (probe2.json)
 
@@ -39,8 +39,8 @@ red, and motion are not the difference.
 - Literata 400: "too heavy." (Thread left open: the auto-reply offered a 350.)
 - Quiet bar: "I like this." The tinted chosen view was near invisible in dark (both reviewers); round 2 underlines it.
 - Plato's fonts: "nice to read", "for both" → Gentium Book Plus 400 for Greek and English.
-- Wrap as a unit: "oh that is nicer"; then kept for sideways ("b for sideways phone? yes"), on hold for the upright
-  phone until he sees it in parallel (round 3).
+- Wrap as a unit: kept on every screen ("oh that is nicer"; "b for sideways phone? yes"; after seeing round 3's phone
+  parallel, 17:27: "sure, wrap as a unit").
 - Phone Both is PARALLEL ONLY (17:11, caps): "NO STACKED ON PHONE. PARALLEL ONLY." The built B stacks each passage on
   a phone; that goes. Round 3 (phone) shows parallel at 18 and 20px, with and without wrap as a unit.
 - English keeps its Bekker numbers on the phone ("you better fucking believe they do"). In phone parallel the
@@ -74,7 +74,7 @@ its Bekker numbers in the right margin, column label in the left margin; option:
 
 ## Next
 
-1. John's look at round 3: does wrap as a unit stay on the upright phone in parallel?
+1. Update the flip page: mark round 3's wrap as a unit kept (the page still shows it unmarked).
 2. Still unruled from round 2: whole lines on desktop (Greek 510px; English narrows), phone English in ink (moot if
    parallel puts both in ink, as round 3 does), shorter sideways bar (44px). Ask, or show them again combined.
 3. Round 4: everything kept, combined, on all screens; then one Opus and one Codex review of it (fresh agents,
