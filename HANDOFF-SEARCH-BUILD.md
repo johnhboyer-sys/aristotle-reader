@@ -42,6 +42,36 @@ mock-up. Rewrite this file (don't append) when you hand off.
   G-3 one menu per category + switches recommended); H (phone query width: H2
   tools under the rule recommended); Group by: rows open or shut, the data size
   (grammar-dict EN gz 7.7 → 87 KB), facets lemma-only. Track A relays rulings.
+- **13 Nov afternoon: the page re-mocked; BUILD ON HOLD until John rules on it.** John chose D6 (Greek and
+  English side by side on desktop, stacked on the phone) and D8: no Greek | English | Both switch; the filled
+  fields decide the search; a field's options show only once it has text, as one compact row. Other choices:
+  - "In all works | authentic works | choose works…" as words on the Proximity/Search row.
+  - F 4b: Search on the editor's foot row, no "Not searched yet".
+  - G-3 with switches: one menu per grammar category, word class first. The class is derived from the data: case →
+    declined word, mood → verb, marker → the rest. The mood decides a verb's menus.
+
+  The full mock-up is published at https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X. Source:
+  `/private/tmp/claude-501/-Users-johnboyer-Developer-aristotle-reader/fd0fa02b-3cff-421e-a7cc-90c9514c6193/scratchpad/mock/`
+  (notes.md has every choice and measure). The four review rounds and their log are in `…/scratchpad/mock-review/`.
+  - **Reviews:** Opus and Codex alternating. All four chose H3 and (a) words, and said adopt the 44px keyboard and the
+    sideways fold after Search.
+  - **John ruled (17:07): options (b), the menus, in every state that shows them** (Greek typed, English typed,
+    grouped by grammar, keyboard). This overrides the reviewers' (a).
+  - **Known cost of (b):** at 961 and on phones, Accents and Lemma wrap, so (b) takes two rows.
+  - **H2 vs H3:** not yet ruled; H3 recommended.
+  - **Still open for John:** the count on a Both search (it adds Greek and English word hits, `hitCount` in
+    search-pages.ts); what Lemma does beyond "any form"; two lines per term in the upright editor; naming
+    "Keep hits that cross a chapter" in the folded line; paradigm rows shut.
+  - **For the build:**
+    - `lang` becomes derived. The switch, `setLang` and `LANGS` go. Keyboard and Beta Code stop keying off
+      `lang !== 'english'`.
+    - R-S1's language loop must be rewritten (Track A's gate).
+    - Dark `--go` has no dark value: two reds.
+    - Controls under the sideways key sheet stay focusable.
+    - Segment words should be radio groups (one tab stop).
+    - The chapter-starts NOTE before results breaks the no-explainer rule.
+    - At 360px the count runs into Save.
+    - The measuring gaps R4 lists, for whoever ports these checks into a gate.
 - **Follow-ups (not blockers):** the Forms rail needs an accents stream for
   Aristotle (pipeline), then its tick boxes split by case; until then ἀρετή and
   ἀρετῇ are two groups in the results but one row (αρετη) in the rail. Also:
