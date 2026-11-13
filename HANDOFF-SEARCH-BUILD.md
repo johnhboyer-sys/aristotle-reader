@@ -3,6 +3,27 @@
 Written 12 Nov 2026, 13:20, at the end of the session that refined the search
 mock-up. Rewrite this file (don't append) when you hand off.
 
+## 0. State (12 Nov 18:40)
+
+- Worktree `.claude/worktrees/search-build`, branch `claude/search-build` from
+  73007670f2. Unpushed. It has its OWN corpus copy in `build/` (cloned from
+  redesign-build 12 Nov 16:54) — never relink it; build the site with
+  `PUBLIC_SHOW_PRIVATE=0 npx astro build`, since `npm run build`'s prebuild
+  rewrites `public/data`.
+- **S1 committed** 86693cb7ad (engine adopted; 1,530 shared tests, 114 app;
+  hit totals equal the throwaway port on 8 queries; `app/scripts/search-counts.mjs`).
+  **S1b committed** 1a9d5188cf (running text; 4,142 pipeline tests; 47 works,
+  995,731 tokens aligned). Reviews: two Opus passes on S1, one on S1b; summaries
+  and Codex reports in the session scratchpad (lost on reboot; the commit
+  messages carry the substance).
+- **Next, when Codex's five-hour window allows:** the Greek-hit citation fix
+  (brief: a Greek hit cites its own line, not its tick span's first line —
+  1095b29 shows 1095b25), then S2. The running.json files in `build/dist` came
+  from a one-off backfill (not committed); `npm run build:public` regenerates
+  them through stage 6.
+- Desktop app now mounts the new Search (its byte-pin test was retired): PR
+  follow-up, per memory `desktop-parity-low-priority`.
+
 ## 1. What this track is
 
 Build the redesigned search page into the site: the Svelte component, its
@@ -144,6 +165,27 @@ mock-ups" and "Round 7"), the artifact comments, and 12 Nov:
     button**.
 14. Design is collaborative except where John says NOT THIS or MUST HAVE
     THIS (memory `design-calls-are-suggestions`).
+15. **Running text is in** (12 Nov 16:53): port Plato's running-text search
+    whole, pipeline included (done as S1b).
+16. **No gloss line above the results** (12 Nov 17:53): the old page's
+    "word: meaning · Lexicon" line stays out; the word panel covers it.
+17. **Page breaks: the chapter rule stays, with chapter name lines**
+    (12 Nov 18:02, option A on the decision page
+    https://claude.ai/artifact/CEmX4yFRkqPk45sBUfme3U): a page never splits a
+    chapter; each chapter's hits get a name line ("Chapter 13" plus its title
+    where the corpus has one), so a page that ends short ends at a chapter.
+    S4.
+18. **Translator names under the English** (12 Nov 18:36, John's idea, from the
+    Lyceum Presocratics reader's `seg-trans-toggle`): a passage several
+    translations hit is ONE instance, Greek once, ONE English shown; under it the
+    names of the translators with hits ("Rackham · Ross · Ostwald · Peters"),
+    the label's small capitals, chosen one bold and underlined, others `--mid`;
+    clicking a name shows that translation with its hits. No buttons drawn. A
+    single translator's name sits in the same place. Names set close under the
+    English, more room before the next passage. Phone: full label size and a
+    44px tap area. First shown: the Translations rail's order. S4. (Opus also
+    suggested the same names for a Greek hit's English, all translations of the
+    passage; not yet ruled.)
 
 Standing rules from memory: **never shrink type or tap targets** (one reader is
 vision-impaired and reads on a phone held sideways); **no explainer text in
