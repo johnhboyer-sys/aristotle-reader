@@ -52,7 +52,18 @@ https://claude.ai/artifact/3CZPdw9xaQbTnBeNEgFtJQ
   cause. It holds within 1px across the 3×3 text-size × spacing matrix (gate
   R-R15).
 
-Search (Track B) rulings, each with the search session's recommendation:
+**Search rulings 1–5: ruled (John, 13 Nov 11:54: "yes" to the
+recommendations).** 1 A (Accents on sets Form to "only as I typed it"); 2
+yes; 3 Greek first; 4 replaced: build the translator switch on Greek-only
+hits (Both view's names switch, the work's order, reference first); 5 keep
+the new wildcard rules. Also ruled on the sheet: proximity editor collapses
+after Search; form groups keyed with all accents stripped, breathing and
+subscript kept, one spelling shown; word card option a; all uncommented shots
+approved. Open rounds (pictures): B grammar heading, C keyboard marks
+(https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV), D Both view compact, F
+proximity editor compact.
+
+The questions as they were put:
 1. **Accents vs Form.** With Accents on, ἀρετή finds only that spelling (78
    hits) but Form still reads "any form". A (recommended): Accents on sets
    Form to "only as I typed". B: keep every form, respect accents within each.
