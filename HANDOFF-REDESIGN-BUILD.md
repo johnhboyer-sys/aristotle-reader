@@ -48,9 +48,15 @@ C2-b, Group by with lemma on readings). Full checks on the merged tree all
 green: app 130, shared 1867, scripts 99, svelte-check 0, stage6 pytest 41,
 build:public 0 broken, deploy:dry ok, check-redesign 64/0, search-shots 0
 failed, 14 counts unchanged. Logs `.redesign-shots/notes/d26/final7/`. Rounds
-page: https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV. Waiting on John: D
-(D5b / D6), G (grammar menu), H (phone query width), Group by (rows shut,
-data size, facets lemma-only).
+page: https://claude.ai/artifact/RDf6KuWG6TDtKsBedphspV. **John 14:40: build ON HOLD for a
+full mock-up.** Ruled: G-3 + switches; F 4b with Search on the footer row and
+no "Not searched yet" line; single search page (no Greek/English/Both switch:
+the fields with text decide; options show only under a field with text; D2
+lines, D7 and/or; In moves out of the form); H2 vs H3 open, so the mock-up has
+both. The search session builds the mock-up and hill-climbs it (Opus UX review
+and Codex code review, alternating, up to 4 rounds); reviewers answer whether
+the single page is good UX. Still open: Group by rows shut (mocked shut), data
+size, facets lemma-only.
 
 **Search screenshot sheet** (build beside round 34, light and dark):
 https://claude.ai/artifact/3CZPdw9xaQbTnBeNEgFtJQ
