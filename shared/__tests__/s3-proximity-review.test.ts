@@ -231,14 +231,13 @@ describe('the placement equals a brute-force search', () => {
         const take: (Hit | undefined)[] = c.relations.map(() => undefined);
         keptSlots.forEach((s, k) => { take[s] = x.hits[k]; });
         expect(valid(c, take), ctx).toBe(true);
-        // A word marked near the match: no NOT term measured from its term
-        // reaches it (finding 2).
-        const [lo, hi] = unitOf(c, x.hits[0].start);
+        // Replace just this term; every rule must still hold, with all other
+        // chosen hits fixed. valid() uses only the rules, not engine helpers.
         for (const h of x.near) {
           const s = keptSlots.find((slot) => c.perSlot[slot].includes(h))!;
           const alt = take.slice();
           alt[s] = h;
-          expect(notReached(c, alt, lo, hi), `${ctx} near ${h.start}`).toBe(false);
+          expect(valid(c, alt), `${ctx} near slot ${s} at ${h.start}`).toBe(true);
         }
       }
     }
@@ -256,6 +255,18 @@ describe('words marked near a match', () => {
     book_bounds: [{ book: 1, start: 0 }],
   } as unknown as Offsets;
   const opts: ComboOptions = { window: 5, unit: 'words', ordered: false, crossChapter: true };
+
+  it('leave out a hit before the preceding chosen slot under the order lock', () => {
+    const [w] = comboWindows([at(10), at(12), at(11, 14)], { ...opts, ordered: true }, offsets);
+    expect(w.hits.map((h) => h.start)).toEqual([10, 12, 14]);
+    expect(w.near.map((h) => h.start)).toEqual([]);
+  });
+
+  it('leave out a target hit too far from its chosen child', () => {
+    const [w] = comboWindows([at(10), at(5, 10), at(15)], opts, offsets, [], [], [0, 0, 1]);
+    expect(w.hits.map((h) => h.start)).toEqual([10, 10, 15]);
+    expect(w.near.map((h) => h.start)).toEqual([]);
+  });
 
   it('leave out a partner hit that its own not-near term reaches', () => {
     // A@10; B near A at 5 or 14; C not near B, at 1: B@5 has C 4 away.

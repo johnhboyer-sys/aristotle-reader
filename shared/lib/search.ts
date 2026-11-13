@@ -2221,27 +2221,33 @@ function windows(
     };
     if (!place(1)) continue;
     const chosen = take;
-    // Every other word of a term in range of the hit it was sought from, as
-    // its partners were sought: the first term's on either side of the
-    // anchor, the others' as `candidates`, and under the order lock only
-    // after the anchor, where a partner may stand. A word a NOT term measured
-    // from its term reaches is no partner, and is not marked (Codex review,
-    // 12 Nov): it is checked as if it stood in the match in its term's place.
+    // An extra mark must work in its term's place with every other chosen
+    // hit fixed: both ends of each relation, the slot order, and NOT terms.
     const near: SlotHit[] = [];
-    const clearOfNots = (s: number, h: SlotHit) => {
-      if (!nots.length) return true;
+    const canReplace = (s: number, h: SlotHit) => {
+      if (!fits(h, unitLo, unitHi)) return false;
       const alt = chosen.slice();
       alt[s] = h;
-      return !excluded(alt, unitLo, unitHi);
+      if (opts.ordered && ((s > 0 && alt[s - 1].start + alt[s - 1].span > h.start)
+        || (s + 1 < alt.length && h.start + h.span > alt[s + 1].start))) return false;
+      for (let k = 0; k < alt.length; k++) {
+        if (k !== s && identities[s] && identities[s] === identities[k] && h.start === alt[k].start) return false;
+        if (k === 0 || (k !== s && targets[k] !== s)) continue;
+        const from = alt[targets[k]], hit = alt[k];
+        if (words && Math.abs(hit.start - from.start) > opts.window) return false;
+        if (relations[k] === 'after' && hit.start < from.start + from.span) return false;
+        if (relations[k] === 'before' && hit.start + hit.span > from.start) return false;
+      }
+      return !nots.length || !excluded(alt, unitLo, unitHi);
     };
     for (let i = lowerBound(sorted[0], Math.max(unitLo, anchor.start - reach)); i < sorted[0].length && sorted[0][i].start < Math.min(unitHi, anchor.start + reach + 1); i++) {
       const h = sorted[0][i];
       if (h.start + h.span > unitHi) continue;
-      if (!chosen.includes(h) && clearOfNots(0, h)) near.push(h);
+      if (!chosen.includes(h) && canReplace(0, h)) near.push(h);
     }
     for (let s = 1; s < sorted.length; s++) {
       for (const h of candidates(s, chosen[targets[s]], sorted[s], opts.ordered ? anchor.start + anchor.span : 0)) {
-        if (!chosen.includes(h) && clearOfNots(s, h)) near.push(h);
+        if (!chosen.includes(h) && canReplace(s, h)) near.push(h);
       }
     }
     out.push({

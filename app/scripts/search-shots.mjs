@@ -44,7 +44,8 @@ const D = [1152, 1000], W = [1152, 900], P = [390, 844], S = [844, 390];
 // A step is { sel, text?, act, value?, index?, expect?, want?, uncheckable? };
 // sel is what must be visible first. expect: what must be visible after it (a
 // selector, or { sel, text } or { sel, value }, a field holding that value);
-// false: no end state of its own (a submit). opens() adds one.
+// false: requires an uncheckable reason. Submits also prove a new search ran.
+// opens() adds an end state.
 const opens = (step, expect) => ({ ...step, expect });
 const sum = (t) => opens({ sel: 'details.opt > summary', text: t, act: 'click' }, { sel: 'details.opt[open] > summary', text: t });
 const btn = (sel, text) => ({ sel, text, act: 'click' });
@@ -59,7 +60,7 @@ const ARETH = { sel: '.query-input', value: 'ἀρετή' }; // a)reth/ typed wi
 const MENUS = [
   ['d01-match', AR, D, [sum('Match')]],
   ['d02-form', AR, D, [sum('Form')]],
-  ['d03-accents-on', AR, D, [opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), opens(btn('.search-btn'), false)]],
+  ['d03-accents-on', AR, D, [opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), btn('.search-btn')]],
   ['d05-in-works', AR, D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]'), opens(btn('.opt-in label', 'Choose works'), '#works-panel')]],
   ['d30-in-menu', AR, D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
   ['d31-in-authentic', AR + '&w=-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl', D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
@@ -207,6 +208,34 @@ async function until(fn, ms = 3000) {
   for (const t0 = Date.now(); ; await new Promise(r => setTimeout(r, 150))) { if (await fn()) return true; if (Date.now() - t0 > ms) return false; }
 }
 
+// Search.svelte writes the URL, disables the submit button while searching,
+// and then draws its count. Watch before clicking so even a fast search of
+// the same query and count has proof; the old render alone proves nothing.
+async function submitSearch(p, loc, s, tag) {
+  const before = new URL(p.url()).search;
+  const count = () => p.locator('.result-count').first().textContent({ timeout: 500 }).catch(() => null);
+  const oldCount = await count();
+  await p.evaluate(() => {
+    window.__searchShotSubmit?.observer.disconnect();
+    const state = { started: false, observer: null };
+    state.observer = new MutationObserver(records => {
+      if (records.some(r => r.type === 'attributes' && r.attributeName === 'disabled'
+        && r.oldValue === null && r.target.matches('.search-btn'))) state.started = true;
+    });
+    state.observer.observe(document.body, { subtree: true, attributes: true, attributeFilter: ['disabled'], attributeOldValue: true });
+    window.__searchShotSubmit = state;
+  });
+  try {
+    await act(p, loc, s);
+    if (!await until(async () => new URL(p.url()).search !== before || await count() !== oldCount
+      || await p.evaluate(() => window.__searchShotSubmit.started))) {
+      throw new StepFail('state', `${tag}: no new search observed after submit (query and count unchanged, no search started)`);
+    }
+  } finally {
+    await p.evaluate(() => { window.__searchShotSubmit.observer.disconnect(); delete window.__searchShotSubmit; });
+  }
+}
+
 // Runs step n and proves its end state. With `expect`, that must hold after;
 // without, a click on a toggle must leave it on (want: false, off) and a
 // select must hold its option. A step whose end state already holds is
@@ -214,12 +243,20 @@ async function until(fn, ms = 3000) {
 // to prove FAILS, unless it declares why it cannot be checked
 // (`uncheckable`). Returns null, or { skipped } or { unchecked } (the reason).
 export async function runStep(p, s, n = 1) {
-  if (s.act === 'scrollTop') { await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(900); return null; }
   const tag = `step ${n} (${s.act} ${describe(s)})`;
   const unproved = (why) => {
-    if (s.uncheckable) return { unchecked: `${tag}: ${s.uncheckable}` };
+    if (typeof s.uncheckable === 'string' && s.uncheckable.trim()) return { unchecked: `${tag}: ${s.uncheckable}` };
     throw new StepFail('state', `${tag}: ${why}, and no end state given (name one, or declare uncheckable: '<reason>')`);
   };
+  if (s.expect === false && !(typeof s.uncheckable === 'string' && s.uncheckable.trim())) return unproved('expect: false requires a reason');
+  if (s.act === 'scrollTop') { await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(900); return s.expect === false ? unproved('no end state given') : null; }
+  const target = (s.text === undefined ? p.locator(s.sel) : p.locator(s.sel, { hasText: s.text })).first();
+  const submit = s.act === 'click' && await target.evaluateAll(els => els.some(el => el.type === 'submit' && !!el.form));
+  if (submit) {
+    await submitSearch(p, await need(p, s), s, tag);
+    if (s.expect && !await until(() => holds(p, s.expect))) throw new StepFail('state', `${tag}: expected ${describe(spec(s.expect))} after submit`);
+    return s.expect === false ? unproved('no end state given') : null;
+  }
   if (s.expect) {
     if (await holds(p, s.expect)) return { skipped: `${tag}: ${describe(spec(s.expect))} already holds` };
     await act(p, await need(p, s), s);
@@ -227,7 +264,7 @@ export async function runStep(p, s, n = 1) {
     return null;
   }
   const loc = await need(p, s);
-  if (s.expect === false) { await act(p, loc, s); return null; }
+  if (s.expect === false) { await act(p, loc, s); return unproved('no end state given'); }
   if (s.act === 'type') { await act(p, loc, s); return unproved('typing proves nothing by itself'); }
   if (s.act === 'select') {
     if (await selected(loc, s)) return { skipped: `${tag}: already selected` };
