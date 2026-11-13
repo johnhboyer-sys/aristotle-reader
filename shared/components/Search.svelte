@@ -60,7 +60,7 @@
     type LemmaCandidate,
     type LemmaChoice,
   } from '../lib/data';
-  import { WORKS, getWork, workPath, WORK_ORDER, WORK_GROUPS, searchableTranslations, type TranslationRef } from '../lib/works';
+  import { WORKS, getWork, workPath, WORK_ORDER, SEARCH_GROUPS, searchableTranslations, type TranslationRef } from '../lib/works';
   import { formatCite, formatLocValue, schemeFor } from '../lib/citation';
   import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlSearch } from '../lib/search-url';
   import { FULL, addSaved, findSaved, savedAvailable } from '../lib/saved-searches';
@@ -3728,12 +3728,12 @@
             {/each}
           </div>
 
-          {#each WORK_GROUPS as grp}
+          {#each SEARCH_GROUPS as grp}
             {@const shown = grp.ids.filter(id => findsWork(id, worksFind))}
             {#if shown.length}
             <div class="works-group">
               <div class="works-group-head">
-                <span class="works-group-name">{grp.ref}. {grp.label}</span>
+                <span class="works-group-name">{grp.ref ? `${grp.ref}. ` : ''}{grp.label}</span>
                 <span class="works-group-scope">
                   <button type="button" class="scope-btn" on:click={() => selectOnly(grp.ids)} title="Search only this division">Only these {grp.ids.length}</button>
                   <button type="button" class="scope-btn" on:click={() => addGroup(grp.ids)} title="Add this division to the selection">Add these {grp.ids.length}</button>

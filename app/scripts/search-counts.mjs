@@ -28,7 +28,8 @@ const queries = [
   ['Accents observed', { g: 'ἀρετή', acc: '1' }],
   ['Running text', { g: 'λογ', m: 'text' }],
   ['Genitive plural near virtue', [['c', 'g:case.gen,number.pl'], ['c', 'l:areth'], ['cw', '10']]],
-  ['Authentic works', { g: 'ἀρετή', w: '-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl' }],
+  ['Authentic works', { g: 'ἀρετή', w: 'auth' }],
+  ['Mock-up authentic list (Isagoge kept)', { g: 'ἀρετή', w: '-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl' }],
 ];
 const browser = await resolvePlaywright().chromium.launch({ headless: true });
 const results = [];

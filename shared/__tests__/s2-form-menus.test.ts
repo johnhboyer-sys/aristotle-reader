@@ -5,7 +5,7 @@ import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Search from '../components/Search.svelte';
 import { decodeSearchUrl, emptyUrlSearch, encodeSearchUrl, type UrlSearch } from '../lib/search-url';
-import { AUTHENTIC_IDS, WORKS } from '../lib/works';
+import { AUTHENTIC_IDS, SEARCH_GROUPS, WORKS } from '../lib/works';
 import { GREEK_KEYS, KEY_ROWS } from '../lib/greek-keys';
 import type { BookData } from '../lib/data';
 
@@ -15,17 +15,28 @@ const base = (over: Partial<UrlSearch> = {}): UrlSearch => ({ ...emptyUrlSearch(
 const MOCK_NOT = ['Oec', 'MM', 'Prob', 'VV', 'DM', 'Mech', 'Col', 'Phgn', 'Plant', 'MXG', 'Aud', 'Lin', 'Spir', 'Vent', 'Mirab', 'RhetAl'];
 
 describe('authentic works, from the authenticity flag', () => {
-  it('are the works with no flag or "genuine", and none dubious or spurious', () => {
+  it("are Aristotle's works with no flag or \"genuine\": none dubious, spurious, or by another author", () => {
     const flagged = WORKS.filter((w) => w.authenticity === 'dubious' || w.authenticity === 'spurious').map((w) => w.id);
+    const others = WORKS.filter((w) => w.author !== 'Aristotle').map((w) => w.id);
     expect(flagged.length).toBeGreaterThan(0);
-    expect(AUTHENTIC_IDS.length + flagged.length).toBe(WORKS.length);
-    for (const id of flagged) expect(AUTHENTIC_IDS).not.toContain(id);
-    for (const w of WORKS) if (!w.authenticity || w.authenticity === 'genuine') expect(AUTHENTIC_IDS).toContain(w.id);
+    expect(others).toEqual(['Isa']);
+    expect(AUTHENTIC_IDS.length + flagged.length + others.length).toBe(WORKS.length);
+    for (const id of [...flagged, ...others]) expect(AUTHENTIC_IDS).not.toContain(id);
+    for (const w of WORKS) {
+      if (w.author === 'Aristotle' && (!w.authenticity || w.authenticity === 'genuine')) expect(AUTHENTIC_IDS).toContain(w.id);
+    }
   });
 
-  it('today: 31, the complement of the 16 the mock-up left out by hand', () => {
-    expect(AUTHENTIC_IDS).toHaveLength(31);
-    expect(ALL.filter((id) => !AUTHENTIC_IDS.includes(id)).sort()).toEqual([...MOCK_NOT].sort());
+  it("today: 30, the mock-up's 16 exclusions plus Porphyry's Isagoge (John, 12 Nov)", () => {
+    expect(AUTHENTIC_IDS).toHaveLength(30);
+    expect(ALL.filter((id) => !AUTHENTIC_IDS.includes(id)).sort()).toEqual([...MOCK_NOT, 'Isa'].sort());
+  });
+
+  it('the works picker groups every work, the Isagoge under its author', () => {
+    const ids = SEARCH_GROUPS.flatMap((g) => g.ids);
+    expect([...ids].sort()).toEqual([...ALL].sort());
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(SEARCH_GROUPS.at(-1)).toEqual({ ref: '', label: 'Porphyry', ids: ['Isa'] });
   });
 });
 
@@ -40,7 +51,9 @@ describe('w=auth in the address', () => {
 
   it('reads every older spelling of the same search as before', () => {
     const auth = decodeSearchUrl('?g=a&w=auth', ALL).works;
-    expect(decodeSearchUrl(`?g=a&w=-${MOCK_NOT.join(',')}`, ALL).works).toEqual(auth);
+    // The mock-up's exclusion list predates the Isagoge ruling: it now reads as
+    // what it says, those 16 left out and the Isagoge kept, not as w=auth.
+    expect(decodeSearchUrl(`?g=a&w=-${MOCK_NOT.join(',')}`, ALL).works).toEqual([...auth, 'Isa'].sort((x, y) => ALL.indexOf(x) - ALL.indexOf(y)));
     expect(decodeSearchUrl(`?g=a&w=${AUTHENTIC_IDS.join(',')}`, ALL).works).toEqual(auth);
     // Lists and exclusions that are not the authentic works are untouched.
     expect(decodeSearchUrl('?g=a&w=EN,Pol', ALL).works).toEqual(['EN', 'Pol']);
@@ -213,13 +226,22 @@ describe('In: all works, authentic works, or a choice', () => {
     expect(inMenu().querySelector('summary')).toHaveTextContent(/^In all works$/);
   });
 
-  it('reads the mock-up’s old exclusion list as authentic works', async () => {
-    window.history.replaceState(null, '', `/search?g=logos&w=-${MOCK_NOT.join(',')}`);
+  it('opens w=auth as authentic works', async () => {
+    window.history.replaceState(null, '', '/search?g=logos&w=auth');
     const { search } = await import('../lib/search');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalled());
     expect(inMenu().querySelector('summary')).toHaveTextContent(/^In authentic works$/);
     expect((within(inMenu()).getByLabelText('Authentic works') as HTMLInputElement).checked).toBe(true);
+  });
+
+  it('reads the mock-up’s old exclusion list as the pick it is, the Isagoge kept', async () => {
+    window.history.replaceState(null, '', `/search?g=logos&w=-${MOCK_NOT.join(',')}`);
+    const { search } = await import('../lib/search');
+    render(Search);
+    await vi.waitFor(() => expect(search).toHaveBeenCalled());
+    expect(inMenu().querySelector('summary')).toHaveTextContent(`In ${ALL.length - MOCK_NOT.length} of ${ALL.length}`);
+    expect((within(inMenu()).getByLabelText('Authentic works') as HTMLInputElement).checked).toBe(false);
   });
 
   it('Choose works… opens the picker, In showing open while it is; Done shuts it and returns to In', async () => {
