@@ -22,7 +22,21 @@ mock-up. Rewrite this file (don't append) when you hand off.
   from a one-off backfill (not committed); `npm run build:public` regenerates
   them through stage 6.
 - Desktop app now mounts the new Search (its byte-pin test was retired): PR
-  follow-up, per memory `desktop-parity-low-priority`.
+  follow-up, per memory `desktop-parity-low-priority`. Since S2 its search form
+  is unstyled there (it loads neither b.css tokens nor b-search.css).
+- **John, 12 Nov evening:** Claude (Opus agents) writes the code while Codex is
+  out; Codex reviews every Claude commit after (cross-family). **Commit as you
+  go** once a stage is reviewed by Claude and green. **Going live: (a)** search
+  ships with the rest of the redesign (home/work pages, round 9) as ONE PR; not
+  a separate search PR. Proximity distance is plain pairwise (each term within
+  N of its target's hit); 4-term cap stays, test 6 after Codex. The Isagoge is
+  not an authentic work (30).
+- Committed after S1b: 459ca65815 citation fix · 0fb0a69910 screenshot gate ·
+  a4efcf6dbd S2 · acec61a06a Isagoge · 1cee9e4628 S3 · a73a85a175 pairwise + box
+  terms · a31ffeb4b3 gate proves states. Codex reviews: R1 (through acec61a06a,
+  4 findings, fixed or listed) and R2 (S3, 7 should-fix: being fixed on branch
+  `claude/search-r2` in worktree `.claude/worktrees/search-r2`, to be brought
+  onto this branch after S4a). Briefs and reports in the session scratchpad.
 
 ## 1. What this track is
 
