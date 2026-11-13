@@ -15,13 +15,18 @@ Phone, Sideways; Light, Dark. Each option flips against its round's start, Now (
 (aristotle.johnhboyer.com), and Plato; letters are fixed per round. Source in `.redesign-shots/notes/reader/r1/`:
 `index.html`; shooters `shoot-r1.mjs`, `shoot-r2.mjs`, `shoot-r3p.mjs`; shots `img/` (round 1), `img2/` (round 2),
 `img3/` (round 3); `probe2.mjs` + `probe2.json` (the measurements); `align.mjs` (phone-parallel alignment check);
-`review-brief.md`, `opus-review-r1.md`, `codex-review-r1.md`. All scratch work (raw shots, probes, contact sheets) is
+`review-brief.md`, `opus-review-r1.md`, `codex-review-r1.md`, `opus-crops/` (the Opus reviewer's crops). All scratch work (raw shots, probes, contact sheets) is
 in `.redesign-shots/notes/reader/work/`. Shooters inject CSS into the built page (`app/dist` served on 127.0.0.1:4331,
 a server this track did not start) before the reader measures; no app code is touched. Every shot is Ethics I at
 1094b1, Both view. Run a shooter as `node <shooter> <outdir> [option ...]` from any directory; it resolves
 Playwright from `app/`.
 
 Round 3 is ruled: phone parallel with wrap as a unit.
+
+**The exact CSS of every kept change** is in the shooters, not in app code: `shoot-r2.mjs` → `BASE` (Gentium both,
+quiet bar with underlined chosen view), `C.unit`, `C.margins`, `C.glare`; `shoot-r3p.mjs` → `PAR` (phone parallel:
+padding 40/26px, 14px column gap, column label in the left margin at left -38px, English numbers at right -24px).
+Build from those once John says the design is settled.
 
 ### What the measurements found (probe2.json)
 
@@ -42,7 +47,8 @@ red, and motion are not the difference.
 - Wrap as a unit: kept on every screen ("oh that is nicer"; "b for sideways phone? yes"; after seeing round 3's phone
   parallel, 17:27: "sure, wrap as a unit").
 - Phone Both is PARALLEL ONLY (17:11, caps): "NO STACKED ON PHONE. PARALLEL ONLY." The built B stacks each passage on
-  a phone; that goes. Round 3 (phone) shows parallel at 18 and 20px, with and without wrap as a unit.
+  a phone; that goes. Round 3 (phone) shows parallel at 18px (the 20px variants are marked out), with and without
+  wrap as a unit.
 - English keeps its Bekker numbers on the phone ("you better fucking believe they do"). In phone parallel the
   column label (1094b) goes in the left margin so Greek and English start on one line; `align.mjs` in the notes
   folder checks it (0 of 31 rows off; the old label-above layout fails 19 of 31, its positive control). Live today:
@@ -67,10 +73,10 @@ every fifth line); set aside. The Opus review is in-family (I built the mocks on
 
 ### Rounds 2 and 3
 
-Round 2 (start = Gentium both + quiet bar with underlined chosen view): Gentium larger (out) · wrap as a unit (kept
-sideways) · narrow margins (kept) · whole lines · less glare (kept, sitewide) · phone English in ink · shorter
+Round 2 (start = Gentium both + quiet bar with underlined chosen view): Gentium larger (out) · wrap as a unit (kept,
+every screen) · narrow margins (kept) · whole lines · less glare (kept, sitewide) · phone English in ink · shorter
 sideways bar · two combinations. Round 3 (phone only): parallel Both at Gentium 18px, quiet bar, English in ink with
-its Bekker numbers in the right margin, column label in the left margin; option: wrap as a unit.
+its Bekker numbers in the right margin, column label in the left margin; wrap as a unit kept.
 
 ## Next
 
