@@ -16,8 +16,14 @@
 //             selector. Font failures and other errors still exit non-zero.
 //
 // A state whose step cannot find its target is FAILED, naming the selector; it
-// is never shot in the wrong state. Before every shot the page must have
-// loaded faces of each family in FONTS, or the state is FAILED.
+// is never shot in the wrong state. Each step must reach its end state (see
+// runStep): a step whose end state already holds is skipped, never clicked
+// back off, and one that does not reach it is FAILED. Before every shot a
+// search URL must show its result count (a number, or "No passages found.")
+// and a bare /search its empty form; other pages are shot unchecked, and the
+// result says so. Any page error, or console error from the site's own
+// origin, FAILS the state. Before every shot the page must have loaded faces
+// of each family in FONTS, or the state is FAILED.
 //
 // Writes <out>/build/<name>.png and <out>/results.json (merged across runs).
 import { createRequire } from 'node:module';
@@ -32,26 +38,30 @@ const e = encodeURIComponent;
 const AR = `/search?g=${e('ἀρετή')}`;
 const D = [1152, 1000], W = [1152, 900], P = [390, 844], S = [844, 390];
 
-// A step is { desc, sel, run(page) }; sel is what must be visible first.
-const sum = (t) => ({ sel: 'details.opt > summary', text: t, act: 'click' });
+// A step is { sel, text?, act, value?, index?, expect?, want? }; sel is what
+// must be visible first. expect: what must be visible after it (a selector, or
+// { sel, text }); false: no end state of its own (a submit). opens() adds one.
+const opens = (step, expect) => ({ ...step, expect });
+const sum = (t) => opens({ sel: 'details.opt > summary', text: t, act: 'click' }, { sel: 'details.opt[open] > summary', text: t });
 const btn = (sel, text) => ({ sel, text, act: 'click' });
 const typeIn = (sel, s) => ({ sel, act: 'type', value: s });
 const select = (sel, value) => ({ sel, act: 'select', value });
 const top = { act: 'scrollTop' };
+const EDITOR = '.prox-terms'; // the proximity editor's term grid, drawn only while it is open
 
 // Menu and control states (menus.mjs): viewport-only shots, light.
 const MENUS = [
   ['d01-match', AR, D, [sum('Match')]],
   ['d02-form', AR, D, [sum('Form')]],
-  ['d03-accents-on', AR, D, [btn('.opt-btn', 'Accents'), btn('.search-btn')]],
-  ['d05-in-works', AR, D, [btn('.opt-in > summary'), btn('.opt-in label', 'Choose works')]],
-  ['d30-in-menu', AR, D, [btn('.opt-in > summary')]],
-  ['d31-in-authentic', AR + '&w=-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl', D, [btn('.opt-in > summary')]],
-  ['d06-advanced', AR, D, [btn('.advanced-trigger')]],
-  ['d07-lemma-open', AR, D, [btn('.opt-lemma')]],
-  ['d08-lemma-typing', '/search', D, [btn('.opt-lemma'), typeIn('.query-input', 'ψυχ')]],
-  ['d09-near-open', '/search', D, [btn('.advanced-trigger')]],
-  ['d10-near-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}`, D, [btn('.prox-change')]],
+  ['d03-accents-on', AR, D, [opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), opens(btn('.search-btn'), false)]],
+  ['d05-in-works', AR, D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]'), opens(btn('.opt-in label', 'Choose works'), '#works-panel')]],
+  ['d30-in-menu', AR, D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
+  ['d31-in-authentic', AR + '&w=-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl', D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
+  ['d06-advanced', AR, D, [opens(btn('.advanced-trigger'), EDITOR)]],
+  ['d07-lemma-open', AR, D, [opens(btn('.opt-lemma'), '.opt-lemma[aria-pressed="true"]')]],
+  ['d08-lemma-typing', '/search', D, [opens(btn('.opt-lemma'), '.opt-lemma[aria-pressed="true"]'), opens(typeIn('.query-input', 'ψυχ'), '.gs-under')]],
+  ['d09-near-open', '/search', D, [opens(btn('.advanced-trigger'), EDITOR)]],
+  ['d10-near-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}`, D, [opens(btn('.prox-change'), EDITOR)]],
   ['d11-group-menu', AR, D, [sum('Group')]],
   ['d12-group-grammar', AR + '&v=grammar', D, []],
   ['d13-group-form', AR + '&v=form', D, []],
@@ -59,23 +69,23 @@ const MENUS = [
   ['d15-context-menu', AR, D, [sum('Context')]],
   ['d16-perpage-menu', AR, D, [sum('Per page')]],
   ['d17-citations-only', AR + '&ps=c', D, []],
-  ['d18-keyboard', '/search', D, [btn('.gk-toggle')]],
-  ['d19-beta-code', '/search', D, [btn('.sq-row .tog'), typeIn('.query-input', 'a)reth/')]],
+  ['d18-keyboard', '/search', D, [opens(btn('.gk-toggle'), '#grk-keys')]],
+  ['d19-beta-code', '/search', D, [opens(btn('.sq-row .tog'), '.sq-row .tog[aria-pressed="true"]'), typeIn('.query-input', 'a)reth/')]],
   ['d20-both', `/search?g=${e('ἀρετή')}&e=virtue`, D, []],
   ['d21-forms-untick', AR, D, [btn('.fx input[type=checkbox] >> nth=1'), btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ instances/), top]],
-  ['d23-save', AR, D, [btn('.sx-save')]],
+  ['d23-save', AR, D, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
   ['d24-word-click', AR, D, [btn('.instance mark')]],
   ['d27-word-card', AR + '#zcard', D, [btn('.instance mark')]],
-  ['d28-pending-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&cw=10`, D, [btn('.prox-change'), { sel: '.combo-slot >> nth=1 >> .prox-relw select', act: 'select', index: 1 }]],
-  ['d25-group-collapsed', AR, D, [btn('.group-head')]],
+  ['d28-pending-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&cw=10`, D, [opens(btn('.prox-change'), EDITOR), { sel: '.combo-slot >> nth=1 >> .prox-relw select', act: 'select', index: 1 }]],
+  ['d25-group-collapsed', AR, D, [{ ...btn('.group-head'), want: false }]],
   ['d26-any-word', `/search?g=${e('ἀρετή ἕξις')}&gm=any`, D, []],
   ['n01-three-terms', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('l:hdonh')}&cw=10`, D, []],
-  ['n02-three-terms-editor', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('lb:hdonh')}&cw=10`, [1152, 1300], [btn('.prox-change')]],
+  ['n02-three-terms-editor', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('lb:hdonh')}&cw=10`, [1152, 1300], [opens(btn('.prox-change'), EDITOR)]],
   ['n03-before-and-not', `/search?c=${e('l:areth')}&c=${e('lb:hdonh')}&c=${e('ln:luph')}&cw=10`, D, []],
-  ['n07-or-term', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('l:hdonh')}&cw=10`, [1152, 1300], [btn('.prox-change'), select('.combo-slot >> nth=2 >> .prox-join', 'or')]],
-  ['n08-term-from-term', `/search?c=${e('l:aitios')}&c=${e('l:dia')}&c=${e('g:case.acc')}&cw=5`, [1152, 1300], [btn('.prox-change'), { sel: '.combo-slot >> nth=2 >> .prox-target', act: 'select', index: 1 }]],
-  ['n04-add-term', '/search', [1152, 1200], [btn('.advanced-trigger'), btn('button', 'Add term')]],
-  ['n06-grammar-term', `/search?c=${e('l:areth')}&c=${e('g:case.gen,number.pl')}&cw=3`, [1152, 1200], [btn('.prox-change')]],
+  ['n07-or-term', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('l:hdonh')}&cw=10`, [1152, 1300], [opens(btn('.prox-change'), EDITOR), select('.combo-slot >> nth=2 >> .prox-join', 'or')]],
+  ['n08-term-from-term', `/search?c=${e('l:aitios')}&c=${e('l:dia')}&c=${e('g:case.acc')}&cw=5`, [1152, 1300], [opens(btn('.prox-change'), EDITOR), { sel: '.combo-slot >> nth=2 >> .prox-target', act: 'select', index: 1 }]],
+  ['n04-add-term', '/search', [1152, 1200], [opens(btn('.advanced-trigger'), EDITOR), opens(btn('button', 'Add term'), '.combo-slot >> nth=2')]],
+  ['n06-grammar-term', `/search?c=${e('l:areth')}&c=${e('g:case.gen,number.pl')}&cw=3`, [1152, 1200], [opens(btn('.prox-change'), EDITOR)]],
   ['n05-phone-three', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('l:hdonh')}&cw=10`, P, []],
   ['p01-options', AR, P, [btn('.z-opts')]],
   ['p02-options-match', AR, P, [btn('.z-opts'), sum('Match')]],
@@ -93,7 +103,7 @@ const MENUS = [
   ['q07-filter-works', AR, P, [btn('.sx-icon', 'Filter'), btn('.sx-panel button', 'Works')]],
   ['q08-filter-forms', AR, P, [btn('.sx-icon', 'Filter'), btn('.sx-panel button', 'Forms')]],
   ['q09-word-click', AR, P, [btn('.instance mark')]],
-  ['q10-save', AR, P, [btn('.sx-save')]],
+  ['q10-save', AR, P, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
   ['q11-group-grammar', AR + '&v=grammar', P, []],
   ['q12-citations-only', AR + '&ps=c', P, []],
   ['s01-sideways-options', AR, S, [btn('.z-opts')]],
@@ -143,6 +153,8 @@ if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
 class StepFail extends Error { constructor(cause, msg) { super(msg); this.cause = cause; } }
 
 const describe = (s) => s.text === undefined ? s.sel : `${s.sel} [text ${s.text instanceof RegExp ? s.text : JSON.stringify(s.text)}]`;
+const spec = (x) => typeof x === 'string' ? { sel: x } : x;
+const visible = (p, x) => { const { sel, text } = spec(x); return p.locator(`${sel} >> visible=true`, text === undefined ? {} : { hasText: text }); };
 
 async function need(p, s) {
   const loc = (s.text === undefined ? p.locator(s.sel) : p.locator(s.sel, { hasText: s.text })).first();
@@ -155,15 +167,79 @@ async function need(p, s) {
   return loc;
 }
 
-async function runStep(p, s) {
-  if (s.act === 'scrollTop') { await p.evaluate(() => scrollTo(0, 0)); return; }
-  const loc = await need(p, s);
+// A toggle's state: a summary's <details> open, else aria-expanded, else
+// aria-pressed; null when the element is none of these.
+const toggled = (loc) => loc.evaluate(el => {
+  if (el.tagName === 'SUMMARY' && el.parentElement?.tagName === 'DETAILS') return el.parentElement.open;
+  const a = el.getAttribute('aria-expanded') ?? el.getAttribute('aria-pressed');
+  return a === null ? null : a === 'true';
+}).catch(() => undefined);
+const selected = (loc, s) => loc.evaluate((el, s) => s.index !== undefined ? el.selectedIndex === s.index : el.value === s.value, { index: s.index, value: s.value }).catch(() => undefined);
+
+async function act(p, loc, s) {
   if (s.act === 'click') await loc.click({ timeout: 5000 });
   else if (s.act === 'type') { await loc.fill('', { timeout: 5000 }); await loc.type(s.value, { delay: 40 }); }
   else if (s.act === 'select') {
     try { await loc.selectOption(s.index !== undefined ? { index: s.index } : s.value, { timeout: 5000 }); }
     catch { throw new StepFail('other', `cannot select ${s.index !== undefined ? 'index ' + s.index : JSON.stringify(s.value)} in ${describe(s)}`); }
   }
+  await p.waitForTimeout(900);
+}
+
+async function until(fn, ms = 3000) {
+  for (const t0 = Date.now(); ; await new Promise(r => setTimeout(r, 150))) { if (await fn()) return true; if (Date.now() - t0 > ms) return false; }
+}
+
+// Runs step n and proves its end state. With `expect`, that must be visible
+// after; without, a click on a toggle must leave it on (want: false, off) and
+// a select must hold its option. A step whose end state already holds is
+// skipped, so no step can toggle its state back off. Returns null, or
+// { skipped } or { unchecked } (a step with no end state to prove).
+async function runStep(p, s, n = 1) {
+  if (s.act === 'scrollTop') { await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(900); return null; }
+  const tag = `step ${n} (${s.act} ${describe(s)})`;
+  if (s.expect) {
+    if (await visible(p, s.expect).count()) return { skipped: `${tag}: ${describe(spec(s.expect))} already visible` };
+    await act(p, await need(p, s), s);
+    if (!await until(async () => (await visible(p, s.expect).count()) > 0)) throw new StepFail('state', `${tag}: expected ${describe(spec(s.expect))} visible after it`);
+    return null;
+  }
+  const loc = await need(p, s);
+  if (s.expect === false || s.act === 'type') { await act(p, loc, s); return s.expect === false ? null : { unchecked: `${tag}: no end state given` }; }
+  if (s.act === 'select') {
+    if (await selected(loc, s)) return { skipped: `${tag}: already selected` };
+    await act(p, loc, s);
+    if (!await until(() => selected(loc, s))) throw new StepFail('state', `${tag}: the option did not stay selected`);
+    return null;
+  }
+  const want = s.want ?? true, was = await toggled(loc);
+  if (was === want) return { skipped: `${tag}: already ${want ? 'open' : 'closed'}` };
+  await act(p, loc, s);
+  if (was === null) return { unchecked: `${tag}: not a toggle, and no end state given` };
+  if (!await until(async () => (await toggled(loc)) === want)) throw new StepFail('state', `${tag}: expected it ${want ? 'open' : 'closed'} after the click, found it ${want ? 'closed' : 'open'} or gone`);
+  return null;
+}
+
+// What a page must show before it is shot. A search URL (g, e or c): its
+// result count, a number or "No passages found."; a bare /search: the empty
+// form. Returns what it saw; any other page is not checked, and says so.
+async function checkRender(p, path) {
+  const u = new URL(path, 'http://x');
+  if (!/\/search\/?$/.test(u.pathname)) return `render not checked: ${u.pathname} is not the search page`;
+  if (['g', 'e', 'c'].some(k => u.searchParams.getAll(k).some(v => v.trim()))) {
+    const c = visible(p, '.result-count').first();
+    try { await c.waitFor({ state: 'visible', timeout: 20000 }); }
+    catch {
+      const err = await visible(p, '.search-error').first().textContent({ timeout: 500 }).catch(() => null);
+      throw new StepFail('render', `search did not render: no visible .result-count${err ? `; search error: ${err.trim()}` : ''}`);
+    }
+    const t = (await c.textContent()).trim();
+    if (!/^(\d[\d,]* instances?\b|No passages found\.)/.test(t)) throw new StepFail('render', `result count reads ${JSON.stringify(t)}`);
+    return t;
+  }
+  if (!await visible(p, '.query-input').count()) throw new StepFail('render', 'empty form did not render: no visible .query-input');
+  if (await p.locator('.result-count').count()) throw new StepFail('render', 'bare /search shows a result count');
+  return 'empty form';
 }
 
 // Every family in FONTS must have at least one loaded face. document.fonts.check
@@ -188,36 +264,46 @@ async function checkFonts(p) {
 async function shoot(browser, st, theme, base, file) {
   const ctx = await browser.newContext({ viewport: { width: st.w, height: st.h }, colorScheme: theme, deviceScaleFactor: 1, isMobile: st.w < 900, hasTouch: st.w < 900 });
   await ctx.addInitScript(t => { try { localStorage.setItem('ne-theme', t); } catch {} }, theme);
-  const p = await ctx.newPage(); const errs = [];
+  const p = await ctx.newPage(); const errs = [], notes = { skipped: [], unchecked: [] };
   p.on('pageerror', x => errs.push(x.message));
+  // Console errors from the site's own origin only; a blocked third-party
+  // request logs one that says nothing about the page.
+  const origin = new URL(base).origin;
+  p.on('console', m => { if (m.type() === 'error' && (m.location().url || '').startsWith(origin)) errs.push(`console: ${m.text()}`); });
   const lost = []; p.on('requestfailed', r => lost.push(`${r.url().slice(0, 80)} (${r.failure()?.errorText})`));
   try {
     await p.goto(base + st.path, { waitUntil: 'networkidle', timeout: 90000 });
     await p.evaluate(() => document.fonts.ready);
     if (st.kind === 'menu') {
       await p.waitForTimeout(1500);
-      for (const s of st.steps) { await runStep(p, s); await p.waitForTimeout(900); }
+      for (const [i, s] of st.steps.entries()) { const r = await runStep(p, s, i + 1); if (r?.skipped) notes.skipped.push(r.skipped); if (r?.unchecked) notes.unchecked.push(r.unchecked); }
       await p.evaluate(() => document.fonts.ready); await p.mouse.move(1, 1); await p.waitForTimeout(1600);
+      notes.render = await checkRender(p, st.path);
       await checkFonts(p);
       await p.screenshot({ path: file });
     } else {
       await p.waitForTimeout(2000);
       let y0 = 0;
       if (st.action === 'more') {
-        await runStep(p, btn('.inst-more')); await p.mouse.move(1, 1); await p.waitForLoadState('networkidle'); await p.waitForTimeout(1500);
+        const r = await runStep(p, btn('.inst-more')); if (r?.skipped) notes.skipped.push(r.skipped); if (r?.unchecked) notes.unchecked.push(r.unchecked);
+        await p.mouse.move(1, 1); await p.waitForLoadState('networkidle'); await p.waitForTimeout(1500);
         // round 34: the opened hit's head row sits 24px from the top of the shot
         await need(p, { sel: '.z-ohead' });
         y0 = await p.evaluate(() => { const h = document.querySelector('.z-ohead'); return Math.max(0, Math.round(h.getBoundingClientRect().top + scrollY - 24)); });
       }
-      if (st.action === 'advanced') { await runStep(p, btn('button', /^(Advanced|Proximity)/)); await p.waitForTimeout(800); }
+      if (st.action === 'advanced') { const r = await runStep(p, opens(btn('button', /^(Advanced|Proximity)/), EDITOR)); if (r?.skipped) notes.skipped.push(r.skipped); }
+      notes.render = await checkRender(p, st.path);
       await checkFonts(p);
       const full = await p.evaluate(() => document.documentElement.scrollHeight);
       await p.screenshot({ path: file, fullPage: true, clip: { x: 0, y: y0, width: st.w, height: Math.min(st.clipH, full - y0) } });
     }
-    return { status: 'shot', errs };
+    await p.waitForTimeout(300);
+    if (errs.length) throw new StepFail('error', `page error: ${errs[0].split('\n')[0].slice(0, 160)}${errs.length > 1 ? ` (+${errs.length - 1} more)` : ''}`);
+    return { status: 'shot', errs, ...notes };
   } catch (x) {
-    if (x instanceof StepFail) return { status: 'failed', cause: x.cause, reason: x.message + (x.cause === 'font' && lost.length ? `; failed requests: ${lost.join(', ')}` : ''), errs };
-    return { status: 'failed', cause: 'other', reason: String(x.message).split('\n')[0].slice(0, 200), errs };
+    if (existsSync(file)) unlinkSync(file); // no picture under a failed verdict
+    if (x instanceof StepFail) return { status: 'failed', cause: x.cause, reason: x.message + (x.cause === 'font' && lost.length ? `; failed requests: ${lost.join(', ')}` : ''), errs, ...notes };
+    return { status: 'failed', cause: 'other', reason: String(x.message).split('\n')[0].slice(0, 200), errs, ...notes };
   } finally { await ctx.close(); }
 }
 
@@ -262,7 +348,8 @@ async function main() {
     const r = await shoot(browser, st, theme, a.base, file);
     results[`${st.name}@${theme}`] = { name: st.name, theme, file: r.status === 'shot' ? `build/${fname}` : null, ...r, base: a.base, at: new Date().toISOString() };
     tally[r.status].push({ name: fname, ...r });
-    console.log(`${r.status === 'shot' ? 'ok    ' : 'FAILED'} ${fname}${r.reason ? '  ' + r.reason : ''}${r.errs.length ? '  [page error: ' + r.errs[0].slice(0, 100) + ']' : ''}`);
+    console.log(`${r.status === 'shot' ? 'ok    ' : 'FAILED'} ${fname}${r.reason ? '  ' + r.reason : ''}${r.status === 'shot' ? `  [${r.render}]` : ''}`);
+    for (const k of ['skipped', 'unchecked']) for (const m of r[k] || []) console.log(`         ${k} ${m}`);
     writeFileSync(resPath, JSON.stringify(results, null, 1));
   }
   await browser.close();
@@ -274,6 +361,8 @@ async function main() {
   for (const [r, why] of skipped) console.log(`  skipped: ${r} — ${why}`);
   const withErrs = [...tally.shot, ...tally.failed].filter(x => x.errs.length);
   if (withErrs.length) console.log(`  page errors in ${withErrs.length}: ${withErrs.map(x => x.name).join(', ')}`);
+  const unchecked = tally.shot.filter(x => x.unchecked?.length || !/^(\d|No passages|empty form)/.test(x.render));
+  if (unchecked.length) console.log(`  shot with something unchecked (${unchecked.length}): ${unchecked.map(x => x.name.replace(/\.png$/, '')).join(', ')}`);
 
   const hard = tally.failed.filter(f => !(a.allowMissing && (f.cause === 'missing' || f.cause === 'hidden')));
   process.exit(hard.length ? 1 : 0);
