@@ -11,7 +11,8 @@ import { getWork } from '../lib/works';
 // The book of paired-hit.test.ts (EN 70a–c, five turns, Rackham and a
 // turn-aligned Ross), and after it plain sections 71a … 99a, one to a
 // Stephanus page, for paging; 98a holds repeated forms out of Greek order,
-// ω β ω α β ω, for sorting; 99a is long, for the context windows: 31 Greek
+// ω β ω α β ω, for sorting, each 26 words from the next so no two hits
+// share a passage (S4a joins those that do); 99a is long, for the context windows: 31 Greek
 // words κ0 … κ30, and 61 English words of five letters, "virtu" the 31st.
 // Every work and book reads the same.
 //   T0  70a line 1          Rackham "One two three."        Ross "Uno dos."
@@ -38,7 +39,7 @@ const { fixture, COLUMNS } = vi.hoisted(() => {
       seg('70b', 'six seven eight Nine ten. Eleven', line(1, 'ζ η θ'), line(2, 'ι κ')),
       seg('70c', 'twelve thirteen Residual words here Last.', line(1, 'λ μ')),
       ...extra.map(c => seg(c, 'Plain words', line(1, 'ο π ρ'))),
-      seg('98a', 'Plain words', line(1, 'ω β ω α β ω')),
+      seg('98a', 'Plain words', line(1, ['ω', 'β', 'ω', 'α', 'β', 'ω'].join(` ${Array(25).fill('ν').join(' ')} `))),
       seg('99a', LONG_ENGLISH, line(1, LONG_GREEK)),
     ],
     turnFlow: {
@@ -255,11 +256,14 @@ describe('Search.svelte: context', () => {
   it('English: a single Greek line gives the same word budget in either context', async () => {
     const hit = at('99a', { engMatch: true, engHits: [{ translation: 'rackham', positions: [30] }] });
     const { container } = await open('/search?e=virtu', [hit], 1);
-    const passage = () => items(container)[0].querySelector('.sx-tr .inst-snippet');
+    const passage = () => items(container)[0].querySelector('.inst-rows .inst-snippet');
     expect(wordsIn(passage())).toHaveLength(43);
+    // Cut at word boundaries, each cut a spaced ellipsis, never "..." (§7.5).
+    expect(text(passage())).toMatch(/^… \S.*\S …$/);
+    expect(text(passage())).not.toContain('...');
     await press('Context', '1 line');
     await vi.waitFor(() => expect(wordsIn(passage())).toHaveLength(43));
-    expect(marks(items(container)[0].querySelector('.sx-tr')!)).toEqual(['virtu']);
+    expect(marks(items(container)[0].querySelector('.inst-rows')!)).toEqual(['virtu']);
   });
 
   it('whole section: one instance per section, both sides whole, every hit marked, the counts unchanged', async () => {
@@ -282,11 +286,11 @@ describe('Search.svelte: context', () => {
     // The citation names every Greek hit of the section.
     expect(a.querySelector('.inst-ref')!.getAttribute('href')).toContain('hlt=70a:0,3');
     // A Greek search: the section's English, unmarked, in the reference translation.
-    expect(text(a.querySelector('.inst-pair'))).toBe('Rackham One two three. Four five');
+    expect(text(a.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham');
     expect(a.querySelector('.inst-pair mark')).toBeNull();
     expect(text(b.querySelector('.inst-snippet.greek'))).toBe('ζ η θ ι κ');
     expect(marks(b)).toEqual(['η']);
-    expect(text(b.querySelector('.inst-pair'))).toBe('Rackham six seven eight Nine ten. Eleven');
+    expect(text(b.querySelector('.inst-pair'))).toBe('six seven eight Nine ten. Eleven Rackham');
     // No "more" on a whole section.
     expect(container.querySelector('.inst-more')).toBeNull();
   });
@@ -313,15 +317,15 @@ describe('Search.svelte: context', () => {
       // Each the whole section, its own form marked; the English once, on the first.
       expect(text(a.querySelector('.inst-snippet.greek'))).toBe('α β γ δ ε');
       expect(marks(a.querySelector('.inst-snippet.greek')!)).toEqual(['α']);
-      expect(marks(a.querySelector('.sx-tr')!)).toEqual(['One', 'two', 'three']);
+      expect(marks(a.querySelector('.inst-rows')!)).toEqual(['One', 'two', 'three']);
       expect(text(d.querySelector('.inst-snippet.greek'))).toBe('α β γ δ ε');
       expect(marks(d)).toEqual(['δ']);
-      expect(d.querySelector('.sx-tr')).toBeNull();
-      expect(text(d.querySelector('.inst-pair'))).toBe('Rackham One two three. Four five');
+      expect(d.querySelector('.inst-rows')).toBeNull();
+      expect(text(d.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham');
       expect(marks(h)).toEqual(['η']);
       expect(status()).toHaveTextContent('6 instances');
       // The work view: one instance per section, as before.
-      await press('Group the hits', 'By work');
+      await press('Group by', 'By work');
       await vi.waitFor(async () => {
         expectAllOpen(container);
         expect(items(container)).toHaveLength(2);
@@ -343,10 +347,10 @@ describe('Search.svelte: context', () => {
     const [a, b] = items(container);
     expect(items(container)).toHaveLength(2);
     expect(marks(a)).toEqual(['α', 'Four']);
-    expect([...a.querySelectorAll('.sx-tr > div')].map(text)).toEqual(['Rackham One two three. Four five']);
+    expect([...a.querySelectorAll('.inst-rows')].map(text)).toEqual(['One two three. Four five Rackham']);
     expect(text(b.querySelector('.inst-ref'))).toBe('70b');
     expect(text(b.querySelector('.inst-snippet.greek'))).toBe('ζ η θ ι κ');
-    expect([...b.querySelectorAll('.sx-tr > div')].map(text)).toEqual(['Ross seis']);
+    expect([...b.querySelectorAll('.inst-rows')].map(text)).toEqual(['seis Ross']);
     expect(marks(b)).toEqual(['seis']);
     expect(status()).toHaveTextContent('3 instances');
     expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['3 instances']);
@@ -358,17 +362,20 @@ describe('Search.svelte: context', () => {
     const before = [a.innerHTML, b.innerHTML];
     const more = a.querySelector('button.inst-more')!;
     expect(more).toHaveAttribute('aria-expanded', 'false');
-    expect(text(more)).toBe('more');
+    expect(text(more)).toBe('Show the whole section');
     await fireEvent.click(more);
     await vi.waitFor(() => expect(more).toHaveAttribute('aria-expanded', 'true'));
-    expect(text(more)).toBe('less');
+    expect(text(more)).toBe('Show less');
+    // The opened hit's head row: where it is, and a second way back (r34-06).
+    expect(text(a.querySelector('.inst-ohead span'))).toBe(`${getWork('EN')!.title} · Book I`);
+    expect(a.querySelector('.inst-ohead button')).toHaveTextContent('Show less');
     expect(text(a.querySelector('.inst-snippet.greek'))).toBe('α β γ δ ε');
     expect(marks(a)).toEqual(['α', 'δ']);
-    expect(text(a.querySelector('.inst-pair'))).toBe('Rackham One two three. Four five');
+    expect(text(a.querySelector('.inst-pair'))).toBe('One two three. Four five Rackham');
     expect(b.innerHTML).toBe(before[1]);
     expect(window.location.search).not.toContain('ctx');
-    await fireEvent.click(more);
-    await vi.waitFor(() => expect(text(more)).toBe('more'));
+    await fireEvent.click(a.querySelector('.inst-ohead button')!);
+    await vi.waitFor(() => expect(text(more)).toBe('Show the whole section'));
     expect(a.innerHTML).toBe(before[0]);
   });
 
@@ -387,17 +394,17 @@ describe('Search.svelte: context', () => {
     expect(marks(li)).toEqual(['virtue']);
     // "more": the section, its one hit marked.
     await fireEvent.click(li.querySelector('button.inst-more')!);
-    await vi.waitFor(() => expect(text(li.querySelector('.sx-tr'))).toBe('Ross virtue Nueve virtue.'));
-    expect(li.querySelector('.sx-tr')!.innerHTML).toContain('virtue Nueve <mark>virtue</mark>.');
+    await vi.waitFor(() => expect(text(li.querySelector('.inst-rows'))).toBe('virtue Nueve virtue. Ross'));
+    expect(li.querySelector('.inst-rows')!.innerHTML).toContain('virtue Nueve <mark>virtue</mark>.');
     expect(marks(li)).toEqual(['virtue']);
     // The whole section: the same.
     await press('Context', 'Whole section');
     await vi.waitFor(() => expect(items(container)[0].querySelector('.inst-more')).toBeNull());
     expectAllOpen(container);
     const [s] = items(container);
-    expect(text(s.querySelector('.sx-tr'))).toBe('Ross virtue Nueve virtue.');
+    expect(text(s.querySelector('.inst-rows'))).toBe('virtue Nueve virtue. Ross');
     expect(marks(s)).toEqual(['virtue']);
-    expect(s.querySelector('.sx-tr')!.innerHTML).toContain('virtue Nueve <mark>virtue</mark>.');
+    expect(s.querySelector('.inst-rows')!.innerHTML).toContain('virtue Nueve <mark>virtue</mark>.');
     expect(status()).toHaveTextContent('1 instance');
     expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['1 instance']);
     vi.mocked(fetchBook).mockReset().mockResolvedValue(fixture);
@@ -413,11 +420,13 @@ describe('Search.svelte: context', () => {
 });
 
 describe('Search.svelte: sort', () => {
-  // EN 98a: ω0 β1 ω2 α3 β4 ω5; Met 98a: ω0. The EN comes first in the corpus.
-  const RESULTS = [grk('98a', [0, 1, 2, 3, 4, 5]), grk('98a', [0], 'Meta')];
-  // Each hit as work:token, in the order drawn.
+  // EN 98a: ω0 β1 ω2 α3 β4 ω5, 26 words apart; Met 98a: ω0. The EN comes
+  // first in the corpus.
+  const SPREAD = 26;
+  const RESULTS = [grk('98a', [0, 1, 2, 3, 4, 5].map(k => k * SPREAD)), grk('98a', [0], 'Meta')];
+  // Each hit as work:its place among 98a's six, in the order drawn.
   const order = (c: HTMLElement) => items(c).map(li =>
-    `${li.querySelector('.inst-ref')!.getAttribute('href')!.includes('/Meta/') ? 'Meta' : 'EN'}:${(li.querySelector('mark')!.closest('button') as HTMLElement).dataset.i}`);
+    `${li.querySelector('.inst-ref')!.getAttribute('href')!.includes('/Meta/') ? 'Meta' : 'EN'}:${Number((li.querySelector('mark')!.closest('button') as HTMLElement).dataset.i) / SPREAD}`);
   const heads = (c: HTMLElement) => [...c.querySelectorAll('.group-label')].map(text);
   const sorted = async (c: HTMLElement, name: string) => {
     await press('Sort', name);
@@ -484,8 +493,8 @@ describe('Search.svelte: sort', () => {
     const drawn = () => items(container).map(li => `${text(li.querySelector('.inst-ref'))} ${text(li.querySelector('mark'))}`);
     expect(drawn()).toEqual(['70b1 ω', '70b1 ω', '70a1 α']);
     expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['6 instances']);
-    for (const v of ['By form', 'Grammar']) {
-      await press('Group the hits', v);
+    for (const v of ['By form', 'By grammar']) {
+      await press('Group by', v);
       await vi.waitFor(() => expect(heads(container)).toEqual(['ω', 'α']));
       // The heads still count every hit their group holds.
       expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['2 instances', '4 instances']);
@@ -495,7 +504,7 @@ describe('Search.svelte: sort', () => {
   });
 
   it('keeps the speaker filter', async () => {
-    const results = [grk('98a', [0, 3], 'EN', { speakers: ['Socrates', 'Socrates'] })];
+    const results = [grk('98a', [0, 3].map(k => k * SPREAD), 'EN', { speakers: ['Socrates', 'Socrates'] })];
     const { container } = await open(`${G('ω')}&sp=only&sn=Socrates&so=form`, results, 2);
     expect(order(container)).toEqual(['EN:3', 'EN:0']);
     expect(items(container).map(li => text(li.querySelector('.inst-speaker')))).toEqual(['Socrates', 'Socrates']);
@@ -510,24 +519,24 @@ describe('Search.svelte: page size', () => {
   it('20, 40 or 100 hits a page, breaking at Stephanus pages, back to the first page, with no new search', async () => {
     const { search } = await import('../lib/search');
     const { container } = await open(G('ο'), MANY, 81);
-    expect(options('Hits per page')).toEqual([
+    expect(options('Per page')).toEqual([
       ['20', 'false'], ['40', 'true'], ['100', 'false'], ['Citations only', 'false'],
     ]);
     // 13 Stephanus pages of 3 hits fit in 40.
     expect(pager(container)).toBe('Page 1 of 3');
     await fireEvent.click(within(container.querySelector('.pager')! as HTMLElement).getByRole('button', { name: /Next/ }));
     await vi.waitFor(() => expect(pager(container)).toBe('Page 2 of 3'));
-    await press('Hits per page', '20');
+    await press('Per page', '20');
     await vi.waitFor(() => expect(pager(container)).toBe('Page 1 of 5'));
     expect(window.location.search).toContain('ps=20');
     // The context does not move a page break.
     await press('Context', 'Whole section');
     await vi.waitFor(() => expect(window.location.search).toContain('ctx=s'));
     await vi.waitFor(() => expect(pager(container)).toBe('Page 1 of 5'));
-    await press('Hits per page', '100');
+    await press('Per page', '100');
     await vi.waitFor(() => expect(container.querySelector('.pager')).toBeNull());
     expect(status()).toHaveTextContent('81 instances');
-    await press('Hits per page', '40');
+    await press('Per page', '40');
     await vi.waitFor(() => expect(pager(container)).toBe('Page 1 of 3'));
     expect(window.location.search).not.toContain('ps=');
     expect(search).toHaveBeenCalledTimes(1);
@@ -549,22 +558,25 @@ describe('Search.svelte: page size', () => {
     await vi.waitFor(() => expect(page.container.querySelector('.cite')).not.toBeNull());
     return page;
   }
+  // A work's name heads its first group; each book is named on its own line.
   const cites = (c: HTMLElement) => [...c.querySelectorAll('.cite-group')].map(g =>
-    `${text(g.querySelector('.book-header'))}: ${[...g.querySelectorAll('.cite')].map(text).join(', ')}`);
+    `${[g.querySelector('.book-header'), g.querySelector('.sx-book')].filter(Boolean).map(text).join(' ')}: ${[...g.querySelectorAll('.cite')].map(text).join(', ')}`);
 
-  it('citations only: every hit\'s section with its count, linked, and no book fetched', async () => {
+  // S4a (handoff §7.6): a Greek hit is cited to its line, read off the
+  // index's offsets; no book is fetched for it.
+  it('citations only: every Greek hit\'s line with its count, linked, and no book fetched', async () => {
     const { fetchBook } = await import('../lib/data');
     const { container } = await citations(`${G('α')}&ps=c`, RESULTS, 4);
-    expect(cites(container)).toEqual([`${getWork('Int')!.title}: 70a`, `${getWork('EN')!.title} Book I: 70a ×2, 70b`]);
+    expect(cites(container)).toEqual([`${getWork('Int')!.title}: 70a1`, `${getWork('EN')!.title} Book I: 70a1, 70a2, 70b1`]);
     const link = container.querySelector('.cite')!;
     expect(link.getAttribute('href')).toContain('/Int/book/1');
     expect(link.getAttribute('href')).toContain('hlt=70a:0');
-    expect(link.getAttribute('href')).toContain('loc=70a');
+    expect(link.getAttribute('href')).toContain('loc=70a:1');
     expect(fetchBook).not.toHaveBeenCalled();
     expect(container.querySelector('li.instance')).toBeNull();
-    for (const name of ['Group the hits', 'Sort', 'Context']) expect(screen.queryByRole('group', { name })).toBeNull();
+    for (const name of ['Group by', 'Sort', 'Context']) expect(screen.queryByRole('group', { name })).toBeNull();
     expect(control('Show hits from one work')).not.toBeNull();
-    expect(within(control('Hits per page')).getByRole('radio', { name: 'Citations only' })).toBeChecked();
+    expect(within(control('Per page')).getByRole('radio', { name: 'Citations only' })).toBeChecked();
   });
 
   it('citations only: the Forms panel still narrows the list', async () => {
@@ -574,10 +586,10 @@ describe('Search.svelte: page size', () => {
     await fireEvent.click(within(forms).getByRole('checkbox', { name: /δ/ }));
     await fireEvent.click(within(forms).getByRole('button', { name: 'Apply' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
-    expect(cites(container)).toEqual([`${getWork('Int')!.title}: 70a`, `${getWork('EN')!.title} Book I: 70a, 70b`]);
+    expect(cites(container)).toEqual([`${getWork('Int')!.title}: 70a1`, `${getWork('EN')!.title} Book I: 70a1, 70b1`]);
     expect(fetchBook).not.toHaveBeenCalled();
     // Back to hits: the books are fetched and the hits drawn.
-    await press('Hits per page', '40');
+    await press('Per page', '40');
     await vi.waitFor(() => expect(container.querySelector('.chapter-group')).not.toBeNull());
     expect(container.querySelector('.cite')).toBeNull();
   });
@@ -585,7 +597,7 @@ describe('Search.svelte: page size', () => {
   it('citations only keeps the speaker filter', async () => {
     const results = [grk('70a', [0, 3], 'EN', { speakers: ['EN', 'Socrates'] })];
     const { container } = await citations(`${G('α')}&sp=only&sn=EN,Socrates&ps=c`, results, 2);
-    expect(cites(container)).toEqual([`${getWork('EN')!.title} Book I: 70a ×2`]);
+    expect(cites(container)).toEqual([`${getWork('EN')!.title} Book I: 70a1, 70a2`]);
   });
 });
 
@@ -643,7 +655,7 @@ describe('Search.svelte: a proximity hit', () => {
     const zeta = li.querySelectorAll('mark')[1].closest('button')!;
     expect([zeta.dataset.s, zeta.dataset.i]).toEqual(['1:70b', '0']);
     // The English goes as far as the Greek.
-    expect(text(li.querySelector('.inst-pair'))).toBe('Rackham One two three. Four five 70b six seven eight Nine ten. Eleven');
+    expect(text(li.querySelector('.inst-pair'))).toBe('One two three. Four five 70b six seven eight Nine ten. Eleven Rackham');
     expect(status()).toHaveTextContent('1 instance');
   });
 
@@ -655,8 +667,8 @@ describe('Search.svelte: a proximity hit', () => {
     await vi.waitFor(() => expect(container.querySelector('.sec-on')).not.toBeNull());
     const views = items(container).map(li => [text(li.querySelector('.inst-snippet.greek')), text(li.querySelector('.inst-pair'))]);
     expect(views).toEqual([
-      ['α β γ δ ε', 'Rackham One two three. Four five'],
-      ['α β γ δ ε 70b ζ η θ ι κ', 'Rackham One two three. Four five 70b six seven eight Nine ten. Eleven'],
+      ['α β γ δ ε', 'One two three. Four five Rackham'],
+      ['α β γ δ ε 70b ζ η θ ι κ', 'One two three. Four five 70b six seven eight Nine ten. Eleven Rackham'],
     ]);
   });
 
@@ -671,7 +683,7 @@ describe('Search.svelte: a proximity hit', () => {
     await press('Context', 'Whole section');
     await vi.waitFor(() => expect(container.querySelector('.sec-on')).not.toBeNull());
     const li = items(container).find(x => text(x.querySelector('.inst-ref')) === '70c')!;
-    expect(text(li.querySelector('.inst-pair'))).toBe('Rackham twelve thirteen Residual words here Last. 71a Plain words');
+    expect(text(li.querySelector('.inst-pair'))).toBe('twelve thirteen Residual words here Last. 71a Plain words Rackham');
   });
 
   it('whole section: a window inside its section shows that section only', async () => {
@@ -752,8 +764,8 @@ describe('Search.svelte: no setting changes a count', () => {
     };
     for (const cx of ['1 line', '3 lines', 'Whole section']) {
       await pick('Context', cx);
-      for (const v of ['By work', 'By form', 'Grammar']) {
-        await pick('Group the hits', v);
+      for (const v of ['By work', 'By form', 'By grammar']) {
+        await pick('Group by', v);
         for (const so of ['Bekker order', 'Works A–Z', 'Forms A–Z', 'Commonest form first']) {
           await pick('Sort', so);
           await vi.waitFor(() => expect(`${cx} ${v} ${so}: ${sum()}`).toBe(`${cx} ${v} ${so}: 10`));

@@ -47,25 +47,31 @@ it.skipIf(!dataPresent)('renders real Bekker pairings and merges translation row
  const english = page.container.querySelector('a.inst-ref[href*="loc=1095b:25"]')!.closest('li')!;
  expect(english.querySelector('.inst-pair[lang="grc"]')?.textContent).toContain(seg.greek.find((l: any) => l.n === 28).text.split(' ')[0]);
  expect(english.querySelector('.inst-pair[lang="grc"]')?.textContent).not.toContain(seg.greek[0].text);
- expect(english.querySelectorAll('.sx-tr .lab').length).toBeGreaterThan(1);
- for (const row of english.querySelectorAll('.sx-tr > div')) {
-   const label = row.querySelector('.lab')?.textContent;
+ // S4a (ruling 18): one translation's English at a time, a switch for each
+ // translation with hits here; each, shown, holds its hit.
+ const names = [...english.querySelectorAll<HTMLButtonElement>('.tr-names button')];
+ expect(names.length).toBeGreaterThan(1);
+ for (const name of names) {
+   await fireEvent.click(name);
+   await vi.waitFor(() => expect(name).toHaveAttribute('aria-pressed', 'true'));
+   const label = name.textContent;
+   const snippet = english.querySelector('.inst-rows .inst-snippet');
+   evidence('EVIDENCE '+label+': '+words12(snippet));
    const pieces = label === 'Ross' ? seg.ross : label === 'Ostwald' ? seg.third : null;
    if (!pieces) continue;
-   expect(row.querySelector('.inst-snippet')?.textContent).toContain('virtue');
-   expect(wordCount(shown(row.querySelector('.inst-snippet')))).toBeLessThanOrEqual(80);
+   expect(snippet?.textContent).toContain('virtue');
+   expect(wordCount(shown(snippet))).toBeLessThanOrEqual(80);
  }
  evidence('EVIDENCE English EN1095b28, ref '+english.querySelector('.inst-ref')?.textContent+' | Greek: '+words12(english.querySelector('.inst-pair')));
- for (const row of english.querySelectorAll('.sx-tr > div')) evidence('EVIDENCE '+row.querySelector('.lab')?.textContent+': '+words12(row.querySelector('.inst-snippet')));
  page.unmount();
  page = await real('g=ἀρετή&e=virtue&w=EN&ctx=1');
- expect(page.container.querySelector('a.inst-ref[href*="loc=1095b:29"]')!.closest('li')!.querySelectorAll('.sx-tr > div').length).toBeGreaterThan(0);
+ expect(page.container.querySelector('a.inst-ref[href*="loc=1095b:29"]')!.closest('li')!.querySelectorAll('.inst-rows').length).toBeGreaterThan(0);
  expect(page.container.querySelector('a.inst-ref[href*="loc=1095b:25"]')).toBeNull();
  page.unmount();
  page = await real('e=virtue&w=Cat&ctx=1');
  const cat = page.container.querySelector('li.instance')!;
  evidence('EVIDENCE Categories '+cat.querySelector('.inst-ref')?.textContent+' | Greek: '+words12(cat.querySelector('.inst-pair')));
- for (const row of cat.querySelectorAll('.sx-tr > div')) evidence('EVIDENCE '+row.querySelector('.lab')?.textContent+': '+words12(row.querySelector('.inst-snippet')));
+ for (const row of cat.querySelectorAll('.inst-rows')) evidence('EVIDENCE '+row.querySelector('.tr-names')?.textContent+': '+words12(row.querySelector('.inst-snippet')));
  expect(cat.querySelector('.inst-pair[lang="grc"]')).not.toBeNull();
 },120000);
 
@@ -73,16 +79,17 @@ it.skipIf(!dataPresent)('widens both languages and keeps English rows in section
  let page = await real('g=ἀρετή&e=virtue&w=EN&ctx=1');
  const short = page.container.querySelector('a.inst-ref[href*="loc=1095b:29"]')!.closest('li')!;
  const greekWords = short.querySelector('.inst-snippet')!.textContent!.length;
- const englishWords = short.querySelector('.sx-tr .inst-snippet')!.textContent!.length;
+ const englishWords = short.querySelector('.inst-rows .inst-snippet')!.textContent!.length;
  page.unmount();
  page = await real('g=ἀρετή&e=virtue&w=EN&ctx=3');
  const wide = page.container.querySelector('a.inst-ref[href*="loc=1095b:29"]')!.closest('li')!;
  expect(wide.querySelector('.inst-snippet')!.textContent!.length).toBeGreaterThan(greekWords);
- expect(wide.querySelector('.sx-tr .inst-snippet')!.textContent!.length).toBeGreaterThan(englishWords);
+ expect(wide.querySelector('.inst-rows .inst-snippet')!.textContent!.length).toBeGreaterThan(englishWords);
  page.unmount();
  page = await real('g=ἀρετή&e=virtue&w=EN&ctx=s');
  const section = page.container.querySelector('a.inst-ref[href*="loc=1095b:"]')!.closest('li')!;
- expect(section.querySelectorAll('.sx-tr > div').length).toBeGreaterThan(1);
+ // Several translations with hits in the section: a switch for each.
+ expect(section.querySelectorAll('.tr-names button').length).toBeGreaterThan(1);
  expect(section.textContent).toContain('virtue');
 },120000);
 
@@ -91,7 +98,7 @@ const wordCount = (text: string) => text.split(/\s+/).filter(w => w !== '…' &&
 it.skipIf(!dataPresent)('clamps paired rows around hits and leaves sections full (needs the built corpus)', async () => {
  let page = await real('e=virtue&w=Cat');
  const cat = page.container.querySelector('a.inst-ref[href*="loc=2b:15"]')!.closest('li')!;
- const en = cat.querySelector('.sx-tr .inst-snippet')!;
+ const en = cat.querySelector('.inst-rows .inst-snippet')!;
  const gr = cat.querySelector('.inst-pair[lang="grc"]')!;
  expect(wordCount(shown(en))).toBeLessThanOrEqual(80);
  expect(en.querySelector('mark')?.textContent).toBe('virtue');
@@ -104,18 +111,22 @@ it.skipIf(!dataPresent)('clamps paired rows around hits and leaves sections full
  evidence('ROUND4 e=virtue Cat 2b15 GR: '+shown(gr));
  page.unmount();
  page = await real('g=ἀρετή&w=EN');
- for (const line of [25, 30]) {
-   const inst = [...page.container.querySelectorAll('li.instance')].find(el => shown(el.querySelector('.inst-ref')) === `1095b${line}`)
-     ?? page.container.querySelector(`a.inst-ref[href*="loc=1095b:${line === 25 ? 29 : 30}"]`)?.closest('li');
-   expect(inst).toBeTruthy();
-   const english = shown(inst!.querySelector('.inst-pair-text'));
-   expect(wordCount(english)).toBeLessThanOrEqual(80);
-   if (line === 25) expect(english).toContain('ground of virtue');
-   evidence(`ROUND4 g=ἀρετή EN 1095b${line} EN: `+english);
-   evidence(`ROUND4 g=ἀρετή EN 1095b${line} GR: `+shown(inst!.querySelector('.inst-snippet')));
- }
+ // S4a: the hits at 1095b29, 1095b30 and 1095b33 share their lines (three
+ // a hit, the section ending at b33), so they are one instance, all marked,
+ // cited first line to last.
+ const inst = page.container.querySelector('a.inst-ref[href*="loc=1095b:29"]')?.closest('li');
+ expect(inst).toBeTruthy();
+ expect(shown(inst!.querySelector('.inst-ref'))).toBe('1095b29–33');
+ expect(inst!.querySelectorAll('.inst-snippet.greek mark').length).toBe(3);
+ expect(page.container.querySelector('a.inst-ref[href*="loc=1095b:30"]')).toBeNull();
+ expect(page.container.querySelector('a.inst-ref[href*="loc=1095b:33"]')).toBeNull();
+ const english = shown(inst!.querySelector('.inst-pair-text'));
+ expect(wordCount(english)).toBeLessThanOrEqual(80);
+ expect(english).toContain('ground of virtue');
+ evidence('ROUND4 g=ἀρετή EN 1095b29–33 EN: '+english);
+ evidence('ROUND4 g=ἀρετή EN 1095b29–33 GR: '+shown(inst!.querySelector('.inst-snippet')));
  page.unmount();
  page = await real('e=virtue&w=Cat&ctx=s');
  const section = page.container.querySelector('a.inst-ref[href*="loc=2b:"]')!.closest('li')!;
- expect(wordCount(shown(section.querySelector('.sx-tr .inst-snippet')))).toBeGreaterThan(80);
+ expect(wordCount(shown(section.querySelector('.inst-rows .inst-snippet')))).toBeGreaterThan(80);
 }, 120000);

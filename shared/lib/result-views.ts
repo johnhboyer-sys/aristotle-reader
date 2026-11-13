@@ -277,7 +277,7 @@ export interface FormGroupOf<T> {
  * it carries English hits too) and then by form in Greek order (compareForms,
  * as orderHits), each group keeping the items' order;
  * the items without a form in one group at the end. */
-export function formGroupsOf<T extends { form?: string; surface?: string; hits: number; grk?: number }>(items: T[]): FormGroupOf<T>[] {
+export function formGroupsOf<T extends { form?: string; surface?: string; surfaces?: string[]; hits: number; grk?: number }>(items: T[]): FormGroupOf<T>[] {
   const byForm = new Map<string | null, FormGroupOf<T>>();
   for (const item of items) {
     const form = item.form ?? null;
@@ -285,7 +285,9 @@ export function formGroupsOf<T extends { form?: string; surface?: string; hits: 
     g.items.push(item);
     g.count += item.hits;
     g.grk += item.grk ?? item.hits;
-    if (item.surface && !g.surfaces.includes(item.surface)) g.surfaces.push(item.surface);
+    // An item of several hits of one form (hits merged into one passage)
+    // names each spelling it holds.
+    for (const surface of item.surfaces ?? [item.surface]) if (surface && !g.surfaces.includes(surface)) g.surfaces.push(surface);
   }
   const english = byForm.get(null);
   byForm.delete(null);

@@ -26,7 +26,9 @@ it.skipIf(!dataPresent)('a Greek hit is labelled, linked, and exported at its ow
   const page = await real('g=ἀρετή&w=EN');
   const first = refs(page.container)[0];
   console.log('ROUND5 g=ἀρετή&w=EN first five: ' + refs(page.container).slice(0, 5).map(a => shown(a)).join(', '));
-  expect(shown(first)).toBe('1095b29');
+  // Its own line, not its tick span's first (1095b25); the hits at 1095b30
+  // and 1095b33 share its lines and its instance, cited to the last (S4a).
+  expect(shown(first)).toBe('1095b29–33');
   expect(first.getAttribute('href')).toMatch(/loc=1095b:29(&|$)/);
   expect(shown(first.closest('li')!.querySelector('.inst-snippet'))).toContain('ἐπ');
 
@@ -45,11 +47,12 @@ it.skipIf(!dataPresent)('a Greek hit is labelled, linked, and exported at its ow
 }, 240000);
 
 it.skipIf(!dataPresent)('a Greek hit on a lettered line keeps its letter (needs the built corpus)', async () => {
-  // Categories 2b6b holds ὑποκειμέναις.
+  // Categories 2b6b holds ὑποκειμέναις; so does 2b5, whose lines it shares,
+  // so the two are one instance (S4a), cited to both lines, the letter kept.
   const page = await real('g=ὑποκειμέναις&m=form&w=Cat');
-  const a = refs(page.container).find(el => /loc=2b:6b(&|$)/.test(el.getAttribute('href') ?? ''));
+  const a = refs(page.container).find(el => /loc=2b:5(&|$)/.test(el.getAttribute('href') ?? ''));
   expect(a).toBeTruthy();
-  expect(shown(a!)).toBe('2b6b');
+  expect(shown(a!)).toBe('2b5–6b');
   page.unmount();
 }, 240000);
 

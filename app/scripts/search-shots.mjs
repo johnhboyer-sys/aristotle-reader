@@ -288,8 +288,8 @@ async function shoot(browser, st, theme, base, file) {
         const r = await runStep(p, btn('.inst-more')); if (r?.skipped) notes.skipped.push(r.skipped); if (r?.unchecked) notes.unchecked.push(r.unchecked);
         await p.mouse.move(1, 1); await p.waitForLoadState('networkidle'); await p.waitForTimeout(1500);
         // round 34: the opened hit's head row sits 24px from the top of the shot
-        await need(p, { sel: '.z-ohead' });
-        y0 = await p.evaluate(() => { const h = document.querySelector('.z-ohead'); return Math.max(0, Math.round(h.getBoundingClientRect().top + scrollY - 24)); });
+        await need(p, { sel: '.inst-ohead' });
+        y0 = await p.evaluate(() => { const h = document.querySelector('.inst-ohead'); return Math.max(0, Math.round(h.getBoundingClientRect().top + scrollY - 24)); });
       }
       if (st.action === 'advanced') { const r = await runStep(p, opens(btn('button', /^(Advanced|Proximity)/), EDITOR)); if (r?.skipped) notes.skipped.push(r.skipped); }
       notes.render = await checkRender(p, st.path);

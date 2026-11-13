@@ -111,20 +111,24 @@ describe('Search.svelte: a Greek hit shows its English', () => {
     expect(pair).toHaveAttribute('lang', 'en');
     // Not the whole section ("One two three. Four five"), nor the whole turn.
     expect(text(pair!.querySelector('.inst-pair-text'))).toBe('Four five');
-    // The translator's short name, opening the reader in that translation.
-    const label = pair!.querySelector('a.lab')!;
-    expect(label).toHaveTextContent('Rackham');
-    expect(label.getAttribute('href')).toContain('trans=rackham');
-    expect(label.getAttribute('href')).toContain('loc=70a');
+    // The translator's short name under it, plain: one translation, no
+    // choice to offer (ruling 18).
+    const label = pair!.querySelector('.tr-names')!;
+    expect(label).toHaveTextContent(/^Rackham$/);
+    expect(label.querySelector('button, a')).toBeNull();
+    expect(label.previousElementSibling).toBe(pair!.querySelector('.inst-pair-text'));
     expect(pair!.querySelector('mark')).toBeNull();
   });
 
   it('prints the English once where two hits in a row share a unit', async () => {
-    // α and β are one turn; δ is the next.
+    // α and β are one turn; δ is the next. α and β share a passage and a
+    // turn: one instance, both marked (S4a). δ's passage overlaps theirs,
+    // but its turn is another, and its English is its own.
     const { list } = await instances(`/search?g=${encodeURIComponent('α')}`,
       [at('70a', { grkMatch: true, grkPositions: [0, 1, 3] })], 3);
-    expect(list).toHaveLength(3);
-    expect(list.map(li => text(li.querySelector('.inst-pair-text')))).toEqual(['One two three.', '', 'Four five']);
+    expect(list).toHaveLength(2);
+    expect(list.map(li => marks(li.querySelector('.inst-snippet.greek')!))).toEqual([['α', 'β'], ['δ']]);
+    expect(list.map(li => text(li.querySelector('.inst-pair-text')))).toEqual(['One two three.', 'Four five']);
   });
 
   it('uses the translator chip in force, and the reference translation without one', async () => {
@@ -135,17 +139,20 @@ describe('Search.svelte: a Greek hit shows its English', () => {
     })];
     const url = `/search?g=${encodeURIComponent('α')}&e=four+cuatro&em=any`;
     const plain = await instances(url, results, 3);
-    expect(text(plain.list[0].querySelector('.inst-pair'))).toBe('Rackham One two three.');
-    // The English hit is one instance for the unit, a row per translator.
+    // The English, then its translator's name under it (ruling 18).
+    expect(text(plain.list[0].querySelector('.inst-pair'))).toBe('One two three. Rackham');
+    // The English hit is one instance for the unit, one translation shown and
+    // a switch for each translation with hits there, in the side column's order.
     expect(plain.list).toHaveLength(2);
-    expect([...plain.list[1].querySelectorAll('.sx-tr a.lab')].map(text)).toEqual(['Rackham', 'Ross']);
+    expect([...plain.list[1].querySelectorAll('.tr-names button')].map(text)).toEqual(['Rackham', 'Ross']);
     expect(text(plain.list[1].querySelector('.inst-pair'))).toBe('δ ε');
     plain.container.remove();
 
     const chip = await instances(`${url}&t=ross`, results, 2);
     const pair = chip.list[0].querySelector('.inst-pair')!;
-    expect(text(pair)).toBe('Ross Uno dos.');
-    expect(pair.querySelector('a.lab')!.getAttribute('href')).toContain('trans=ross');
+    expect(text(pair)).toBe('Uno dos. Ross');
+    // The reference opens the reader at the hit.
+    expect(chip.list[0].querySelector('.inst-ref')!.getAttribute('href')).toContain('loc=70a');
   });
 });
 
@@ -155,7 +162,7 @@ describe('Search.svelte: an English hit shows its Greek', () => {
     const { list } = await instances('/search?e=nine',
       [at('70b', { engMatch: true, engHits: [{ translation: 'rackham', positions: [3] }] })], 1);
     expect(list).toHaveLength(1);
-    expect(marks(list[0].querySelector('.sx-tr')!)).toEqual(['Nine']);
+    expect(marks(list[0].querySelector('.inst-en')!)).toEqual(['Nine']);
     const pair = list[0].querySelector('.inst-pair');
     expect(pair).not.toBeNull();
     expect(pair).toHaveAttribute('lang', 'grc');
@@ -170,7 +177,7 @@ describe('Search.svelte: an English hit shows its Greek', () => {
       [at('70b', { engMatch: true, engHits: [{ translation: 'rackham', positions: [2, 3] }] })], 2);
     expect(list.map(li => text(li.querySelector('.inst-pair')))).toEqual(['ζ η', 'θ ι κ']);
     // Each passage stops at its turn: neither shows the other's word.
-    expect(list.map(li => text(li.querySelector('.sx-tr .inst-snippet')))).toEqual(['six seven eight', 'Nine ten. Eleven']);
+    expect(list.map(li => text(li.querySelector('.inst-en .inst-snippet')))).toEqual(['six seven eight', 'Nine ten. Eleven']);
     expect(list.map(marks)).toEqual([['eight'], ['Nine']]);
     expect(text(container.querySelector('.group-count'))).toBe('2 instances');
   });
@@ -182,7 +189,9 @@ describe('Search.svelte: an English hit shows its Greek', () => {
     expect(text(list[0].querySelector('.inst-ref'))).toBe('70b');
     expect(marks(list[0])).toEqual(['seis']);
     expect(text(list[0].querySelector('.inst-pair'))).toBe('ζ η');
-    expect(list[0].querySelector('.sx-tr a.lab')!.getAttribute('href')).toContain('loc=70b');
+    // The reference opens the reader in the translation shown, at its section.
+    expect(list[0].querySelector('.inst-ref')!.getAttribute('href')).toContain('loc=70b');
+    expect(list[0].querySelector('.inst-ref')!.getAttribute('href')).toContain('trans=ross');
   });
 });
 
@@ -203,7 +212,7 @@ describe('Search.svelte: Greek and English hits in one unit', () => {
     // θ and "nine": one instance, no second row, no unmarked copy.
     expect(marks(list[1])).toEqual(['θ', 'Nine']);
     expect(list[1].querySelector('.inst-snippet.greek')).toHaveAttribute('lang', 'grc');
-    expect(list[1].querySelector('.sx-tr a.lab')).toHaveTextContent('Rackham');
+    expect(list[1].querySelector('.inst-en .tr-names')).toHaveTextContent(/^Rackham$/);
     expect(list[1].querySelector('.inst-pair')).toBeNull();
   });
 

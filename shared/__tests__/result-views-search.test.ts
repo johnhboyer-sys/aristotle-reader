@@ -87,7 +87,7 @@ async function open(
   window.history.replaceState(null, '', url);
   const page = render(Search);
   // Settled once the switch is drawn and the first page's groups are in.
-  await screen.findByRole('group', { name: 'Group the hits' });
+  await screen.findByRole('group', { name: 'Group by' });
   await vi.waitFor(() => expect(page.container.querySelectorAll('.group-head').length).toBeGreaterThan(0));
   return page;
 }
@@ -100,16 +100,21 @@ const heads = (c: HTMLElement) => [...c.querySelectorAll('.group-head')].map(h =
 const run = (g: Element | null) => g ? [g.querySelector('.gx-head'), ...g.querySelectorAll('label')].map(text).join(' ') : '';
 // The view is a radio in the "Group by" menu.
 const viewButton = (name: string) =>
-  within(screen.getByRole('group', { name: 'Group the hits' })).getByRole('radio', { name });
+  within(screen.getByRole('group', { name: 'Group by' })).getByRole('radio', { name });
 // Every heading starts open, in every view (John, 2026-11-10): no hit waits
 // behind a click.
 function expectAllOpen(c: HTMLElement) {
   expect(c.querySelectorAll('.group-head').length).toBeGreaterThan(0);
   expect(c.querySelectorAll('.group-head[aria-expanded="false"]')).toHaveLength(0);
 }
-// Each instance by its link and its marked Greek, which no two share.
-const instances = (c: HTMLElement) => [...c.querySelectorAll('li.instance')].map(li =>
-  `${li.querySelector('.inst-ref')?.getAttribute('href')} ${li.querySelector('.inst-snippet')?.innerHTML.trim()}`).sort();
+// Each hit shown, by the Greek word it marks, which no two instances share.
+// Hits whose passages overlap are one instance, every hit marked (S4a), and
+// a form view files that instance under each form with its own marks: the
+// hits are the same in every view, the instances not.
+const hitsShown = (c: HTMLElement) => [...c.querySelectorAll('li.instance .inst-snippet.greek mark')].map(m => {
+  const b = m.closest<HTMLElement>('button.gw')!;
+  return `${b.dataset.w}:${b.dataset.s}:${b.dataset.i}`;
+}).sort();
 const facetRow = () => screen.getByRole('group', { name: 'Narrow by grammar' });
 const formRows = (panel: HTMLElement) => [...panel.querySelectorAll('label')].map(label =>
   `${text(label)}${(label.querySelector('input') as HTMLInputElement).checked ? ' ✓' : ''}`);
@@ -121,18 +126,19 @@ describe('Search.svelte: views', () => {
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     expect(viewButton('By work')).toBeChecked();
     expectAllOpen(container);
-    const shown = instances(container);
+    const shown = hitsShown(container);
     expect(shown).toHaveLength(6);
-    for (const name of ['By form', 'Grammar', 'By work']) {
+    expect(new Set(shown).size).toBe(6);
+    for (const name of ['By form', 'By grammar', 'By work']) {
       await fireEvent.click(viewButton(name));
       await vi.waitFor(() => expect(viewButton(name)).toBeChecked());
       // The menu's own value follows the view in force, not the click.
       expect(text(viewButton(name).closest('details')!.querySelector('summary b'))).toBe(name.replace(/^By /, ''));
-      for (const other of ['By work', 'By form', 'Grammar'].filter(n => n !== name)) {
+      for (const other of ['By work', 'By form', 'By grammar'].filter(n => n !== name)) {
         expect(viewButton(other)).not.toBeChecked();
       }
       expectAllOpen(container);
-      expect(instances(container)).toEqual(shown);
+      expect(hitsShown(container)).toEqual(shown);
     }
     expect(status()).toHaveTextContent('6 instances');
   });
@@ -146,10 +152,13 @@ describe('Search.svelte: views', () => {
     expect(window.location.search).toContain('v=form');
     expectAllOpen(container);
     const first = container.querySelector('.chapter-group')!;
-    // Corpus order within the group: the Int comes before the EN.
+    // Corpus order within the group: the Int comes before the EN, whose two
+    // hits of the form share one passage and are one instance (S4a).
     expect([...first.querySelectorAll('.inst-ref')].map(text)).toEqual([
-      `${getWork('Int')!.abbr} 70a1`, `${getWork('EN')!.abbr} 70a1`, `${getWork('EN')!.abbr} 70a1`,
+      `${getWork('Int')!.abbr} 70a1`, `${getWork('EN')!.abbr} 70a1`,
     ]);
+    expect([...first.querySelectorAll('li.instance')].map(li => [...li.querySelectorAll('.inst-snippet.greek mark')].map(text)))
+      .toEqual([['ἐστί'], ['ἐστί', 'ἐστι']]);
     // Back to works: the citation is the section alone again.
     await fireEvent.click(viewButton('By work'));
     expectAllOpen(container);
@@ -158,44 +167,47 @@ describe('Search.svelte: views', () => {
 
   // John, 2026-11-10: the Stephanus page headings "just add clicks". The hits
   // are listed plainly under their work, and the work's heading opens and
-  // shuts; a work of one book drops its "Book 1".
-  it('by work, the default: a heading per work and book that opens and shuts, and no Stephanus headings', async () => {
+  // shuts. S4a (round 34, d25, ruling 17): one heading per work; a work of
+  // several books names each book on a line with its count, and each
+  // chapter's hits sit under a line naming the chapter.
+  it('by work, the default: a heading per work that opens and shuts, a line per book and per chapter, and no Stephanus headings', async () => {
     const results = [at('Meta', '70a', [0, 1], 1), at('Meta', '70b', [1], 1), at('Meta', '70a', [3], 2), at('EN', '70b', [1])];
     const { container } = await open(G, { results, forms: { byResult: new Map(), headwords: new Map(), failedWorks: [] } });
     await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
     expect(viewButton('By work')).toBeChecked();
     const labels = getWork('Meta')!.bookLabels;
-    // The EN comes first in the corpus; the heads are the work headings.
-    expect(heads(container)).toEqual([
-      `Metaphysics Book ${labels[0]} 3 instances`, `Metaphysics Book ${labels[1]} 1 instance`, 'Nicomachean Ethics Book I 1 instance',
-    ]);
+    // The work headings, each counting its hits on the page.
+    expect(heads(container)).toEqual(['Metaphysics 4 instances', 'Nicomachean Ethics 1 instance']);
     // Each heading holds its own button, and the button names its work.
-    expect([...container.querySelectorAll('.book-header')].map(h => {
-      const head = h.querySelector('button.group-head');
-      return head ? `${text(head.querySelector('.work-name'))}|${text(head.querySelector('.book-name'))}` : null;
-    })).toEqual([`Metaphysics|Book ${labels[0]}`, `Metaphysics|Book ${labels[1]}`, 'Nicomachean Ethics|Book I']);
+    expect([...container.querySelectorAll('.book-header')].map(h => text(h.querySelector('button.group-head .work-name'))))
+      .toEqual(['Metaphysics', 'Nicomachean Ethics']);
+    expect([...container.querySelectorAll('.sx-book')].map(text)).toEqual([`Book ${labels[0]} 3`, `Book ${labels[1]} 1`, 'Book I 1']);
+    // The mock outline names chapter 70 in every book, with no title.
+    expect([...container.querySelectorAll('.sx-chap')].map(text)).toEqual(['Chapter 70', 'Chapter 70', 'Chapter 70']);
     expect(text(container.querySelector('.sx-results'))).not.toMatch(/Stephanus/i);
-    expect(container.querySelectorAll('.chapter-group')).toHaveLength(3);
-    // Every hit shows, each with its section; Met 70a's two words are an
-    // instance each.
+    expect(container.querySelectorAll('.chapter-group')).toHaveLength(2);
+    // Every hit shows, each with its section; Met 70a's two words share a
+    // passage and are one instance with both marked (S4a).
     expectAllOpen(container);
-    expect([...container.querySelectorAll('.inst-ref')].map(text)).toEqual(['70a1', '70a1', '70b1', '70a1', '70b1']);
-    // The work heading shuts its hits and opens them again.
-    const laws1 = container.querySelectorAll('.group-head')[1];
-    await fireEvent.click(laws1);
-    expect(laws1).toHaveAttribute('aria-expanded', 'false');
-    expect([...container.querySelectorAll('.inst-ref')].map(text)).toEqual(['70a1', '70a1', '70b1', '70b1']);
-    await fireEvent.click(laws1);
-    expect(laws1).toHaveAttribute('aria-expanded', 'true');
-    expect(container.querySelectorAll('.inst-ref')).toHaveLength(5);
+    expect([...container.querySelectorAll('.inst-ref')].map(text)).toEqual(['70a1', '70b1', '70a1', '70b1']);
+    expect([...container.querySelectorAll('li.instance')][0].querySelectorAll('.inst-snippet.greek mark')).toHaveLength(2);
+    // The work heading shuts its hits, its book and chapter lines with them, and opens them again.
+    const meta = container.querySelectorAll('.group-head')[0];
+    await fireEvent.click(meta);
+    expect(meta).toHaveAttribute('aria-expanded', 'false');
+    expect([...container.querySelectorAll('.inst-ref')].map(text)).toEqual(['70b1']);
+    expect([...container.querySelectorAll('.sx-book')].map(text)).toEqual(['Book I 1']);
+    await fireEvent.click(meta);
+    expect(meta).toHaveAttribute('aria-expanded', 'true');
+    expect(container.querySelectorAll('.inst-ref')).toHaveLength(4);
   });
 
   it('reads an old address with v=work as the default view', async () => {
     const { container } = await open(`${G}&v=work`);
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     expect(viewButton('By work')).toBeChecked();
-    expect(within(screen.getByRole('group', { name: 'Group the hits' })).getAllByRole('radio').map(r => r.closest('label')!.textContent!.trim()))
-      .toEqual(['By work', 'By form', 'Grammar']);
+    expect(within(screen.getByRole('group', { name: 'Group by' })).getAllByRole('radio').map(r => r.closest('label')!.textContent!.trim()))
+      .toEqual(['By work', 'By form', 'By grammar']);
     expect([...container.querySelectorAll('.book-header .work-name')].map(text)).toEqual(['De Interpretatione', 'Nicomachean Ethics']);
   });
 
@@ -203,12 +215,18 @@ describe('Search.svelte: views', () => {
     const { greekHitGrammar } = await import('../lib/search');
     const { container } = await open(G);
     expect(greekHitGrammar).not.toHaveBeenCalled();
-    await fireEvent.click(viewButton('Grammar'));
-    await vi.waitFor(() => expect(heads(container)).toEqual([
-      'ἐστί · ἐστι sg pres ind act 3rd 3 instances',
-      'τῆς gen sg fem · dat sg fem 2 instances',
-      'ταῖς dat pl fem 1 instance',
-    ]));
+    await fireEvent.click(viewButton('By grammar'));
+    // Each form's readings fold under their count, under its heading (d12).
+    const analyses = () => [...container.querySelectorAll<HTMLButtonElement>('button.sx-analyses')];
+    await vi.waitFor(() => expect(analyses().map(b => b.getAttribute('aria-expanded'))).toEqual(['false', 'false', 'false']));
+    expect(heads(container)).toEqual(['ἐστί · ἐστι 3 instances', 'τῆς 2 instances', 'ταῖς 1 instance']);
+    expect(analyses().map(b => text(b).replace(/[▸▾]/, ''))).toEqual(['1 analysis', '2 analyses', '1 analysis']);
+    expect(container.querySelector('.group-readings')).toBeNull();
+    for (const b of analyses()) await fireEvent.click(b);
+    expect(analyses().map(b => b.getAttribute('aria-expanded'))).toEqual(['true', 'true', 'true']);
+    expect([...container.querySelectorAll('.group-readings')].map(text)).toEqual([
+      'sg pres ind act 3rd', 'gen sg fem · dat sg fem', 'dat pl fem',
+    ]);
     expect(greekHitGrammar).toHaveBeenCalledWith(RESULTS);
     const row = facetRow();
     const runs = [...row.querySelectorAll('.gx-group')].map(run);
@@ -227,7 +245,7 @@ describe('Search.svelte: grammar facets', () => {
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     await fireEvent.click(within(facetRow()).getByRole('checkbox', { name: 'Gender fem' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
-    await vi.waitFor(() => expect(heads(container)).toEqual(['τῆς gen sg fem · dat sg fem 2 instances', 'ταῖς dat pl fem 1 instance']));
+    await vi.waitFor(() => expect(heads(container)).toEqual(['τῆς 2 instances', 'ταῖς 1 instance']));
     const works = screen.getByRole('group', { name: 'Show hits from one work' });
     expect(within(works).getAllByRole('button').map(text)).toEqual(['Nicomachean Ethics2', 'De Interpretatione1']);
     expect(formRows(screen.getByRole('group', { name: 'Greek forms found' }))).toEqual(['της 2 ✓', 'ταις 1 ✓']);
@@ -390,13 +408,17 @@ describe('Search.svelte: the notes of a whole section', () => {
       .toEqual(['τῆς: one of 2 readings · λόγος: case dat or nom']));
   });
 
-  it('a hit opened with "more" keeps its note and adds the others now marked', async () => {
+  // Two hits a word apart share a passage: one instance (S4a), which names
+  // the word each note is about, and keeps both opened to its section.
+  it('a passage of two hits names the word each note is about, opened or not', async () => {
     const { container } = await open(`${G}&gf=case.dat`, TWO);
     await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
     expectAllOpen(container);
-    const [li] = container.querySelectorAll('li.instance');
-    await vi.waitFor(() => expect(note(li)).toBe('one of 2 readings'));
+    const items = container.querySelectorAll('li.instance');
+    expect(items).toHaveLength(1);
+    const [li] = items;
+    await vi.waitFor(() => expect(note(li)).toBe('τῆς: one of 2 readings · λόγος: case dat or nom'));
     await fireEvent.click(li.querySelector('button.inst-more')!);
-    await vi.waitFor(() => expect(note(li)).toBe('one of 2 readings · λόγος: case dat or nom'));
+    await vi.waitFor(() => expect(note(li)).toBe('τῆς: one of 2 readings · λόγος: case dat or nom'));
   });
 });

@@ -97,7 +97,7 @@ async function open(url: string, results: SearchResult[] = RESULTS, forms: HitFo
   vi.mocked(greekHitGrammar).mockResolvedValueOnce(GRAMMAR);
   window.history.replaceState(null, '', url);
   const page = render(Search);
-  await screen.findByRole('group', { name: 'Hits per page' });
+  await screen.findByRole('group', { name: 'Per page' });
   await vi.waitFor(() => expect(page.container.querySelectorAll('.group-head, .cite').length).toBeGreaterThan(0));
   return page;
 }
@@ -106,7 +106,7 @@ const text = (el: Element | null | undefined) => (el?.textContent ?? '').replace
 const summary = () => screen.getByRole('group', { name: 'This search' });
 const chosen = () => [...summary().querySelectorAll('li')].map(li => text(li.querySelector('span')));
 const remove = (what: string) => within(summary()).getByRole('button', { name: `Remove ${what}` });
-const MENUS = ['Group the hits', 'Sort', 'Context', 'Hits per page'];
+const MENUS = ['Group by', 'Sort', 'Context', 'Per page'];
 const menu = (legend: string) => screen.getByRole('group', { name: legend }).closest('details')!;
 const value = (legend: string) => text(menu(legend).querySelector('summary b'));
 const radio = (legend: string, name: string) =>
@@ -138,10 +138,10 @@ describe('Search.svelte: the display bar', () => {
   });
 
   const cases = [
-    { legend: 'Group the hits', label: 'By form', b: 'form', param: 'v=form', entry: 'By form', back: 'By work', backB: 'work' },
+    { legend: 'Group by', label: 'By form', b: 'form', param: 'v=form', entry: 'By form', back: 'By work', backB: 'work' },
     { legend: 'Sort', label: 'Commonest form first', b: 'Commonest form first', param: 'so=freq', entry: 'Commonest form first', back: 'Bekker order', backB: 'Bekker order' },
     { legend: 'Context', label: '1 line', b: '1 line', param: 'ctx=1', entry: '1 line', back: '3 lines', backB: '3 lines' },
-    { legend: 'Hits per page', label: 'Citations only', b: 'Citations only', param: 'ps=c', entry: 'Citations only', back: '40', backB: '40' },
+    { legend: 'Per page', label: 'Citations only', b: 'citations only', param: 'ps=c', entry: 'Citations only', back: '40', backB: '40' },
   ];
   for (const c of cases) {
     it(`"${c.legend}": a radio applies at once, without a new search, and the summary's × sets it back`, async () => {
@@ -213,8 +213,8 @@ describe('Search.svelte: the display bar', () => {
   it('under citations only holds just the Per page menu', async () => {
     const { container } = await open(`${G}&ps=c`);
     const bar = container.querySelector('.sx-main > .sx-display')!;
-    expect([...bar.querySelectorAll('legend')].map(text)).toEqual(['Hits per page']);
-    expect(value('Hits per page')).toBe('Citations only');
+    expect([...bar.querySelectorAll('legend')].map(text)).toEqual(['Per page']);
+    expect(value('Per page')).toBe('citations only');
   });
 
   it('is not drawn when nothing is found', async () => {
@@ -235,8 +235,8 @@ describe('Search.svelte: the reference column', () => {
     const { container } = await open(G);
     const hits = () => [...container.querySelectorAll('.sx-results')].find(el => el.querySelector('li.instance'))!;
     expect(hits()).toHaveClass('by-work');
-    menu('Group the hits').open = true;
-    await fireEvent.click(radio('Group the hits', 'By form'));
+    menu('Group by').open = true;
+    await fireEvent.click(radio('Group by', 'By form'));
     await vi.waitFor(() => expect(hits()).not.toHaveClass('by-work'));
   });
 
@@ -265,12 +265,14 @@ describe('Search.svelte: the count row', () => {
     expect(names(container)).toEqual(['28 instances · page 1 of 2', 'Save', 'Previous page', 'Next page', 'Filter, 1 chosen', 'Sort and display']);
     // Save (PR 8) is a word; the rest are icons.
     for (const b of bar(container).querySelectorAll('button:not(.sx-save)')) expect(b.querySelector('svg')).not.toBeNull();
-    expect(screen.getByRole('button', { name: 'Previous page' })).toBeDisabled();
-    await fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
+    // The pager over the hits names its arrows the same way (S4a): these are the count row's.
+    const row = within(bar(container) as HTMLElement);
+    expect(row.getByRole('button', { name: 'Previous page' })).toBeDisabled();
+    await fireEvent.click(row.getByRole('button', { name: 'Next page' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('page 2 of 2'));
     // Both wait while the page loads.
-    await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Previous page' })).not.toBeDisabled());
-    expect(screen.getByRole('button', { name: 'Next page' })).toBeDisabled();
+    await vi.waitFor(() => expect(row.getByRole('button', { name: 'Previous page' })).not.toBeDisabled());
+    expect(row.getByRole('button', { name: 'Next page' })).toBeDisabled();
   });
 
   it('has no arrows for one page', async () => {
@@ -427,11 +429,16 @@ describe('set B\'s rules', () => {
   });
 
   it('gives a hit’s reference a narrow column in By work, where it is only the section', () => {
-    // John, 2026-11-10: "too much blank space" beside "2a".
-    expect(find(topLevel(style), '.instance').some(r => /grid-template-columns:\s*7\.5rem minmax\(0, 1fr\)/.test(r.body))).toBe(true);
-    expect(find(topLevel(style), '.sx-results.by-work .instance').some(r => /grid-template-columns:\s*2\.75rem minmax\(0, 1fr\)/.test(r.body) && /column-gap:\s*1\.25rem/.test(r.body))).toBe(true);
+    // John, 2026-11-10: "too much blank space" beside "2a". S4a moved the
+    // results' rules to b-search.css, at round 34's widths: 84px by work,
+    // 104px where the place names its work, 20px to the text.
+    const B = readFileSync(resolve(here, '../styles/b-search.css'), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
+    expect(find(topLevel(B), '.search-page .instance').some(r => /grid-template-columns:\s*104px minmax\(0, 1fr\)/.test(r.body) && /column-gap:\s*20px/.test(r.body))).toBe(true);
+    expect(find(topLevel(B), '.search-page .sx-results.by-work .instance').some(r => /grid-template-columns:\s*84px minmax\(0, 1fr\)/.test(r.body))).toBe(true);
     // A phone keeps one column, the reference over the text, in every view.
-    expect(find(block(style, /@media \(max-width: 680px\)/), '.sx-results.by-work .instance').some(r => /grid-template-columns:\s*minmax\(0, 1fr\)/.test(r.body))).toBe(true);
+    expect(find(block(B, /@media \(max-width: 960px\)/), '.search-page .sx-results.by-work .instance').some(r => /grid-template-columns:\s*minmax\(0, 1fr\)/.test(r.body))).toBe(true);
+    // None of it is left in the component.
+    expect(find(style, '.instance')).toEqual([]);
   });
 
   it('marks a ticked grammar value without colour where colours are forced', () => {

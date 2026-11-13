@@ -99,7 +99,7 @@ async function open(url: string, results: SearchResult[] = RESULTS) {
   window.history.replaceState(null, '', url);
   const page = render(Search);
   // Settled once the results' controls and the first page's hits are drawn.
-  await screen.findByRole('group', { name: 'Hits per page' });
+  await screen.findByRole('group', { name: 'Per page' });
   await vi.waitFor(() => expect(page.container.querySelectorAll('.group-head, .cite').length).toBeGreaterThan(0));
   return page;
 }
@@ -126,7 +126,7 @@ describe('Search.svelte: the side column', () => {
     for (const name of ['Show hits from one work', 'Greek forms found', 'Narrow by grammar']) {
       expect(within(side).getByRole('group', { name })).toBeInTheDocument();
     }
-    for (const name of ['Group the hits', 'Sort', 'Context', 'Hits per page']) {
+    for (const name of ['Group by', 'Sort', 'Context', 'Per page']) {
       expect(within(side).queryByRole('group', { name })).toBeNull();
     }
     expect(within(side).getByRole('button', { name: 'Export results as CSV' })).toBeInTheDocument();
@@ -193,12 +193,12 @@ describe('Search.svelte: "This search"', () => {
       control: () => {
         expect((within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case gen' }) as HTMLInputElement).checked).toBe(false);
         // The view, also chosen, stays.
-        expect(pressed('Group the hits')).toEqual(['Grammar']);
+        expect(pressed('Group by')).toEqual(['By grammar']);
       },
     },
     {
       what: 'By form', url: `${G}&v=form`, before: '6 instances', after: '6 instances', param: 'v=',
-      control: () => expect(pressed('Group the hits')).toEqual(['By work']),
+      control: () => expect(pressed('Group by')).toEqual(['By work']),
     },
     {
       what: 'Forms A–Z', url: `${G}&so=form`, before: '6 instances', after: '6 instances', param: 'so=',
@@ -210,11 +210,11 @@ describe('Search.svelte: "This search"', () => {
     },
     {
       what: '20 a page', url: `${G}&ps=20`, before: '6 instances', after: '6 instances', param: 'ps=',
-      control: () => expect(pressed('Hits per page')).toEqual(['40']),
+      control: () => expect(pressed('Per page')).toEqual(['40']),
     },
     {
       what: 'Citations only', url: `${G}&ps=c`, before: '6 instances', after: '6 instances', param: 'ps=',
-      control: () => expect(pressed('Hits per page')).toEqual(['40']),
+      control: () => expect(pressed('Per page')).toEqual(['40']),
     },
   ];
   for (const c of cases) {
@@ -241,8 +241,8 @@ describe('Search.svelte: "This search"', () => {
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     expect(chosen()).toEqual([]);
     expect(window.location.search).toBe(`?g=${encodeURIComponent('εἰμί')}`);
-    expect(pressed('Group the hits')).toEqual(['By work']);
-    expect(pressed('Hits per page')).toEqual(['40']);
+    expect(pressed('Group by')).toEqual(['By work']);
+    expect(pressed('Per page')).toEqual(['40']);
     expect(search).toHaveBeenCalledTimes(1);
   });
 
