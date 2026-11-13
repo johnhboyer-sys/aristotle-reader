@@ -73,9 +73,15 @@ it('counts each form in a mixed merge for Commonest form first', async () => {
   expect([...c.querySelectorAll('.inst-ref')].map(text)).toEqual(['70b1', '70c1', '70a1']);
 });
 
-it('lists both spellings when a merged passage holds one folded form', async () => {
+// Ruled 13 Nov: a group is headed by one spelling, its commonest; a tie goes
+// to the first met. A merged passage counts each spelling it holds.
+it('heads a merged passage holding one form with one spelling, its commonest', async () => {
   const c = await open(bookOf(line(1, 'ἐστί ἐστι')), [hit('70a', [0, 1])], '&v=form');
-  expect(text(c.querySelector('.group-label'))).toBe('ἐστί · ἐστι');
+  expect(text(c.querySelector('.group-label'))).toBe('ἐστί');
+});
+it('counts a grave as the acute when it heads a group', async () => {
+  const c = await open(bookOf(line(1, 'ἐστι ἐστί ἐστὶ')), [hit('70a', [0, 1, 2])], '&v=form');
+  expect([...c.querySelectorAll('.group-label')].map(text)).toEqual(['ἐστί']);
 });
 
 it('gives pager arrows 44px targets and keeps the glyph and status in place', () => {

@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { greekHitGrammar, type HitForms, type HitGrammar, type Reading, type SearchResult } from '../lib/search';
 import {
-  ambiguous, compareForms, facetCounts, formGroupsOf, formatReading, grammarHitNote, readingMatches, refine, tokenMatches, withTicked,
+  ambiguous, compareForms, facetCounts, formGroupsOf, formKey, formatReading, grammarHitNote, readingMatches, refine, tokenMatches, withTicked,
   ambiguityNote,
 } from '../lib/result-views';
 import { formGroups } from '../lib/form-panel';
@@ -334,40 +334,30 @@ describe('compareForms', () => {
 });
 
 describe('formGroupsOf', () => {
+  // Keyed on the ruled form key (groupby-key.test.ts): accents off, all else
+  // kept. ἐστι and ἐστί are one form; καὶ and καί too.
+  const g = (id: number, spelling: string, hits = 1, grk?: number) =>
+    ({ id, group: formKey(spelling), spellings: [spelling], hits, ...(grk === undefined ? {} : { grk }) });
   it('groups by form, most hits first, then by form, with the English last', () => {
     const items = [
-      { id: 1, form: 'ths', surface: 'τῆς', hits: 1 },
-      { id: 2, form: 'esti', surface: 'ἐστι', hits: 1 },
-      { id: 3, id2: 'eng', hits: 2 },
-      { id: 4, form: 'ths', surface: 'τῆς', hits: 1 },
-      { id: 5, form: 'esti', surface: 'ἐστί', hits: 1 },
-      { id: 6, form: 'kai', surface: 'καὶ', hits: 1 },
-      { id: 7, form: 'kai', surface: 'καί', hits: 3 },
+      g(1, 'τῆς'), g(2, 'ἐστι'), { id: 3, id2: 'eng', hits: 2 }, g(4, 'τῆς'), g(5, 'ἐστί'), g(6, 'καὶ'), g(7, 'καί', 3),
     ];
     const groups = formGroupsOf(items);
-    expect(groups.map(g => [g.form, g.surfaces.join(' · '), g.count, g.items.map(i => i.id)])).toEqual([
-      ['kai', 'καὶ · καί', 4, [6, 7]],
-      ['esti', 'ἐστι · ἐστί', 2, [2, 5]],
-      ['ths', 'τῆς', 2, [1, 4]],
+    expect(groups.map(x => [x.key, x.heading, x.count, x.items.map(i => i.id)])).toEqual([
+      ['και', 'καί', 4, [6, 7]],
+      ['ἐστι', 'ἐστι', 2, [2, 5]],
+      ['τῆς'.normalize('NFD').replace(/\u0342/g, '').normalize('NFC'), 'τῆς', 2, [1, 4]],
       [null, '', 2, [3]],
     ]);
   });
 
   it('orders the groups by their Greek hits, given, not by the English an item carries', () => {
     // β: one Greek hit carrying two English; ω: two Greek hits.
-    const items = [
-      { id: 1, form: 'b', surface: 'β', hits: 3, grk: 1 },
-      { id: 2, form: 'w', surface: 'ω', hits: 1, grk: 1 },
-      { id: 3, form: 'w', surface: 'ω', hits: 1, grk: 1 },
-    ];
-    expect(formGroupsOf(items).map(g => [g.form, g.count])).toEqual([['w', 2], ['b', 3]]);
+    const items = [g(1, 'β', 3, 1), g(2, 'ω', 1, 1), g(3, 'ω', 1, 1)];
+    expect(formGroupsOf(items).map(x => [x.heading, x.count])).toEqual([['ω', 2], ['β', 3]]);
   });
 
   it('breaks a tie in Greek order, as the sort does: δ before ξ, though their keys run d, c', () => {
-    const items = [
-      { id: 1, form: 'cenos', surface: 'ξένος', hits: 1 },
-      { id: 2, form: 'dhmos', surface: 'δῆμος', hits: 1 },
-    ];
-    expect(formGroupsOf(items).map(g => g.form)).toEqual(['dhmos', 'cenos']);
+    expect(formGroupsOf([g(1, 'ξένος'), g(2, 'δῆμος')]).map(x => x.form)).toEqual(['dhmos', 'cenos']);
   });
 });

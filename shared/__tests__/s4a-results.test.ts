@@ -204,7 +204,8 @@ describe('Search.svelte S4a: the menus over the hits', () => {
     const read = menus.map(d => [text(d.querySelector('legend')), ...[...d.querySelectorAll('.opt-row')].map(r =>
       [text(r.querySelector('label')), text(r.querySelector('.opt-gloss'))].filter(Boolean).join(': '))]);
     expect(read).toEqual([
-      ['Group by', 'By work: a heading for each work', 'By form: each spelling apart', 'By grammar: case, number, tense, and so on'],
+      // One word as spelled: By grammar is a dictionary word's (John, 13 Nov).
+      ['Group by', 'By work: a heading for each work', 'By form: each spelling apart'],
       ['Sort', 'Bekker order: page, column, and line', 'Works A–Z: by title', 'Forms A–Z: by spelling', 'Commonest form first: the biggest group on top'],
       ['Context', '1 line: the line with the hit', '3 lines: a line either side', 'Whole section: the section the hit is in'],
       ['Per page', '20', '40', '100', 'Citations only: places, no text'],

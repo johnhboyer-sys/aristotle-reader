@@ -346,7 +346,8 @@ describe('Search.svelte: the rail\'s lists', () => {
 
 describe('Search.svelte: the Grammar row', () => {
   it('follows the Forms row, a line of tick boxes per category, and still narrows the hits', async () => {
-    await open(`${G}&v=grammar`);
+    // A dictionary-word search: By grammar is offered for it alone (John, 13 Nov).
+    await open('/search?l=eimi&v=grammar');
     const forms = await screen.findByRole('group', { name: 'Greek forms found' });
     const grammar = await screen.findByRole('group', { name: 'Narrow by grammar' });
     expect(forms.nextElementSibling).toBe(grammar);

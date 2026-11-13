@@ -39,6 +39,8 @@ export const FONTS = ['Oswald', 'Literata', 'Sofia Sans'];
 
 const e = encodeURIComponent;
 const AR = `/search?g=${e('ἀρετή')}`;
+// ἀρετή as a dictionary word (Lemma on): By grammar is offered for it alone (John, 13 Nov).
+const AR_L = '/search?l=areth';
 const D = [1152, 1000], W = [1152, 900], P = [390, 844], S = [844, 390];
 
 // A step is { sel, text?, act, value?, index?, expect?, want?, uncheckable? };
@@ -73,7 +75,7 @@ const MENUS = [
   ['d09-near-open', '/search', D, [opens(btn('.advanced-trigger'), EDITOR)]],
   ['d10-near-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}`, D, [opens(btn('.prox-change'), EDITOR)]],
   ['d11-group-menu', AR, D, [sum('Group')]],
-  ['d12-group-grammar', AR + '&v=grammar', D, []],
+  ['d12-group-grammar', AR_L + '&v=grammar', D, []],
   ['d13-group-form', AR + '&v=form', D, []],
   ['d14-sort-menu', AR, D, [sum('Sort')]],
   ['d15-context-menu', AR, D, [sum('Context')]],
@@ -85,10 +87,13 @@ const MENUS = [
   ['d21-forms-untick', AR, D, [{ ...btn('.fx input[type=checkbox] >> nth=1'), want: false }, opens(btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ instances/), { sel: '.sx-of', text: 'restore all forms' }), top]],
   ['d23-save', AR, D, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
   ['d24-word-click', AR, D, [opens(btn('.instance mark'), WORD)]],
-  ['d27-word-card', AR + '#zcard', D, [opens(btn('.instance mark'), WORD)]],
   ['d28-pending-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&cw=10`, D, [opens(btn('.prox-change'), EDITOR), { sel: '.combo-slot >> nth=1 >> .prox-relw select', act: 'select', index: 1 }]],
   ['d25-group-collapsed', AR, D, [{ ...btn('.group-head'), want: false }]],
   ['d26-any-word', `/search?g=${e('ἀρετή ἕξις')}&gm=any`, D, []],
+  // r34-05's phrase grouped by form: τὸ, τοῦ and τῷ τί ἦν εἶναι apart (John, 13 Nov).
+  ['d29-group-form-phrase', `/search?g=${e('τὸ τί ἦν εἶναι')}&gm=phrase&m=form&v=form`, D, []],
+  ['d32-group-menu-lemma', AR_L, D, [sum('Group')]],
+  ['q14-sort-lemma', AR_L, P, [VIEW]],
   ['n01-three-terms', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('l:hdonh')}&cw=10`, D, []],
   ['n02-three-terms-editor', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('lb:hdonh')}&cw=10`, [1152, 1300], [opens(btn('.prox-change'), EDITOR)]],
   ['n03-before-and-not', `/search?c=${e('l:areth')}&c=${e('lb:hdonh')}&c=${e('ln:luph')}&cw=10`, D, []],
@@ -114,7 +119,7 @@ const MENUS = [
   ['q08-filter-forms', AR, P, [FILTER, opens(btn('.sx-panel .sx-nav', 'Forms'), '.sx-panel.open[data-screen="forms"]')]],
   ['q09-word-click', AR, P, [opens(btn('.instance mark'), WORD)]],
   ['q10-save', AR, P, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
-  ['q11-group-grammar', AR + '&v=grammar', P, []],
+  ['q11-group-grammar', AR_L + '&v=grammar', P, []],
   ['q12-citations-only', AR + '&ps=c', P, []],
   ['s01-sideways-options', AR, S, [OPTS]],
   ['s02-sideways-keyboard', AR, S, [opens(btn('.gk-toggle'), '#grk-keys')]],
@@ -139,7 +144,7 @@ const PAGES = [
 ];
 
 // Retired since round 34: reported as skipped, never shot.
-export const RETIRED = { 'd04-case-on': 'no longer exists (Case option dropped)', 'd22-works-more': 'no longer exists (works "more" dropped)' };
+export const RETIRED = { 'd04-case-on': 'no longer exists (Case option dropped)', 'd22-works-more': 'no longer exists (works "more" dropped)', 'd27-word-card': 'option b dropped (John, 13 Nov)' };
 
 export const STATES = [
   ...MENUS.map(([name, path, [w, h], steps]) => ({ name, kind: 'menu', path, w, h, theme: 'light', steps, twin: `menus/m34/${name}.png` })),
@@ -283,7 +288,8 @@ export async function runStep(p, s, n = 1) {
   return null;
 }
 
-// What a page must show before it is shot. A search URL (g, e or c): its
+// What a page must show before it is shot. A search URL (g, e, c, or l, a
+// dictionary-word search): its
 // result count, a number or "No passages found."; when the number is not
 // zero, at least one hit drawn with its text (a citation, in the citations
 // view), and no warning that the page's passages did not load (the count is
@@ -293,7 +299,7 @@ export async function runStep(p, s, n = 1) {
 export async function checkRender(p, path) {
   const u = new URL(path, 'http://x');
   if (!/\/search\/?$/.test(u.pathname)) return `render not checked: ${u.pathname} is not the search page`;
-  if (['g', 'e', 'c'].some(k => u.searchParams.getAll(k).some(v => v.trim()))) {
+  if (['g', 'e', 'c', 'l'].some(k => u.searchParams.getAll(k).some(v => v.trim()))) {
     const c = visible(p, '.result-count').first();
     try { await c.waitFor({ state: 'visible', timeout: 20000 }); }
     catch {
