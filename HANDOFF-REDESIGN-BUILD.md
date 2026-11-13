@@ -358,6 +358,11 @@ Left on purpose (John has not asked for a commit); keep them:
   Proposed method: one review page of every reader state with a note box under
   each, then rounds.
 
+- Search Forms list: accented spellings need an "accents" stream in
+  Aristotle's search shards (Plato's build has one; `formAccents` in
+  `shared/lib/search.ts`); then tick boxes split by case. John, 13 Nov: not
+  this PR. Until then the results group ἀρετή and ἀρετῇ apart (key: accents
+  stripped, breathing and subscript kept) while the list shows one "αρετη".
 - English search refs to the line, once every work is properly aligned (John,
   13 Nov: column for now).
 - Corpus: no lemma page for σωφροσύνη or ἀκούσιος.
