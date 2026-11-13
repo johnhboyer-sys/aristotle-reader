@@ -73,20 +73,20 @@ describe('proximity on the Ethics, against a brute-force count', () => {
         && at('luph').some((l) => same(h, l) && Math.abs(l - h) <= 5))));
     expect(expected).toBe(7);
     expect(await engine([lemma('areth'), lemma('hdonh'), lemma('luph', { target: 1 })], opts(5))).toBe(expected);
-    // Measured from ἀρετή instead, the three must share one window: fewer.
+    // Measured from ἀρετή instead, each within 5 of ἀρετή, pair by pair.
     const star = total((w) => brute(w, 'areth', (a, at, same) =>
-      at('hdonh').some((h) => same(a, h) && Math.abs(h - a) <= 5
-        && at('luph').some((l) => same(a, l) && Math.max(a, h, l) - Math.min(a, h, l) <= 5))));
-    expect(star).toBe(5);
+      at('hdonh').some((h) => same(a, h) && Math.abs(h - a) <= 5)
+        && at('luph').some((l) => same(a, l) && Math.abs(l - a) <= 5)));
+    expect(star).toBe(6);
     expect(await engine([lemma('areth'), lemma('hdonh'), lemma('luph')], opts(5))).toBe(star);
   }, 60000);
 
   it.skipIf(!dataPresent)('not near: ἡδονή before ἀρετή, λύπη not near ἀρετή, within 10 words', async () => {
-    // A λύπη within 10 words of either end of ἀρετή's neighbourhood (ἀρετή
-    // and the ἡδονή before it) rules the pair out; another ἡδονή may serve.
+    // A λύπη within 10 words of ἀρετή, the term it is measured from, rules
+    // that ἀρετή out, whatever ἡδονή stands before it.
     const expected = total((w) => brute(w, 'areth', (a, at, same) =>
-      at('hdonh').some((h) => same(a, h) && h < a && a - h <= 10
-        && !at('luph').some((l) => same(a, l) && l >= h - 10 && l <= a + 10))));
+      at('hdonh').some((h) => same(a, h) && h < a && a - h <= 10)
+        && !at('luph').some((l) => same(a, l) && Math.abs(l - a) <= 10)));
     expect(expected).toBe(6);
     expect(await engine([lemma('areth'), lemma('hdonh', { relation: 'before' }), lemma('luph', { relation: 'not' })], opts(10))).toBe(expected);
   }, 60000);

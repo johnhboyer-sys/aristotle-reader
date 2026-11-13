@@ -109,6 +109,72 @@ describe('a proximity search from the address', () => {
   });
 });
 
+// John, 12 Nov: the box shows the terms, "; " between them, at full ink and
+// read-only while proximity is live; Turn off gives the box back.
+describe('the search box while proximity is live', () => {
+  const box = () => document.getElementById('grk-input') as HTMLInputElement;
+  const keyboard = () => screen.getByRole('button', { name: 'Greek keyboard' });
+  const beta = () => screen.getByRole('button', { name: /Beta Code/ });
+
+  it('shows the terms in term order, an or-run as one item, a grammar term as its description', async () => {
+    await arrive('c=l:areth&c=l:ecis&c=lo:hdonh&c=g:case.gen,number.pl&cw=10');
+    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; ἕξις or ἡδονή; genitive plural'));
+    expect(box()).toBeDisabled();
+    expect(box()).toHaveAttribute('lang', 'grc');
+    expect(keyboard()).toBeDisabled();
+    expect(beta()).toBeDisabled();
+  });
+
+  it('shows the terms on the English tab too', async () => {
+    await arrive('c=l:areth&c=l:ecis');
+    await fireEvent.click(screen.getByRole('button', { name: 'English', pressed: false }));
+    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; ἕξις'));
+    expect(box().closest('.sq-row')).not.toHaveAttribute('hidden');
+  });
+
+  it('Turn off gives back the empty box and its tools', async () => {
+    await arrive('c=l:areth&c=l:ecis');
+    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; ἕξις'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Turn off' }));
+    await vi.waitFor(() => expect(summary()).toBeNull());
+    expect(box().value).toBe('');
+    expect(box()).not.toBeDisabled();
+    expect(box()).toHaveAttribute('placeholder', 'e.g. τέχνη');
+    expect(keyboard()).not.toBeDisabled();
+    expect(beta()).not.toBeDisabled();
+  });
+
+  it('shows the open editor\'s terms once they make a search, and keeps the typed query for after', async () => {
+    window.history.replaceState(null, '', '/search');
+    render(Search);
+    await fireEvent.input(box(), { target: { value: 'ἀρετή' } });
+    await fireEvent.click(prox());
+    // Term 1 takes the query; one term is no search, so the box is the page's.
+    await vi.waitFor(() => expect(within(terms()[0]).getByText('ἀρετή')).toBeInTheDocument());
+    expect(box().value).toBe('ἀρετή');
+    expect(box()).not.toBeDisabled();
+    await pick('Kind for term 2', 'grammatical');
+    await fireEvent.click(within(screen.getByRole('group', { name: 'Case' })).getByRole('button', { name: 'acc' }));
+    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; accusative'));
+    expect(box()).toBeDisabled();
+    // Shut, nothing searched: the box is the page's again.
+    await fireEvent.click(prox());
+    await vi.waitFor(() => expect(box()).not.toBeDisabled());
+    expect(box().value).toBe('ἀρετή');
+  });
+
+  it('shuts the Greek keyboard when proximity takes the box', async () => {
+    window.history.replaceState(null, '', '/search');
+    render(Search);
+    await fireEvent.click(keyboard());
+    expect(document.getElementById('grk-keys')).not.toBeNull();
+    window.history.pushState(null, '', '/search?c=l:areth&c=l:ecis');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; ἕξις'));
+    expect(document.getElementById('grk-keys')).toBeNull();
+  });
+});
+
 describe('the editor', () => {
   it('opens from Change with Close in its place; one Search, its own; Match and Form step back', async () => {
     await arrive('c=l:areth&c=l:ecis');

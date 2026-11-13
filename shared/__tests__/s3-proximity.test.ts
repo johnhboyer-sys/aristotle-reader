@@ -19,6 +19,44 @@ const opts = (over: Partial<ComboOptions> = {}): ComboOptions => ({
 });
 const starts = (w: { hits: { start: number }[] }[]) => w.map((x) => x.hits.map((h) => h.start));
 
+// John, 12 Nov: each term within N of the hit chosen for the term it is
+// measured from, pair by pair and nothing more. Two terms measured from one
+// term may stand on either side of it, up to 2N apart.
+describe('plain pairwise distance', () => {
+  // ἀρετή@20, ἕξις 8 to its left, ἡδονή 8 to its right; within 10 words.
+  it('accepts two terms either side of their target, 16 apart', () => {
+    const w = comboWindows([at(20), at(12), at(28)], opts({ window: 10 }), offsetsOf(), [], [], [0, 0, 0]);
+    expect(starts(w)).toEqual([[20, 12, 28]]);
+    expect([w[0].start, w[0].end]).toEqual([12, 28]);
+  });
+
+  it('checks before and after against the target alone', () => {
+    // ἕξις near ἀρετή, ἡδονή before ἀρετή: ἕξις 8 after, ἡδονή 8 before.
+    expect(starts(comboWindows([at(20), at(28), at(12)], opts({ window: 10 }), offsetsOf(), ['near', 'near', 'before'], [], [0, 0, 0])))
+      .toEqual([[20, 28, 12]]);
+    expect(starts(comboWindows([at(20), at(12), at(28)], opts({ window: 10 }), offsetsOf(), ['near', 'before', 'after'], [], [0, 0, 0])))
+      .toEqual([[20, 12, 28]]);
+    // Each pair still within N: ἡδονή 11 before is out.
+    expect(comboWindows([at(20), at(28), at(9)], opts({ window: 10 }), offsetsOf(), ['near', 'near', 'before'], [], [0, 0, 0])).toEqual([]);
+  });
+
+  it('rejects a match only for a NOT hit within N of its target\'s hit', () => {
+    // A@10, B@14 from A; C (not, from A) at 18 is 8 from A, 4 from B.
+    const rel: SlotRelation[] = ['near', 'near', 'not'];
+    expect(comboWindows([at(10), at(14), at(18)], opts(), offsetsOf(), rel, [], [0, 0, 0])).toHaveLength(1);
+    expect(comboWindows([at(10), at(14), at(15)], opts(), offsetsOf(), rel, [], [0, 0, 0])).toHaveLength(0);
+    // B@6, 4 before A: a NOT hit 5 before A still counts, 6 before does not.
+    expect(comboWindows([at(10), at(6), at(5)], opts(), offsetsOf(), rel, [], [0, 0, 0])).toHaveLength(0);
+    expect(comboWindows([at(10), at(6), at(4)], opts(), offsetsOf(), rel, [], [0, 0, 0])).toHaveLength(1);
+  });
+
+  it('with the order lock, keeps slot order and each pair within N of its target', () => {
+    // A@10, B@14, C@18, all from A: C is 8 from A.
+    expect(comboWindows([at(10), at(14), at(18)], opts({ window: 8, ordered: true }), offsetsOf(), [], [], [0, 0, 0])).toHaveLength(1);
+    expect(comboWindows([at(10), at(14), at(18)], opts({ window: 7, ordered: true }), offsetsOf(), [], [], [0, 0, 0])).toHaveLength(0);
+  });
+});
+
 describe('a term measured from an earlier term', () => {
   // A@10, B@14, C@19: C is 9 from A but 5 from B.
   const hits = [at(10), at(14), at(19)];
@@ -27,11 +65,12 @@ describe('a term measured from an earlier term', () => {
     expect(starts(comboWindows(hits, opts(), offsetsOf(), [], [], [0, 0, 1]))).toEqual([[10, 14, 19]]);
   });
 
-  it('keeps every term measured from one term inside one window', () => {
-    // B@14 and C@19 both from A@10: B is 4 from A, C 9; and with A@16 the
-    // neighbourhood {A, B, C} spans 5 and fits.
+  it('keeps every term measured from one term within reach of it, pair by pair', () => {
+    // B@14 and C@19 both from A@10: B is 4 from A, C 9; with A@16, 2 and 3.
     expect(comboWindows([at(10), at(14), at(19)], opts(), offsetsOf(), [], [], [0, 0, 0])).toHaveLength(0);
     expect(comboWindows([at(16), at(14), at(19)], opts(), offsetsOf(), [], [], [0, 0, 0])).toHaveLength(1);
+    // B@6 and C@14 either side of A@10, 8 apart: each is 4 from A.
+    expect(comboWindows([at(10), at(6), at(14)], opts(), offsetsOf(), [], [], [0, 0, 0])).toHaveLength(1);
     // Measured from B, C needs only B within reach: A@10, B@14, C@19 and C@9.
     expect(starts(comboWindows([at(10), at(14), at(9, 19)], opts(), offsetsOf(), [], [], [0, 0, 1]))).toEqual([[10, 14, 9]]);
   });
@@ -74,14 +113,13 @@ describe('a term measured from an earlier term', () => {
 describe('not near, measured from its own target', () => {
   const rel: SlotRelation[] = ['near', 'near', 'not'];
   it('excludes only near the term it names', () => {
-    // A@10, B@14 measured from A. Measured from A, C's reach is A's
-    // neighbourhood {A, B}: C@21 is 6 past its end, outside 5.
+    // A@10, B@14 measured from A. Measured from A, C's reach is A@10 alone:
+    // C@21 is 11 from it, outside 5.
     expect(comboWindows([at(10), at(14), at(21)], opts(), offsetsOf(), rel, [], [0, 0, 0])).toHaveLength(1);
     expect(comboWindows([at(10), at(14), at(18)], opts(), offsetsOf(), rel, [], [0, 0, 1])).toHaveLength(0);
     // C@5 is 5 before A, 9 before B: near A, not near B.
     expect(comboWindows([at(10), at(14), at(5)], opts(), offsetsOf(), rel, [], [0, 0, 0])).toHaveLength(0);
-    // Measured from B, whose neighbourhood is B alone (nothing is measured
-    // from it), C@5 stands 9 away.
+    // Measured from B, C@5 stands 9 away.
     expect(comboWindows([at(10), at(14), at(5)], opts(), offsetsOf(), rel, [], [0, 0, 1])).toHaveLength(1);
   });
 
@@ -186,9 +224,12 @@ describe('searchCombo with or-joins and targets', () => {
   });
 
   it('or-joined NOT terms exclude if either occurs', async () => {
-    const not = { relation: 'not' as const };
+    // Measured from beta@14: gamma@30 is far, eps@19 is 5 away.
+    const not = { relation: 'not' as const, target: 1 };
     expect(await positions([f('alpha'), f('beta'), f('gamma', not)], opts(), 'OR5')).toEqual([[[10, 14]]]);
     expect(await positions([f('alpha'), f('beta'), f('gamma', not), f('eps', { or: true })], opts(), 'OR6')).toEqual([]);
+    // Measured from alpha@10, eps@19 is 9 away and excludes nothing.
+    expect(await positions([f('alpha'), f('beta'), f('gamma', { relation: 'not' }), f('eps', { or: true })], opts(), 'OR7')).toEqual([[[10, 14]]]);
   });
 
   it('measures a term from the term it names', async () => {

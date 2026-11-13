@@ -246,18 +246,18 @@ describe('searchCombo', () => {
     expect(results).toHaveLength(0);
   });
 
-  // The window bounds the WHOLE match, not each slot's distance from the first
-  // one. Measured from slot 0 these two orderings disagree, and a window of W
-  // would quietly admit a span of 2W.
-  it('gives the same unordered result however the slots are ordered', async () => {
-    // alpha@2, beta@4, epsilon@8: the extent is 6, so W=5 must reject and W=6
-    // must accept, whichever slot is listed first.
-    for (const order of [['alpha', 'beta', 'epsilon'], ['beta', 'alpha', 'epsilon'], ['epsilon', 'beta', 'alpha']]) {
+  // The window bounds each slot's distance from the slot it is measured from
+  // (here the first), pair by pair and nothing more (John, 12 Nov). So which
+  // slot is listed first decides the reach a match needs.
+  it('measures each slot from the first slot, whichever is listed first', async () => {
+    // alpha@2, beta@4, epsilon@8. From alpha the farthest is epsilon, 6 away;
+    // from beta, epsilon, 4 away (alpha is 2); from epsilon, alpha, 6 away.
+    for (const [order, need] of [[['alpha', 'beta', 'epsilon'], 6], [['beta', 'alpha', 'epsilon'], 4], [['epsilon', 'beta', 'alpha'], 6]] as const) {
       const slots = order.map((t) => slot(t));
-      const tight = await searchCombo(slots, opts({ window: 5 }), [`CO5-${order[0]}`]);
-      expect(tight.results, `W=5 with ${order.join(',')}`).toHaveLength(0);
-      const loose = await searchCombo(slots, opts({ window: 6 }), [`CO6-${order[0]}`]);
-      expect(loose.results, `W=6 with ${order.join(',')}`).toHaveLength(1);
+      const tight = await searchCombo(slots, opts({ window: need - 1 }), [`CO5-${order[0]}`]);
+      expect(tight.results, `W=${need - 1} with ${order.join(',')}`).toHaveLength(0);
+      const loose = await searchCombo(slots, opts({ window: need }), [`CO6-${order[0]}`]);
+      expect(loose.results, `W=${need} with ${order.join(',')}`).toHaveLength(1);
     }
   });
 
@@ -358,9 +358,11 @@ describe('searchCombo', () => {
       expect(await ids([slot('alpha'), not('beta')], opts({ window: 5 }), 'CN1')).toEqual([]);
       expect(await ids([slot('alpha'), not('epsilon')], opts({ window: 5 }), 'CN2')).toEqual([[2]]);
       expect(await ids([slot('alpha'), not('epsilon')], opts({ window: 6 }), 'CN3')).toEqual([]);
-      // Measured from the whole match: alpha@2..beta@4, so epsilon@8 is 4 past its end.
+      // Measured from the hit of the term it names (alpha@2), not from the
+      // whole match: epsilon@8 is 4 past beta@4 but 6 from alpha.
       expect(await ids([slot('alpha'), slot('beta'), not('epsilon')], opts({ window: 3 }), 'CN4')).toEqual([[2, 4]]);
-      expect(await ids([slot('alpha'), slot('beta'), not('epsilon')], opts({ window: 4 }), 'CN5')).toEqual([]);
+      expect(await ids([slot('alpha'), slot('beta'), not('epsilon')], opts({ window: 5 }), 'CN5')).toEqual([[2, 4]]);
+      expect(await ids([slot('alpha'), slot('beta'), not('epsilon')], opts({ window: 6 }), 'CN5b')).toEqual([]);
     });
 
     it('words: a NOT term across a book edge, or across a turn when turns are kept apart, does not count', async () => {
@@ -390,7 +392,10 @@ describe('searchCombo', () => {
     it('ignores the order lock, which binds only the other terms', async () => {
       expect(await ids([slot('alpha'), not('zeta'), slot('beta')], opts({ window: 5, ordered: true }), 'CN15'))
         .toEqual([[2, 4]]);
+      // epsilon@8 is 6 from alpha@2, the term it is measured from.
       expect(await ids([slot('alpha'), not('epsilon'), slot('beta')], opts({ window: 5, ordered: true }), 'CN16'))
+        .toEqual([[2, 4]]);
+      expect(await ids([slot('alpha'), not('epsilon'), slot('beta')], opts({ window: 6, ordered: true }), 'CN16b'))
         .toEqual([]);
       // Order still binds the others.
       expect(await ids([slot('beta'), not('zeta'), slot('alpha')], opts({ window: 5, ordered: true }), 'CN17'))

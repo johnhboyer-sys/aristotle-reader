@@ -99,14 +99,17 @@ const starts = (w: { hits: { start: number }[] }[]) => w.map((x) => x.hits.map((
 
 describe('NOT near while choosing partners', () => {
   it('words: a match the NOT term excludes gives way to another partner the NOT term does not reach', () => {
-    // A@10 with B@5 reaches back to 0, where C@1 stands; A@10 with B@14
-    // reaches back only to 5.
+    // The NOT term measured from B: B@5 has C@1 within 5; B@14 does not.
     const rel: SlotRelation[] = ['near', 'near', 'not'];
-    expect(starts(comboWindows([at(10), at(5, 14), at(1)], opts(), offsetsOf(), rel))).toEqual([[10, 14]]);
+    const fromB = [0, 0, 1];
+    expect(starts(comboWindows([at(10), at(5, 14), at(1)], opts(), offsetsOf(), rel, [], fromB))).toEqual([[10, 14]]);
     // And a NOT term on the other side picks the earlier partner.
-    expect(starts(comboWindows([at(10), at(5, 14), at(18)], opts(), offsetsOf(), rel))).toEqual([[10, 5]]);
+    expect(starts(comboWindows([at(10), at(5, 14), at(18)], opts(), offsetsOf(), rel, [], fromB))).toEqual([[10, 5]]);
     // Both sides: no partner escapes.
-    expect(starts(comboWindows([at(10), at(5, 14), at(1, 18)], opts(), offsetsOf(), rel))).toEqual([]);
+    expect(starts(comboWindows([at(10), at(5, 14), at(1, 18)], opts(), offsetsOf(), rel, [], fromB))).toEqual([]);
+    // Measured from A@10, C@1 (9 away) and C@18 (8 away) exclude nothing,
+    // whichever partner is chosen (pair by pair, John 12 Nov).
+    expect(starts(comboWindows([at(10), at(5, 14), at(1, 18)], opts(), offsetsOf(), rel))).toEqual([[10, 5]]);
   });
 
   it('line and turn: a NOT term anywhere in the unit excludes, whichever partner is chosen', () => {

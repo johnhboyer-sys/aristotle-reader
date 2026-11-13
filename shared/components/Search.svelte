@@ -67,7 +67,7 @@
   import { WORKS, getWork, workPath, WORK_ORDER, SEARCH_GROUPS, searchableTranslations, type TranslationRef } from '../lib/works';
   import { formatCite, formatLocValue, schemeFor } from '../lib/citation';
   import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlCombo, type UrlSearch } from '../lib/search-url';
-  import { grammarWords, proximitySentence, termWords } from '../lib/proximity-sentence';
+  import { grammarWords, proximitySentence, proximityTerms, termWords } from '../lib/proximity-sentence';
   import { FULL, addSaved, findSaved, savedAvailable } from '../lib/saved-searches';
   import { betaQueryToGreek, betaToGreek, liveGreek } from '../lib/betacode';
   import { addMark, deleteBack, GREEK_MARKS, insertText, KEY_ROWS, type KeyEdit } from '../lib/greek-keys';
@@ -1270,6 +1270,10 @@
       : `${works.length} works`;
   $: proxSentence = proxLive && lastSearch?.combo
     ? proximitySentence(lastSearch.combo.slots, lastSearch.combo, headsOf(pickInfo), inValue(lastSearch.works, selectedWorks, worksValue)) : '';
+  // While proximity holds the box, it shows the terms, "; " between them
+  // (John, 12 Nov): the search shown, or the open editor's before one is.
+  $: proxTerms = !comboActive ? ''
+    : proximityTerms((proxLive && lastSearch?.combo ? lastSearch.combo : comboNow)?.slots ?? [], headsOf(pickInfo));
   $: pendingSentence = comboPending && comboNow
     ? proximitySentence(comboNow.slots, comboNow, headsOf(pickInfo), inValue(WORK_IDS.filter(id => selectedWorks.has(id)), selectedWorks, worksValue)) : '';
 
@@ -3331,6 +3335,8 @@
   };
   let kbdOpen = false;
   let kbdSheet = false;
+  // Proximity takes the box, so the keyboard has nothing to type into.
+  $: if (comboActive && kbdOpen) kbdOpen = false;
   let phoneQuery: MediaQueryList | undefined;
   const onPhone = (e: MediaQueryListEvent) => { kbdSheet = e.matches; };
   async function toggleKbd() {
@@ -3532,9 +3538,14 @@
          sit on the Greek field's rule, quiet tools, not buttons. -->
     <div class="sq">
       <div class="sq-fields">
-        <div class="sq-row" hidden={lang === 'english'}>
+        <!-- Proximity searches the Greek: its terms show on every tab. -->
+        <div class="sq-row" hidden={lang === 'english' && !comboActive}>
           <svg class="sq-glass" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
           <label class="query-label" class:sr-only={lang !== 'both'} for="grk-input">Greek</label>
+          {#if comboActive}
+            <!-- Proximity holds the box: its terms, read-only, at full ink. -->
+            <input id="grk-input" class="query-input greek-input" lang="grc" type="search" value={proxTerms} disabled />
+          {:else}
           <input
             id="grk-input"
             class="query-input greek-input"
@@ -3557,15 +3568,15 @@
             autocorrect="off"
             autocapitalize="none"
             spellcheck="false"
-            disabled={comboActive}
           />
+          {/if}
           <button type="button" class="sq-tool gk-toggle" aria-label="Greek keyboard" aria-expanded={kbdOpen} aria-controls={kbdOpen && lang !== 'english' ? 'grk-keys' : undefined}
             disabled={comboActive} on:click={toggleKbd}>
             <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="0.7" y="0.7" width="20.6" height="14.6"/><path d="M4 4.5h2M8 4.5h2M12 4.5h2M16 4.5h2M4 8h2M8 8h2M12 8h2M16 8h2M6 11.5h10"/></svg>
             <span class="sq-tool-l" aria-hidden="true">Keyboard</span>
           </button>
           {#if lang !== 'english'}
-            <button type="button" class="sq-tool tog" aria-pressed={betaMode} on:click={toggleBeta} title="Type Beta Code, see Greek: lo/gos becomes λόγος as you type"><span lang="grc">β</span> Beta Code</button>
+            <button type="button" class="sq-tool tog" aria-pressed={betaMode} disabled={comboActive} on:click={toggleBeta} title="Type Beta Code, see Greek: lo/gos becomes λόγος as you type"><span lang="grc">β</span> Beta Code</button>
           {/if}
           {#if sugg.length && !lemmaOn && !(kbdOpen && !kbdSheet)}{@render suggestList(sugg, suggActive, lemmaGlosses, false)}{/if}
         </div>

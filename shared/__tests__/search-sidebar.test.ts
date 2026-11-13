@@ -639,7 +639,9 @@ describe('Search.svelte: removing the chapter limit', () => {
     vi.mocked(searchCombo).mockReturnValueOnce(new Promise(resolve => {done=resolve;}));
     await fireEvent.click(remove('Within a chapter'));
     await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(2));
-    await fireEvent.keyDown(screen.getByLabelText('Greek'),{key:'Enter'});
+    // A newer search while that one runs. Proximity holds the Greek box (it
+    // shows the terms, read-only), so the search goes through the form.
+    await fireEvent.submit(document.querySelector('form.search-form')!);
     await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(3));
     await vi.waitFor(() => expect(chosen()).toEqual([]));
     done({results:BILINGUAL,failedWorks:[]});

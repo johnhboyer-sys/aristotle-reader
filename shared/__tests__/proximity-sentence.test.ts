@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { grammarWords, proximitySentence, type SentenceTerm } from '../lib/proximity-sentence';
+import { grammarWords, proximitySentence, proximityTerms, type SentenceTerm } from '../lib/proximity-sentence';
 
 // The summary sentence of HANDOFF-SEARCH-BUILD §5.5, as round 34 draws it.
 const HEADS: Record<string, string> = { areth: 'ἀρετή', ecis: 'ἕξις', hdonh: 'ἡδονή', luph: 'λύπη', aitios: 'αἴτιος', dia: 'διά' };
@@ -56,5 +56,31 @@ describe('the proximity sentence', () => {
     expect(proximitySentence([gram({ tense: 'aor', voice: 'pass', mood: 'part' })], words(5), heads, 'Categories'))
       .toBe('any aorist participle passive, in Categories');
     expect(grammarWords({ number: 'pl', case: 'gen', gender: 'fem' })).toBe('feminine genitive plural');
+  });
+});
+
+// The search box while proximity is live (John, 12 Nov: "a ; between terms").
+describe('the proximity terms in the search box', () => {
+  it('joins the terms with "; " in term order, a grammar term as its description', () => {
+    expect(proximityTerms([lemma('aitios'), lemma('dia'), gram({ case: 'acc' }, { target: 1 })], heads)).toBe('αἴτιος; διά; accusative');
+    expect(proximityTerms([gram({ number: 'pl', case: 'gen' }), lemma('areth')], heads)).toBe('genitive plural; ἀρετή');
+  });
+
+  it('writes an or-joined run as one item', () => {
+    expect(proximityTerms([lemma('areth'), lemma('ecis'), lemma('hdonh', { or: true })], heads)).toBe('ἀρετή; ἕξις or ἡδονή');
+    expect(proximityTerms([lemma('areth'), lemma('ecis'), lemma('hdonh', { or: true }), lemma('luph', { or: true })], heads))
+      .toBe('ἀρετή; ἕξις or ἡδονή or λύπη');
+  });
+
+  it('writes a phrase as its words, a typed form as typed, and keeps a NOT term', () => {
+    expect(proximityTerms([
+      { kind: 'phrase', text: ' τὸ  τί ἦν εἶναι ', picked: [], grammar: {}, relation: 'near' },
+      { kind: 'form', text: 'ἀρετῆς', picked: [], grammar: {}, relation: 'near' },
+      lemma('luph', { relation: 'not' }),
+    ], heads)).toBe('τὸ τί ἦν εἶναι; ἀρετῆς; λύπη');
+  });
+
+  it('leaves out terms that ask nothing', () => {
+    expect(proximityTerms([lemma('areth'), { ...lemma('x'), picked: [] }, lemma('ecis')], heads)).toBe('ἀρετή; ἕξις');
   });
 });

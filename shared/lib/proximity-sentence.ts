@@ -79,3 +79,15 @@ export function proximitySentence(
   if (works) parts.push(`in ${works}`);
   return parts.join(', ');
 }
+
+/** The terms as the search box shows them while proximity is live, "; "
+ *  between them in term order (John, 12 Nov): "αἴτιος; διά; accusative". A
+ *  word as its headword, a phrase as its words, a grammar term as its
+ *  description; an or-joined run is one item, "ἕξις or ἡδονή". */
+export function proximityTerms(terms: SentenceTerm[], heads: (key: string) => string): string {
+  const word = (t: SentenceTerm) =>
+    t.kind === 'lemma' ? t.picked.map(heads).join(' or ')
+      : t.kind === 'grammatical' ? grammarWords(t.grammar)
+      : t.text.trim().split(/\s+/).join(' ');
+  return comboGroups(terms, usable).map(g => g.members.map(word).join(' or ')).join('; ');
+}
