@@ -3,7 +3,7 @@
 Written 12 Nov 2026, 13:20, at the end of the session that refined the search
 mock-up. Rewrite this file (don't append) when you hand off.
 
-## 0. State (13 Nov 02:50): BUILD DONE, tip handed to the coordinator
+## 0. State (13 Nov 06:30): BUILD DONE, merged by the coordinator
 
 - **Every stage is built and committed** on `claude/search-build` (worktree
   `.claude/worktrees/search-build`, from 73007670f2, unpushed): S1 engine, S1b
@@ -24,12 +24,23 @@ mock-up. Rewrite this file (don't append) when you hand off.
   link check, leak check). A trial merge against its f5f3b4a07f had no
   conflicts; this branch never touches b.css, BFonts.astro or Reader.svelte.
   One deploy for the whole redesign (John's ruling (a)). Nothing is pushed.
+- **After §6 (13 Nov 05:00–06:30):** Track A ported its check-redesign gates
+  to the new page; they found three accessibility defects, fixed in
+  ead5584589 (b-search.css only: 40px tap boxes, a red-underline focus mark
+  on the three text fields, Match/Form values mid instead of opacity .78;
+  Codex R10/R10b closed). Track A merged it as 53535ede1c; its full run is
+  63 pass, 1 fail: R-S1, which waits on John (below, 6).
 - **For John (morning of 13 Nov), with recommendations:** (1) Accents vs Form —
   turning Accents on should set Form to "only as I typed"; (2) confirm the phone
   "This search" lists filters only, matching the Filter badge, Clear all keeping
   the view; (3) the guide puts Typing Greek first; (4) no translator-names
   switch on Greek-only hits for now; (5) old links under Plato's wildcard
   syntax (`λόγος.`, `*λόγος`) open a different search — keep the new rules.
+  (6) English hits cite the line ("Cat 2b15") as Plato's stack does, or the
+  column ("Cat 2b") as the old site did and as the ruling recorded in
+  redesign-browser.mjs `searchRefFormat` says. No ruling chose line-level; it
+  came with the S1 port. If column: Search.svelte's English formatCite and the
+  s1-round3-real / s1-round5-ref tests change. Track A relays the answer.
   Plus his look at the phone/sideways departures in the sheet.
 - **Follow-ups (not blockers):** the desktop app mounts the new Search
   unstyled (needs b.css tokens and b-search.css); "Group by grammar" groups by
