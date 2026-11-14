@@ -61,8 +61,7 @@ form, now H3). The rendered target for those parts is the 13 Nov mock-up, not th
 2. **Lemma stays a switch on top of "any form"** (09:37), after the explanation: "any form" takes every headword a
    typed spelling can belong to (εἴδη → εἶδος and οἶδα; φύσει → φύσις, φύω, φυσάω, φύζω, from `lemma-map/`);
    Lemma picks one headword from the list.
-3. **Two lines per term (upright phone): asked again 09:37 with a marked crop; not yet answered.** Build as mocked
-   unless he says otherwise.
+3. **Two lines per term on the upright phone: fine** (09:43, after the marked crop).
 4. **Folded line: as mocked** ("looks great"): defaults stay silent, so "Keep hits that cross a chapter" is not
    named while on; off adds "inside one chapter". **The chapter NOTE box goes** ("I don't like the huge across
    chapter explainer text"), as the explainer ban already required.
