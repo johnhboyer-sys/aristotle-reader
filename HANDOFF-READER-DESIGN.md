@@ -192,3 +192,13 @@ findings become round 5's options; stop when a round brings nothing he keeps.
   PHONEHANG: 34px (two digits fit the 40px margin), right edge on the column labels' (4px in Both, 8px in one-text
   views), baseline on the chapter line, book head hung 20/24px. Sideways (701–960px, 72px margin) takes the desktop
   rule. Final set reshot as `final*` (+ finalch10, finalmirab).
+
+## Lexicon headwords in Beta Code (John, 14 Nov 17:57: "have a subagent fix it")
+
+259 of 7,339 lexicon headwords show as raw Beta Code (lemma pages, the
+lexicon index, and Nearby): `app/scripts/build-lemmata.mjs` falls back to the
+Beta key when LSJ has no entry (`lsjHead(b.key) ?? b.lemmaBeta`). 43 are
+hyphenated compounds (`e)n-u(pa/rxw`); the rest are names and forms LSJ files
+under another key (`ma/lista`, `*gai=a`). Fix in progress: try LSJ with the
+compound joined (hyphen and the breathing after it dropped), else convert with
+`betaToGreek`. Predates the redesign; the live site has it too.
