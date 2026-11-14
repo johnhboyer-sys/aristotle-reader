@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { publicDir } from 'astro:config/server';
 import plates from '../data/plates.json';
 import { nameYear, yearOnly } from '../lib/edition-label';
+import translationBib from '../data/translation-bib.json';
 import BFonts from './BFonts.astro';
 import BNav from './BNav.astro';
 import BFoot from './BFoot.astro';
@@ -90,6 +91,9 @@ const printGroups = [...new Set(reading.map(r => r.kind))].map(kind => {
     : entries.length > 1 ? 'Commentaries' : 'Commentary';
   return { label, entries };
 });
+// Full entries for the Greek edition and every translation the page offers,
+// at the page foot (John, 14 Nov 2026); the facts list above gives name and year.
+const englishFull = editions.map(t => (translationBib as Record<string, string>)[`${workId}/${t.id}`]).filter(Boolean);
 const plate = plates[workId as keyof typeof plates];
 // ── SEO ─────────────────────────────────────────────────────────────────────
 const pageTitle = `${work.title} — ${author}, in Greek & English`;
@@ -223,6 +227,13 @@ const breadcrumbLd = Astro.site
               <details class="b-bk" data-book={b.book}><summary><span class="b-bkn" lang={/[α-ωΑ-Ω]/.test(b.label) ? 'grc' : 'en'}><span class="b-bkw">Book </span>{b.label}</span><span class="b-bkf">{titles[String(b.book)]?.[b.chapters[0]?.chapter] ? chapterTitle(b.book,b.chapters[0].chapter) : <span class="b-bks2">{usesBekker ? bookRange(b) : ''}</span>}</span><span class="b-bkc">{!numbered(b) && <span class="b-book-range">{bookRange(b)}</span>}{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</span></summary>{rows}</details>
             </> : rows;
           })}
+          </div>
+        </section>
+        <section class="b-sec" data-section="texts">
+          <h2 class="b-h2">Texts</h2>
+          <div class="b-print-groups b-texts">
+            {work.greekSource.full && <div><h3>Greek text</h3><p set:html={sanitizeHtml(work.greekSource.full)}/></div>}
+            {englishFull.length > 0 && <div><h3>{englishFull.length > 1 ? 'English translations' : 'English translation'}</h3>{englishFull.map(e => <p set:html={sanitizeHtml(e)}/>)}</div>}
           </div>
         </section>
         <section class="b-sec b-two" data-section="reference">

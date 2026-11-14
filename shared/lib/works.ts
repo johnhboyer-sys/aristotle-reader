@@ -138,7 +138,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Minio-Paluello, Aristotelis Categoriae (OCT, 1949)',
     greekSource: {
       short: 'Minio-Paluello (OCT, 1949)',
-      full: 'L. Minio-Paluello, ed. Aristotelis categoriae et liber de interpretatione. Oxford: Clarendon Press, 1949.',
+      full: 'L. Minio-Paluello, ed. <i>Aristotelis categoriae et liber de interpretatione</i>. Oxford: Clarendon Press, 1949.',
     },
     // Edghill (1928) + Taylor (1812) are public domain and ship publicly. Ackrill
     // (1963) is US-copyright: carried in Cat.yaml for the local build and gated
@@ -164,7 +164,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Minio-Paluello, Aristotelis De Interpretatione (OCT, 1949)',
     greekSource: {
       short: 'Minio-Paluello (OCT, 1949)',
-      full: 'L. Minio-Paluello, ed. Aristotelis categoriae et liber de interpretatione. Oxford: Clarendon Press, 1949.',
+      full: 'L. Minio-Paluello, ed. <i>Aristotelis categoriae et liber de interpretatione</i>. Oxford: Clarendon Press, 1949.',
     },
     // Edghill (1928) + Taylor (1812) public domain; Ackrill (1963) US-copyright,
     // local build only (same gating as Categories). Taylor's text and notes are
@@ -188,7 +188,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Busse, Porphyrii Isagoge (CAG IV.1, 1887)',
     greekSource: {
       short: 'Busse (CAG IV.1, 1887)',
-      full: 'A. Busse, ed. Porphyrii Isagoge et in Aristotelis Categorias commentarium. Commentaria in Aristotelem Graeca IV.1. Berlin: Reimer, 1887.',
+      full: 'A. Busse, ed. <i>Porphyrii Isagoge et in Aristotelis Categorias commentarium</i>. Commentaria in Aristotelem Graeca IV.1. Berlin: Reimer, 1887.',
     },
     // Porphyry's introduction to Aristotle's Categories; cited by Busse page,
     // not Bekker. Owen (1853) is public domain and translated from the Greek.
@@ -210,7 +210,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Physica (OCT, 1950)',
     greekSource: {
       short: 'Ross (OCT, 1950)',
-      full: 'W. D. Ross, ed. Aristotelis Physica. Oxford: Clarendon Press (Oxford Classical Texts), 1950.',
+      full: 'W. D. Ross, ed. <i>Aristotelis Physica</i>. Oxford: Clarendon Press (Oxford Classical Texts), 1950.',
     },
     translations: [
       { id: 'hardie', name: 'R. P. Hardie and R. K. Gaye (Oxford, 1930)', short: 'Hardie & Gaye', slot: 'english' },
@@ -228,7 +228,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Moraux, Aristote: Du ciel (Budé, 1965)',
     greekSource: {
       short: 'Moraux (Budé, 1965)',
-      full: 'P. Moraux, ed. Aristote: Du ciel. Paris: Les Belles Lettres (Budé), 1965.',
+      full: 'P. Moraux, ed. <i>Aristote: Du ciel</i>. Paris: Les Belles Lettres (Budé), 1965.',
     },
     translations: [
       { id: 'stocks', name: 'J. L. Stocks (Oxford, 1922)', short: 'Stocks', slot: 'english' },
@@ -246,7 +246,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Mugler, Aristote. De la génération et de la corruption (Les Belles Lettres, 1966)',
     greekSource: {
       short: 'Mugler (Les Belles Lettres, 1966)',
-      full: 'C. Mugler, ed. Aristote. De la génération et de la corruption. Paris: Les Belles Lettres, 1966.',
+      full: 'C. Mugler, ed. <i>Aristote. De la génération et de la corruption</i>. Paris: Les Belles Lettres, 1966.',
     },
     translations: [
       { id: 'joachim', name: 'H. H. Joachim (Oxford, 1922)', short: 'Joachim', slot: 'english' },
@@ -264,7 +264,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Fobes, Aristotelis Meteorologicorum libri quattuor (1919)',
     greekSource: {
       short: 'Fobes (1919)',
-      full: 'F. H. Fobes, ed. Aristotelis meteorologicorum libri quattuor. Cambridge, Mass.: Harvard University Press, 1919; repr. 1967.',
+      full: 'F. H. Fobes, ed. <i>Aristotelis meteorologicorum libri quattuor</i>. Cambridge, Mass.: Harvard University Press, 1919; repr. 1967.',
     },
     translations: [
       { id: 'webster', name: 'E. W. Webster (Oxford, 1923)', short: 'Webster', slot: 'english' },
@@ -282,7 +282,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: De Anima (Oxford, 1961)',
     greekSource: {
       short: 'Ross (Oxford, 1961)',
-      full: 'W. D. Ross, ed. Aristotle: De Anima. Oxford: Clarendon Press, 1961.',
+      full: 'W. D. Ross, ed. <i>Aristotle: De Anima</i>. Oxford: Clarendon Press, 1961.',
     },
     // Wallace (Cambridge, 1882) is public domain and a Tier 0 secondary: chapter
     // divisions match the Greek spine exactly (5/12/13), no anchors file.
@@ -308,7 +308,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -326,7 +326,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -344,7 +344,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -362,7 +362,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -380,7 +380,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -398,7 +398,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'ross', name: 'G. R. T. Ross (Oxford, 1908)', short: 'Ross', slot: 'english' },
@@ -416,7 +416,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'ross', name: 'G. R. T. Ross (Oxford, 1908)', short: 'Ross', slot: 'english' },
@@ -437,7 +437,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Louis, Aristote: Histoire des animaux (Budé, 1964–69)',
     greekSource: {
       short: 'Louis (Budé, 1964–69)',
-      full: 'P. Louis, ed. Aristote: Histoire des animaux. 3 vols. Paris: Les Belles Lettres (Budé), 1964–69.',
+      full: 'P. Louis, ed. <i>Aristote: Histoire des animaux</i>. 3 vols. Paris: Les Belles Lettres (Budé), 1964–69.',
     },
     translations: [
       { id: 'thompson', name: 'D’Arcy Wentworth Thompson (Oxford, 1910)', short: 'Thompson', slot: 'english' },
@@ -455,7 +455,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Louis, Aristote: Les parties des animaux (Budé, 1956)',
     greekSource: {
       short: 'Louis (Budé, 1956)',
-      full: 'P. Louis, ed. Aristote: Les parties des animaux. Paris: Les Belles Lettres (Budé), 1956.',
+      full: 'P. Louis, ed. <i>Aristote: Les parties des animaux</i>. Paris: Les Belles Lettres (Budé), 1956.',
     },
     translations: [
       { id: 'ogle', name: 'William Ogle (Oxford, 1912)', short: 'Ogle', slot: 'english' },
@@ -473,7 +473,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Jaeger, Aristotelis De animalium motione (Teubner, 1913)',
     greekSource: {
       short: 'Jaeger (Teubner, 1913)',
-      full: 'W. Jaeger, ed. Aristotelis de animalium motione et de animalium incessu. Leipzig: Teubner, 1913.',
+      full: 'W. Jaeger, ed. <i>Aristotelis de animalium motione et de animalium incessu</i>. Leipzig: Teubner, 1913.',
     },
     translations: [
       { id: 'farquharson', name: 'A. S. L. Farquharson (Oxford, 1912)', short: 'Farquharson', slot: 'english' },
@@ -491,7 +491,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Jaeger, Aristotelis De animalium incessu (Teubner, 1913)',
     greekSource: {
       short: 'Jaeger (Teubner, 1913)',
-      full: 'W. Jaeger, ed. Aristotelis de animalium motione et de animalium incessu. Leipzig: Teubner, 1913.',
+      full: 'W. Jaeger, ed. <i>Aristotelis de animalium motione et de animalium incessu</i>. Leipzig: Teubner, 1913.',
     },
     translations: [
       { id: 'farquharson', name: 'A. S. L. Farquharson (Oxford, 1912)', short: 'Farquharson', slot: 'english' },
@@ -509,7 +509,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Drossaart Lulofs, Aristotelis De Generatione Animalium (OCT, 1965)',
     greekSource: {
       short: 'Drossaart Lulofs (OCT, 1965)',
-      full: 'H. J. Drossaart Lulofs, ed. Aristotelis de generatione animalium. Oxford: Clarendon Press (Oxford Classical Texts), 1965; repr. 1972.',
+      full: 'H. J. Drossaart Lulofs, ed. <i>Aristotelis de generatione animalium</i>. Oxford: Clarendon Press (Oxford Classical Texts), 1965; repr. 1972.',
     },
     translations: [
       { id: 'platt', name: 'Arthur Platt (Oxford, 1910)', short: 'Platt', slot: 'english' },
@@ -529,7 +529,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle’s Metaphysics (Oxford, 1953)',
     greekSource: {
       short: 'Ross (Oxford, 1953)',
-      full: 'W. D. Ross, ed. Aristotle’s Metaphysics. 2 vols. Oxford: Clarendon Press, 1924; repr. 1970 [of 1953 corr. edn.].',
+      full: 'W. D. Ross, ed. <i>Aristotle’s Metaphysics</i>. 2 vols. Oxford: Clarendon Press, 1924; repr. 1970 [of 1953 corr. edn.].',
     },
     // Public build ships the public-domain Ross (1928) only. The copyrighted
     // Tredennick (Loeb 1933) primary + aligned-Ross overlay live in Meta.yaml
@@ -551,7 +551,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)',
     greekSource: {
       short: 'Ross (OCT, 1964)',
-      full: 'W. D. Ross, ed. Aristotelis analytica priora et posteriora. Oxford: Clarendon Press, 1964.',
+      full: 'W. D. Ross, ed. <i>Aristotelis analytica priora et posteriora</i>. Oxford: Clarendon Press, 1964.',
     },
     translations: [
       { id: 'jenkinson', name: 'A. J. Jenkinson (Oxford, 1928)', short: 'Jenkinson', slot: 'english' },
@@ -570,7 +570,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)',
     greekSource: {
       short: 'Ross (OCT, 1964)',
-      full: 'W. D. Ross, ed. Aristotelis analytica priora et posteriora. Oxford: Clarendon Press, 1964.',
+      full: 'W. D. Ross, ed. <i>Aristotelis analytica priora et posteriora</i>. Oxford: Clarendon Press, 1964.',
     },
     // Mure (Oxford, 1928) primary + Bouchier (Blackwell, 1901) overlay — both PD.
     // Bouchier is a Tier 0 secondary: "Part" divisions match the 34/19 Bekker
@@ -593,7 +593,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)',
     greekSource: {
       short: 'Ross (OCT, 1958)',
-      full: 'W. D. Ross, ed. Aristotelis topica et sophistici elenchi. Oxford: Clarendon Press, 1958.',
+      full: 'W. D. Ross, ed. <i>Aristotelis topica et sophistici elenchi</i>. Oxford: Clarendon Press, 1958.',
     },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
@@ -612,7 +612,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)',
     greekSource: {
       short: 'Ross (OCT, 1958)',
-      full: 'W. D. Ross, ed. Aristotelis topica et sophistici elenchi. Oxford: Clarendon Press, 1958.',
+      full: 'W. D. Ross, ed. <i>Aristotelis topica et sophistici elenchi</i>. Oxford: Clarendon Press, 1958.',
     },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
@@ -631,11 +631,11 @@ export const WORKS: Work[] = [
     greekEdition: 'Bywater, Aristotelis Ethica Nicomachea (OCT, 1894)',
     greekSource: {
       short: 'Bywater (OCT, 1894)',
-      full: 'Ingram Bywater, ed. Aristotelis Ethica Nicomachea. Oxford: Clarendon Press (Oxford Classical Texts), 1894; repr. 1962.',
+      full: 'Ingram Bywater, ed. <i>Aristotelis Ethica Nicomachea</i>. Oxford: Clarendon Press (Oxford Classical Texts), 1894; repr. 1962.',
     },
     translations: [
       { id: 'rackham', name: 'H. Rackham (Loeb, 1926)', short: 'Rackham', slot: 'english' },
-      { id: 'ross', name: 'W. D. Ross (Oxford, 1908)', short: 'Ross', slot: 'secondary' },
+      { id: 'ross', name: 'W. D. Ross (Oxford, 1925)', short: 'Ross', slot: 'secondary' },
       // Public domain (Bobbs-Merrill 1962, copyright not renewed — verified), so
       // it ships in the public build. Bekker-keyed from its inline apparatus and
       // carries Ostwald's 505 footnotes (shown as popups in the reader).
@@ -671,7 +671,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Susemihl, Aristotelis Ethica Eudemia (Teubner, 1884)',
     greekSource: {
       short: 'Susemihl (Teubner, 1884)',
-      full: 'F. Susemihl, ed. Aristotelis ethica Eudemia. Leipzig: Teubner, 1884.',
+      full: 'F. Susemihl, ed. <i>Aristotelis ethica Eudemia</i>. Leipzig: Teubner, 1884.',
     },
     // Public build ships the public-domain Solomon (1915) only. The copyrighted
     // Rackham (Loeb 1935) overlay lives in EE.yaml for the local/private build
@@ -693,7 +693,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Politica (OCT, 1957)',
     greekSource: {
       short: 'Ross (OCT, 1957)',
-      full: 'W. D. Ross, ed. Aristotelis politica. Oxford: Clarendon Press, 1957.',
+      full: 'W. D. Ross, ed. <i>Aristotelis politica</i>. Oxford: Clarendon Press, 1957.',
     },
     // Public build ships the public-domain Jowett (1885) + Ellis (1776/1912)
     // only. The copyrighted Rackham (Loeb 1932) primary + aligned-Jowett
@@ -717,7 +717,7 @@ export const WORKS: Work[] = [
     greekEdition: 'van Groningen and Wartelle, Aristote. Économique (Les Belles Lettres, 1968)',
     greekSource: {
       short: 'van Groningen and Wartelle (Les Belles Lettres, 1968)',
-      full: 'B. A. van Groningen and A. Wartelle, eds. Aristote. Économique. Paris: Les Belles Lettres, 1968.',
+      full: 'B. A. van Groningen and A. Wartelle, eds. <i>Aristote. Économique</i>. Paris: Les Belles Lettres, 1968.',
     },
     authenticity: 'dubious',
     // Dubious (Barnes 1984 marks it *): Book I is possibly by a pupil, Book II by a
@@ -740,7 +740,7 @@ export const WORKS: Work[] = [
     greekEdition: 'F. Susemihl, Aristotelis quae feruntur Magna moralia (Teubner, 1883)',
     greekSource: {
       short: 'Susemihl (Teubner, 1883)',
-      full: 'F. Susemihl, ed. Aristotelis quae feruntur Magna moralia. Leipzig: Teubner, 1883; text as printed by G. C. Armstrong (Loeb, 1935). Lines as in I. Bekker, ed. Aristotelis opera, vol. II. Berlin: Georg Reimer, 1831.',
+      full: 'F. Susemihl, ed. <i>Aristotelis quae feruntur Magna moralia</i>. Leipzig: Teubner, 1883; text as printed by G. C. Armstrong (Loeb, 1935). Lines as in I. Bekker, ed. <i>Aristotelis opera</i>, vol. II. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'dubious',
     // Contested: some hold it Aristotle's earliest ethics, most a Peripatetic
@@ -763,7 +763,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -782,7 +782,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Lorimer, Aristotelis qui fertur libellus De mundo (Les Belles Lettres, 1933)',
     greekSource: {
       short: 'Lorimer (Les Belles Lettres, 1933)',
-      full: 'W. L. Lorimer, ed. Aristotelis qui fertur libellus De mundo. Paris: Les Belles Lettres, 1933.',
+      full: 'W. L. Lorimer, ed. <i>Aristotelis qui fertur libellus De mundo</i>. Paris: Les Belles Lettres, 1933.',
     },
     authenticity: 'spurious',
     translations: [
@@ -801,7 +801,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -820,7 +820,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'dubious',
     translations: [
@@ -839,7 +839,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -858,7 +858,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -879,7 +879,7 @@ export const WORKS: Work[] = [
     // laid on the Berlin edition's printed lines (sources/plant-greek/).
     greekSource: {
       short: 'Bekker (Oxford, 1837)',
-      full: 'I. Bekker, ed. Aristotelis opera, vol. 6. Oxford: Oxford University Press, 1837; lines as in Bekker, Aristotelis opera, vol. 2, Berlin: Georg Reimer, 1831. Text from Open Greek and Latin First1KGreek.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>, vol. 6. Oxford: Oxford University Press, 1837; lines as in Bekker, <i>Aristotelis opera</i>, vol. 2, Berlin: Georg Reimer, 1831. Text from Open Greek and Latin First1KGreek.',
       licence: { name: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/' },
     },
     authenticity: 'spurious',
@@ -899,7 +899,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -918,7 +918,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -937,7 +937,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -956,7 +956,7 @@ export const WORKS: Work[] = [
     greekEdition: 'W. Jaeger, Ps.-Aristotelis De spiritu libellus (Leipzig, 1913)',
     greekSource: {
       short: 'Jaeger (Teubner, 1913)',
-      full: 'W. Jaeger, ed. Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus. Leipzig: Teubner, 1913.',
+      full: 'W. Jaeger, ed. <i>Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus</i>. Leipzig: Teubner, 1913.',
     },
     authenticity: 'spurious',
     translations: [
@@ -975,7 +975,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -995,7 +995,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -1014,7 +1014,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Ars Rhetorica (OCT, 1959)',
     greekSource: {
       short: 'Ross (OCT, 1959)',
-      full: 'W. D. Ross, ed. Aristotelis ars rhetorica. Oxford: Clarendon Press, 1959.',
+      full: 'W. D. Ross, ed. <i>Aristotelis ars rhetorica</i>. Oxford: Clarendon Press, 1959.',
     },
     // Freese (Loeb, 1926) primary + Roberts (Oxford, 1924) overlay — both PD.
     // Roberts is a Tier 0 secondary: "Part" divisions match the 15/26/19 Bekker
@@ -1038,7 +1038,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Fuhrmann, Anaximenis Ars Rhetorica (Teubner, 1966), on Bekker’s lines',
     greekSource: {
       short: 'Fuhrmann (Teubner, 1966)',
-      full: 'M. Fuhrmann, ed. Anaximenis ars rhetorica quae vulgo fertur Aristotelis ad Alexandrum. Leipzig: Teubner, 1966. Lines and numbers from I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'M. Fuhrmann, ed. <i>Anaximenis ars rhetorica quae vulgo fertur Aristotelis ad Alexandrum</i>. Leipzig: Teubner, 1966. Lines and numbers from I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -1057,7 +1057,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Kassel, Aristotelis De Arte Poetica (OCT, 1966)',
     greekSource: {
       short: 'Kassel (OCT, 1966)',
-      full: 'R. Kassel, ed. Aristotelis de arte poetica liber. Oxford: Clarendon Press, 1965; repr. 1968 [of 1966 corr. edn.].',
+      full: 'R. Kassel, ed. <i>Aristotelis de arte poetica liber</i>. Oxford: Clarendon Press, 1965; repr. 1968 [of 1966 corr. edn.].',
     },
     // Fyfe (Loeb, 1932) primary + Butcher (Macmillan, 1907) overlay — both PD.
     // Butcher is a Tier 0 secondary: chapters pinned to the Greek spine, gutter
@@ -1079,7 +1079,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Oppermann, Aristotelis Ἀθηναίων πολιτεία (Teubner, 1928)',
     greekSource: {
       short: 'Oppermann (Teubner, 1928)',
-      full: 'H. Oppermann, ed. Aristotelis Ἀθηναίων πολιτεία. Leipzig: Teubner, 1928; repr. 1968.',
+      full: 'H. Oppermann, ed. <i>Aristotelis Ἀθηναίων πολιτεία</i>. Leipzig: Teubner, 1928; repr. 1968.',
     },
     // Cited by chapter.section, not Bekker: the papyrus came to light in 1890.
     // Chapter N rides synthetic column "Na", section S line S (plan:

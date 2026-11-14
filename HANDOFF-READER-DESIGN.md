@@ -63,6 +63,14 @@ red, and motion are not the difference.
   phone Both is a separate question to put to him as a picture. Memory `plato-phone-serves-both`; the coordinator
   queued it with the Plato search port.
 
+- Whole lines on desktop (14 Nov, 12:03): "whole lines when possible but don't adjust the English width to ensure
+  them. Unless we add that as a setting option for users, equal widths for the columns." Round 2's whole lines
+  option (Greek 510px, English narrows) is out as the default; equal columns that widen with the window are in.
+- 14 Nov: John wants to explore reader layouts as user options: whole Bekker lines with type sized to the window;
+  English wider than Greek; Greek broken into paragraphs that match the English (first lines aligned, as Plato does
+  with speakers' turns; needs alignment work, maybe per translation); font and weight settings; a workbench view
+  with a fixed right rail (morphology, dictionary, other tools). "I'm thinking big here."
+
 ### Round 1 reviews (fresh agents, findings only)
 
 Opus 5.5 and Codex gpt-6.1-sol medium agreed: keep wrap-as-a-unit, narrow margins, less glare, phone English in
@@ -103,3 +111,84 @@ its Bekker numbers in the right margin, column label in the left margin; wrap as
   search-shots, search-counts), because `aristotle-reader-9c` runs them too.
 - Mock-ups and options only until John rules. No commits to app code, no gates, no pushes. Rewrite (don't append) this
   file when you hand off.
+
+## Paragraph-aligned mock (14 Nov, 12:20)
+
+John asked for a mock of Greek broken into the translation's paragraphs ("we still keep bekker numbers obvi"); he
+called it a later update to the reader, not a blocker for the redesign. Mock: Ethics I.1–3, Rackham, 1440 and
+1280px, light and dark, against today's rows. Shooter and pictures in `.redesign-shots/notes/reader/para/`
+(`shoot.mjs` rebuilds the built page's DOM; 22 paragraph starts chosen by hand, `STARTS`). A paragraph that starts
+mid-line splits the Bekker line: the number stays on the first half; the second half starts where the first half
+ends. Where the Bekker column changes mid-paragraph, the English margin shows the column (1094b). Ross's hosted text
+has one or two paragraphs per chapter, so for Ross this layout is the same as today's chapter rows.
+
+## Greek-only workbench mock (14 Nov, 12:35)
+
+John: "Greek only workbench with the side rail." Mock on the real page (Greek view, real word panel, real grammata
+LSJ) restyled as a 440px rail that stays open: word card on top (parse, gloss, "342 in this work · 1,666 in
+Aristotle" from the lemma page; a second analysis folded to one line), LSJ scrolling under it, the translation's
+five-line span pinned at the foot (Rackham 1094a1–5) with Cite, Search, and Lexicon links. With no word picked the
+rail holds only the passage. Greek lines stay whole at 1440 and 1280. Shooter and pictures in
+`.redesign-shots/notes/reader/rail/`. Not built: the English follows the five-line marks only (no word-level
+highlight; that needs word alignment); the rail toggle's place in the bar is undecided.
+
+## Scope (John, 14 Nov, 12:22)
+
+"We get the parallel Greek English reader page to v good. Then the workbench and other things are later PRs."
+So this track finishes the parallel reader (round 4 and its reviews, then the build). The workbench rail,
+paragraph-aligned rows, and layout settings are later PRs; their mocks stay in `notes/reader/para/` and `rail/`.
+
+## Round 4 (14 Nov, 12:35)
+
+Published as the Round 4 tab of the flip page (version 8). Shooter `notes/reader/r1/shoot-r4.mjs`, shots `img4/`
+(94), measurements `img4/log.json`. Screens 1152, 1440, 1920, phone, sideways. "Everything kept" = round 2 BASE +
+unit + margins + glare + EQUAL columns (desktop and sideways) + round 3 PAR + English-only held to 720px. Open for
+John: Centred on wide screens (from 1400px) and Shorter bar sideways. Other states shown against Now: book head,
+chapter opening, Greek only, English only.
+Measured: equal columns 490/490 at 1152 (4 of 15 Greek lines wrap), 588/588 at 1440 and 1920 (none wrap).
+Fix in the build, no ruling needed: the line number sits 1.1px below the text baseline in Gentium (0.7px phone;
+the `.b-ln` offset uses Literata's .4345); English-only rows that count a hidden Greek column miss the 720px cap
+(today they run 1240px); equal columns replace `greekColumnWidth` in Both view.
+Next (John, 12:26 plan): after his round 4 rulings, fresh Opus and Codex reviews of the combined page; their
+findings become round 5's options; stop when a round brings nothing he keeps.
+
+### Round 4 rulings and additions (14 Nov, 13:00–13:06)
+
+- Centred on wide screens: kept ("for wider screens, definitiely B" = the flip page's B).
+- Chapter number moves into the left margin on desktop ("so number doesn't sit over the text"). Options hang72
+  (72px, margin 108px below 1400px) and hang56 (56px in the 72px margin); three digits step down to fit.
+- Greek only and English only: he asked to centre them too; shown as greekc/englishc/topc (720px column centred).
+- English paragraphs must never break at a Bekker column, in any view ("don't break english paragraphs"; "can't
+  have that"; "get rid of these horizontal bekker column line breaks"; "not a fan"). Option `whole`: rows end only
+  at a chapter or where the English starts a paragraph; no rule under phone rows; column label red in the English
+  margin (a red 1 on the phone). Data: Ross, Ostwald (third), and overlays carry a `cont` flag per piece (2,270);
+  the primary `english` slot (3,138 segments) has none, so the pipeline must record paragraph continuation there
+  before the build can do this for Rackham, Jowett, etc. Cost seen: the two columns' labels drift (Greek 1094b two
+  lines above the English 1094b at 1440) because rows no longer realign every column.
+- Flip page version 9.
+- Shorter sideways bar (44px, buttons keep 40px): kept (13:14, "yes").
+- Bar on wide screens (13:21): "The contents menu, site title, etc should always be left aligned in the header" —
+  the bar keeps its 24px edges at every width; only the reading block centres. Flip page version 11.
+- Correction (13:17): `cont` on overlay pieces means "continues the chapter", not the paragraph. The `whole` mock
+  joins every column boundary inside a chapter; 4 of Ethics I's 18 (where Ostwald's sentence ends at the column)
+  may be real paragraph breaks. Build fix: stage1_ross.build_chunks strips a leading "\n" on a segment's first
+  piece (record it as a flag instead); stage1_common.add_paragraph records nothing when the new column's chunk is
+  still empty (record a start-of-chunk flag). The reader joins a row to the one before unless that flag is set.
+- Book head (13:25): "the ruled line and book head should sit aligned with chapter numbers" — desktop: .b-bookh
+  margin-left −(one-digit numeral width + 12px gap) = −46px at 72px (−38px at 56px), max-width grows by the same so
+  the rule still ends at the text's right edge. Options tophang72/tophang56; flip page version 12.
+- Chapter number baseline (13:31): "Chapter number down to same baseline as 'chapter n • bekker'". .b-chn bottom:
+  calc(22px − .058em) (measured: Sofia Sans' baseline sat 4.1px high at 72px, 3.3px at 56px); shooter logs
+  `chnGap` (b-chb baseline − b-chn baseline): 0/−0.1px everywhere except 56px two-digit at 1152 (−0.9, the
+  numeral steps to 50px there). Flip page version 13.
+- Desktop rulings (13:51, "For desktop, C, D, G-K"): kept C whole (paragraphs never break; label drift accepted),
+  D wholeen, G tophang56 (book head hangs 38px), H hang56 (56px number in the 72px narrow margin; three digits step
+  down to fit), J greekc, K englishc (single views centred). Out: E hang72, F tophang72 (and so the 108px margin).
+  Still open: italic titles in the work page's Texts section.
+- Italic titles in the work page's Texts section (13:53, "Yes italics in texts"): all 47 Greek `full` entries and
+  the 63 translation entries mark book titles with <i> (series roman); attribution.astro now renders the Greek
+  entry through sanitizeHtml. Test translation-bib.test.ts: <i> required, nothing else allowed. Uncommitted.
+- Phone chapter number (13:53, "For phone, move ch number to margin like I asked for on desktop"): mock
+  PHONEHANG: 34px (two digits fit the 40px margin), right edge on the column labels' (4px in Both, 8px in one-text
+  views), baseline on the chapter line, book head hung 20/24px. Sideways (701–960px, 72px margin) takes the desktop
+  rule. Final set reshot as `final*` (+ finalch10, finalmirab).

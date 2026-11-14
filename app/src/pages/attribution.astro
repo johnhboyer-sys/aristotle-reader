@@ -6,6 +6,7 @@ import '@shared/styles/global.css';
 import '@shared/styles/b.css';
 import { WORKS, greekSourcesByLicence } from '@shared/lib/works';
 import { jsonLdSafe } from '../lib/jsonld';
+import { sanitizeHtml } from '../lib/html';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // True only in the local/full build (PUBLIC_SHOW_PRIVATE=1), where copyright-
 // encumbered overlays are carried; every production/public build drops them
@@ -261,7 +262,7 @@ const jsonLd = {
     </p>
     <ul>
       {greek.publicDomain.map((w) => (
-        <li><strong>{w.title}</strong> — {w.greekSource.full}</li>
+        <li><strong>{w.title}</strong> — <span set:html={sanitizeHtml(w.greekSource.full)} /></li>
       ))}
     </ul>
     <p>
@@ -282,7 +283,7 @@ const jsonLd = {
         </p>
         <ul>
           {g.works.map((w) => (
-            <li><strong>{w.title}</strong> — {w.greekSource.full}
+            <li><strong>{w.title}</strong> — <span set:html={sanitizeHtml(w.greekSource.full)} />
               Licence: <a href={g.licence.url}>{g.licence.name}</a>.</li>
           ))}
         </ul>
