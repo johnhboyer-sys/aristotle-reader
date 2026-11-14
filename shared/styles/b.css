@@ -866,6 +866,13 @@ body.home { margin: 0; padding: 0; max-width: none; }
 @media (max-width: 960px) {
   .dir-b.pg-lexicon .lxi-body { padding: 18px 18px 30px; }
 }
+/* The text starts where the bar's logo does (the bar keeps to the 1168px
+   column, 14 Nov): the lexicon index, lemma pages, and picture credits. */
+@media (min-width: 961px) {
+  .dir-b.pg-lexicon .lxi-body { padding-inline: max(72px, calc((100% - 1168px) / 2)); }
+  .dir-b .b-pc { margin-left: max(0px, calc((100% - 1168px) / 2 - 72px)); }
+  .dir-b.pg-lexicon > main:not(.lxi-body) { max-width: 1312px; margin-inline: auto; }
+}
 
 /* Desktop home and work pages, round 9. */
 .dir-b.pg-work .b-print-groups, .dir-b.pg-work .b-edition-tools .b-compare-tool { display: none; }

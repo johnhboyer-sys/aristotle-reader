@@ -7,7 +7,7 @@
   import { measureGreekTrack as measureTrack, measuresGreekTrack, greekColumnWidth } from '../lib/greek-track';
   import { sanitizeHtml } from '../lib/html';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
-  import { getWork, visibleTranslations, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
+  import { getWork, visibleTranslations, plainFull, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
   import { touchRecent } from '../lib/resume';
   import { restoreReaderFonts, type GFont, type EFont } from '../lib/reader-fonts';
   import WordPopup from './WordPopup.svelte';
@@ -685,10 +685,10 @@
   // Masthead pieces (critical-edition design): author eyebrow + work title;
   // the full source citation(s) adapted to the printed view live in the footer.
   $: printCite = view === 'greek'
-    ? (greekSrc?.full ? `Greek text: ${greekSrc.full}` : '')
+    ? (greekSrc?.full ? `Greek text: ${plainFull(greekSrc.full)}` : '')
     : view === 'english'
       ? (selectedTrans?.name ? `Translation: ${selectedTrans.name}` : '')
-      : [greekSrc?.full ? `Greek text: ${greekSrc.full}` : '',
+      : [greekSrc?.full ? `Greek text: ${plainFull(greekSrc.full)}` : '',
          selectedTrans?.name ? `Translation: ${selectedTrans.name}` : '']
           .filter(Boolean).join('   ·   ');
 
@@ -1820,7 +1820,7 @@
       {/if}
       <div class="rc-cite">
         {#if view === 'greek'}
-          {#if greekSrc}<span class="rc-greek">{greekSrc.full}</span>{/if}
+          {#if greekSrc}<span class="rc-greek">{plainFull(greekSrc.full)}</span>{/if}
         {:else if trans === 'compare'}
           {#if view === 'both'}<span class="rc-col-spacer" aria-hidden="true"></span>{/if}
           <span class="rc-col-name">{citeShort(transById(compareLeft))}</span>

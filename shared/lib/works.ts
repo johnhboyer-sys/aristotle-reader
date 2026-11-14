@@ -1168,6 +1168,9 @@ export function searchableTranslations(work: Work): TranslationRef[] {
   return work.translations.filter(t => !t.private || SHOW_PRIVATE);
 }
 
+/** greekSource.full without its <i> title marks, for places that print it as text. */
+export const plainFull = (full: string): string => full.replace(/<\/?i>/g, '');
+
 export function visibleTranslations(work: Work): TranslationRef[] {
   const extra = (globalThis as {
     __ARISTOTLE_EXTRA_TRANSLATIONS__?: Record<string, TranslationRef[]>;
