@@ -44,7 +44,7 @@ export const transParts = (name: string) => {
   const rest = m?.[2] || '';
   const year = /^(.*?)[,\s]+(\d{4}(?:[–-]\d{2,4})?)$/.exec(rest);
   const prefix = year?.[1].trim().replace(/,$/, '') || '';
-  // A bare ‘rev.’ keeps its year attached; ‘rev. ed.’ takes the kit’s comma.
-  const formatted = year ? `${prefix}${/\brev\.$/.test(prefix) ? ' ' : ', '}${year[2]}` : rest;
+  // A bare ‘rev.’ or ‘repr.’ keeps its year attached; ‘rev. ed.’ takes the kit’s comma.
+  const formatted = year ? `${prefix}${/\b(?:rev|repr)\.$/.test(prefix) ? ' ' : ', '}${year[2]}` : rest;
   return {who: m ? m[1] : name, rest: formatted};
 };

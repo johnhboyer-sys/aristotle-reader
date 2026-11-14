@@ -94,7 +94,7 @@ describe('bookSpan', () => {
 describe('transParts', () => {
   it.each([
     ['F. H. Peters (Kegan Paul, rev. ed. 1893)', 'F. H. Peters, Kegan Paul, rev. ed., 1893'],
-    ['William Ellis (1776; rev. 1912)', 'William Ellis, 1776; rev. 1912'],
+    ['William Ellis (1776; repr. 1912)', 'William Ellis, 1776; repr. 1912'],
   ])('formats %s for English facts', (name, expected) => {
     const {who, rest} = transParts(name);
     expect([who, rest].filter(Boolean).join(', ')).toBe(expected);

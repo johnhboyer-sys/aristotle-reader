@@ -138,7 +138,7 @@ const structuredData = Astro.site
           <div class="b-dw">{d.groups.map(g => <>
             {g.label && <h3 class="b-sub sub-label">{g.label}</h3>}
             <ul class="b-works">{g.cards.filter(c => c.kind === 'work' && c.work.id !== 'Isa').map(c => c.kind === 'work' && <li><a href={`${base}${workLanding(c.work.id)}`} data-work={c.work.id}>
-              <span class="b-wt">{c.work.title}{c.work.authenticity && c.work.authenticity !== 'genuine' && <span class="b-tag">{AUTHENTICITY_LABEL[c.work.authenticity]}</span>}</span>
+              <span class="b-wt">{c.work.listTitle ?? c.work.title}{c.work.authenticity && c.work.authenticity !== 'genuine' && <span class="b-tag">{AUTHENTICITY_LABEL[c.work.authenticity]}</span>}</span>
               <span class:list={["b-wg", {"b-greek-hang": hangs(c.work.greekTitle)}]} lang="grc">{c.work.greekTitle}</span><span class="b-we">{extents[c.work.id]}</span>
             </a></li>)}</ul>
           </>)}</div>

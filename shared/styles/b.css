@@ -672,6 +672,9 @@ body.home { margin: 0; padding: 0; max-width: none; }
    44px under it. Plates and the bust are cut to their ink box (--ix, --iy,
    --iw, --ih: plates.json, in the plate's own 1280×914 pixels). */
 @media (min-width: 961px) {
+  /* The bar keeps to the 1168px column on every page (John, 14 Nov: the logo
+     jumped from x=376 to 72 between home and search at 1920). */
+  .dir-b .b-nav { padding-inline: max(72px, calc((100% - 1168px) / 2)); }
   .dir-b:where(.pg-home, .pg-work) .b-page { max-width: 1312px; margin-inline: auto; }
   .dir-b:where(.pg-home, .pg-work) .b-foot { margin: 0 72px; padding-left: 0; padding-right: 0; }
   .dir-b:where(.pg-home, .pg-work) .b-top { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); column-gap: 40px; margin: 0 72px; padding-bottom: 44px; }

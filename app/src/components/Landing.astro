@@ -8,6 +8,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { publicDir } from 'astro:config/server';
 import plates from '../data/plates.json';
+import { nameYear, yearOnly } from '../lib/edition-label';
 import BFonts from './BFonts.astro';
 import BNav from './BNav.astro';
 import BFoot from './BFoot.astro';
@@ -191,11 +192,11 @@ const breadcrumbLd = Astro.site
             {work.related?.map(r => getWork(r.id) && <p class="b-cred b-related"><a href={`${base}${workLanding(r.id)}`}>{r.label}</a></p>)}
             <section class="b-wk" data-section="facts">
               <dl class="b-facts">
-                <dt>Greek text</dt><dd>{work.greekSource.short}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
+                <dt>Greek text</dt><dd>{nameYear(work.greekSource.short)}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
                 <dt>Open Greek and English with</dt><dd>{editions.map(t => {
-                  const reviser = t.name.match(/, rev\. (?:\S+ )*(\S+) \(/)?.[1];
+                  const revised = /, rev\. (?:\S+ )*\S+ \(/.test(t.name);
                   const imprint = t.name.match(/\(.*\)$/)?.[0];
-                  return <a class="b-edition-row" href={readHref(`?trans=${t.id}`)}><span><span class="b-translator">{t.short}</span>{reviser && `, rev. ${reviser}`}{imprint && ` ${imprint}`}</span>{editions.length > 1 && primary?.id === t.id && <small class="b-opens-first">opens first</small>}</a>;
+                  return <a class="b-edition-row" href={readHref(`?trans=${t.id}`)}><span><span class="b-translator">{t.short}</span>{revised && ', rev.'}{imprint && ` ${yearOnly(imprint)}`}</span>{editions.length > 1 && primary?.id === t.id && <small class="b-opens-first">opens first</small>}</a>;
                 })}
                 <div class="b-edition-tools">
                   {editions.length >= 2 && <a class="b-compare-tool" href={readHref('?trans=compare')}>Compare translations</a>}

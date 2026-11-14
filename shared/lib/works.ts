@@ -48,6 +48,7 @@ export interface Work {
   narrator?: string;
   id: string;       // slug + data dir, e.g. 'EN'
   title: string;
+  listTitle?: string;   // shorter title for the home page's list (John, 14 Nov: De Mirabilibus)
   greekTitle?: string;  // polytonic Greek title, shown in the print masthead
   abbr: string;     // display abbreviation (may differ from id styling)
   author: string;
@@ -701,7 +702,7 @@ export const WORKS: Work[] = [
     // divisions match the Greek spine exactly (13/12/18/16/12/8/17/7).
     translations: [
       { id: 'jowett', name: 'Benjamin Jowett, rev. W. D. Ross (Oxford, 1921)', short: 'Jowett', slot: 'english' },
-      { id: 'ellis', name: 'William Ellis (1776; rev. 1912)', short: 'Ellis', slot: 'secondary' },
+      { id: 'ellis', name: 'William Ellis (1776; repr. 1912)', short: 'Ellis', slot: 'secondary' },
     ],
     blurb: 'Aristotle on the city, citizenship, constitutions, and the best life.',
   },
@@ -985,6 +986,7 @@ export const WORKS: Work[] = [
   {
     id: 'Mirab',
     title: 'De Mirabilibus Auscultationibus',
+    listTitle: 'De Mirabilibus',
     greekTitle: 'Περὶ θαυμασίων ἀκουσμάτων',
     abbr: 'Mir.',
     author: 'Aristotle',
