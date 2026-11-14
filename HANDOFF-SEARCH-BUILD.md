@@ -1,6 +1,6 @@
 # HANDOFF: search build (the redesigned search page, for real)
 
-Rewritten 13 Nov 2026, 17:30, before a restart. Rewrite this file (don't append) when you hand off.
+Rewritten 13 Nov 2026, 17:30; §0 questions ruled and the gate review added 14 Nov 09:45. Rewrite this file (don't append) when you hand off.
 
 ## 0. State (13 Nov 17:30): built and merged; a new form design ruled; its build ON HOLD
 
@@ -46,7 +46,7 @@ form, now H3). The rendered target for those parts is the 13 Nov mock-up, not th
   A hybrid was rejected because it jumps.
 - **In:** "In all works | authentic works | choose works…" as words on the Proximity/Search row, shown once there is a
   query.
-- **F 4b proximity editor:** one line per term (two upright, see open questions); Add term, In this order, Keep hits,
+- **F 4b proximity editor:** one line per term (two upright, question 3); Add term, In this order, Keep hits,
   and Search on one foot row; no "Not searched yet" line ("unnecessary explanation").
 - **G-3 with switches:** one menu per grammar category, word class first. The class is derived from the data, with
   no new data: case → declined word, mood → verb, marker → the rest. The mood decides a verb's menus. In this order
@@ -54,16 +54,38 @@ form, now H3). The rendered target for those parts is the 13 Nov mock-up, not th
 - **Carried:** the editor folds after Search; column refs; Accents sets Form; translator switch; keyboard C2-b; Group
   by per kind of search.
 
-### Seven questions open for John
-1. **The count on a Both search.** It adds Greek and English word hits (`hitCount`, shared/lib/search-pages.ts), so
-   "ἀρετή and virtue" shows 2,952 while "virtue" alone shows 2,394. Should it count passages?
-2. **Lemma:** what does it do beyond "any form", now that Accents sets Form?
-3. **Two lines per term** in the upright phone editor; one line doesn't fit at 390px without smaller type.
-4. **Naming "Keep hits that cross a chapter"** in the folded line. It is on by default, so silent now.
-5. **Paradigm rows** in By grammar: shut (recommended) or open.
-6. **The 44px phone keyboard:** 48.8×44 keys, seven across, built key order. Default keys are 31×44.
-7. **The sideways fold after Search:** the whole form folds to one line plus Change. With it, every sideways search
-   state shows a whole line of Aristotle on the first screen; without it, none does.
+### The seven questions, ruled 14 Nov morning (John, by Remote Control)
+1. **Count on a Both search: passages**, "with the hit number labeled as such" (09:28). The big number counts
+   passages; the word-hit total stays, labelled as hits. (Was: `hitCount` in shared/lib/search-pages.ts adds Greek
+   and English word hits, 2,952 for "ἀρετή and virtue" against 2,394 for "virtue".)
+2. **Lemma stays a switch on top of "any form"** (09:37), after the explanation: "any form" takes every headword a
+   typed spelling can belong to (εἴδη → εἶδος and οἶδα; φύσει → φύσις, φύω, φυσάω, φύζω, from `lemma-map/`);
+   Lemma picks one headword from the list.
+3. **Two lines per term (upright phone): asked again 09:37 with a marked crop; not yet answered.** Build as mocked
+   unless he says otherwise.
+4. **Folded line: as mocked** ("looks great"): defaults stay silent, so "Keep hits that cross a chapter" is not
+   named while on; off adds "inside one chapter". **The chapter NOTE box goes** ("I don't like the huge across
+   chapter explainer text"), as the explainer ban already required.
+5. **Group by grammar paradigm rows start shut** ("yes if you mean default is non expanded").
+6. **Keyboard: the built Greek layout, spread to the sheet's edges, 36px keys** (09:41). John rejected the 48.8px
+   seven-across grid: "doesn't maintain layout of an actual Greek keyboard. Might as well be alphabetical". The
+   spread: `.gk-keys` grid 19 columns (the built 21 had columns 1 and 21 empty), gap 4px, every key's start column
+   minus 1; key order, spans, stagger unchanged; 36×44 at 390px. Mock: `keysSpread()` in
+   `.redesign-shots/notes/search-mock-13nov/mock/shoot.mjs` (`--kspread`), shots `phone-keyboard-*-kspread.png`.
+   Applies on the phone sheet; check the desktop panel and sideways keep their built grid unless the build finds
+   the same empty columns there (then ask).
+7. **Sideways: the form folds after Search** (yes).
+
+### Codex review of the three gate commits (14 Nov 09:20, gpt-6.1-sol medium, findings only)
+Fix these in the gate rewrite the new form needs anyway (R-S1's language loop):
+- ef3e1911ea, `app/scripts/check-redesign.mjs:3444`: R-S1 assumes one page when the count lacks its pagination
+  suffix, so later pages go unchecked if `.rc-p` text is missing. Fail instead. (high)
+- ef3e1911ea, `check-redesign.mjs:298`: the shared search states open only some menus and dropped Help, so the Form
+  menu and the Beta Code Help dialog sit outside R-A1–R-A3. Add states that open them. (high)
+- 09ff5e6728, `app/scripts/redesign-browser.mjs:218`: text height minus padding can be 0 and `searchRefUnbroken`
+  checks only an upper bound; a clipped ref (`height:0; padding-top:40px; overflow:hidden`) passes. Add a lower
+  bound and a `--prove` case for it. (high)
+- 49715e6876: clean.
 
 ### Where the mock-up lives
 - **Published:** https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X (Track A's copy, defaults H3 and (a)).
