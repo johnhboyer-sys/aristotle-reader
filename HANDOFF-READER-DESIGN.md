@@ -277,7 +277,12 @@ The last review round. CSS and JS in shoot-r4.mjs, the `R7` and `R7JS` blocks. B
 - M sideways: the book head on one row; the Greek title and credit sit right of BOOK I.
 Not kept (John, 12:41, "just look weird"): I and I2 (the bar's right group over the text's
 right edge, whole or split); the controls stay at the window's right edge.
-Held for John to look over: D (phone hairline), E (55/45), F (flush-right turnover), J (single views centred on the text), L (dark chapter line
-#A4A39C), N (crowded English numbers). Still open from round 6: B (A's rule at ch. 10).
+Kept (John, 12:48):
+- D phone Both: a 1px hairline down the middle of the 14px column gap (#d9d7d0 light, #34332f
+  dark; a background gradient on `.b-row`).
+- L dark: the chapter reference line (`.b-chb`) #a4a39c.
+E was described backwards: 55/45 makes the phone English fall further behind its Greek (1094b
+~18 lines low, against ~7 at 50/50). E2, the reverse 45/55, brings it within a line; shown.
+Held for John to look over: E/E2 (column split), F (flush-right turnover), J (single views centred on the text), N (crowded English numbers). Still open from round 6: B (A's rule at ch. 10).
 Build fixes noted this round: the phone opening-fragment turnover outdents (should be the
 fragment indent + 8px); at 1152px round 6 C's 88px gap wraps a few lines.
