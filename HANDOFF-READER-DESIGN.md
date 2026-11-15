@@ -202,3 +202,19 @@ hyphenated compounds (`e)n-u(pa/rxw`); the rest are names and forms LSJ files
 under another key (`ma/lista`, `*gai=a`). Fix in progress: try LSJ with the
 compound joined (hyphen and the breathing after it dropped), else convert with
 `betaToGreek`. Predates the redesign; the live site has it too.
+
+## Rulings 14 Nov 18:00
+
+- Phone chapter titles: 18 or 19px, not 21 (John left the pick to me): **19px**,
+  so the title stays a step above the 18px text. `@media (max-width: 700px)
+  { .dir-b .b-cht { font-size: 19px; } }` (shots `pt19*` in img4).
+- The bar names the chapter whose head has reached the top 40% of the reading
+  area (the reviewers' fault: it named the chapter before at every opening). Build it.
+- Series titles stay roman, book titles italic: Chicago style.
+- Kenyon 1920 and Ogle 1911 stand: the Classical Review notices date the
+  separate Oxford printings (Atheniensium respublica, Clarendon 1920;
+  De partibus animalium, Clarendon 1911, 5s. net) before Works vols. 10 and 5.
+- Round 5 options A–L (reviews of the All-kept page): John wants to see them
+  before cutting any.
+- Search build: no decisions open (the seven questions were ruled 14 Nov
+  morning); it waits only for John's go.
