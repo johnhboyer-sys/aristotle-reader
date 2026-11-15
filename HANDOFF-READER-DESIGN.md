@@ -275,8 +275,9 @@ The last review round. CSS and JS in shoot-r4.mjs, the `R7` and `R7JS` blocks. B
 - H sideways English only: the 664px column, centred (left padding max(60px, (100% - 664px) / 2)).
 - K a 12px fade from the page colour under the bar (`.b-rh::after`).
 - M sideways: the book head on one row; the Greek title and credit sit right of BOOK I.
-Held for John to look over: D (phone hairline), E (55/45), F (flush-right turnover), I (wide
-bar's right group over the text), J (single views centred on the text), L (dark chapter line
+Not kept (John, 12:41, "just look weird"): I and I2 (the bar's right group over the text's
+right edge, whole or split); the controls stay at the window's right edge.
+Held for John to look over: D (phone hairline), E (55/45), F (flush-right turnover), J (single views centred on the text), L (dark chapter line
 #A4A39C), N (crowded English numbers). Still open from round 6: B (A's rule at ch. 10).
 Build fixes noted this round: the phone opening-fragment turnover outdents (should be the
 fragment indent + 8px); at 1152px round 6 C's 88px gap wraps a few lines.
