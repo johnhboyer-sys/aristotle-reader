@@ -1122,6 +1122,7 @@ describe('B reader fonts', () => {
   afterEach(() => {
     localStorage.removeItem('reader-gfont');
     localStorage.removeItem('reader-efont');
+    localStorage.removeItem('reader-full-greek');
     document.querySelectorAll('link[data-reader-font]').forEach((link) => link.remove());
     const settings = (window as unknown as Window).happyDOM.settings;
     settings.disableCSSFileLoading = cssLoadingDisabled;
@@ -1142,11 +1143,11 @@ describe('B reader fonts', () => {
     expect(greek.nextElementSibling?.nextElementSibling).toBe(english);
     expect(english).toHaveClass('b-seg', 'wide');
     expect(within(english).getAllByRole('button').map((button) => button.textContent?.trim()))
-      .toEqual(['Literata Abc', 'EB Garamond Abc']);
+      .toEqual(['Gentium Abc', 'Literata Abc', 'EB Garamond Abc']);
     expect(document.querySelector('link[data-reader-font]')).toBeNull();
     const body = container.querySelector('.reader-body');
-    expect(body).toHaveAttribute('data-gfont', 'literata');
-    expect(body).toHaveAttribute('data-efont', 'literata');
+    expect(body).toHaveAttribute('data-gfont', 'gentium');
+    expect(body).toHaveAttribute('data-efont', 'gentium');
 
     await fireEvent.click(within(greek).getByRole('button', { name: 'Cardo αβγ' }));
     await fireEvent.click(within(english).getByRole('button', { name: 'EB Garamond Abc' }));
@@ -1160,10 +1161,44 @@ describe('B reader fonts', () => {
       'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
 
     await fireEvent.click(screen.getByRole('button', { name: /Reset/ }));
-    expect(body).toHaveAttribute('data-gfont', 'literata');
-    expect(body).toHaveAttribute('data-efont', 'literata');
+    expect(body).toHaveAttribute('data-gfont', 'gentium');
+    expect(body).toHaveAttribute('data-efont', 'gentium');
     expect(localStorage.getItem('reader-gfont')).toBeNull();
     expect(localStorage.getItem('reader-efont')).toBeNull();
+  });
+
+  it('renders typography at display time, copies it without the dash joiner, and leaves the data alone', async () => {
+    const book = structuredClone(fixtureBook);
+    const original = "\"Don't\" stop  —\"yes\".";
+    book.segments[0].third[0].text = original;
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    const prose = [...container.querySelectorAll<HTMLElement>('.b-ec .bk-seg')].find(el => el.textContent!.includes('stop'))!;
+    expect(prose.textContent).toContain('“Don’t” stop\u2060—“yes”.');
+    const range = document.createRange();
+    range.selectNodeContents(prose);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const setData = vi.fn();
+    await fireEvent.copy(prose, { clipboardData: { setData } });
+    expect(setData).toHaveBeenCalledWith('text/plain', expect.stringContaining('“Don’t” stop—“yes”.'));
+    expect(setData.mock.calls[0][1]).not.toContain('\u2060');
+    selection.removeAllRanges();
+    expect(book.segments[0].third[0].text).toBe(original);
+  });
+
+  it('saves full Greek lines and resets the setting', async () => {
+    const { unmount } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    await fireEvent.click(screen.getByLabelText('Full Greek lines'));
+    expect(localStorage.getItem('reader-full-greek')).toBe('1');
+    unmount();
+    render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    expect(screen.getByLabelText('Full Greek lines')).toBeChecked();
+    await fireEvent.click(screen.getByRole('button', { name: /Reset/ }));
+    expect(screen.getByLabelText('Full Greek lines')).not.toBeChecked();
+    expect(localStorage.getItem('reader-full-greek')).toBeNull();
   });
 
   it('restores and loads saved Cardo and EB Garamond faces once', async () => {
@@ -1179,10 +1214,10 @@ describe('B reader fonts', () => {
     expect(document.querySelectorAll('link[data-reader-font]')).toHaveLength(2);
   });
 
-  it('removes the retired didot preference when restoring Literata', () => {
+  it('removes the retired didot preference when restoring Gentium', () => {
     localStorage.setItem('reader-gfont', 'didot');
     const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
-    expect(container.querySelector('.reader-body')).toHaveAttribute('data-gfont', 'literata');
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-gfont', 'gentium');
     expect(localStorage.getItem('reader-gfont')).toBeNull();
     expect(document.querySelector('link[data-reader-font]')).toBeNull();
   });

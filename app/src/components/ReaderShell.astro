@@ -85,7 +85,7 @@ const editions = visibleTranslations(work);
 const primaryEdition = editions.find((t) => t.id === work.defaultTranslation)
   ?? editions.find((t) => t.slot === 'english') ?? editions[0];
 // The head's short work name, for a row too narrow for the full one.
-const shortName = workId === 'EN' ? 'Ethics' : work.abbr;
+const shortName = work.abbr;
 // A chapter's title in the contents: the work's own, else the opening
 // translation's (Ostwald titles his chapters), else its Bekker span.
 const noMarks = (s: string) => s.replace(/\[\^[^\]]*\]/g, '').trim();
@@ -93,9 +93,6 @@ const tocTitle = (book: number, c: ChapterRef) => noMarks(
   chapterTitles[String(book)]?.[c.chapter]
   || transTitles[primaryEdition?.id ?? '']?.[String(book)]?.[c.chapter]
   || (nonBekker ? '' : c.bekker));
-const firstTitle = chapters[0] ? noMarks(
-  chapterTitles[String(n)]?.[chapters[0].chapter]
-  || transTitles[primaryEdition?.id ?? '']?.[String(n)]?.[chapters[0].chapter] || '') : '';
 // The visible tab title + og:title. Front-loads the work name (what people
 // search) and appends the parallel-text long-tail phrasing ("greek english
 // translation") that these deep book pages can realistically rank for, since
@@ -231,7 +228,7 @@ const intro =
         </div>
       </details>
     )}
-    <span class="b-rh-ch" data-reader-context><span data-ctx-n>{chapters[0] ? `Chapter ${chapters[0].chapter}` : ''}</span><i data-ctx-title>{firstTitle}</i></span>
+    <span class="b-rh-ch" data-reader-context><span data-ctx-n>{chapters[0] ? `Chapter ${chapters[0].chapter}` : ''}</span></span>
     <span class="b-sp"></span>
     <span class="b-seg hide-s" role="group" aria-label="Reading view">
       {['greek', 'both', 'english'].map((v) => <button type="button" data-reader-view={v} aria-pressed={v === 'both' ? 'true' : 'false'}>{v[0].toUpperCase() + v.slice(1)}</button>)}
@@ -239,6 +236,10 @@ const intro =
     {editions.length > 1 && (
       <button type="button" class="b-rh-b hide-s" data-reader-picker aria-expanded="false" aria-haspopup="true"><span data-label>{primaryEdition?.short}</span> <svg viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></button>
     )}
+    <button type="button" class="b-phone-view" data-view-toggle aria-label="Reading view" aria-expanded="false" aria-controls="phone-view-menu"><span data-view-label>Both</span><svg viewBox="0 0 10 6" width="9" height="6" aria-hidden="true"><path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg></button>
+    <div class="b-menu b-view-menu" id="phone-view-menu" role="group" aria-label="Reading view" hidden>
+      {['greek', 'both', 'english'].map((v) => <button type="button" data-reader-view={v} aria-pressed={v === 'both' ? 'true' : 'false'}>{v[0].toUpperCase() + v.slice(1)}</button>)}
+    </div>
     <a class="b-ib" href={`${base}/search`} aria-label="Search"><svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.4"/></svg></a>
     <button type="button" class="b-ib b-aab" data-aa aria-label="Text and view settings" aria-expanded="false">Aa</button>
     <ThemeToggle bMoon />
@@ -247,7 +248,7 @@ const intro =
   <!-- Closed, the drawer is hidden and inert, so none of its links is a tab
        stop; setToc() below opens it. -->
   <aside class="b-toc" id="toc-sidebar" aria-label={`${work.title}: contents`} hidden inert>
-    <div class="b-toc-h"><a href={`${base}/`}>All works</a><button type="button" class="b-x" data-toc-close aria-label="Close contents"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.4"/></svg></button></div>
+    <div class="b-toc-h"><a href={`${base}/`}>All works</a><a class="b-toc-search" href={`${base}/search`}>Search</a><button type="button" class="b-x" data-toc-close aria-label="Close contents"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.4"/></svg></button></div>
     <p class="b-toc-w">{work.title}</p>
     {!nonBekker && <div class="b-toc-go"><BekkerJump work={workId} inputId="bekker-input-toc" alwaysOpen client:load /></div>}
     <nav class="toc-outline" aria-label="Books and chapters">
@@ -284,6 +285,21 @@ const intro =
   const toc = document.getElementById('toc-sidebar') as HTMLElement;
   const tocToggle = head.querySelector<HTMLElement>("[data-toc-toggle]")!;
   const bookMenu = head.querySelector<HTMLDetailsElement>('.b-bkm');
+  const viewToggle = head.querySelector<HTMLButtonElement>('[data-view-toggle]')!;
+  const viewMenu = head.querySelector<HTMLElement>('#phone-view-menu')!;
+  const setViewMenu = (open: boolean) => {
+    viewMenu.hidden = !open;
+    viewToggle.setAttribute('aria-expanded', String(open));
+    if (open) viewMenu.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
+    else viewToggle.focus();
+  };
+  viewToggle.addEventListener('click', () => setViewMenu(viewMenu.hidden));
+  window.matchMedia('(max-width: 700px)').addEventListener('change', () => {
+    if (!viewMenu.hidden) setViewMenu(false);
+  });
+  viewMenu.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('[data-reader-view]')) setViewMenu(false);
+  });
   const setToc = (open: boolean) => {
     toc.hidden = !open;
     toc.inert = !open;
@@ -296,6 +312,7 @@ const intro =
   toc.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', () => setToc(false)));
   document.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
+    if (!viewMenu.hidden && !viewMenu.contains(t) && !viewToggle.contains(t)) setViewMenu(false);
     if (!toc.hidden && !toc.contains(t) && !tocToggle.contains(t)) setToc(false);
     if (bookMenu?.open && !bookMenu.contains(t)) bookMenu.open = false;
   });
@@ -314,6 +331,7 @@ const intro =
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       // preventDefault marks the key as spent: the word panel stays open.
+      if (!viewMenu.hidden) { e.preventDefault(); setViewMenu(false); return; }
       if (!toc.hidden) { e.preventDefault(); setToc(false); tocToggle.focus(); return; }
       if (bookMenu?.open) { e.preventDefault(); bookMenu.open = false; bookMenu.querySelector('summary')?.focus(); return; }
       window.dispatchEvent(new CustomEvent('close-settings'));
@@ -332,15 +350,13 @@ const intro =
     window.location.href = `${document.body.dataset.base}/${document.body.dataset.work}/book/${next}`;
   });
 
-  // One row at every width (R-R2): with the row unwrapped, cut furniture in
-  // order until it fits — the chapter's title, then the long work name, then
-  // the chapter. Never the type or a target.
-  const CUTS = ['cut-title', 'cut-name', 'cut-ch'];
+  // Keep one row: cut the long work name, then the chapter, until it fits.
+  const CUTS = ['cut-name', 'cut-ch'];
   // The row overflows when its last item passes the head's right padding
   // (scrollWidth misses items that only eat into the padding).
   const overflows = () => {
     const end = head.getBoundingClientRect().right - parseFloat(getComputedStyle(head).paddingRight);
-    return [...head.children].some((c) => c.getBoundingClientRect().right > end + 0.5);
+    return [...head.children].some((c) => !c.classList.contains('b-menu') && c.getBoundingClientRect().right > end + 0.5);
   };
   const fit = () => {
     head.classList.remove(...CUTS);
@@ -349,6 +365,32 @@ const intro =
       head.classList.add(cut);
     }
   };
+  // Round 7 C: hide only in the sideways band, with menus keeping the bar shown.
+  const sideways = window.matchMedia('(min-width: 701px) and (max-width: 960px) and (max-height: 500px)');
+  let lastY = window.scrollY;
+  let downFrom = lastY;
+  const menusOpen = () => !toc.hidden || !!head.querySelector('details[open], [aria-expanded="true"]');
+  const setAway = (away: boolean) => {
+    const next = away && sideways.matches && !menusOpen();
+    if (head.classList.contains('b-rh-away') === next) return;
+    head.classList.toggle('b-rh-away', next);
+    window.dispatchEvent(new CustomEvent('reader-head-visibility'));
+  };
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (y < lastY || y <= 0) { setAway(false); downFrom = y; }
+    else if (y - downFrom > 8) setAway(true);
+    if (menusOpen()) { setAway(false); downFrom = y; }
+    lastY = y;
+  }, { passive: true });
+  document.addEventListener('pointerdown', (e) => {
+    if (e.clientY <= 44) { setAway(false); downFrom = window.scrollY; }
+  }, { passive: true });
+  head.addEventListener('focusin', () => { setAway(false); downFrom = window.scrollY; });
+  const keepShown = () => { if (menusOpen()) setAway(false); };
+  new MutationObserver(keepShown).observe(head, { subtree: true, attributes: true, attributeFilter: ['open', 'aria-expanded'] });
+  new MutationObserver(keepShown).observe(toc, { attributes: true, attributeFilter: ['hidden'] });
+  sideways.addEventListener('change', () => { setAway(false); downFrom = lastY = window.scrollY; });
   fit();
   new ResizeObserver(fit).observe(head);
   window.addEventListener('reader-head-fit', fit);

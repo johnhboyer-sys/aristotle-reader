@@ -4,7 +4,8 @@
   import { hitTokens, fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation, anchorCite, citeOfId, citeLabelOf, isChapterSection, isNonBekker, tickCite } from '../lib/data';
   import { englishQueryUnits, greekFold } from '../lib/search';
   import { markEnglishHtml, overlayPieces } from '../lib/english-hit';
-  import { measureGreekTrack as measureTrack, measuresGreekTrack, greekColumnWidth } from '../lib/greek-track';
+  import { measureGreekTrack as measureTrack, measuresGreekTrack } from '../lib/greek-track';
+  import { curlyEnglish, curlyEnglishHtml, greekElision } from '../lib/typography';
   import { sanitizeHtml } from '../lib/html';
   import { lineParts, cellParts, locateToken, type LinePart } from '../lib/line-parts';
   import { getWork, visibleTranslations, plainFull, bookLabel as workBookLabel, type TranslationRef } from '../lib/works';
@@ -293,7 +294,7 @@
   // sequencing defect it exists to prevent — measuring before the lines are
   // rendered — can be tested without mounting a reader.
   function measureGreekTrack(): boolean {
-    if (b) { evenGreek(); return true; }
+    if (b) { scheduleEven(); return true; }
     // A chapter-section work takes no measured track: its sections wrap in the
     // bounded column global.css / desktop.css give it.
     if (!measuresGreekTrack(workMeta)) return false;
@@ -306,39 +307,52 @@
   }
   let colScale = 1.0;
 
-  // ── B: the Greek column (R-R5, R-R6) ────────────────────────────────────
-  // One width for the whole book: the widest Greek line, measured unwrapped
-  // (`gw-measure`), published as --greek-w. In Both view beside the English
-  // the column is then --gcol: whole lines while the English keeps 26em (18em
-  // each in Compare), else what the English leaves down to 20em, else a share
-  // in proportion to those floors (greekColumnWidth). Narrower than its lines,
-  // the Greek wraps with a hanging indent and keeps its numbers.
+  // Full Greek lines are opt-in; the default grid keeps equal columns.
+  let fullGreek = false;
+  let fullGreekFits = false;
+  function saveFullGreek() {
+    try { if (fullGreek) localStorage.setItem('reader-full-greek', '1'); else localStorage.removeItem('reader-full-greek'); } catch {}
+  }
   function evenGreek() {
     if (!b || typeof document === 'undefined') return;
     const body = document.querySelector<HTMLElement>('.reader-body');
     if (!body) return;
-    body.style.removeProperty('--gcol');
-    // Sections (chapter-section) and Busse's prose flow take no line width.
-    if (!measuresGreekTrack(workMeta) || busse) { body.style.removeProperty('--greek-w'); return; }
+    fullGreekFits = false;
+    if (!fullGreek || view === 'english') return;
     body.classList.add('gw-measure');
     let w = 0;
     try {
-      // offsetWidth, not getBoundingClientRect: layout px, whatever the scale.
-      for (const g of body.querySelectorAll<HTMLElement>('.b-gc .b-lt')) w = Math.max(w, g.offsetWidth);
+      for (const g of body.querySelectorAll<HTMLElement>('.b-gc .b-lt')) w = Math.max(w, g.getBoundingClientRect().width);
     } finally {
       body.classList.remove('gw-measure');
     }
-    if (!w) return;   // Greek hidden: keep the last width
-    w = Math.ceil(w);
+    if (!w) return;
+    w = Math.ceil(w) + 2;
     body.style.setProperty('--greek-w', `${w}px`);
-    if (view !== 'both' || window.innerWidth <= 700) return;
-    const row = body.querySelector<HTMLElement>('.b-row');
-    const ec = row?.querySelector<HTMLElement>('.b-ec');
-    if (!row || !ec) return;
-    const n = [...row.children].filter((c) => getComputedStyle(c).display !== 'none').length;
-    const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
-    const u = parseFloat(getComputedStyle(ec).fontSize);
-    body.style.setProperty('--gcol', `${greekColumnWidth(w, u, n, gap, row.clientWidth)}px`);
+    const allowed = window.innerWidth >= 961 || (view === 'greek' && window.matchMedia('(min-width: 701px) and (max-width: 960px) and (max-height: 500px)').matches);
+    if (!allowed) return;
+    fullGreekFits = view === 'greek' || [...body.querySelectorAll<HTMLElement>('.b-row')].every(row => {
+      const english = [...row.querySelectorAll<HTMLElement>('.b-ec')].filter(ec => getComputedStyle(ec).display !== 'none');
+      const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+      return row.clientWidth - w - gap * english.length >= english.reduce((sum, ec) => sum + 20 * parseFloat(getComputedStyle(ec).fontSize), 0);
+    });
+  }
+  function fitChapterNumbers() {
+    const body = document.querySelector<HTMLElement>('.b-text');
+    if (!body) return;
+    const phone = window.innerWidth <= 700;
+    const gap = phone ? parseFloat(getComputedStyle(body).getPropertyValue('--chgap')) || 4 : 12;
+    for (const n of body.querySelectorAll<HTMLElement>('.b-chn')) {
+      n.style.removeProperty('font-size');
+      let fs = parseFloat(getComputedStyle(n).fontSize);
+      const room = n.parentElement!.getBoundingClientRect().left - gap - (phone ? 2 : 8);
+      while (n.getBoundingClientRect().width > room && fs > 24) {
+        fs = Math.max(24, fs - 2); n.style.fontSize = `${fs}px`;
+      }
+      while (n.getBoundingClientRect().left < (phone ? 10 : 12) && fs > 18) {
+        fs--; n.style.fontSize = `${fs}px`;
+      }
+    }
   }
   // The arguments are the reactive dependencies that call it; unused here.
   function scheduleEven(..._deps: unknown[]) {
@@ -347,6 +361,7 @@
     // word the reader clicked can be pinned across the reflow.
     tick().then(() => {
       evenGreek();
+      tick().then(fitChapterNumbers);
       // The Greek's one tab stop follows it back into view.
       if (!document.querySelector('.reader-body .b-gc .tok[tabindex="0"]')) rove(visibleToks()[0] ?? null);
     });
@@ -365,12 +380,15 @@
       if (settingsOpen) closeSettings();
     };
     const onClose = () => { pickerOpen = false; };
-    const onResize = () => { vw = window.innerWidth; if (pickerOpen) placeMenu('[data-reader-picker]'); if (settingsOpen) placeMenu('[data-aa]'); };
+    const onResize = () => { vw = window.innerWidth; scheduleEven(); updateChapterContext(); if (pickerOpen) placeMenu('[data-reader-picker]'); if (settingsOpen) placeMenu('[data-aa]'); };
     document.addEventListener('click', onClick);
+    const onVisibility = () => { updateChapterContext(); if (spyArmed) setupScrollSpy(); };
+    window.addEventListener('reader-head-visibility', onVisibility);
     window.addEventListener('close-settings', onClose);
     window.addEventListener('resize', onResize);
     unHead = () => {
       document.removeEventListener('click', onClick);
+      window.removeEventListener('reader-head-visibility', onVisibility);
       window.removeEventListener('close-settings', onClose);
       window.removeEventListener('resize', onResize);
     };
@@ -382,13 +400,14 @@
     ['cardo', 'Cardo', 'Cardo'],
   ];
   const EFONTS: [EFont, string, string][] = [
+    ['gentium', 'Gentium', '"Gentium Book Plus"'],
     ['literata', 'Literata', 'Literata'],
     ['garamond', 'EB Garamond', '"EB Garamond"'],
   ];
   const GFONT_KEY = 'reader-gfont';
   const EFONT_KEY = 'reader-efont';
-  let gfont: GFont = 'literata';
-  let efont: EFont = 'literata';
+  let gfont: GFont = 'gentium';
+  let efont: EFont = 'gentium';
   function loadReaderFace(face: 'cardo' | 'garamond') {
     if (document.querySelector(`link[data-reader-font="${face}"]`)) return;
     const l = document.createElement('link');
@@ -401,14 +420,14 @@
   }
   function setGFont(f: GFont) {
     gfont = f;
-    try { if (f === 'literata') localStorage.removeItem(GFONT_KEY); else localStorage.setItem(GFONT_KEY, f); } catch {}
+    try { if (f === 'gentium') localStorage.removeItem(GFONT_KEY); else localStorage.setItem(GFONT_KEY, f); } catch {}
     if (f === 'cardo') loadReaderFace(f);
     const fam = GFONTS.find((g) => g[0] === f)![2];
     document.fonts?.load(`${f === 'literata' ? 300 : 400} 19px ${fam}`, 'αβγ').then(() => scheduleEven()).catch(() => {});
   }
   function setEFont(f: EFont) {
     efont = f;
-    try { if (f === 'literata') localStorage.removeItem(EFONT_KEY); else localStorage.setItem(EFONT_KEY, f); } catch {}
+    try { if (f === 'gentium') localStorage.removeItem(EFONT_KEY); else localStorage.setItem(EFONT_KEY, f); } catch {}
     if (f === 'garamond') loadReaderFace(f);
     const fam = EFONTS.find((e) => e[0] === f)![2];
     document.fonts?.load(`${f === 'literata' ? 300 : 400} 19px ${fam}`, 'Abc').then(() => scheduleEven()).catch(() => {});
@@ -427,10 +446,10 @@
   let pickerOpen = false;
   let menuAt = { top: 68, right: 12 };
   function placeMenu(sel: string) {
-    const head = document.querySelector('.b-rh')?.getBoundingClientRect();
+    const headBottom = readingTop();
     const btn = document.querySelector(sel)?.getBoundingClientRect();
     menuAt = {
-      top: Math.round((head?.bottom ?? 60) + 8),
+      top: Math.round(headBottom + 8),
       right: Math.max(12, Math.round(window.innerWidth - (btn?.right ?? window.innerWidth - 12))),
     };
   }
@@ -551,6 +570,8 @@
     if (!b || typeof document === 'undefined') return;
     document.querySelectorAll<HTMLElement>('[data-reader-view]').forEach((btn) =>
       btn.setAttribute('aria-pressed', String(btn.dataset.readerView === v)));
+    const viewLabel = document.querySelector('[data-view-label]');
+    if (viewLabel) viewLabel.textContent = v[0].toUpperCase() + v.slice(1);
     const picker = document.querySelector<HTMLElement>('[data-reader-picker]');
     if (picker) {
       const p = transById(tr === 'compare' ? l : tr);
@@ -562,16 +583,15 @@
     document.querySelector('[data-aa]')?.setAttribute('aria-expanded', String(aa));
     const ctxEl = document.querySelector<HTMLElement>('[data-reader-context]');
     if (ctxEl) {
-      const nEl = ctxEl.querySelector('[data-ctx-n]'), tEl = ctxEl.querySelector('[data-ctx-title]');
+      const nEl = ctxEl.querySelector('[data-ctx-n]');
       if (nEl) nEl.textContent = ctx.n ? `Chapter ${ctx.n}` : '';
-      if (tEl) tEl.textContent = ctx.title;
       window.dispatchEvent(new CustomEvent('reader-head-fit'));
     }
   }
   let ctxB = { n: '', title: '' };
   let mounted = false;
   $: if (mounted) syncHead(view, trans, compareLeft, compareRight, settingsOpen, pickerOpen, ctxB);
-  $: if (mounted) scheduleEven(view, trans, compareLeft, compareRight, fsScale, colScale, gfont, efont, !!popup, wpOver, vw);
+  $: if (mounted) scheduleEven(view, trans, compareLeft, compareRight, fsScale, lhScale, colScale, gfont, efont, !!popup, wpOver, vw, fullGreek, bookNum, enrichedSegments);
 
   $: fsGreek = (FS_GREEK_BASE * fsScale).toFixed(3);
   $: fsEng   = (FS_ENG_BASE   * fsScale).toFixed(3);
@@ -596,7 +616,7 @@
       localStorage.removeItem(FS_KEY); localStorage.removeItem(LH_KEY);
       localStorage.removeItem(COLW_KEY); localStorage.removeItem(CITE_KEY);
     } catch {}
-    if (b) { setGFont('literata'); setEFont('literata'); setWp(false); }
+    if (b) { setGFont('gentium'); setEFont('gentium'); setWp(false); fullGreek = false; saveFullGreek(); }
   }
 
   // ── Citation shown in the controls strip ─────────────────────────────────
@@ -755,9 +775,8 @@
   let ctxRaf = 0;
   function updateChapterContext() {
     if (b) {
-      // The head shows the chapter whose head last passed under it (the
-      // first chapter before any has).
-      const line = (document.querySelector('.b-rh')?.getBoundingClientRect().bottom ?? 60) + 12;
+      // Name the chapter whose head reached 40% of the reading area.
+      const line = readingTop() + 0.4 * (window.innerHeight - readingTop());
       const heads = [...document.querySelectorAll<HTMLElement>('.reader-body .chapter-head')];
       let at = heads[0];
       for (const h of heads) {
@@ -785,7 +804,10 @@
   // The reading area starts below the sticky header AND the sticky controls
   // strip pinned beneath it, so the spy's detection band begins at the strip's bottom.
   function readingTop(): number {
-    if (b) return Math.round(document.querySelector('.b-rh')?.getBoundingClientRect().bottom ?? 60);
+    if (b) {
+      const head = document.querySelector('.b-rh');
+      return head?.classList.contains('b-rh-away') ? 0 : Math.round((head as HTMLElement | null)?.offsetHeight ?? 60);
+    }
     const headerH = Math.round(document.querySelector('.page-header')?.getBoundingClientRect().height ?? 60);
     const ctrlBottom = document.querySelector('.reader-controls')?.getBoundingClientRect().bottom ?? 0;
     return Math.max(headerH, Math.round(ctrlBottom));
@@ -894,7 +916,8 @@
     // Sidenote [[sN]] and figure [[figN]] markers are rendered elsewhere (the
     // right rail / an inline figure), so strip them from the prose flow.
     text = text.replace(/\s*\[\[(?:s|fig)\d+\]\]\s*/g, ' ');
-    return markEnglishHtml(text, marks.units, marks.phrase, marks.forms);
+    const html = markEnglishHtml(text, marks.units, marks.phrase, marks.forms);
+    return b ? curlyEnglishHtml(html) : html;
   }
   // §Phase-3 B5: the printed number is stored as `display`; identity is the
   // (scope, number) pair encoded in the label — continuous scope's label IS
@@ -1344,6 +1367,7 @@
       setGFont(fonts.gfont);
       setEFont(fonts.efont);
       wpOver = (() => { try { return localStorage.getItem(WP_KEY) === 'over'; } catch { return false; } })();
+      fullGreek = (() => { try { return localStorage.getItem('reader-full-greek') === '1'; } catch { return false; } })();
       bHead();
     }
 
@@ -1577,15 +1601,15 @@
   }
 
   function handleCopy(e: ClipboardEvent) {
-    if (!citeCopy) return;
+    if (!b && !citeCopy) return;
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
-    const text = sel.toString().trim();
+    const text = sel.toString().replace(/\u2060/g, '').trim();
     if (!text) return;
     const range = sel.getRangeAt(0);
-    const cite = greekCiteForRange(range);
-    if (!cite) return; // English-only selection; wait for alignment
-    e.clipboardData?.setData('text/plain', text + '\n' + cite);
+    const cite = citeCopy ? greekCiteForRange(range) : null;
+    if (!b && !cite) return;
+    e.clipboardData?.setData('text/plain', cite ? text + '\n' + cite : text);
     e.preventDefault();
   }
 
@@ -1612,7 +1636,7 @@
   function clickCopyBtn() {
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) { copyBtnPos = null; return; }
-    const text = sel.toString().trim();
+    const text = sel.toString().replace(/\u2060/g, '').trim();
     const cite = greekCiteForRange(sel.getRangeAt(0));
     const full = cite ? text + '\n' + cite : text;
     navigator.clipboard.writeText(full).catch(() => {});
@@ -1679,14 +1703,14 @@
         role={b ? 'button' : undefined}
         tabindex={b ? -1 : undefined}
         on:click={(e) => handleTokenClick(e, part.tok)}
-      >{part.text}</span>{:else}{part.text}{/if}{/each}{/snippet}
+      >{b ? greekElision(part.text) : part.text}</span>{:else}{b ? greekElision(part.text) : part.text}{/if}{/each}{/snippet}
   {#snippet chapterHead(block: Block)}
     {#if b}
       {@const title = chapterTitleB(block.chapter, trans === 'compare' ? compareLeft : trans, view)}
       <div class="chapter-head b-chh" id="ch-{bookNum}-{block.chapter}" data-chapter={block.chapter} data-title={titleText(title.text)}>
         <span class="b-chn">{block.chapter}</span>
         <div>
-          {#if title.text}<p class="b-cht">{#if title.fn}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(title.text, title.fn, engMarks)}{:else}{title.text}{/if}</p>{/if}
+          {#if title.text}<p class="b-cht">{#if title.fn}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(title.text, title.fn, engMarks)}{:else}{curlyEnglish(title.text)}{/if}</p>{/if}
           <p class="b-chb">Chapter {block.chapter}{#if block.bekker && !nonBekker}{' · '}{block.bekker}{/if}</p>
         </div>
       </div>
@@ -1720,7 +1744,7 @@
            .overlay-prose would leak into captured offsets — as a sibling they
            never see it, keeping the render-only/no-offset-shift guarantee
            structural. -->
-      {#if chTitle}<div class="overlay-chapter-title">{#if fnTransIds.has(transId)}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(chTitle, transId, engMarks)}{:else}{chTitle}{/if}</div>{/if}
+      {#if chTitle}<div class="overlay-chapter-title">{#if fnTransIds.has(transId)}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(chTitle, transId, engMarks)}{:else}{b ? curlyEnglish(chTitle) : chTitle}{/if}</div>{/if}
       {#if fnTransIds.has(transId)}
         <div
           class="overlay-prose"
@@ -1748,7 +1772,7 @@
               {#each (block.otables[transId] ?? []).filter(t => t.n === part.n) as tbl}
                 <table class="eng-table"><tbody>
                   {#each tbl.rows as trow}
-                    <tr>{#each trow as cell}<td>{cell}</td>{/each}</tr>
+                    <tr>{#each trow as cell}<td>{b ? curlyEnglish(cell) : cell}</td>{/each}</tr>
                   {/each}
                 </tbody></table>
               {/each}
@@ -1777,6 +1801,7 @@
 
   <div class="reader-body view-{view} trans-{trans}" role="main"
     class:b-text={b}
+    class:full-greek={b && fullGreek && fullGreekFits}
     class:wp-over={b && wpOver}
     data-body={b ? '' : undefined}
     data-view={b ? view : undefined}
@@ -1968,7 +1993,7 @@
                    the footnote and endnote panels apply before {@html}. -->
               {#if busse && view !== 'greek' && block.figs.length}
                 {#each block.figs as fig}
-                  {#if figuresData[String(fig)]}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html sanitizeHtml(figuresData[String(fig)])}{/if}
+                  {#if figuresData[String(fig)]}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html b ? curlyEnglishHtml(sanitizeHtml(figuresData[String(fig)])) : sanitizeHtml(figuresData[String(fig)])}{/if}
                 {/each}
               {/if}
             </div>
@@ -2049,6 +2074,7 @@
       <label class="b-sl"><span>Line spacing</span><output>{Math.round(lhScale * 100)}%</output><input type="range" min="0.8" max="1.4" step="0.05" bind:value={lhScale} on:change={saveLh} /></label>
       {#if vw > 700}
         <label class="b-sl"><span>Column width</span><output>{Math.round(colScale * 100)}%</output><input type="range" min="0.75" max="1.3" step="0.05" bind:value={colScale} on:change={saveColw} /></label>
+        <label class="b-chk b-full-greek" data-view={view}><input type="checkbox" bind:checked={fullGreek} on:change={saveFullGreek} /><span>Full Greek lines</span></label>
       {/if}
       {#if vw >= 961}
         <p class="b-mk">Word panel</p>
