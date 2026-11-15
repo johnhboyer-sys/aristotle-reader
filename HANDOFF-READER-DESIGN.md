@@ -288,6 +288,8 @@ E was described backwards: 55/45 makes the phone English fall further behind its
 ~18 lines low, against ~7 at 50/50). E2, the reverse 45/55, brings it within a line; shown.
 Not kept (John, 13:24): F, the flush-right turnover; the stranded words read as stray lines.
 Wrapped Greek keeps its hanging indent.
-Held for John to look over: E/E2 (column split), N (crowded English numbers). Still open from round 6: B (A's rule at ch. 10).
+Not kept (John, 13:28): N. Rule for any later crowding fix: 1 and the multiples of 5 always
+stay; only an off-step number (a chapter's first-line number such as Mir. 99's 3) may go.
+Held for John to look over: E/E2 (column split). Still open from round 6: B (A's rule at ch. 10).
 Build fixes noted this round: the phone opening-fragment turnover outdents (should be the
 fragment indent + 8px); at 1152px round 6 C's 88px gap wraps a few lines.
