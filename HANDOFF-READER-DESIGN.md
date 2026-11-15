@@ -259,3 +259,24 @@ line labels 8px before the text, not E's 52, so "1094a" clears the edge).
 - O phone English only: line-height 27px.
 Build fix found by both reviewers: the phone English margin numbers sit ~5px low since the
 27px line-height (their offset was tuned for 31px).
+
+## Round 7 rulings (John, 15 Nov 12:32), page https://claude.ai/artifact/BLxSfUD6bjuWMv38odaV3i
+
+The last review round. CSS and JS in shoot-r4.mjs, the `R7` and `R7JS` blocks. Base: final3
+(every keep through round 6).
+- A phone English: hyphenate only words of 7+ letters, 3+ letters each side; no two hyphenated
+  lines in a row (`hyphenate-limit-chars: 7 3 3; hyphenate-limit-lines: 1`, the second Safari only).
+- B curly quotes and apostrophes in the English (“ ” ‘ ’), and ’ for the Greek elision mark.
+  Build it in the data or at render, not as a DOM walk; the text itself does not change.
+- C sideways: the bar slides away on scroll down and returns on scroll up or a tap at the top.
+  (The shot only hid it; the build needs the scroll behaviour.)
+- G a chapter number keeps 12px from the window edge on desktop, 10px on the phone, stepping its
+  size down to fit (floor 18px).
+- H sideways English only: the 664px column, centred (left padding max(60px, (100% - 664px) / 2)).
+- K a 12px fade from the page colour under the bar (`.b-rh::after`).
+- M sideways: the book head on one row; the Greek title and credit sit right of BOOK I.
+Held for John to look over: D (phone hairline), E (55/45), F (flush-right turnover), I (wide
+bar's right group over the text), J (single views centred on the text), L (dark chapter line
+#A4A39C), N (crowded English numbers). Still open from round 6: B (A's rule at ch. 10).
+Build fixes noted this round: the phone opening-fragment turnover outdents (should be the
+fragment indent + 8px); at 1152px round 6 C's 88px gap wraps a few lines.
