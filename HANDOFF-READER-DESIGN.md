@@ -304,3 +304,18 @@ sideways Greek only (not phone upright, not sideways Both). Shot in shoot-r4.mjs
 Greek 578 / English 394, zero wraps; at 1440+ equal columns already fit every Book I line at 100%
 text, so the switch matters below ~1420px or with enlarged text. Build: recompute on text-size,
 font, and book change; if the English would fall below a floor (to be set), wrap as usual.
+
+## Every page gets the reader's colours; a new 404 (John, 15 Nov 13:39)
+
+"Every page gets it": the less-glare paper (#f1f0eb, ground #ebeae4, dark ink #e0dfd9) goes on
+every page. Support, attribution, glossary, phrases, desktop, and 404 still use the old design
+(paper #f3efe6) and move to direction B in the build. Renders of the B pages:
+https://claude.ai/artifact/92KozgPAJKHqzCLYjEJazr
+
+The 404 is redone around a goat-stag (Aristotle's word for what signifies but is not: Int. 1,
+16a16-18; APo II.7, 92b5-8). Plate: Jonston, Historiae naturalis de quadrupedibus libri
+(Amsterdam, Schipper, 1657), Tab. XXXIV, the middle figure "Tragelaphus / Pygargi species",
+copper engraving; Smithsonian Libraries copy, Internet Archive Historiaenaturac4Jons, leaf n144,
+NOT_IN_COPYRIGHT. Same book as the HA plate. Cut and cleaned in .redesign-shots/notes/404/
+(clean.py: the horn tips crossed the upper animal's ground, erased outside hand-drawn horn
+outlines; small specks dropped). Two pale stains in the ground are left as printed.
