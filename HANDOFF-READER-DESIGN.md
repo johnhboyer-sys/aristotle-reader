@@ -233,5 +233,8 @@ Kept, every screen it was shown on (CSS in shoot-r4.mjs, the round 5 block):
 - J phone Both: English line-height 27px.
 - K phone: the view choice in the bar where search was; search moves to the contents menu.
 - L phone: 8px more left margin (Both 48, single views 54).
-Open: H (chapter title in the bar below 1400) and the short work name "Ethics",
-which does not tell the Nicomachean from the Eudemian.
+- H (John, 21:3x): no chapter titles in the bar at any width, for every work.
+  Only the Nicomachean Ethics has titles (Ostwald's), up to ~730px wide; at
+  1152-1399 no book's titles all fit. The title stays in the chapter head.
+- Short work name: EN, not "Ethics" (ReaderShell.astro `shortName`), so it
+  differs from EE; every work then uses its abbreviation.
