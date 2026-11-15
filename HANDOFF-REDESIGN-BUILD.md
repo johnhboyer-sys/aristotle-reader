@@ -267,14 +267,17 @@ Left on purpose (John has not asked for a commit); keep them:
 6. Update `docs/redesign-home-and-work-spec.md`.
 7. Show John the built pages beside round 9 before calling Track A done.
 
-### 3.6 Still open for John (ask; don't guess)
+### 3.6 Open for John on 11 Nov (all settled by 14 Nov)
 
-- The Categories scan download again (bsb11761492, p. 833).
+- ~~The Categories scan download again (bsb11761492, p. 833).~~ Done 14 Nov
+  (`.redesign-shots/notes/d26/cat-scan-2026-11-14/`); the plate lost its lettering in d878089e10.
 - ~~The parentheses in the Greek summary and "rev. Ross" on the Politics.~~ Settled (John, 15 Nov:
   "Thought we settled the Greek and English citations"): the 14 Nov Texts section rulings govern
   (full entries, titles italic, series roman, Chicago style; commit d07f9247e5).
-- The nav on the 1168px column, home and work pages only.
-- The De Mirabilibus row wrapping at 1525px (not rechecked against round 9).
+- ~~The nav on the 1168px column, home and work pages only.~~ Settled 14 Nov: the bar keeps to the
+  1168px column on every page (d878089e10).
+- ~~The De Mirabilibus row wrapping at 1525px.~~ Settled 14 Nov: a short title in the home list
+  (`listTitle`, d878089e10).
 
 ### 3.7 Reviewer suggestions on round 9, not ruled (don't build unless John says)
 
