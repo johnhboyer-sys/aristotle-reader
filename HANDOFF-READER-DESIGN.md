@@ -331,3 +331,10 @@ outlines; small specks dropped). Two pale stains in the ground are left as print
   adds the four traces whole, since the horns' pale front halves read as paper to the watershed;
   two paper slivers (by the right tine, behind the head) are seeded out.
 - 15 Nov 15:07, John: "Looks fine now." The 404 plate (light print and dark cut-out) is approved.
+- 15 Nov, John: "I liked the prior 404 copy", "I like the jokey line." The new 404 keeps today's
+  words: h1 "Page not found"; "The goat-stag is Aristotle's example of a name that signifies
+  something which does not exist (De Interpretatione 16a16). So, it would seem, is the page you're
+  looking for."; buttons "Back to the corpus" and "Search". Mock-up (desk 1152, wide 1440, phone,
+  both themes): https://claude.ai/artifact/BvZQQrfNeTS51c46XKrWVo (v2), from
+  `.redesign-shots/notes/404/mock/shoot.cjs`. Not yet asked: whether today's eyebrow "Aristotle"
+  and caption "τραγέλαφος · the goat-stag" come along (the mock drops both).
