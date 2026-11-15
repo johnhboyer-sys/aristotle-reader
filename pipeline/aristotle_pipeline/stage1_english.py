@@ -277,8 +277,7 @@ def parse_english(xml_path: Path, manifest: Manifest) -> dict:
         raise ValueError("no TEI body found")
     walker = _Walker(manifest)
     walker.walk(body)
-    chunks = [c for c in walker.chunks if c["text"].strip() or c["notes"]]
-    carry_trailing_paragraphs(chunks)
+    chunks = carry_trailing_paragraphs(walker.chunks, lambda c: c["text"].strip() or c["notes"])
     for c in chunks:
         c["text"] = c["text"].strip()
     return {

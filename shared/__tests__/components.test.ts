@@ -1187,6 +1187,22 @@ describe('B reader fonts', () => {
     expect(book.segments[0].third[0].text).toBe(original);
   });
 
+  it('leaves a copy with no dash joiner to the browser, edge spaces and all', async () => {
+    const book = structuredClone(fixtureBook);
+    book.segments[0].third[0].text = 'plain words here';
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    const prose = [...container.querySelectorAll<HTMLElement>('.b-ec .bk-seg')].find(el => el.textContent!.includes('plain'))!;
+    const range = document.createRange();
+    range.selectNodeContents(prose);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const setData = vi.fn();
+    await fireEvent.copy(prose, { clipboardData: { setData } });
+    expect(setData).not.toHaveBeenCalled();
+    selection.removeAllRanges();
+  });
+
   it('saves full Greek lines and resets the setting', async () => {
     const { unmount } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
     await fireEvent(window, new CustomEvent('toggle-settings'));

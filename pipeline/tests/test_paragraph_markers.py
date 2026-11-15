@@ -174,7 +174,22 @@ def test_trailing_paragraph_marker_marks_next_column():
         {"book": 2, "text": "Last. ", "markers": [{"kind": "paragraph", "n": "", "offset": 5}]},
     ]
     nxt = {"book": 3, "text": "x", "markers": []}
-    carry_trailing_paragraphs(chunks + [nxt])
+    kept = carry_trailing_paragraphs(chunks + [nxt], lambda c: c["text"].strip())
+    assert kept == chunks + [nxt]
     assert chunks[1].get("paraStart") is True
     assert "paraStart" not in chunks[3]
     assert "paraStart" not in nxt  # a new book always breaks; never carried across books
+
+
+def test_paragraph_start_on_a_dropped_empty_column_passes_on():
+    # <p>First.</p><milestone 1094b/><p><milestone 1095a/>New paragraph.</p>:
+    # 1094b opens the paragraph but holds no text, and is dropped.
+    from aristotle_pipeline.stage1_common import carry_trailing_paragraphs
+    chunks = [
+        {"book": 1, "column": "1094a", "text": "First. ", "markers": [], "notes": []},
+        {"book": 1, "column": "1094b", "text": "", "markers": [], "notes": [], "paraStart": True},
+        {"book": 1, "column": "1095a", "text": "New paragraph.", "markers": [], "notes": []},
+    ]
+    kept = carry_trailing_paragraphs(chunks, lambda c: c["text"].strip() or c["notes"])
+    assert [c["column"] for c in kept] == ["1094a", "1095a"]
+    assert kept[1].get("paraStart") is True

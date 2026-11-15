@@ -1633,13 +1633,17 @@
     if (!b && !citeCopy) return;
     const sel = window.getSelection();
     if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
-    const text = sel.toString().replace(/\u2060/g, '').trim();
-    if (!text) return;
-    const range = sel.getRangeAt(0);
-    const cite = citeCopy ? greekCiteForRange(range) : null;
-    if (!b && !cite) return;
-    e.clipboardData?.setData('text/plain', cite ? text + '\n' + cite : text);
-    e.preventDefault();
+    const raw = sel.toString();
+    const cite = citeCopy && raw.trim() ? greekCiteForRange(sel.getRangeAt(0)) : null;
+    if (cite) {
+      e.clipboardData?.setData('text/plain', raw.replace(/\u2060/g, '').trim() + '\n' + cite);
+      e.preventDefault();
+    } else if (b && raw.includes('\u2060')) {
+      // Only the B English's em-dash joiner is taken out; the selection is
+      // otherwise copied as the browser would, edge spaces included.
+      e.clipboardData?.setData('text/plain', raw.replace(/\u2060/g, ''));
+      e.preventDefault();
+    }
   }
 
   // ── Floating copy button (appears on Greek text selection) ────────────────
