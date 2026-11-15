@@ -324,3 +324,9 @@ outlines; small specks dropped). Two pale stains in the ground are left as print
   stray ticks erased). Cut-out: `.redesign-shots/notes/404/cut404.py` runs the d26 recut.py with
   `cut404.json` (seeds under the belly and between the legs; the two captions kept as ink with a
   rim; speck 6 so the i-dots stay). Desk print `desk-404-914.jpg` (1280x914, padded like the rest).
+- 15 Nov 13:48, John: hatching still by each horn, and the front (right) side of each horn cut
+  out. Fixed: each horn's front edge is now found from the scan (edge.py for the right horn, track.py
+  following the left horn's outermost thin line row by row); the trace sits on that edge with no
+  widening, and the two tines have their own traces (horns.json: L, R, T1, T2). The dark cut-out
+  adds the four traces whole, since the horns' pale front halves read as paper to the watershed;
+  two paper slivers (by the right tine, behind the head) are seeded out.
