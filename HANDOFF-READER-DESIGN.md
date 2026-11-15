@@ -319,3 +319,8 @@ copper engraving; Smithsonian Libraries copy, Internet Archive Historiaenaturac4
 NOT_IN_COPYRIGHT. Same book as the HA plate. Cut and cleaned in .redesign-shots/notes/404/
 (clean.py: the horn tips crossed the upper animal's ground, erased outside hand-drawn horn
 outlines; small specks dropped). Two pale stains in the ground are left as printed.
+- 15 Nov 13:45, John: "We are redoing every page", and the 404 plate needs the dark-mode outline
+  cut like the other cut plates. Horn hatching re-cleaned (tighter horn outlines in clean.py, four
+  stray ticks erased). Cut-out: `.redesign-shots/notes/404/cut404.py` runs the d26 recut.py with
+  `cut404.json` (seeds under the belly and between the legs; the two captions kept as ink with a
+  rim; speck 6 so the i-dots stay). Desk print `desk-404-914.jpg` (1280x914, padded like the rest).
