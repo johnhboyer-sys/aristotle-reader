@@ -337,6 +337,7 @@ def build_english(manifest: Manifest, spine: dict, chapters: list[dict],
     for seg in spine["segments"]:
         text = ""
         markers: list[dict] = []
+        para_start = False
         for p in pieces.get(seg["id"], []):
             if text and not text.endswith(" "):
                 text += " "
@@ -350,16 +351,21 @@ def build_english(manifest: Manifest, spine: dict, chapters: list[dict],
             start = prose[key].index(body, read_to.get(key, 0)) if key in prose else 0
             read_to[key] = start + len(body)
             base = len(text) + len(p["text"]) - len(body)
+            if not text and p.get("para"):
+                para_start = True
             for e in paragraphs.get(key, []):
                 if start <= e["offset"] < start + len(body):
                     placed += 1
-                    if base + e["offset"] - start > 0:
+                    if base + e["offset"] - start == 0:
+                        para_start = True
+                    else:
                         markers.append({"kind": "paragraph", "n": "",
                                         "offset": base + e["offset"] - start})
             text += p["text"]
         chunks.append({
             "id": seg["id"], "book": seg["book"], "column": seg["column"],
             "text": text, "notes": [], "markers": markers,
+            **({"paraStart": True} if para_start else {}),
         })
 
     wanted = sum(len(v) for v in paragraphs.values())

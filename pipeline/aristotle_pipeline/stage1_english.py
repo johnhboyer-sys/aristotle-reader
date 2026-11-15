@@ -21,7 +21,7 @@ from pathlib import Path
 from lxml import etree
 
 from .config import BUILD_DIR, Manifest
-from .stage1_common import StandoffChunkMixin, local_name, write_json
+from .stage1_common import StandoffChunkMixin, carry_trailing_paragraphs, local_name, write_json
 
 _WS = re.compile(r"\s+")
 
@@ -278,6 +278,7 @@ def parse_english(xml_path: Path, manifest: Manifest) -> dict:
     walker = _Walker(manifest)
     walker.walk(body)
     chunks = [c for c in walker.chunks if c["text"].strip() or c["notes"]]
+    carry_trailing_paragraphs(chunks)
     for c in chunks:
         c["text"] = c["text"].strip()
     return {

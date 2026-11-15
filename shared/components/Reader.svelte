@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from 'svelte';
   import { fade } from 'svelte/transition';
+  import { rowGroups } from '../lib/row-groups';
   import { hitTokens, fetchBook, parseBekker, lineAnchor, lineRef, nearestLineAnchor, fetchSidenotes, fetchFigures, fetchQuotations, type Segment, type GreekLine, type Token, type BookData, type OverlayPiece, type Quotation, anchorCite, citeOfId, citeLabelOf, isChapterSection, isNonBekker, tickCite } from '../lib/data';
   import { englishQueryUnits, greekFold } from '../lib/search';
   import { markEnglishHtml, overlayPieces } from '../lib/english-hit';
@@ -729,6 +730,34 @@
     });
   })();
 
+  $: joinColumns = b && view !== 'greek' && !chapterSection && !busse;
+  $: displaySegments = joinColumns
+    ? rowGroups(segments, trans === 'compare' ? [compareLeft, compareRight] : [trans], translations)
+        .map(group => {
+          const sources = group.map(r => ({
+            seg: enrichedSegments[r.segmentIndex].seg,
+            block: enrichedSegments[r.segmentIndex].blocks[r.blockIndex],
+            bi: r.blockIndex,
+          }));
+          const first = sources[0];
+          const joinFlow = (id: string): FlowPart[] => sources.flatMap((source, i) => {
+            const flow = id === engSlot?.id ? source.block.flow : (source.block.oflows[id] ?? []);
+            const marked = flow.map(p => ({ ...p, sourceColumn: source.seg.column,
+              ...(p.n === 1 && !p.para ? { column: source.seg.column } : {}),
+            }));
+            return i && marked.length ? [{ text: ' ', n: null, real: false }, ...marked] : marked;
+          });
+          const block: EnrichedBlock = {
+            ...first.block,
+            sources,
+            flow: joinFlow(engSlot?.id ?? ''),
+            oflows: Object.fromEntries(secondaries.map(t => [t.id, joinFlow(t.id)])),
+            otables: Object.fromEntries(secondaries.map(t => [t.id, sources.flatMap(s => (s.block.otables[t.id] ?? []).map(table => ({ ...table, column: s.seg.column })))])),
+          };
+          return { seg: first.seg, blocks: [block], key: `${first.seg.id}:${first.bi}` };
+        })
+    : enrichedSegments.map(s => ({ ...s, key: s.seg.id }));
+
   // Ordered list of distinct chapter identifiers present in the loaded book.
   // Empty-string entries (no chapter assignment yet) are filtered out.
   $: chaptersInBook = [...new Set(
@@ -993,13 +1022,13 @@
   // flowParts). A GreekLine may be a partial slice of a real line (cont = its
   // tail half, after a mid-line chapter split): it suppresses the repeated id.
   type RLine = GreekLine & { cont?: boolean };
-  interface Block { chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][] }[]>; sidenotes: number[]; figs: number[]; }
+  interface Block { sources?: { seg: Segment; block: Block; bi: number }[]; chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][]; column?: string }[]>; sidenotes: number[]; figs: number[]; }
   // EnrichedBlock annotates each block with the chapter it belongs to (tracking
   // across segments so continuation blocks know their chapter too).
   interface EnrichedBlock extends Block { currentChapter: string; }
   // A flowing-prose part: either a text run (n null) or a Bekker margin marker
   // (text null) placed at an exact mid-sentence offset — no row break.
-  interface FlowPart { text: string | null; n: number | null; real: boolean; para?: boolean; }
+  interface FlowPart { text: string | null; n: number | null; real: boolean; para?: boolean; column?: string; sourceColumn?: string; }
 
   // The char position where token `w` begins in a line's text (0 at the start,
   // text.length at/after the end), so a cut preserves the verbatim
@@ -1089,18 +1118,18 @@
   // marks. (It also keeps `.para-br + .bk-seg` adjacency intact when a tick
   // lands exactly on a paragraph start.) Ticks with an attached table — or
   // with no following text run — keep the standalone rendering.
-  type RenderPart = FlowPart & { tick?: { n: number; real: boolean } };
-  function attachTicks(parts: FlowPart[], tableNs: Set<number> = new Set()): RenderPart[] {
+  type RenderPart = FlowPart & { tick?: { n: number; real: boolean; column?: string } };
+  function attachTicks(parts: FlowPart[], tableNs: Set<string> = new Set()): RenderPart[] {
     const isText = (p: FlowPart | undefined): p is FlowPart => !!p && p.text !== null && p.text !== '\n';
     const isBreak = (p: FlowPart | undefined): boolean => !!p && (p.text === '\n' || p.para === true);
     const out: RenderPart[] = [];
     for (let i = 0; i < parts.length; i += 1) {
       const part = parts[i];
       const isTick = part.text === null && part.n !== null && !part.para;
-      if (isTick && part.n !== null && !tableNs.has(part.n)) {
+      if (isTick && part.n !== null && !tableNs.has(`${part.sourceColumn ?? ''}:${part.n}`)) {
         const next = parts[i + 1];
         if (isText(next)) {
-          out.push({ ...next, tick: { n: part.n, real: part.real } });
+          out.push({ ...next, tick: { n: part.n, real: part.real, column: part.column } });
           i += 1;
           continue;
         }
@@ -1110,7 +1139,7 @@
         // previous-line attachment this helper exists to prevent).
         if (isBreak(next) && isText(parts[i + 2])) {
           out.push(next);
-          out.push({ ...parts[i + 2], tick: { n: part.n, real: part.real } });
+          out.push({ ...parts[i + 2], tick: { n: part.n, real: part.real, column: part.column } });
           i += 2;
           continue;
         }
@@ -1188,9 +1217,9 @@
       pieces.find(p => !p.cont && p.chapter === chapter);
     // {transId: flow} + {transId: tables} for a block, picking each overlay's
     // continuation slice or the slice for `chapter` (null → continuation).
-    const overlaysFor = (chapter: string | null): { oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][] }[]> } => {
+    const overlaysFor = (chapter: string | null): { oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][]; column?: string }[]> } => {
       const oflows: Record<string, FlowPart[]> = {};
-      const otables: Record<string, { n: number; rows: string[][] }[]> = {};
+      const otables: Record<string, { n: number; rows: string[][]; column?: string }[]> = {};
       for (const { t, pieces } of secPieces) {
         const p = chapter === null ? pieceCont(pieces) : pieceFor(pieces, chapter);
         oflows[t.id] = flowOf(p);
@@ -1453,7 +1482,7 @@
             // citation of "775a11" skipped the whole group and snapped back to
             // line 10 — a confidently wrong line, which is worse than none.
             const seg = document.getElementById(`col-${locCol}`);
-            const ids = [...(seg?.querySelectorAll('.greek-line') ?? [])].map((n) => n.id);
+            const ids = [...(joinColumns ? document.querySelectorAll(`.greek-line[id^="L${locCol}-"]`) : (seg?.querySelectorAll('.greek-line') ?? []))].map((n) => n.id);
             const near = nearestLineAnchor(ids, locCol, locLine);
             const bestEl = near ? document.getElementById(near) : null;
             if (bestEl) { el = bestEl; targetId = near as string; }
@@ -1704,6 +1733,44 @@
         tabindex={b ? -1 : undefined}
         on:click={(e) => handleTokenClick(e, part.tok)}
       >{b ? greekElision(part.text) : part.text}</span>{:else}{b ? greekElision(part.text) : part.text}{/if}{/each}{/snippet}
+  {#snippet greekLines(seg: Segment, block: Block, bi: number)}
+              {#each greekItems(block.lines) as item, li}
+                {#if item.table}
+                  <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->
+                  <table class="greek-table"><tbody>
+                    {#each item.rows as row}
+                      <tr id={lineAnchor(seg.column, row.n, row.sub)} class:target={targetId === lineAnchor(seg.column, row.n, row.sub)}>
+                        <td class="line-num">{showLineNum(row.n, row.sub)}</td>
+                        {#each (row.cells ?? []) as cell}
+                          <td class="line-text" lang="grc">{@render greekToks(cellParts(cell))}</td>
+                        {/each}
+                      </tr>
+                    {/each}
+                  </tbody></table>
+                {:else}
+                  {@const num = lineLabel(seg.column, item.line, bi === 0 && li === 0)}
+                  <div class="greek-line" id={item.line.cont ? `${lineAnchor(seg.column, item.line.n, item.line.sub)}-c` : lineAnchor(seg.column, item.line.n, item.line.sub)} class:target={!item.line.cont && targetId === lineAnchor(seg.column, item.line.n, item.line.sub)} class:cont={item.line.cont} class:b-gl={b}>
+                    <span class="line-num" class:b-ln={b} class:col={b && !nonBekker && num.startsWith(seg.column)}>{num}</span>
+                    <!-- The siglum sits in the margin at the gutter's edge; when the
+                         line also carries a Bekker number, it slides left of it —
+                         the number never yields its slot. -->
+                    <!-- A quotation's `lo` is a bare line number, so it belongs
+                         to the unlettered line: without the `sub` guard a
+                         quotation starting at 244b5 drew its sigla twice, once
+                         on 5 and again on 5a. -->
+                    {#if !item.line.cont && !item.line.sub && quoteStarts.has(`${seg.column}:${item.line.n}`)}
+                      <span class="quotation-sigla" class:has-num={showLineNum(item.line.n) !== ''}>
+                        {#each quoteStarts.get(`${seg.column}:${item.line.n}`) ?? [] as q}
+                          <QuotationMarker quotation={q} />
+                        {/each}
+                      </span>
+                    {/if}
+                    <span class="line-text" class:b-lt={b} lang="grc">{@render greekToks(lineParts(item.line))}</span>
+                  </div>
+                {/if}
+              {/each}
+  {/snippet}
+
   {#snippet chapterHead(block: Block)}
     {#if b}
       {@const title = chapterTitleB(block.chapter, trans === 'compare' ? compareLeft : trans, view)}
@@ -1727,6 +1794,14 @@
        Bekker numbers. The footnote/table-bearing translation ('third' slot)
        uses renderThird + clickable `[^N]` markers + diagram tables; the rest
        use plain highlightEng. Works for any number of translations. -->
+  {#snippet bekkerNum(tick: { n: number | null; real: boolean; column?: string }, block: Block, transId: string)}
+    {@const columnAnchor = joinColumns && view === 'english' && tick.column &&
+      transId === (trans === 'compare' ? compareLeft : trans) &&
+      tick.column !== block.sources?.[0].seg.column ? `col-${tick.column}` : undefined}
+    <span class="bk-num" class:col-num={!!tick.column} class:approx={!tick.real}
+      class:segment={!!columnAnchor} id={columnAnchor}>{tick.column && vw > 700 ? tick.column : tick.n}</span>
+  {/snippet}
+
   {#snippet transFlow(block: Block, transId: string)}
     {@const flow = transId === engSlot?.id ? block.flow : (block.oflows[transId] ?? [])}
     {#if flow.length}
@@ -1758,18 +1833,17 @@
           on:keydown={onFootnoteClick}
           role="presentation"
         >
-          {#each attachTicks(flow, new Set((block.otables[transId] ?? []).map(t => t.n))) as part}
+          {#each attachTicks(flow, new Set((block.otables[transId] ?? []).map(t => `${t.column ?? ''}:${t.n}`))) as part}
             {#if part.text === '\n'}
               <svelte:element this={b ? 'span' : 'br'} class="para-br" />
             {:else if part.text !== null}
               <span class="bk-seg"
-                >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
-                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId, engMarks)}</span>
+                >{#if part.tick}{@render bekkerNum(part.tick, block, transId)}{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html renderThird(part.text, transId, engMarks)}</span>
             {:else if part.para}
               <svelte:element this={b ? 'span' : 'br'} class="para-br" />
             {:else}
-              <span class="bk-num" class:approx={!part.real}>{part.n}</span>
-              {#each (block.otables[transId] ?? []).filter(t => t.n === part.n) as tbl}
+              {@render bekkerNum(part, block, transId)}
+              {#each (block.otables[transId] ?? []).filter(t => t.n === part.n && (!part.sourceColumn || t.column === part.sourceColumn)) as tbl}
                 <table class="eng-table"><tbody>
                   {#each tbl.rows as trow}
                     <tr>{#each trow as cell}<td>{b ? curlyEnglish(cell) : cell}</td>{/each}</tr>
@@ -1786,12 +1860,11 @@
               <svelte:element this={b ? 'span' : 'br'} class="para-br" />
             {:else if part.text !== null}
               <span class="bk-seg"
-                >{#if part.tick}<span class="bk-num" class:approx={!part.tick.real}>{part.tick.n}</span
-                  >{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text, engMarks)}</span>
+                >{#if part.tick}{@render bekkerNum(part.tick, block, transId)}{/if}<!-- eslint-disable-next-line svelte/no-at-html-tags -->{@html highlightEng(part.text, engMarks)}</span>
             {:else if part.para}
               <svelte:element this={b ? 'span' : 'br'} class="para-br" />
             {:else}
-              <span class="bk-num" class:approx={!part.real}>{part.n}</span>
+              {@render bekkerNum(part, block, transId)}
             {/if}
           {/each}
         </div>
@@ -1900,9 +1973,9 @@
         {/if}
       </div>
     {/if}
-    {#each enrichedSegments as {seg, blocks} (seg.id)}
+    {#each displaySegments as {seg, blocks, key} (key)}
       {@const leadChapter = blocks[0]?.chapter ? blocks[0] : null}
-      <div class="segment" id="col-{seg.column}">
+      <div class="segment" id={joinColumns && blocks[0].sources?.[0].bi ? undefined : `col-${seg.column}`}>
         <!-- A chapter that opens this column heads the segment, ABOVE the column
              reference (the column ref is a marker within the chapter, not a
              heading over it). Mid-column chapter starts render inline below. -->
@@ -1939,41 +2012,15 @@
             <!-- Greek column -->
             <div class="greek-col" class:b-gc={b} lang="grc">
               {#if greekSpacerTitle}<div class="overlay-chapter-title overlay-chapter-title-spacer" aria-hidden="true">{titleText(greekSpacerTitle)}</div>{/if}
-              {#each greekItems(block.lines) as item, li}
-                {#if item.table}
-                  <!-- Greek inline table (the TLG ⎪ column square, e.g. De Int 22a). -->
-                  <table class="greek-table"><tbody>
-                    {#each item.rows as row}
-                      <tr id={lineAnchor(seg.column, row.n, row.sub)} class:target={targetId === lineAnchor(seg.column, row.n, row.sub)}>
-                        <td class="line-num">{showLineNum(row.n, row.sub)}</td>
-                        {#each (row.cells ?? []) as cell}
-                          <td class="line-text" lang="grc">{@render greekToks(cellParts(cell))}</td>
-                        {/each}
-                      </tr>
-                    {/each}
-                  </tbody></table>
-                {:else}
-                  {@const num = lineLabel(seg.column, item.line, bi === 0 && li === 0)}
-                  <div class="greek-line" id={item.line.cont ? `${lineAnchor(seg.column, item.line.n, item.line.sub)}-c` : lineAnchor(seg.column, item.line.n, item.line.sub)} class:target={!item.line.cont && targetId === lineAnchor(seg.column, item.line.n, item.line.sub)} class:cont={item.line.cont} class:b-gl={b}>
-                    <span class="line-num" class:b-ln={b} class:col={b && !nonBekker && num.startsWith(seg.column)}>{num}</span>
-                    <!-- The siglum sits in the margin at the gutter's edge; when the
-                         line also carries a Bekker number, it slides left of it —
-                         the number never yields its slot. -->
-                    <!-- A quotation's `lo` is a bare line number, so it belongs
-                         to the unlettered line: without the `sub` guard a
-                         quotation starting at 244b5 drew its sigla twice, once
-                         on 5 and again on 5a. -->
-                    {#if !item.line.cont && !item.line.sub && quoteStarts.has(`${seg.column}:${item.line.n}`)}
-                      <span class="quotation-sigla" class:has-num={showLineNum(item.line.n) !== ''}>
-                        {#each quoteStarts.get(`${seg.column}:${item.line.n}`) ?? [] as q}
-                          <QuotationMarker quotation={q} />
-                        {/each}
-                      </span>
-                    {/if}
-                    <span class="line-text" class:b-lt={b} lang="grc">{@render greekToks(lineParts(item.line))}</span>
+              {#if block.sources}
+                {#each block.sources as source}
+                  <div class="column-lines" id={source.bi === 0 && source.seg.column !== seg.column && view !== 'english' ? `col-${source.seg.column}` : undefined}>
+                    {@render greekLines(source.seg, source.block, source.bi)}
                   </div>
-                {/if}
-              {/each}
+                {/each}
+              {:else}
+                {@render greekLines(seg, block, bi)}
+              {/if}
             </div>
 
             <!-- English column: the selected translation (single view), or the

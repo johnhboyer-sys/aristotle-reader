@@ -28,6 +28,8 @@ export interface GreekLine {
 }
 
 export interface EnglishChunk {
+  // The column opens a paragraph; no offset-zero paragraph marker.
+  paraStart?: boolean;
   text: string;
   notes: { offset: number; text: string }[];
   markers: { kind: string; n: string; offset: number }[];
@@ -49,6 +51,8 @@ export interface ChapterStart {
 // `cont` = the tail of a chapter that began in an earlier column. An overlay is
 // chapter-anchored (no per-line Bekker gutter), distributed across columns.
 export interface OverlayPiece {
+  // This continuation piece opens a paragraph at the column cut.
+  para?: boolean;
   chapter: string;
   text: string;
   cont: boolean;

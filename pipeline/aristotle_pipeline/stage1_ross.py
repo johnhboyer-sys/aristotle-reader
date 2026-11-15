@@ -503,7 +503,8 @@ def build_chunks(spine: dict, chapters: list[dict],
                  align_map: dict | None = None) -> dict[str, list[dict]]:
     """{segment_id: [{chapter, text, cont}]} for any chapter-keyed prose dict.
     `cont` marks the slice of a chapter that began in an earlier column (a
-    continuation block). When `align_map` is present, column boundaries and the
+    continuation block); `para: true` marks a new paragraph at a column cut.
+    When `align_map` is present, column boundaries and the
     line 1/20 ticks come from real anchors; otherwise everything is
     proportionally interpolated."""
     seg_chapters, chapter_key = _chapter_segments(spine, chapters)
@@ -565,6 +566,7 @@ def build_chunks(spine: dict, chapters: list[dict],
                 "chapter": str(chap),
                 "text": piece,
                 "cont": i > 0,
+                **({"para": True} if i > 0 and piece.startswith("\n") else {}),
                 "bekker": ticks,
                 "_g": gidx,
             })

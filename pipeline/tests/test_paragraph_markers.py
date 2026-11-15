@@ -118,3 +118,63 @@ def test_paragraph_boundary_is_sidecar_marker_and_does_not_move_bekker_offsets(t
     ).encode("utf-8") == json.dumps(
         chunk["bekker"], sort_keys=True, separators=(",", ":")
     ).encode("utf-8")
+
+
+def test_column_opening_paragraph_flag_and_continuation(tmp_path):
+    path = tmp_path / "columns.xml"
+    _write_tei(path, '<p>First.</p><milestone resp="Bekker" unit="page" n="1094b"/>'
+               '<p>New paragraph <milestone resp="Bekker" unit="page" n="1095a"/>'
+               'continues here.</p>')
+    english = parse_english(path, DummyManifest())
+    chunks = {c['column']: c for c in english['chunks']}
+    assert chunks['1094b']['paraStart'] is True
+    assert 'paraStart' not in chunks['1095a']
+    assert not any(m['kind'] == 'paragraph' and m['offset'] == 0
+                   for c in chunks.values() for m in c['markers'])
+
+
+def test_overlay_paragraph_flag_survives_first_piece_strip_and_emission(tmp_path):
+    from aristotle_pipeline.stage1_ross import build_chunks
+    spine = _spine()
+    second = dict(spine['segments'][0], id='1:1094b', column='1094b')
+    spine['segments'].append(second)
+    chapters = [{'book': 1, 'chapter': '1', 'column': '1094a', 'line': 1}]
+    text = 'First sentence.\nNew paragraph continues.'
+    anchors = {'1:1': {'anchors': [
+        {'citation': '1094b1', 'offset': text.index('New'), 'confidence': 'reliable'},
+    ]}}
+    chunks = build_chunks(spine, chapters, {(1, 1): text}, anchors)
+    piece = chunks['1:1094b'][0]
+    assert piece['para'] is True
+    assert not piece['text'].startswith('\n')
+    assert piece['bekker'][0]['offset'] == 0
+    assert 'para' not in chunks['1:1094a'][0]
+    continued = build_chunks(spine, chapters, {(1, 1): text.replace('\n', ' ')}, anchors)
+    assert 'para' not in continued['1:1094b'][0]
+    english = {'chunks': [dict(id=s['id'], text='Text', notes=[], markers=[], paraStart=True)
+                          for s in spine['segments']], 'chapters': chapters}
+    tokens = {'segments': [dict(id=s['id'], lines=[{'n': n, 'tokens': []} for n in range(1, 6)])
+                           for s in spine['segments']]}
+    emit_books(spine, tokens, english, chapter_ranges(spine, chapters), tmp_path, chunks,
+               third=chunks, overlays={'extra': chunks})
+    segments = json.loads((tmp_path / 'book-01.json').read_text())['segments']
+    assert segments[1]['english']['paraStart'] is True
+    for field in ('ross', 'third'):
+        assert segments[1][field][0]['para'] is True
+    assert segments[1]['overlays']['extra'][0]['para'] is True
+
+
+def test_trailing_paragraph_marker_marks_next_column():
+    from aristotle_pipeline.stage1_common import carry_trailing_paragraphs
+    chunks = [
+        {"book": 1, "text": "End of one. ", "markers": [{"kind": "paragraph", "n": "", "offset": 11}]},
+        {"book": 1, "text": "New paragraph here.", "markers": []},
+        {"book": 1, "text": "Mid. More.", "markers": [{"kind": "paragraph", "n": "", "offset": 4}]},
+        {"book": 1, "text": "continues", "markers": []},
+        {"book": 2, "text": "Last. ", "markers": [{"kind": "paragraph", "n": "", "offset": 5}]},
+    ]
+    nxt = {"book": 3, "text": "x", "markers": []}
+    carry_trailing_paragraphs(chunks + [nxt])
+    assert chunks[1].get("paraStart") is True
+    assert "paraStart" not in chunks[3]
+    assert "paraStart" not in nxt  # a new book always breaks; never carried across books

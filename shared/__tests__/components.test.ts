@@ -1222,3 +1222,77 @@ describe('B reader fonts', () => {
     expect(document.querySelector('link[data-reader-font]')).toBeNull();
   });
 });
+
+it.each([false, true])('B joins column rows unless primary starts a paragraph (%s)', async (paraStart) => {
+  const { fetchBook } = await import('../lib/data');
+  const book: BookData = {
+    book: 1,
+    segments: [fixtureBook.segments[0], {
+      id: 'seg2', column: '1094b',
+      greek: [{ n: 1, text: 'δεύτερος', tokens: [] }],
+      english: { text: 'Continued English.', notes: [], markers: [],
+        bekker: [{ n: 1, offset: 0, real: true }], ...(paraStart ? { paraStart: true } : {}) },
+    }],
+  };
+  vi.mocked(fetchBook).mockResolvedValueOnce(book);
+  window.history.replaceState(null, '', '/EN/1?trans=rackham');
+  const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, b: true } });
+  await screen.findByText('Continued English.');
+  expect(container.querySelectorAll('.b-row')).toHaveLength(paraStart ? 2 : 1);
+  expect([...container.querySelectorAll('.b-ln.col')].map(el => el.textContent)).toEqual(['1094a', '1094b']);
+  expect(container.querySelector('#L1094b-1')).toBeTruthy();
+  if (!paraStart) {
+    const row = container.querySelector('.b-row')!;
+    expect(row.querySelectorAll('.b-ln.col')).toHaveLength(2);
+    expect(row.querySelectorAll('.english-col .overlay-prose')).toHaveLength(1);
+    expect(row.querySelector('.para-br')).toBeNull();
+    expect(row.querySelector('.english-col')?.textContent).toContain('here. 1094bContinued');
+  }
+});
+
+it.each([700, 701])('B keeps column anchors and responsive ticks in English view at %spx', async (width) => {
+  vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(width);
+  localStorage.setItem('reader-view', 'english');
+  window.history.replaceState(null, '', '/EN/1?trans=rackham');
+  const book: BookData = { book: 1, segments: [fixtureBook.segments[0], {
+    id: 'seg2', column: '1094b', greek: [{ n: 1, text: 'δεύτερος', tokens: [] }],
+    english: { text: 'Continued.', notes: [], markers: [], bekker: [
+      { n: 1, offset: 0, real: true }, { n: 5, offset: 4, real: false },
+    ] },
+  }] };
+  try {
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    await screen.findByText('Cont');
+    expect(container.querySelectorAll('.b-row')).toHaveLength(1);
+    expect(container.querySelectorAll('#col-1094b')).toHaveLength(1);
+    const tick = container.querySelector('.english-col #col-1094b')!;
+    expect(tick.classList.contains('col-num')).toBe(true);
+    expect(tick.textContent).toBe(width > 700 ? '1094b' : '1');
+    expect(container.querySelectorAll('.english-col .segment[id]')).toHaveLength(1);
+  } finally {
+    localStorage.removeItem('reader-view');
+  }
+});
+
+it.each([false, true])('B Compare breaks when an overlay starts a paragraph (%s)', async (para) => {
+  window.history.replaceState(null, '', '/EN/1?trans=compare');
+  localStorage.setItem('reader-cmpl-EN', 'rackham');
+  localStorage.setItem('reader-cmpr-EN', 'ross');
+  const book: BookData = { book: 1, segments: [
+    { ...fixtureBook.segments[0], ross: [{ chapter: '1', cont: false, text: 'Ross starts.', bekker: [{ n: 1, offset: 0, real: true }] }] },
+    { id: 'seg2', column: '1094b', greek: [{ n: 1, text: 'δεύτερος', tokens: [] }],
+      english: { text: 'Primary continues.', notes: [], markers: [], bekker: [{ n: 1, offset: 0, real: true }] },
+      ross: [{ chapter: '1', cont: true, text: 'Ross continues.', ...(para ? { para: true } : {}), bekker: [{ n: 1, offset: 0, real: true }] }],
+    },
+  ] };
+  try {
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    await screen.findByText('Ross continues.');
+    expect(container.querySelectorAll('.b-row')).toHaveLength(para ? 2 : 1);
+    expect(container.querySelectorAll('.english-col .overlay-prose')).toHaveLength(para ? 2 : 1);
+    expect(container.querySelectorAll('.overlay-col .overlay-prose')).toHaveLength(para ? 2 : 1);
+  } finally {
+    localStorage.removeItem('reader-cmpl-EN');
+    localStorage.removeItem('reader-cmpr-EN');
+  }
+});

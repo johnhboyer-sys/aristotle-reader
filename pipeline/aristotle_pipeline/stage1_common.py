@@ -71,6 +71,18 @@ def write_json(path: Path, obj) -> None:
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+def carry_trailing_paragraphs(chunks: list[dict]) -> None:
+    """A <p> that opens just before a column milestone leaves its paragraph
+    marker at the very end of the previous column's text; the paragraph itself
+    starts the next column. Mark that next column `paraStart` (in place)."""
+    for prev, nxt in zip(chunks, chunks[1:]):
+        if prev.get("book") != nxt.get("book"):
+            continue
+        end = len(prev["text"].rstrip())
+        if any(m["kind"] == "paragraph" and m["offset"] >= end for m in prev["markers"]):
+            nxt["paraStart"] = True
+
+
 class StandoffChunkMixin:
     """Chunk text plus standoff notes/markers for TEI walkers.
 
@@ -121,7 +133,9 @@ class StandoffChunkMixin:
 
     def add_paragraph(self):
         chunk = self._chunk()
-        if chunk["text"]:
+        if not chunk["text"]:
+            chunk["paraStart"] = True
+        else:
             offset = len(chunk["text"].rstrip())
             marker = {"kind": "paragraph", "n": "", "offset": offset}
             if not chunk["markers"] or chunk["markers"][-1] != marker:

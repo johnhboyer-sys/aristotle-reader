@@ -164,3 +164,18 @@ def test_malformed_entry_stops_the_build(tmp_path, monkeypatch, entry, text):
     monkeypatch.setattr(stage1_archive, "SOURCES_DIR", tmp_path)
     with pytest.raises(ValueError, match="paragraphs.yaml"):
         stage1_archive._load_paragraphs({"dir": "tst"}, {(1, 1): text})
+
+
+def test_paragraph_at_column_cut_sets_flag_without_offset_zero_marker(tmp_path, monkeypatch):
+    (tmp_path / 'bare').mkdir()
+    bare = _build(tmp_path / 'bare', monkeypatch)
+    # Use the actual proportional column cut; placement must not change it.
+    body = bare['1b']['text'].split(' Gamma one')[0].strip()
+    prose = stage1_archive._load_prose({'dir': 'tst', 'books': 1, 'chapter_marker': 'part'})
+    offset = prose[(1, 1)].index(body)
+    chunks = _build(tmp_path, monkeypatch,
+                    f'- {{book: 1, chapter: 1, offset: {offset}, at: "{body}"}}\n')
+    assert chunks['1b']['paraStart'] is True
+    assert 'paraStart' not in bare['1b']
+    assert not any(m['kind'] == 'paragraph' and m['offset'] == 0 for m in chunks['1b']['markers'])
+    assert chunks['1b']['text'] == bare['1b']['text']
