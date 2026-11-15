@@ -335,6 +335,11 @@ outlines; small specks dropped). Two pale stains in the ground are left as print
   words: h1 "Page not found"; "The goat-stag is Aristotle's example of a name that signifies
   something which does not exist (De Interpretatione 16a16). So, it would seem, is the page you're
   looking for."; buttons "Back to the corpus" and "Search". Mock-up (desk 1152, wide 1440, phone,
-  both themes): https://claude.ai/artifact/BvZQQrfNeTS51c46XKrWVo (v2), from
-  `.redesign-shots/notes/404/mock/shoot.cjs`. Not yet asked: whether today's eyebrow "Aristotle"
-  and caption "τραγέλαφος · the goat-stag" come along (the mock drops both).
+  both themes): https://claude.ai/artifact/BvZQQrfNeTS51c46XKrWVo, from
+  `.redesign-shots/notes/404/mock/shoot2.cjs`.
+- 15 Nov 15:19, John: "SAME COPY AS OLD ONE"; no Works breadcrumb or eyebrow; "No 'page not found'
+  shout my caps. This isn't a title"; "Just the picture, the text under it and then the buttons."
+  v3: one centred 640px column under the site bar: the plate (desk print on every screen, so the
+  captions are never cropped; paper multiplied away in light, the cut-out in dark), the old caption
+  "τραγέλαφος · the goat-stag", "Page not found" in the text face at text size (still the h1), the
+  old paragraph, then the two buttons. No nav item marked current.
