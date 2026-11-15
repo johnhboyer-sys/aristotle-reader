@@ -238,3 +238,24 @@ Kept, every screen it was shown on (CSS in shoot-r4.mjs, the round 5 block):
   1152-1399 no book's titles all fit. The title stays in the chapter head.
 - Short work name: EN, not "Ethics" (ReaderShell.astro `shortName`), so it
   differs from EE; every work then uses its abbreviation.
+
+## Round 6 rulings (John, 14 Nov 23:25), page https://claude.ai/artifact/DyRniEWPsmTHMXnQnLa5SZ
+
+CSS in shoot-r4.mjs, the `R6` block. Base: final2 (round 5 keeps; sideways margin 60px with the
+line labels 8px before the text, not E's 52, so "1094a" clears the edge).
+- A phone Both: the English margin keeps only the red column number; no grey 5/10/15.
+  (B, the same rule at ch. 10, was not picked; asked.)
+- C, D 1100-1399: column gap 88px so the English column label clears the Greek.
+- E, F phone Both: English `hyphens: auto`; a word joiner before every em dash in the English.
+  (`text-wrap: pretty` did not fix one-word Greek lines; leave it out.)
+- G Greek only: 600px column, centred (was 540).
+- H, I phone Both: Greek column label 6px from the text (left -40px).
+- J a chapter starting mid-line: first fragment indent 16px on the phone, 2em elsewhere.
+- K, L sideways: no eyebrow over BOOK I; chapter title 24px; 24px above a chapter head, 12px
+  under it; the chapter number's bottom moves with it (`bottom: calc(12px - .058em)`) so it
+  stays on the "Chapter n · Bekker" baseline (John's condition for L).
+- M English only on desktop: text 664px.
+- N light: the book-head rule 1px #bdbbb3.
+- O phone English only: line-height 27px.
+Build fix found by both reviewers: the phone English margin numbers sit ~5px low since the
+27px line-height (their offset was tuned for 31px).
