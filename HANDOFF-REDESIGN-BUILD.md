@@ -106,6 +106,8 @@ shots only faked:
     others, into `app/public/plates/dark/desk/`. One `<picture>` per theme, as on work pages
     (gate R-P4's pattern).
   - John approved the plate, light and dark ("Looks fine now"). Don't re-clean it.
+  - `cut/404.png` is already made. To rerun `clean.py` or `cut404.py`, make a venv with numpy, scipy, and
+    Pillow first: the one used on 15 Nov was in a temp folder and did not survive the reboot.
 
 ### 1.4 Search form (`HANDOFF-SEARCH-BUILD.md`)
 
