@@ -270,7 +270,9 @@ Left on purpose (John has not asked for a commit); keep them:
 ### 3.6 Still open for John (ask; don't guess)
 
 - The Categories scan download again (bsb11761492, p. 833).
-- The parentheses in the Greek summary and "rev. Ross" on the Politics.
+- ~~The parentheses in the Greek summary and "rev. Ross" on the Politics.~~ Settled (John, 15 Nov:
+  "Thought we settled the Greek and English citations"): the 14 Nov Texts section rulings govern
+  (full entries, titles italic, series roman, Chicago style; commit d07f9247e5).
 - The nav on the 1168px column, home and work pages only.
 - The De Mirabilibus row wrapping at 1525px (not rechecked against round 9).
 
