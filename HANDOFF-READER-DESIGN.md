@@ -293,3 +293,14 @@ stay; only an off-step number (a chapter's first-line number such as Mir. 99's 3
 Held for John to look over: E/E2 (column split). Still open from round 6: B (A's rule at ch. 10).
 Build fixes noted this round: the phone opening-fragment turnover outdents (should be the
 fragment indent + 8px); at 1152px round 6 C's 88px gap wraps a few lines.
+
+## Full Greek lines (John, 15 Nov 13:26-13:28)
+
+A setting replaces the wrap fixes: "Full Greek lines" in the Aa panel, under Column width, off by
+default (equal columns stay the standard look). On, the Greek column takes the width of the
+book's longest Bekker line and the English the rest; Greek only widens past 600px only for a
+book whose longest line needs it. The switch appears only where the lines fit: desktop, and
+sideways Greek only (not phone upright, not sideways Both). Shot in shoot-r4.mjs `fg*`: at 1152
+Greek 578 / English 394, zero wraps; at 1440+ equal columns already fit every Book I line at 100%
+text, so the switch matters below ~1420px or with enlarged text. Build: recompute on text-size,
+font, and book change; if the English would fall below a floor (to be set), wrap as usual.
