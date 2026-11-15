@@ -24,6 +24,7 @@
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
+import { resolveHead } from './lemma-head.mjs';
 
 const DATA = 'public/data';
 const OUT = join(DATA, 'lemmata');
@@ -294,7 +295,7 @@ const manifest = {};   // popup: lsjKey -> { slug, head, count, distinctiveness_
 const index = [];      // getStaticPaths: [{ slug, key }]
 
 for (const b of top) {
-  const head = lsjHead(b.key) ?? b.lemmaBeta;
+  const head = resolveHead(b.key, b.lemmaBeta, lsjHead);
   let slug = slugRecord[b.key];
   if (!slug) {
     slug = slugify(b.lemmaBeta || b.key);
@@ -405,7 +406,7 @@ for (const [f, heads] of picker) {
   const entries = [...heads.entries()]
     .sort((x, y) => y[1].count - x[1].count)
     .map(([key, v]) => {
-      const e = { h: lsjHead(key) ?? v.lemmaBeta, k: key };
+      const e = { h: resolveHead(key, v.lemmaBeta, lsjHead), k: key };
       if (manifest[key]) e.s = manifest[key].slug;
       return e;
     });
