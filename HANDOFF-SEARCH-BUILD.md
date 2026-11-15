@@ -588,19 +588,22 @@ The design needs these; the mock-up only drew them.
    panel (accentless spellings show, and one spelling can appear under two
    lemmas).
 
-## 8. After the build: John's open questions (tweaks, not blockers)
+## 8. Tweaks after the first build (all ruled)
 
 1. ~~One Search or two while the proximity editor is open~~ — settled 13 Nov by F 4b: Search on the editor's
    foot row.
 2. ~~Phone: Keyboard and Beta Code on the field's line or under it~~ — settled 13 Nov by H3: beside the "Greek"
    label above the field.
-3. The View sheet's Close and Done: choices apply at once, so the labels
-   might say so.
-4. Short descriptions in the phone sheets, against "no explainer text".
-5. Rail lists: "15 more" link (round 8) or the scrolling box with a fade
-   (now).
-6. "Any form" renamed "every form of the word" (asked, not answered).
-7. Citations only in Context rather than Per page (Opus).
+All ruled 15 Nov (John); build them with the form:
+3. **View sheet: drop Close** (15:30, "Drop close"). Done in the foot band is the only way out; choices still apply
+   at once.
+4. **No short descriptions in the phone sheets** (the no-explainer rule; John, 14 Nov: "I don't like the huge across
+   chapter explainer text").
+5. **Rail lists: as built**, each in its own scrolling box with a fade (15:30, "What is built now"). No "15 more" link.
+6. **"Any form" keeps its name** (14 Nov 09:37: "Any form stays with lemma as switch").
+7. **Citations only moves to the Context menu** (15:30), a fourth choice after Whole section; it leaves Per page
+   (20 · 40 · 100). On, it hides Group by and Sort and drops line numbers (the S6 test in §7 that says it hides
+   Context changes with it). Phone View sheet: Context row gets the fourth choice; Per page is 20 · 40 · 100 only.
 
 ## 9. Housekeeping
 
