@@ -12,7 +12,9 @@ import sharp from 'sharp';
 const file = new URL('../src/data/plates.json', import.meta.url);
 const plates = JSON.parse(readFileSync(file, 'utf8'));
 const check = process.argv.includes('--check');
-const ids = Object.keys(plates);
+// The 404 shows the whole desk image, without an ink-box crop. Its box is
+// the supplied credit record, not the threshold crop used by home/work pages.
+const ids = Object.keys(plates).filter(id => id !== '404');
 if (!ids.length) throw new Error('examined=0 plates');
 
 let changed = 0;

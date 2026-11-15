@@ -20,6 +20,7 @@ const stop = (text: string) => /[.!?]$/.test(text.trim()) ? ' ' : '. ';
 const sections = [
   {heading:'The home page', rows:[{id:'home',title:'Aristotle'}]},
   {heading:'The works', rows:works},
+  {heading:'The 404 page', rows:[{id:'404',title:'Page not found'}]},
 ];
 ---
 <html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><ThemeInit/><Pwa/><title>Picture credits — Aristotle Reader</title><link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml"/><BFonts/></head>
@@ -27,6 +28,6 @@ const sections = [
 <h1 class="b-pc-h">Picture credits</h1>
 {sections.map(({heading,rows}) => <section><h2 class="b-h2">{heading}</h2><ul class="b-pc-l">{rows.map(w => {
  const p = plates[w.id as keyof typeof plates];
- return <li data-plate={w.id}><a href={w.id === 'home' ? `${base}/` : `${base}${workLanding(w.id)}`}><i>{w.id === 'Isa' ? 'Porphyry, Isagoge' : w.title}</i></a><span><span data-credit-part="who">{p.who}</span>, <i data-credit-part="what">{p.what}</i>, <span data-credit-part="when">{p.when}</span>{stop(p.when)}<span data-credit-part="how">{p.how}</span>{stop(p.how)}<span data-credit-part="where">{p.credit === null ? beforeLicence(p.where) : p.where}</span>{p.credit !== null && <>{stop(p.where)}<span data-holder-credit>{beforeLicence(p.credit)}</span></>}{' ('}<span data-licence>{p.lic}</span>{').'} {Array.isArray(p.url) ? <>Records: {p.url.map((source, i) => <>{i > 0 && ', '}<a data-record href={source.href}>{source.part}</a></>)}</> : <a data-record href={p.url}>Record</a>}</span></li>;
+ return <li data-plate={w.id}><a href={w.id === 'home' ? `${base}/` : w.id === '404' ? `${base}/404.html` : `${base}${workLanding(w.id)}`}><i>{w.id === 'Isa' ? 'Porphyry, Isagoge' : w.title}</i></a><span><span data-credit-part="who">{p.who}</span>, <i data-credit-part="what">{p.what}</i>, <span data-credit-part="when">{p.when}</span>{stop(p.when)}<span data-credit-part="how">{p.how}</span>{stop(p.how)}<span data-credit-part="where">{p.credit === null ? beforeLicence(p.where) : p.where}</span>{p.credit !== null && <>{stop(p.where)}<span data-holder-credit>{beforeLicence(p.credit)}</span></>}{' ('}<span data-licence>{p.lic}</span>{').'} {Array.isArray(p.url) ? <>Records: {p.url.map((source, i) => <>{i > 0 && ', '}<a data-record href={source.href}>{source.part}</a></>)}</> : <a data-record href={p.url}>Record</a>}</span></li>;
 })}</ul></section>)}
 </main><BFoot/></div></div></body></html>

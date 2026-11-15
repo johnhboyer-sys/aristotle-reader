@@ -19,12 +19,17 @@ const count = (id: string, n: number) => { console.log(`${id} examined=${n}`); e
 test('R-P1 source hashes, JPEG dimensions, ids, no masks', () => {
     const files = ['desk', 'phone'].flatMap(b => existsSync(resolve(root, `public/plates/${b}`)) ? readdirSync(resolve(root, `public/plates/${b}`)).map(f => `${b}/${f}`) : []);
     count('R-P1', files.length);
-    expect(files).toHaveLength(96);
+    // The 404 uses the desk plate at every screen size.
+    const expectedFiles = Object.keys(manifest()).flatMap(id =>
+        id === '404' ? [`desk/${id}.jpg`] : [`desk/${id}.jpg`, `phone/${id}.jpg`]);
+    expect(files.sort()).toEqual(expectedFiles.sort());
+    const darkDeskIds = readdirSync(resolve(root, 'public/plates/dark/desk')).map(f => f.replace('.webp', '')).sort();
+    expect(darkDeskIds).toEqual(Object.keys(manifest()).sort());
     const scan = (dir: string): string[] => readdirSync(dir, { withFileTypes: true }).flatMap(d => d.isDirectory() ? [d.name, ...scan(resolve(dir, d.name))] : []);
     expect(scan(resolve(root, 'public/plates'))).not.toContain('mask');
     const hashes = json('scripts/fixtures/plate-sha256.json');
     for (const band of ['desk', 'phone'])
-        expect(files.filter(f => f.startsWith(band + '/')).map(f => f.split('/')[1].replace('.jpg', '')).sort()).toEqual(Object.keys(manifest()).sort());
+        expect(files.filter(f => f.startsWith(band + '/')).map(f => f.split('/')[1].replace('.jpg', '')).sort()).toEqual(Object.keys(manifest()).filter(id => band === 'desk' || id !== '404').sort());
     for (const f of files) {
         expect(f).not.toMatch(/mask/);
         const b = readFileSync(resolve(root, 'public/plates', f));
@@ -47,8 +52,8 @@ test('R-P1 source hashes, JPEG dimensions, ids, no masks', () => {
 test('R-P2 manifest schema and ids', () => {
     const m = manifest();
     count('R-P2', Object.keys(m).length);
-    expect(Object.keys(m).sort()).toEqual(['home', ...WORKS.map(w => w.id)].sort());
-    expect(Object.keys(m)).toHaveLength(48);
+    expect(Object.keys(m).sort()).toEqual(['home', '404', ...WORKS.map(w => w.id)].sort());
+    expect(Object.keys(m)).toHaveLength(WORKS.length + 2);
     for (const [id, p] of Object.entries(m) as [
         string,
         any
@@ -66,7 +71,7 @@ test('R-P2 manifest schema and ids', () => {
         for (const k of ['pick', 'desk', 'phone'])
             expect(p, id).not.toHaveProperty(k);
     }
-    const sides = (side: string) => Object.entries(m).filter(([id, p]: [string, any]) => id !== 'home' && p.place === side).length;
+    const sides = (side: string) => Object.entries(m).filter(([id, p]: [string, any]) => id !== 'home' && id !== '404' && p.place === side).length;
     expect([sides('left'), sides('right')]).toEqual([22, 25]);
     expect(m.home.place).toBe('left');
     expect([m.GC.place, m.Mete.place, m.MA.place, m.Isa.place]).toEqual(['right', 'left', 'left', 'left']);
@@ -120,7 +125,7 @@ test('R-H11 home weight fails a heavy or missing page', () => {
 test('R-P2 ink boxes match the desk plates', () => {
     const out = execFileSync('node', ['scripts/measure-plate-ink.mjs', '--check'], {cwd: root, encoding: 'utf8'});
     count('R-P2 ink', Number(out.match(/examined=(\d+)/)?.[1] || 0));
-    expect(out).toMatch(/examined=48 plates; all match/);
+    expect(out).toContain(`examined=${Object.keys(manifest()).filter(id => id !== '404').length} plates; all match`);
 });
 test('R-P3 credit keys and EN exact credit', () => {
     const m = manifest();

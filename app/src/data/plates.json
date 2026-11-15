@@ -681,5 +681,19 @@
     "url": "https://archive.org/details/gri_33125009324597/page/n61",
     "credit": null,
     "creditChecked": "2026-11-08"
+  },
+  "404": {
+    "place": "right",
+    "ink": [8, 49, 1259, 865],
+    "alt": "An engraved goat-stag: a bearded goat with a deer’s body and branching horns, labelled Tragelaphus.",
+    "who": "Johannes Jonston (author); engraver not named by the holder",
+    "what": "Tab. XXXIV, the middle figure (Tragelaphus, Pygargi species), in Historiae naturalis de quadrupedibus libri",
+    "when": "Amsterdam, Johannes Jacobus Schipper, 1657",
+    "how": "Copper engraving",
+    "where": "Smithsonian Libraries, via the Internet Archive",
+    "lic": "public domain",
+    "url": "https://archive.org/details/Historiaenaturac4Jons/page/n144",
+    "credit": null,
+    "creditChecked": "2026-11-15"
   }
 }
