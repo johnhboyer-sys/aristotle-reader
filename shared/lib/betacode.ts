@@ -61,6 +61,14 @@ export function betaToGreek(input: string): string {
       const base = LETTER[(input[i] ?? '').toLowerCase()];
       if (base) {
         i++;
+        // Marks may also follow the letter ('*(/a|dhs', '*a(/|dhs').
+        while (i < input.length && DIAC.includes(input[i])) {
+          const d = input[i];
+          if (d in BREATH) breath = BREATH[d];
+          else if (d in ACCENT) accent = ACCENT[d];
+          else if (d === '|') sub = SUBSCRIPT;
+          i++;
+        }
         // Capital sigma is always Σ, so no final-form handling needed.
         // Uppercase the BASE letter, then compose. Uppercasing the composed
         // string instead put "*(/|a" (ᾍ) through String#toUpperCase, whose full
