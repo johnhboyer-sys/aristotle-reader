@@ -244,7 +244,7 @@ Kept, every screen it was shown on (CSS in shoot-r4.mjs, the round 5 block):
 CSS in shoot-r4.mjs, the `R6` block. Base: final2 (round 5 keeps; sideways margin 60px with the
 line labels 8px before the text, not E's 52, so "1094a" clears the edge).
 - A phone Both: the English margin keeps only the red column number; no grey 5/10/15.
-  (B, the same rule at ch. 10, was not picked; asked.)
+  (B was only A pictured at ch. 10, not a separate change; A applies everywhere.)
 - C, D 1100-1399: column gap 88px so the English column label clears the Greek.
 - E, F phone Both: English `hyphens: auto`; a word joiner before every em dash in the English.
   (`text-wrap: pretty` did not fix one-word Greek lines; leave it out.)
@@ -290,7 +290,7 @@ Not kept (John, 13:24): F, the flush-right turnover; the stranded words read as 
 Wrapped Greek keeps its hanging indent.
 Not kept (John, 13:28): N. Rule for any later crowding fix: 1 and the multiples of 5 always
 stay; only an off-step number (a chapter's first-line number such as Mir. 99's 3) may go.
-Not kept (John, 13:30): E (55/45). E2 (45/55) deferred: "maybe later, not now"; phone Both stays 50/50. Still open from round 6: B (A's rule at ch. 10).
+Not kept (John, 13:30): E (55/45). E2 (45/55) deferred: "maybe later, not now"; phone Both stays 50/50.
 Build fixes noted this round: the phone opening-fragment turnover outdents (should be the
 fragment indent + 8px); at 1152px round 6 C's 88px gap wraps a few lines.
 
