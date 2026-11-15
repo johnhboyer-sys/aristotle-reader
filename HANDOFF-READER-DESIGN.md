@@ -290,7 +290,7 @@ Not kept (John, 13:24): F, the flush-right turnover; the stranded words read as 
 Wrapped Greek keeps its hanging indent.
 Not kept (John, 13:28): N. Rule for any later crowding fix: 1 and the multiples of 5 always
 stay; only an off-step number (a chapter's first-line number such as Mir. 99's 3) may go.
-Held for John to look over: E/E2 (column split). Still open from round 6: B (A's rule at ch. 10).
+Not kept (John, 13:30): E (55/45). E2 (45/55) deferred: "maybe later, not now"; phone Both stays 50/50. Still open from round 6: B (A's rule at ch. 10).
 Build fixes noted this round: the phone opening-fragment turnover outdents (should be the
 fragment indent + 8px); at 1152px round 6 C's 88px gap wraps a few lines.
 
