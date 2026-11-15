@@ -641,7 +641,8 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 }
 
 .dir-b .b-pc { padding: 40px 72px 56px; max-width: 1100px; }
-.dir-b .b-pc-h { font: 650 48px/1 var(--sans); text-transform: uppercase; color: var(--red-ink); margin: 0 0 32px; }
+/* Page titles in ink (John, 15 Nov). */
+.dir-b .b-pc-h { font: 650 48px/1 var(--sans); text-transform: uppercase; color: var(--ink); margin: 0 0 32px; }
 .dir-b .b-pc .b-h2 { margin-top: 32px; }
 .dir-b .b-pc-l { list-style: none; margin: 0; padding: 0; }
 .dir-b .b-pc-l li { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 4px 24px; padding: 12px 0; border-bottom: 1px solid var(--line); font: 400 15px/1.45 var(--sans); color: var(--mid); }
@@ -1228,8 +1229,7 @@ body.home { margin: 0; padding: 0; max-width: none; }
 .dir-b.pg-support .b-info, .dir-b.pg-attribution .b-info, .dir-b.pg-glossary .b-info, .dir-b.pg-desktop .b-info { padding: 24px 18px 40px; }
 }
 
-/* John, 15 Nov: titles and their eyebrows in ink on these pages, not red. */
-.dir-b:is(.pg-support, .pg-attribution, .pg-glossary, .pg-desktop) .b-pc-h,
+/* John, 15 Nov: titles and their eyebrows in ink, not red. */
 .dir-b.pg-support .sp-eyebrow .gk { color: var(--ink); }
 /* Phrases: preserve the shared island and its states, using B tokens and type. */
 .dir-b.pg-phrases .phrases-page { max-width: 820px; margin: 0 auto; padding: 1.5rem 1rem 4rem; color: var(--ink); }
