@@ -39,6 +39,24 @@ describe('resolveHead', () => {
     expect(resolveHead('su/n-ka/ptw', 'su/n-ka/ptw', none)).toBe('συγκάπτω');
   });
 
+  // Grok's review of ef4ac017e9 (Smyth 72, 80, 95, 101): shapes not in today's data.
+  it.each([
+    ['a)mfi/-e(/nnumi', 'ἀμφιέννυμι'],   // amphi keeps its iota
+    ['e)n-r(a/ptw', 'ἐνράπτω'],          // en keeps nu before rho
+    ['su/n-zeu/gnumi', 'συζεύγνυμι'],    // sun > su before zeta
+    ['su/n-site/w', 'συσσιτέω'],          // sun > sus before sigma + vowel
+    ['su/n-skeua/zw', 'συσκευάζω'],      // sun > su before sigma + consonant
+    ['a)na/-r(e/w', 'ἀναρρέω'],           // rho doubles after a vowel
+    ['su/n-r(e/w', 'συρρέω'],
+    ['peri/-ei)mi/', 'περίειμι'],          // eimi compounds: recessive
+    ['u(pe/r-ei)mi/', 'ὑπέρειμι'],
+    ['pa/r-ei)mi/', 'πάρειμι'],
+    ['e)n-a)po/-ei)mi/', 'ἐνάπειμι'],
+    ['-u(/w', 'ὕω'],                        // no preverb: breathing stays
+  ])('joins %s as %s', (key, head) => {
+    expect(resolveHead(key, key, none)).toBe(head);
+  });
+
   it('converts an LSJ head that is itself Beta Code', () => {
     expect(resolveHead('a)h/th', 'a)h/th', k => (k === 'a)h/th' ? 'a)h/th' : null))).toBe('ἀήτη');
   });
