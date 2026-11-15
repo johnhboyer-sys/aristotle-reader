@@ -86,17 +86,13 @@ every screen) · narrow margins (kept) · whole lines · less glare (kept, sitew
 sideways bar · two combinations. Round 3 (phone only): parallel Both at Gentium 18px, quiet bar, English in ink with
 its Bekker numbers in the right margin, column label in the left margin; wrap as a unit kept.
 
-## Next
+## Next (15 Nov 15:35)
 
-1. Update the flip page: mark round 3's wrap as a unit kept (the page still shows it unmarked).
-2. Still unruled from round 2: whole lines on desktop (Greek 510px; English narrows), phone English in ink (moot if
-   parallel puts both in ink, as round 3 does), shorter sideways bar (44px). Ask, or show them again combined.
-3. Round 4: everything kept, combined, on all screens; then one Opus and one Codex review of it (fresh agents,
-   findings only; brief pattern in `review-brief.md`; say the site numbers every fifth line).
-4. Show the sitewide less-glare colours on home, work, search, and lexicon pages before any build.
-5. Gentium's line-number baseline: the `.b-ln` offset formula uses Literata metrics (.4345); check numbers against
-   Gentium baselines before any build.
-6. Not yet shown: chapter openings, footnote markers, Greek-only and English-only views, and the book head (BOOK I).
+The design rounds are over; every question here is ruled. The build is in `HANDOFF-REDESIGN-BUILD.md` §0–§2,
+which points back to the sections below for each ruling. The 13 Nov list that stood here is done or ruled:
+round 3 kept, round 2's open items ruled (whole lines became the Full Greek lines setting; shorter
+sideways bar kept), round 4 reviewed, sitewide colours shown and kept, the Gentium baseline is a build
+fix, and the unshown states went through rounds 4–7.
 
 ## Standing rules
 
