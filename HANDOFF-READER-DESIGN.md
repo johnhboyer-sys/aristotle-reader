@@ -330,3 +330,4 @@ outlines; small specks dropped). Two pale stains in the ground are left as print
   widening, and the two tines have their own traces (horns.json: L, R, T1, T2). The dark cut-out
   adds the four traces whole, since the horns' pale front halves read as paper to the watershed;
   two paper slivers (by the right tine, behind the head) are seeded out.
+- 15 Nov 15:07, John: "Looks fine now." The 404 plate (light print and dark cut-out) is approved.
