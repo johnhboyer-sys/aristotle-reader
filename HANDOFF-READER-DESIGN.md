@@ -218,3 +218,20 @@ compound joined (hyphen and the breathing after it dropped), else convert with
   before cutting any.
 - Search build: no decisions open (the seven questions were ruled 14 Nov
   morning); it waits only for John's go.
+
+## Round 5 rulings (John, 14 Nov 21:26), page https://claude.ai/artifact/YTgw2GayXo34PWbpBnVMo5
+
+Kept, every screen it was shown on (CSS in shoot-r4.mjs, the round 5 block):
+- A compact book head (48 desktop / 40 phone / 28 sideways; padding 24 / 12 / 12).
+- B 36px above a chapter head on desktop, 24 on the phone upright and sideways.
+- C phone: wrapped Greek hangs 8px, not 18.
+- D 1100-1399px: right margin 20, column gap 48.
+- E sideways: margins 52 / 16, column gap 48.
+- F Greek only: a 540px column centred (desktop and sideways).
+- G Greek only and English only: a paragraph is an indent, no blank space (`.para-br` height 0).
+- I dark: the book-head rule 1px #8f8e8a.
+- J phone Both: English line-height 27px.
+- K phone: the view choice in the bar where search was; search moves to the contents menu.
+- L phone: 8px more left margin (Both 48, single views 54).
+Open: H (chapter title in the bar below 1400) and the short work name "Ethics",
+which does not tell the Nicomachean from the Eudemian.
