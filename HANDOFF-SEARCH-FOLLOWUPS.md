@@ -28,6 +28,8 @@ State on 16 Nov, end of the counting session:
   - Gate R-S7 rewritten to those numbers; `--prove` catches 9 of 9 cases. Two Codex reviews (gpt-6.1-sol,
     medium), and a third on the last fixes; all findings fixed. The last four have tests 6–8 in `search-chapter-draw.test.ts`, except
     partial marks when a row's words run past its window (finding 3), which has none.
+- **A is built: PR #198, merged 16 Nov** (the switch, the split rows, "and/or" by default, old links kept
+  as "and"). Next: B (nested list), D (rows, the 100 page), C (phrases), each its own PR.
 - **PR 2 onward: John's four questions** in the picture page,
   https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
   of git: 3.6 MB of JPEGs).
@@ -59,9 +61,10 @@ State on 16 Nov, end of the counting session:
     `citationsFor`; John, 16 Nov: "Yes, replace it"), which lists references alone.
   - **C is ruled (John, 16 Nov): Exclude only, no Include.** "Why doesn't the user just search that
     exact phrase with the 'exact phrase' setting?" An Include gives the hits an exact-phrase search
-    gives, so it goes, and with it the question of which wins an overlap (C4/C5). Still his to confirm,
-    choices the pictures made: an Exclude lowers other phrases' counts; rows do not re-sort; the badge;
-    "by virtue of" shows 32 hits, not 45.
+    gives, so it goes, and with it the question of which wins an overlap (C4/C5). And (John, 16 Nov):
+    an Exclude lowers the counts of phrases that overlap it ("virtue of the" 108 → 60 with "in virtue
+    of" excluded); the rows keep their order after an Exclude; on the phone the Filter button carries
+    a badge while a phrase is excluded. The phrase list does not exist on the site yet: C is new work.
 - **Follow-ups:** the desktop app's corpus needs `search/eng-chapters.json` too (without it English hits
   fall in the chapter their section's Greek opens in); three svelte-check errors in
   `app/src/__tests__/lemma-head.test.ts` predate this branch; the smaller items in §4.
