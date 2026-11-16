@@ -122,3 +122,35 @@ it('warns when a work\'s chapters did not load', async () => {
   const c = await open(book([line(1, 'λόγος ἀρετή')], 'Virtue here.'), [r], 'g=λόγος');
   await vi.waitFor(() => expect(c.querySelector('.sx-note.warn')).toHaveTextContent(/The chapters of .+ did not load/));
 });
+
+// 6. A whole section split by a chapter start: each row marks the English of
+// its own chapter only (Codex review 2, 16 Nov).
+it('marks only its own chapter\'s English in each row of a split section', async () => {
+  const { loadOffsets, loadEngChapters } = await import('../lib/search');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(10));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [2, '2']] } });
+  const r: SearchResult = { ...base, grkMatch: true, engMatch: true, grkPositions: [3, 15],
+    engHits: [{ translation: 'rackham', positions: [0, 2] }] };
+  const c = await open(book(Array.from({ length: 22 }, (_, i) => line(i + 1, 'α')), 'Virtue one. Virtue two.'),
+    [r], 'g=α&e=virtue&ctx=s&ps=20');
+  await vi.waitFor(() => expect(headings(c)).toEqual(['Chapter 1', 'Chapter 2']));
+  const rows = [...c.querySelectorAll('li.instance')];
+  expect(rows).toHaveLength(2);
+  expect(rows.map(i => [...i.querySelectorAll('.inst-en mark')].map(m => m.textContent))).toEqual([['Virtue'], ['Virtue']]);
+  expect(rows.map(i => i.querySelectorAll('.greek mark').length)).toEqual([1, 1]);
+});
+
+// 7. Two runs of a phrase overlap across a chapter start: the shared word is
+// marked in both rows (Codex review 2, 16 Nov).
+it('marks a word two overlapping phrase runs share in each run\'s row', async () => {
+  const { loadOffsets, loadEngChapters } = await import('../lib/search');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(20));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [1, '2']] } });
+  const r: SearchResult = { ...base, grkMatch: false, engMatch: true, grkPositions: [],
+    engHits: [{ translation: 'english', positions: [0, 1, 2], matches: [0, 1] }] };
+  const c = await open(book([line(1, 'α')], 'Ha ha ha.'), [r], 'e=%22ha%20ha%22&em=phrase');
+  await vi.waitFor(() => expect(headings(c)).toEqual(['Chapter 1', 'Chapter 2']));
+  const rows = [...c.querySelectorAll('li.instance')];
+  expect(rows.map(i => [...i.querySelectorAll('.inst-en mark')].map(m => m.textContent).join(' ').trim().toLowerCase()))
+    .toEqual(['ha ha', 'ha ha']);
+});

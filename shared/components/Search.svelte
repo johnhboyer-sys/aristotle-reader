@@ -2510,7 +2510,8 @@
       const i = start === undefined ? -1 : cw.findIndex(x => x.start === start - at + lead);
       if (i >= 0) marks.add(i);
     }
-    return marks.size === words.length ? markWordsHtml(clipped, marks) : null;
+    // Words past the window's edge are not drawn, and not marked.
+    return marks.size ? markWordsHtml(clipped, marks) : null;
   }
 
   // Build the Stephanus-page groups for a slice of results: load the books and
@@ -2718,30 +2719,38 @@
           const starts: number[] = [];
           texts.reduce((n, text) => { starts.push(n); return n + englishWords(text).length; }, 0);
           // A phrase is counted where its first word stands (eachHit), and
-          // its every word is drawn there.
+          // its every word is drawn there; a word two phrases share, in the
+          // chapter of each.
           const heads = [...(hit.matches ?? [])].sort((a, b) => a - b);
-          const headOf = (w: number) => heads.filter(m => m <= w).at(-1) ?? w;
+          const span = Math.max(1, ...(ctx.engPhrase ? [ctx.engUnits.flat().length] : ctx.engUnits.map(u => u.length)));
+          const chaptersOf = (w: number): ChapterAt[] => {
+            const own = heads.filter(m => m <= w && w < m + span);
+            const at = (own.length ? own : [heads.filter(m => m <= w).at(-1) ?? w]).map(m => places.eng(r, t.id, m));
+            return at.filter((a, i) => at.findIndex(b => b.key === a.key) === i);
+          };
           for (const w of marked) {
-            if (!sectionOnPage(places.eng(r, t.id, headOf(w)))) continue;
             let k = starts.length - 1;
             while (k > 0 && starts[k] > w) k--;
-            const key = `${pair}:${t.id}:${seg.id}:${k}`;
-            (held.get(key) ?? held.set(key, new Set()).get(key)!).add(w - starts[k]);
+            for (const at of chaptersOf(w)) {
+              if (!sectionOnPage(at)) continue;
+              // By chapter too: a section a chapter starts in is a row in each.
+              const key = `${pair}:${t.id}:${seg.id}:${k}:${at.key}`;
+              (held.get(key) ?? held.set(key, new Set()).get(key)!).add(w - starts[k]);
+            }
           }
           // By unit, and within a unit by chapter: a unit across a chapter's
           // start is two instances, each under the chapter its words count in.
           const byUnit = new Map<string, { unit: PairUnit; at: ChapterAt; words: number[] }>();
           const units = new Map<PairUnit, number>();
           const split = new Map<PairUnit, number>();   // a unit's chapters
-          const file = (w: number, words: number[]) => {
+          const file = (w: number, words: number[], at: ChapterAt) => {
             const unit = unitAtEnglish(ix, seg, t, w);
-            const at = places.eng(r, t.id, headOf(w));
             const key = `${units.get(unit) ?? units.set(unit, units.size).get(unit)}:${at.key}`;
             if (!byUnit.has(key)) split.set(unit, (split.get(unit) ?? 0) + 1);
             (byUnit.get(key) ?? byUnit.set(key, { unit, at, words: [] }).get(key)!).words.push(...words);
           };
-          for (const w of marked) file(w, [w]);
-          if (!marked.length) file(0, []);
+          for (const w of marked) for (const at of chaptersOf(w)) file(w, [w], at);
+          if (!marked.length) file(0, [], places.eng(r, t.id, 0));
           // What the hit counts for is the index's to say (engHitCount). Where
           // the marks are the index's positions, each unit counts its own (a
           // phrase where its first word stands); otherwise the whole count
@@ -2752,7 +2761,8 @@
           const exact = marked.length > 0 && marked.length === found.size && marked.every(w => found.has(w));
           let k = 0;
           for (const { unit, at, words } of byUnit.values()) {
-            const n = exact ? words.reduce((sum, w) => sum + (counted.get(w) ?? 0), 0) : k ? 0 : engHitCount(hit);
+            // A word filed in two chapters counts in the one its match starts in.
+            const n = exact ? words.reduce((sum, w) => sum + (places.eng(r, t.id, w).key === at.key ? counted.get(w) ?? 0 : 0), 0) : k ? 0 : engHitCount(hit);
             k++;
             const line = firstLine(unit);
             const display = { ...pairContext(ix, seg, unit, textContext) };
@@ -2933,14 +2943,14 @@
     // section and holding all its hits, so the Greek and the English widen
     // together (John, 2026-11-09: "Both, to the section").
     const placed = made.filter(m => !merged.has(m.inst) && sectionOnPage(m.inst.ch!));
-    const bySection = new Map<string, { work: string; book: number; column: string; insts: Instance[] }>();
+    const bySection = new Map<string, { work: string; book: number; column: string; ch: string; insts: Instance[] }>();
     // A section a chapter starts in is filed once in each chapter, with
     // that chapter's hits.
     for (const { work, book, inst } of placed) {
       const key = `${work}:${book}:${inst.column}:${inst.ch!.key}`;
-      (bySection.get(key) ?? bySection.set(key, { work, book, column: inst.column, insts: [] }).get(key)!).insts.push(inst);
+      (bySection.get(key) ?? bySection.set(key, { work, book, column: inst.column, ch: inst.ch!.key, insts: [] }).get(key)!).insts.push(inst);
     }
-    for (const { work, book, column, insts } of bySection.values()) {
+    for (const { work, book, column, ch, insts } of bySection.values()) {
       const pair = `${work}:${book}`;
       const seg = books.get(pair)!.segments.find(x => x.column === column);
       if (!seg) continue;
@@ -2958,7 +2968,7 @@
       const sectionHtml = (t: TranslationRef) => books.get(pair)!.segments
         .flatMap(s => piecesOf(pair, ix, s, t).map((piece, k) => ({ ...piece, key: `${pair}:${t.id}:${s.id}:${k}` })))
         .filter(piece => piece.section === column)
-        .map(piece => markWordsHtml(piece.text, held.get(piece.key) ?? new Set()).trim())
+        .map(piece => markWordsHtml(piece.text, held.get(`${piece.key}:${ch}`) ?? new Set()).trim())
         .filter(Boolean).join(' ');
       const rows = ts.filter(t => matched.has(t.id)).map((t): TransRow => ({
         translation: t.id, label: t.short, title: t.name,

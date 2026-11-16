@@ -9,9 +9,35 @@ for PR 1 below, so the readers are ported once, with the new counting.
 
 ## 0. Start here
 
-- **PR 1: counting, pages, phrases, and page 67** (§1–§3). John ruled the model on 15–16 Nov; it is not
-  built.
-- **PR 2 onward: the smaller search follow-ups** (§4). Each is its own PR, unless two touch the same lines.
+State on 16 Nov, end of the counting session:
+
+- **PR 1 is #197** (branch `claude/search-counting-bf1064`): page 67 and every part John has ruled.
+  - Counts chapters, not columns. Both + "and" means both terms anywhere in one chapter
+    (`chapterJoin`, `lib/chapter-pages.ts`). Greek hits are words. English hits show only with one
+    translation per work. Both counts Greek hits only.
+  - Page 67: a hit is now put in its chapter once (`chapterPlaces`), and pages, counts, and drawing all
+    read that one place. Tests: `shared/__tests__/search-pages.test.ts` (page 67),
+    `chapter-join.test.ts`, `search-chapter-draw.test.ts`.
+  - English words find their chapter through a new index file, `search/eng-chapters.json`
+    (`stage6_search.py`, `segment_chapter_starts`; slot → section → `[word, chapter]` starts).
+  - Measured on the built site, ἀρετή + virtue: Both 229 chapters · 940 hits · 84 pages (was "311
+    passages", 2,952 hits, 83 pages). Either: 438 chapters · 967 hits. English virtue, every translation:
+    415 chapters and no hit total (was 2,394 hits). `docs/search-counting/brute.mjs` counts the same
+    from the books, outside the page. `counts-2026-11-16.json` against `counts-base-2026-11-15.json`:
+    every Greek search keeps its old total, now as its hits.
+  - Gate R-S7 rewritten to those numbers; `--prove` catches 9 of 9 cases. Two Codex reviews (gpt-6.1-sol,
+    medium); all findings fixed. The last three have tests 6–7 in `search-chapter-draw.test.ts`, except
+    partial marks when a row's words run past its window (finding 3), which has none.
+- **PR 2 waits on John:** the four questions in the picture page,
+  https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
+  of git: 3.6 MB of JPEGs). A: how the bar splits chapters against the and/or switch. B: the English
+  "in more than one: N of M" line. C: phrase Include/Exclude and which wins an overlap. D: pages by
+  chapters or by rows. Also his to confirm, choices the pictures made: the "only one" label; an Exclude
+  lowers other phrases' counts while an Include changes none; rows do not re-sort; the badge; "by virtue
+  of" shows 32 hits, not 45.
+- **Follow-ups:** the desktop app's corpus needs `search/eng-chapters.json` too (without it English hits
+  fall in the chapter their section's Greek opens in); three svelte-check errors in
+  `app/src/__tests__/lemma-head.test.ts` predate this branch; the smaller items in §4.
 - **Rules that carry over:** no explainer text in the reader or the results; never shrink type or tap
   targets (44px); styles go in `b-search.css`; implementation and review are never the same model family
   (a Claude edit gets a Codex review); pass `model:` on every Agent spawn; Grok is benched (John, 11 Nov);
