@@ -224,3 +224,21 @@ it('runs a new Greek and English search as "and/or" by default', async () => {
   await vi.waitFor(() => expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters\s*2 hits\b/));
   expect(new URLSearchParams(window.location.search).get('op')).toBe('or');
 });
+
+// 13. "and" with no chapter holding both languages finds nothing, and the
+// split still says where the hits are (Codex review, 16 Nov).
+it('keeps the split rows when "and" finds no chapter with both', async () => {
+  const { loadOffsets, loadEngChapters, search } = await import('../lib/search');
+  const { fetchBook, fetchChapters } = await import('../lib/data');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(10));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [2, '2']] } });
+  vi.mocked(fetchBook).mockResolvedValue(book(Array.from({ length: 22 }, (_, i) => line(i + 1, 'α')), 'Virtue one. Two.'));
+  vi.mocked(fetchChapters).mockResolvedValue({ '1': [{ column: '70a', chapter: '1', line: '1', bekker: '70a' }] });
+  // Greek in chapter 2 only; English in chapter 1 only.
+  vi.mocked(search).mockResolvedValue({ results: [{ ...base, grkMatch: true, engMatch: true, grkPositions: [15],
+    engHits: [{ translation: 'rackham', positions: [0] }] }], failedWorks: [] });
+  window.history.replaceState(null, '', '/search?g=α&e=virtue&op=and');
+  const { container: c } = render(Search);
+  await vi.waitFor(() => expect(c.textContent).toMatch(/No passages found/));
+  await vi.waitFor(() => expect(splitOf(c)).toEqual(['Greek and English 0', 'Greek only 1 off', 'English only 1 off']));
+});

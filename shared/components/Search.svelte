@@ -5006,7 +5006,7 @@
             </button>
           {/if}
         </div>
-        {#if splitRows.length && totalInstances > 0}
+        {#if split && split.chapters > 0}
           <ul class="sx-split">
             {#each splitRows as row (row.label)}
               <li class="i" class:off={!row.on}><span class="i-t">{row.label}</span><small>{row.n}</small></li>
