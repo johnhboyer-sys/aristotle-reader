@@ -157,24 +157,28 @@ describe('Search.svelte: the side column', () => {
 
   it('shows the count once, and the status region still announces it', async () => {
     const { container } = await open(G);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('6 hits'));
     // The number and its word are spans of one line (r34-02: the number large).
     const shown = container.querySelectorAll('.result-count');
     expect(shown).toHaveLength(1);
-    expect(text(shown[0])).toBe('6 instances');
-    expect(text(shown[0].querySelector('.rc-n'))).toBe('6');
-    expect(text(shown[0].querySelector('.rc-w'))).toBe('instances');
+    // The bar counts chapters, then Greek hits (John, 15-16 Nov); the " · " between is drawn by CSS.
+    expect(text(shown[0])).toBe('2 chapters6 hits');
+    expect(text(shown[0].querySelector('.rc-n'))).toBe('2');
+    expect(text(shown[0].querySelector('.rc-w'))).toBe('chapters');
+    expect(text(shown[0].querySelector('.rc-hits'))).toBe('6 hits');
     expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 
   it('says "of N · restore all forms" under the count while forms are set aside, and restores them', async () => {
     const { search } = await import('../lib/search');
-    const { container } = await open(`${G}&xf=ths`);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('4 instances'));
+    // "of N" counts chapters (John, 15-16 Nov), so the forms set aside must take
+    // a chapter with them: Int holds only esti and ths, EN keeps tais.
+    const { container } = await open(`${G}&xf=esti,ths`);
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 chapter · 1 hit'));
     const of = container.querySelector('.sx-head .sx-of')!;
-    expect(text(of)).toBe('of 6 · restore all forms');
+    expect(text(of)).toBe('of 2 · restore all forms');
     await fireEvent.click(within(of as HTMLElement).getByRole('button', { name: 'restore all forms' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 chapters · 6 hits'));
     expect(window.location.search).not.toContain('xf=');
     expect(container.querySelector('.sx-of')).toBeNull();
     expect(search).toHaveBeenCalledTimes(1);
@@ -188,7 +192,7 @@ describe('Search.svelte: the side column', () => {
     expect(box.querySelectorAll('button.i')).toHaveLength(3);
     expect(within(trans).queryByRole('button', { name: /more$|^fewer$/ })).toBeNull();
     await fireEvent.click(within(trans).getByRole('button', { name: /^Rackham/ }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent(/4 (?:instances?|hits)/));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 chapter · 4 hits'));
     expect(within(trans).getByRole('button', { pressed: true }).querySelector('.i-x')).toHaveTextContent('×');
   });
 });
@@ -205,7 +209,7 @@ describe('Search.svelte: "This search"', () => {
   // Filter badge counts them; display settings are View's.
   it('lists exactly what narrows the results, in the order of the controls', async () => {
     await open(`${G}&e=one&t=rackham&wf=EN&xf=tais&gf=case.gen&v=form&so=form&ctx=1&ps=20&sp=only&sn=EN`, BILINGUAL);
-    await vi.waitFor(() => expect(status()).toHaveTextContent(/\d+ (?:instances?|hits)/));
+    await vi.waitFor(() => expect(status()).toHaveTextContent(/\d+ hits?/));
     // Round 34: the rail undoes each where it is set, with no summary.
     expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
     await openSheet();
@@ -233,22 +237,22 @@ describe('Search.svelte: "This search"', () => {
   // nothing is searched again.
   const cases: { what: string; url: string; results?: SearchResult[]; before: string; after: string; param: string; control: () => void }[] = [
     {
-      what: 'Nicomachean Ethics', url: `${G}&wf=EN`, before: '4 instances', after: '6 instances', param: 'wf=',
+      what: 'Nicomachean Ethics', url: `${G}&wf=EN`, before: '4 hits', after: '6 hits', param: 'wf=',
       control: () => expect(pressed('Show hits from one work')).toEqual([]),
     },
     {
-      what: 'Rackham', url: `${G}&e=one&t=rackham`, results: BILINGUAL, before: '4 instances', after: '9 instances', param: 't=',
+      what: 'Rackham', url: `${G}&e=one&t=rackham`, results: BILINGUAL, before: '4 hits', after: '6 hits', param: 't=',
       control: () => expect(pressed('Show English hits from one translation')).toEqual([]),
     },
     {
-      what: '1 form set aside', url: `${G}&xf=ths`, before: '4 instances', after: '6 instances', param: 'xf=',
+      what: '1 form set aside', url: `${G}&xf=ths`, before: '4 hits', after: '6 hits', param: 'xf=',
       control: () => {
         const boxes = within(screen.getByRole('group', { name: 'Greek forms found' })).getAllByRole('checkbox') as HTMLInputElement[];
         expect(boxes.map(b => b.checked)).toEqual([true, true, true]);
       },
     },
     {
-      what: 'Case gen', url: `${L}&v=grammar&gf=case.gen`, before: '2 instances', after: '6 instances', param: 'gf=',
+      what: 'Case gen', url: `${L}&v=grammar&gf=case.gen`, before: '2 hits', after: '6 hits', param: 'gf=',
       control: () => {
         expect((within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case gen' }) as HTMLInputElement).checked).toBe(false);
         // The view, also chosen, stays.
@@ -278,10 +282,10 @@ describe('Search.svelte: "This search"', () => {
   it('clears every filter at once, without a new search, and leaves the display as it is', async () => {
     const { search } = await import('../lib/search');
     await open(`${L}&wf=EN&xf=tais&v=grammar&gf=case.gen&so=form&ctx=1&ps=20`);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 hit'));
     await openSheet();
     await fireEvent.click(within(summary()).getByRole('button', { name: 'Clear all' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('6 hits'));
     expect(chosen()).toEqual([]);
     expect(window.location.search).not.toMatch(/[?&](wf|xf|gf)=/);
     expect(window.location.search).toMatch(/[?&]v=grammar(&|$)/);
@@ -383,13 +387,14 @@ describe('Search.svelte: the Filter sheet', () => {
     expect(document.activeElement).toBe(filter());
   });
 
-  it('uses passages in the Filter foot for Both, with hits named in the results bar', async () => {
+  // John, 15-16 Nov: the foot counts chapters; the bar adds the Greek hits.
+  it('uses chapters in the Filter foot for Both, with hits named in the results bar', async () => {
     await open(`${G}&e=one`, BILINGUAL);
     await fireEvent.click(filter());
     const sheet = await screen.findByRole('dialog', { name: 'Filter' });
-    expect(within(sheet).getByRole('button', { name: 'Show 3 passages' })).toBeInTheDocument();
-    expect(within(sheet).queryByRole('button', { name: 'Show 9 instances' })).toBeNull();
-    expect(status()).toHaveTextContent('3 passages · 9 hits');
+    expect(within(sheet).getByRole('button', { name: 'Show 2 chapters' })).toBeInTheDocument();
+    expect(within(sheet).queryByRole('button', { name: 'Show 6 hits' })).toBeNull();
+    expect(status()).toHaveTextContent('2 chapters · 6 hits');
   });
 
   it('lists the filters as a menu, each with what is set, and no filter itself', async () => {
@@ -401,7 +406,8 @@ describe('Search.svelte: the Filter sheet', () => {
     for (const name of ['Show hits from one work', 'Greek forms found', 'Narrow by grammar']) {
       expect(within(sheet).queryByRole('group', { name })).toBeNull();
     }
-    expect(within(sheet).getByRole('button', { name: 'Show 6 instances' })).toBeInTheDocument();
+    // The foot counts chapters (John, 15-16 Nov): EN's book and Int's.
+    expect(within(sheet).getByRole('button', { name: 'Show 2 chapters' })).toBeInTheDocument();
   });
 
   it('puts "This search" at the head of the menu when something is chosen, and only then', async () => {
@@ -413,7 +419,7 @@ describe('Search.svelte: the Filter sheet', () => {
     expect(chosen()).toEqual(['Nicomachean Ethics']);
     expect(text(within(sheet).getByRole('button', { name: /^Works/ }))).toBe('Works Nicomachean Ethics ›');
     await fireEvent.click(remove('Nicomachean Ethics'));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('6 hits'));
     sheet = screen.getByRole('dialog', { name: 'Filter' });
     expect(within(sheet).queryByRole('group', { name: 'This search' })).toBeNull();
   });
@@ -429,7 +435,7 @@ describe('Search.svelte: the Filter sheet', () => {
     expect(within(sheet).queryByRole('button', { name: /^Forms/ })).toBeNull();
     // A choice applies at once, and the screen stays.
     await fireEvent.click(within(within(sheet).getByRole('group', { name: 'Show hits from one work' })).getByRole('button', { name: /^Nicomachean Ethics/ }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('4 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('4 hits'));
     expect(screen.getByRole('dialog', { name: 'Works' })).toBeInTheDocument();
     expect(window.location.search).toContain('wf=EN');
     expect(search).toHaveBeenCalledTimes(1);
@@ -441,14 +447,14 @@ describe('Search.svelte: the Filter sheet', () => {
 
   // S5b (q08): the foot's button applies the ticks and shows the hits they
   // leave, counted before it is pressed.
-  it('keeps Deselect all and "Show N instances" at the foot of the forms screen', async () => {
+  it('keeps Deselect all and "Show N chapters" at the foot of the forms screen', async () => {
     await open(G);
     await fireEvent.click(filter());
     await fireEvent.click(within(await screen.findByRole('dialog', { name: 'Filter' })).getByRole('button', { name: /^Forms/ }));
     const sheet = await screen.findByRole('dialog', { name: 'Forms' });
     const foot = sheet.querySelector('.sx-foot')!;
     expect(foot).toHaveClass('sheet-foot');
-    expect([...foot.querySelectorAll('button')].map(text)).toEqual(['Deselect all', 'Show 6 instances']);
+    expect([...foot.querySelectorAll('button')].map(text)).toEqual(['Deselect all', 'Show 2 chapters']);
     expect(within(sheet).getAllByRole('checkbox')).toHaveLength(3);
   });
 
@@ -461,12 +467,19 @@ describe('Search.svelte: the Filter sheet', () => {
     const sheet = await screen.findByRole('dialog', { name: 'Forms' });
     const boxes = within(sheet).getAllByRole('checkbox');
     await fireEvent.click(boxes.find(b => /ται/.test(b.closest('label')!.textContent!))!);
-    const show = within(sheet).getByRole('button', { name: /^Show \d+ instances?$/ });
-    expect(text(show)).toBe('Show 5 instances');
-    expect(status()).toHaveTextContent('6 instances');
+    const show = within(sheet).getByRole('button', { name: /^Show \d+ chapters?$/ });
+    // The button counts chapters (John, 15-16 Nov): ταῖς is EN's, whose other
+    // hits stay in the same chapter, so nothing leaves yet.
+    expect(text(show)).toBe('Show 2 chapters');
+    // Tick ταῖς again and set aside the others: Int holds only ἐστί and τῆς, so
+    // its chapter goes, and EN's stays on ταῖς.
+    await fireEvent.click(boxes.find(b => /ται/.test(b.closest('label')!.textContent!))!);
+    for (const b of boxes.filter(b => !/ται/.test(b.closest('label')!.textContent!))) await fireEvent.click(b);
+    expect(text(show)).toBe('Show 1 chapter');
+    expect(status()).toHaveTextContent('2 chapters · 6 hits');
     await fireEvent.click(show);
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 chapter · 1 hit'));
     expect(window.location.search).toContain('xf=');
     expect(document.activeElement).toBe(filter());
   });
@@ -482,7 +495,7 @@ describe('Search.svelte: the Filter sheet', () => {
     expect(rows[0]).toHaveAttribute('aria-pressed', 'false');
     expect(rows.filter(r => r.getAttribute('aria-pressed') === 'true').map(r => text(r.querySelector('.i-t')))).toEqual(['Nicomachean Ethics']);
     await fireEvent.click(rows[0]);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('6 hits'));
     expect(window.location.search).not.toContain('wf=');
     expect(within(sheet).getByRole('button', { name: 'All works' })).toHaveAttribute('aria-pressed', 'true');
     // Pressed again, All works changes nothing.
@@ -498,18 +511,18 @@ describe('Search.svelte: the Filter sheet', () => {
     const clear = within(sheet).getByRole('button', { name: 'Clear' });
     expect(clear).toBeDisabled();
     await fireEvent.click(within(sheet).getByRole('checkbox', { name: 'Case gen' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 hits'));
     expect(clear).not.toBeDisabled();
     await fireEvent.click(clear);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('6 hits'));
     expect(window.location.search).not.toContain('gf=');
   });
 
-  it('shuts from "Show N instances" and hands focus back', async () => {
+  it('shuts from "Show N chapters" and hands focus back', async () => {
     await open(G);
     await fireEvent.click(filter());
     const sheet = await screen.findByRole('dialog', { name: 'Filter' });
-    await fireEvent.click(within(sheet).getByRole('button', { name: 'Show 6 instances' }));
+    await fireEvent.click(within(sheet).getByRole('button', { name: 'Show 2 chapters' }));
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(document.activeElement).toBe(filter());
   });
@@ -677,7 +690,7 @@ describe('Search.svelte: the Filter sheet and the page behind it', () => {
     vi.mocked(search).mockResolvedValueOnce({ results: RESULTS, failedWorks: [] });
     await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'εἰμί' } });
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('6 hits'));
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Greek any form",
+    "url": "http://127.0.0.1:4391/search?g=%E1%BC%80%CF%81%CE%B5%CF%84%CE%AE",
+    "total": 252,
+    "hits": 967,
+    "pages": 29,
+    "shown": "252 chapters · 967 hits · page 1 of 29"
+  },
+  {
+    "name": "English virtue",
+    "url": "http://127.0.0.1:4391/search?e=virtue",
+    "total": 415,
+    "hits": null,
+    "pages": 66,
+    "shown": "415 chapters · page 1 of 66"
+  },
+  {
+    "name": "Greek any word",
+    "url": "http://127.0.0.1:4391/search?g=%E1%BC%80%CF%81%CE%B5%CF%84%CE%AE+%E1%BC%95%CE%BE%CE%B9%CF%82&gm=any",
+    "total": 431,
+    "hits": 1514,
+    "pages": 42,
+    "shown": "431 chapters · 1514 hits · page 1 of 42"
+  },
+  {
+    "name": "Exact phrase",
+    "url": "http://127.0.0.1:4391/search?g=%CF%84%E1%BD%B8+%CF%84%CE%AF+%E1%BC%A6%CE%BD+%CE%B5%E1%BC%B6%CE%BD%CE%B1%CE%B9&gm=phrase&m=form",
+    "total": 51,
+    "hits": 102,
+    "pages": 3,
+    "shown": "51 chapters · 102 hits · page 1 of 3"
+  },
+  {
+    "name": "Virtue near habit",
+    "url": "http://127.0.0.1:4391/search?c=l%3Aareth&c=l%3Aecis&cw=10",
+    "total": 30,
+    "hits": 55,
+    "pages": 2,
+    "shown": "30 chapters · 55 hits · page 1 of 2"
+  },
+  {
+    "name": "Accents observed",
+    "url": "http://127.0.0.1:4391/search?g=%E1%BC%80%CF%81%CE%B5%CF%84%CE%AE&acc=1",
+    "total": 50,
+    "hits": 78,
+    "pages": 3,
+    "shown": "50 chapters · 78 hits · page 1 of 3"
+  },
+  {
+    "name": "Running text",
+    "url": "http://127.0.0.1:4391/search?g=%CE%BB%CE%BF%CE%B3&m=text",
+    "total": 1158,
+    "hits": 5398,
+    "pages": 152,
+    "shown": "1158 chapters · 5398 hits · page 1 of 152"
+  },
+  {
+    "name": "Genitive plural near virtue",
+    "url": "http://127.0.0.1:4391/search?c=g%3Acase.gen%2Cnumber.pl&c=l%3Aareth&cw=10",
+    "total": 176,
+    "hits": 768,
+    "pages": 21,
+    "shown": "176 chapters · 768 hits · page 1 of 21"
+  },
+  {
+    "name": "Authentic works",
+    "url": "http://127.0.0.1:4391/search?g=%E1%BC%80%CF%81%CE%B5%CF%84%CE%AE&w=auth",
+    "total": 208,
+    "hits": 736,
+    "pages": 21,
+    "shown": "208 chapters · 736 hits · page 1 of 21"
+  },
+  {
+    "name": "Mock-up authentic list (Isagoge kept)",
+    "url": "http://127.0.0.1:4391/search?g=%E1%BC%80%CF%81%CE%B5%CF%84%CE%AE&w=-Oec%2CMM%2CProb%2CVV%2CDM%2CMech%2CCol%2CPhgn%2CPlant%2CMXG%2CAud%2CLin%2CSpir%2CVent%2CMirab%2CRhetAl",
+    "total": 208,
+    "hits": 736,
+    "pages": 21,
+    "shown": "208 chapters · 736 hits · page 1 of 21"
+  },
+  {
+    "name": "Or: either pleasure or pain near virtue (EN, EE; 17)",
+    "url": "http://127.0.0.1:4391/search?c=l%3Aareth&c=l%3Ahdonh&c=lo%3Aluph&w=EN%2CEE",
+    "total": 11,
+    "hits": 17,
+    "pages": 1,
+    "shown": "11 chapters · 17 hits"
+  },
+  {
+    "name": "Term from term: pain near pleasure near virtue (EN, EE; 7)",
+    "url": "http://127.0.0.1:4391/search?c=l%3Aareth&c=l%3Ahdonh&c=l2%3Aluph&w=EN%2CEE",
+    "total": 4,
+    "hits": 7,
+    "pages": 1,
+    "shown": "4 chapters · 7 hits"
+  },
+  {
+    "name": "Not near: pleasure before virtue, no pain (EN, EE; 6)",
+    "url": "http://127.0.0.1:4391/search?c=l%3Aareth&c=lb%3Ahdonh&c=ln%3Aluph&cw=10&w=EN%2CEE",
+    "total": 5,
+    "hits": 6,
+    "pages": 1,
+    "shown": "5 chapters · 6 hits"
+  },
+  {
+    "name": "Before: habit before virtue (EN, EE; 11)",
+    "url": "http://127.0.0.1:4391/search?c=l%3Aareth&c=lb%3Aecis&w=EN%2CEE",
+    "total": 8,
+    "hits": 11,
+    "pages": 1,
+    "shown": "8 chapters · 11 hits"
+  }
+]

@@ -93,12 +93,12 @@ const at = (column: string, r: Partial<SearchResult>): SearchResult => ({
 const text = (el: Element | null | undefined) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
 const marks = (el: Element) => [...el.querySelectorAll('mark')].map(m => m.textContent);
 
-async function draw(url: string, results: SearchResult[], total: number, props: Record<string, unknown> = {}) {
+async function draw(url: string, results: SearchResult[], total: number | string, props: Record<string, unknown> = {}) {
   const { search } = await import('../lib/search');
   vi.mocked(search).mockResolvedValueOnce({ results, failedWorks: [] });
   window.history.replaceState(null, '', url);
   const { container } = render(Search, { props });
-  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(`${total} instance`));
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(typeof total === 'number' ? `${total} hit` : total));
   await vi.waitFor(() => expect(container.querySelector('li.instance')).not.toBeNull());
   return { container, list: () => [...container.querySelectorAll('li.instance')] };
 }
@@ -127,9 +127,14 @@ describe('Search.svelte S4a: the translations under the English (ruling 18)', ()
     engHits: [{ translation: 'rackham', positions: [3] }, { translation: 'ross', positions: [2, 4] }],
   })];
   const url = '/search?e=four+cuatro+seis&em=any';
+  // EN answers in two translations, so an English-only search shows chapters
+  // and no hit total (John, 15-16 Nov); each translator's count is in the
+  // names under the English.
+  const BAR = '1 chapter';
 
   it('shows one English, the names of those with hits under it, the commonest first', async () => {
-    const { list } = await draw(url, results, 3);
+    const { list } = await draw(url, results, BAR);
+    expect(screen.getByRole('status')).not.toHaveTextContent('hit');
     expect(list()).toHaveLength(2);
     const [li, seis] = list();
     // Ross has two hits on the page to Rackham's one, so leads, and is shown.
@@ -148,7 +153,7 @@ describe('Search.svelte S4a: the translations under the English (ruling 18)', ()
   });
 
   it('a name, clicked, shows its English with its hits marked, in that instance only', async () => {
-    const { list } = await draw(url, results, 3);
+    const { list } = await draw(url, results, BAR);
     const [li, seis] = list();
     await fireEvent.click(screen.getByRole('button', { name: 'Rackham' }));
     await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Rackham' })).toHaveAttribute('aria-pressed', 'true'));
@@ -161,7 +166,7 @@ describe('Search.svelte S4a: the translations under the English (ruling 18)', ()
   });
 
   it('marks words, never the space after them', async () => {
-    const { container } = await draw(url, results, 3);
+    const { container } = await draw(url, results, BAR);
     const all = [...container.querySelectorAll('mark')].map(m => m.textContent!);
     expect(all.length).toBeGreaterThan(0);
     for (const m of all) expect(m).toBe(m.trim());
@@ -176,7 +181,7 @@ describe('Search.svelte S4a: hits that share their lines are one instance', () =
     expect(text(list()[0].querySelector('.inst-ref'))).toBe('70a1');
     expect(list()[0].querySelector('.inst-ref')!.getAttribute('href')).toContain('hlt=70a:0,1');
     // The counts are per hit, as before.
-    expect(text(container.querySelector('.group-count'))).toBe('2 instances');
+    expect(text(container.querySelector('.group-count'))).toBe('2 hits');
   });
 });
 

@@ -108,25 +108,29 @@ describe('paginate', () => {
     expect(shown.filter(s => s.chapter === '2').every(s => s.page === 1)).toBe(true);
   });
 
-  it('keeps a hit under a chapter the offsets do not name with its passage', () => {
+  it('puts a chapter the offsets do not name on the page where the section opens', () => {
     const r = result('SE', 1, '164b', [60]);   // chapter 2
     const laid = paginate([result('SE', 1, '164a', range(0, 40)), r], new Map([['SE', offsets]]), 40);
     expect(laid.pages).toHaveLength(2);
     // 164b opens in chapter 1, so its first page is the first.
     expect(laid.pageOf(r, '—')).toBe(0);
-    expect(laid.pages[0]).toContain(r);
     expect(laid.pageOf(r, '2')).toBe(1);
+    expect(laid.pages[1]).toContain(r);
+    // Its one hit is chapter 2's: the first page has nothing of it to show.
+    expect(laid.pages[0]).not.toContain(r);
   });
 
   it('shows an English hit a translation places one chapter past its column on that chapter\'s page', () => {
     // 164a is all chapter 1 in the Greek, but a translation's slice there can
-    // run into chapter 2, which starts the next page.
+    // run into chapter 2, which starts the next page: its chapter 2 begins at
+    // word 2 (eng-chapters.json).
     const r = result('SE', 1, '164a', [], [[3]]);
     const results = [result('SE', 1, '164a', range(0, 39)), r, result('SE', 1, '164b', [60])];
-    const laid = paginate(results, new Map([['SE', offsets]]), 40);
+    const laid = paginate(results, new Map([['SE', offsets]]), 40, new Map([['SE', { english: { '0': [[2, '2']] } }]]));
     expect(laid.pages).toHaveLength(2);
     expect(laid.pageOf(r, '2')).toBe(1);
     expect(laid.pages[1]).toContain(r);
+    expect(laid.pages[0]).not.toContain(r);
     expect(laid.pageOf(r, '1')).toBe(0);
   });
 
@@ -156,5 +160,32 @@ describe('paginate', () => {
 
   it('makes no pages of no results', () => {
     expect(paginate([], new Map(), 40).pages).toEqual([]);
+  });
+});
+
+// Page 67 of the Both search ἀρετή + virtue drew nothing (16 Nov). Politics
+// 1276b opens in III 3 and its English hits all fall in III 4: the pages
+// counted them in III 3, where the column begins, and the page drew them in
+// III 4, so III 3 had a page to itself with nothing on it. A hit must be
+// counted in the chapter it is drawn in, and every page must draw something.
+describe('paginate: a hit is counted where it is drawn', () => {
+  // 164b's English: words 0–9 end chapter 1; chapter 2 begins at word 10.
+  const eng = new Map([['SE', { english: { '1': [[10, '2']] as [number, string][] } }]]);
+  const pageHits = (laid: ReturnType<typeof paginate>, results: SearchResult[]) =>
+    laid.pages.map((_, i) => results.flatMap(r => [
+      ...r.grkPositions.map(p => chapterOf(r.meta.column, p)),
+      ...(r.engHits ?? []).flatMap(h => h.positions.map(w => (w >= 10 ? '2' : '1'))),
+    ].filter(ch => laid.pageOf(r, ch) === i)).length);
+
+  it('draws something on every page when a column\'s English falls past its chapter', () => {
+    // Chapter 1 has no hit of its own: 164b opens in it, but its English
+    // hits are all chapter 2's.
+    const results = [
+      result('SE', 1, '164b', [], [range(10, 30)]),
+      result('SE', 1, '165a', range(0, 30)),
+    ];
+    const laid = paginate(results, new Map([['SE', offsets]]), 40, eng);
+    expect(pageHits(laid, results)).toEqual([50]);
+    expect(laid.pageOf(results[0], '2')).toBe(laid.pageOf(results[1], '2'));
   });
 });

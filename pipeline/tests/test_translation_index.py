@@ -180,3 +180,48 @@ def test_gate_reports_an_index_for_a_translation_the_books_lack(tmp_path):
 def test_gate_is_silent_for_a_work_with_one_translation(tmp_path):
     work = _work(tmp_path, [_seg("1:1a")])
     assert _gate(work) == []
+
+
+# -- Where each chapter begins in each translation -----------------------------
+#
+# search/eng-chapters.json: slot -> seg_idx -> [[word_pos, chapter], ...]. The
+# results page reads it to put an English hit in its chapter before any book is
+# fetched, so the page count and each page's chapters are known from the index
+# alone, and the page draws a hit under the same chapter it was counted in.
+
+def _chapters(work):
+    return json.loads((work / "search" / "eng-chapters.json").read_text(encoding="utf-8"))
+
+
+def test_the_primary_chapter_start_is_counted_in_words(tmp_path):
+    text = "End of three. Four begins here."
+    seg = _seg("1:1b", english={"text": text},
+               chapterStarts=[{"chapter": "4", "engOffset": text.index("Four")}])
+    work = _work(tmp_path, [seg])
+    emit_translation_indexes(work)
+    assert _chapters(work) == {"english": {"0": [[3, "4"]]}}
+
+
+def test_a_primary_without_a_chapter_start_has_no_entry(tmp_path):
+    work = _work(tmp_path, [_seg("1:1a", english={"text": "All of one chapter."})])
+    emit_translation_indexes(work)
+    assert _chapters(work) == {}
+
+
+def test_each_piece_names_its_chapter_where_the_chapter_changes(tmp_path):
+    work = _work(tmp_path, [
+        _seg("1:1a", ross=[_piece("2", "all two")]),
+        _seg("1:1b", ross=[_piece("3", "end of three", cont=True), _piece("4", "four begins"),
+                           _piece("4", "and goes on")]),
+    ])
+    emit_translation_indexes(work)
+    assert _chapters(work) == {"secondary": {"0": [[0, "2"]], "1": [[0, "3"], [3, "4"]]}}
+
+
+def test_a_chapter_start_off_a_word_boundary_is_an_error(tmp_path):
+    text = "End of three. Four begins."
+    seg = _seg("1:1b", english={"text": text},
+               chapterStarts=[{"chapter": "4", "engOffset": text.index("our")}])
+    work = _work(tmp_path, [seg])
+    with pytest.raises(ValueError, match="1:1b"):
+        emit_translation_indexes(work)

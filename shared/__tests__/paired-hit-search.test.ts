@@ -82,13 +82,16 @@ const at = (column: string, r: Partial<SearchResult>): SearchResult => ({
 // Runs the search in `url` over `results` and hands back the instances drawn.
 // The settle point is the count in the status line, then the book fetch; a
 // case that draws nothing fails on its first lookup, not by passing early.
-async function instances(url: string, results: SearchResult[], total: number) {
+// `total` is the hits (Greek words only in a Greek or Both search), or the
+// bar's text where an English-only search of EN, which has two translations,
+// shows chapters and no hit total (John, 15-16 Nov).
+async function instances(url: string, results: SearchResult[], total: number | string) {
   const { search } = await import('../lib/search');
   const { fetchBook } = await import('../lib/data');
   vi.mocked(search).mockResolvedValueOnce({ results, failedWorks: [] });
   window.history.replaceState(null, '', url);
   const { container } = render(Search);
-  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(new RegExp(`${total} (?:instance|hits)`)));
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(typeof total === 'number' ? `${total} hit` : total));
   await vi.waitFor(() => expect(fetchBook).toHaveBeenCalled());
   await vi.waitFor(() => expect(container.querySelector('.chapter-group')).not.toBeNull());
   expect(container.querySelectorAll('button.group-head[aria-expanded="false"]')).toHaveLength(0);
@@ -137,7 +140,8 @@ describe('Search.svelte: a Greek hit shows its English', () => {
       engHits: [{ translation: 'rackham', positions: [3] }, { translation: 'ross', positions: [2] }],
     })];
     const url = `/search?g=${encodeURIComponent('α')}&e=four+cuatro&em=any`;
-    const plain = await instances(url, results, 3);
+    // Both search: the hits are the Greek word alone, whatever the English adds.
+    const plain = await instances(url, results, 1);
     expect(text(plain.list[0].querySelector('.inst-pair-text'))).toBe('One two three.');
     expect(plain.list[0].querySelector('.inst-pair button[aria-pressed="true"]')).toHaveTextContent('Rackham');
     // The English hit is one instance for the unit, one translation shown and
@@ -147,7 +151,7 @@ describe('Search.svelte: a Greek hit shows its English', () => {
     expect(text(plain.list[1].querySelector('.inst-pair'))).toBe('δ ε');
     plain.container.remove();
 
-    const chip = await instances(`${url}&t=ross`, results, 2);
+    const chip = await instances(`${url}&t=ross`, results, 1);
     const pair = chip.list[0].querySelector('.inst-pair')!;
     expect(text(pair.querySelector('.inst-pair-text'))).toBe('Uno dos.');
     expect(pair.querySelector('button[aria-pressed="true"]')).toHaveTextContent('Ross');
@@ -160,7 +164,7 @@ describe('Search.svelte: an English hit shows its Greek', () => {
   it("prints the Greek of the turn the word stands in, unmarked", async () => {
     // "nine": the first stacked speech of the row whose Greek is θ ι κ.
     const { list } = await instances('/search?e=nine',
-      [at('70b', { engMatch: true, engHits: [{ translation: 'rackham', positions: [3] }] })], 1);
+      [at('70b', { engMatch: true, engHits: [{ translation: 'rackham', positions: [3] }] })], '1 chapter');
     expect(list).toHaveLength(1);
     expect(marks(list[0].querySelector('.inst-en')!)).toEqual(['Nine']);
     const pair = list[0].querySelector('.inst-pair');
@@ -174,18 +178,19 @@ describe('Search.svelte: an English hit shows its Greek', () => {
   it("gives each turn's match its own instance and Greek", async () => {
     // "eight" (turn 1) and "nine" (turn 2) are in one section.
     const { list, container } = await instances('/search?e=eight+nine&em=any',
-      [at('70b', { engMatch: true, engHits: [{ translation: 'rackham', positions: [2, 3] }] })], 2);
+      [at('70b', { engMatch: true, engHits: [{ translation: 'rackham', positions: [2, 3] }] })], '1 chapter');
     expect(list.map(li => text(li.querySelector('.inst-pair')))).toEqual(['ζ η', 'θ ι κ']);
     // Each passage stops at its turn: neither shows the other's word.
     expect(list.map(li => text(li.querySelector('.inst-en .inst-snippet')))).toEqual(['six seven eight', 'Nine ten. Eleven']);
     expect(list.map(marks)).toEqual([['eight'], ['Nine']]);
-    expect(text(container.querySelector('.group-count'))).toBe('2 instances');
+    // An English-only search of two translations draws no hit count on a heading.
+    expect(container.querySelector('.group-count')).toBeNull();
   });
 
   it('cites a turn-aligned hit at the section its words fall in', async () => {
     // Ross's "seis" is filed under 70a, where the turn starts; it is in 70b.
     const { list } = await instances('/search?e=seis',
-      [at('70a', { engMatch: true, engHits: [{ translation: 'ross', positions: [4] }] })], 1);
+      [at('70a', { engMatch: true, engHits: [{ translation: 'ross', positions: [4] }] })], '1 chapter');
     expect(text(list[0].querySelector('.inst-ref'))).toBe('70b');
     expect(marks(list[0])).toEqual(['seis']);
     expect(text(list[0].querySelector('.inst-pair'))).toBe('ζ η');
@@ -204,10 +209,11 @@ describe('Search.svelte: Greek and English hits in one unit', () => {
   const url = `/search?g=${encodeURIComponent('θ')}&e=nine`;
 
   it('become one instance, each side with its marks', async () => {
-    const { container, list } = await instances(url, results, 3);
+    // The hits are the two Greek words; "nine" adds none (John, 15-16 Nov).
+    const { container, list } = await instances(url, results, 2);
     expect(container.querySelector('.rc-n')).toHaveTextContent(/^1$/);
-    expect(container.querySelector('.rc-w')).toHaveTextContent(/^passage$/);
-    expect(container.querySelector('.rc-hits')).toHaveTextContent(/^3 hits$/);
+    expect(container.querySelector('.rc-w')).toHaveTextContent(/^chapter$/);
+    expect(container.querySelector('.rc-hits')).toHaveTextContent(/^2 hits$/);
     expect(list).toHaveLength(2);
     // ζ has no English partner: Greek, then its turn's English, unmarked.
     expect(marks(list[0])).toEqual(['ζ']);
@@ -219,17 +225,20 @@ describe('Search.svelte: Greek and English hits in one unit', () => {
     expect(list[1].querySelector('.inst-pair')).toBeNull();
   });
 
-  // A guard, not a new behaviour: these counts are the same before the merge.
+  // A guard: the merge changes no count. Chapters (each work's book is one
+  // here) and Greek hits only.
   it('count what the two separate instances counted', async () => {
+    // "Either language": under "both" the Int chapter, Greek only, would now
+    // drop out (a Both "and" joins by chapter, John, 15 Nov).
     const crito = { ...at('70a', { grkMatch: true, grkPositions: [0] }), work: 'Int' };
-    const { container } = await instances(url, [...results, crito], 4);
-    expect(screen.getByRole('status')).toHaveTextContent('2 passages · 4 hits');
+    const { container } = await instances(`${url}&op=or`, [...results, crito], 3);
+    expect(screen.getByRole('status')).toHaveTextContent('2 chapters · 3 hits');
     expect(container.querySelector('.rc-n')).toHaveTextContent(/^2$/);
-    expect(container.querySelector('.rc-w')).toHaveTextContent(/^passages$/);
-    // Int sorts first; EN's page holds one Greek hit and the merged pair.
-    expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['1 instance', '3 instances']);
+    expect(container.querySelector('.rc-w')).toHaveTextContent(/^chapters$/);
+    // Int sorts first; EN's page holds the pair's two Greek hits.
+    expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['1 hit', '2 hits']);
     const works = screen.getByRole('group', { name: 'Show hits from one work' });
-    expect(text(works)).toContain('Nicomachean Ethics3');
+    expect(text(works)).toContain('Nicomachean Ethics2');
     expect(text(works)).toContain('De Interpretatione1');
   });
 });

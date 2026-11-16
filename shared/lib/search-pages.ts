@@ -31,9 +31,9 @@ const posOf = (r: SearchResult): Pos =>
  * Stephanus pages, in corpus order. A Stephanus page with more hits than
  * `target` is a result page of its own. */
 export function paginate(results: SearchResult[], target: number): SearchResult[][];
-export function paginate(results: SearchResult[], offsets: Map<string, import('./search').Offsets | null>, target: number): import('./chapter-pages').ResultPages;
-export function paginate(results: SearchResult[], arg: number | Map<string, import('./search').Offsets | null>, size?: number): SearchResult[][] | import('./chapter-pages').ResultPages {
-  if (typeof arg !== 'number') return chapterPaginate(results, arg, size!);
+export function paginate(results: SearchResult[], offsets: Map<string, import('./search').Offsets | null>, target: number, eng?: Map<string, import('./search').EngChapters | null>): import('./chapter-pages').ResultPages;
+export function paginate(results: SearchResult[], arg: number | Map<string, import('./search').Offsets | null>, size?: number, eng?: Map<string, import('./search').EngChapters | null>): SearchResult[][] | import('./chapter-pages').ResultPages {
+  if (typeof arg !== 'number') return chapterPaginate(results, arg, size!, eng);
   const target = arg;
   const units = new Map<string, { pos: Pos; n: number; results: SearchResult[] }>();
   for (const r of results) {

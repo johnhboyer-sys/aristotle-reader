@@ -91,7 +91,7 @@ const MENUS = [
   ['d18-keyboard', '/search', D, [opens(btn('.gk-toggle'), '#grk-keys')]],
   ['d19-beta-code', '/search', D, [opens(btn('.sq-head .tog'), '.sq-head .tog[aria-pressed="true"]'), opens(typeIn('#grk-input', 'a)reth/'), ARETH)]],
   ['d20-both', `/search?g=${e('ἀρετή')}&e=virtue`, D, []],
-  ['d21-forms-untick', AR, D, [{ ...btn('.fx input[type=checkbox] >> nth=1'), want: false }, opens(btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ instances/), { sel: '.sx-of', text: 'restore all forms' }), top]],
+  ['d21-forms-untick', AR, D, [{ ...btn('.fx input[type=checkbox] >> nth=1'), want: false }, opens(btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ chapters/), { sel: '.sx-of', text: 'restore all forms' }), top]],
   ['d23-save', AR, D, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
   ['d24-word-click', AR, D, [opens(btn('.instance mark'), WORD)]],
   ['d28-pending-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&cw=10`, D, [opens(btn('.prox-change'), EDITOR), { sel: '.combo-slot >> nth=1 >> .prox-relw select', act: 'select', index: 1 }]],
@@ -318,8 +318,8 @@ export async function checkRender(p, path) {
       throw new StepFail('render', `search did not render: no visible .result-count${err ? `; search error: ${err.trim()}` : ''}`);
     }
     const t = (await c.textContent()).trim();
-    // A Both search counts passages, its hits labelled as hits (ruling 1, 14 Nov).
-    const m = /^(\d[\d,]*) (?:instances?|passages?)(?![a-z])|^No passages found\./.exec(t);
+    // The count is of chapters (John, 15 Nov), its hits labelled as hits.
+    const m = /^(\d[\d,]*) chapters?(?![a-z])|^No passages found\./.exec(t);
     if (!m) throw new StepFail('render', `result count reads ${JSON.stringify(t)}`);
     if (!m[1] || Number(m[1].replace(/,/g, '')) === 0) return t;
     const warning = async () => {

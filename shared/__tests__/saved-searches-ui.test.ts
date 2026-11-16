@@ -53,8 +53,9 @@ async function open(url: string) {
   vi.mocked(search).mockResolvedValueOnce({ results: RESULTS, failedWorks: [] });
   window.history.replaceState(null, '', url);
   const page = render(Search);
-  // Settled: the count is in the status line.
-  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/1 instance/));
+  // Settled: the count is in the status line. An English-only search of EN,
+  // which has two translations, shows chapters and no hit total (John, 15-16 Nov).
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/1 chapter/));
   return page;
 }
 const block = () => vi.spyOn(window, 'localStorage', 'get')
@@ -133,7 +134,7 @@ describe('Search.svelte: Save beside the count', () => {
   it('a blocked store hides Save, and search still runs', async () => {
     block();
     const { container } = await open(G);
-    expect(container.querySelector('.result-count')).toHaveTextContent('1 instance');
+    expect(container.querySelector('.result-count')).toHaveTextContent('1 hit');
     expect(screen.queryByRole('button', { name: /^Save/ })).toBeNull();
   });
 

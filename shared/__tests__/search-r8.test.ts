@@ -10,6 +10,7 @@ import type { SearchResult } from '../lib/search';
 vi.mock('../lib/search', async original => ({
   ...await original<typeof import('../lib/search')>(),
   search: vi.fn(), loadOffsets: vi.fn(async () => null),
+  loadEngChapters: vi.fn(async () => { throw new Error('none'); }),
   greekHitForms: vi.fn(async () => ({ byResult: new Map(), headwords: new Map(), failedWorks: [] })),
   speakerRoster: vi.fn(async () => []),
 }));
@@ -62,7 +63,10 @@ it.each(['3', '1', 's'])('holds each page to its chapters at Context %s', async 
 });
 
 it('marks only the current chapter’s English hits under Whole section', async () => {
-  const { loadOffsets } = await import('../lib/search');
+  const { loadOffsets, loadEngChapters } = await import('../lib/search');
+  // Chapters now place an English word by the work's eng-chapters.json (John,
+  // 15-16 Nov); 'One' is word 0 of chapter 1, 'two' word 1, the start of chapter 2.
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [1, '2']] } });
   vi.mocked(loadOffsets).mockResolvedValue({ token_count: 22, seg_base_offset: [0],
     segments: [{ book: 1, column: '70a', line_runs: Array.from({ length: 22 }, (_, i) => [i + 1, 1]) }],
     book_bounds: [{ book: 1, start: 0 }], chapter_bounds: [

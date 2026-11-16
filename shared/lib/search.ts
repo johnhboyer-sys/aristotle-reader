@@ -127,6 +127,15 @@ export function loadOffsets(work: string): Promise<Offsets> {
   return loadIndex<Offsets>(work, 'offsets.json');
 }
 
+// Where a chapter begins in each translation's words (stage6
+// eng-chapters.json): slot -> seg_idx -> [[word_pos, chapter], ...], the
+// word counted as the slot's English index counts it. The results page puts an
+// English hit in its chapter from this, before any book is fetched.
+export type EngChapters = Record<string, Record<string, [number, string][]>>;
+export function loadEngChapters(work: string): Promise<EngChapters> {
+  return loadIndex<EngChapters>(work, 'eng-chapters.json');
+}
+
 // Corpus-level indexes live beside the per-work ones rather than inside them,
 // so they are fetched from the root and memoised on their own path.
 const _shared = memoAsyncBy<string, unknown>(path =>
@@ -731,7 +740,7 @@ export function englishQueryUnits(query: string): string[][] {
 // one english-<slot>.json for each translation beyond it (stage6
 // emit_translation_indexes names them the same way). The slot alone names the
 // translation's postings in the corpus shards, as "<work>/<slot>".
-function englishIndexSlot(t: Pick<TranslationRef, 'id' | 'slot'>): string {
+export function englishIndexSlot(t: Pick<TranslationRef, 'id' | 'slot'>): string {
   return t.slot === 'overlay' ? `overlay-${t.id}` : t.slot;
 }
 export function englishIndexFile(t: Pick<TranslationRef, 'id' | 'slot'>): string {

@@ -126,13 +126,13 @@ describe('By form, keyed as ruled', () => {
     const results = [at('70b', [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], { windows: [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]] })];
     const { container } = await open(`${g('τὸ τί ἦν εἶναι')}&gm=phrase&m=form&v=form`, { results });
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'τό τί ἦν εἶναι 1 instance', 'τοῦ τί ἦν εἶναι 1 instance', 'τῷ τί ἦν εἶναι 1 instance',
+      'τό τί ἦν εἶναι 1 hit', 'τοῦ τί ἦν εἶναι 1 hit', 'τῷ τί ἦν εἶναι 1 hit',
     ]));
   });
 
   it('one word: the dative stands apart from the nominative, which is headed by its commonest spelling', async () => {
     const { container } = await open(`${g('ἀρετή')}&v=form`);
-    await vi.waitFor(() => expect(heads(container)).toEqual(['ἀρετή 2 instances', 'ἀρετῇ 1 instance']));
+    await vi.waitFor(() => expect(heads(container)).toEqual(['ἀρετή 2 hits', 'ἀρετῇ 1 hit']));
   });
 });
 
@@ -144,35 +144,35 @@ describe('By grammar: the headword over its paradigm', () => {
     const { container } = await open('/search?l=areth&v=grammar&ps=20', { results, forms, grammar });
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('page 1 of 2'));
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'αρετη 18 instances', 'Nominative or vocative singular ἀρετή 12 instances', 'Dative singular ἀρετῇ 6 instances',
+      'αρετη 18 hits', 'Nominative or vocative singular ἀρετή 12 hits', 'Dative singular ἀρετῇ 6 hits',
     ]));
     const { fetchBook } = await import('../lib/data');
     expect([...new Set(vi.mocked(fetchBook).mock.calls.map(([, n]) => n))]).toEqual([1, 2, 3, 4, 5, 6]);
     await fireEvent.click(screen.getAllByRole('button', { name: 'Next page' })[0]);
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'αρετη 9 instances', 'Nominative or vocative singular ἀρετή 6 instances', 'Dative singular ἀρετῇ 3 instances',
+      'αρετη 9 hits', 'Nominative or vocative singular ἀρετή 6 hits', 'Dative singular ἀρετῇ 3 hits',
     ]));
     await fireEvent.click(within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case dat' }));
-    await vi.waitFor(() => expect(heads(container)).toEqual(['αρετη 9 instances', 'Dative singular ἀρετῇ 9 instances']));
+    await vi.waitFor(() => expect(heads(container)).toEqual(['αρετη 9 hits', 'Dative singular ἀρετῇ 9 hits']));
   });
 
   it('new data: the verb’s parses are gone from the rows and the facets', async () => {
     const { container } = await open('/search?l=areth&v=grammar');
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'αρετη 3 instances', 'Nominative or vocative singular ἀρετή 2 instances', 'Dative singular ἀρετῇ 1 instance',
+      'αρετη 3 hits', 'Nominative or vocative singular ἀρετή 2 hits', 'Dative singular ἀρετῇ 1 hit',
     ]));
     await vi.waitFor(() => expect(facetHeads()).toEqual(['Case', 'Number', 'Gender']));
     // The note under a hit counts the noun's readings alone: ἀρετῇ is not
     // "one of 3 readings" under Case dat.
     await fireEvent.click(within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case dat' }));
-    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 instance'));
+    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 hit'));
     expect(container.querySelector('.inst-oneof')).toBeNull();
   });
 
   it('a pick in the address in Beta Code with its marks reads the same rows, its label accented (Codex R14)', async () => {
     const { container } = await open('/search?l=' + encodeURIComponent('a)reth/') + '&v=grammar');
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'ἀρετή 3 instances', 'Nominative or vocative singular ἀρετή 2 instances', 'Dative singular ἀρετῇ 1 instance',
+      'ἀρετή 3 hits', 'Nominative or vocative singular ἀρετή 2 hits', 'Dative singular ἀρετῇ 1 hit',
     ]));
   });
 
@@ -192,13 +192,13 @@ describe('By grammar: the headword over its paradigm', () => {
   it('old data: every reading of a spelling, as before', async () => {
     const { container } = await open('/search?l=areth&v=grammar', { grammar: grammarOf(old) });
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'αρετη 3 instances',
-      'Nominative or vocative singular ἀρετή 2 instances',
-      'Dative singular or present active indicative, second singular or present active subjunctive, second singular ἀρετῇ 1 instance',
+      'αρετη 3 hits',
+      'Nominative or vocative singular ἀρετή 2 hits',
+      'Dative singular or present active indicative, second singular or present active subjunctive, second singular ἀρετῇ 1 hit',
     ]));
     await vi.waitFor(() => expect(facetHeads()).toEqual(['Case', 'Number', 'Gender', 'Tense', 'Mood', 'Voice', 'Person']));
     await fireEvent.click(within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case dat' }));
-    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 instance'));
+    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 hit'));
     await vi.waitFor(() => expect(container.querySelectorAll('.sx-para')).toHaveLength(1));
     await fireEvent.click(container.querySelector<HTMLButtonElement>('.sx-para')!);
     expect(text(container.querySelector('.inst-oneof'))).toBe('one of 3 readings');

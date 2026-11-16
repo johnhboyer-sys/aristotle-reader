@@ -98,7 +98,7 @@ async function draw(url: string, results: SearchResult[], total: number, props: 
   vi.mocked(search).mockResolvedValueOnce({ results, failedWorks: [] });
   window.history.replaceState(null, '', url);
   const { container } = render(Search, { props });
-  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(new RegExp(`${total} (?:instance|hits)`)));
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(new RegExp(`${total} (?:hits?)`)));
   await vi.waitFor(() => expect(container.querySelector('li.instance')).not.toBeNull());
   return { container, list: () => [...container.querySelectorAll('li.instance')] };
 }
@@ -121,7 +121,8 @@ describe.skipIf(!!process.env.PAIR_TIMING)('Greek-only paired translations', () 
   });
 
   it('defaults to the narrowed translation', async () => {
-    const { list } = await draw(`${G('α')}&e=plain&op=or&t=ross`, [...hit, at('71a', { engMatch: true, engHits: [{ translation: 'ross', positions: [0] }] })], 2);
+    // A Both search counts Greek words only (John, 15-16 Nov): one Greek hit, though two results.
+    const { list } = await draw(`${G('α')}&e=plain&op=or&t=ross`, [...hit, at('71a', { engMatch: true, engHits: [{ translation: 'ross', positions: [0] }] })], 1);
     const pair = list()[0].querySelector('.inst-pair')!;
     expect(pair.querySelector('.inst-pair-text')).toHaveTextContent('Uno dos.');
     expect(pair.querySelector('button[aria-pressed="true"]')).toHaveTextContent('Ross');
