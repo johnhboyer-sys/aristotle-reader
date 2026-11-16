@@ -38,10 +38,23 @@ State on 16 Nov, end of the counting session:
     inclusive disjunction". Picture A4 shows the panel's labels (Both languages / Either or both / One
     language, not both): a draft he has not ruled. Today's `op=or` links mean inclusive; keep them
     inclusive and give the exclusive or a new value.
-  - Still open: B, the English "in more than one: N of M" line. C: phrase Include/Exclude and which wins
-    an overlap. D: pages by chapters or by rows. Also his to confirm, choices the pictures made: an Exclude
-    lowers other phrases' counts while an Include changes none; rows do not re-sort; the badge; "by
-    virtue of" shows 32 hits, not 45.
+  - **B is ruled (John, 16 Nov):** one list, each work with its translations under it; the separate
+    Translations list goes. A work's row counts chapters with a hit in at least one translation; a
+    translator's row counts that translator's hits in that work (sorted by hits). A translator's name
+    shows that translator's hits in that work. His words: "for the work as a heading with nested list,
+    it should be chapters with at least one hit in at least one translation ... and for translators, it
+    should be HITS." The passage rows stay as built: one translator's English, the names of every
+    translator with a hit there underneath, to switch between. Still his to pick: how the work's number
+    says "chapters" (pictures B6 "84 ch", B7 "84 chap.", B8 one head line "chapters · hits"). The
+    "in more than one" line (B1) was not taken up.
+  - **D is ruled (John, 16 Nov): pages by rows**, "that way there is a set number of passages displayed
+    with hits per page." Open: whether a page may split a chapter (fixed 40 rows, 23 pages for ἀρετή +
+    virtue) or breaks only between chapters (about 40, 25 pages). Cost to solve: counting rows needs
+    every book of the search before page 1 (50 books, 30 MB, 7 MB gzipped; "and/or" 100 books, 57 MB,
+    13 MB gzipped) unless rows can be counted from the index.
+  - Still open: C, phrase Include/Exclude and which wins an overlap. Also his to confirm, choices the
+    pictures made: an Exclude lowers other phrases' counts while an Include changes none; rows do not
+    re-sort; the badge; "by virtue of" shows 32 hits, not 45.
 - **Follow-ups:** the desktop app's corpus needs `search/eng-chapters.json` too (without it English hits
   fall in the chapter their section's Greek opens in); three svelte-check errors in
   `app/src/__tests__/lemma-head.test.ts` predate this branch; the smaller items in §4.
