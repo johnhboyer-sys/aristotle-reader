@@ -57,21 +57,28 @@ const top = { act: 'scrollTop' };
 const EDITOR = '.prox-terms'; // the proximity editor's term grid, drawn only while it is open
 const WORD = '[role="dialog"][aria-label^="Word"]'; // the word card a click on a hit opens (WordPopup)
 const ARETH = { sel: '.query-input', value: 'ἀρετή' }; // a)reth/ typed with Beta Code on
-const OPTS = opens(btn('.opts-toggle'), '.opts-toggle[aria-expanded="true"]'); // a phone's Options, open
+// 15 Nov: the 13 Nov form has no Options fold and no language switch; a
+// field's options show once it has text, on the phone as Match ▾ and Form ▾
+// menus on one row. In is words on the Proximity/Search row; sideways the form
+// folds after Search and Change unfolds it.
+const UNFOLD = opens(btn('.fchg'), '#grk-input'); // sideways: Change, the form unfolded
+const CHOOSE = opens(btn('.d6-in [role="radio"]', 'choose works'), '#works-panel'); // In: choose works…, the picker open
+// Lemma shows once the Greek field has text; the word list typing opens lies
+// over it until Escape shuts the list.
+const LEMMA_TYPING = [opens(typeIn('#grk-input', 'ψυχ'), '.opt-lemma'),
+  { sel: '#grk-input', act: 'press', value: 'Escape', expect: false, uncheckable: 'Escape shuts the word list; a shut list draws nothing to prove' },
+  opens(btn('.opt-lemma'), '.opt-lemma[aria-pressed="true"]'), opens(typeIn('#grk-input', 'ψυχ'), '.gs-under')];
 const FILTER = opens(btn('.sx-icon', 'Filter'), '.sx-panel.open[data-screen="menu"]'); // a phone's Filter sheet, at its menu
 const VIEW = opens(btn('.sx-icon', 'View'), '.sx-panel.open[data-screen="sort"]'); // a phone's View sheet
 
 // Menu and control states (menus.mjs): viewport-only shots, light.
 const MENUS = [
-  ['d01-match', AR, D, [sum('Match')]],
-  ['d02-form', AR, D, [sum('Form')]],
   ['d03-accents-on', AR, D, [opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), btn('.search-btn')]],
-  ['d05-in-works', AR, D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]'), opens(btn('.opt-in label', 'Choose works'), '#works-panel')]],
-  ['d30-in-menu', AR, D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
-  ['d31-in-authentic', AR + '&w=-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl', D, [opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
+  ['d05-in-works', AR, D, [CHOOSE]],
+  ['d31-in-authentic', AR + '&w=-Oec,MM,Prob,VV,DM,Mech,Col,Phgn,Plant,MXG,Aud,Lin,Spir,Vent,Mirab,RhetAl', D, []],
   ['d06-advanced', AR, D, [opens(btn('.advanced-trigger'), EDITOR)]],
   ['d07-lemma-open', AR, D, [opens(btn('.opt-lemma'), '.opt-lemma[aria-pressed="true"]')]],
-  ['d08-lemma-typing', '/search', D, [opens(btn('.opt-lemma'), '.opt-lemma[aria-pressed="true"]'), opens(typeIn('.query-input', 'ψυχ'), '.gs-under')]],
+  ['d08-lemma-typing', '/search', D, LEMMA_TYPING],
   ['d09-near-open', '/search', D, [opens(btn('.advanced-trigger'), EDITOR)]],
   ['d10-near-change', `/search?c=${e('l:areth')}&c=${e('l:ecis')}`, D, [opens(btn('.prox-change'), EDITOR)]],
   ['d11-group-menu', AR, D, [sum('Group')]],
@@ -82,7 +89,7 @@ const MENUS = [
   ['d16-perpage-menu', AR, D, [sum('Per page')]],
   ['d17-citations-only', AR + '&ps=c', D, []],
   ['d18-keyboard', '/search', D, [opens(btn('.gk-toggle'), '#grk-keys')]],
-  ['d19-beta-code', '/search', D, [opens(btn('.sq-row .tog'), '.sq-row .tog[aria-pressed="true"]'), opens(typeIn('.query-input', 'a)reth/'), ARETH)]],
+  ['d19-beta-code', '/search', D, [opens(btn('.sq-head .tog'), '.sq-head .tog[aria-pressed="true"]'), opens(typeIn('#grk-input', 'a)reth/'), ARETH)]],
   ['d20-both', `/search?g=${e('ἀρετή')}&e=virtue`, D, []],
   ['d21-forms-untick', AR, D, [{ ...btn('.fx input[type=checkbox] >> nth=1'), want: false }, opens(btn('.fx-apply, .sx-forms button', /Apply|Show these forms|Show [0-9,]+ instances/), { sel: '.sx-of', text: 'restore all forms' }), top]],
   ['d23-save', AR, D, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
@@ -102,27 +109,26 @@ const MENUS = [
   ['n04-add-term', '/search', [1152, 1200], [opens(btn('.advanced-trigger'), EDITOR), opens(btn('button', 'Add term'), '.combo-slot >> nth=2')]],
   ['n06-grammar-term', `/search?c=${e('l:areth')}&c=${e('g:case.gen,number.pl')}&cw=3`, [1152, 1200], [opens(btn('.prox-change'), EDITOR)]],
   ['n05-phone-three', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('l:hdonh')}&cw=10`, P, []],
-  ['p01-options', AR, P, [OPTS]],
-  ['p02-options-match', AR, P, [OPTS, sum('Match')]],
+  ['p01-options', AR, P, []],
+  ['p02-options-match', AR, P, [sum('Match')]],
   ['p03-filter', AR, P, [FILTER]],
   ['p04-sort', AR, P, [VIEW]],
   ['p05-keyboard', AR, P, [opens(btn('.gk-toggle'), '#grk-keys')]],
-  ['p06-advanced', AR, P, [OPTS, opens(btn('.advanced-trigger'), EDITOR)]],
-  ['q01-form', AR, P, [OPTS, sum('Form')]],
-  ['q02-accents-on', AR, P, [OPTS, opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), btn('.search-btn')]],
-  ['q03-in-works', AR, P, [OPTS, opens(btn('.opt-in > summary'), 'details.opt-in[open]'), opens(btn('.opt-in label', 'Choose works'), '#works-panel')]],
-  ['q13-in-menu', AR, P, [OPTS, opens(btn('.opt-in > summary'), 'details.opt-in[open]')]],
-  ['q04-lemma-typing', '/search', P, [OPTS, opens(btn('.opt-lemma'), '.opt-lemma[aria-pressed="true"]'), opens(typeIn('.query-input', 'ψυχ'), '.gs-under')]],
+  ['p06-advanced', AR, P, [opens(btn('.advanced-trigger'), EDITOR)]],
+  ['q01-form', AR, P, [sum('Form')]],
+  ['q02-accents-on', AR, P, [opens(btn('.opt-btn', 'Accents'), { sel: '.opt-btn[aria-pressed="true"]', text: 'Accents' }), btn('.search-btn')]],
+  ['q03-in-works', AR, P, [CHOOSE]],
+  ['q04-lemma-typing', '/search', P, LEMMA_TYPING],
   ['q05-near-editor', `/search?c=${e('l:areth')}&c=${e('l:ecis')}&c=${e('lb:hdonh')}&cw=10`, P, [opens(btn('.prox-change'), EDITOR)]],
-  ['q06-beta-code', '/search', P, [opens(btn('.sq-row .tog'), '.sq-row .tog[aria-pressed="true"]'), opens(typeIn('.query-input', 'a)reth/'), ARETH)]],
+  ['q06-beta-code', '/search', P, [opens(btn('.sq-head .tog'), '.sq-head .tog[aria-pressed="true"]'), opens(typeIn('#grk-input', 'a)reth/'), ARETH)]],
   ['q07-filter-works', AR, P, [FILTER, opens(btn('.sx-panel .sx-nav', 'Works'), '.sx-panel.open[data-screen="works"]')]],
   ['q08-filter-forms', AR, P, [FILTER, opens(btn('.sx-panel .sx-nav', 'Forms'), '.sx-panel.open[data-screen="forms"]')]],
   ['q09-word-click', AR, P, [opens(btn('.instance mark'), WORD)]],
   ['q10-save', AR, P, [opens(btn('.sx-save'), { sel: '.sx-save', text: 'Saved' })]],
   ['q11-group-grammar', AR_L + '&v=grammar', P, []],
   ['q12-citations-only', AR + '&ps=c', P, []],
-  ['s01-sideways-options', AR, S, [OPTS]],
-  ['s02-sideways-keyboard', AR, S, [opens(btn('.gk-toggle'), '#grk-keys')]],
+  ['s01-sideways-options', AR, S, [UNFOLD]],
+  ['s02-sideways-keyboard', AR, S, [UNFOLD, opens(btn('.gk-toggle'), '#grk-keys')]],
 ];
 
 // Page states (shots.mjs): full-page capture clipped to clipH, theme as listed.
@@ -144,7 +150,11 @@ const PAGES = [
 ];
 
 // Retired since round 34: reported as skipped, never shot.
-export const RETIRED = { 'd04-case-on': 'no longer exists (Case option dropped)', 'd22-works-more': 'no longer exists (works "more" dropped)', 'd27-word-card': 'option b dropped (John, 13 Nov)' };
+export const RETIRED = { 'd04-case-on': 'no longer exists (Case option dropped)', 'd22-works-more': 'no longer exists (works "more" dropped)', 'd27-word-card': 'option b dropped (John, 13 Nov)',
+  'd01-match': 'no longer exists: a desktop draws Match as words, not a menu (13 Nov form, options (a)); seen in d03 and r34-02',
+  'd02-form': 'no longer exists: a desktop draws Form as words, not a menu (13 Nov form, options (a)); seen in d03 and r34-02',
+  'd30-in-menu': 'no longer exists: In is words on the Proximity/Search row, not a menu (13 Nov form); d31 shows it',
+  'q13-in-menu': 'no longer exists: In is words on the Proximity/Search row, not a menu (13 Nov form); q03 opens its picker' };
 
 export const STATES = [
   ...MENUS.map(([name, path, [w, h], steps]) => ({ name, kind: 'menu', path, w, h, theme: 'light', steps, twin: `menus/m34/${name}.png` })),
@@ -205,6 +215,7 @@ const selected = (loc, s) => loc.evaluate((el, s) => s.index !== undefined ? el.
 async function act(p, loc, s) {
   if (s.act === 'click') await loc.click({ timeout: 5000 });
   else if (s.act === 'type') { await loc.fill('', { timeout: 5000 }); await loc.type(s.value, { delay: 40 }); }
+  else if (s.act === 'press') await loc.press(s.value, { timeout: 5000 });
   else if (s.act === 'select') {
     try { await loc.selectOption(s.index !== undefined ? { index: s.index } : s.value, { timeout: 5000 }); }
     catch { throw new StepFail('other', `cannot select ${s.index !== undefined ? 'index ' + s.index : JSON.stringify(s.value)} in ${describe(s)}`); }
@@ -307,7 +318,8 @@ export async function checkRender(p, path) {
       throw new StepFail('render', `search did not render: no visible .result-count${err ? `; search error: ${err.trim()}` : ''}`);
     }
     const t = (await c.textContent()).trim();
-    const m = /^(\d[\d,]*) instances?\b|^No passages found\./.exec(t);
+    // A Both search counts passages, its hits labelled as hits (ruling 1, 14 Nov).
+    const m = /^(\d[\d,]*) (?:instances?|passages?)(?![a-z])|^No passages found\./.exec(t);
     if (!m) throw new StepFail('render', `result count reads ${JSON.stringify(t)}`);
     if (!m[1] || Number(m[1].replace(/,/g, '')) === 0) return t;
     const warning = async () => {
@@ -319,10 +331,17 @@ export async function checkRender(p, path) {
     let hits = 0, warned = null;
     await until(async () => (warned = await warning()) !== null || (hits = await drawn()) > 0, 20000);
     if (warned !== null) throw new StepFail('render', `passages did not render: ${warned}`);
+    // Group by grammar: the paradigm rows start shut (ruling 5, 14 Nov), so
+    // its hits are drawn only under a shut row; the shut rows are the render.
+    if (!hits && u.searchParams.get('v') === 'grammar') {
+      const shut = await p.locator('.group-head.sx-para[aria-expanded="false"]').evaluateAll(els => els.filter(el => el.checkVisibility()).length);
+      if (shut) return `${t}; ${shut} paradigm rows drawn shut`;
+    }
     if (!hits) throw new StepFail('render', `count reads ${JSON.stringify(t)} but no hit with its text rendered`);
     return `${t}; ${hits} hit${hits === 1 ? '' : 's'} drawn`;
   }
-  if (!await visible(p, '.query-input').count()) throw new StepFail('render', 'empty form did not render: no visible .query-input');
+  // With the proximity editor open the fields give way to its terms.
+  if (!await visible(p, '.query-input, .prox-terms').count()) throw new StepFail('render', 'empty form did not render: no visible .query-input or .prox-terms');
   if (await p.locator('.result-count').count()) throw new StepFail('render', 'bare /search shows a result count');
   return 'empty form';
 }

@@ -101,7 +101,10 @@ export function readControlBoxes(els) {
                 if (answers) { w = Math.max(w,aw); h = Math.max(h,ah); }
             }
         }
-        return {tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0,65), w, h};
+        // The search page asks 44px below 961px of its form, editor and sheets (inSearch);
+        // the phone key sheet's keys are 36 wide by ruling (key).
+        return {tag: el.tagName, text: el.getAttribute('aria-label') || el.textContent?.trim().slice(0,65), w, h,
+            inSearch: !!el.closest('main.search-page :is(.search-form, .sx-panel)'), key: el.matches('.gk-sheet .gk-key')};
     });
 }
 
@@ -225,10 +228,13 @@ export function readInstanceRefs(hits) {
     });
 }
 // One line, or two when a range breaks after its dash; never a break inside
-// the place itself.
+// the place itself. The text's height lies within half a line of its lines:
+// taller hides a break, shorter is a ref clipped out of sight (a box of
+// height 0 under its padding still has text rects, so `visible` alone passes it).
 export function searchRefUnbroken(ref) {
     return ref.visible && ref.leadLines === 1 && (ref.lines === 1 || (ref.dash && ref.lines === 2))
-        && Number.isFinite(ref.lineHeight) && ref.lineHeight > 0 && ref.height <= (ref.lines + .5) * ref.lineHeight;
+        && Number.isFinite(ref.lineHeight) && ref.lineHeight > 0
+        && ref.height >= (ref.lines - .5) * ref.lineHeight && ref.height <= (ref.lines + .5) * ref.lineHeight;
 }
 // searchRefFormat's locator rules, for a ref that is the place alone: the book
 // and chapter are heading lines over the hits (ruling 17), and a Greek hit
