@@ -34,6 +34,10 @@ vi.mock('../lib/search', async (importOriginal) => {
     searchCombo: vi.fn(async () => ({ results: [], failedWorks: [] })),
     searchPhraseVariants: vi.fn(),
     speakerRoster: vi.fn(async () => []),
+    // Offsets with no chapters: pages fall back to whole books, and nothing
+    // failed to load, so no warning but the one under test is drawn.
+    loadOffsets: vi.fn(async () => ({ token_count: 0, seg_base_offset: [], segments: [], book_bounds: [] })),
+    loadEngChapters: vi.fn(async () => ({})),
   };
 });
 vi.mock('../lib/data', async (importOriginal) => {

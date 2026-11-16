@@ -206,8 +206,13 @@
   let selectedWorks = new Set<string>(WORKS.map(w => w.id));
   let worksOpen = false;  // is the works "Refine" panel expanded?
   let groups: ChapterGroup[] = [];        // chapter groups of the CURRENT page
-  $: bothSearch = !!lastSearch?.eng.trim() && (!!lastSearch?.grk.trim() || !!lastSearch?.lemmas.length);
+  const isBoth = (s: UrlSearch | null) => !!s?.eng.trim() && (!!s?.grk.trim() || !!s?.lemmas.length);
+  $: bothSearch = isBoth(lastSearch);
   $: engSearch = !!lastSearch?.eng.trim() && !bothSearch;
+  // The English of the results on screen: the widened results of a Both
+  // search (findVariants) are Greek alone, and nothing joins them.
+  const joinsBoth = (s: UrlSearch | null, ctx: SearchCtx) => isBoth(s) && !!ctx.engQuery;
+  $: joinBoth = joinsBoth(lastSearch, searchCtx);
   // The count is of chapters (John, 15 Nov: Bekker columns are not thematic
   // units), and of hits where a hit is one thing: a Greek word in a Greek or
   // a Both search (the English decides only which chapters count), an English
@@ -226,6 +231,9 @@
   // depends on where a speech begins, so it is never noise.
   let approximateTurns: string[] = [];
   let approximateChapters: string[] = [];
+  // Works whose chapter data did not load: their hits fall back to their
+  // book, or to the chapter their section opens in.
+  let chaptersFailed: string[] = [];
 
   // Inflected variants of a typed phrase. Offered only for a Greek phrase
   // searched by surface form, which is the case where finding the variants by
@@ -401,7 +409,7 @@
   // within the translation and work chosen and the facets ticked, so the
   // counts add up to the Greek hits shown.
   $: keepFacet = facetKeep(ownG, facets);
-  $: formPanel = hitForms ? formGroups(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, bothSearch, searchCtx.langOp), hitForms, keepFacet) : [];
+  $: formPanel = hitForms ? formGroups(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), hitForms, keepFacet) : [];
   $: formKeys = [...new Set(formPanel.flatMap(g => g.forms.map(f => f.form)))];
   $: formChoice = formKeys.length > 1 || excludedForms.size > 0;
   // Apply has something to do when the ticks differ from what is in force.
@@ -651,7 +659,7 @@
   };
   $: keepForm = formKeep(hitForms, excludedForms);
   $: facetRows = withTicked(
-    ownG ? facetCounts(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, bothSearch, searchCtx.langOp), ownG, keepForm) : [],
+    ownG ? facetCounts(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), ownG, keepForm) : [],
     facets);
   const categoryLabel = (key: string) => GRAMMAR_CATEGORIES.find(c => c.key === key)?.label ?? key;
   // A value in a reader's word where the grid gives one (adj → adjective).
@@ -720,7 +728,7 @@
   // chosen below, if any, so the counts add up to the English hits shown.
   $: transCounts = (() => {
     const by = new Map<string, { id: string; short: string; n: number }>();
-    for (const r of joined(narrowWork(formResults, workFilter), places, bothSearch, searchCtx.langOp)) {
+    for (const r of joined(narrowWork(formResults, workFilter), places, joinBoth, searchCtx.langOp)) {
       for (const h of r.engHits ?? []) {
         const entry = by.get(h.translation)
           ?? by.set(h.translation, { id: h.translation, short: translationRef(r.work, h.translation)?.short ?? h.translation, n: 0 }).get(h.translation)!;
@@ -760,7 +768,7 @@
   }
   $: workCounts = (() => {
     // In the bar's measure: its hits where it counts hits, else chapters.
-    const shown = joined(narrow(formResults, transFilter, searchCtx), places, bothSearch, searchCtx.langOp);
+    const shown = joined(narrow(formResults, transFilter, searchCtx), places, joinBoth, searchCtx.langOp);
     const unit = countOf(shown, places, engSearch, transFilter).hits === null ? 'chapters' : 'hits';
     const by = new Map<string, number>();
     for (const work of new Set(shown.map(r => r.work))) {
@@ -808,15 +816,18 @@
   // translation's words) of the works with hits. Loaded before the results
   // are counted, so every count is of chapters from the start.
   let places: ChapterPlaces = chapterPlaces(new Map());
-  async function placesFor(results: SearchResult[]): Promise<{ places: ChapterPlaces; offsets: Map<string, Offsets | null> }> {
+  async function placesFor(results: SearchResult[]): Promise<{ places: ChapterPlaces; offsets: Map<string, Offsets | null>; failed: string[] }> {
     const offsets = new Map<string, Offsets | null>();
     const eng = new Map<string, EngChapters | null>();
+    const failed: string[] = [];
+    const english = new Set(results.filter(r => r.engMatch).map(r => r.work));
     await Promise.all([...new Set(results.map(r => r.work))].map(async work => {
-      const [o, e] = await Promise.allSettled([loadOffsets(work), loadEngChapters(work)]);
+      const [o, e] = await Promise.allSettled([loadOffsets(work), english.has(work) ? loadEngChapters(work) : Promise.resolve({})]);
       offsets.set(work, o.status === 'fulfilled' ? o.value : null);
       eng.set(work, e.status === 'fulfilled' ? e.value : null);
+      if (o.status === 'rejected' || e.status === 'rejected') failed.push(work);
     }));
-    return { places: chapterPlaces(offsets, eng), offsets };
+    return { places: chapterPlaces(offsets, eng), offsets, failed };
   }
   // The engines join the two languages with "either"; "both" is joined here,
   // after every filter, by chapter: both terms anywhere in one chapter (John,
@@ -828,6 +839,8 @@
   function joined(results: SearchResult[], P: ChapterPlaces, both: boolean, op: LangOp): SearchResult[] {
     return both && op === 'and' ? chapterJoin(results, P) : results;
   }
+  // A Both search's results, joined by chapter: not the widened ones
+  // ("any inflection"), which are a Greek search's.
   // What the bar counts (see `counted`).
   function countOf(results: SearchResult[], P: ChapterPlaces, english: boolean, trans: string | null) {
     const m = measure(results, P);
@@ -850,9 +863,12 @@
     if (run !== layoutRun) return;
     places = found.places;
     pageOffsets = found.offsets;
-    const shown = joined(narrowWork(narrow(withoutForms(results), transFilter, searchCtx), workFilter), places, bothSearch, searchCtx.langOp);
+    chaptersFailed = found.failed;
+    // Read fresh, not from the reactive copies: a widening sets searchCtx
+    // and comes straight here, before they catch up.
+    const shown = joined(narrowWork(narrow(withoutForms(results), transFilter, searchCtx), workFilter), places, joinsBoth(lastSearch, searchCtx), searchCtx.langOp);
     totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
-    counted = countOf(shown, places, engSearch, transFilter);
+    counted = countOf(shown, places, !!lastSearch?.eng.trim() && !isBoth(lastSearch), transFilter);
     shownResults = shown;
     const layout = paginatePlaces(shown, places, pageTarget(pageSize));
     pages = layout.pages;
@@ -1051,14 +1067,14 @@
   // The hits with every form back in, for "of 967 · restore all forms" under
   // the count while some are set aside (d21).
   $: allFormsTotal = excludedForms.size
-    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set(), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, bothSearch, searchCtx.langOp), places, engSearch, transFilter).chapters
+    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set(), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), places, engSearch, transFilter).chapters
     : mainCount;
   const chaptersLabel = (n: number) => `Show ${n} chapter${n === 1 ? '' : 's'}`;
   $: hitsLabel = `Show ${mainCount} ${countNoun}`;
   // What the forms ticked on the sheet would leave (q08), and its button:
   // the ticks applied, then the hits.
   $: formsPreview = formsDirty
-    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set([...[...excludedForms].filter(f => !formKeys.includes(f)), ...formKeys.filter(f => !formTicks.has(f))]), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, bothSearch, searchCtx.langOp), places, engSearch, transFilter).chapters
+    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set([...[...excludedForms].filter(f => !formKeys.includes(f)), ...formKeys.filter(f => !formTicks.has(f))]), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), places, engSearch, transFilter).chapters
     : mainCount;
   function showForms() {
     if (formsDirty) applyForms();
@@ -2478,6 +2494,25 @@
     return [...out.values()];
   }
 
+  // `clipped` with only `words` marked: the words' places in the text the
+  // index counted (`indexed`), found again in the clipped window. Null where
+  // the window is not cut from that text, and the query's marks stand.
+  function ownMarks(clipped: string, indexed: string, words: number[]): string | null {
+    const core = clipped.replace(/^…\s*/, '').replace(/\s*…$/, '');
+    const at = indexed.indexOf(core);
+    if (!core || at < 0) return null;
+    const lead = clipped.indexOf(core);
+    const iw = englishWords(indexed);
+    const cw = englishWords(clipped);
+    const marks = new Set<number>();
+    for (const w of words) {
+      const start = iw[w]?.start;
+      const i = start === undefined ? -1 : cw.findIndex(x => x.start === start - at + lead);
+      if (i >= 0) marks.add(i);
+    }
+    return marks.size === words.length ? markWordsHtml(clipped, marks) : null;
+  }
+
   // Build the Stephanus-page groups for a slice of results: load the books and
   // outlines they touch (bounded concurrency), then assemble and sort. A failed
   // book or outline fetch is evicted (see data.ts) and its work:book key
@@ -2682,8 +2717,12 @@
           const marked = englishMarked(texts, hit.positions, ctx.engUnits, ctx.engPhrase, ctx.engForms);
           const starts: number[] = [];
           texts.reduce((n, text) => { starts.push(n); return n + englishWords(text).length; }, 0);
+          // A phrase is counted where its first word stands (eachHit), and
+          // its every word is drawn there.
+          const heads = [...(hit.matches ?? [])].sort((a, b) => a - b);
+          const headOf = (w: number) => heads.filter(m => m <= w).at(-1) ?? w;
           for (const w of marked) {
-            if (!sectionOnPage(places.eng(r, t.id, w))) continue;
+            if (!sectionOnPage(places.eng(r, t.id, headOf(w)))) continue;
             let k = starts.length - 1;
             while (k > 0 && starts[k] > w) k--;
             const key = `${pair}:${t.id}:${seg.id}:${k}`;
@@ -2693,10 +2732,12 @@
           // start is two instances, each under the chapter its words count in.
           const byUnit = new Map<string, { unit: PairUnit; at: ChapterAt; words: number[] }>();
           const units = new Map<PairUnit, number>();
+          const split = new Map<PairUnit, number>();   // a unit's chapters
           const file = (w: number, words: number[]) => {
             const unit = unitAtEnglish(ix, seg, t, w);
-            const at = places.eng(r, t.id, w);
+            const at = places.eng(r, t.id, headOf(w));
             const key = `${units.get(unit) ?? units.set(unit, units.size).get(unit)}:${at.key}`;
+            if (!byUnit.has(key)) split.set(unit, (split.get(unit) ?? 0) + 1);
             (byUnit.get(key) ?? byUnit.set(key, { unit, at, words: [] }).get(key)!).words.push(...words);
           };
           for (const w of marked) file(w, [w]);
@@ -2728,8 +2769,11 @@
               ? indexedOffset - spanStart : englishWords(spanText)[firstMark]?.start;
             const clipped = context === 's' ? spanText : pairEnglishWindow(seg, t, display, hitLine,
               greekWindow.greek.reduce((n, l) => n + l.text.split(/\s+/).length, 0), hitOffset);
+            // A unit a chapter starts in is a row in each chapter, and each
+            // row marks only its own words, as it counts only them.
+            const own = (split.get(unit) ?? 0) > 1 ? ownMarks(clipped, indexedText, words) : null;
             // A row for each passage the words fall in; the count goes on the first.
-            const rows = [markEnglishHtml(clipped, ctx.engUnits, ctx.engPhrase, ctx.engForms)]
+            const rows = [own ?? markEnglishHtml(clipped, ctx.engUnits, ctx.engPhrase, ctx.engForms)]
               .map((html, j): TransRow => ({
                 translation: t.id,
                 label: t.short,
@@ -2890,8 +2934,10 @@
     // together (John, 2026-11-09: "Both, to the section").
     const placed = made.filter(m => !merged.has(m.inst) && sectionOnPage(m.inst.ch!));
     const bySection = new Map<string, { work: string; book: number; column: string; insts: Instance[] }>();
+    // A section a chapter starts in is filed once in each chapter, with
+    // that chapter's hits.
     for (const { work, book, inst } of placed) {
-      const key = `${work}:${book}:${inst.column}`;
+      const key = `${work}:${book}:${inst.column}:${inst.ch!.key}`;
       (bySection.get(key) ?? bySection.set(key, { work, book, column: inst.column, insts: [] }).get(key)!).insts.push(inst);
     }
     for (const { work, book, column, insts } of bySection.values()) {
@@ -5202,9 +5248,16 @@
             {#if pages.length > 1}{@render pager('')}{/if}
           </div>
         {/if}
-        {#if failedWorks.length || formsFailed || grammarFailed || unsearched.length || unresolved.length || approximateTurns.length}
+        {#if failedWorks.length || chaptersFailed.length || formsFailed || grammarFailed || unsearched.length || unresolved.length || approximateTurns.length}
           <!-- Notices are rows: what kind, what happened, and what to do. -->
           <div class="sx-notes">
+            {#if chaptersFailed.length}
+              <div class="sx-note warn" role="alert">
+                <span class="k">Warning</span>
+                <span>The chapters of {chaptersFailed.map((w) => getWork(w)?.title ?? w).join(', ')} did not load, so {chaptersFailed.length === 1 ? 'its' : 'their'} chapter counts may be wrong.</span>
+                <button type="button" class="a" on:click={doSearch}>Try again</button>
+              </div>
+            {/if}
             {#if failedWorks.length}
               <div class="sx-note warn" role="alert">
                 <span class="k">Warning</span>

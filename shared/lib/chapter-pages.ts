@@ -150,11 +150,15 @@ export function chapterJoin(results: SearchResult[], places: ChapterPlaces): Sea
   return results.flatMap(r => {
     let left = r;
     if (r.grkMatch) {
-      // A match of several words stands or falls with its first word.
-      const kept = new Set((r.windows ?? r.grkPositions.map(p => [p]))
-        .filter(w => keep(places.grk(r, w[0]))).flat());
+      // A match of several words stands or falls with its first word, and
+      // a window kept is kept whole.
+      const windows = (r.windows ?? r.grkPositions.map(p => [p])).filter(w => keep(places.grk(r, w[0])));
+      const kept = new Set(windows.flat());
       left = cutPositions(r, r.grkPositions.map(p => kept.has(p)));
+      if (r.windows) left = { ...left, windows };
     }
+    // A match the index gave no translation for stands at its section's head.
+    if (r.engMatch && !r.engHits && !keep(places.eng(r, '', 0))) left = { ...left, engMatch: false };
     if (r.engMatch && r.engHits) {
       const engHits = r.engHits.flatMap(h => {
         const inside = (w: number) => keep(places.eng(r, h.translation, w));

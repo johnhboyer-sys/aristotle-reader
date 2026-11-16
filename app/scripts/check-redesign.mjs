@@ -4001,26 +4001,47 @@ if(stage>=4) Object.assign(gates, {
                 console.log(`R-S7 D1440 english bar="${bar.text}"`);
             } finally {await close(p);}
         }
-        // Every page of the Both search draws hits, and the pages hold every chapter counted, each once.
+        // Every page of the Both search draws hits, and the pages draw every chapter counted, each
+        // once by its work, book, and chapter, and the hits counted: a page that left one chapter
+        // out and drew another twice would keep the number of headings.
         {
             const p=await open('D1440','light','/search?g=ἀρετή&e=virtue');
             try {
                 const total=Number((await p.locator('.pager-status').first().textContent()).match(/of (\d+)/)[1]);
-                let chapters=0;
+                const seen=new Map();
                 const empty=[];
+                let hits=0;
                 for(let i=1;i<=total;i++) {
                     await p.waitForFunction(k=>(document.querySelector('.pager-status')?.textContent??'').trim().startsWith(`Page ${k} of`),i,{timeout:60000});
                     if(prove&&proofCase==='empty-page'&&i===67)await p.evaluate(()=>document.querySelectorAll('main.search-page .instance-list > li, main.search-page .sx-chap').forEach(el=>el.remove()));
-                    const got=await p.evaluate(()=>({rows:document.querySelectorAll('main.search-page .instance-list > li').length,chapters:document.querySelectorAll('main.search-page .sx-chap').length}));
+                    if(prove&&proofCase==='twice'&&i===2)await p.evaluate(()=>{const c=[...document.querySelectorAll('main.search-page .sx-chap-n')];c[1].textContent=c[0].textContent;});
+                    const got=await p.evaluate(()=>{
+                        const main=document.querySelector('main.search-page');
+                        let work='',book='',hits=0;
+                        const keys=[];
+                        for(const el of main.querySelectorAll('.work-name, .sx-book, .sx-chap-n')) {
+                            if(el.classList.contains('work-name')) {
+                                work=el.textContent.trim();book='';
+                                const n=el.closest('.group-head')?.querySelector('.group-count')?.textContent.match(/^(\d[\d,]*) hits?$/);
+                                if(n)hits+=Number(n[1].replace(/,/g,''));
+                            } else if(el.classList.contains('sx-book')) book=el.firstChild.textContent.trim();
+                            else keys.push(`${work} | ${book} | ${el.textContent.trim()}`);
+                        }
+                        return {rows:main.querySelectorAll('.instance-list > li').length,keys,hits};
+                    });
                     if(!got.rows)empty.push(i);
-                    chapters+=got.chapters;
+                    for(const k of got.keys)seen.set(k,[...(seen.get(k)??[]),i]);
+                    hits+=got.hits;
                     if(i<total)await p.locator('.pager .pager-next').first().click();
                 }
                 assert(total>0,'D1440 Both search examined=0 pages');
                 assert(!empty.length,`D1440 Both search draws nothing on page${empty.length>1?'s':''} ${empty.join(', ')} of ${total}`);
-                assert(chapters===229,`D1440 Both search draws ${chapters} chapters over its ${total} pages, expected the 229 it counts`);
+                const twice=[...seen].filter(([,pp])=>pp.length>1);
+                assert(!twice.length,`D1440 Both search draws ${twice.length} chapters more than once: ${twice.slice(0,3).map(([k,pp])=>`${k} (pages ${pp.join(', ')})`).join('; ')}`);
+                assert(seen.size===229,`D1440 Both search draws ${seen.size} chapters over its ${total} pages, expected the 229 it counts`);
+                assert(hits===940,`D1440 Both search's work headings count ${hits} hits over its ${total} pages, expected the 940 it counts`);
                 n+=total;
-                console.log(`R-S7 D1440 pages=${total} chapters drawn=${chapters}`);
+                console.log(`R-S7 D1440 pages=${total} chapters drawn=${seen.size} hits drawn=${hits}`);
             } finally {await close(p);}
         }
         return n;
@@ -5079,7 +5100,7 @@ const stageFourProofs = {
     'R-S4': {'split':/D1152 Accents and Lemma are split/,'three-rows':/D961 Greek options take [3-9] rows, expected 2 at most/,'phone-wrap':/P390 Greek options take 2 rows, expected 1/,'no-phone-menus':/P390 phone Match and Form menus: found \[\]/,'clipped':/P360 Greek options clipped: /},
     'R-S5': {'english-low':/D1152 English options row top=[\d.]+ is not level with Greek options row 1/},
     'R-S6': {'fixed-field':/S844 Greek field row is position: fixed/,'over-header':/S844 Greek field [-\d.]+–[-\d.]+ lies over the site header/,'gap':/S844 Greek field sits 2[89](\.\d)?px above the key sheet, expected 8±2/,'live-under':/S844 \d+ of \d+ controls under the key sheet are not inert/,'inert-clear':/S844 Clear Greek shown=true inert=true/},
-    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'empty-page':/D1440 Both search draws nothing on page 67 of \d+/},
+    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'empty-page':/D1440 Both search draws nothing on page 67 of \d+/,'twice':/D1440 Both search draws 1 chapters more than once: /},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <textarea[^>]*id="grk-input"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},
