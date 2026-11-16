@@ -28,13 +28,20 @@ State on 16 Nov, end of the counting session:
   - Gate R-S7 rewritten to those numbers; `--prove` catches 9 of 9 cases. Two Codex reviews (gpt-6.1-sol,
     medium), and a third on the last fixes; all findings fixed. The last four have tests 6–8 in `search-chapter-draw.test.ts`, except
     partial marks when a row's words run past its window (finding 3), which has none.
-- **PR 2 waits on John:** the four questions in the picture page,
+- **PR 2 onward: John's four questions** in the picture page,
   https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
-  of git: 3.6 MB of JPEGs). A: how the bar splits chapters against the and/or switch. B: the English
-  "in more than one: N of M" line. C: phrase Include/Exclude and which wins an overlap. D: pages by
-  chapters or by rows. Also his to confirm, choices the pictures made: the "only one" label; an Exclude
-  lowers other phrases' counts while an Include changes none; rows do not re-sort; the badge; "by virtue
-  of" shows 32 hits, not 45.
+  of git: 3.6 MB of JPEGs).
+  - **A is ruled (John, 16 Nov):** the split as pictured, with the switch reading **and | and/or | or**.
+    "or" is the exclusive or (one language, not both: Greek only + English only); "and/or" is the
+    inclusive or, today's "either". His words: "A (Split) looks good except 'only one' is awkward. What
+    if we go with 'and' | 'and/or' | 'or'", then "treat 'or' as exclusive disjunction and 'and/or' as
+    inclusive disjunction". Picture A4 shows the panel's labels (Both languages / Either or both / One
+    language, not both): a draft he has not ruled. Today's `op=or` links mean inclusive; keep them
+    inclusive and give the exclusive or a new value.
+  - Still open: B, the English "in more than one: N of M" line. C: phrase Include/Exclude and which wins
+    an overlap. D: pages by chapters or by rows. Also his to confirm, choices the pictures made: an Exclude
+    lowers other phrases' counts while an Include changes none; rows do not re-sort; the badge; "by
+    virtue of" shows 32 hits, not 45.
 - **Follow-ups:** the desktop app's corpus needs `search/eng-chapters.json` too (without it English hits
   fall in the chapter their section's Greek opens in); three svelte-check errors in
   `app/src/__tests__/lemma-head.test.ts` predate this branch; the smaller items in §4.
