@@ -34,13 +34,13 @@ const RESULTS: SearchResult[] = COLUMNS.map((column, i) => ({
   engHits: [{ translation: 'rackham', positions: [i < 6 ? 3 : 1] }],
 }));
 
-async function open(query: string) {
+async function open(query: string, book = BOOK, results = RESULTS, eng = 'virtue') {
   const { fetchBook, fetchChapters } = await import('../lib/data');
   const { search } = await import('../lib/search');
-  vi.mocked(fetchBook).mockResolvedValue(BOOK);
+  vi.mocked(fetchBook).mockResolvedValue(book);
   vi.mocked(fetchChapters).mockResolvedValue({ '1': COLUMNS.map(column => ({ column, chapter: '1', line: '1', bekker: column })) });
-  vi.mocked(search).mockResolvedValue({ results: RESULTS, failedWorks: [] });
-  window.history.replaceState(null, '', `/search?e=virtue&t=rackham${query}`);
+  vi.mocked(search).mockResolvedValue({ results, failedWorks: [] });
+  window.history.replaceState(null, '', `/search?e=${encodeURIComponent(eng)}&t=rackham${query}`);
   const page = render(Search);
   await vi.waitFor(() => expect(page.container.querySelector('li.instance')).not.toBeNull());
   return page.container;
@@ -102,4 +102,29 @@ it('counts a phrase set aside on Filter, and opens the list from the sheet', asy
   expect(text(nav)).toBe('Phrases 1 set aside ›');
   await fireEvent.click(nav);
   await vi.waitFor(() => expect(within(screen.getByRole('dialog', { name: 'Phrases' })).getByRole('group', { name: 'English phrases' })).toBeInTheDocument());
+});
+
+// Codex's review of C. Every section: "in virtue of" and "moral virtue" in one passage.
+const bookOf = (english: string): BookData => ({ ...BOOK, segments: BOOK.segments.map(sg => ({ ...sg, english: { ...sg.english!, text: english } })) });
+const resultsOf = (hit: (i: number) => { positions: number[]; matches?: number[] }): SearchResult[] => RESULTS.map((r, i) => ({ ...r, engHits: [{ translation: 'rackham', ...hit(i) }] }));
+
+it('marks only the hits left where a row keeps one', async () => {
+  // he acts in virtue(3) of the soul and moral virtue(9) too
+  const c = await open('', bookOf('He acts in virtue of the soul and moral virtue too.'), resultsOf(() => ({ positions: [3, 9] })));
+  await vi.waitFor(() => expect(status()).toContain('24 hits'));
+  await vi.waitFor(() => expect(rows()).toContain('in virtue of 12'));
+  const marks = () => [...c.querySelectorAll('li.instance .inst-en')].map(el => el.querySelectorAll('mark').length);
+  expect(marks().every(n => n === 2)).toBe(true);
+  await fireEvent.click(within(list()).getByRole('checkbox', { name: 'Exclude in virtue of' }));
+  await vi.waitFor(() => expect(status()).toContain('12 hits'));
+  await vi.waitFor(() => expect(marks().length && marks().every(n => n === 1)).toBe(true));
+});
+
+it('sets aside the words of a search with a term of several words', async () => {
+  // he acts in virtue(3) of coming(5) to(6) be(7): "virtue" and "coming-to-be", each a run.
+  await open('', bookOf('He acts in virtue of coming to be.'), resultsOf(() => ({ positions: [3, 5, 6, 7], matches: [3, 5] })), 'virtue coming-to-be');
+  await vi.waitFor(() => expect(status()).toContain('24 hits'));
+  await vi.waitFor(() => expect(rows()).toContain('in virtue of 12'));
+  await fireEvent.click(within(list()).getByRole('checkbox', { name: 'Exclude in virtue of' }));
+  await vi.waitFor(() => expect(status()).toContain('12 hits'));
 });

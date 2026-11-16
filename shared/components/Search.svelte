@@ -409,12 +409,13 @@
   function withoutForms(results: SearchResult[]): SearchResult[] {
     return refine(results, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: grammarOwn(hitGrammar, lastSearch, hitForms) ?? undefined, facets }, keepOp(searchCtx));
   }
-  $: formResults = withoutPhrases(refine(allResults, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), asidePhrases, phraseTexts);
+  $: refinedResults = refine(allResults, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: ownG ?? undefined, facets }, keepOp(searchCtx));
+  $: formResults = withoutPhrases(refinedResults, asidePhrases, phraseTexts);
   // Counted before any form is set aside, so one set aside stays listed, and
   // within the translation and work chosen and the facets ticked, so the
   // counts add up to the Greek hits shown.
   $: keepFacet = facetKeep(ownG, facets);
-  $: formPanel = hitForms ? formGroups(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), hitForms, keepFacet) : [];
+  $: formPanel = hitForms ? formGroups(joined(narrowWork(narrow(withoutPhrases(allResults, asidePhrases, phraseTexts), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), hitForms, keepFacet) : [];
   $: formKeys = [...new Set(formPanel.flatMap(g => g.forms.map(f => f.form)))];
   $: formChoice = formKeys.length > 1 || excludedForms.size > 0;
   // Apply has something to do when the ticks differ from what is in force.
@@ -501,7 +502,7 @@
     const out: PhraseHit[] = [];
     for (const r of results) for (const h of r.engHits ?? []) {
       const text = texts.get(phraseKey(r, h.translation));
-      if (text && !h.matches) for (const at of h.positions) out.push({ text, at });
+      if (text) for (const at of h.positions) out.push({ text, at });
     }
     return out;
   }
@@ -514,26 +515,30 @@
       if (!r.engHits?.length) { out.push(r); continue; }
       const engHits = r.engHits.flatMap(h => {
         const text = texts.get(phraseKey(r, h.translation));
-        if (!text || h.matches || !h.positions.length) return [h];
+        if (!text || !h.positions.length) return [h];
         const positions = h.positions.filter(at => !setAside({ text, at }, aside));
-        return positions.length ? [{ ...h, positions }] : [];
+        if (positions.length === h.positions.length) return [h];
+        // A run of a term of several words (a hyphenated one) goes with its first word.
+        const matches = h.matches?.filter(m => positions.includes(m));
+        return positions.length && (!matches || matches.length) ? [{ ...h, positions, ...(matches ? { matches } : {}) }] : [];
       });
       if (!engHits.length && !r.grkMatch) continue;
       out.push(engHits.length === r.engHits.length && engHits.every((h, i) => h === r.engHits![i]) ? r : { ...r, engHits, engMatch: engHits.length > 0 });
     }
     return out;
   }
-  // Counted within the translation and work chosen, as the forms are, and
-  // over every phrase in, so a row set aside keeps its count and its place.
+  // Counted within the translation and work chosen and the forms and facets
+  // in force, as the forms are, and over every phrase in, so a row set aside
+  // keeps its count and its place.
   $: phraseList = phraseTexts && phrasesOffered
-    ? phraseRows(phraseHitsOf(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), phraseTexts), asidePhrases)
+    ? phraseRows(phraseHitsOf(joined(narrowWork(narrow(refinedResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), phraseTexts), asidePhrases)
     : [];
   $: phraseChoice = phraseList.length > 0 || (phrasesOffered && asidePhrases.size > 0);
   $: phrasesShown = phrasesMore ? phraseList : phraseList.slice(0, PHRASES_SHOWN);
   // The words of every passage an English hit stands in, as the index counts
   // them (the pieces buildGroups cuts), read once for the results on screen.
   async function loadPhrases(results: SearchResult[]) {
-    const want = results.filter(r => r.engHits?.some(h => !h.matches && h.positions.length));
+    const want = results.filter(r => r.engHits?.some(h => h.positions.length));
     const pairs = [...new Set(want.map(r => `${r.work}:${r.meta.book}`))];
     const texts = new Map<string, PhraseText>();
     let failed = false;
@@ -3014,7 +3019,8 @@
               greekWindow.greek.reduce((n, l) => n + l.text.split(/\s+/).length, 0), hitOffset);
             // A unit a chapter starts in is a row in each chapter, and each
             // row marks only its own words, as it counts only them.
-            const own = (split.get(unit) ?? 0) > 1 ? ownMarks(clipped, indexedText, words) : null;
+            // So with phrases set aside: a word inside one is not marked.
+            const own = (split.get(unit) ?? 0) > 1 || asidePhrases.size ? ownMarks(clipped, indexedText, words) : null;
             // A row for each passage the words fall in; the count goes on the first.
             const rows = [own ?? markEnglishHtml(clipped, ctx.engUnits, ctx.engPhrase, ctx.engForms)]
               .map((html, j): TransRow => ({

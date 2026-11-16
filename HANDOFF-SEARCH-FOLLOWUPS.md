@@ -59,6 +59,19 @@ State on 16 Nov, end of the counting session:
   stay for their tests and for the readers still to be ported.
 - **C's list is ruled (John, 16 Nov: "Three-word runs"):** the phrases offered are three-word runs
   around the hit that occur at least 5 times in the results, the top 10 shown and the rest under More.
+- **C is built** (branch `claude/search-phrases`, cut from D): `lib/phrase-list.ts` (`phraseText`,
+  `runsAt`, `setAside`, `phraseRows`); in `Search.svelte` `loadPhrases` reads every English hit's
+  passage from the books once after the search (the pieces `buildGroups` cuts), `withoutPhrases`
+  drops the hits inside a phrase set aside before every count, and the list (`.sx-phr`) sits above
+  Forms, a sheet screen of its own on the phone. A run stays within a sentence and crosses piece
+  edges. URL `xp=` (comma-separated). No list for an exact-phrase search. Measured, English virtue:
+  in virtue of 335, virtue of the 108, the virtue of 97, virtue of a 68, virtue of which 67, of the
+  virtues 65, virtue or excellence 51, the virtues are 46, of virtue and 41, the other virtues 39;
+  with "in virtue of" out: virtue of the 60, virtue of a 34, virtue of which 3. `brute.mjs` counts the
+  same from the books; R-S7 pins both.
+- **Follow-up found by D's gate:** Top 136a, Pickard-Cambridge, draws an English hit whose window
+  misses its word, at every page size (the row has no mark). R-S7 tolerates five such rows on the
+  100 page and lists them.
 - **PR 2 onward: John's four questions** in the picture page,
   https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
   of git: 3.6 MB of JPEGs).
