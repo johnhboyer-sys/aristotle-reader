@@ -844,7 +844,10 @@ function phraseStarts(
 // -- Public search API ----------------------------------------------------
 
 export type SearchMode = 'all' | 'any' | 'phrase';
-export type LangOp = 'and' | 'or';
+// How a Both search joins its languages, by chapter: "and" both, "or" either
+// or both (the inclusive or, "and/or" on the switch), "xor" one and not both
+// ("or" on the switch; John, 16 Nov). The engines take "and" or "or".
+export type LangOp = 'and' | 'or' | 'xor';
 
 // One translation's English match in a segment: which translation (a
 // TranslationRef id) and the word positions the query matched there, counted

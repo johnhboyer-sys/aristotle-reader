@@ -62,6 +62,7 @@ console.log(JSON.stringify({
   'ἀρετή or virtue: chapters': new Set([...G, ...E]).size,
   'both': both.length, 'Greek only': G.size - both.length, 'English only': E.size - both.length,
   'Greek hits, both chapters': sum(grk, both), 'Greek hits, all': sum(grk, [...G]),
+  'Greek hits, Greek-only chapters': sum(grk, [...G].filter(k => !E.has(k))),
   'English hits, all translations': sum(eng, [...E]),
   'virtue: chapters': E.size, 'virtue: chapters with more than one translation': [...slots.values()].filter(s => s.size > 1).length,
 }, null, 1));

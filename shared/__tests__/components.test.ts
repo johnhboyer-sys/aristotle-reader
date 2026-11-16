@@ -120,7 +120,7 @@ describe('Search.svelte', () => {
     await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue test' } });
     // "Either language": Metaphysics has no English hit, and "both" would drop
     // its chapter (a Both "and" now joins by chapter, John, 15 Nov).
-    await fireEvent.click(screen.getByRole('radio', { name: 'Either language' }));
+    await fireEvent.click(screen.getByRole('radio', { name: 'Either or both' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await vi.waitFor(() => expect(status).toHaveTextContent('2 chapters · 3 hits'));
@@ -241,7 +241,7 @@ describe('Search.svelte in the address bar', () => {
     expect(checked('Any form of this word', 'engforms')).toBe(true);
     // Accents is a switch drawn alone (ruling 5); "Hits match" joins the two queries (d20).
     expect(screen.getByRole('button', { name: 'Accents' })).toHaveAttribute('aria-pressed', 'true');
-    expect(checked('Either language')).toBe(true);
+    expect(checked('Either or both')).toBe(true);
   });
 
   it('runs the command palette hand-off with every default', async () => {

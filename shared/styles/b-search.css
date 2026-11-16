@@ -2235,3 +2235,15 @@ body:has(.search-page) { background: #ebeae4; }
   .search-page .search-form .opt-panel.sheet .opt-row { padding-bottom: 13px; }
   .search-page .search-form .opt-panel.sheet .ck { padding-block: 12px 13px; margin-block: -12px -13px; }
 }
+
+/* A Both search's chapters by language, under the count (John, 16 Nov):
+   the rows the and | and/or | or switch lists are lit, the rest grey. */
+.search-page .sx-split { margin: 12px 0 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.search-page .sx-split .i { display: flex; align-items: center; gap: 12px; min-height: 44px; border-bottom: 1px solid var(--line); font: 600 16px/1.25 var(--sans); color: var(--ink); }
+.search-page .sx-split .i:last-child { border-bottom: 0; }
+.search-page .sx-split .i-t { flex: 1 1 auto; min-width: 0; }
+.search-page .sx-split .i small { flex: none; font: 600 16px/1 var(--sans); color: inherit; font-variant-numeric: tabular-nums; }
+.search-page .sx-split .i.off { font-weight: 500; color: var(--mid); }
+@media not all and (min-width: 961px) {
+  .search-page .sx-split { margin-top: 0; border-top: 0; }
+}

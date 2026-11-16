@@ -99,7 +99,7 @@ describe('search URL', () => {
   });
 
   it('drops unknown works and bad values for their defaults', () => {
-    const s = decodeSearchUrl('?g=a&gm=nonsense&em=&m=headword&op=xor&w=EN,Nope&cw=3', ALL);
+    const s = decodeSearchUrl('?g=a&gm=nonsense&em=&m=headword&op=nand&w=EN,Nope&cw=3', ALL);
     expect(s).toEqual(base({ grk: 'a', works: ['EN'] }));
   });
 
