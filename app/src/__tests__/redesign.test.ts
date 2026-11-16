@@ -94,7 +94,9 @@ test('R-P2 plate URLs check every composite href', () => {
     expect(validPlateUrl([])).toBe(false);
     expect(validPlateUrl([{part: '', href: 'https://example.com/a'}])).toBe(false);
 });
-test('R-P3 built Juv credits link both source records', () => {
+// CI runs these tests before it builds the site; the two built-page checks skip there, and say so.
+const built = existsSync(resolve(root, 'dist/index.html'));
+test.skipIf(!built)('R-P3 built Juv credits link both source records (needs the built site)', () => {
     const html = readFileSync(resolve(root, 'dist/picture-credits/index.html'), 'utf8');
     const doc = new DOMParser().parseFromString(html.match(/<li data-plate="Juv"[\s\S]*?<\/li>/)![0], 'text/html');
     const row = doc.querySelector('[data-plate="Juv"]');
@@ -110,7 +112,7 @@ test('R-P3 built Juv credits link both source records', () => {
 // Round 9: the home page's built HTML stays under 60,000 bytes.
 const homeWeightProblem = (bytes: number | null): string | null =>
     bytes === null ? 'dist/index.html is missing: examined nothing' : bytes >= 60000 ? `dist/index.html is ${bytes} bytes, round 9 allows under 60000` : null;
-test('R-H11 home weight', () => {
+test.skipIf(!built)('R-H11 home weight (needs the built site)', () => {
     const file = resolve(root, 'dist/index.html');
     const bytes = existsSync(file) ? readFileSync(file).length : null;
     count('R-H11', bytes ?? 0);

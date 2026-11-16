@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { resumePassage } from '../lib/resume-passage';
 import type { BookData, Segment } from '../lib/data';
@@ -8,20 +8,22 @@ const translation = (slot: TranslationRef['slot'] = 'english', extra = {}): Tran
 const work = (slot: TranslationRef['slot'] = 'english', extra = {}) => ({ translations: [translation(slot, extra)], defaultTranslation: 'chosen' });
 const book = (segment: Partial<Segment>): BookData => ({ book: 1, segments: [{ id: '1:1a', column: '1a', greek: [], english: null, ...segment }] });
 const greek = (n: number, text: string) => ({ n, text, tokens: [] });
+// CI has no built corpus; these three read it, as s1-corpus-check does.
+const dataPresent = existsSync(resolve('../app/public/data/EN/book-02.json'));
 
 describe('saved passage', () => {
-  it('keeps the suffix of Physics VII lettered lines', () => {
+  it.skipIf(!dataPresent)('keeps the suffix of Physics VII lettered lines (needs the built corpus)', () => {
     const data: BookData = JSON.parse(readFileSync(resolve('../app/public/data/Phys/book-07.json'), 'utf8'));
     expect(resumePassage(data, work(), '244b5a')?.greek).toMatch(/^ἅπαν γὰρ σῶμα/);
     expect(resumePassage(data, work(), '244b5')?.greek).toMatch(/^<ὑπόκειται/);
     expect(resumePassage(data, work(), '244b5z')).toBeNull();
   });
-  it('keeps English semicolon clauses at Categories 2a11', () => {
+  it.skipIf(!dataPresent)('keeps English semicolon clauses at Categories 2a11 (needs the built corpus)', () => {
     const data: BookData = JSON.parse(readFileSync(resolve('../app/public/data/Cat/book-01.json'), 'utf8'));
     expect(resumePassage(data, work(), '2a11')?.english).toBe('Substance, in the truest and primary and most definite sense of the word, is that which is neither predicable of a subject nor present in a subject; for instance, the individual man or horse.');
   });
 
-  it('uses the Greek word and the chosen overlay chapter, not primary engOffset', () => {
+  it.skipIf(!dataPresent)('uses the Greek word and the chosen overlay chapter, not primary engOffset (needs the built corpus)', () => {
     const data: BookData = JSON.parse(readFileSync(resolve('../app/public/data/EN/book-02.json'), 'utf8'));
     const result = resumePassage(data, { translations: [translation('english'), translation('third', { id: 'ostwald' })], defaultTranslation: 'ostwald' }, '1104b3');
     expect(result?.chapter).toBe('3');

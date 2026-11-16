@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { initReturningLayout, resolveHomePlace, updateTouchVerb } from '../lib/home-resume';
 
@@ -34,10 +34,12 @@ describe('returning home layout', () => {
   });
 });
 
+// CI has no built corpus: the EN chapter and column maps come from it.
+const dataPresent = existsSync(resolve('public/data/EN/chapters.json'));
 const load = (file: string) => JSON.parse(readFileSync(resolve(`public/data/EN/${file}.json`), 'utf8'));
-const chapters = load('chapters');
-const columns = load('columns');
-describe('home saved place', () => {
+const chapters = dataPresent ? load('chapters') : null;
+const columns = dataPresent ? load('columns') : null;
+describe.skipIf(!dataPresent)('home saved place (needs the built corpus)', () => {
   it('moves an EN citation from stale Book I to Book II chapter 3', () => {
     expect(resolveHomePlace(1, '1104b3', chapters, columns)).toEqual({ book: 2, cite: '1104b3', chapter: '3' });
   });
