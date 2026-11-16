@@ -408,9 +408,9 @@
 .search-page .auth-btn.on { border-bottom-color: var(--red-ink); }
 /* All is 16px of text: its box grows 12.5px each side, unseen, and its
    underline keeps to the word (R-A1). */
-.search-page .auth-btn:first-child { position: relative; padding-inline: 12.5px; margin-inline: -12.5px; }
+.search-page .auth-btn:first-child { position: relative; padding-inline: 14.5px; margin-inline: -14.5px; }
 .search-page .auth-btn:first-child.on { border-bottom-color: transparent; }
-.search-page .auth-btn:first-child.on::after { content: ""; position: absolute; left: 12.5px; right: 12.5px; bottom: -3px; border-bottom: 3px solid var(--red-ink); }
+.search-page .auth-btn:first-child.on::after { content: ""; position: absolute; left: 14.5px; right: 14.5px; bottom: -3px; border-bottom: 3px solid var(--red-ink); }
 .search-page .auth-btn:hover:not(:disabled) { color: var(--red-ink); }
 .search-page .auth-btn:disabled { color: var(--mid); cursor: default; }
 .search-page .auth-count { margin-left: 4px; font-weight: 500; color: var(--mid); font-variant-numeric: tabular-nums; }
@@ -2221,4 +2221,14 @@ body:has(.search-page) { background: #ebeae4; }
     .search-page .f-foot { column-gap: 24px; }
     .search-page:has(.gk-sheet) { padding-bottom: 300px; }
   }
+}
+
+/* Tap boxes R-A1 found short (15 Nov): 44px under 961px, 40px above. Each
+   grows its box, not its text or the layout. */
+.search-page .help-close { display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: -10px -12px -10px 0; }
+.search-page .works-action { min-width: 44px; padding-inline: 5.5px; margin-inline: -5.5px; }
+@media (max-width: 960.98px) {
+  .search-page :is(.sx-close, .sx-back) { display: inline-flex; align-items: center; min-width: 44px; }
+  .search-page .sx-close { justify-content: flex-end; }
+  .search-page :is(.search-form, .sx-display) .opt-panel .ck { padding-block: 12px 13px; margin-block: -12px -13px; }
 }

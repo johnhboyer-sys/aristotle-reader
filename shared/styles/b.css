@@ -11,7 +11,7 @@
 /* Direction B. Fixed Oswald titles, side plates and paper in dark mode. */
 .frame.dir-b {
   line-height: normal;
-  --bg: #ebeae4; --paper: #f1f0eb; --ink: #141413; --mid: #5d5c57; --faint: #6c6b66; --line: #d9d8d2; --line2: #e6e5e0;
+  --bg: #ebeae4; --paper: #f1f0eb; --ink: #141413; --mid: #5d5c57; --faint: #6a6964; --line: #d9d8d2; --line2: #e6e5e0;
   --red: #e2382e; --red-ink: #b42419; --soft: #e9e8e3; --hl: #f3e2a4; --sel-ink: #ffffff;
   --po-op: .82;
   --sans: "Sofia Sans", system-ui, sans-serif; --read: "Literata", Georgia, serif;
