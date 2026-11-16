@@ -6,9 +6,11 @@ you hand off. The version before this one is at
 
 ## 0. Start here
 
-**The build is done and open as PR #195** (https://github.com/johnhboyer-sys/aristotle-reader/pull/195),
-pushed 16 Nov on John's yes. Merge and deploy wait for his word. §1 to §4 below stay as the record of
-what was built.
+**Merged: PR #195, 16 Nov, as `de57f687c6` (all CI green). Not deployed: the deploy waits for John.**
+At deploy: retake the homepage card (`~/personal-website`, deploy only on his yes) and raise the Daily
+Nous pitch. Search follow-ups moved to `HANDOFF-SEARCH-FOLLOWUPS.md`, the port to the other readers to
+`HANDOFF-SEARCH-PORT.md`. Still open from this track: the site speed session, and the duplicate
+secondary chapter (`pieceCont`, its own PR). §1 to §4 below stay as the record.
 
 - **Worktree:** `~/Developer/aristotle-reader/.claude/worktrees/redesign-build`, branch
   `claude/redesign-build`. Auto-fix is on for the PR in the session that opened it.
