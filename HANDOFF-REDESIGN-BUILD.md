@@ -1,32 +1,43 @@
 # HANDOFF: redesign build (direction B)
 
-Rewritten 15 Nov 2026, 15:35, for a new build session. Rewrite this file (don't append) when you hand
-off. The version before this one is at `.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-15.md`
-(untracked) and in git history.
+Rewritten 15 Nov 2026, 21:50, at the end of the build session. Rewrite this file (don't append) when
+you hand off. The version before this one is at
+`.redesign-shots/notes/HANDOFF-REDESIGN-BUILD-archive-2026-11-15b.md` (untracked) and in git history.
 
 ## 0. Start here
 
-**John, 15 Nov 15:30: "prep for a new session for building."** Every design question is ruled. The
-build covers the reader, every page's colours, the six old-design pages, the new 404, and the search
-form. Nothing is open for John except the built result, which you show him before you call it done.
+**The build is done and waits for John's yes to push and open the PR.** §1 to §4 below describe what
+was built and how; they stay as the record. What is left is §5 steps 3 to 7.
 
-- **Work in this worktree:** `~/Developer/aristotle-reader/.claude/worktrees/redesign-build`, branch
-  `claude/redesign-build`. It is 256 commits ahead of `main` and **not pushed**. `claude/search-build`
-  was merged in on 15 Nov (2057b30e37), so `HANDOFF-SEARCH-BUILD.md` here is current. Build search
-  here too. Leave the old `search-build` worktree alone.
-- **Read first, in this order:**
-  1. this file;
-  2. `HANDOFF-READER-DESIGN.md`, rounds 1–7 and the sections after them, for every reader ruling and
-     its measurements;
-  3. `HANDOFF-SEARCH-BUILD.md` §0 (the 13 Nov form design, the 14 Nov rulings) and §8;
-  4. `docs/redesign-build-brief.md` and `docs/redesign-home-and-work-spec.md`, for what is built.
-- **Load the `delegate` skill before the first spawn.** Route models off the budget board printed at
-  session start. John's standing plan for this build is that Codex writes each stage, at
-  `--model gpt-6.1-sol --effort medium`, and the session (Opus) reviews. Implementation and review
-  are never the same model family. That includes your own hand edits: they get a Codex review. Every
-  Codex brief says "Do not launch a browser or run browser gates", and you run the browser gates
-  yourself. Pass `model:` on every Agent spawn.
-- **Ask John only when a ruling truly fails in the build.** Then show him a picture.
+- **Worktree:** `~/Developer/aristotle-reader/.claude/worktrees/redesign-build`, branch
+  `claude/redesign-build`, HEAD `79e3e4b2e0`, **not pushed**. Commits this session, oldest first:
+  `ce4f044d79` reader stage 1, `4ba14cbeb7` stage 2 (English rows join across columns; pipeline
+  `paraStart`), `76a86f60cd` six pages and the 404, `92e5c0c471` ink titles, `f54ba67e7f`,
+  `d724a464d5` search form, `c447930672` reader gate fixes, `d1ac25e3b6` search tap boxes and the
+  light `--faint` (#6a6964), `89265efb08` gates, `1a0aa90852` Opus-review fixes, `9c504d6f29` the
+  sharded gate runner, `79e3e4b2e0` Codex-review fixes.
+- **State, 15 Nov 21:40:**
+  - check-redesign stage 5, 79 gates via `node app/scripts/check-redesign-shards.mjs --base URL
+    --stage 5 --jobs 4 --log FILE` (13.7 min): 78 pass; R-P4 failed under load, passes alone. Page
+    loads wait on outside hosts (Google Fonts), so a slow network fails gates in bulk: if many fail
+    with "no loaded Gentium" or `page.goto` timeouts, rerun those alone before believing them.
+  - search-shots 136/0 failed (both themes); 14 search-counts unchanged; shared vitest 1,891, app 247,
+    `test:scripts` 99, svelte-check 0 errors; `build:public` 0 broken links; `deploy:dry` ok at
+    `79e3e4b2e0` (add 271, change 17,204, delete 48; leak check clean).
+  - Reviews: Opus adversarial review of the Codex-written app code (1 blocker, 3 should-fix: all fixed
+    but the pre-existing one below); Codex review of the Claude-written gates and fixes (8
+    should-fix, all fixed). Grok is benched (John, 11 Nov).
+- **For John** (review page https://claude.ai/artifact/4MoW4SyZrTn5KQxby8hena: reader, search, empty
+  search, 404, built against live, both themes, three screens):
+  1. Push and open the PR? (`pr-body.md` in `.redesign-shots/notes/` is filled.)
+  2. The Greek word list covers the Lemma switch after typing (picture on the page). Not changed.
+  3. A Both search counts 311 passages but shows 83 pages: pages are cut by word hits (2,952) and
+     never split a chapter. Predates the count change. Not changed.
+- **Lost:** the `search-build` worktree was removed by another session; its untracked 13 Nov mock-up
+  folder went with it. The branches survive and are merged here; the published mock is
+  https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X. R-S3 takes its field widths from brief s4b.
+- **Load the `delegate` skill before the first spawn.** Pass `model:` on every Agent spawn; a Claude
+  edit gets a Codex review.
 
 ## 1. What to build
 
@@ -174,12 +185,12 @@ about 40 uncommitted files from other tracks. They are not this build's work: le
 
 ## 5. Finish
 
-1. Full gate run plus proofs; tests (`app` vitest, `shared` vitest, root
+1. **Done 15 Nov.** Full gate run plus proofs; tests (`app` vitest, `shared` vitest, root
    `test:scripts`, svelte-check); app build; link check (0 broken);
    `npm run build:public` and `npm run deploy:dry` at the root.
    Then one adversarial review of the whole branch diff since `main`, findings only, by a model
    family that did not write the code. Screenshots of every changed page in both themes for John.
-2. Fill the PR body, `.redesign-shots/notes/pr-body.md`: `__BUILD__` (the
+2. **Done 15 Nov.** Fill the PR body, `.redesign-shots/notes/pr-body.md`: `__BUILD__` (the
    build:public and deploy:dry results), D26 and what followed it (logged in
    `.redesign-shots/notes/departures-amend.md`), round 9, the search build, and
    the follow-ups in §6.
@@ -196,16 +207,20 @@ about 40 uncommitted files from other tracks. They are not this build's work: le
 6. At deploy, raise the Daily Nous pitch with John.
 7. Then port the search design to plato-reader (memory
    `port-search-fixes-to-plato`), per hunk.
-8. Rewrite this file.
+8. Rewrite this file (done 15 Nov; again at the next handoff).
 
 ## 6. Follow-ups for the PR body (not this PR)
 
-- **Shard the gate suite (John's yes, 12 Nov 23:17).** `check-redesign.mjs
-  --stage 5` takes ~38 min, all gates in sequence in one browser; the gates are
-  independent, so run them across ~4 browsers in parallel (target ~10 min),
-  keeping `--only`/`--prove` and one combined log. Do it after the reader-fix
-  commit, before §5's final run.
-
+- ~~Shard the gate suite~~: done, `app/scripts/check-redesign-shards.mjs` (79 gates in ~14 min).
+- **Pre-existing, own PR:** a secondary translation's chapter can show twice (`pieceCont` falls back to
+  `pieces[0]` in `Reader.svelte`; EN 5 1129a, 6 1144b, 8 1155a and 1158a, Rhet 2 1378a, Rhet 3
+  1404a). The row join makes it more visible.
+- Pipeline: `tests/test_running_text.py` imports `backfill_running_text`, never committed.
+- One English Bekker number in EN sits on the line above its text (34.8px).
+- Grammar group counts count the shown page (the whole result fetched 54 books, 33 MB).
+- Review nits left: an old `ps=c` link opens at 40 a page; a spaced em dash loses the space before
+  it (the mock did the same); an old proximity link with case and tense loses the case when the
+  term is edited (G-3 derives one word class).
 - ~~Reader pages need their own design rounds~~: done, rounds 1–7 (READER-DESIGN); built in this
   pass (§1.1).
 - Search Forms list: accented spellings need an "accents" stream in
