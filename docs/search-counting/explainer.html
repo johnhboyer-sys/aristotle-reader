@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Search Page Count</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;650&family=Gentium+Book+Plus&display=swap">
+<style>
+  :root { --paper: #f1f0eb; --bg: #ebeae4; --ink: #141413; --mid: #5d5c57; --faint: #6a6964; --line: #d9d8d2; --bar: #5d5c57; --bar-hi: #141413; --red: #b3241b;
+    --sans: "Sofia Sans", system-ui, sans-serif; --greek: "Gentium Book Plus", serif; color-scheme: light; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --paper: #171716; --bg: #121211; --ink: #e0dfd9; --mid: #a7a59e; --faint: #8f8d86; --line: #2d2c29; --bar: #8f8d86; --bar-hi: #e0dfd9; --red: #ff7a6b; color-scheme: dark; } }
+  :root[data-theme="dark"] { --paper: #171716; --bg: #121211; --ink: #e0dfd9; --mid: #a7a59e; --faint: #8f8d86; --line: #2d2c29; --bar: #8f8d86; --bar-hi: #e0dfd9; --red: #ff7a6b; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 400 17px/1.5 var(--sans); }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 64px; }
+  h1 { font-weight: 650; font-size: 30px; line-height: 1.15; margin: 0 0 6px; }
+  h2 { font-weight: 650; font-size: 20px; margin: 44px 0 10px; padding-top: 14px; border-top: 1px solid var(--ink); }
+  p { margin: 0 0 12px; }
+  .lede { color: var(--mid); margin-bottom: 28px; }
+  .bar-shot { background: var(--paper); border: 1px solid var(--line); padding: 14px 16px; display: flex; flex-wrap: wrap; gap: 6px 28px; align-items: baseline; font-size: 16px; }
+  .bar-shot b { font-weight: 650; }
+  .bar-shot .pg { margin-left: auto; color: var(--mid); }
+  .counts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0 8px; }
+  .count { background: var(--paper); border: 1px solid var(--line); padding: 14px 14px 16px; }
+  .count .n { font-size: 34px; font-weight: 650; line-height: 1; font-variant-numeric: tabular-nums; }
+  .count .what { font-weight: 650; margin-top: 8px; }
+  .count .how { color: var(--mid); font-size: 15px; margin-top: 4px; }
+  .count.red .n { color: var(--red); }
+  @media (max-width: 600px) { .counts { grid-template-columns: 1fr; } }
+  /* The nesting sketch: one column holds entries, an entry holds hits. */
+  .nest { background: var(--paper); border: 1px solid var(--ink); padding: 12px 14px 14px; margin-top: 14px; }
+  .nest > .lab { font-weight: 650; margin-bottom: 10px; }
+  .nest > .lab span { color: var(--mid); font-weight: 400; }
+  .entry { border: 1px solid var(--line); background: var(--bg); padding: 10px 12px; margin-top: 8px; }
+  .entry .ref { font-weight: 650; font-size: 15px; margin-bottom: 6px; }
+  .hits { display: flex; flex-wrap: wrap; gap: 6px; }
+  .hit { border: 1px solid var(--mid); padding: 2px 8px; font-size: 15px; }
+  .hit[lang="grc"] { font-family: var(--greek); font-size: 17px; }
+  .note { color: var(--mid); font-size: 15px; margin-top: 10px; }
+  .p1 { background: var(--paper); border: 1px solid var(--ink); margin-top: 14px; }
+  .p1 .col { display: grid; grid-template-columns: 116px minmax(0, 1fr); border-top: 1px solid var(--line); }
+  .p1 .col:first-child { border-top: 0; }
+  .p1 .cl { background: var(--bg); color: var(--mid); font-weight: 650; font-size: 15px; padding: 9px 10px; border-right: 1px solid var(--line); }
+  .p1 .row { display: flex; gap: 12px; align-items: baseline; padding: 8px 12px; border-top: 1px dashed var(--line); }
+  .p1 .row:first-child { border-top: 0; }
+  .p1 .row span { font-weight: 650; min-width: 54px; font-variant-numeric: tabular-nums; }
+  .p1 .row i { font-style: normal; font-family: var(--greek); font-size: 17px; min-width: 0; }
+  .p1 .row i:not(:lang(grc)) { }
+  .key td span { color: var(--mid); font-size: 14px; }
+  .key td:nth-child(2), .key td:nth-child(3), .key th:nth-child(2), .key th:nth-child(3) { text-align: right; }
+  @media (max-width: 600px) { .p1 .col { grid-template-columns: 92px minmax(0, 1fr); } .key th:nth-child(4), .key td:nth-child(4) { display: none; } }
+  /* Pages chart */
+  .chart { background: var(--paper); border: 1px solid var(--line); padding: 16px 12px 10px; margin-top: 14px; position: relative; }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart .grid { stroke: var(--line); stroke-width: 1; }
+  .chart .axis { fill: var(--faint); font: 400 12px var(--sans); }
+  .chart rect.b { fill: var(--bar); }
+  .chart g.p:hover rect.b, .chart g.p:focus rect.b { fill: var(--bar-hi); }
+  .chart g.p:focus { outline: none; }
+  .chart rect.hit-area { fill: transparent; }
+  .chart .zero { fill: none; stroke: var(--red); stroke-width: 2; }
+  #tip { position: absolute; pointer-events: none; background: var(--ink); color: var(--paper); font-size: 14px; padding: 6px 9px; white-space: nowrap; opacity: 0; transform: translate(-50%, -100%); }
+  #tip.on { opacity: 1; }
+  .chart-cap { color: var(--mid); font-size: 15px; margin-top: 8px; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-weight: 650; }
+  .opts { display: grid; gap: 12px; margin-top: 14px; }
+  .opt { background: var(--paper); border: 1px solid var(--line); padding: 14px 16px; }
+  .opt h3 { margin: 0 0 4px; font-size: 18px; font-weight: 650; }
+  .opt .res { font-variant-numeric: tabular-nums; font-weight: 500; }
+  .opt .cost { color: var(--mid); font-size: 15px; margin-top: 6px; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: var(--mid); font-size: 15px; min-height: 44px; display: flex; align-items: center; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Why 311 passages fill 83 pages</h1>
+  <p class="lede">A Both search for ἀρετή and virtue, on the built site. Every number here was read off the pages.</p>
+
+  <div class="bar-shot" aria-label="What the results bar says">
+    <span><b>311</b> passages</span><span><b>2,952</b> hits</span><span class="pg">Page 1 of 83</span>
+  </div>
+
+  <h2>Page 1, row by row</h2>
+  <p>A <b>page</b> is what you see between the arrows: “Page 1 of 83”. Page 1 of this search holds the 13 rows below, exactly as the site draws them. Each row is one reference with its Greek and English.</p>
+  <div class="p1" aria-label="Page 1">
+    <div class="col"><div class="cl">Cat. 6b</div><div class="rows"><div class="row"><span>6b16</span><i>ἀρετὴ κακίᾳ ἐναντίον</i></div></div></div>
+    <div class="col"><div class="cl">Cat. 8b</div><div class="rows"><div class="row"><span>8b29</span><i>αἱ ἀρεταί</i></div><div class="row"><span>8b33</span><i>ἡ ἀρετή</i></div></div></div>
+    <div class="col"><div class="cl">Cat. 10b</div><div class="rows"><div class="row"><span>10b</span><i>English only (Owen)</i></div><div class="row"><span>10b7–9</span><i>ἀπὸ τῆς ἀρετῆς … ἀρετὴν ἔχειν</i></div><div class="row"><span>10b</span><i>English only: “in virtue of” (Edghill)</i></div></div></div>
+    <div class="col"><div class="cl">Cat. 13a</div><div class="rows"><div class="row"><span>13a27</span><i>πρὸς ἀρετὴν</i></div></div></div>
+    <div class="col"><div class="cl">Cat. 14a</div><div class="rows"><div class="row"><span>14a23</span><i>τοῦ μὲν γὰρ ἀρετή</i></div></div></div>
+    <div class="col"><div class="cl">Cat. 15b</div><div class="rows"><div class="row"><span>15b19</span><i>ἐπιστήμην ἔχειν καὶ ἀρετήν</i></div><div class="row"><span>15b</span><i>English only (Owen, Taylor)</i></div></div></div>
+    <div class="col"><div class="cl">An. Pr. 69a</div><div class="rows"><div class="row"><span>69a26</span><i>ἡ δ’ ἀρετὴ εἰ ἐπιστήμη</i></div></div></div>
+    <div class="col"><div class="cl">An. Post. 85a</div><div class="rows"><div class="row"><span>85a</span><i>English only: “in virtue of” (Bouchier)</i></div><div class="row"><span>85a22</span><i>αὕτη γὰρ ἀρετὴ ἀποδείξεως</i></div></div></div>
+  </div>
+  <p class="note">The grey labels on the left are Bekker columns. Rows that say “English only” have “virtue” in a translation but no ἀρετή in the Greek beside it.</p>
+
+  <h2>What each number counts, on page 1 and in all</h2>
+  <table class="key">
+    <thead><tr><th></th><th>On page 1</th><th>Whole search</th><th>Shown where</th></tr></thead>
+    <tbody>
+      <tr><td><b>Columns</b><br><span>the grey labels</span></td><td>8</td><td>311</td><td>The bar, as “311 passages”</td></tr>
+      <tr><td><b>Rows</b><br><span>what you read</span></td><td>13</td><td>829</td><td>Nowhere</td></tr>
+      <tr><td><b>Hits</b><br><span>each matched word</span></td><td>39</td><td>2,952</td><td>The bar, as “2,952 hits”</td></tr>
+    </tbody>
+  </table>
+  <p>Hits outnumber rows because one row counts every match in it. Row 6b16 is four hits: ἀρετὴ in the Greek, and “virtue” in Owen, Taylor, and Edghill.</p>
+  <p>So when the bar says “311 passages”, it is counting the grey labels, not the rows. That is why 311 and 83 pages seem not to fit: 311 is the smallest of the three numbers, and the pager is using the largest.</p>
+
+  <h2>Counting by chapter, measured</h2>
+  <p>Every Greek and English hit for ἀρετή and virtue, exported from the built site and sorted by chapter. English counts every translation.</p>
+  <table class="key">
+    <thead><tr><th>Chapters with</th><th>Count</th></tr></thead>
+    <tbody>
+      <tr><td>ἀρετή or virtue (inclusive or)</td><td>440</td></tr>
+      <tr><td>both, anywhere in the chapter</td><td>230</td></tr>
+      <tr><td>both, inside one column piece</td><td>228</td></tr>
+      <tr><td>ἀρετή but no virtue</td><td>23</td></tr>
+      <tr><td>virtue but no ἀρετή</td><td>187</td></tr>
+    </tbody>
+  </table>
+  <p>The two ways of testing “and” differ by two chapters: Magna Moralia II 8 (ἀρετή at 1207a, virtue at 1207b) and Rhet. ad Alex. 3 (ἀρετή at 1425a, virtue at 1424a–b).</p>
+  <p><b>Today’s “and” matches by column, and a column can cross a chapter break.</b> So it returns 311 columns spread over 238 chapters, and 10 of those chapters hold only one language. Nicomachean Ethics III 4 shows up for Rackham’s “the virtues are exercised” at 1113b, because the ἀρετή that matched sits in the same column but in chapter 3. Counting by chapter removes all 10.</p>
+
+  <h2>How the pager cuts</h2>
+  <p>The pager counts <b>hits</b>. It fills a page to about 40 hits, then starts the next, and it never splits a chapter. Page 1 stops at 39 hits. 2,952 hits at about 36 a page gives 83 pages. Because a row can hold 1 hit or 10, a page shows anywhere from 1 to 20 rows.</p>
+  <div class="chart" id="chart">
+    <div id="tip" role="status" aria-live="polite"></div>
+  </div>
+  <p class="chart-cap">Rows on each of the 83 pages. Point at a bar for its hits. Page 67 (red) is empty: the pager counts it but draws nothing, with no error. That is a bug, separate from the counts.</p>
+  <details>
+    <summary>The numbers for every page</summary>
+    <table id="tbl"><thead><tr><th>Page</th><th>Rows</th><th>Hits</th></tr></thead><tbody></tbody></table>
+  </details>
+
+  <h2>The fix you said yes to</h2>
+  <p>“Page by passages, 40 a page” depends on which count is the passage.</p>
+  <div class="opts">
+    <div class="opt">
+      <h3>A. Page by row</h3>
+      <div class="res">829 rows at 40 a page → about 21 pages, each the same length.</div>
+      <div class="cost">Every page looks alike, and the bar can say “829 passages”. The cost: rows exist only after the site loads the books, so it must load every book in the search before it can show page 1. For this search, that is every book of every work that mentions virtue.</div>
+    </div>
+    <div class="opt">
+      <h3>B. Page by column</h3>
+      <div class="res">311 columns at 40 a page → about 8 pages, about 100 rows each.</div>
+      <div class="cost">Cheap: the pager knows the columns before any book loads. But pages get long, and they still vary in length, since one column can hold 1 row or 15. The bar should then say “311 columns”, not passages.</div>
+    </div>
+    <div class="opt">
+      <h3>C. Keep the pager, fix the words</h3>
+      <div class="res">83 pages stay. The bar reads “2,952 hits in 311 columns”.</div>
+      <div class="cost">No code risk, and the numbers stop clashing. Pages stay short and uneven.</div>
+    </div>
+  </div>
+</main>
+<script>
+  const ENTS = [13,12,13,9,19,9,3,10,10,3,8,6,5,7,5,7,13,11,6,7,7,6,9,6,3,7,7,7,11,1,9,10,8,10,8,7,10,10,4,6,7,13,11,11,6,11,14,13,2,16,6,6,11,5,13,8,18,17,17,9,13,14,10,12,18,12,0,19,15,2,15,13,17,11,14,14,10,16,18,5,20,19,6];
+  const HITS = [39,35,39,40,37,28,16,39,34,11,47,37,22,37,20,52,75,40,34,26,29,15,42,26,17,71,39,37,39,5,47,115,40,35,34,27,39,39,20,28,33,63,40,37,16,41,36,36,8,68,32,24,40,11,38,19,45,37,39,29,36,34,29,35,68,28,0,73,35,8,42,36,39,27,38,34,22,45,36,15,72,36,20];
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 720, H = 220, L = 28, B = 26, T = 6, max = 20;
+  const bw = (W - L) / ENTS.length;
+  const el = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Rows on each of 83 result pages, from 0 to 20' });
+  const y = v => T + (H - T - B) * (1 - v / max);
+  for (const v of [0, 5, 10, 15, 20]) {
+    svg.append(el('line', { class: 'grid', x1: L, x2: W, y1: y(v), y2: y(v) }));
+    const t = el('text', { class: 'axis', x: L - 6, y: y(v) + 4, 'text-anchor': 'end' }); t.textContent = v; svg.append(t);
+  }
+  for (const p of [1, 20, 40, 60, 83]) {
+    const t = el('text', { class: 'axis', x: L + (p - .5) * bw, y: H - 6, 'text-anchor': 'middle' }); t.textContent = p; svg.append(t);
+  }
+  const chart = document.getElementById('chart'), tip = document.getElementById('tip');
+  ENTS.forEach((v, i) => {
+    const g = el('g', { class: 'p', tabindex: 0, 'aria-label': `Page ${i + 1}: ${v} rows, ${HITS[i]} hits` });
+    const x = L + i * bw + 1, w = Math.max(bw - 2, 1);
+    if (v) {
+      const h = (H - T - B) * v / max, top = y(v), r = Math.min(2, w / 2);
+      // Rounded top, square foot on the baseline.
+      g.append(el('path', { class: 'b', d: `M${x},${y(0)} V${top + r} Q${x},${top} ${x + r},${top} H${x + w - r} Q${x + w},${top} ${x + w},${top + r} V${y(0)} Z`, fill: 'var(--bar)' }));
+    } else {
+      g.append(el('circle', { class: 'zero', cx: x + w / 2, cy: y(0) - 5, r: 4 }));
+    }
+    g.append(el('rect', { class: 'hit-area', x: L + i * bw, y: T, width: bw, height: H - T - B }));
+    const show = () => {
+      const r = svg.getBoundingClientRect(), cr = chart.getBoundingClientRect(), s = r.width / W;
+      tip.textContent = `Page ${i + 1} · ${v} rows · ${HITS[i]} hits`;
+      tip.style.left = Math.min(Math.max(r.left - cr.left + (x + w / 2) * s, 90), cr.width - 90) + 'px';
+      tip.style.top = (r.top - cr.top + y(v) * s - 8) + 'px';
+      tip.classList.add('on');
+    };
+    g.addEventListener('mouseenter', show); g.addEventListener('focus', show);
+    g.addEventListener('mouseleave', () => tip.classList.remove('on')); g.addEventListener('blur', () => tip.classList.remove('on'));
+    svg.append(g);
+  });
+  chart.prepend(svg);
+  document.querySelectorAll('.chart path.b').forEach(p => p.removeAttribute('fill'));
+  const tb = document.querySelector('#tbl tbody');
+  ENTS.forEach((v, i) => { const tr = document.createElement('tr'); tr.innerHTML = `<td>${i + 1}</td><td>${v}</td><td>${HITS[i]}</td>`; tb.append(tr); });
+</script>
+</body>
+</html>

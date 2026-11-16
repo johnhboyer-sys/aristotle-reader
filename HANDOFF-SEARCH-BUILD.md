@@ -2,7 +2,14 @@
 
 Rewritten 13 Nov 2026, 17:30; §0 questions ruled and the gate review added 14 Nov 09:45. Rewrite this file (don't append) when you hand off.
 
-## 0. State (13 Nov 17:30): built and merged; a new form design ruled; its build ON HOLD
+## 0. Closed: merged with the redesign (PR #195, 16 Nov, `de57f687c6`)
+
+The search build is done and on main; the deploy waits for John. Follow-up work lives in
+`HANDOFF-SEARCH-FOLLOWUPS.md` (counting, pages, phrases, smaller items) and `HANDOFF-SEARCH-PORT.md`
+(the other readers). The sections below stay as the record of the spec that was built. §0a keeps the 13 Nov
+form ruling, which won over §§4–8 where they conflict.
+
+## 0a. Record: the state on 13 Nov 17:30: built and merged; a new form design ruled; its build ON HOLD
 
 ### Built, merged, green
 - **Built:** stages S1–S6 and John's 13 Nov morning rulings, all on `claude/search-build` (worktree
