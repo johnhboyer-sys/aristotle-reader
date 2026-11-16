@@ -21,6 +21,8 @@ import { AUTHENTIC_IDS, HAS_SPEAKERS } from './works';
 //            2026), so an old cs=1 link opens with case ignored; never written
 //   xf       Greek forms set aside in the results' form panel: folded keys,
 //            comma-separated (default: none)
+//   xp       English phrases set aside in the results' phrase list, comma-
+//            separated (default: none)
 //   op       or (default and: both queries)
 //   w        works: absent = all; "auth" = the authentic works (works.ts
 //            authenticity unset or genuine); "EN,Cat" = these; "-Oec,MM" =
@@ -102,6 +104,7 @@ export interface UrlSearch {
   workFilter: string | null; // the one work the hits are narrowed to
   lemmas: string[];        // the single-lemma search
   xforms: string[];        // forms set aside in the form panel, as folded keys
+  xphrases: string[];      // English phrases set aside in the phrase list
   combo: UrlCombo | null;  // a proximity search; it supersedes the rest
   speaker: SpeakerFilter | null; // whose words; null = anyone's
   view: ResultView;        // how the hits are grouped
@@ -114,7 +117,7 @@ export interface UrlSearch {
 export const emptyUrlSearch = (allWorks: string[]): UrlSearch => ({
   grk: '', eng: '', grkMode: 'all', engMode: 'all', matchMode: 'lemma',
   accent: false, punctuation: false, caseExact: false, langOp: 'or', engForms: true, works: [...allWorks], trans: null, workFilter: null,
-  lemmas: [], xforms: [], combo: null, speaker: null, view: 'page', facets: {},
+  lemmas: [], xforms: [], xphrases: [], combo: null, speaker: null, view: 'page', facets: {},
   context: '3', sort: 'page', pageSize: '40',
 });
 
@@ -257,6 +260,7 @@ export function encodeSearchUrl(s: UrlSearch, allWorks: string[]): string {
       if (!s.engForms) put('ef', '0');
       if (s.lemmas.length || grk) put('op', s.langOp);
       if (s.trans) put('t', s.trans);
+      if (s.xphrases.length) put('xp', s.xphrases.join(','));
     }
   }
   if (combo && s.trans) put('t', s.trans);
@@ -318,6 +322,7 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
   const op = p.get('op');
   s.langOp = op === 'and' || op === 'or' || op === 'xor' ? op : s.eng && (s.grk || s.lemmas.length) ? 'and' : 'or';
   s.xforms = list(p.get('xf'));
+  s.xphrases = s.eng ? list(p.get('xp')).map(x => x.toLowerCase().replace(/\s+/g, ' ')) : [];
 
   const decoded = p.getAll('c').map(decodeSlot);
   const slots = decodeSlots(decoded).slice(0, COMBO_TERMS_MAX);

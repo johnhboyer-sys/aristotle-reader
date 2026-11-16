@@ -13,6 +13,25 @@ const words = t => (t.toLowerCase().replace(/[‘’]/g, "'").match(/[a-z']+/g) 
 // "virtue" in any form: virtue, virtues, virtue's, virtues'.
 const isVirtue = w => w === 'virtue' || w === 'virtues' || w === "virtue's" || w === "virtues'";
 const grk = new Map(), eng = new Map(), slots = new Map(), bySlot = new Map(), chBySlot = new Map();
+// The phrase list (John, 16 Nov: "Three-word runs"): each three-word run that
+// holds a virtue word, within a sentence, counted once for each such word in it.
+const phrases = new Map(), aside = new Map();
+const ASIDE = 'in virtue of';
+const runsIn = text => {
+  for (const sentence of text.split(/[.;:!?]/)) {
+    const w = words(sentence);
+    w.forEach((x, i) => {
+      if (!isVirtue(x)) return;
+      const runs = [];
+      for (let a = i - 2; a <= i; a++) if (a >= 0 && a + 2 < w.length) runs.push(w.slice(a, a + 3).join(' '));
+      for (const r of runs) {
+        bump(phrases, r);
+        // With "in virtue of" set aside, a word inside it counts for it alone.
+        if (r === ASIDE || !runs.includes(ASIDE)) bump(aside, r);
+      }
+    });
+  }
+};
 const bump = (m, k, n = 1) => m.set(k, (m.get(k) || 0) + n);
 for (const work of readdirSync(DIST).sort()) {
   const dir = join(DIST, work);
@@ -45,12 +64,14 @@ for (const work of readdirSync(DIST).sort()) {
           from = c.engOffset; cur = c.chapter;
         }
         add(cur, 'main', words(text.slice(from)).filter(isVirtue).length);
+        runsIn(text);
       }
       // The others: each piece names its chapter.
       const others = { secondary: seg.secondary || seg.ross, third: seg.third };
       for (const [id, v] of Object.entries(seg.overlays || {})) others['overlay-' + id] = v;
       for (const [slot, pieces] of Object.entries(others)) {
         for (const p of pieces || []) add(p.chapter, slot, words(p.text || '').filter(isVirtue).length);
+        runsIn((pieces || []).map(p => p.text || '').join(' '));
       }
     }
   }
@@ -68,5 +89,7 @@ console.log(JSON.stringify({
   // The nested list (John, 16 Nov): EN's chapters with virtue in any translation, and each slot's hits.
   'virtue: EN chapters': [...E].filter(k => k.startsWith('EN:')).length,
   'virtue: EN chapters by slot': Object.fromEntries([...chBySlot].filter(([k]) => k.startsWith('EN|')).map(([k, v]) => [k.slice(3), v.size])),
+  'virtue: phrases, top 12': Object.fromEntries([...phrases].filter(([, n]) => n >= 5).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 12)),
+  'virtue: phrases, top 12, "in virtue of" set aside': Object.fromEntries([...phrases].filter(([, n]) => n >= 5).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 12).map(([p]) => [p, aside.get(p) || 0])),
   'virtue: EN hits by slot': Object.fromEntries([...bySlot].filter(([k]) => k.startsWith('EN|')).map(([k, n]) => [k.slice(3), n])), 'virtue: chapters with more than one translation': [...slots.values()].filter(s => s.size > 1).length,
 }, null, 1));
