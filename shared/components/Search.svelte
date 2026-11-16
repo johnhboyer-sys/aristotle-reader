@@ -2722,9 +2722,11 @@
           // its every word is drawn there; a word two phrases share, in the
           // chapter of each.
           const heads = [...(hit.matches ?? [])].sort((a, b) => a - b);
-          const span = Math.max(1, ...(ctx.engPhrase ? [ctx.engUnits.flat().length] : ctx.engUnits.map(u => u.length)));
+          // Only a phrase's runs share one length; terms' runs differ, so a
+          // term's word goes with the last run to start at or before it.
+          const span = Math.max(1, ctx.engUnits.flat().length);
           const chaptersOf = (w: number): ChapterAt[] => {
-            const own = heads.filter(m => m <= w && w < m + span);
+            const own = ctx.engPhrase ? heads.filter(m => m <= w && w < m + span) : [];
             const at = (own.length ? own : [heads.filter(m => m <= w).at(-1) ?? w]).map(m => places.eng(r, t.id, m));
             return at.filter((a, i) => at.findIndex(b => b.key === a.key) === i);
           };

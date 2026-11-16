@@ -154,3 +154,19 @@ it('marks a word two overlapping phrase runs share in each run\'s row', async ()
   expect(rows.map(i => [...i.querySelectorAll('.inst-en mark')].map(m => m.textContent).join(' ').trim().toLowerCase()))
     .toEqual(['ha ha', 'ha ha']);
 });
+
+// 8. Two terms, one a word and one two words, side by side across a chapter
+// start: the second term's words are not marked in the first's row (Codex
+// review 3, 16 Nov).
+it('does not stretch a one-word term over the next term\'s words', async () => {
+  const { loadOffsets, loadEngChapters } = await import('../lib/search');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(20));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [1, '2']] } });
+  const r: SearchResult = { ...base, grkMatch: false, engMatch: true, grkPositions: [],
+    engHits: [{ translation: 'english', positions: [0, 1, 2], matches: [0, 1] }] };
+  const c = await open(book([line(1, 'α')], 'Virtue well-being.'), [r], `e=${encodeURIComponent('virtue well-being')}`);
+  await vi.waitFor(() => expect(headings(c)).toEqual(['Chapter 1', 'Chapter 2']));
+  const rows = [...c.querySelectorAll('li.instance')];
+  expect(rows.map(i => [...i.querySelectorAll('.inst-en mark')].map(m => m.textContent).join(' ').trim().toLowerCase()))
+    .toEqual(['virtue', 'well being']);
+});

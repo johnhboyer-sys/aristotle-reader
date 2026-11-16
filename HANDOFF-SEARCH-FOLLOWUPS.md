@@ -26,7 +26,7 @@ State on 16 Nov, end of the counting session:
     from the books, outside the page. `counts-2026-11-16.json` against `counts-base-2026-11-15.json`:
     every Greek search keeps its old total, now as its hits.
   - Gate R-S7 rewritten to those numbers; `--prove` catches 9 of 9 cases. Two Codex reviews (gpt-6.1-sol,
-    medium); all findings fixed. The last three have tests 6–7 in `search-chapter-draw.test.ts`, except
+    medium), and a third on the last fixes; all findings fixed. The last four have tests 6–8 in `search-chapter-draw.test.ts`, except
     partial marks when a row's words run past its window (finding 3), which has none.
 - **PR 2 waits on John:** the four questions in the picture page,
   https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
