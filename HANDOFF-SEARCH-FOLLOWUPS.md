@@ -44,8 +44,8 @@ State on 16 Nov, end of the counting session:
     shows that translator's hits in that work. His words: "for the work as a heading with nested list,
     it should be chapters with at least one hit in at least one translation ... and for translators, it
     should be HITS." The passage rows stay as built: one translator's English, the names of every
-    translator with a hit there underneath, to switch between. Still his to pick: how the work's number
-    says "chapters" (pictures B6 "84 ch", B7 "84 chap.", B8 one head line "chapters · hits"). The
+    translator with a hit there underneath, to switch between. The work's number reads "84 chap." (B7;
+    John, 16 Nov: "84 chap. for work"); a translator's number stands alone. The
     "in more than one" line (B1) was not taken up.
   - **D is ruled (John, 16 Nov): pages by rows, exactly N a page** ("n results = n rows per page. do
     that."), so a chapter may run on to the next page (ἀρετή + virtue: 890 rows, 23 pages of 40). A row
