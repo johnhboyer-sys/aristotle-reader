@@ -295,7 +295,10 @@ async function* accessStatesInner(page, size) {
         await openSearchGroups(page);
         yield {name:'search-hits',root:'.dir-b'};
         const menus = page.locator('.search-form details.phone-option > summary');
-        if (await menus.first().isVisible()) for (const [label, name] of [['Greek match', 'search-match'], ['Greek form', 'search-form']]) {
+        // Under 961px Match and Form are menus (B1): their absence is a fault, not a skip.
+        const menusShown = await menus.first().isVisible();
+        assert(menusShown || sizes[size][0] >= 961, `${size} the phone's Greek match and form menus are not drawn`);
+        if (menusShown) for (const [label, name] of [['Greek match', 'search-match'], ['Greek form', 'search-form']]) {
             await menus.filter({hasText: label}).click();
             await waitFor('.search-form details.phone-option[open] > summary', `${label} menu did not open`);
             yield {name, root:'.dir-b'};
@@ -3831,11 +3834,17 @@ if(stage>=4) Object.assign(gates, {
     // R-S4: Accents and Lemma one group (R2-12); Greek options two rows at most on a desktop, one on the phone (B1).
     'R-S4': async()=>{
         let n=0;
-        for(const [size,most] of [['D1152',2],['D961',2],['P390',1]]) {
-            const p=await open(size,'light','/search?g=ἀρετή');
+        // P360 with the longest values that keep all four controls (exact phrase, exact form,
+        // Accents on; running text would hide Lemma): the mock had 2px to spare there, and the
+        // ruling is wrap rather than clip (§0, B1).
+        const longest='/search?g=%E1%BC%80%CF%81%CE%B5%CF%84%CE%AE&gm=phrase&m=form&acc=1';
+        for(const [size,most,path] of [['D1152',2,'/search?g=ἀρετή'],['D961',2,'/search?g=ἀρετή'],['P390',1,'/search?g=ἀρετή'],['P360',2,longest]]) {
+            const p=await open(size,'light',path);
             try {
                 if(prove&&proofCase==='split'&&size==='D1152')await style(p,'.greek-switches{flex-wrap:wrap!important;max-width:110px!important}');
                 if(prove&&proofCase==='three-rows'&&size==='D961')await style(p,'.d6-opts-g{flex-wrap:wrap!important}.d6-opts-g > *{flex-basis:100%!important}');
+                if(prove&&proofCase==='no-phone-menus'&&size==='P390')await p.evaluate(()=>document.querySelectorAll('.d6-opts-g .phone-option').forEach(el=>el.remove()));
+                if(prove&&proofCase==='clipped'&&size==='P360')await style(p,'.d6-opts-g{flex-wrap:nowrap!important;overflow:hidden!important}.d6-opts-g > *{flex-shrink:0!important}');
                 if(prove&&proofCase==='phone-wrap'&&size==='P390')await style(p,'.d6-opts-g{flex-wrap:wrap!important}.d6-opts-g > .greek-switches{flex-basis:100%!important}');
                 const got=await p.evaluate(()=>{
                     const box=document.querySelector('.d6-opts-g');
@@ -3846,14 +3855,20 @@ if(stage>=4) Object.assign(gates, {
                     const sw=t=>[...box.querySelectorAll('.opt-switch')].find(el=>el.checkVisibility()&&el.textContent.trim()===t)?.getBoundingClientRect();
                     const a=sw('Accents'), l=sw('Lemma');
                     const between=a&&l?ctl.filter(el=>{const r=el.getBoundingClientRect();return Math.abs(r.top-a.top)<4&&r.left>=a.right-1&&r.right<=l.left+1;}).length:0;
-                    return {controls:ctl.length, rows:rows.length, accents:a&&{top:a.top,left:a.left,right:a.right}, lemma:l&&{top:l.top,left:l.left}, between};
+                    // The phone's Match and Form are menus (B1); a control past the box's or the window's edge is clipped.
+                    const menus=[...box.querySelectorAll('.phone-option > summary')].filter(el=>el.checkVisibility()).map(el=>el.textContent.trim());
+                    const edge=Math.min(innerWidth,box.getBoundingClientRect().right)+.5;
+                    const clipped=ctl.filter(el=>el.getBoundingClientRect().right>edge).map(el=>el.textContent.trim());
+                    return {controls:ctl.length, rows:rows.length, accents:a&&{top:a.top,left:a.left,right:a.right}, lemma:l&&{top:l.top,left:l.left}, between, menus, clipped, overflow:box.scrollWidth>box.clientWidth+1};
                 });
                 assert(got&&got.controls>0,`${size} examined=0 Greek option controls`);
                 assert(got.accents&&got.lemma,`${size} Accents or Lemma not drawn: ${JSON.stringify(got)}`);
                 const together=Math.abs(got.accents.top-got.lemma.top)<=2&&got.lemma.left>=got.accents.right-1&&!got.between;
                 assert(together,`${size} Accents and Lemma are split: Accents top=${f1(got.accents.top)} right=${f1(got.accents.right)}, Lemma top=${f1(got.lemma.top)} left=${f1(got.lemma.left)}, ${got.between} controls between`);
                 assert(got.rows<=most,`${size} Greek options take ${got.rows} rows, expected ${most===1?'1':'2 at most'}`);
-                console.log(`R-S4 ${size} controls=${got.controls} rows=${got.rows}`);
+                if(size.startsWith('P'))assert(got.menus.length===2&&/match/i.test(got.menus[0])&&/form/i.test(got.menus[1]),`${size} phone Match and Form menus: found ${JSON.stringify(got.menus)}`);
+                assert(!got.clipped.length&&!got.overflow,`${size} Greek options clipped: ${got.clipped.join(', ')||'the row overflows its box'}`);
+                console.log(`R-S4 ${size} controls=${got.controls} rows=${got.rows} menus=${got.menus.join('|')}`);
                 n+=got.controls;
             } finally {await close(p);}
         }
@@ -3926,6 +3941,7 @@ if(stage>=4) Object.assign(gates, {
             const p=await open(size,'light','/search?g=ἀρετή&e=virtue');
             try {
                 if(prove&&proofCase==='hits-as-count'&&size==='D1440')await p.locator('main.search-page .rc-n').first().evaluate(el=>{el.textContent=document.querySelector('main.search-page .rc-hits').textContent.match(/\d[\d,]*/)[0];});
+                if(prove&&proofCase==='off-by-one'&&size==='S844')await p.locator('main.search-page .result-count .rc-n').first().evaluate(el=>{el.textContent='310';});
                 if(prove&&proofCase==='unlabelled'&&size==='D1440')await p.locator('main.search-page .rc-hits').first().evaluate(el=>el.remove());
                 const bar=await p.evaluate(()=>{
                     const c=[...document.querySelectorAll('main.search-page .result-count')].find(el=>el.checkVisibility());
@@ -3939,8 +3955,9 @@ if(stage>=4) Object.assign(gates, {
                 const hm=/^(\d[\d,]*) hits?$/.exec(bar.hitsText||'');
                 assert(hm&&bar.hitsShown,`${size} Both count shows no hit total labelled as hits: "${bar.text}"`);
                 const hits=Number(hm[1].replace(/,/g,''));
-                // ἀρετή and virtue: 311 passages against 2952 word hits; the big number is the smaller.
-                assert(bar.n>0&&bar.n<hits,`${size} Both count's big number ${bar.n} is not the passage count (hits ${hits})`);
+                // ἀρετή and virtue: 311 passages against 2952 word hits, pinned (measured 15 Nov; the
+                // engine is held by search-counts.mjs), not read back from the display under test.
+                assert(bar.n===311&&hits===2952,`${size} Both count reads ${bar.n} passages and ${hits} hits, expected 311 and 2952`);
                 n++;
                 if(await p.locator('.sx-filter').isVisible()) {
                     await p.locator('.sx-filter').click();
@@ -4262,6 +4279,10 @@ if (stage >= 5) Object.assign(gates, {
      if (prove && proofCase === 'no-fade' && size === 'D1440') await style(p, '.dir-b .b-rh::after{content:none!important}');
      if (prove && proofCase === 'dark-chb' && theme === 'dark' && size === 'D1152') await style(p, '.dir-b .b-chb{color:var(--faint)!important}');
      if (prove && proofCase === 'phone-rule' && size === 'P390' && theme === 'light' && view === 'both') await style(p, '.dir-b .b-text[data-view="both"] .b-row{border-bottom:1px solid var(--line2)!important}');
+     if (prove && proofCase === 'later-row' && size === 'D1440' && theme === 'light' && view === 'both') await p.evaluate(() => {
+      const rows = [...document.querySelectorAll('.reader-body .b-row')].filter(r => r.querySelector('.b-gc')?.getClientRects().length && r.querySelector('.b-ec')?.getClientRects().length);
+      rows[2].style.gridTemplateColumns = '3fr 7fr';
+     });
      const r = await p.evaluate(readFinalLayout, readLineStarts.toString());
      const label = `${size} ${theme} ${view}`;
      assert(r.rows > 0, `${label} examined=0 rows`);
@@ -4275,7 +4296,11 @@ if (stage >= 5) Object.assign(gates, {
      // Both: equal columns (round 4 EQUAL; phone 50/50, round 3 PAR), the gap, the row cap, centring from 1400px.
      if (view === 'both') {
       if (!r.pairs.length) bad('examined=0 rows with Greek and English side by side');
-      for (const x of r.pairs.slice(0, 1)) {
+      // Every row, each kind of fault once (the first row that shows it), so a
+      // later 30/70 row or a missing hairline cannot hide behind a good first row.
+      const seenFault = new Set(), rowBad = bad;
+      for (const [ri, x] of r.pairs.entries()) {
+       const bad = msg => { const kind = msg.replace(/[\d.]+/g, '#'); if (!seenFault.has(kind)) { seenFault.add(kind); rowBad(`row ${ri + 1} of ${r.pairs.length}: ${msg}`); } };
        if (!near(x.g, x.e)) bad(`Greek column ${f1(x.g)}px, English ${f1(x.e)}px: not equal columns (round 4 EQUAL${k === 'phone' ? ', round 3 PAR 50/50' : ''})`);
        if (L.gap !== null && !near(x.gap, L.gap)) bad(`column gap=${f1(x.gap)} expected ${L.gap} (${L.why})`);
        const rowW = k === 'phone' ? r.content : Math.min(r.content, 1240 * r.cw);
@@ -4712,6 +4737,7 @@ if (stage >= 5) Object.assign(gates, {
      return {trans, double: count(en, /"/g), single: count(en, /'/g), dashes: count(en, /—/g), greek: count(gr, /'/g)};
     });
     if (prove && proofCase === 'straight' && size === 'D1152') await p.evaluate(() => { const w = document.createTreeWalker(document.querySelector('.reader-body .b-ec'), NodeFilter.SHOW_TEXT); let x; while ((x = w.nextNode()) && !x.textContent.trim()); if (x) x.textContent = '"' + x.textContent; });
+    if (prove && proofCase === 'dropped-single' && size === 'D1152') await p.evaluate(() => { const w = document.createTreeWalker(document.querySelector('.reader-body'), NodeFilter.SHOW_TEXT); for (let x; (x = w.nextNode());) if (x.parentElement.closest('.b-ec')) x.textContent = x.textContent.replace(/[‘’]/g, ''); });
     if (prove && proofCase === 'greek-apostrophe' && size === 'D1152') await p.evaluate(() => { const tok = document.querySelector('.reader-body .b-gc .tok'); tok.textContent += "'"; });
     if (prove && proofCase === 'dash-space' && size === 'P390') await p.evaluate(() => { const w = document.createTreeWalker(document.querySelector('.reader-body'), NodeFilter.SHOW_TEXT); for (let x; (x = w.nextNode());) if (x.parentElement.closest('.b-ec') && x.textContent.includes('—')) { x.textContent = x.textContent.replace(/\u2060?—/, ' —'); break; } });
     const page = await p.evaluate(() => {
@@ -4730,6 +4756,7 @@ if (stage >= 5) Object.assign(gates, {
     if (page.titleStraight) issues.push(`${label} ${page.titleStraight} straight quotes in the chapter titles, e.g. ${page.titleAt}`);
     if (page.greekStraight) issues.push(`${label} ${page.greekStraight} U+0027 elision marks in the Greek, expected ’ (round 7 B), e.g. ${page.greekAt}`);
     if (page.curlyDouble < data.double) issues.push(`${label} ${page.curlyDouble} curly double quotes drawn for the data's ${data.double} straight ones`);
+    if (page.curlySingle < data.single) issues.push(`${label} ${page.curlySingle} curly single quotes drawn for the data's ${data.single} straight ones`);
     if (page.greekCurly < data.greek) issues.push(`${label} ${page.greekCurly} ’ drawn in the Greek for the data's ${data.greek} U+0027`);
     if (!data.dashes || !page.dashes) issues.push(`${label} examined=0 em dashes (data ${data.dashes}, page ${page.dashes})`);
     if (page.spaceDash) issues.push(`${label} ${page.spaceDash} em dashes after a space, where a line may break (round 6 F), e.g. ${page.spaceDashAt}`);
@@ -4999,10 +5026,10 @@ const stageFourProofs = {
     'R-A1': {...stageThreeProofs['R-A1'],'search-target':/D1440 BUTTON Clear Greek 34×34/,'search-44':/P390 BUTTON Clear Greek 42×42 \(need 44×44\)/,'search-key':/P390 BUTTON smooth breathing 30×44 \(need 36×44\) state=search-keyboard/},
     'R-S2': {'switch':/D1440 empty page: a Greek \| English \| Both switch is drawn/,'dead-clear':/D1440 Clear Greek left the Greek query/,'kept-greek':/D1440 English: the search ran as .*expected \{"e":"virtue","g":null\}/},
     'R-S3': {'narrow-field':/D1152 Greek field width=412, the mock's is 468±4/,'clear-in-row':/D1152 Clear Greek is not on the Greek label line: .*in the field row=true/},
-    'R-S4': {'split':/D1152 Accents and Lemma are split/,'three-rows':/D961 Greek options take [3-9] rows, expected 2 at most/,'phone-wrap':/P390 Greek options take 2 rows, expected 1/},
+    'R-S4': {'split':/D1152 Accents and Lemma are split/,'three-rows':/D961 Greek options take [3-9] rows, expected 2 at most/,'phone-wrap':/P390 Greek options take 2 rows, expected 1/,'no-phone-menus':/P390 phone Match and Form menus: found \[\]/,'clipped':/P360 Greek options clipped: /},
     'R-S5': {'english-low':/D1152 English options row top=[\d.]+ is not level with Greek options row 1/},
     'R-S6': {'fixed-field':/S844 Greek field row is position: fixed/,'over-header':/S844 Greek field [-\d.]+–[-\d.]+ lies over the site header/,'gap':/S844 Greek field sits 2[89](\.\d)?px above the key sheet, expected 8±2/,'live-under':/S844 \d+ of \d+ controls under the key sheet are not inert/,'inert-clear':/S844 Clear Greek shown=true inert=true/},
-    'R-S7': {'hits-as-count':/D1440 Both count's big number \d+ is not the passage count/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-instances':/P390 Filter sheet foot reads "Show \d+ instances", expected "Show \d+ passages"/},
+    'R-S7': {'hits-as-count':/D1440 Both count reads 2952 passages and 2952 hits, expected 311 and 2952/,'off-by-one':/S844 Both count reads 310 passages and 2952 hits, expected 311 and 2952/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-instances':/P390 Filter sheet foot reads "Show \d+ instances", expected "Show \d+ passages"/},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <textarea[^>]*id="grk-input"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},
@@ -5017,11 +5044,11 @@ const stageFiveProofs = {
     'R-L4': {'hash-link':/invalid By work search: #/},
     'R-R18': {'old-paper': /light \/search\?q=ἀρετή --paper=#fbfbf9 expected #f1f0eb/, 'old-ink': /dark \/lemma\/\S+ --ink=#ecebe6 expected #e0dfd9/, 'reader-paper': /light \/EN\/book\/1 \.b-text background=rgb\(251, 251, 249\) expected rgb\(241, 240, 235\)/},
     'R-R19': {'literata-default': /D1152 no saved face: greek \d+ of \d+ elements not Gentium Book Plus 400, e\.g\. .* family="?Literata/, 'saved-ignored': /D1152 saved cardo\/garamond: data-gfont=gentium, expected cardo/},
-    'R-R20': {'wrong-gap': /D1440 light both column gap=88 expected 64/, 'stacked-phone': /P390 light both column gap=-[\d.]+ expected 14/, 'tall-side-bar': /S844 light both bar height=60 expected 44 \(round 4 SHORTBAR\)/, 'no-fade': /D1440 light both no 12px fade under the bar \(round 7 K\)/, 'dark-chb': /D1152 dark both dark \.b-chb color=.* expected rgb\(164, 163, 156\) \(round 7 L\)/, 'phone-rule': /P390 light both a phone row has a rule under it/},
+    'R-R20': {'wrong-gap': /D1440 light both row 1 of \d+: column gap=88 expected 64/, 'stacked-phone': /P390 light both row 1 of \d+: column gap=-[\d.]+ expected 14/, 'later-row': /D1440 light both row 3 of \d+: Greek column [\d.]+px, English [\d.]+px: not equal columns/, 'tall-side-bar': /S844 light both bar height=60 expected 44 \(round 4 SHORTBAR\)/, 'no-fade': /D1440 light both no 12px fade under the bar \(round 7 K\)/, 'dark-chb': /D1152 dark both dark \.b-chb color=.* expected rgb\(164, 163, 156\) \(round 7 L\)/, 'phone-rule': /P390 light both row 1 of \d+: a phone row has a rule under it/},
     'R-R21': {'no-fit': /\/Mirab\/book\/1 D1152 both chapter \d{3} \(56px\) is [\d.]+px wide for a [\d.]+px margin and could step down/, 'low-number': /\/EN\/book\/1 D1440 both chapter \d+ \(56px\) baseline below the \.b-chb baseline by/, 'overstep': /\/Mirab\/book\/1 D1920 both chapter \d{3} \(30px\) stepped down though 32px fits/, 'sticky-size': /\/Mirab\/book\/1 D1152→1920: \d+ chapter numbers kept a stepped size/},
     'R-R22': {'bar-title': /EN D1920 the bar holds 1 chapter-title element/, 'ethics': /EN P390 short work name "Ethics", expected "EN"/, 'menu-stays': /EN P390 the view menu stayed open after a choice/, 'old-spy': /EN D1152 chapter \d head at y=[\d.]+ .*the bar names "Chapter \d", expected chapter \d/},
     'R-R23': {'no-hide': /S844 after a 400px scroll down: bar away=false/, 'no-tap': /S844 after a tap in the top 44px: bar away=true/, 'hides-over-menu': /S844 scrolled down with the Aa panel open: bar away=true/},
-    'R-R24': {'straight': /EN D1152 Both \(ostwald\) 1 straight quotes in the English/, 'greek-apostrophe': /EN D1152 Both \(ostwald\) 1 U\+0027 elision marks in the Greek/, 'dash-space': /EN P390 Both \(ostwald\) 1 em dashes after a space/},
+    'R-R24': {'dropped-single': /EN D1152 Both \(ostwald\) 0 curly single quotes drawn for the data's \d+ straight ones/, 'straight': /EN D1152 Both \(ostwald\) 1 straight quotes in the English/, 'greek-apostrophe': /EN D1152 Both \(ostwald\) 1 U\+0027 elision marks in the Greek/, 'dash-space': /EN P390 Both \(ostwald\) 1 em dashes after a space/},
     'R-R25': {'phone-switch': /P390 greek Aa shows "Full Greek lines" where full lines cannot fit/, 'no-widen': /D1152 Both on(, text 90%)? Greek column \d+px, expected the longest line/},
     'R-R26': {'uncapped': /D1440 english \d+ of \d+ rows wider than 664px/, 'outdent': /P390 both opening fragment L[\w-]+ turns over at [\d.]+px, expected the fragment indent \+ 8 = 24/},
 };
@@ -5035,6 +5062,8 @@ try {
         if (only && only !== id) continue;
         const variants = id === 'R-C2' ? assetProofs : stage >= 5 && stageFiveProofs[id] ? stageFiveProofs[id] : stage >= 4 && stageFourProofs[id] ? stageFourProofs[id] : stage >= 3 && stageThreeProofs[id] ? stageThreeProofs[id] : stage >= 2 && stageTwoProofs[id] ? stageTwoProofs[id] : id === 'R-T5' ? sidewaysProofs : id === 'R-T1-home' ? homeTitleProofs : null;
         const cases = prove && variants ? Object.keys(variants) : ['default'];
+        // check-redesign-shards.mjs counts these against the PROVE-CAUGHT lines.
+        if (prove) console.log(`PROVE-CASES ${id} ${cases.length}`);
         for (const variant of cases) {
             proofCase = variant;
             gateContext = {path: 'source files', size: 'n/a', theme: 'n/a'};

@@ -33,8 +33,18 @@ const worker = async () => { while (next < ids.length) await runOne(next++); };
 await Promise.all(Array.from({length: Math.min(jobs, ids.length)}, worker));
 
 // Exit codes as check-redesign.mjs sets them: 0 pass; 1 fail (with --prove,
-// every mutation caught); 2 a proof not caught. A crash gives anything else.
-const ok = r => prove ? r.code === 1 : r.code === 0;
+// every mutation caught); 2 a proof not caught. An uncaught exception also
+// exits 1, so the code alone proves nothing: a pass must print PASS, a proof
+// run must print PROVE-CAUGHT for every case its PROVE-CASES line declares,
+// and neither may show Node's crash trailer.
+const crashed = out => /^Node\.js v\d/m.test(out);
+const ok = r => {
+  if (crashed(r.out)) return false;
+  if (!prove) return r.code === 0 && new RegExp(`^PASS ${r.id} `, 'm').test(r.out);
+  const declared = Number(new RegExp(`^PROVE-CASES ${r.id} (\\d+)$`, 'm').exec(r.out)?.[1] ?? 0);
+  const caught = (r.out.match(new RegExp(`^PROVE-CAUGHT ${r.id} `, 'gm')) || []).length;
+  return r.code === 1 && declared > 0 && caught === declared;
+};
 // Four browsers on one preview server can time a page load out. A gate that
 // failed runs once more alone; if it then passes it is listed as flaky, with
 // both runs in the log, never silently as a pass.

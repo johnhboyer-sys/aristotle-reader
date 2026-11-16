@@ -891,9 +891,11 @@
     // With the Greek hidden a chapter-section work watches its English section
     // ticks, so the hash stays a section (#49a3), not a chapter (#49a).
     // Joined English rows: every tick of the shown translation, since a row's
-    // only ids may lie further apart than a page jump.
+    // only ids may lie further apart than a page jump, and the bare anchors of
+    // columns with no tick. Not the rows themselves: a tall row stays in the
+    // band with its top above the window and would outrank every later tick.
     const els = Array.from(document.querySelectorAll(greekVisible ? '.greek-line[id]'
-      : chapterSection ? '.english-col .bk-num' : joinColumns ? '.segment[id], .bk-num[data-cite]' : '.segment[id]'));
+      : chapterSection ? '.english-col .bk-num' : joinColumns ? '.bk-num[data-cite], .col-anchor' : '.segment[id]'));
     if (!els.length) return;
     const topInset = readingTop();
     // Detection band: a strip just below the sticky chrome. The intersecting

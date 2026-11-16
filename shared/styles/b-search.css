@@ -2230,5 +2230,8 @@ body:has(.search-page) { background: #ebeae4; }
 @media (max-width: 960.98px) {
   .search-page :is(.sx-close, .sx-back) { display: inline-flex; align-items: center; min-width: 44px; }
   .search-page .sx-close { justify-content: flex-end; }
-  .search-page :is(.search-form, .sx-display) .opt-panel .ck { padding-block: 12px 13px; margin-block: -12px -13px; }
+  /* Each sheet row is 12 + 19.2 + 13px: its label fills it, 44.2px, and
+     no two labels' boxes overlap. */
+  .search-page .search-form .opt-panel.sheet .opt-row { padding-bottom: 13px; }
+  .search-page .search-form .opt-panel.sheet .ck { padding-block: 12px 13px; margin-block: -12px -13px; }
 }
