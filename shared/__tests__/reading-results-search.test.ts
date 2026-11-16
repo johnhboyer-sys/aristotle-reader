@@ -190,25 +190,78 @@ describe('Search.svelte: the card goes with its hits', () => {
 
   it('does not outlive a page change that was still loading when it opened', async () => {
     const { fetchBook } = await import('../lib/data');
-    const MANY = Array.from({ length: 27 }, (_, i) => grk(`${71 + i}a`, [0, 1, 2]));
-    const { container } = await open(G('ο'), MANY, 81);
-    // The next page's book is slow: the old hits are still on screen.
+    // 20 rows in Book 1 and 7 in Book 2, at 20 a page: Book 2 is page 2.
+    const MANY = Array.from({ length: 27 }, (_, i) => ({ ...grk(`${71 + i}a`, [0, 1, 2]), meta: { id: `1:${71 + i}a`, book: i < 20 ? 1 : 2, column: `${71 + i}a` } }));
+    // Book 2 is slow: page 2 waits, the old hits still on screen.
     let bookIn!: (book: typeof fixture) => void;
-    vi.mocked(fetchBook).mockReturnValueOnce(new Promise(resolve => { bookIn = resolve; }));
+    const slow = new Promise<typeof fixture>(resolve => { bookIn = resolve; });
+    vi.mocked(fetchBook).mockImplementation(async (_work, book) => (book === 2 ? slow : fixture));
+    const { container } = await open(`${G('ο')}&ps=20`, MANY, 81);
+    expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of …');
     await fireEvent.click(within(container.querySelector('.pager')! as HTMLElement).getByRole('button', { name: /Next/ }));
     await openCard(container);
     bookIn(fixture);
-    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 2 of 3'));
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 2 of 2'));
     expect(card(container)).toBeNull();
     vi.mocked(fetchBook).mockReset().mockResolvedValue(fixture);
   });
 
+  // Codex's review of D: a book that fails past the page in view is still
+  // reported, and Retry fetches it again.
+  it('reports a book that did not load past the page in view, and fetches it again on Retry', async () => {
+    const { fetchBook } = await import('../lib/data');
+    // 20 rows in Book 1 and 7 in Book 2, at 20 a page.
+    const MANY = Array.from({ length: 27 }, (_, i) => ({ ...grk(`${71 + i}a`, [0, 1, 2]), meta: { id: `1:${71 + i}a`, book: i < 20 ? 1 : 2, column: `${71 + i}a` } }));
+    let down = true;
+    vi.mocked(fetchBook).mockImplementation(async (_work, book) => {
+      if (book === 2 && down) throw new Error('Load failed');
+      return fixture;
+    });
+    const { container } = await open(`${G('ο')}&ps=20`, MANY, 81);
+    const warn = () => text(container.querySelector('.search-note.warn'));
+    await vi.waitFor(() => expect(warn()).toContain('1 passage source didn’t load'));
+    expect(container.querySelector('.pager')).toBeNull();
+    down = false;
+    await fireEvent.click(within(container.querySelector('.search-note.warn')! as HTMLElement).getByRole('button', { name: 'Retry' }));
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of 2'));
+    expect(container.querySelector('.search-note.warn')).toBeNull();
+    vi.mocked(fetchBook).mockReset().mockResolvedValue(fixture);
+  });
+
+  // Codex's review of D: a layout retired while its books load (a Context
+  // change) starts no more of them; the new layout fetches each once.
+  it('starts no more books for a layout a Context change retired', async () => {
+    const { fetchBook, fetchChapters } = await import('../lib/data');
+    const chapters = vi.mocked(fetchChapters).getMockImplementation()!;
+    const one = (await chapters('EN'))['1'];
+    vi.mocked(fetchChapters).mockImplementation(async () => Object.fromEntries(Array.from({ length: 7 }, (_, i) => [String(i + 1), one])));
+    // 20 rows in Book 1, then a row in each of Books 2 to 7.
+    const MANY = Array.from({ length: 26 }, (_, i) => ({ ...grk(`${71 + i}a`, [0, 1, 2]), meta: { id: `1:${71 + i}a`, book: i < 20 ? 1 : i - 18, column: `${71 + i}a` } }));
+    const held: (() => void)[] = [];
+    let free = false;
+    vi.mocked(fetchBook).mockImplementation((_work, book) => book === 1 || free
+      ? Promise.resolve(fixture) : new Promise(resolve => { held.push(() => resolve(fixture)); }));
+    const { container } = await open(`${G('ο')}&ps=20`, MANY, 78);
+    expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of …');
+    await press('Context', '1 line');
+    await vi.waitFor(() => expect(window.location.search).toContain('ctx=1'));
+    free = true;
+    for (const go of held.splice(0)) go();
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of 2'));
+    await new Promise(r => setTimeout(r, 50));
+    const calls = (n: number) => vi.mocked(fetchBook).mock.calls.filter(([, b]) => b === n).length;
+    expect([6, 7].map(calls)).toEqual([1, 1]);
+    vi.mocked(fetchBook).mockReset().mockResolvedValue(fixture);
+    vi.mocked(fetchChapters).mockImplementation(chapters);
+  });
+
   it('closes on a change of page, and of sort', async () => {
+    // 27 rows at 20 a page: two pages.
     const MANY = Array.from({ length: 27 }, (_, i) => grk(`${71 + i}a`, [0, 1, 2]));
-    const { container } = await open(G('ο'), MANY, 81);
+    const { container } = await open(`${G('ο')}&ps=20`, MANY, 81);
     await openCard(container);
     await fireEvent.click(within(container.querySelector('.pager')! as HTMLElement).getByRole('button', { name: /Next/ }));
-    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 2 of 3'));
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 2 of 2'));
     expect(card(container)).toBeNull();
     await expectAllOpen(container);
     await openCard(container);
@@ -231,7 +284,7 @@ describe('Search.svelte: context', () => {
     await open(G('κ15'), [grk('99a', [15])], 1);
     const row = control('Context');
     expect(options('Context')).toEqual([
-      ['1 line', 'false'], ['3 lines', 'true'], ['Whole section', 'false'], ['Citations only', 'false'],
+      ['1 line', 'false'], ['3 lines', 'true'], ['Whole section', 'false'],
     ]);
     for (const r of within(row).getAllByRole('radio')) expect(r.closest('label')!.className).toContain('ck');
     await press('Context', '1 line');
@@ -535,32 +588,39 @@ describe('Search.svelte: sort', () => {
 });
 
 describe('Search.svelte: page size', () => {
-  // 71a … 97a, one to a Stephanus page, three hits each: 81 hits.
+  // 71a … 97a, one to a Stephanus page, three hits each: 81 hits, each
+  // section's three one row, so 27 rows.
   const MANY = Array.from({ length: 27 }, (_, i) => grk(`${71 + i}a`, [0, 1, 2]));
   const pager = (c: HTMLElement) => text(c.querySelector('.pager-status'));
 
-  it('20, 40 or 100 hits a page, breaking at Stephanus pages, back to the first page, with no new search', async () => {
+  // Pages are rows, exactly N a page, the last what is left (John, 16 Nov).
+  it('20, 40 or 100 rows a page, the last page what is left, with no new search', async () => {
     const { search } = await import('../lib/search');
     const { container } = await open(G('ο'), MANY, 81);
     expect(options('Per page')).toEqual([
       ['20', 'false'], ['40', 'true'], ['100', 'false'],
     ]);
-    // 13 Stephanus pages of 3 hits fit in 40.
-    expect(pager(container)).toBe('Page 1 of 3');
-    await fireEvent.click(within(container.querySelector('.pager')! as HTMLElement).getByRole('button', { name: /Next/ }));
-    await vi.waitFor(() => expect(pager(container)).toBe('Page 2 of 3'));
+    // 27 rows fit in 40.
+    expect(container.querySelector('.pager')).toBeNull();
+    expect(items(container)).toHaveLength(27);
     await press('Per page', '20');
-    await vi.waitFor(() => expect(pager(container)).toBe('Page 1 of 5'));
+    await vi.waitFor(() => expect(pager(container)).toBe('Page 1 of 2'));
+    expect(items(container)).toHaveLength(20);
     expect(window.location.search).toContain('ps=20');
-    // The context does not move a page break.
+    await fireEvent.click(within(container.querySelector('.pager')! as HTMLElement).getByRole('button', { name: /Next/ }));
+    await vi.waitFor(() => expect(pager(container)).toBe('Page 2 of 2'));
+    expect(items(container)).toHaveLength(7);
+    // A section's hits are one row in every context: the page stands.
     await press('Context', 'Whole section');
     await vi.waitFor(() => expect(window.location.search).toContain('ctx=s'));
-    await vi.waitFor(() => expect(pager(container)).toBe('Page 1 of 5'));
+    await vi.waitFor(() => expect(pager(container)).toBe('Page 2 of 2'));
+    await vi.waitFor(() => expect(items(container)).toHaveLength(7));
     await press('Per page', '100');
     await vi.waitFor(() => expect(container.querySelector('.pager')).toBeNull());
+    expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(27);
     expect(status()).toHaveTextContent('81 hits');
     await press('Per page', '40');
-    await vi.waitFor(() => expect(pager(container)).toBe('Page 1 of 3'));
+    await vi.waitFor(() => expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(0));
     expect(window.location.search).not.toContain('ps=');
     expect(search).toHaveBeenCalledTimes(1);
   });
@@ -571,56 +631,60 @@ describe('Search.svelte: page size', () => {
     byResult: new Map([['EN:1:70a', ['a', 'd']], ['EN:1:70b', ['h']], ['Int:1:70a', ['a']]]),
     headwords: new Map(), failedWorks: [],
   };
-  async function citations(url: string, results: SearchResult[], total: number) {
+  async function hundred(url: string, results: SearchResult[], total: number) {
     const { search, greekHitForms } = await import('../lib/search');
     vi.mocked(search).mockResolvedValueOnce({ results, failedWorks: [] });
     vi.mocked(greekHitForms).mockResolvedValueOnce(FORMS);
     window.history.replaceState(null, '', url);
     const page = render(Search);
     await vi.waitFor(() => expect(status()).toHaveTextContent(new RegExp(`${total} hits?`)));
-    await vi.waitFor(() => expect(page.container.querySelector('.cite')).not.toBeNull());
+    await vi.waitFor(() => expect(page.container.querySelector('.cmp-row')).not.toBeNull());
     return page;
   }
-  // A work's name heads its first group; each book is named on its own line.
-  const cites = (c: HTMLElement) => [...c.querySelectorAll('.cite-group')].map(g =>
-    `${[g.querySelector('.book-header'), g.querySelector('.sx-book')].filter(Boolean).map(text).join(' ')}: ${[...g.querySelectorAll('.cite')].map(text).join(', ')}`);
+  // Each row: its reference, then the words around its first hit.
+  const rows = (c: HTMLElement) => [...c.querySelectorAll('li.instance.cmp .cmp-row')].map(b =>
+    `${text(b.querySelector('.cmp-ref'))}: ${text(b.querySelector('.cmp-sum'))} [${[...b.querySelectorAll('.cmp-sum mark')].map(text).join(',')}]`);
 
-  // S4a (handoff §7.6): a Greek hit is cited to its line, read off the
-  // index's offsets; no book is fetched for it.
-  it('citations only: every Greek hit\'s line with its count, linked, and no book fetched', async () => {
-    const { fetchBook } = await import('../lib/data');
-    const { container } = await citations(`${G('α')}&ps=c`, RESULTS, 4);
-    expect(cites(container)).toEqual([`${getWork('Int')!.title}: 70a`, `${getWork('EN')!.title} Book I: 70a×2, 70b`]);
-    const link = container.querySelector('.cite')!;
-    expect(link.getAttribute('href')).toContain('/Int/book/1');
-    expect(link.getAttribute('href')).toContain('hlt=70a:0');
-    expect(link.getAttribute('href')).toContain('loc=70a:1');
-    expect(fetchBook).not.toHaveBeenCalled();
-    expect(container.querySelector('li.instance')).toBeNull();
-    for (const name of ['Group by', 'Sort']) expect(screen.queryByRole('group', { name })).toBeNull();
-    expect(control('Show hits from one work')).not.toBeNull();
-    expect(within(control('Context')).getByRole('radio', { name: 'Citations only' })).toBeChecked();
+  // The 100 page (John, 16 Nov, after the TLG): citations and a summary, a
+  // row opening in place to the passage as the other sizes draw it. It
+  // replaces Citations only, whose old links open it.
+  it('the 100 page: each row its reference and the words around its first hit, opening in place', async () => {
+    const { container } = await hundred(`${G('α')}&ps=c`, RESULTS, 4);
+    // The Interpretatione's first (corpus order), then the Ethics' three: its
+    // α and δ are two rows, each with its English.
+    expect(rows(container)).toEqual(['70a1: … α β γ δ ε … [α]', '70a1: … α β γ δ ε … [α]', '70a2: … α β γ δ ε … [δ]', '70b1: … ζ η θ ι κ … [η]']);
+    for (const name of ['Group by', 'Sort', 'Context', 'Per page']) expect(control(name)).not.toBeNull();
+    const first = container.querySelector<HTMLButtonElement>('li.instance.cmp .cmp-row')!;
+    expect(first).toHaveAttribute('aria-expanded', 'false');
+    await fireEvent.click(first);
+    const open = await vi.waitFor(() => {
+      const li = container.querySelector('li.instance.cmp-open');
+      expect(li).not.toBeNull();
+      return li!;
+    });
+    expect(open.querySelector('.cmp-shut')).toHaveAttribute('aria-expanded', 'true');
+    expect(marks(open.querySelector('.inst-snippet.greek')!)).toEqual(['α']);
+    // Its reference is the reader's link, as a row's is at the other sizes.
+    expect(open.querySelector('.cmp-head a.cmp-ref')!.getAttribute('href')).toContain('/Int/book/1');
+    expect(open.querySelector('.cmp-head a.cmp-ref')!.getAttribute('href')).toContain('loc=70a:1');
+    expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(3);
+    await fireEvent.click(open.querySelector('.cmp-shut')!);
+    await vi.waitFor(() => expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(4));
   });
 
-  it('citations only: the Forms panel still narrows the list', async () => {
-    const { fetchBook } = await import('../lib/data');
-    const { container } = await citations(`${G('α')}&ps=c`, RESULTS, 4);
+  it('the 100 page: the Forms panel narrows its rows', async () => {
+    const { container } = await hundred(`${G('α')}&ps=100`, RESULTS, 4);
     const forms = control('Greek forms found');
-    await fireEvent.click(within(forms).getByRole('checkbox', { name: /δ/ }));
+    await fireEvent.click(within(forms).getByRole('checkbox', { name: /η/ }));
     await fireEvent.click(within(forms).getByRole('button', { name: 'Apply' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('3 hits'));
-    expect(cites(container)).toEqual([`${getWork('Int')!.title}: 70a`, `${getWork('EN')!.title} Book I: 70a, 70b`]);
-    expect(fetchBook).not.toHaveBeenCalled();
-    // Back to hits: the books are fetched and the hits drawn.
-    await press('Context', '3 lines');
-    await vi.waitFor(() => expect(container.querySelector('.chapter-group')).not.toBeNull());
-    expect(container.querySelector('.cite')).toBeNull();
+    await vi.waitFor(() => expect(rows(container)).toEqual(['70a1: … α β γ δ ε … [α]', '70a1: … α β γ δ ε … [α]', '70a2: … α β γ δ ε … [δ]']));
   });
 
-  it('citations only keeps the speaker filter', async () => {
+  it('the 100 page keeps the speaker filter', async () => {
     const results = [grk('70a', [0, 3], 'EN', { speakers: ['EN', 'Socrates'] })];
-    const { container } = await citations(`${G('α')}&sp=only&sn=EN,Socrates&ps=c`, results, 2);
-    expect(cites(container)).toEqual([`${getWork('EN')!.title} Book I: 70a×2`]);
+    const { container } = await hundred(`${G('α')}&sp=only&sn=EN,Socrates&ps=100`, results, 2);
+    expect(rows(container)).toEqual(['70a1: … α β γ δ ε … [α]', '70a2: … α β γ δ ε … [δ]']);
   });
 });
 

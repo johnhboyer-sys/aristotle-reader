@@ -48,7 +48,7 @@ import { AUTHENTIC_IDS, HAS_SPEAKERS } from './works';
 //   ctx      how much text a hit shows: 1 (a line) | s (its whole section)
 //            (default 3 lines). Not cx, which is the proximity chapter switch
 //   so       the order of a results page: work | form | freq (default page)
-//   ps       hits per results page: 20 | 100 | c, citations only (default 40)
+//   ps       rows per results page: 20 | 100 (default 40); an old ps=c or ctx=c is 100
 
 import {
   COMBO_TERMS_MAX,
@@ -343,10 +343,10 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
   s.context = pick(p.get('ctx'), RESULT_CONTEXTS, '3');
   s.sort = pick(p.get('so'), RESULT_SORTS, 'page');
   s.pageSize = pick(p.get('ps'), PAGE_SIZES, '40');
-  // Old citations URLs used Per page (ps=c, 400 a page). Citations only is now
-  // a Context choice and Per page is 20, 40, or 100 (John, 15 Nov), so such a
-  // link opens as citations at 40 a page.
-  if (p.get('ps') === 'c') s.context = 'c';
+  // Citations only (ctx=c, and before it ps=c) gave way to the 100 page,
+  // each row its reference and the words around its first hit (John, 16 Nov:
+  // "Yes, replace it"), so such a link opens there.
+  if (p.get('ctx') === 'c' || p.get('ps') === 'c') s.pageSize = '100';
   for (const pair of list(p.get('gf'))) {
     const [k, v, extra] = pair.split('.');
     // A name every object has ("constructor", "__proto__") is not a category,

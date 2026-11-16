@@ -63,7 +63,8 @@ try {
       await page.waitForFunction(() => {
         const status = document.querySelector('[role="status"]')?.textContent?.trim();
         if (document.querySelector('.search-error')) throw new Error(document.querySelector('.search-error').textContent);
-        return status && (status === 'No passages found.' || /^\d[\d,]* chapters?/.test(status));
+        // Pages are rows, counted as the books load: "page 1 of …" until they have (John, 16 Nov).
+        return status && (status === 'No passages found.' || (/^\d[\d,]* chapters?/.test(status) && !/of …/.test(status)));
       }, null, { timeout: 120000 });
       const counts = await page.evaluate(() => {
         const status = document.querySelector('[role="status"]').textContent.trim();

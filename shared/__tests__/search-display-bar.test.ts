@@ -84,6 +84,9 @@ const GRAMMAR: HitGrammar = {
 const WORKS = ['Euthyphro', 'DA', 'Int', 'Cat', 'Cratylus', 'EN', 'Meta'];
 const LETTERS = ['a', 'b', 'g', 'd', 'e', 'z', 'h', 'q', 'i', 'k', 'l', 'm', 'n', 'c'];
 const WIDE = WORKS.flatMap(w => [at(w, '70a', [0, 1]), at(w, '70b', [0, 1])]);
+// The same 28 hits, 70a's two far apart: at 1 line, three rows a work, 21 in
+// all, two pages at 20 (pages are rows, John, 16 Nov).
+const SPREAD = WORKS.flatMap(w => [at(w, '70a', [0, 15]), at(w, '70b', [0, 1])]);
 const WIDE_FORMS: HitForms = {
   byResult: new Map(WIDE.map((r, i) => [`${r.work}:${r.meta.id}`, [LETTERS[(2 * i) % 14], LETTERS[(2 * i + 1) % 14]]])),
   headwords: new Map(), failedWorks: [],
@@ -97,7 +100,7 @@ async function open(url: string, results: SearchResult[] = RESULTS, forms: HitFo
   window.history.replaceState(null, '', url);
   const page = render(Search);
   await screen.findByRole('group', { name: 'Per page' });
-  await vi.waitFor(() => expect(page.container.querySelectorAll('.group-head, .cite').length).toBeGreaterThan(0));
+  await vi.waitFor(() => expect(page.container.querySelectorAll('.group-head').length).toBeGreaterThan(0));
   return page;
 }
 const status = () => screen.getByRole('status');
@@ -119,8 +122,8 @@ const G = `/search?g=${encodeURIComponent('εἰμί')}`;
 
 describe('Search.svelte: the display bar', () => {
   it('holds the four menus and the top pager over the hits, none of them in the side column or the sheet', async () => {
-    // 28 hits at 20 a page: two pages, so the top pager is drawn.
-    const { container } = await open(`${G}&ps=20`, WIDE, WIDE_FORMS);
+    // 21 rows at 20 a page: two pages, so the top pager is drawn.
+    const { container } = await open(`${G}&ps=20&ctx=1`, SPREAD, WIDE_FORMS);
     const main = container.querySelector('.sx-main')!;
     const bar = main.querySelector(':scope > .sx-display')!;
     expect(bar).not.toBeNull();
@@ -143,7 +146,6 @@ describe('Search.svelte: the display bar', () => {
     { legend: 'Group by', label: 'By form', b: 'form', param: 'v=form', entry: 'By form', back: 'By work', backB: 'work' },
     { legend: 'Sort', label: 'Commonest form first', b: 'Commonest form first', param: 'so=freq', entry: 'Commonest form first', back: 'Bekker order', backB: 'Bekker order' },
     { legend: 'Context', label: '1 line', b: '1 line', param: 'ctx=1', entry: '1 line', back: '3 lines', backB: '3 lines' },
-    { legend: 'Context', label: 'Citations only', b: 'citations only', param: 'ctx=c', entry: 'Citations only', back: '3 lines', backB: '3 lines' },
   ];
   for (const c of cases) {
     it(`"${c.legend}": a radio applies at once, without a new search, and the menu sets it back`, async () => {
@@ -219,11 +221,14 @@ describe('Search.svelte: the display bar', () => {
     expect(document.activeElement).toBe(m.querySelector('summary'));
   });
 
-  it('under citations only holds just the Per page menu', async () => {
+  // Citations only gave way to the 100 page (John, 16 Nov): an old link opens
+  // it, with every menu.
+  it('opens an old citations link at 100 a page, every menu in place', async () => {
     const { container } = await open(`${G}&ps=c`);
     const bar = container.querySelector('.sx-main > .sx-display')!;
-    expect([...bar.querySelectorAll('legend')].map(text)).toEqual(['Context', 'Per page']);
-    expect(value('Context')).toBe('citations only');
+    expect([...bar.querySelectorAll('legend')].map(text)).toEqual(['Group by', 'Sort', 'Context', 'Per page']);
+    expect(value('Context')).toBe('3 lines');
+    expect(value('Per page')).toBe('100');
   });
 
   it('is not drawn when nothing is found', async () => {
@@ -274,8 +279,9 @@ describe('Search.svelte: the count row', () => {
   // John, 15-16 Nov: the bar counts chapters, then Greek hits. The " · " before
   // the hits is drawn by CSS, so the text has none; the title has it.
   it('holds the count, Save, the pager, Filter and View, in that order', async () => {
-    const { container } = await open(`${G}&ps=20`, WIDE, WIDE_FORMS);
-    expect(names(container)).toEqual(['7 chapters28 hits · page 1 of 2', 'Save search', 'Previous page', '1/2', 'Next page', 'Filter', 'View, 20 per page']);
+    const { container } = await open(`${G}&ps=20&ctx=1`, SPREAD, WIDE_FORMS);
+    await vi.waitFor(() => expect(status()).toHaveTextContent('page 1 of 2'));
+    expect(names(container)).toEqual(['7 chapters28 hits · page 1 of 2', 'Save search', 'Previous page', '1/2', 'Next page', 'Filter', 'View, 1 line, 20 per page']);
     // Each is an icon; Save, Filter and View an icon over its label.
     for (const b of bar(container).querySelectorAll('button')) expect(b.querySelector('svg')).not.toBeNull();
     expect([...bar(container).querySelectorAll('.sx-lab')].map(text)).toEqual(['Save search', 'Filter', 'View']);
@@ -298,7 +304,8 @@ describe('Search.svelte: the count row', () => {
   });
 
   it('tells the count how long it is, so it can shrink to fit', async () => {
-    const { container } = await open(`${G}&ps=20`, WIDE, WIDE_FORMS);
+    const { container } = await open(`${G}&ps=20&ctx=1`, SPREAD, WIDE_FORMS);
+    await vi.waitFor(() => expect(status()).toHaveTextContent('page 1 of 2'));
     const count = container.querySelector<HTMLElement>('.result-count')!;
     expect(count.style.getPropertyValue('--n')).toBe(String('7 chapters · 28 hits · page 1 of 2'.length));
     expect(count).toHaveAttribute('title', '7 chapters · 28 hits · page 1 of 2');

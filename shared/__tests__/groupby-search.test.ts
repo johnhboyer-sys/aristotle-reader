@@ -38,7 +38,7 @@ vi.mock('../lib/search', async (importOriginal) => {
 vi.mock('../lib/data', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/data')>();
   const sections = [{ column: '70a', chapter: '70', line: '1' }, { column: '70b', chapter: '70', line: '1' }];
-  return { ...actual, fetchBook: vi.fn(async (_w: string, n: number) => book(n)), fetchChapters: vi.fn(async () => Object.fromEntries(Array.from({ length: 9 }, (_, i) => [String(i + 1), sections]))) };
+  return { ...actual, fetchBook: vi.fn(async (_w: string, n: number) => book(n)), fetchChapters: vi.fn(async () => Object.fromEntries(Array.from({ length: 25 }, (_, i) => [String(i + 1), sections]))) };
 });
 
 afterEach(async () => {
@@ -137,23 +137,23 @@ describe('By form, keyed as ruled', () => {
 });
 
 describe('By grammar: the headword over its paradigm', () => {
-  it('counts the shown page without fetching books from later pages, then recounts filtered hits', async () => {
-    const results = Array.from({ length: 9 }, (_, i) => at('70a', [0, 1, 2], { meta: { id: `${i + 1}:70a`, book: i + 1, column: '70a' } }));
+  // Pages are rows (John, 16 Nov): 25 books, a row each, 20 a page.
+  it('counts the shown page, then recounts filtered hits', async () => {
+    const results = Array.from({ length: 25 }, (_, i) => at('70a', [0, 1, 2], { meta: { id: `${i + 1}:70a`, book: i + 1, column: '70a' } }));
     const forms: HitForms = { ...FORMS, byResult: new Map(results.map(r => [`EN:${r.meta.id}`, ['areth', 'areth', 'areth']])) };
     const grammar: HitGrammar = { failedWorks: [], byResult: new Map(results.map(r => [`EN:${r.meta.id}`, [[NOM_SG], [DAT_SG], [NOM_SG]]])) };
     const { container } = await open('/search?l=areth&v=grammar&ps=20', { results, forms, grammar });
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('page 1 of 2'));
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'αρετη 18 hits', 'Nominative or vocative singular ἀρετή 12 hits', 'Dative singular ἀρετῇ 6 hits',
+      'αρετη 60 hits', 'Nominative or vocative singular ἀρετή 40 hits', 'Dative singular ἀρετῇ 20 hits',
     ]));
-    const { fetchBook } = await import('../lib/data');
-    expect([...new Set(vi.mocked(fetchBook).mock.calls.map(([, n]) => n))]).toEqual([1, 2, 3, 4, 5, 6]);
     await fireEvent.click(screen.getAllByRole('button', { name: 'Next page' })[0]);
     await vi.waitFor(() => expect(heads(container)).toEqual([
-      'αρετη 9 hits', 'Nominative or vocative singular ἀρετή 6 hits', 'Dative singular ἀρετῇ 3 hits',
+      'αρετη 15 hits', 'Nominative or vocative singular ἀρετή 10 hits', 'Dative singular ἀρετῇ 5 hits',
     ]));
+    // A filter lays the rows out again, from the first page: a row each, 20 on it.
     await fireEvent.click(within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case dat' }));
-    await vi.waitFor(() => expect(heads(container)).toEqual(['αρετη 9 hits', 'Dative singular ἀρετῇ 9 hits']));
+    await vi.waitFor(() => expect(heads(container)).toEqual(['αρετη 20 hits', 'Dative singular ἀρετῇ 20 hits']));
   });
 
   it('new data: the verb’s parses are gone from the rows and the facets', async () => {

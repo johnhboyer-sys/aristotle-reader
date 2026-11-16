@@ -36,8 +36,8 @@ State on 16 Nov, end of the counting session:
   A translation chosen in no one work (an old link's `t=`) is on in every work it has hits in, and
   choosing it lifts it. Measured, English virtue: EN 84 chap.; Rackham 315, Ostwald 298, Ross 294,
   Peters 264; Ross alone 81 chapters · 294 hits (`brute.mjs` agrees). R-S7 checks the list on desktop
-  and phone and the phone's Works screen with `w=EN&t=ostwald`. **Beyond the ruling, for John:** the
-  work rows of a Both search now count chapters too (they counted hits).
+  and phone and the phone's Works screen with `w=EN&t=ostwald`. The work rows of a Both search count
+  chapters too (they counted hits): beyond the ruling, and John kept it (16 Nov). PR #200.
   Next: D (rows, the 100 page), then C (phrases), each its own PR.
 - **D: rows cannot be counted from the index alone.** A row is what `buildGroups` draws: hits whose
   windows share words merge into one row, a Greek and an English hit in one aligned unit
@@ -46,6 +46,17 @@ State on 16 Nov, end of the counting session:
   needs the search's books before the page count is known. **Ruled (John, 16 Nov): fill as books
   load.** Page 1 draws as soon as its own books load; the rest load in the background, and the pager
   reads "1 of …" until they finish and then the page count.
+- **D is built** (branch `claude/search-rows`, cut from B): `layOutRows`, `startRows`, `bookRows`,
+  `pageRows` in `Search.svelte`. Each book of the search is laid out once by `buildGroups` (now with
+  no page filter), in corpus order, four at a time in the background; a page is the slice of rows
+  it holds, a chapter that runs over a page edge heading its part on both. Context lays the rows
+  out again (it changes what merges); Per page only slices them again. The 100 page draws each row
+  as a button (`.cmp-row`: reference, then `summaryOf`: seven words before the first hit, eight
+  after) that opens in place (`openRows`). Context "Citations only" is gone (`ResultContext` is
+  1 | 3 | s); `ctx=c` and `ps=c` links open the 100 page. R-S7 checks 40 rows on every page but the
+  last, no chapter twice on a page or on pages apart, 229 chapters and 940 hits drawn, and the
+  100 page. `lib/chapter-pages.ts` `paginate`/`paginatePlaces` no longer serve this page; they
+  stay for their tests and for the readers still to be ported.
 - **C's list is ruled (John, 16 Nov: "Three-word runs"):** the phrases offered are three-word runs
   around the hit that occur at least 5 times in the results, the top 10 shown and the rest under More.
 - **PR 2 onward: John's four questions** in the picture page,

@@ -212,7 +212,7 @@ describe('Search.svelte S4a: the menus over the hits', () => {
       // One word as spelled: By grammar is a dictionary word's (John, 13 Nov).
       ['Group by', 'By work', 'By form'],
       ['Sort', 'Bekker order', 'Works A–Z', 'Forms A–Z', 'Commonest form first'],
-      ['Context', '1 line', '3 lines', 'Whole section', 'Citations only'],
+      ['Context', '1 line', '3 lines', 'Whole section'],
       ['Per page', '20', '40', '100'],
     ]);
   });

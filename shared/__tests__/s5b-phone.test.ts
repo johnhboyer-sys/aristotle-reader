@@ -176,7 +176,7 @@ describe('no target under 44px, at any width', () => {
     '.search-page .prox-lock input', '.search-page .prox-lock input:checked::after', // a tick box inside its label
     '.search-page .pager-arrow', '.search-page .group-head .caret::after', // chevrons inside their buttons
     '.search-page span.tr-name', // one translator's name: text, not a button
-    '.search-page .cite-group .sx-book', // a book's name over its citations
+    '.search-page .cmp-x', // the 100 page's chevron inside its 44px row
     '.search-page .sx-badge', '.search-page .sx-dot', // marks on the Filter and View buttons
     '.search-page .sx-forms .fx input', '.search-page .gx-chip input', // tick boxes inside their 44px labels
     '.search-page .sx-row .i-x', // the × drawn inside the chosen work's bar
