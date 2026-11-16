@@ -3935,8 +3935,9 @@ if(stage>=4) Object.assign(gates, {
     },
     // R-S7: the results count chapters (John, 15–16 Nov): Both + "and" is both terms anywhere in
     // one chapter, its hits the Greek words; an English search over works with several
-    // translations shows no hit total. Every page draws, and the pages draw every chapter
-    // counted (page 67 of this search drew nothing, 16 Nov). The figures are pinned from
+    // translations shows no hit total. Pages are rows, exactly 40 a page but the last (John,
+    // 16 Nov), and the pages draw every chapter and hit counted (page 67 of this search drew
+    // nothing, 16 Nov, under chapter pages). The figures are pinned from
     // docs/search-counting/brute.mjs, which counts the books themselves with no engine code.
     'R-S7': async()=>{
         let n=0;
@@ -4119,21 +4120,22 @@ if(stage>=4) Object.assign(gates, {
                 console.log(`R-S7 P390 w=EN&t=ostwald Works screen on=${JSON.stringify(shown)}`);
             } finally {await close(p);}
         }
-        // Every page of the Both search draws hits, and the pages draw every chapter counted, each
-        // once by its work, book, and chapter, and the hits counted: a page that left one chapter
-        // out and drew another twice would keep the number of headings.
+        // Pages by rows (John, 16 Nov: "n results = n rows per page"): every page of the Both
+        // search but the last draws exactly 40 rows, the last at least one; the pages draw every
+        // chapter counted and the hits counted. A chapter is drawn on one page, or runs from the
+        // foot of one page to the head of the next, never twice on a page: a page that left one
+        // chapter out and drew another twice would keep the number of headings.
         {
             const p=await open('D1440','light','/search?g=ἀρετή&e=virtue');
             try {
+                await p.waitForFunction(()=>/of \d+/.test(document.querySelector('.pager-status')?.textContent??''),null,{timeout:120000});
                 const total=Number((await p.locator('.pager-status').first().textContent()).match(/of (\d+)/)[1]);
-                const seen=new Map();
-                const empty=[];
-                let hits=0;
+                const pages=[];
                 for(let i=1;i<=total;i++) {
                     await p.waitForFunction(k=>(document.querySelector('.pager-status')?.textContent??'').trim().startsWith(`Page ${k} of`),i,{timeout:60000});
-                    if(prove&&proofCase==='empty-page'&&i===67)await p.evaluate(()=>document.querySelectorAll('main.search-page .instance-list > li, main.search-page .sx-chap').forEach(el=>el.remove()));
-                    if(prove&&proofCase==='twice'&&i===2)await p.evaluate(()=>{const c=[...document.querySelectorAll('main.search-page .sx-chap-n')];c[1].textContent=c[0].textContent;});
-                    const got=await p.evaluate(()=>{
+                    if(prove&&proofCase==='short-page'&&i===2)await p.evaluate(()=>document.querySelector('main.search-page .instance-list > li')?.remove());
+                    if(prove&&proofCase==='twice'&&i===2)await p.evaluate(()=>{const c=[...document.querySelectorAll('main.search-page .sx-chap-n')];c[2].textContent=c[0].textContent;});
+                    pages.push(await p.evaluate(()=>{
                         const main=document.querySelector('main.search-page');
                         let work='',book='',hits=0;
                         const keys=[];
@@ -4146,20 +4148,53 @@ if(stage>=4) Object.assign(gates, {
                             else keys.push(`${work} | ${book} | ${el.textContent.trim()}`);
                         }
                         return {rows:main.querySelectorAll('.instance-list > li').length,keys,hits};
-                    });
-                    if(!got.rows)empty.push(i);
-                    for(const k of got.keys)seen.set(k,[...(seen.get(k)??[]),i]);
-                    hits+=got.hits;
+                    }));
                     if(i<total)await p.locator('.pager .pager-next').first().click();
                 }
                 assert(total>0,'D1440 Both search examined=0 pages');
-                assert(!empty.length,`D1440 Both search draws nothing on page${empty.length>1?'s':''} ${empty.join(', ')} of ${total}`);
-                const twice=[...seen].filter(([,pp])=>pp.length>1);
-                assert(!twice.length,`D1440 Both search draws ${twice.length} chapters more than once: ${twice.slice(0,3).map(([k,pp])=>`${k} (pages ${pp.join(', ')})`).join('; ')}`);
-                assert(seen.size===229,`D1440 Both search draws ${seen.size} chapters over its ${total} pages, expected the 229 it counts`);
+                pages.forEach((pg,k)=>{
+                    if(k<total-1) assert(pg.rows===40,`D1440 Both search page ${k+1} of ${total} draws ${pg.rows} rows, expected 40`);
+                    else assert(pg.rows>=1&&pg.rows<=40,`D1440 Both search's last page draws ${pg.rows} rows, expected 1 to 40`);
+                    const dup=pg.keys.filter((key,j)=>pg.keys.indexOf(key)!==j);
+                    assert(!dup.length,`D1440 Both search draws ${dup[0]} twice on page ${k+1}`);
+                });
+                const where=new Map();
+                pages.forEach((pg,k)=>pg.keys.forEach((key,j)=>where.set(key,[...(where.get(key)??[]),{page:k,first:j===0,last:j===pg.keys.length-1}])));
+                const split=[...where].filter(([,at])=>at.length>1);
+                const bad=split.filter(([,at])=>at.length>2||at[1].page!==at[0].page+1||!at[0].last||!at[1].first);
+                assert(!bad.length,`D1440 Both search draws ${bad.length} chapters on pages apart: ${bad.slice(0,3).map(([key,at])=>`${key} (pages ${at.map(a=>a.page+1).join(', ')})`).join('; ')}`);
+                assert(where.size===229,`D1440 Both search draws ${where.size} chapters over its ${total} pages, expected the 229 it counts`);
+                const hits=pages.reduce((h,pg)=>h+pg.hits,0);
                 assert(hits===940,`D1440 Both search's work headings count ${hits} hits over its ${total} pages, expected the 940 it counts`);
                 n+=total;
-                console.log(`R-S7 D1440 pages=${total} chapters drawn=${seen.size} hits drawn=${hits}`);
+                const rows=pages.reduce((r,pg)=>r+pg.rows,0);
+                console.log(`R-S7 D1440 pages=${total} rows=${rows} last page=${pages.at(-1).rows} chapters drawn=${where.size} split across pages=${split.length} hits drawn=${hits}`);
+            } finally {await close(p);}
+        }
+        // The 100 page (John, 16 Nov, after the TLG): each row its reference and the words around
+        // its first hit, marked, opening in place to the passage with its reader link; an old
+        // Citations only link (ctx=c) opens it.
+        for(const size of ['D1440','P390']) {
+            const p=await open(size,'light','/search?g=ἀρετή&e=virtue&ctx=c');
+            try {
+                await p.waitForFunction(()=>/of \d+/.test([...document.querySelectorAll('main.search-page .result-count')].find(el=>el.checkVisibility())?.textContent??''),null,{timeout:120000});
+                if(prove&&proofCase==='cmp-unmarked'&&size==='D1440')await p.evaluate(()=>document.querySelectorAll('main.search-page .cmp-sum mark').forEach(m=>m.replaceWith(m.textContent)));
+                const got=await p.evaluate(()=>{
+                    const rows=[...document.querySelectorAll('main.search-page li.instance')];
+                    const bare=rows.filter(li=>!li.classList.contains('cmp')||!li.querySelector('.cmp-ref')?.textContent.trim()||!li.querySelector('.cmp-sum mark'));
+                    const tall=rows.map(li=>li.querySelector('.cmp-row')?.getBoundingClientRect().height??0).filter(h=>h<44);
+                    return {rows:rows.length,bare:bare.length,short:tall.length,page:[...document.querySelectorAll('main.search-page .result-count')].find(el=>el.checkVisibility())?.textContent.match(/page 1 of (\d+)/)?.[1]};
+                });
+                assert(got.rows===100,`${size} ctx=c draws ${got.rows} rows on page 1, expected the 100 page's 100`);
+                assert(!got.bare,`${size} the 100 page draws ${got.bare} rows without a reference and a marked hit`);
+                assert(!got.short,`${size} the 100 page draws ${got.short} rows under 44px`);
+                n++;
+                await p.locator('main.search-page li.instance.cmp .cmp-row >> visible=true').first().click();
+                await p.waitForSelector('main.search-page li.instance.cmp-open .inst-snippet mark',{timeout:30000});
+                const open1=await p.evaluate(()=>{const li=document.querySelector('main.search-page li.instance.cmp-open');return {href:li.querySelector('.inst-ref')?.getAttribute('href')??'',expanded:li.querySelector('.cmp-head')?.getAttribute('aria-expanded')};});
+                assert(/loc=/.test(open1.href)&&open1.expanded==='true',`${size} the 100 page's first row opens to href="${open1.href}" expanded=${open1.expanded}`);
+                n++;
+                console.log(`R-S7 ${size} 100 page rows=${got.rows} pages=${got.page} first opens ${open1.href.slice(0,60)}`);
             } finally {await close(p);}
         }
         return n;
@@ -5218,7 +5253,7 @@ const stageFourProofs = {
     'R-S4': {'split':/D1152 Accents and Lemma are split/,'three-rows':/D961 Greek options take [3-9] rows, expected 2 at most/,'phone-wrap':/P390 Greek options take 2 rows, expected 1/,'no-phone-menus':/P390 phone Match and Form menus: found \[\]/,'clipped':/P360 Greek options clipped: /},
     'R-S5': {'english-low':/D1152 English options row top=[\d.]+ is not level with Greek options row 1/},
     'R-S6': {'fixed-field':/S844 Greek field row is position: fixed/,'over-header':/S844 Greek field [-\d.]+–[-\d.]+ lies over the site header/,'gap':/S844 Greek field sits 2[89](\.\d)?px above the key sheet, expected 8±2/,'live-under':/S844 \d+ of \d+ controls under the key sheet are not inert/,'inert-clear':/S844 Clear Greek shown=true inert=true/},
-    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'empty-page':/D1440 Both search draws nothing on page 67 of \d+/,'twice':/D1440 Both search draws 1 chapters more than once: /,'split-number':/P390 Both split reads .*"Greek only 22 off".*, expected/,'split-lit':/D1440 Both split reads .*"English only 186"\].*, expected/,'xor-inclusive':/D1440 One language count reads 438 chapters and 27 hits, expected 209 and 27/,'xor-label':/D1440 One language switch reads "and\/or", expected "or"/,'default-and':/D1440 New search count reads 229 chapters and 940 hits, expected 438 and 967/,'nest-order':/D1440 English nested list opens .*"  Ostwald 298","  Rackham 315".*, expected/,'nest-hits':/P390 English nested list opens \["Nicomachean Ethics 1171",.*, expected/,'nest-click':/D1440 Ross in the Nicomachean Ethics count reads 81 chapters and 385 hits, expected 81 and 294/,'works-bounce':/P390 w=EN Works screen falls back to the menu/,'cross-on':/P390 w=EN&t=ostwald marks \[\] on, expected \["Ostwald"\]/},
+    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'short-page':/D1440 Both search page 2 of \d+ draws 39 rows, expected 40/,'twice':/D1440 Both search draws .* twice on page 2/,'cmp-unmarked':/D1440 the 100 page draws 100 rows without a reference and a marked hit/,'split-number':/P390 Both split reads .*"Greek only 22 off".*, expected/,'split-lit':/D1440 Both split reads .*"English only 186"\].*, expected/,'xor-inclusive':/D1440 One language count reads 438 chapters and 27 hits, expected 209 and 27/,'xor-label':/D1440 One language switch reads "and\/or", expected "or"/,'default-and':/D1440 New search count reads 229 chapters and 940 hits, expected 438 and 967/,'nest-order':/D1440 English nested list opens .*"  Ostwald 298","  Rackham 315".*, expected/,'nest-hits':/P390 English nested list opens \["Nicomachean Ethics 1171",.*, expected/,'nest-click':/D1440 Ross in the Nicomachean Ethics count reads 81 chapters and 385 hits, expected 81 and 294/,'works-bounce':/P390 w=EN Works screen falls back to the menu/,'cross-on':/P390 w=EN&t=ostwald marks \[\] on, expected \["Ostwald"\]/},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <textarea[^>]*id="grk-input"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},

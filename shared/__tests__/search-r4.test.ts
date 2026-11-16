@@ -41,7 +41,8 @@ const bookOf = (...greek: GreekLine[]): BookData => ({ book: 1, segments: [{
   english: { text: 'One two three.', notes: [], markers: [] },
 }] });
 
-it('keeps overlapping passages in their chapters and assigned pages', async () => {
+// Pages are rows now (John, 16 Nov): the two chapters' rows, one page.
+it('keeps overlapping passages in their chapters', async () => {
   const { loadOffsets } = await import('../lib/search');
   vi.mocked(loadOffsets).mockResolvedValue({ token_count: 22, seg_base_offset: [0],
     segments: [{ book: 1, column: '70a', line_runs: Array.from({ length: 22 }, (_, i) => [i + 1, 1]) }],
@@ -51,11 +52,10 @@ it('keeps overlapping passages in their chapters and assigned pages', async () =
     ] });
   const c = await open(bookOf(...Array.from({ length: 22 }, (_, i) => line(i + 1, 'α'))),
     [hit('70a', Array.from({ length: 22 }, (_, i) => i))], '&ps=20');
-  expect(c.querySelectorAll('.inst-snippet.greek mark')).toHaveLength(20);
-  expect([...c.querySelectorAll('.sx-chap')].map(text)).toEqual(['Chapter 1']);
-  await fireEvent.click(within(c.querySelector('.pager-bottom')!).getByRole('button', { name: 'Next page' }));
-  await vi.waitFor(() => expect(c.querySelectorAll('.inst-snippet.greek mark')).toHaveLength(2));
-  expect([...c.querySelectorAll('.sx-chap')].map(text)).toEqual(['Chapter 2']);
+  await vi.waitFor(() => expect([...c.querySelectorAll('.run-heading')].map(h =>
+    [text(h.querySelector('.sx-chap')), h.nextElementSibling!.querySelectorAll('.inst-snippet.greek mark').length]))
+    .toEqual([['Chapter 1', 20], ['Chapter 2', 2]]));
+  expect(c.querySelector('.pager-bottom')).toBeNull();
 });
 
 it.each([false, true])('keeps proximity windows separate with aligned Greek=%s', async aligned => {

@@ -42,9 +42,12 @@ const bookOf = (...greek: GreekLine[]): BookData => ({ book: 1, segments: [{
   english: { text: 'One two three.', notes: [], markers: [] },
 }] });
 
-// Finding 3: a section that runs over a chapter break, its chapters on two
-// pages. Each page shows its own chapter's hits, Whole section included.
-it.each(['3', '1', 's'])('holds each page to its chapters at Context %s', async ctx => {
+// Finding 3: a section that runs over a chapter break. Each chapter shows its
+// own hits, Whole section included. Pages are rows now (John, 16 Nov), and the
+// two chapters' rows are one page.
+const marksByChapter = (c: Element) => [...c.querySelectorAll('.run-heading')].map(h =>
+  [text(h.querySelector('.sx-chap')), h.nextElementSibling!.querySelectorAll('li.instance .greek mark').length]);
+it.each(['3', '1', 's'])('holds each chapter to its hits at Context %s', async ctx => {
   const { loadOffsets } = await import('../lib/search');
   vi.mocked(loadOffsets).mockResolvedValue({ token_count: 22, seg_base_offset: [0],
     segments: [{ book: 1, column: '70a', line_runs: Array.from({ length: 22 }, (_, i) => [i + 1, 1]) }],
@@ -54,12 +57,8 @@ it.each(['3', '1', 's'])('holds each page to its chapters at Context %s', async 
     ] } as never);
   const c = await open(bookOf(...Array.from({ length: 22 }, (_, i) => line(i + 1, 'α'))),
     [hit('70a', Array.from({ length: 22 }, (_, i) => i))], `&ps=20&ctx=${ctx}`);
-  const marks = () => c.querySelectorAll('li.instance .greek mark').length;
-  await vi.waitFor(() => expect(marks()).toBe(20));
-  expect([...c.querySelectorAll('.sx-chap')].map(text)).toEqual(['Chapter 1']);
-  await fireEvent.click(within(c.querySelector('.pager-bottom')!).getByRole('button', { name: 'Next page' }));
-  await vi.waitFor(() => expect(marks()).toBe(2));
-  expect([...c.querySelectorAll('.sx-chap')].map(text)).toEqual(['Chapter 2']);
+  await vi.waitFor(() => expect(marksByChapter(c)).toEqual([['Chapter 1', 20], ['Chapter 2', 2]]));
+  expect(c.querySelector('.pager-bottom')).toBeNull();
 });
 
 it('marks only the current chapter’s English hits under Whole section', async () => {
@@ -78,12 +77,10 @@ it('marks only the current chapter’s English hits under Whole section', async 
   const result = { ...hit('70a', Array.from({ length: 22 }, (_, i) => i)), engMatch: true,
     engHits: [{ translation: 'rackham', positions: [0, 1] }] };
   const c = await open(book, [result], '&e=one%20two&ps=20&ctx=s');
-  const englishMarks = () => [...c.querySelectorAll('li.instance .inst-en mark')].map(text);
-  await vi.waitFor(() => expect(c.querySelectorAll('li.instance .greek mark')).toHaveLength(20));
-  expect(englishMarks()).toEqual(['One']);
-  await fireEvent.click(within(c.querySelector('.pager-bottom')!).getByRole('button', { name: 'Next page' }));
-  await vi.waitFor(() => expect(c.querySelectorAll('li.instance .greek mark')).toHaveLength(2));
-  expect(englishMarks()).toEqual(['two']);
+  const englishMarks = () => [...c.querySelectorAll('.run-heading')].map(h =>
+    [text(h.querySelector('.sx-chap')), [...h.nextElementSibling!.querySelectorAll('li.instance .inst-en mark')].map(text)]);
+  await vi.waitFor(() => expect(marksByChapter(c)).toEqual([['Chapter 1', 20], ['Chapter 2', 2]]));
+  expect(englishMarks()).toEqual([['Chapter 1', ['One']], ['Chapter 2', ['two']]]);
 });
 
 // Finding 4: a proximity window whose terms stand lines apart, in a section

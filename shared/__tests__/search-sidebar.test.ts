@@ -101,7 +101,7 @@ async function open(url: string, results: SearchResult[] = RESULTS) {
   const page = render(Search);
   // Settled once the results' controls and the first page's hits are drawn.
   await screen.findByRole('group', { name: 'Per page' });
-  await vi.waitFor(() => expect(page.container.querySelectorAll('.group-head, .cite').length).toBeGreaterThan(0));
+  await vi.waitFor(() => expect(page.container.querySelectorAll('.group-head').length).toBeGreaterThan(0));
   return page;
 }
 const status = () => screen.getByRole('status');
@@ -549,7 +549,7 @@ describe('Search.svelte: the View sheet', () => {
     expect([...sheet.querySelectorAll('fieldset')].map(fs => [...fs.querySelectorAll('label')].map(text))).toEqual([
       ['By work', 'By form'],
       ['Bekker order', 'Works A–Z', 'Forms A–Z', 'Commonest form'],
-      ['1 line', '3 lines', 'Whole section', 'Citations only'],
+      ['1 line', '3 lines', 'Whole section'],
       ['20', '40', '100'],
     ]);
     const on = [...sheet.querySelectorAll<HTMLInputElement>('input:checked')].map(i => text(i.closest('label')));
@@ -617,11 +617,11 @@ describe('Search.svelte: the View sheet', () => {
     }
   });
 
-  it('offers only Per page for a list of citations', async () => {
-    await open(`${G}&ps=c`);
+  it('offers every menu on the 100 page', async () => {
+    await open(`${G}&ps=100`);
     await fireEvent.click(sortBtn());
     const sheet = await screen.findByRole('dialog', { name: 'View' });
-    expect([...sheet.querySelectorAll('fieldset legend')].map(text)).toEqual(['Context', 'Per page']);
+    expect([...sheet.querySelectorAll('fieldset legend')].map(text)).toEqual(['Group by', 'Sort', 'Context', 'Per page']);
   });
 });
 

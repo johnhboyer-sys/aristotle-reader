@@ -50,7 +50,7 @@
   import { isChapterSection } from '../lib/data';
   import { loadEngChapters, loadOffsets, offsetRef, type EngChapters, type Offsets } from '../lib/search';
   import { engHitCount, hitCount } from '../lib/search-pages';
-  import { chapterJoin, chapterOnly, chapterPlaces, measure, paginatePlaces, type ChapterAt, type ChapterPlaces, type Measure } from '../lib/chapter-pages';
+  import { chapterJoin, chapterOnly, chapterPlaces, measure, type ChapterAt, type ChapterPlaces, type Measure } from '../lib/chapter-pages';
   import {
     fetchBook,
     fetchChapters,
@@ -176,8 +176,8 @@
     jumpUrl: string;
     hits: number;          // the words it matched here, each a hit
   }
-  // All instances within one Stephanus page (the `chapter` of the sister repo's
-  // shape): the unit the pages break at, and the CSV's page column.
+  // All instances within one chapter (the `chapter` of the sister repo's
+  // shape): the heading its rows are drawn under, and the CSV's page column.
   interface ChapterGroup {
     work: string;
     book: number;
@@ -340,14 +340,9 @@
   let helpModal: HTMLDivElement;
   let helpTrigger: HTMLElement | null = null;
 
-  // Pagination. search() returns the complete hit list (index-only); we render
-  // it a page at a time, breaking pages only between chapters
-  // (lib/search-pages) so a card never splits across result pages — and so only
-  // the current page's books are fetched. That keeps the request burst small
-  // however broad the query is, instead of loading every result's book at once.
-  // About this many hits per page, breaking between whole chapters.
+  // Pagination: exactly this many rows a page, the last page what is left
+  // (see layOutRows).
   const pageTarget = (ps: PageSize) => Number(ps);
-  let pages: SearchResult[][] = [];       // each page's slice of the result set
   let shownResults: SearchResult[] = [];  // every page's results, once each
   let pageIdx = 0;
   let pageLoading = false;                // fetching the current page's books
@@ -572,33 +567,60 @@
     if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter, xforms: [...excludedForms], view, facets, context, sort, pageSize }, 'replace');
     if (view === 'grammar') needGrammar();
   }
-  // How much text a hit shows. The pages stay as they are; the page in view
-  // is drawn again.
+  // How much text a hit shows. Hits whose passages share words are one row,
+  // so the rows are laid out again, and the page in view is drawn again.
   const CONTEXTS: (DisplayChoice & { id: ResultContext })[] = [
     { id: '1', label: '1 line', value: '1 line', gloss: 'the line with the hit' },
     { id: '3', label: '3 lines', value: '3 lines', gloss: 'a line either side' },
     { id: 's', label: 'Whole section', value: 'whole section', gloss: 'the section the hit is in' },
-    { id: 'c', label: 'Citations only', value: 'citations only' },
   ];
   function setContext(next: ResultContext) {
     if (next === context) return;
     context = next;
     if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter, xforms: [...excludedForms], view, facets, context, sort, pageSize }, 'replace');
-    if (pages.length) renderPage(pageIdx);
+    if (rowBooks.length) {
+      rowBooks = rowBooks.map(b => ({ results: b.results }));
+      startRows();
+      renderPage(pageIdx);
+    }
   }
-  // Hits per page, or citations alone. The pages are laid out again from the
-  // results in hand, from the first.
+  // Rows per page. The pages start again from the first; the rows stand.
   const PAGE_CHOICES: (DisplayChoice & { id: PageSize })[] = [
     { id: '20', label: '20', value: '20' },
     { id: '40', label: '40', value: '40' },
     { id: '100', label: '100', value: '100' },
   ];
-  let citeList: CiteGroup[] = [];      // the page in view, under citations only
   function setPageSize(next: PageSize) {
     if (next === pageSize) return;
     pageSize = next;
     if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter, xforms: [...excludedForms], view, facets, context, sort, pageSize }, 'replace');
-    showResults(allResults);
+    if (pageTotal !== null) pageTotal = pagesFor(rowBooks);
+    if (rowBooks.length) renderPage(0);
+  }
+  // The 100 page: each row its reference and the words around its first hit,
+  // opened in place to the passage as the other sizes draw it (John, 16 Nov,
+  // after the TLG: "citations and summary only with 'click to expand'").
+  $: compact = pageSize === '100';
+  let openRows = new Set<Instance>();
+  function toggleRow(inst: Instance) {
+    if (openRows.has(inst)) openRows.delete(inst);
+    else openRows.add(inst);
+    openRows = openRows;
+  }
+  // The words around the first marked word of a passage's html: seven before,
+  // eight after, as plain text with that word marked.
+  function summaryOf(html: string): string {
+    const at = html.indexOf('<mark');
+    const end = html.indexOf('</mark>', at);
+    const plain = (h: string) => h.replace(/<[^>]*>/g, '')
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&');
+    const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    if (at < 0 || end < 0) return esc(plain(html).trim().split(/\s+/).slice(0, 15).join(' '));
+    const before = plain(html.slice(0, at)).replace(/^\s*…\s*/, '');
+    const after = plain(html.slice(end + 7)).replace(/\s*…\s*$/, '');
+    const head = before.trimEnd().split(/\s+/).filter(Boolean).slice(-7).join(' ');
+    const tail = after.trimStart().split(/\s+/).filter(Boolean).slice(0, 8).join(' ');
+    return `… ${esc(head)}${/\s$/.test(before) ? ' ' : ''}<mark>${esc(plain(html.slice(at, end + 7)))}</mark>${/^\s/.test(after) ? ' ' : ''}${esc(tail)} …`;
   }
   // The hits opened to their whole section by "more", on the page in view.
   let more = new Set<Instance>();
@@ -835,7 +857,7 @@
   $: countText = totalInstances === 0
     ? 'No passages found.'
     : `${mainCount} ${countNoun}` + (counted.hits !== null ? ` · ${hitsText(counted.hits)}` : '')
-      + (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '');
+      + (paged ? ` · page ${pageIdx + 1} of ${pageOf}` : '');
   const hitsText = (n: number) => `${n} hit${n === 1 ? '' : 's'}`;
 
   function setWorkFilter(id: string | null) {
@@ -899,21 +921,99 @@
     return { chapters: m.chapters, hits: !english ? m.grkHits : oneEach ? m.engHits : null };
   }
 
-  let pageOfChapter: (at: ChapterAt) => number = () => 0;
   let layoutRun = 0;
-  // The search index's offsets of the works with hits: where each page
-  // breaks, and the line of a Greek hit under citations only.
-  let pageOffsets = new Map<string, Offsets | null>();
+
+  // Pages by rows (John, 16 Nov: "n results = n rows per page"). A row is a
+  // passage the list draws, however many hits it holds, and every page but
+  // the last holds exactly N, so a chapter may run on to the next page. Where
+  // a row starts and ends turns on the book's text (hits whose passages
+  // share words are one row, and so are a Greek and an English hit in one
+  // aligned unit), so the books are laid out in corpus order as they load: a
+  // page draws once the books through its last row have, and the page count
+  // shows when every book has (John, 16 Nov: "fill as books load").
+  type Built = Awaited<ReturnType<typeof buildGroups>>;
+  interface RowBook { results: SearchResult[]; built?: Promise<Built>; rows?: number }
+  let rowBooks: RowBook[] = [];
+  let pageTotal: number | null = 0;   // null while books are still being laid out
+  let rowsRun = 0;                    // a new layout of the rows retires the old
+  let moreRows = false;               // a page after the one in view, while pageTotal is unknown
+  $: paged = pageTotal === null ? pageIdx > 0 || moreRows : pageTotal > 1;
+  $: pageOf = pageTotal === null ? '…' : String(pageTotal);
+  $: lastPage = pageTotal === null ? !moreRows : pageIdx >= pageTotal - 1;
+  const rowsOf = (b: Built) => b.groups.reduce((n, g) => n + g.instances.length, 0);
+  const pagesFor = (books: RowBook[]) => Math.ceil(books.reduce((n, b) => n + (b.rows ?? 0), 0) / pageTarget(pageSize));
+  function layOutRows(shown: SearchResult[]) {
+    const by = new Map<string, SearchResult[]>();
+    for (const r of shown) {
+      const key = `${r.work}:${r.meta.book}`;
+      (by.get(key) ?? by.set(key, []).get(key)!).push(r);
+    }
+    rowBooks = [...by.values()]
+      .sort((a, b) => (WORK_ORDER.get(a[0].work) ?? 0) - (WORK_ORDER.get(b[0].work) ?? 0) || a[0].meta.book - b[0].meta.book)
+      .map(results => ({ results }));
+    startRows();
+  }
+  // Every book laid out, the next few at a time behind the page in view;
+  // then the page count.
+  function startRows() {
+    const run = ++rowsRun;
+    pageTotal = rowBooks.length ? null : 0;
+    moreRows = false;
+    if (!rowBooks.length) return;
+    void pool(rowBooks, 4, b => bookRows(b, run)).then(() => {
+      if (run === rowsRun) pageTotal = pagesFor(rowBooks);
+    });
+  }
+  function bookRows(b: RowBook, run: number): Promise<Built> {
+    b.built ??= buildGroups(b.results, searchCtx, context).then(x => {
+      if (run === rowsRun) b.rows = rowsOf(x);
+      return x;
+    });
+    return b.built;
+  }
+  // Page i's rows, under their chapters: the books through its last row,
+  // then the slice. Null when a newer layout has retired this one.
+  async function pageRows(i: number, run: number): Promise<(Built & { more: boolean; total: number | null }) | null> {
+    const n = pageTarget(pageSize);
+    const from = i * n;
+    const to = from + n;
+    const picked: { g: ChapterGroup; inst: Instance }[] = [];
+    const failed: string[] = [];
+    const segs = new Map<string, Segment>();
+    let seen = 0;
+    let k = 0;
+    for (; k < rowBooks.length && seen < to; k++) {
+      for (const ahead of rowBooks.slice(k + 1, k + 4)) void bookRows(ahead, run);
+      const b = await bookRows(rowBooks[k], run);
+      if (run !== rowsRun) return null;
+      if (seen >= from || seen + rowsOf(b) > from) {
+        failed.push(...b.failed);
+        for (const [key, seg] of b.segs) segs.set(key, seg);
+      }
+      for (const g of b.groups) for (const inst of g.instances) {
+        if (seen >= from && seen < to) picked.push({ g, inst });
+        seen++;
+      }
+    }
+    // A chapter whose rows run across two pages heads its part on each.
+    const groups: ChapterGroup[] = [];
+    let last: ChapterGroup | null = null;
+    for (const { g, inst } of picked) {
+      if (g !== last) { groups.push({ ...g, instances: [] }); last = g; }
+      groups[groups.length - 1].instances.push(inst);
+    }
+    return { groups, failed: [...new Set(failed)], segs, more: seen > to || k < rowBooks.length, total: k >= rowBooks.length ? seen : null };
+  }
+
   async function showResults(results: SearchResult[]) {
     // A filter that leaves no page draws none, so the card goes here too.
     popup = null;
     const run = ++layoutRun;
-    // Each hit's chapter, before any book is fetched: pages break between
+    // Each hit's chapter, before any book is fetched: the counts are of
     // chapters, and each page draws its hits under the chapter they counted in.
     const found = await placesFor(results);
     if (run !== layoutRun) return;
     places = found.places;
-    pageOffsets = found.offsets;
     chaptersFailed = found.failed;
     // Read fresh, not from the reactive copies: a widening sets searchCtx
     // and comes straight here, before they catch up.
@@ -924,13 +1024,11 @@
     totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
     counted = countOf(shown, places, !!lastSearch?.eng.trim() && !isBoth(lastSearch), transFilter);
     shownResults = shown;
-    const layout = paginatePlaces(shown, places, pageTarget(pageSize));
-    pages = layout.pages;
-    pageOfChapter = layout.pageOfChapter;
-    if (run !== layoutRun) return;
-    if (pages.length) await renderPage(0);
+    layOutRows(shown);
+    openRows = new Set();
+    if (rowBooks.length) await renderPage(0);
     // A retired page leaves pageLoading to the layout that retired it.
-    else { groups = []; citeList = []; pageIdx = 0; pageLoading = false; }
+    else { groups = []; pageIdx = 0; pageLoading = false; }
   }
 
   function setTransFilter(id: string | null) {
@@ -2472,7 +2570,7 @@
   // What an instance counts for: each Greek hit it holds (a word, a match of
   // several words, or a section's); an English one, each word or phrase its
   // translations matched (see hitCount in lib/search-pages, which counts the
-  // total and lays out pages from the index alone).
+  // total from the index alone).
   const hitsIn = (inst: Instance) => (inst.rows?.reduce((n, row) => n + row.hits, 0) ?? 0)
     + (inst.lang === 'grk' ? inst.grkHits ?? 0 : inst.rows ? 0 : 1);
   // A heading counts what the bar counts: Greek words in a Greek or Both
@@ -2504,50 +2602,6 @@
       + `${hits?.length ? `hlt=${column}:${hits.join(',')}&` : ''}loc=${formatLocValue(work, column, line)}`;
   }
 
-  // Citations only: count hits by column, without fetching books. Links
-  // retain each hit's line; the visible citation omits line numbers.
-  // By work and book, in corpus order.
-  interface CiteGroup { key: string; work: string; book: number; cites: { ref: string; href: string; n: number }[] }
-  function citationsFor(results: SearchResult[], ctx: SearchCtx, offsets: Map<string, Offsets | null>): CiteGroup[] {
-    const jump = jumpLinks(ctx);
-    const out = new Map<string, CiteGroup>();
-    const segIdx = new Map<string, Map<string, number>>();   // work → "book:column" → segment index
-    const indexOf = (work: string, book: number, column: string) => {
-      const o = offsets.get(work);
-      if (!o) return -1;
-      let m = segIdx.get(work);
-      if (!m) { m = new Map(o.segments.map((sg, i) => [`${sg.book}:${sg.column}`, i])); segIdx.set(work, m); }
-      return m.get(`${book}:${column}`) ?? -1;
-    };
-    for (const r of results) {
-      if (!hitCount(r)) continue;
-      const key = `${r.work}:${r.meta.book}`;
-      const g = out.get(key) ?? out.set(key, { key, work: r.work, book: r.meta.book, cites: [] }).get(key)!;
-      const add = (ref: string, href: string, n: number) => {
-        const known = g.cites.find(c => c.ref === ref);
-        if (known) known.n += n;
-        else g.cites.push({ ref, href, n });
-      };
-      const column = r.meta.column;
-      const eng = hitCount(r) - (!r.grkMatch ? 0 : r.windows ? r.windows.length : r.grkPositions.length);
-      // An English-only hit in one translation opens the reader in it, where
-      // the work offers a choice.
-      const hits = r.engHits ?? [];
-      const trans = !r.grkMatch && hits.length === 1 && translationsOf(r.work).length > 1 ? hits[0].translation : undefined;
-      if (eng) add(formatCite(r.work, column), jump(r.work, r.meta.book, column, 1, trans), eng);
-      if (!r.grkMatch) continue;
-      const o = offsets.get(r.work);
-      const i = indexOf(r.work, r.meta.book, column);
-      for (const w of r.windows ?? r.grkPositions.map(p => [p])) {
-        const at = o && i >= 0 ? offsetRef(o, o.seg_base_offset[i] + w[0]) : null;
-        if (!at) { add(formatCite(r.work, column), jump(r.work, r.meta.book, column, 1, undefined, r.grkPositions), 1); continue; }
-        add(formatCite(r.work, at.column),
-          jump(r.work, r.meta.book, at.column, at.line, undefined, at.column === column ? r.grkPositions : undefined) + (at.sub ?? ''), 1);
-      }
-    }
-    return [...out.values()];
-  }
-
   // `clipped` with only `words` marked: the words' places in the text the
   // index counted (`indexed`), found again in the clipped window. Null where
   // the window is not cut from that text, and the query's marks stand.
@@ -2577,9 +2631,9 @@
     results: SearchResult[],
     ctx: SearchCtx,
     context: ResultContext,
-    allPages = false,
+    perHit = false,
   ): Promise<{ groups: ChapterGroup[]; failed: string[]; segs: Map<string, Segment> }> {
-    const textContext = context === 'c' ? '3' : context;
+    const textContext = context;
     const wbPairs = [...new Set(results.map(r => `${r.work}:${r.meta.book}`))];
     const workSet = [...new Set(results.map(r => r.work))];
     const failed: string[] = [];
@@ -2641,14 +2695,9 @@
     // did not load has none to name, and groups by its outline.
     const chapterOf = (work: string, book: number, inst: Pick<Instance, 'column' | 'ch'> & { line?: number }) =>
       inst.ch?.chapter ? inst.ch : lookups.get(`${work}:${book}`)!(inst.column, inst.line ?? 1);
-    // This page's hits: those of the chapters it shows. Whole sections are
-    // cut to them first; otherwise each hit is kept or dropped as it is filed.
-    const onPage = (at: ChapterAt) => allPages || pageOfChapter(at) === pageIdx;
-    const sectionOnPage = (at: ChapterAt) => context !== 's' || onPage(at);
 
     const gmap = new Map<string, ChapterGroup>();
     const add = (work: string, book: number, inst: Instance) => {
-      if (!onPage(inst.ch!)) return;
       const ch = chapterOf(work, book, inst);
       const key = `${work}:${book}:${ch.chapter}`;
       let g = gmap.get(key);
@@ -2788,7 +2837,6 @@
             let k = starts.length - 1;
             while (k > 0 && starts[k] > w) k--;
             for (const at of chaptersOf(w)) {
-              if (!sectionOnPage(at)) continue;
               // By chapter too: a section a chapter starts in is a row in each.
               const key = `${pair}:${t.id}:${seg.id}:${k}:${at.key}`;
               (held.get(key) ?? held.set(key, new Set()).get(key)!).add(w - starts[k]);
@@ -2898,9 +2946,9 @@
     // with none: two units' English would not be one passage's; in a book
     // aligned by turns, a hit joins only its own turn's. In the form
     // views the instance is filed once under each of its forms, that form's
-    // hits marked, as a whole section is. Not for the CSV (allPages), which
+    // hits marked, as a whole section is. Not for the CSV (perHit), which
     // is a row per hit.
-    if (context !== 's' && !allPages) {
+    if (context !== 's' && !perHit) {
       const byKey = new Map<string, Instance[]>();
       for (const { inst } of made) {
         const sh = shownOf.get(inst);
@@ -2998,7 +3046,7 @@
     // and under the whole-section context the instance itself, one for each
     // section and holding all its hits, so the Greek and the English widen
     // together (John, 2026-11-09: "Both, to the section").
-    const placed = made.filter(m => !merged.has(m.inst) && sectionOnPage(m.inst.ch!));
+    const placed = made.filter(m => !merged.has(m.inst));
     const bySection = new Map<string, { work: string; book: number; column: string; ch: string; insts: Instance[] }>();
     // A section a chapter starts in is filed once in each chapter, with
     // that chapter's hits.
@@ -3106,27 +3154,28 @@
     pageIdx = i;
     pageLoading = true;
     pageError = '';
-    // A newer search (the back button can start one mid-load) replaces
-    // `pages`; this page's books must not then overwrite its results.
-    // A newer search or filter starts a new layout before its pages exist, so
-    // the layout is checked as well as the pages.
-    const set = pages;
+    // A newer search (the back button can start one mid-load), filter, or
+    // context lays the rows out again; this page's books must not then
+    // overwrite its results.
+    const run = rowsRun;
     const layout = layoutRun;
-    const stale = () => seq !== renderSeq || set !== pages || layout !== layoutRun;
-    if (context === 'c') {
-      groups = [];
-      citeList = citationsFor(set[i] ?? [], searchCtx, pageOffsets);
-      pageLoading = false;
-      return;
-    }
+    const stale = () => seq !== renderSeq || run !== rowsRun || layout !== layoutRun;
     try {
-      const { groups: g, failed, segs } = await buildGroups(set[i] ?? [], searchCtx, context);
-      if (stale()) return;
+      let got = await pageRows(i, run);
+      if (stale() || !got) return;
+      // Past the last row (a context that joined rows, a page size): the last page.
+      if (!got.groups.length && i > 0 && got.total !== null) {
+        i = Math.max(0, Math.ceil(got.total / pageTarget(pageSize)) - 1);
+        pageIdx = i;
+        got = await pageRows(i, run);
+        if (stale() || !got) return;
+      }
+      const { groups: g, failed, segs } = got;
+      moreRows = got.more;
       // Again here: a word of the old page may have been opened while this
       // one's books were loading.
       popup = null;
       groups = g;
-      citeList = [];
       more = new Set();
       shownTrans = new Map();
       pageSegs = segs;
@@ -3143,7 +3192,7 @@
   }
 
   function goPage(i: number) {
-    if (i < 0 || i >= pages.length || i === pageIdx || pageLoading) return;
+    if (i < 0 || (i > pageIdx && lastPage) || i === pageIdx || pageLoading) return;
     renderPage(i);
     if (typeof document !== 'undefined') {
       document.querySelector('.sx-layout')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3292,7 +3341,9 @@
     loading = false;
     error = '';
     allResults = [];
-    pages = [];
+    rowBooks = [];
+    rowsRun++;
+    pageTotal = 0;
     groups = [];
     totalInstances = 0;
     transFilter = null;
@@ -4280,8 +4331,8 @@
   {#snippet pager(cls: string)}
     <nav class="pager {cls}" aria-label="Result pages">
       <button type="button" class="pager-btn" aria-label="Previous page" on:click={() => goPage(pageIdx - 1)} disabled={pageIdx === 0 || pageLoading}><span class="pager-arrow" aria-hidden="true"></span></button>
-      <span class="pager-status">{pageLoading ? 'Loading…' : `Page ${pageIdx + 1} of ${pages.length}`}</span>
-      <button type="button" class="pager-btn pager-next" aria-label="Next page" on:click={() => goPage(pageIdx + 1)} disabled={pageIdx >= pages.length - 1 || pageLoading}><span class="pager-arrow" aria-hidden="true"></span></button>
+      <span class="pager-status">{pageLoading ? 'Loading…' : `Page ${pageIdx + 1} of ${pageOf}`}</span>
+      <button type="button" class="pager-btn pager-next" aria-label="Next page" on:click={() => goPage(pageIdx + 1)} disabled={lastPage || pageLoading}><span class="pager-arrow" aria-hidden="true"></span></button>
     </nav>
   {/snippet}
 
@@ -4327,7 +4378,23 @@
             ?? pairs?.find(p => p.translation === transFilter)
             ?? pairs?.find(p => p.translation === ref?.id) ?? pairs?.[0]}
           {@const shown = shownRow(inst, rows, transOrder, shownTrans)}
-          <li class="instance" class:open={opened}>
+          {#if compact && !openRows.has(inst)}
+            {@const grk = inst.lang === 'grk' || !shown}
+            <li class="instance cmp">
+              <button type="button" class="cmp-row" aria-expanded="false" on:click={() => toggleRow(inst)}>
+                <span class="cmp-ref">{citeText(inst, view)}</span>
+                <!-- eslint-disable-next-line svelte/no-at-html-tags -->
+                <span class="cmp-sum" class:greek={grk} lang={grk ? 'grc' : 'en'}>{@html summaryOf(grk ? inst.html : shown?.html ?? '')}</span>
+                <span class="cmp-x" aria-hidden="true"></span>
+              </button>
+            </li>
+          {:else}
+          <li class="instance" class:open={opened} class:cmp-open={compact}>
+            {#if compact}
+              <button type="button" class="cmp-row cmp-head" aria-expanded="true" on:click={() => toggleRow(inst)}>
+                <span class="cmp-ref">{citeText(inst, view)}</span><span class="cmp-sum"></span><span class="cmp-x" aria-hidden="true"></span>
+              </button>
+            {/if}
             <a class="inst-ref" href={inst.lang === 'eng' && shown ? shown.jumpUrl : inst.jumpUrl} target="_blank" rel="noopener" title="Open in reader (new tab)">{#each citeText(inst, view).split('–') as part, i}{#if i}–<wbr>{/if}{part}{/each}</a>
             <div class="inst-body">
               {#if opened}
@@ -4374,6 +4441,7 @@
               <span class="inst-oneof" title="The morphological analysis allows more than one reading of this form">{oneOf}</span>
             {/if}
           </li>
+          {/if}
         {/each}
       </ul>
     {/each}
@@ -5019,18 +5087,18 @@
              narrow screen one row (§5.7): the count with "instances" under
              it, Save, the pager ‹ 1/28 ›, Filter, and View, each an icon over
              its 14px label; a red dot on View while it is not the default. -->
-        <div class="result-bar" class:paged={pages.length > 1}>
-          <p class="result-count" style="--n: {countText.length}; --d: {String(mainCount).length}" title={countText}>{#if totalInstances === 0}{countText}{:else}<span class="rc-n">{mainCount}</span>{' '}<span class="rc-w">{countNoun}</span>{#if counted.hits !== null}<span class="rc-hits">{hitsText(counted.hits)}</span>{/if}{#if pages.length > 1}<span class="rc-p">{` · page ${pageIdx + 1} of ${pages.length}`}</span>{/if}{/if}</p>
+        <div class="result-bar" class:paged>
+          <p class="result-count" style="--n: {countText.length}; --d: {String(mainCount).length}" title={countText}>{#if totalInstances === 0}{countText}{:else}<span class="rc-n">{mainCount}</span>{' '}<span class="rc-w">{countNoun}</span>{#if counted.hits !== null}<span class="rc-hits">{hitsText(counted.hits)}</span>{/if}{#if paged}<span class="rc-p">{` · page ${pageIdx + 1} of ${pageOf}`}</span>{/if}{/if}</p>
           {#if canSave}
             <!-- Not disabled once saved: that would drop the focus. -->
             <button type="button" class="sx-save" class:saved={savedNow} on:click={saveSearch}><svg class="sx-ico" width="22" height="22" viewBox="0 0 24 24" fill={savedNow ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16l-5.5 4.5z"/></svg><span class="sx-lab">{#if savedNow}Saved<span class="sx-save-w">{' '}✓</span>{:else if saveFailed}{FULL}{:else}Save<span class="sx-save-w">{' '}search</span>{/if}</span></button>
           {/if}
-          {#if pages.length > 1}
+          {#if paged}
             <button type="button" class="sx-icon sx-arrow" aria-label="Previous page" on:click={() => goPage(pageIdx - 1)} disabled={pageIdx === 0 || pageLoading}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
             </button>
-            <span class="sx-pg" aria-hidden="true">{pageIdx + 1}/{pages.length}</span>
-            <button type="button" class="sx-icon sx-arrow" aria-label="Next page" on:click={() => goPage(pageIdx + 1)} disabled={pageIdx >= pages.length - 1 || pageLoading}>
+            <span class="sx-pg" aria-hidden="true">{pageIdx + 1}/{pageOf}</span>
+            <button type="button" class="sx-icon sx-arrow" aria-label="Next page" on:click={() => goPage(pageIdx + 1)} disabled={lastPage || pageLoading}>
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 5.5 16 12l-6.5 6.5"/></svg>
             </button>
           {/if}
@@ -5104,9 +5172,7 @@
           {/if}
           {#if sheetOpen && sheetKind === 'sort'}
             <!-- How the hits are shown (p04): Group by, Sort, Context, Per page,
-                 no glosses; Export; Done. A list of citations has nothing to
-                 group, order or widen. -->
-            {#if context !== 'c'}
+                 no glosses; Export; Done. -->
               <fieldset class="sx-seg" class:sx-seg-2={viewChoices.length === 2}>
                 <legend class="k">Group by</legend>
                 {#each viewChoices as v}
@@ -5119,7 +5185,6 @@
                   <label class="ck"><input type="radio" name="sx-m-sort" value={so.id} checked={sort === so.id} on:change={() => setSort(so.id)} /><span>{so.short ?? so.label}</span></label>
                 {/each}
               </fieldset>
-            {/if}
               <fieldset class="sx-seg sx-seg-context">
                 <legend class="k">Context</legend>
                 {#each CONTEXTS as c}
@@ -5332,18 +5397,14 @@
       </div>
       <div class="sx-main">
         <!-- How the hits are shown: the search form's menus (§5.2), each with
-             its title and a gloss under every choice, then the pager. A list
-             of citations has nothing to group, order or widen (John,
-             2026-11-10: set B). -->
+             its title and a gloss under every choice, then the pager. -->
         {#if totalInstances > 0}
           <div class="sopt sx-display">
-            {#if context !== 'c'}
               {@render displayMenu('Group by', 'sx-view', viewChoices, view, (id) => setView(id as ResultView))}
               {@render displayMenu('Sort', 'sx-sort', SORTS, sort, (id) => setSort(id as ResultSort))}
-            {/if}
               {@render displayMenu('Context', 'sx-context', CONTEXTS, context, (id) => setContext(id as ResultContext))}
             {@render displayMenu('Per page', 'sx-pagesize', PAGE_CHOICES, pageSize, (id) => setPageSize(id as PageSize))}
-            {#if pages.length > 1}{@render pager('')}{/if}
+            {#if paged}{@render pager('')}{/if}
           </div>
         {/if}
         {#if failedWorks.length || chaptersFailed.length || formsFailed || grammarFailed || unsearched.length || unresolved.length || approximateTurns.length}
@@ -5435,26 +5496,6 @@
           </p>
         {/if}
 
-        {#if context === 'c'}
-          <!-- Places only (d17): a work's name once, then its books. -->
-          <div class="sx-results sx-cites">
-            {#each citeList as cg, i (cg.key)}
-              <section class="book-section cite-group" class:cite-more={i > 0 && citeList[i - 1].work === cg.work}>
-                {#if i === 0 || citeList[i - 1].work !== cg.work}
-                  <h2 class="book-header"><span class="work-name">{getWork(cg.work)?.title ?? cg.work}</span></h2>
-                {/if}
-                {#if (getWork(cg.work)?.bookLabels.length ?? 0) > 1}
-                  <h3 class="sx-book">Book {getWork(cg.work)?.bookLabels[cg.book - 1] ?? cg.book}</h3>
-                {/if}
-                <p class="cite-list">
-                  {#each cg.cites as c}
-                    <a class="cite" href={c.href} target="_blank" rel="noopener" title="Open in reader (new tab)">{c.ref}{#if c.n > 1}<small>×{c.n}</small>{/if}</a>
-                  {/each}
-                </p>
-              </section>
-            {/each}
-          </div>
-        {/if}
         <div class="sx-results" class:by-work={narrowRefs} use:wordClicks>
         {#each viewSections as sec (sec.key)}
           {#each sec.groups as g (g.key)}
@@ -5504,7 +5545,7 @@
         {/each}
         </div>
 
-        {#if pages.length > 1}{@render pager('pager-bottom')}{/if}
+        {#if paged}{@render pager('pager-bottom')}{/if}
       </div>
     </div>
   {/if}

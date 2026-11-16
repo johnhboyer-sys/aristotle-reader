@@ -35,9 +35,9 @@ export function viewsOffered(kind: SearchKind): ResultView[] {
   return ['page'];
 }
 
-/** One line, three, a whole section, or citations without text. */
-export type ResultContext = '1' | '3' | 's' | 'c';
-export const RESULT_CONTEXTS: readonly ResultContext[] = ['1', '3', 's', 'c'];
+/** One line, three, or a whole section. */
+export type ResultContext = '1' | '3' | 's';
+export const RESULT_CONTEXTS: readonly ResultContext[] = ['1', '3', 's'];
 /** How the hits of one results page are ordered. */
 export type ResultSort = 'page' | 'work' | 'form' | 'freq';
 export const RESULT_SORTS: readonly ResultSort[] = ['page', 'work', 'form', 'freq'];

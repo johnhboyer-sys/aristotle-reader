@@ -1,4 +1,4 @@
-import { render } from '@testing-library/svelte';
+import { fireEvent, render } from '@testing-library/svelte';
 import { afterEach, expect, it, vi } from 'vitest';
 import Search from '../components/Search.svelte';
 import type { BookData, GreekLine } from '../lib/data';
@@ -55,7 +55,7 @@ async function open(positions: number[], params: string, data = book, index = of
   vi.mocked(search).mockResolvedValue({ results: [result], failedWorks: [] });
   window.history.replaceState(null, '', `/search?g=γάμμα${params}`);
   const page = render(Search);
-  await vi.waitFor(() => expect(page.container.querySelector('.inst-ref, .cite')).not.toBeNull());
+  await vi.waitFor(() => expect(page.container.querySelector('.inst-ref, .cmp-row')).not.toBeNull());
   return page;
 }
 
@@ -95,9 +95,12 @@ it('links the 6b citation to the same lettered reader target as its snippet', as
   const href = snippets.container.querySelector('.inst-ref')!.getAttribute('href')!;
   expect(new URL(href, window.location.origin).searchParams.get('loc')).toBe('2b:6b');
   snippets.unmount();
-  vi.mocked((await import('../lib/data')).fetchBook).mockClear();
-  const citations = await open([3], '&ps=c');
-  expect(citations.container.querySelector('.cite')).toHaveTextContent('2b');
-  expect(citations.container.querySelector('.cite')).toHaveAttribute('href', href);
-  expect((await import('../lib/data')).fetchBook).not.toHaveBeenCalled();
+  // An old citations link opens the 100 page (John, 16 Nov), its row the
+  // same lettered place, opening to the same link.
+  const rows = await open([3], '&ps=c&ctx=1');
+  const row = rows.container.querySelector('.cmp-row')!;
+  expect(row.querySelector('.cmp-ref')).toHaveTextContent('2b6b');
+  expect(row.querySelector('.cmp-sum mark')).toHaveTextContent('γάμμα');
+  await fireEvent.click(row);
+  await vi.waitFor(() => expect(rows.container.querySelector('.inst-ref')).toHaveAttribute('href', href));
 });
