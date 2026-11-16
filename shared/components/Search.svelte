@@ -3243,6 +3243,8 @@
     searched = false;
     narrowPrompt = false;
     showTry = true;
+    // A blank search shows its fields: the fold is a finished search's.
+    formFolded = false;
     // The sheet refined results that are gone; left open, it would cover the
     // next search's.
     sheetOpen = false;

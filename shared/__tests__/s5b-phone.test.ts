@@ -244,6 +244,18 @@ describe('the sideways form', () => {
     expect(document.querySelector('.search-form')).not.toHaveClass('fold-on');
     expect(screen.getByLabelText('English')).toHaveValue('virtue');
   });
+
+  it('unfolds when Back returns to a blank search (Codex review, 16 Nov)', async () => {
+    sized(844, 390); render(Search);
+    await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue' } });
+    await fireEvent.submit(document.querySelector('form')!);
+    await vi.waitFor(() => expect(document.querySelector('.search-form')).toHaveClass('fold-on'));
+    window.history.replaceState(null, '', '/search');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    await vi.waitFor(() => expect(screen.getByLabelText('English')).toHaveValue(''));
+    expect(document.querySelector('.search-form')).not.toHaveClass('fold-on');
+    expect(screen.getByLabelText('Greek')).toBeVisible();
+  });
 });
 
 // §5.9: a sheet's rows end where its foot band begins.
