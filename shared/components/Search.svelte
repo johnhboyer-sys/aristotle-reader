@@ -977,7 +977,10 @@
       if (run === rowsRun) {
         b.rows = rowsOf(x);
         b.failed = x.failed.length > 0;
-        if (pageTotal !== null) pageTotal = pagesFor(rowBooks);
+        if (pageTotal !== null) {
+          pageTotal = pagesFor(rowBooks);
+          rowsFailed = rowBooks.filter(r => r.failed).length;
+        }
       }
       // A book that did not load is asked for again next time (Retry).
       if (x.failed.length) b.built = undefined;
@@ -1027,6 +1030,9 @@
     // A filter that leaves no page draws none, so the card goes here too.
     popup = null;
     const run = ++layoutRun;
+    // The rows in hand are retired now, not once the chapters below load:
+    // their books stop starting.
+    rowsRun++;
     // Each hit's chapter, before any book is fetched: the counts are of
     // chapters, and each page draws its hits under the chapter they counted in.
     const found = await placesFor(results);

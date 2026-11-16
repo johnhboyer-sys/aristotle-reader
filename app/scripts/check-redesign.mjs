@@ -4193,8 +4193,9 @@ if(stage>=4) Object.assign(gates, {
                 await p.locator('main.search-page li.instance.cmp .cmp-row >> visible=true').first().click();
                 await p.waitForSelector('main.search-page li.instance.cmp-open .inst-snippet mark',{timeout:30000});
                 if(prove&&proofCase==='cmp-nolink'&&size==='D1440')await p.evaluate(()=>document.querySelector('main.search-page li.instance.cmp-open .cmp-head a.cmp-ref')?.removeAttribute('href'));
-                const open1=await p.evaluate(()=>{const li=document.querySelector('main.search-page li.instance.cmp-open');const a=li.querySelector('.cmp-head a.cmp-ref');return {href:a?.getAttribute('href')??'',shown:!!a?.checkVisibility(),expanded:li.querySelector('.cmp-shut')?.getAttribute('aria-expanded')};});
+                const open1=await p.evaluate(()=>{const li=document.querySelector('main.search-page li.instance.cmp-open');const a=li.querySelector('.cmp-head a.cmp-ref');return {href:a?.getAttribute('href')??'',shown:!!a?.checkVisibility(),tall:a?.getBoundingClientRect().height??0,expanded:li.querySelector('.cmp-shut')?.getAttribute('aria-expanded')};});
                 assert(/loc=/.test(open1.href)&&open1.shown&&open1.expanded==='true',`${size} the 100 page's first row opens with reader link href="${open1.href}" shown=${open1.shown} expanded=${open1.expanded}`);
+                assert(open1.tall>=44,`${size} the 100 page's open row's reader link is ${open1.tall.toFixed(1)}px tall, under 44px`);
                 n++;
                 console.log(`R-S7 ${size} 100 page rows=${got.rows} pages=${got.page} first opens ${open1.href.slice(0,60)}`);
             } finally {await close(p);}
