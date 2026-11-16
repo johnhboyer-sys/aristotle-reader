@@ -276,3 +276,19 @@ it('narrows to a translation in its work, and lifts it when chosen again', async
   await vi.waitFor(() => expect(new URLSearchParams(window.location.search).get('t')).toBeNull());
   expect(new URLSearchParams(window.location.search).get('wf')).toBeNull();
 });
+
+// 16. A translation chosen in no one work (an old link's t=): its row is on
+// in its work, and choosing it lifts the filter (Codex review, 16 Nov).
+it('marks a translation chosen across works, and lifts it when chosen', async () => {
+  const { loadOffsets, loadEngChapters } = await import('../lib/search');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(10));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [2, '2']] } });
+  const r: SearchResult = { ...base, grkMatch: false, engMatch: true, grkPositions: [],
+    engHits: [{ translation: 'rackham', positions: [0, 2] }, { translation: 'ross', positions: [1, 4, 6] }] };
+  const c = await open(book(Array.from({ length: 22 }, (_, i) => line(i + 1, 'α')), 'Virtue one. Virtue two.'), [r], 'e=virtue&t=ross');
+  const ross = () => [...c.querySelectorAll<HTMLElement>('.sx-nest .i.sub')].find(i => /Ross/.test(i.textContent ?? ''))!;
+  await vi.waitFor(() => expect(ross()).toHaveAttribute('aria-pressed', 'true'));
+  await fireEvent.click(ross());
+  await vi.waitFor(() => expect(new URLSearchParams(window.location.search).get('t')).toBeNull());
+  expect(new URLSearchParams(window.location.search).get('wf')).toBeNull();
+});

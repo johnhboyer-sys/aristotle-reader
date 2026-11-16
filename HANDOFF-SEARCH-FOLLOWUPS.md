@@ -29,7 +29,25 @@ State on 16 Nov, end of the counting session:
     medium), and a third on the last fixes; all findings fixed. The last four have tests 6–8 in `search-chapter-draw.test.ts`, except
     partial marks when a row's words run past its window (finding 3), which has none.
 - **A is built: PR #198, merged 16 Nov** (the switch, the split rows, "and/or" by default, old links kept
-  as "and"). Next: B (nested list), D (rows, the 100 page), C (phrases), each its own PR.
+  as "and"). Back to a blank search unfolds the form: PR #199, merged.
+- **B is built** (branch `claude/search-nested`): where English was searched, one list, each work with
+  its chapters ("84 chap.") and under it each translation with its hits there, most first; no separate
+  Translations list (`nestRows`, `nestOn`, `setNest` in `Search.svelte`; `.sx-nest` in `b-search.css`).
+  A translation chosen in no one work (an old link's `t=`) is on in every work it has hits in, and
+  choosing it lifts it. Measured, English virtue: EN 84 chap.; Rackham 315, Ostwald 298, Ross 294,
+  Peters 264; Ross alone 81 chapters · 294 hits (`brute.mjs` agrees). R-S7 checks the list on desktop
+  and phone and the phone's Works screen with `w=EN&t=ostwald`. **Beyond the ruling, for John:** the
+  work rows of a Both search now count chapters too (they counted hits).
+  Next: D (rows, the 100 page), then C (phrases), each its own PR.
+- **D: rows cannot be counted from the index alone.** A row is what `buildGroups` draws: hits whose
+  windows share words merge into one row, a Greek and an English hit in one aligned unit
+  (`pairUnits`) become one row, a match can run on into the next sections, and the accent and case
+  filters drop hits by their surface form. All four need the book's text. So exact N rows a page
+  needs the search's books before the page count is known. **Ruled (John, 16 Nov): fill as books
+  load.** Page 1 draws as soon as its own books load; the rest load in the background, and the pager
+  reads "1 of …" until they finish and then the page count.
+- **C's list is ruled (John, 16 Nov: "Three-word runs"):** the phrases offered are three-word runs
+  around the hit that occur at least 5 times in the results, the top 10 shown and the rest under More.
 - **PR 2 onward: John's four questions** in the picture page,
   https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
   of git: 3.6 MB of JPEGs).

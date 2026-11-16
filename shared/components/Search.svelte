@@ -816,9 +816,13 @@
   $: nestChoice = !!nestRows && (workFilter !== null || transFilter !== null || nestRows.length > 1 || nestRows.some(w => w.subs.length > 1));
   // A work's row narrows to the work, every translation; a translation's row
   // to that translation in that work. Chosen again, either lifts it.
+  // A row is on where its filter is in force: a work's, the work with every
+  // translation; a translation's, that translation in its work or in all.
+  const nestOn = (work: string, trans: string | null, wf: string | null, tf: string | null) =>
+    trans === null ? wf === work && tf === null : tf === trans && (wf === null || wf === work);
   function setNest(work: string, trans: string | null) {
-    const same = workFilter === work && transFilter === trans;
-    narrowTo(same ? null : work, same ? null : trans);
+    if (nestOn(work, trans, workFilter, transFilter)) narrowTo(null, null);
+    else narrowTo(work, trans);
   }
   const clearNest = () => { if (workFilter || transFilter) narrowTo(null, null); };
   function narrowTo(work: string | null, trans: string | null) {
@@ -1107,7 +1111,7 @@
   // A screen whose filter has gone (new results, say) gives way to the menu,
   // and focus, which was on the screen, goes to the sheet.
   $: if (sheetOpen && sheetKind === 'filter' && sheetScreen !== 'menu'
-    && !({ works: workChoice, trans: transChoice, forms: formChoice, grammar: facetRows.length > 0 } as Record<string, boolean>)[sheetScreen]) toMenu();
+    && !({ works: nestRows ? nestChoice : workChoice, trans: transChoice && !nestRows, forms: formChoice, grammar: facetRows.length > 0 } as Record<string, boolean>)[sheetScreen]) toMenu();
   async function toMenu() {
     sheetScreen = 'menu';
     await tick();
@@ -5200,12 +5204,12 @@
                     on:click={clearNest}><span class="i-t">All works</span></button>
                 {/if}
                 {#each nestRows as w (w.id)}
-                  {@const on = workFilter === w.id && !transFilter}
+                  {@const on = nestOn(w.id, null, workFilter, transFilter)}
                   <button type="button" class="i" class:on aria-pressed={on}
                     title={`Show only hits in the ${w.title}${on ? ' (again for all)' : ''}`}
                     on:click={() => setNest(w.id, null)}><span class="i-t">{w.title}</span><small>{w.n}<span class="unit">&thinsp;chap.</span></small>{#if on}<span class="i-x" aria-hidden="true">×</span>{/if}</button>
                   {#each w.subs as t (t.id)}
-                    {@const tOn = workFilter === w.id && transFilter === t.id}
+                    {@const tOn = nestOn(w.id, t.id, workFilter, transFilter)}
                     <button type="button" class="i sub" class:on={tOn} aria-pressed={tOn}
                       title={`Show only ${t.short}’s hits in the ${w.title}${tOn ? ' (again for all)' : ''}`}
                       on:click={() => setNest(w.id, t.id)}><span class="i-t">{t.short}</span><small>{t.n}</small>{#if tOn}<span class="i-x" aria-hidden="true">×</span>{/if}</button>
