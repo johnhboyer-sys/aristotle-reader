@@ -1,122 +1,86 @@
 # Search follow-ups — handoff
 
-The search page shipped with the redesign: PR #195, merged 16 Nov as `de57f687c6`. **Not deployed yet**: the
-deploy waits for John's word. This file covers the search PRs that come after it. The build's spec and
-record stay in `HANDOFF-SEARCH-BUILD.md` (closed), and the redesign's in `HANDOFF-REDESIGN-BUILD.md`.
+The search page shipped with the redesign: PR #195, merged 16 Nov as `de57f687c6`. This file covers the
+search PRs that came after it (#197–#202, all merged 16 Nov). **None of it is deployed**: the deploy
+waits for John's word. The build's spec and record stay in `HANDOFF-SEARCH-BUILD.md` (closed), and the
+redesign's in `HANDOFF-REDESIGN-BUILD.md`.
 
-Porting the search to the other readers has its own handoff, `HANDOFF-SEARCH-PORT.md`. That work waits
-for PR 1 below, so the readers are ported once, with the new counting.
+Porting the search to the other readers has its own handoff, `HANDOFF-SEARCH-PORT.md`. It can start now:
+the counting, rows, and phrases it waited for are on main.
 
 ## 0. Start here
 
-State on 16 Nov, end of the counting session:
+State on 16 Nov, evening: **every part John ruled is built and merged. Nothing is deployed** (John,
+16 Nov: "Merge only, no deploy"). The next track is the port to the other readers,
+`HANDOFF-SEARCH-PORT.md`.
 
-- **PR 1 is #197** (branch `claude/search-counting-bf1064`): page 67 and every part John has ruled.
-  - Counts chapters, not columns. Both + "and" means both terms anywhere in one chapter
-    (`chapterJoin`, `lib/chapter-pages.ts`). Greek hits are words. English hits show only with one
-    translation per work. Both counts Greek hits only.
-  - Page 67: a hit is now put in its chapter once (`chapterPlaces`), and pages, counts, and drawing all
-    read that one place. Tests: `shared/__tests__/search-pages.test.ts` (page 67),
-    `chapter-join.test.ts`, `search-chapter-draw.test.ts`.
-  - English words find their chapter through a new index file, `search/eng-chapters.json`
-    (`stage6_search.py`, `segment_chapter_starts`; slot → section → `[word, chapter]` starts).
-  - Measured on the built site, ἀρετή + virtue: Both 229 chapters · 940 hits · 84 pages (was "311
-    passages", 2,952 hits, 83 pages). Either: 438 chapters · 967 hits. English virtue, every translation:
-    415 chapters and no hit total (was 2,394 hits). `docs/search-counting/brute.mjs` counts the same
-    from the books, outside the page. `counts-2026-11-16.json` against `counts-base-2026-11-15.json`:
-    every Greek search keeps its old total, now as its hits.
-  - Gate R-S7 rewritten to those numbers; `--prove` catches 9 of 9 cases. Two Codex reviews (gpt-6.1-sol,
-    medium), and a third on the last fixes; all findings fixed. The last four have tests 6–8 in `search-chapter-draw.test.ts`, except
-    partial marks when a row's words run past its window (finding 3), which has none.
-- **A is built: PR #198, merged 16 Nov** (the switch, the split rows, "and/or" by default, old links kept
-  as "and"). Back to a blank search unfolds the form: PR #199, merged.
-- **B is built** (branch `claude/search-nested`): where English was searched, one list, each work with
-  its chapters ("84 chap.") and under it each translation with its hits there, most first; no separate
-  Translations list (`nestRows`, `nestOn`, `setNest` in `Search.svelte`; `.sx-nest` in `b-search.css`).
-  A translation chosen in no one work (an old link's `t=`) is on in every work it has hits in, and
-  choosing it lifts it. Measured, English virtue: EN 84 chap.; Rackham 315, Ostwald 298, Ross 294,
-  Peters 264; Ross alone 81 chapters · 294 hits (`brute.mjs` agrees). R-S7 checks the list on desktop
-  and phone and the phone's Works screen with `w=EN&t=ostwald`. The work rows of a Both search count
-  chapters too (they counted hits): beyond the ruling, and John kept it (16 Nov). PR #200.
-  Next: D (rows, the 100 page), then C (phrases), each its own PR.
-- **D: rows cannot be counted from the index alone.** A row is what `buildGroups` draws: hits whose
-  windows share words merge into one row, a Greek and an English hit in one aligned unit
-  (`pairUnits`) become one row, a match can run on into the next sections, and the accent and case
-  filters drop hits by their surface form. All four need the book's text. So exact N rows a page
-  needs the search's books before the page count is known. **Ruled (John, 16 Nov): fill as books
-  load.** Page 1 draws as soon as its own books load; the rest load in the background, and the pager
-  reads "1 of …" until they finish and then the page count.
-- **D is built** (branch `claude/search-rows`, cut from B): `layOutRows`, `startRows`, `bookRows`,
-  `pageRows` in `Search.svelte`. Each book of the search is laid out once by `buildGroups` (now with
-  no page filter), in corpus order, four at a time in the background; a page is the slice of rows
-  it holds, a chapter that runs over a page edge heading its part on both. Context lays the rows
-  out again (it changes what merges); Per page only slices them again. The 100 page draws each row
-  as a button (`.cmp-row`: reference, then `summaryOf`: seven words before the first hit, eight
-  after) that opens in place (`openRows`). Context "Citations only" is gone (`ResultContext` is
-  1 | 3 | s); `ctx=c` and `ps=c` links open the 100 page. R-S7 checks 40 rows on every page but the
-  last, no chapter twice on a page or on pages apart, 229 chapters and 940 hits drawn, and the
-  100 page. `lib/chapter-pages.ts` `paginate`/`paginatePlaces` no longer serve this page; they
-  stay for their tests and for the readers still to be ported.
-- **C's list is ruled (John, 16 Nov: "Three-word runs"):** the phrases offered are three-word runs
-  around the hit that occur at least 5 times in the results, the top 10 shown and the rest under More.
-- **C is built** (branch `claude/search-phrases`, cut from D): `lib/phrase-list.ts` (`phraseText`,
-  `runsAt`, `setAside`, `phraseRows`); in `Search.svelte` `loadPhrases` reads every English hit's
-  passage from the books once after the search (the pieces `buildGroups` cuts), `withoutPhrases`
-  drops the hits inside a phrase set aside before every count, and the list (`.sx-phr`) sits above
-  Forms, a sheet screen of its own on the phone. A run stays within a sentence and crosses piece
-  edges. URL `xp=` (comma-separated). No list for an exact-phrase search. Measured, English virtue:
-  in virtue of 335, virtue of the 108, the virtue of 97, virtue of a 68, virtue of which 67, of the
-  virtues 65, virtue or excellence 51, the virtues are 46, of virtue and 41, the other virtues 39;
-  with "in virtue of" out: virtue of the 60, virtue of a 34, virtue of which 3. `brute.mjs` counts the
-  same from the books; R-S7 pins both.
-- **Follow-up found by D's gate:** Top 136a, Pickard-Cambridge, draws an English hit whose window
-  misses its word, at every page size (the row has no mark). R-S7 tolerates five such rows on the
-  100 page and lists them.
-- **PR 2 onward: John's four questions** in the picture page,
-  https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
-  of git: 3.6 MB of JPEGs).
-  - **A is ruled (John, 16 Nov):** the split as pictured, with the switch reading **and | and/or | or**.
-    "or" is the exclusive or (one language, not both: Greek only + English only); "and/or" is the
-    inclusive or, today's "either". His words: "A (Split) looks good except 'only one' is awkward. What
-    if we go with 'and' | 'and/or' | 'or'", then "treat 'or' as exclusive disjunction and 'and/or' as
-    inclusive disjunction". Picture A4 shows the panel's labels (Both languages / Either or both / One
-    language, not both): a draft he has not ruled. Today's `op=or` links mean inclusive; keep them
-    inclusive and give the exclusive or a new value.
-  - **B is ruled (John, 16 Nov):** one list, each work with its translations under it; the separate
-    Translations list goes. A work's row counts chapters with a hit in at least one translation; a
-    translator's row counts that translator's hits in that work (sorted by hits). A translator's name
-    shows that translator's hits in that work. His words: "for the work as a heading with nested list,
-    it should be chapters with at least one hit in at least one translation ... and for translators, it
-    should be HITS." The passage rows stay as built: one translator's English, the names of every
-    translator with a hit there underneath, to switch between. The work's number reads "84 chap." (B7;
-    John, 16 Nov: "84 chap. for work"); a translator's number stands alone. The
-    "in more than one" line (B1) was not taken up.
-  - **D is ruled (John, 16 Nov): pages by rows, exactly N a page** ("n results = n rows per page. do
-    that."), so a chapter may run on to the next page (ἀρετή + virtue: 890 rows, 23 pages of 40). A row
-    is one passage drawn in the list, however many hits it holds. Cost to solve: counting rows needs
-    every book of the search before page 1 (50 books, 30 MB, 7 MB gzipped; "and/or" 100 books, 57 MB,
-    13 MB gzipped) unless rows can be counted from the index.
-  - **And the 100 page follows the TLG** (John, 16 Nov): "a page with 100 rows be citations and summary
-    only with 'click to expand' for normal hit passage display." Pictured D4 (the list) and D5 (a row
-    opened): each row its reference and a line around its first hit; a tap opens the row in place as
-    the other page sizes draw it. It **replaces** Context "Citations only" (`citeList`,
-    `citationsFor`; John, 16 Nov: "Yes, replace it"), which lists references alone.
-  - **C is ruled (John, 16 Nov): Exclude only, no Include.** "Why doesn't the user just search that
-    exact phrase with the 'exact phrase' setting?" An Include gives the hits an exact-phrase search
-    gives, so it goes, and with it the question of which wins an overlap (C4/C5). And (John, 16 Nov):
-    an Exclude lowers the counts of phrases that overlap it ("virtue of the" 108 → 60 with "in virtue
-    of" excluded); the rows keep their order after an Exclude; on the phone the Filter button carries
-    a badge while a phrase is excluded. The phrase list does not exist on the site yet: C is new work.
-- **Follow-ups:** the desktop app's corpus needs `search/eng-chapters.json` too (without it English hits
-  fall in the chapter their section's Greek opens in); three svelte-check errors in
-  `app/src/__tests__/lemma-head.test.ts` predate this branch; the smaller items in §4.
-- **Rules that carry over:** no explainer text in the reader or the results; never shrink type or tap
-  targets (44px); styles go in `b-search.css`; implementation and review are never the same model family
-  (a Claude edit gets a Codex review); pass `model:` on every Agent spawn; Grok is benched (John, 11 Nov);
-  John's design calls get a picture, never a description. Merge a PR when all its checks are green;
-  deploys wait for John.
-- **Explainer for John:** https://claude.ai/artifact/6MCS6YT13myEw7K2CVvGVx (source
-  `docs/search-counting/explainer.html`).
+The PRs, all merged 16 Nov:
+
+- **#197, PR 1: counting.** Counts chapters, not columns. Both + "and" means both terms anywhere in one
+  chapter (`chapterJoin`, `lib/chapter-pages.ts`). Greek hits are words; English hits show only with one
+  translation per work; Both counts Greek hits only. Page 67 fixed: a hit is put in its chapter once
+  (`chapterPlaces`). English words find their chapter through a new index file,
+  `search/eng-chapters.json` (`stage6_search.py`, `segment_chapter_starts`).
+- **#198, A: the switch.** **and | and/or | or**, "or" exclusive, "and/or" inclusive and the default;
+  old `op=or` links stay inclusive. Chapters split by language. **#199:** Back to a blank search
+  unfolds the form.
+- **#200, B: the nested list.** Where English was searched, one list of works ("84 chap."), each
+  translation under it with its hits there, most first; no separate Translations list (`nestRows`,
+  `nestOn`, `setNest`; `.sx-nest`). A Both search's work rows count chapters too: beyond the ruling,
+  and John kept it.
+- **#201, D: rows a page.** A page holds exactly N rows (a row is one passage drawn, however many
+  hits it holds), so a chapter may run on to the next page, heading its part on both. Rows can't be
+  counted from the index (merged windows, aligned units, runs into the next section, accent and case
+  filters all need the text), so, as John ruled, **rows fill as books load**: page 1 draws when its
+  own books load, the rest build four at a time in the background, and the pager reads "1 of …" until
+  they finish (`startRows`, `bookRows`, `pageRows`; `buildGroups` has no page filter now). A book that
+  fails shows a notice with Retry. **The 100 page follows the TLG:** each row a button with its
+  reference and a summary (`.cmp-row`, `summaryOf`: seven words before the first hit, eight after),
+  opening in place (`openRows`) with the reader link in its head. It replaces Context "Citations
+  only" (`ResultContext` is 1 | 3 | s); `ctx=c` and `ps=c` links open the 100 page.
+  `paginate`/`paginatePlaces` no longer serve this page; they stay for their tests and the readers
+  still to be ported.
+- **#202, C: the phrase list, Exclude only.** Three-word runs around English hits, five hits or more,
+  most first, ten shown, the rest under More (`lib/phrase-list.ts`: `phraseText`, `runsAt`,
+  `setAside`, `phraseRows`). `loadPhrases` reads every English hit's passage once after the search;
+  `withoutPhrases` drops the hits inside an excluded phrase before every count, forms included. A run
+  stays within a sentence and crosses piece edges; a term of several words counts once per hit. An
+  Exclude lowers the phrases that overlap it and moves no row; URL `xp=`; on the phone the list is a
+  sheet screen of its own and the Filter button carries a badge. No list for an exact-phrase search.
+
+Measured on the built site, ἀρετή + virtue (`docs/search-counting/brute.mjs` counts the same from the
+books, outside the page):
+
+- Both: 229 chapters · 940 hits (was "311 passages", 2,952 hits). Either: 438 chapters · 967 hits.
+- Rows: 890, 23 pages of 40, 10 on the last; 17 chapters split across pages; the 100 page has 9 pages.
+- English virtue: EN 84 chap.; Rackham 315, Ostwald 298, Ross 294, Peters 264.
+- Phrases: in virtue of 335, virtue of the 108, the virtue of 97, virtue of a 68, virtue of which 67, of
+  the virtues 65, virtue or excellence 51, the virtues are 46, of virtue and 41, the other virtues 39.
+  With "in virtue of" out: virtue of the 60, virtue of a 34, virtue of which 3.
+
+Gate R-S7 (`app/scripts/check-redesign.mjs`) pins all of the above on desktop and phone; `--prove R-S7`
+catches every proof case. Each PR had two Codex reviews (gpt-6.1-sol, medium) and every finding was
+fixed.
+
+**Follow-ups:**
+
+- Top 136a, Pickard-Cambridge, draws an English hit whose window misses its word, at every page size
+  (the row has no mark). R-S7 tolerates five such rows on the 100 page and lists them.
+- The desktop app's corpus needs `search/eng-chapters.json` (without it English hits fall in the
+  chapter their section's Greek opens in).
+- Three svelte-check errors in `app/src/__tests__/lemma-head.test.ts` predate this work.
+- The smaller items in §4.
+
+**Rules that carry over:** no explainer text in the reader or the results; never shrink type or tap
+targets (44px); styles go in `b-search.css`; implementation and review are never the same model family
+(a Claude edit gets a Codex review); pass `model:` on every Agent spawn; Grok is benched (John, 11 Nov);
+John's design calls get a picture, never a description. Merge a PR when all its checks are green;
+deploys wait for John.
+
+**Pictures and explainer:** John's rulings were made from
+https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
+of git: 3.6 MB of JPEGs) and https://claude.ai/artifact/6MCS6YT13myEw7K2CVvGVx (source
+`docs/search-counting/explainer.html`). §2 holds his words.
 
 ## 1. What is wrong today
 
@@ -147,6 +111,9 @@ Measured on the built site with a Both search, ἀρετή + virtue (`/search?g=
   `paginate` placed that result by a different chapter. Not traced yet. Write the failing test first.
 
 ## 2. The model John ruled (15–16 Nov)
+
+The and/or, phrase, and pages bullets below were proposals; the next subsection holds what John ruled
+on them.
 
 - **Count chapters, not columns.** "Bekker columns are not grouped by coherent thematic treatments. So
   anywhere in a chapter." If the Greek were divided into paragraphs, the paragraph would be the unit.
@@ -183,6 +150,41 @@ Measured on the built site with a Both search, ἀρετή + virtue (`/search?g=
 - **Pages.** With chapters as the unit, page by chapters, or by rows at about 40 a page. Not ruled. Rows
   exist only after the books load (`buildGroups` fetches them), so paging by rows means loading every book
   in the search before page 1 shows. Measure that cost before proposing it.
+
+### The four questions, ruled 16 Nov
+
+- **A is ruled (John, 16 Nov):** the split as pictured, with the switch reading **and | and/or | or**.
+  "or" is the exclusive or (one language, not both: Greek only + English only); "and/or" is the
+  inclusive or, today's "either". His words: "A (Split) looks good except 'only one' is awkward. What
+  if we go with 'and' | 'and/or' | 'or'", then "treat 'or' as exclusive disjunction and 'and/or' as
+  inclusive disjunction". Picture A4 shows the panel's labels (Both languages / Either or both / One
+  language, not both): a draft he has not ruled. Today's `op=or` links mean inclusive; keep them
+  inclusive and give the exclusive or a new value.
+- **B is ruled (John, 16 Nov):** one list, each work with its translations under it; the separate
+  Translations list goes. A work's row counts chapters with a hit in at least one translation; a
+  translator's row counts that translator's hits in that work (sorted by hits). A translator's name
+  shows that translator's hits in that work. His words: "for the work as a heading with nested list,
+  it should be chapters with at least one hit in at least one translation ... and for translators, it
+  should be HITS." The passage rows stay as built: one translator's English, the names of every
+  translator with a hit there underneath, to switch between. The work's number reads "84 chap." (B7;
+  John, 16 Nov: "84 chap. for work"); a translator's number stands alone. The
+  "in more than one" line (B1) was not taken up.
+- **D is ruled (John, 16 Nov): pages by rows, exactly N a page** ("n results = n rows per page. do
+  that."), so a chapter may run on to the next page (ἀρετή + virtue: 890 rows, 23 pages of 40). A row
+  is one passage drawn in the list, however many hits it holds. Cost to solve: counting rows needs
+  every book of the search before page 1 (50 books, 30 MB, 7 MB gzipped; "and/or" 100 books, 57 MB,
+  13 MB gzipped) unless rows can be counted from the index.
+- **And the 100 page follows the TLG** (John, 16 Nov): "a page with 100 rows be citations and summary
+  only with 'click to expand' for normal hit passage display." Pictured D4 (the list) and D5 (a row
+  opened): each row its reference and a line around its first hit; a tap opens the row in place as
+  the other page sizes draw it. It **replaces** Context "Citations only" (`citeList`,
+  `citationsFor`; John, 16 Nov: "Yes, replace it"), which lists references alone.
+- **C is ruled (John, 16 Nov): Exclude only, no Include.** "Why doesn't the user just search that
+  exact phrase with the 'exact phrase' setting?" An Include gives the hits an exact-phrase search
+  gives, so it goes, and with it the question of which wins an overlap (C4/C5). And (John, 16 Nov):
+  an Exclude lowers the counts of phrases that overlap it ("virtue of the" 108 → 60 with "in virtue
+  of" excluded); the rows keep their order after an Exclude; on the phone the Filter button carries
+  a badge while a phrase is excluded.
 
 ### Measured chapter counts, ἀρετή + virtue, every translation
 
@@ -225,6 +227,6 @@ Measured on the built site with a Both search, ἀρετή + virtue (`/search?g=
 - `/saved` is not in check-redesign's contrast list (checked separately; it passes).
 - Dead code from the port: `groupState`, `corpus-tools`, `inscription`, `sect-ticks`, `speaker-colors`.
 - The 6-term proximity cap needs a speed test.
-- Review notes: an old `ps=c` link opens at 40 a page; a spaced em dash loses its leading space; an old
+- Review notes: a spaced em dash loses its leading space; an old
   proximity link with case and tense loses the case when the term is edited.
 - The Greek word list covers the Lemma switch after typing: John ruled it no problem (15 Nov). Leave it.
