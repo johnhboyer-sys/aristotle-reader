@@ -5025,6 +5025,8 @@ const stageFiveProofs = {
     'R-R25': {'phone-switch': /P390 greek Aa shows "Full Greek lines" where full lines cannot fit/, 'no-widen': /D1152 Both on(, text 90%)? Greek column \d+px, expected the longest line/},
     'R-R26': {'uncapped': /D1440 english \d+ of \d+ rows wider than 664px/, 'outdent': /P390 both opening fragment L[\w-]+ turns over at [\d.]+px, expected the fragment indent \+ 8 = 24/},
 };
+// --list prints the stage's gate ids, one a line, for check-redesign-shards.mjs.
+if (args.includes('--list')) { console.log(Object.keys(gates).join('\n')); process.exit(0); }
 if (only && !gates[only]) throw Error(`Unknown gate ${only}`);
 let failed = 0;
 let proofFailed = false;
