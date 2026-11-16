@@ -53,9 +53,10 @@ State on 16 Nov, end of the counting session:
     every book of the search before page 1 (50 books, 30 MB, 7 MB gzipped; "and/or" 100 books, 57 MB,
     13 MB gzipped) unless rows can be counted from the index.
   - **And the 100 page follows the TLG** (John, 16 Nov): "a page with 100 rows be citations and summary
-    only with 'click to expand' for normal hit passage display." Not yet pictured. Today's Context
-    "Citations only" (`citeList`, `citationsFor`) lists references alone, with no summary and nothing
-    that opens in place.
+    only with 'click to expand' for normal hit passage display." Pictured D4 (the list) and D5 (a row
+    opened): each row its reference and a line around its first hit; a tap opens the row in place as
+    the other page sizes draw it. It **replaces** Context "Citations only" (`citeList`,
+    `citationsFor`; John, 16 Nov: "Yes, replace it"), which lists references alone.
   - **C is ruled (John, 16 Nov): Exclude only, no Include.** "Why doesn't the user just search that
     exact phrase with the 'exact phrase' setting?" An Include gives the hits an exact-phrase search
     gives, so it goes, and with it the question of which wins an overlap (C4/C5). Still his to confirm,
