@@ -79,7 +79,7 @@ async function arrive(qs: string) {
   await vi.waitFor(() => expect(searchCombo).toHaveBeenCalled());
   await vi.waitFor(() => expect(summary()).not.toBeNull());
   await screen.findByRole('button', { name: 'Change' });
-  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/instance|passage|hits/));
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/\d+ chapters?/));
   return page;
 }
 const lastSlots = async () => {

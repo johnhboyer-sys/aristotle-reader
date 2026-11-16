@@ -48,8 +48,9 @@
   } from '../lib/paired-hit';
   import { AUTHENTIC_IDS, HAS_SPEAKERS } from '../lib/works';
   import { isChapterSection } from '../lib/data';
-  import { loadOffsets, offsetRef, type Offsets } from '../lib/search';
-  import { engHitCount, hitCount, paginate } from '../lib/search-pages';
+  import { loadEngChapters, loadOffsets, offsetRef, type EngChapters, type Offsets } from '../lib/search';
+  import { engHitCount, hitCount } from '../lib/search-pages';
+  import { chapterJoin, chapterPlaces, measure, paginatePlaces, type ChapterAt, type ChapterPlaces } from '../lib/chapter-pages';
   import {
     fetchBook,
     fetchChapters,
@@ -122,6 +123,9 @@
     // for order within a line.
     unit?: PairUnit;
     at?: number;
+    // The chapter the hit is counted in (chapterPlaces), which it is drawn
+    // under, on that chapter's page.
+    ch?: ChapterAt;
     // Greek hits: the segment the token stands in, for its readings, and the
     // token as printed and folded, for the form view (greekFold of the
     // surface is the form index's key).
@@ -202,10 +206,21 @@
   let selectedWorks = new Set<string>(WORKS.map(w => w.id));
   let worksOpen = false;  // is the works "Refine" panel expanded?
   let groups: ChapterGroup[] = [];        // chapter groups of the CURRENT page
-  let totalPassages = 0;
-  $: bothSearch = !!lastSearch?.eng.trim() && (!!lastSearch?.grk.trim() || !!lastSearch?.lemmas.length);
-  $: mainCount = bothSearch ? totalPassages : totalInstances;
-  $: countNoun = bothSearch ? (mainCount === 1 ? 'passage' : 'passages') : (mainCount === 1 ? 'instance' : 'instances');
+  const isBoth = (s: UrlSearch | null) => !!s?.eng.trim() && (!!s?.grk.trim() || !!s?.lemmas.length);
+  $: bothSearch = isBoth(lastSearch);
+  $: engSearch = !!lastSearch?.eng.trim() && !bothSearch;
+  // The English of the results on screen: the widened results of a Both
+  // search (findVariants) are Greek alone, and nothing joins them.
+  const joinsBoth = (s: UrlSearch | null, ctx: SearchCtx) => isBoth(s) && !!ctx.engQuery;
+  $: joinBoth = joinsBoth(lastSearch, searchCtx);
+  // The count is of chapters (John, 15 Nov: Bekker columns are not thematic
+  // units), and of hits where a hit is one thing: a Greek word in a Greek or
+  // a Both search (the English decides only which chapters count), an English
+  // word where no work answers in more than one translation, since otherwise
+  // the total counts translators.
+  let counted = { chapters: 0, hits: null as number | null };
+  $: mainCount = counted.chapters;
+  $: countNoun = mainCount === 1 ? 'chapter' : 'chapters';
   let totalInstances = 0;                 // across the whole result set (all pages)
   let expanded = new Set<string>();
   let loading = false;                    // running the index search
@@ -216,6 +231,9 @@
   // depends on where a speech begins, so it is never noise.
   let approximateTurns: string[] = [];
   let approximateChapters: string[] = [];
+  // Works whose chapter data did not load: their hits fall back to their
+  // book, or to the chapter their section opens in.
+  let chaptersFailed: string[] = [];
 
   // Inflected variants of a typed phrase. Offered only for a Greek phrase
   // searched by surface form, which is the case where finding the variants by
@@ -384,14 +402,14 @@
   // Everything downstream reads the results through this: the hits left once
   // the forms set aside and those the grammar facets reject are gone.
   function withoutForms(results: SearchResult[]): SearchResult[] {
-    return refine(results, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: grammarOwn(hitGrammar, lastSearch, hitForms) ?? undefined, facets }, searchCtx.langOp);
+    return refine(results, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: grammarOwn(hitGrammar, lastSearch, hitForms) ?? undefined, facets }, keepOp(searchCtx));
   }
-  $: formResults = refine(allResults, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: ownG ?? undefined, facets }, searchCtx.langOp);
+  $: formResults = refine(allResults, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: ownG ?? undefined, facets }, keepOp(searchCtx));
   // Counted before any form is set aside, so one set aside stays listed, and
   // within the translation and work chosen and the facets ticked, so the
   // counts add up to the Greek hits shown.
   $: keepFacet = facetKeep(ownG, facets);
-  $: formPanel = hitForms ? formGroups(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), hitForms, keepFacet) : [];
+  $: formPanel = hitForms ? formGroups(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), hitForms, keepFacet) : [];
   $: formKeys = [...new Set(formPanel.flatMap(g => g.forms.map(f => f.form)))];
   $: formChoice = formKeys.length > 1 || excludedForms.size > 0;
   // Apply has something to do when the ticks differ from what is in force.
@@ -641,7 +659,7 @@
   };
   $: keepForm = formKeep(hitForms, excludedForms);
   $: facetRows = withTicked(
-    ownG ? facetCounts(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), ownG, keepForm) : [],
+    ownG ? facetCounts(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), ownG, keepForm) : [],
     facets);
   const categoryLabel = (key: string) => GRAMMAR_CATEGORIES.find(c => c.key === key)?.label ?? key;
   // A value in a reader's word where the grid gives one (adj → adjective).
@@ -710,7 +728,7 @@
   // chosen below, if any, so the counts add up to the English hits shown.
   $: transCounts = (() => {
     const by = new Map<string, { id: string; short: string; n: number }>();
-    for (const r of narrowWork(formResults, workFilter)) {
+    for (const r of joined(narrowWork(formResults, workFilter), places, joinBoth, searchCtx.langOp)) {
       for (const h of r.engHits ?? []) {
         const entry = by.get(h.translation)
           ?? by.set(h.translation, { id: h.translation, short: translationRef(r.work, h.translation)?.short ?? h.translation, n: 0 }).get(h.translation)!;
@@ -749,10 +767,14 @@
     return id ? results.filter(r => r.work === id) : results;
   }
   $: workCounts = (() => {
+    // In the bar's measure: its hits where it counts hits, else chapters.
+    const shown = joined(narrow(formResults, transFilter, searchCtx), places, joinBoth, searchCtx.langOp);
+    const unit = countOf(shown, places, engSearch, transFilter).hits === null ? 'chapters' : 'hits';
     const by = new Map<string, number>();
-    for (const r of narrow(formResults, transFilter, searchCtx)) {
-      const n = hitCount(r);
-      if (n) by.set(r.work, (by.get(r.work) ?? 0) + n);
+    for (const work of new Set(shown.map(r => r.work))) {
+      const c = countOf(shown.filter(r => r.work === work), places, engSearch, transFilter);
+      const n = unit === 'hits' ? c.hits ?? 0 : c.chapters;
+      if (n) by.set(work, n);
     }
     return [...by.entries()]
       .map(([id, n]) => ({ id, n, abbr: getWork(id)?.abbr ?? id, title: getWork(id)?.title ?? id }))
@@ -762,8 +784,9 @@
 
   $: countText = totalInstances === 0
     ? 'No passages found.'
-    : `${mainCount} ${countNoun}` + (bothSearch ? ` · ${totalInstances} hits` : '')
+    : `${mainCount} ${countNoun}` + (counted.hits !== null ? ` · ${hitsText(counted.hits)}` : '')
       + (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '');
+  const hitsText = (n: number) => `${n} hit${n === 1 ? '' : 's'}`;
 
   function setWorkFilter(id: string | null) {
     workFilter = workFilter === id ? null : id;
@@ -773,19 +796,59 @@
   }
 
   // One translation's hits, or all of them. A passage that matched only in
-  // the translations set aside drops out — unless its Greek matched and the
-  // two queries were joined by "either", when the Greek hit still stands.
-  function narrow(results: SearchResult[], id: string | null, ctx: SearchCtx): SearchResult[] {
+  // the translations set aside drops out, unless its Greek matched: whether
+  // a chapter still holds both languages is joined() 's to say, last.
+  function narrow(results: SearchResult[], id: string | null, _ctx?: SearchCtx): SearchResult[] {
     if (!id) return results;
     return results.flatMap(r => {
       if (!r.engHits) return [r];
       const engHits = r.engHits.filter(h => h.translation === id);
       if (engHits.length) return [{ ...r, engHits, engMatch: true }];
-      return r.grkMatch && ctx.langOp === 'or' ? [{ ...r, engHits: [], engMatch: false }] : [];
+      return r.grkMatch ? [{ ...r, engHits: [], engMatch: false }] : [];
     });
   }
+  // How a filter that takes a passage's last Greek hit treats what is left:
+  // an English hit stays where English was searched for ('or'), and "both"
+  // is joined() 's to settle, by chapter.
+  const keepOp = (ctx: SearchCtx): LangOp => (ctx.engQuery ? 'or' : 'and');
 
-  let pageOf: (r: SearchResult, chapter: string) => number = () => 0;
+  // Where each hit falls: the offsets (Greek) and eng-chapters.json (each
+  // translation's words) of the works with hits. Loaded before the results
+  // are counted, so every count is of chapters from the start.
+  let places: ChapterPlaces = chapterPlaces(new Map());
+  async function placesFor(results: SearchResult[]): Promise<{ places: ChapterPlaces; offsets: Map<string, Offsets | null>; failed: string[] }> {
+    const offsets = new Map<string, Offsets | null>();
+    const eng = new Map<string, EngChapters | null>();
+    const failed: string[] = [];
+    const english = new Set(results.filter(r => r.engMatch).map(r => r.work));
+    await Promise.all([...new Set(results.map(r => r.work))].map(async work => {
+      const [o, e] = await Promise.allSettled([loadOffsets(work), english.has(work) ? loadEngChapters(work) : Promise.resolve({})]);
+      offsets.set(work, o.status === 'fulfilled' ? o.value : null);
+      eng.set(work, e.status === 'fulfilled' ? e.value : null);
+      if (o.status === 'rejected' || e.status === 'rejected') failed.push(work);
+    }));
+    return { places: chapterPlaces(offsets, eng), offsets, failed };
+  }
+  // The engines join the two languages with "either"; "both" is joined here,
+  // after every filter, by chapter: both terms anywhere in one chapter (John,
+  // 15 Nov). A filter that takes a chapter's last Greek or English hit takes
+  // the chapter.
+  // Each takes the places, the both-languages flag and the translation
+  // filter as arguments, so a reactive count that calls it re-runs when they
+  // change.
+  function joined(results: SearchResult[], P: ChapterPlaces, both: boolean, op: LangOp): SearchResult[] {
+    return both && op === 'and' ? chapterJoin(results, P) : results;
+  }
+  // A Both search's results, joined by chapter: not the widened ones
+  // ("any inflection"), which are a Greek search's.
+  // What the bar counts (see `counted`).
+  function countOf(results: SearchResult[], P: ChapterPlaces, english: boolean, trans: string | null) {
+    const m = measure(results, P);
+    const oneEach = trans !== null || results.every(r => translationsOf(r.work).length <= 1);
+    return { chapters: m.chapters, hits: !english ? m.grkHits : oneEach ? m.engHits : null };
+  }
+
+  let pageOfChapter: (at: ChapterAt) => number = () => 0;
   let layoutRun = 0;
   // The search index's offsets of the works with hits: where each page
   // breaks, and the line of a Greek hit under citations only.
@@ -794,20 +857,22 @@
     // A filter that leaves no page draws none, so the card goes here too.
     popup = null;
     const run = ++layoutRun;
-    const shown = narrowWork(narrow(withoutForms(results), transFilter, searchCtx), workFilter);
-    totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
-    totalPassages = shown.length;
-    shownResults = shown;
-    // Load chapter offsets to cut pages at chapter boundaries before fetching books.
-    const offsets = new Map<string, Awaited<ReturnType<typeof loadOffsets>> | null>();
-    await Promise.all([...new Set(shown.map(r => r.work))].map(async work => {
-      try { offsets.set(work, await loadOffsets(work)); } catch { offsets.set(work, null); }
-    }));
+    // Each hit's chapter, before any book is fetched: pages break between
+    // chapters, and each page draws its hits under the chapter they counted in.
+    const found = await placesFor(results);
     if (run !== layoutRun) return;
-    pageOffsets = offsets;
-    const layout = paginate(shown, offsets, pageTarget(pageSize));
+    places = found.places;
+    pageOffsets = found.offsets;
+    chaptersFailed = found.failed;
+    // Read fresh, not from the reactive copies: a widening sets searchCtx
+    // and comes straight here, before they catch up.
+    const shown = joined(narrowWork(narrow(withoutForms(results), transFilter, searchCtx), workFilter), places, joinsBoth(lastSearch, searchCtx), searchCtx.langOp);
+    totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
+    counted = countOf(shown, places, !!lastSearch?.eng.trim() && !isBoth(lastSearch), transFilter);
+    shownResults = shown;
+    const layout = paginatePlaces(shown, places, pageTarget(pageSize));
     pages = layout.pages;
-    pageOf = layout.pageOf;
+    pageOfChapter = layout.pageOfChapter;
     if (run !== layoutRun) return;
     if (pages.length) await renderPage(0);
     // A retired page leaves pageLoading to the layout that retired it.
@@ -1002,17 +1067,15 @@
   // The hits with every form back in, for "of 967 · restore all forms" under
   // the count while some are set aside (d21).
   $: allFormsTotal = excludedForms.size
-    ? narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set(), grammar: ownG ?? undefined, facets }, searchCtx.langOp), transFilter, searchCtx), workFilter)
-      .reduce((n, r) => n + hitCount(r), 0)
-    : totalInstances;
-  const instancesLabel = (n: number) => `Show ${n} instance${n === 1 ? '' : 's'}`;
+    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set(), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), places, engSearch, transFilter).chapters
+    : mainCount;
+  const chaptersLabel = (n: number) => `Show ${n} chapter${n === 1 ? '' : 's'}`;
   $: hitsLabel = `Show ${mainCount} ${countNoun}`;
   // What the forms ticked on the sheet would leave (q08), and its button:
   // the ticks applied, then the hits.
   $: formsPreview = formsDirty
-    ? narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set([...[...excludedForms].filter(f => !formKeys.includes(f)), ...formKeys.filter(f => !formTicks.has(f))]), grammar: ownG ?? undefined, facets }, searchCtx.langOp), transFilter, searchCtx), workFilter)
-      .reduce((n, r) => n + hitCount(r), 0)
-    : totalInstances;
+    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set([...[...excludedForms].filter(f => !formKeys.includes(f)), ...formKeys.filter(f => !formTicks.has(f))]), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), places, engSearch, transFilter).chapters
+    : mainCount;
   function showForms() {
     if (formsDirty) applyForms();
     closeSheet();
@@ -1153,7 +1216,7 @@
       if (keep.every(Boolean)) return [r];
       const left = cutPositions(r, keep);
       if (left.grkPositions.length) return [left];
-      return r.engMatch && ctx.langOp === 'or' ? [{ ...left, grkMatch: false }] : [];
+      return r.engMatch && keepOp(ctx) === 'or' ? [{ ...left, grkMatch: false }] : [];
     });
   }
 
@@ -2044,7 +2107,7 @@
   // page headings, they "just add clicks".
   interface ViewRun {
     key: string;
-    book?: { label: string; hits: number };
+    book?: { label: string; hits?: number };
     chapter?: { n: string; title?: string };
     instances: Instance[];
   }
@@ -2140,7 +2203,7 @@
       if (!byChapter && sameBook && last) { last.instances.push(...g.instances); continue; }
       vg.runs.push({
         key: `${g.work}:${g.book}:${byChapter ? g.chapter : ''}`,
-        book: !sameBook && (w?.bookLabels.length ?? 0) > 1 ? { label: w?.bookLabels[g.book - 1] ?? String(g.book), hits: 0 } : undefined,
+        book: !sameBook && (w?.bookLabels.length ?? 0) > 1 ? { label: w?.bookLabels[g.book - 1] ?? String(g.book), hits: counted.hits === null ? undefined : 0 } : undefined,
         chapter: named ? { n: g.chapter, title: g.title } : undefined,
         instances: [...g.instances],
       });
@@ -2152,7 +2215,7 @@
       let head: ViewRun | undefined;
       for (const run of vg.runs) {
         if (run.book) head = run;
-        if (head?.book) head.book.hits += groupHits(run);
+        if (head?.book && head.book.hits !== undefined) head.book.hits += groupHits(run) ?? 0;
       }
     }
     const list = [...sections.values()];
@@ -2358,7 +2421,11 @@
   // total and lays out pages from the index alone).
   const hitsIn = (inst: Instance) => (inst.rows?.reduce((n, row) => n + row.hits, 0) ?? 0)
     + (inst.lang === 'grk' ? inst.grkHits ?? 0 : inst.rows ? 0 : 1);
-  const groupHits = (g: { instances: Instance[] }) => g.instances.reduce((n, inst) => n + hitsIn(inst), 0);
+  // A heading counts what the bar counts: Greek words in a Greek or Both
+  // search, English words in an English one where no work answers in two
+  // translations; otherwise no count.
+  $: groupHits = (g: { instances: Instance[] }): number | undefined => counted.hits === null ? undefined
+    : g.instances.reduce((n, inst) => n + (engSearch ? hitsIn(inst) : inst.lang === 'grk' ? inst.grkHits ?? 0 : 0), 0);
 
   // The reader's address for a hit. Carry the SUBMITTED queries so the reader
   // can highlight them; loc scrolls to the section. Use the snapshot (ctx),
@@ -2425,6 +2492,26 @@
       }
     }
     return [...out.values()];
+  }
+
+  // `clipped` with only `words` marked: the words' places in the text the
+  // index counted (`indexed`), found again in the clipped window. Null where
+  // the window is not cut from that text, and the query's marks stand.
+  function ownMarks(clipped: string, indexed: string, words: number[]): string | null {
+    const core = clipped.replace(/^…\s*/, '').replace(/\s*…$/, '');
+    const at = indexed.indexOf(core);
+    if (!core || at < 0) return null;
+    const lead = clipped.indexOf(core);
+    const iw = englishWords(indexed);
+    const cw = englishWords(clipped);
+    const marks = new Set<number>();
+    for (const w of words) {
+      const start = iw[w]?.start;
+      const i = start === undefined ? -1 : cw.findIndex(x => x.start === start - at + lead);
+      if (i >= 0) marks.add(i);
+    }
+    // Words past the window's edge are not drawn, and not marked.
+    return marks.size ? markWordsHtml(clipped, marks) : null;
   }
 
   // Build the Stephanus-page groups for a slice of results: load the books and
@@ -2496,19 +2583,19 @@
     // text marks these, not every word the query would match there.
     const held = new Map<string, Set<number>>();
 
-    // A hit's chapter, as the page groups it.
-    const chapterOf = (work: string, book: number, inst: Pick<Instance, 'column' | 'line'>) => lookups.get(`${work}:${book}`)!(inst.column, inst.line ?? 1);
-    // Whole sections hold only the hits of this page's chapters.
-    const onPage = (work: string, book: number, inst: Pick<Instance, 'column' | 'line'>) => {
-      if (allPages || context !== 's') return true;
-      const source = results.find(r => r.work === work && r.meta.book === book && r.meta.column === inst.column);
-      return !source || pageOf(source, chapterOf(work, book, inst).chapter) === pageIdx;
-    };
+    // A hit's chapter: the one the pages counted it in. A work whose offsets
+    // did not load has none to name, and groups by its outline.
+    const chapterOf = (work: string, book: number, inst: Pick<Instance, 'column' | 'ch'> & { line?: number }) =>
+      inst.ch?.chapter ? inst.ch : lookups.get(`${work}:${book}`)!(inst.column, inst.line ?? 1);
+    // This page's hits: those of the chapters it shows. Whole sections are
+    // cut to them first; otherwise each hit is kept or dropped as it is filed.
+    const onPage = (at: ChapterAt) => allPages || pageOfChapter(at) === pageIdx;
+    const sectionOnPage = (at: ChapterAt) => context !== 's' || onPage(at);
 
     const gmap = new Map<string, ChapterGroup>();
-    const add = (work: string, book: number, ch: { chapter: string; order: number }, inst: Instance) => {
-      const source = results.find(r => r.work === work && r.meta.book === book && r.meta.column === inst.column);
-      if (!allPages && source && pageOf(source, ch.chapter) !== pageIdx) return;
+    const add = (work: string, book: number, inst: Instance) => {
+      if (!onPage(inst.ch!)) return;
+      const ch = chapterOf(work, book, inst);
       const key = `${work}:${book}:${ch.chapter}`;
       let g = gmap.get(key);
       if (!g) {
@@ -2528,7 +2615,7 @@
     // Context either side of a hit: words of Greek, characters of English.
     const greekReach = context === '1' ? 4 : 12;
     const grkByUnit = new Map<PairUnit, Instance[]>();
-    const engByUnit = new Map<PairUnit, Instance>();
+    const engByUnit = new Map<PairUnit, Map<string, Instance>>();
     const firstLine = (unit: PairUnit) => unit.greek[0]?.n ?? 1;
     // What each Greek hit shows, as token places in its section (a match run
     // on past the section counts on, as hitTokens does), and how to draw
@@ -2585,7 +2672,7 @@
           const inst: Instance = { lang: 'grk', work: r.work, book: r.meta.book, seg: r.meta.id, surface, form: greekFold(surface ?? ''), group: formKey(spelling), spellings: [spelling], column: seg.column, line, sub, ref: formatCite(r.work, seg.column, line, sub), html: windows?.length
             ? greekKwic(r.work, seg, kept, greekReach, [own[0], own[own.length - 1]], after)
             : greekKwic(r.work, seg, [pos], greekReach),
-            toks: own, grkHits: 1, jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, undefined, kept) + (sub ? sub : ''), held, speaker, unit, at: pos };
+            toks: own, grkHits: 1, jumpUrl: jumpFor(r.work, r.meta.book, seg.column, line, undefined, kept) + (sub ? sub : ''), held, speaker, unit, at: pos, ch: places.grk(r, pos) };
           // Drawn by whole lines, a window runs on to its last word's line;
           // a window that runs on into the next section keeps its words.
           const last = own[own.length - 1];
@@ -2631,20 +2718,41 @@
           const marked = englishMarked(texts, hit.positions, ctx.engUnits, ctx.engPhrase, ctx.engForms);
           const starts: number[] = [];
           texts.reduce((n, text) => { starts.push(n); return n + englishWords(text).length; }, 0);
+          // A phrase is counted where its first word stands (eachHit), and
+          // its every word is drawn there; a word two phrases share, in the
+          // chapter of each.
+          const heads = [...(hit.matches ?? [])].sort((a, b) => a - b);
+          // Only a phrase's runs share one length; terms' runs differ, so a
+          // term's word goes with the last run to start at or before it.
+          const span = Math.max(1, ctx.engUnits.flat().length);
+          const chaptersOf = (w: number): ChapterAt[] => {
+            const own = ctx.engPhrase ? heads.filter(m => m <= w && w < m + span) : [];
+            const at = (own.length ? own : [heads.filter(m => m <= w).at(-1) ?? w]).map(m => places.eng(r, t.id, m));
+            return at.filter((a, i) => at.findIndex(b => b.key === a.key) === i);
+          };
           for (const w of marked) {
-            const unit = unitAtEnglish(ix, seg, t, w);
-            if (!onPage(r.work, r.meta.book, { column: unit.section, line: firstLine(unit) })) continue;
             let k = starts.length - 1;
             while (k > 0 && starts[k] > w) k--;
-            const key = `${pair}:${t.id}:${seg.id}:${k}`;
-            (held.get(key) ?? held.set(key, new Set()).get(key)!).add(w - starts[k]);
+            for (const at of chaptersOf(w)) {
+              if (!sectionOnPage(at)) continue;
+              // By chapter too: a section a chapter starts in is a row in each.
+              const key = `${pair}:${t.id}:${seg.id}:${k}:${at.key}`;
+              (held.get(key) ?? held.set(key, new Set()).get(key)!).add(w - starts[k]);
+            }
           }
-          const byUnit = new Map<PairUnit, number[]>();
-          for (const w of marked) {
+          // By unit, and within a unit by chapter: a unit across a chapter's
+          // start is two instances, each under the chapter its words count in.
+          const byUnit = new Map<string, { unit: PairUnit; at: ChapterAt; words: number[] }>();
+          const units = new Map<PairUnit, number>();
+          const split = new Map<PairUnit, number>();   // a unit's chapters
+          const file = (w: number, words: number[], at: ChapterAt) => {
             const unit = unitAtEnglish(ix, seg, t, w);
-            (byUnit.get(unit) ?? byUnit.set(unit, []).get(unit)!).push(w);
-          }
-          if (!marked.length) byUnit.set(unitAtEnglish(ix, seg, t, 0), []);
+            const key = `${units.get(unit) ?? units.set(unit, units.size).get(unit)}:${at.key}`;
+            if (!byUnit.has(key)) split.set(unit, (split.get(unit) ?? 0) + 1);
+            (byUnit.get(key) ?? byUnit.set(key, { unit, at, words: [] }).get(key)!).words.push(...words);
+          };
+          for (const w of marked) for (const at of chaptersOf(w)) file(w, [w], at);
+          if (!marked.length) file(0, [], places.eng(r, t.id, 0));
           // What the hit counts for is the index's to say (engHitCount). Where
           // the marks are the index's positions, each unit counts its own (a
           // phrase where its first word stands); otherwise the whole count
@@ -2654,8 +2762,9 @@
           const found = new Set(hit.positions);
           const exact = marked.length > 0 && marked.length === found.size && marked.every(w => found.has(w));
           let k = 0;
-          for (const [unit, words] of byUnit) {
-            const n = exact ? words.reduce((sum, w) => sum + (counted.get(w) ?? 0), 0) : k ? 0 : engHitCount(hit);
+          for (const { unit, at, words } of byUnit.values()) {
+            // A word filed in two chapters counts in the one its match starts in.
+            const n = exact ? words.reduce((sum, w) => sum + (places.eng(r, t.id, w).key === at.key ? counted.get(w) ?? 0 : 0), 0) : k ? 0 : engHitCount(hit);
             k++;
             const line = firstLine(unit);
             const display = { ...pairContext(ix, seg, unit, textContext) };
@@ -2672,8 +2781,11 @@
               ? indexedOffset - spanStart : englishWords(spanText)[firstMark]?.start;
             const clipped = context === 's' ? spanText : pairEnglishWindow(seg, t, display, hitLine,
               greekWindow.greek.reduce((n, l) => n + l.text.split(/\s+/).length, 0), hitOffset);
+            // A unit a chapter starts in is a row in each chapter, and each
+            // row marks only its own words, as it counts only them.
+            const own = (split.get(unit) ?? 0) > 1 ? ownMarks(clipped, indexedText, words) : null;
             // A row for each passage the words fall in; the count goes on the first.
-            const rows = [markEnglishHtml(clipped, ctx.engUnits, ctx.engPhrase, ctx.engForms)]
+            const rows = [own ?? markEnglishHtml(clipped, ctx.engUnits, ctx.engPhrase, ctx.engForms)]
               .map((html, j): TransRow => ({
                 translation: t.id,
                 label: t.short,
@@ -2687,10 +2799,11 @@
             if (!rows.length) continue;
             // Every translation's hit in one unit shares one instance: the
             // same lines in each translator's words.
-            let inst = engByUnit.get(unit);
+            const inUnit = engByUnit.get(unit) ?? engByUnit.set(unit, new Map()).get(unit)!;
+            let inst = inUnit.get(at.key);
             if (!inst) {
-              inst = { lang: 'eng', work: r.work, book: r.meta.book, column: unit.section, line, ref: formatCite(r.work, unit.section, englishCiteLine(r.work, books.get(pair)!.turnFlow, line)), html: '', jumpUrl: '', rows: [], unit, at: unit.first, pairGreek: books.get(pair)!.turnFlow ? undefined : pairGreekHtml(r.work, seg, greekWindow, true) };
-              engByUnit.set(unit, inst);
+              inst = { lang: 'eng', work: r.work, book: r.meta.book, column: unit.section, line, ref: formatCite(r.work, unit.section, englishCiteLine(r.work, books.get(pair)!.turnFlow, line)), html: '', jumpUrl: '', rows: [], unit, at: unit.first, ch: at, pairGreek: books.get(pair)!.turnFlow ? undefined : pairGreekHtml(r.work, seg, greekWindow, true) };
+              inUnit.set(at.key, inst);
               made.push({ work: r.work, book: r.meta.book, inst });
             }
             inst.rows!.push(...rows);
@@ -2700,9 +2813,16 @@
     }
 
     // One unit, one instance: an English hit joins the first Greek hit of its
-    // unit; alone, it shows the unit's Greek.
-    const firstGrk = new Map<PairUnit, Instance>();
-    for (const [unit, list] of grkByUnit) firstGrk.set(unit, list.reduce((a, b) => (b.at! < a.at! ? b : a)));
+    // unit in its chapter; alone, it shows the unit's Greek.
+    const firstGrk = new Map<PairUnit, Map<string, Instance>>();
+    for (const [unit, list] of grkByUnit) {
+      const byCh = new Map<string, Instance>();
+      for (const inst of list) {
+        const first = byCh.get(inst.ch!.key);
+        if (!first || inst.at! < first.at!) byCh.set(inst.ch!.key, inst);
+      }
+      firstGrk.set(unit, byCh);
+    }
     const merged = new Set<Instance>();
     for (const { work, book, inst } of made) {
       if (inst.lang !== 'eng') continue;
@@ -2711,7 +2831,7 @@
       inst.rows!.sort((a, b) => order(a.translation) - order(b.translation));
       inst.html = inst.rows![0].html;
       inst.jumpUrl = inst.rows![0].jumpUrl;
-      const grk = firstGrk.get(inst.unit!);
+      const grk = firstGrk.get(inst.unit!)?.get(inst.ch!.key);
       if (grk) { grk.rows = inst.rows; merged.add(inst); }
       else {
         const seg = books.get(`${work}:${book}`)?.segments.find(x => x.column === inst.unit!.section);
@@ -2731,8 +2851,7 @@
       for (const { inst } of made) {
         const sh = shownOf.get(inst);
         if (sh && !merged.has(inst)) {
-          const chapter = lookups.get(`${inst.work}:${inst.book}`)!(inst.column, inst.line ?? 1).chapter;
-          const key = `${sh.key}:chapter:${chapter}`;
+          const key = `${sh.key}:chapter:${chapterOf(inst.work, inst.book!, inst).chapter}`;
           (byKey.get(key) ?? byKey.set(key, []).get(key)!).push(inst);
         }
       }
@@ -2791,7 +2910,7 @@
       if (merged.has(inst)) continue;
       // Each translation's English goes under the unit's first Greek hit.
       // Only the reference may borrow from the turn beside it.
-      if (inst.lang === 'grk' && (!inst.rows || inst.forms?.some(f => !f.rows)) && (!books.get(`${work}:${book}`)!.turnFlow || firstGrk.get(inst.unit!) === inst)) {
+      if (inst.lang === 'grk' && (!inst.rows || inst.forms?.some(f => !f.rows)) && (!books.get(`${work}:${book}`)!.turnFlow || firstGrk.get(inst.unit!)?.get(inst.ch!.key) === inst)) {
         const ix = pairsOf(`${work}:${book}`, work);
         const ts = translationsOf(work);
         const ref = ts.find(t => t.slot === 'english') ?? ts[0];
@@ -2825,13 +2944,15 @@
     // and under the whole-section context the instance itself, one for each
     // section and holding all its hits, so the Greek and the English widen
     // together (John, 2026-11-09: "Both, to the section").
-    const placed = made.filter(m => !merged.has(m.inst) && onPage(m.work, m.book, m.inst));
-    const bySection = new Map<string, { work: string; book: number; column: string; insts: Instance[] }>();
+    const placed = made.filter(m => !merged.has(m.inst) && sectionOnPage(m.inst.ch!));
+    const bySection = new Map<string, { work: string; book: number; column: string; ch: string; insts: Instance[] }>();
+    // A section a chapter starts in is filed once in each chapter, with
+    // that chapter's hits.
     for (const { work, book, inst } of placed) {
-      const key = `${work}:${book}:${inst.column}`;
-      (bySection.get(key) ?? bySection.set(key, { work, book, column: inst.column, insts: [] }).get(key)!).insts.push(inst);
+      const key = `${work}:${book}:${inst.column}:${inst.ch!.key}`;
+      (bySection.get(key) ?? bySection.set(key, { work, book, column: inst.column, ch: inst.ch!.key, insts: [] }).get(key)!).insts.push(inst);
     }
-    for (const { work, book, column, insts } of bySection.values()) {
+    for (const { work, book, column, ch, insts } of bySection.values()) {
       const pair = `${work}:${book}`;
       const seg = books.get(pair)!.segments.find(x => x.column === column);
       if (!seg) continue;
@@ -2849,7 +2970,7 @@
       const sectionHtml = (t: TranslationRef) => books.get(pair)!.segments
         .flatMap(s => piecesOf(pair, ix, s, t).map((piece, k) => ({ ...piece, key: `${pair}:${t.id}:${s.id}:${k}` })))
         .filter(piece => piece.section === column)
-        .map(piece => markWordsHtml(piece.text, held.get(piece.key) ?? new Set()).trim())
+        .map(piece => markWordsHtml(piece.text, held.get(`${piece.key}:${ch}`) ?? new Set()).trim())
         .filter(Boolean).join(' ');
       const rows = ts.filter(t => matched.has(t.id)).map((t): TransRow => ({
         translation: t.id, label: t.short, title: t.name,
@@ -2908,10 +3029,11 @@
         }));
       }
       // Filed under the first chapter its hits are in.
-      add(work, book, insts.map(i => chapterOf(work, book, i)).reduce((a, b) => (b.order < a.order ? b : a)), inst);
+      inst.ch = insts.map(i => i.ch!).reduce((a, b) => (b.order < a.order ? b : a));
+      add(work, book, inst);
     }
     if (context !== 's') {
-      for (const { work, book, inst } of placed) add(work, book, lookups.get(`${work}:${book}`)!(inst.column, inst.line), inst);
+      for (const { work, book, inst } of placed) add(work, book, inst);
     }
 
     for (const g of gmap.values()) g.instances.sort(bekkerCmp);
@@ -3289,10 +3411,10 @@
         // every headword that spelling can belong to — ἤν back to εἰμί and ὅς —
         // which is exactly what the picker exists to rule out.
         : soloLemmaActive
-          ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, langOp, works, 'headword', engForms, speakerFilter)
+          ? await search(soloLemma.picked.join(' '), engQuery, 'any', engMode, 'or', works, 'headword', engForms, speakerFilter)
           : runningText
             ? await searchText(works, run)
-            : await search(grkQuery, engQuery, grkMode, engMode, langOp, works, matchMode === 'text' ? 'lemma' : matchMode, engForms, speakerFilter);
+            : await search(grkQuery, engQuery, grkMode, engMode, 'or', works, matchMode === 'text' ? 'lemma' : matchMode, engForms, speakerFilter);
       if (run !== searchRun) return;
       // Accents and case exact: filtered before anything counts the results.
       const results = await exactFilter(found, searchCtx);
@@ -3356,7 +3478,7 @@
     const grk = await searchRunningText({ pattern: grkQuery, accents: accentSensitive, punctuation }, works, speakerFilter,
       (done, total) => { if (run === searchRun) rtProgress = { done, total }; });
     if (!engQuery.trim()) return grk;
-    return joinEnglish(grk, await search('', engQuery, grkMode, engMode, langOp, works, 'lemma', engForms, speakerFilter), langOp);
+    return joinEnglish(grk, await search('', engQuery, grkMode, engMode, 'or', works, 'lemma', engForms, speakerFilter), 'or');
   }
 
   // Greek keyword-in-context: a window of surface tokens around the match,
@@ -4130,7 +4252,7 @@
   {#snippet hitRuns(runs: ViewRun[])}
     {#each runs as run (run.key)}
       <div class="run-heading" class:with-book={!!run.book}>
-      {#if run.book}<h3 class="sx-book">Book {run.book.label}{' '}<span class="sx-book-n">{run.book.hits}</span></h3>{/if}
+      {#if run.book}<h3 class="sx-book">Book {run.book.label}{#if run.book.hits !== undefined}{' '}<span class="sx-book-n">{run.book.hits}</span>{/if}</h3>{/if}
       {#if run.chapter}
         {@const name = chapterName(run.chapter)}
         <h3 class="sx-chap"><span class="sx-chap-n">{name.label}</span>{#if name.title}{' '}<span class="sx-chap-t">{name.title}</span>{/if}</h3>
@@ -4841,7 +4963,7 @@
              it, Save, the pager ‹ 1/28 ›, Filter, and View, each an icon over
              its 14px label; a red dot on View while it is not the default. -->
         <div class="result-bar" class:paged={pages.length > 1}>
-          <p class="result-count" style="--n: {countText.length}; --d: {String(mainCount).length}" title={countText}>{#if totalInstances === 0}{countText}{:else}<span class="rc-n">{mainCount}</span>{' '}<span class="rc-w">{countNoun}</span>{#if bothSearch}<span class="rc-hits">{totalInstances} hits</span>{/if}{#if pages.length > 1}<span class="rc-p">{` · page ${pageIdx + 1} of ${pages.length}`}</span>{/if}{/if}</p>
+          <p class="result-count" style="--n: {countText.length}; --d: {String(mainCount).length}" title={countText}>{#if totalInstances === 0}{countText}{:else}<span class="rc-n">{mainCount}</span>{' '}<span class="rc-w">{countNoun}</span>{#if counted.hits !== null}<span class="rc-hits">{hitsText(counted.hits)}</span>{/if}{#if pages.length > 1}<span class="rc-p">{` · page ${pageIdx + 1} of ${pages.length}`}</span>{/if}{/if}</p>
           {#if canSave}
             <!-- Not disabled once saved: that would drop the focus. -->
             <button type="button" class="sx-save" class:saved={savedNow} on:click={saveSearch}><svg class="sx-ico" width="22" height="22" viewBox="0 0 24 24" fill={savedNow ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16l-5.5 4.5z"/></svg><span class="sx-lab">{#if savedNow}Saved<span class="sx-save-w">{' '}✓</span>{:else if saveFailed}{FULL}{:else}Save<span class="sx-save-w">{' '}search</span>{/if}</span></button>
@@ -4874,7 +4996,7 @@
              screen these are in the sheet. -->
         {#if !sheetOpen}
           <div class="sx-head-more">
-            {#if excludedForms.size && allFormsTotal !== totalInstances}
+            {#if excludedForms.size && allFormsTotal !== mainCount}
               <p class="sx-of">of {allFormsTotal} · <button type="button" class="sx-link" on:click={restoreForms}>restore all forms</button></p>
             {/if}
             {#if savedNow}<a class="sx-link" href={`${BASE_URL}/saved`}>In Saved searches</a>{/if}
@@ -5071,7 +5193,7 @@
                 </button>
                 {#if sheetOpen}
                   <button type="button" class="more fx-apply sheet-done" on:click={showForms}
-                    disabled={!formKeys.some(f => formTicks.has(f))}>{instancesLabel(formsPreview)}</button>
+                    disabled={!formKeys.some(f => formTicks.has(f))}>{chaptersLabel(formsPreview)}</button>
                 {:else}
                   <button type="button" class="more fx-apply" on:click={applyForms}
                     disabled={!formsDirty || !formKeys.some(f => formTicks.has(f))}>Apply</button>
@@ -5138,9 +5260,16 @@
             {#if pages.length > 1}{@render pager('')}{/if}
           </div>
         {/if}
-        {#if failedWorks.length || formsFailed || grammarFailed || unsearched.length || unresolved.length || approximateTurns.length}
+        {#if failedWorks.length || chaptersFailed.length || formsFailed || grammarFailed || unsearched.length || unresolved.length || approximateTurns.length}
           <!-- Notices are rows: what kind, what happened, and what to do. -->
           <div class="sx-notes">
+            {#if chaptersFailed.length}
+              <div class="sx-note warn" role="alert">
+                <span class="k">Warning</span>
+                <span>The chapters of {chaptersFailed.map((w) => getWork(w)?.title ?? w).join(', ')} did not load, so {chaptersFailed.length === 1 ? 'its' : 'their'} chapter counts may be wrong.</span>
+                <button type="button" class="a" on:click={doSearch}>Try again</button>
+              </div>
+            {/if}
             {#if failedWorks.length}
               <div class="sx-note warn" role="alert">
                 <span class="k">Warning</span>
@@ -5253,7 +5382,7 @@
                   {:else}
                     <span class="group-label" class:grc={g.greek} lang={g.greek ? 'grc' : undefined}>{g.label}</span>
                   {/if}
-                  {#if n !== undefined}<span class="group-count">{n} {n === 1 ? 'instance' : 'instances'}</span>{/if}
+                  {#if n !== undefined}<span class="group-count">{hitsText(n)}</span>{/if}
                   <span class="caret" aria-hidden="true"></span>
                 </button>
               </h2>
@@ -5273,7 +5402,7 @@
                           {:else}
                             <span class="group-label grc" lang="grc">{row.spelling}</span>
                           {/if}
-                          {#if rn !== undefined}<span class="group-count">{rn} {rn === 1 ? 'instance' : 'instances'}</span>{/if}
+                          {#if rn !== undefined}<span class="group-count">{hitsText(rn)}</span>{/if}
                           <span class="caret" aria-hidden="true"></span>
                         </button>
                       </h3>

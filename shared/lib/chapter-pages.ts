@@ -1,15 +1,31 @@
 // Counting and paging the search results, from the index alone: the page
 // count and every page's slice are known before any book is fetched, so only
 // the books on the page in view are loaded.
-import type { Offsets, SearchResult } from './search';
-import { WORK_ORDER } from './works';
+//
+// The chapter is the unit (John, 15 Nov: "Bekker columns are not grouped by
+// coherent thematic treatments"). Every hit is put in its chapter here, once,
+// and the results page draws it under that chapter: a hit counted in one
+// chapter and drawn in another left page 67 of ἀρετή + virtue empty.
+import { englishIndexSlot, type EngChapters, type Offsets, type SearchResult } from './search';
+import { cutPositions } from './result-views';
+import { getWork, searchableTranslations, WORK_ORDER } from './works';
 
-import { hitCount } from './search-pages';
 export { hitCount, engHitCount } from './search-pages';
 
 // A place in the corpus to the chapter: work order, book, chapter index.
 type Pos = [number, number, number];
 const cmp = (a: Pos, b: Pos) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2];
+
+/** A chapter a hit falls in. A work whose offsets did not load has no
+ * chapters to name: its hits go in their book, as chapter '' (order 0). */
+export interface ChapterAt {
+  key: string;        // work:book:chapter
+  work: string;
+  book: number;
+  chapter: string;
+  order: number;      // the chapter's place in its book
+  pos: Pos;
+}
 
 interface ChapterMap {
   offsets: Offsets;
@@ -31,8 +47,7 @@ function chapterMap(offsets: Offsets): ChapterMap {
 }
 
 // The chapter a global offset falls in: the last to start at or before it. A
-// token before the book's first chapter start goes with the first chapter, as
-// the results page groups it.
+// token before the book's first chapter start goes with the first chapter.
 function chapterIdx(starts: number[], global: number): number {
   let lo = 0;
   let hi = starts.length - 1;
@@ -44,30 +59,23 @@ function chapterIdx(starts: number[], global: number): number {
   return lo;
 }
 
-export interface ResultPages {
-  pages: SearchResult[][];
-  /** The one page that shows a hit of `r` the page grouped under `chapter`
-   * (a chapter name of r's book). */
-  pageOf(r: SearchResult, chapter: string): number;
+export interface ChapterPlaces {
+  /** The chapter of the Greek word at token `pos` of r's section (a match
+   * running on past the section counts on into the next). */
+  grk(r: SearchResult, pos: number): ChapterAt;
+  /** The chapter of word `word` of `translation` in r's section, the word
+   * counted as the translation's index counts it. */
+  eng(r: SearchResult, translation: string, word: number): ChapterAt;
+  /** A chapter of a book by name, or null where the offsets do not name it. */
+  named(work: string, book: number, chapter: string): ChapterAt | null;
 }
 
-/** Lay results out in pages of about `target` hits, breaking only between
- * chapters, so a chapter never runs across two pages.
- *
- * A passage (one Bekker column) can hold the end of one chapter and the start
- * of the next, so it may sit in two pages' slices; `pageOf` then says which
- * page shows which of its hits, and every hit is shown once. Greek hits are
- * placed in their chapter from the offsets; an English hit's chapter is known
- * only once the book is loaded, so for sizing pages it counts where its
- * passage begins, and the passage is put in the slices of the chapters either
- * side too: a translation's text can run a chapter past the column's Greek
- * (once in the corpus, by one chapter, as of 2026-10). A work whose offsets did not load (`null` or missing) has
- * no chapter edges to break at, and each of its books is laid out whole. */
-export function paginate(
-  results: SearchResult[],
+/** Where each hit falls, from each work's offsets (the Greek) and its
+ * eng-chapters.json (each translation's words). */
+export function chapterPlaces(
   offsets: Map<string, Offsets | null>,
-  target: number,
-): ResultPages {
+  eng: Map<string, EngChapters | null> = new Map(),
+): ChapterPlaces {
   const maps = new Map<string, ChapterMap | null>();
   const mapOf = (work: string) => {
     if (!maps.has(work)) {
@@ -76,43 +84,150 @@ export function paginate(
     }
     return maps.get(work)!;
   };
-
-  // lo..hi: the chapters a passage's hits can fall in; home: where it begins.
-  const spans = new Map<SearchResult, { lo: Pos; hi: Pos; home: Pos }>();
-  const units = new Map<string, { pos: Pos; n: number }>();
-  const count = (pos: Pos, n: number) => {
-    if (!n) return;
-    const key = pos.join(':');
-    const unit = units.get(key) ?? units.set(key, { pos, n: 0 }).get(key)!;
-    unit.n += n;
-  };
-
-  for (const r of results) {
-    const { book } = r.meta;
-    const order = WORK_ORDER.get(r.work) ?? 0;
+  const at = (work: string, book: number, chapter: string, order: number): ChapterAt =>
+    ({ key: `${work}:${book}:${chapter}`, work, book, chapter, order, pos: [WORK_ORDER.get(work) ?? 0, book, order] });
+  const whole = (r: SearchResult) => at(r.work, r.meta.book, '', 0);
+  const place = (r: SearchResult) => {
     const m = mapOf(r.work);
-    const si = m?.seg.get(`${book}:${r.meta.column}`);
-    const starts = m?.starts.get(book);
-    if (!m || si === undefined || !starts?.length) {
-      const pos: Pos = [order, book, 0];
-      spans.set(r, { lo: pos, hi: pos, home: pos });
-      count(pos, hitCount(r));
-      continue;
+    const si = m?.seg.get(`${r.meta.book}:${r.meta.column}`);
+    const starts = m?.starts.get(r.meta.book);
+    return m && si !== undefined && starts?.length ? { m, si, starts, names: m.names.get(r.meta.book)! } : null;
+  };
+  const grk = (r: SearchResult, pos: number) => {
+    const p = place(r);
+    if (!p) return whole(r);
+    const i = chapterIdx(p.starts, p.m.offsets.seg_base_offset[p.si] + pos);
+    return at(r.work, r.meta.book, p.names[i], i);
+  };
+  return {
+    grk,
+    eng(r, translation, word) {
+      const p = place(r);
+      if (!p) return whole(r);
+      const w = getWork(r.work);
+      const t = (w ? searchableTranslations(w) : []).find(x => x.id === translation);
+      const starts = eng.get(r.work)?.[t ? englishIndexSlot(t) : 'english']?.[String(p.si)] ?? [];
+      let chapter: string | undefined;
+      for (const [from, name] of starts) if (from <= word) chapter = name;
+      const i = chapter === undefined ? -1 : p.names.indexOf(chapter);
+      // Before the section's first chapter start, its words are in the
+      // chapter its Greek opens in.
+      return i < 0 ? grk(r, 0) : at(r.work, r.meta.book, p.names[i], i);
+    },
+    named(work, book, chapter) {
+      const i = mapOf(work)?.names.get(book)?.indexOf(chapter) ?? -1;
+      return i < 0 ? null : at(work, book, chapter, i);
+    },
+  };
+}
+
+/** Each hit of a result with its chapter: a Greek word, or a match of
+ * several words by its first; each word a translation matched, or each run
+ * of a phrase (as engHitCount counts them), a match with no word positions
+ * once, at the head of its section. */
+export function eachHit(
+  r: SearchResult,
+  places: ChapterPlaces,
+  fn: (at: ChapterAt, lang: 'grk' | 'eng', translation?: string) => void,
+): void {
+  if (r.grkMatch) for (const w of r.windows ?? r.grkPositions.map(p => [p])) fn(places.grk(r, w[0]), 'grk');
+  if (!r.engMatch) return;
+  for (const h of r.engHits ?? [{ translation: '', positions: [] }]) {
+    const words = h.matches ?? h.positions;
+    if (!words.length) fn(places.eng(r, h.translation, 0), 'eng', h.translation);
+    for (const word of words) fn(places.eng(r, h.translation, word), 'eng', h.translation);
+  }
+}
+
+/** The hits of `results` in chapters where both languages have one: "and"
+ * in a Both search, both terms anywhere in the same chapter (John, 15 Nov).
+ * A result left with no hit drops out. */
+export function chapterJoin(results: SearchResult[], places: ChapterPlaces): SearchResult[] {
+  const grk = new Set<string>();
+  const eng = new Set<string>();
+  for (const r of results) eachHit(r, places, (at, lang) => (lang === 'grk' ? grk : eng).add(at.key));
+  const keep = (at: ChapterAt) => grk.has(at.key) && eng.has(at.key);
+  return results.flatMap(r => {
+    let left = r;
+    if (r.grkMatch) {
+      // A match of several words stands or falls with its first word, and
+      // a window kept is kept whole.
+      const windows = (r.windows ?? r.grkPositions.map(p => [p])).filter(w => keep(places.grk(r, w[0])));
+      const kept = new Set(windows.flat());
+      left = cutPositions(r, r.grkPositions.map(p => kept.has(p)));
+      if (r.windows) left = { ...left, windows };
     }
-    const base = m.offsets.seg_base_offset[si];
-    const end = (m.offsets.seg_base_offset[si + 1] ?? m.offsets.token_count) - 1;
-    const at = (global: number): Pos => [order, book, chapterIdx(starts, global)];
-    const home = at(base);
-    const hi = at(Math.max(base, end));
-    const wide = r.engMatch ? 1 : 0;
-    spans.set(r, {
-      lo: [order, book, Math.max(0, home[2] - wide)],
-      hi: [order, book, Math.min(starts.length - 1, hi[2] + wide)],
-      home,
-    });
-    const grk = !r.grkMatch ? [] : r.windows ? r.windows.map(w => w[0]) : r.grkPositions;
-    for (const p of grk) count(at(base + p), 1);
-    count(home, hitCount(r) - grk.length);
+    // A match the index gave no translation for stands at its section's head.
+    if (r.engMatch && !r.engHits && !keep(places.eng(r, '', 0))) left = { ...left, engMatch: false };
+    if (r.engMatch && r.engHits) {
+      const engHits = r.engHits.flatMap(h => {
+        const inside = (w: number) => keep(places.eng(r, h.translation, w));
+        if (!(h.matches ?? h.positions).length) return inside(0) ? [h] : [];
+        const positions = h.positions.filter(inside);
+        const matches = h.matches?.filter(inside);
+        return (matches ?? positions).length ? [{ ...h, positions, ...(matches ? { matches } : {}) }] : [];
+      });
+      left = { ...left, engHits, engMatch: engHits.length > 0 };
+    }
+    const grkMatch = left.grkPositions.length > 0;
+    return grkMatch || left.engMatch ? [{ ...left, grkMatch }] : [];
+  });
+}
+
+/** The chapters the results reach and their hits: those with Greek, with
+ * English, with both; and the Greek and English hits. */
+export interface Measure { chapters: number; both: number; grkOnly: number; engOnly: number; grkHits: number; engHits: number }
+export function measure(results: SearchResult[], places: ChapterPlaces): Measure {
+  const grk = new Set<string>();
+  const eng = new Set<string>();
+  let grkHits = 0;
+  let engHits = 0;
+  for (const r of results) eachHit(r, places, (at, lang) => {
+    if (lang === 'grk') { grk.add(at.key); grkHits++; } else { eng.add(at.key); engHits++; }
+  });
+  const both = [...grk].filter(k => eng.has(k)).length;
+  return { chapters: new Set([...grk, ...eng]).size, both, grkOnly: grk.size - both, engOnly: eng.size - both, grkHits, engHits };
+}
+
+export interface ResultPages {
+  pages: SearchResult[][];
+  /** The one page that shows a hit of `r` the page grouped under `chapter`
+   * (a chapter name of r's book). */
+  pageOf(r: SearchResult, chapter: string): number;
+  /** The page that shows a chapter (chapterPlaces names it). */
+  pageOfChapter(at: ChapterAt): number;
+}
+
+/** Lay results out in pages of about `target` hits, breaking only between
+ * chapters, so a chapter never runs across two pages. Each hit counts in the
+ * chapter it is drawn in (chapterPlaces); a section that holds the end of one
+ * chapter and the start of the next sits in the slice of every page that
+ * shows one of its hits. A work whose offsets did not load (`null` or
+ * missing) has no chapter edges to break at, and each of its books is laid
+ * out whole. */
+export function paginate(
+  results: SearchResult[],
+  offsets: Map<string, Offsets | null>,
+  target: number,
+  eng: Map<string, EngChapters | null> = new Map(),
+): ResultPages {
+  return paginatePlaces(results, chapterPlaces(offsets, eng), target);
+}
+
+export function paginatePlaces(results: SearchResult[], places: ChapterPlaces, target: number): ResultPages {
+  const units = new Map<string, { pos: Pos; n: number }>();
+  const reach = new Map<SearchResult, Pos[]>();
+  for (const r of results) {
+    const mine: Pos[] = [];
+    const count = (at: ChapterAt) => {
+      const unit = units.get(at.key) ?? units.set(at.key, { pos: at.pos, n: 0 }).get(at.key)!;
+      unit.n++;
+      mine.push(at.pos);
+    };
+    eachHit(r, places, count);
+    // A result with no hit left still has a place: where its section opens.
+    if (!mine.length) mine.push(places.grk(r, 0).pos);
+    reach.set(r, mine);
   }
 
   // Each page starts at a chapter; the first also takes anything before it.
@@ -139,22 +254,12 @@ export function paginate(
   const pages: SearchResult[][] = firsts.map(() => []);
   const ordered = [...results].sort((a, b) =>
     ((WORK_ORDER.get(a.work) ?? 0) - (WORK_ORDER.get(b.work) ?? 0)) || (a.meta.book - b.meta.book));
-  for (const r of ordered) {
-    const { lo, hi } = spans.get(r)!;
-    for (let i = pageAt(lo); i <= pageAt(hi); i++) pages[i].push(r);
-  }
+  if (firsts.length) for (const r of ordered) for (const i of new Set(reach.get(r)!.map(pageAt))) pages[i].push(r);
 
   const pageOf = (r: SearchResult, chapter: string): number => {
-    const span = spans.get(r);
-    if (!span) return 0;
-    const home = pageAt(span.home);
-    const ch = mapOf(r.work)?.names.get(r.meta.book)?.indexOf(chapter) ?? -1;
-    if (ch < 0) return home;
-    // A chapter further from this passage than its span reaches stays with
-    // the passage: the page that holds the chapter has not got it to show.
-    const page = pageAt([span.lo[0], span.lo[1], ch]);
-    return page >= pageAt(span.lo) && page <= pageAt(span.hi) ? page : home;
+    const at = places.named(r.work, r.meta.book, chapter) ?? places.grk(r, 0);
+    return pageAt(at.pos);
   };
 
-  return { pages, pageOf };
+  return { pages, pageOf, pageOfChapter: at => pageAt(at.pos) };
 }

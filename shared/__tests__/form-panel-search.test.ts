@@ -31,6 +31,10 @@ vi.mock('../lib/search', async (importOriginal) => {
     searchCombo: vi.fn(async () => ({ results: [], failedWorks: [] })),
     searchPhraseVariants: vi.fn(),
     speakerRoster: vi.fn(async () => []),
+    // Offsets with no chapters: pages fall back to whole books, and nothing
+    // failed to load, so no warning but the one under test is drawn.
+    loadOffsets: vi.fn(async () => ({ token_count: 0, seg_base_offset: [], segments: [], book_bounds: [] })),
+    loadEngChapters: vi.fn(async () => ({})),
   };
 });
 vi.mock('../lib/data', async (importOriginal) => {
@@ -84,7 +88,7 @@ const G = `/search?g=${encodeURIComponent('εἰμί')}`;
 describe('Search.svelte: the form panel', () => {
   it('lists every form found with its count, commonest first, all ticked', async () => {
     const { panel } = await open(G);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('5 hits'));
     expect(rows(panel)).toEqual(['εστι 3 ✓', 'ειναι 1 ✓', 'ην 1 ✓']);
     const { greekHitForms } = await import('../lib/search');
     expect(greekHitForms).toHaveBeenCalledWith(RESULTS, 'εἰμί', 'lemma');
@@ -93,12 +97,12 @@ describe('Search.svelte: the form panel', () => {
   it('drops an unticked form from the hits and every count, once applied, without a new search', async () => {
     const { search } = await import('../lib/search');
     const { panel } = await open(G);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('5 hits'));
     await fireEvent.click(box(panel, 'εστι'));
     // Nothing moves until Apply.
-    expect(status()).toHaveTextContent('5 instances');
+    expect(status()).toHaveTextContent('5 hits');
     await fireEvent.click(within(panel).getByRole('button', { name: 'Apply' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 hits'));
     // Int had only ἐστι, so with one work left there is no Works row.
     expect(screen.queryByRole('group', { name: 'Show hits from one work' })).toBeNull();
     // The form set aside is still listed, with its count, to tick again.
@@ -108,7 +112,7 @@ describe('Search.svelte: the form panel', () => {
 
     await fireEvent.click(box(panel, 'εστι'));
     await fireEvent.click(within(panel).getByRole('button', { name: 'Apply' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('5 hits'));
     expect(window.location.search).not.toContain('xf=');
   });
 
@@ -123,19 +127,19 @@ describe('Search.svelte: the form panel', () => {
     await fireEvent.click(box(panel, 'ην'));
     expect(apply).toBeEnabled();
     await fireEvent.click(apply);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 hit'));
     expect(window.location.search).toContain('xf=esti,einai');
   });
 
   it('reads the forms set aside from the address bar', async () => {
     const { panel } = await open(`${G}&xf=esti,einai`);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 hit'));
     expect(rows(panel)).toEqual(['εστι 3', 'ειναι 1', 'ην 1 ✓']);
   });
 
   it('counts within the work the hits are narrowed to', async () => {
     const { panel } = await open(`${G}&wf=EN`);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('4 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('4 hits'));
     expect(rows(panel)).toEqual(['εστι 2 ✓', 'ειναι 1 ✓', 'ην 1 ✓']);
   });
 
@@ -174,7 +178,7 @@ describe('Search.svelte: the form panel', () => {
     const spoken = [{ ...at('EN', '70a', [0, 1]), speakers: ['Socrates', 'Socrates'] }];
     const forms: HitForms = { byResult: new Map([['EN:1:70a', ['esti', 'hn']]]), headwords: new Map(), failedWorks: [] };
     const { panel } = await open(`${G}&sp=only&sn=Socrates`, forms, spoken);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 hits'));
     expect(vi.mocked(search).mock.calls[0][8]).toBeUndefined();
     expect(rows(panel)).toEqual(['εστι 1 ✓', 'ην 1 ✓']);
   });
@@ -185,7 +189,7 @@ describe('Search.svelte: the form panel', () => {
     vi.mocked(greekHitForms).mockResolvedValueOnce({ byResult: new Map([['EN:1:70b', ['einai']]]), headwords: new Map(), failedWorks: [] });
     window.history.replaceState(null, '', G);
     render(Search);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 hit'));
     await vi.waitFor(() => expect(greekHitForms).toHaveBeenCalled());
     await new Promise(r => setTimeout(r, 30));
     expect(screen.queryByRole('group', { name: 'Greek forms found' })).toBeNull();
@@ -202,13 +206,13 @@ describe('Search.svelte: the form panel', () => {
     await fireEvent.click(within(panel).getByRole('button', { name: 'Deselect all' }));
     await fireEvent.click(box(panel, 'εστι'));
     await fireEvent.click(within(panel).getByRole('button', { name: 'Apply' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 hit'));
     // Only ὤν was set aside: ἦν and εἶναι were never in view.
     expect(new URLSearchParams(window.location.search).get('xf')).toBe('wn');
     // With the work lifted they are still ticked, and there is nothing to apply.
     const works = screen.getByRole('group', { name: 'Show hits from one work' });
     await fireEvent.click(within(works).getByRole('button', { name: /^De Interpretatione/ }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('5 hits'));
     expect(rows(panel)).toEqual(['εστι 3 ✓', 'ειναι 1 ✓', 'ην 1 ✓', 'ων 1']);
     expect(within(panel).getByRole('button', { name: 'Apply' })).toBeDisabled();
   });
@@ -237,8 +241,18 @@ describe('Search.svelte: the form panel', () => {
     const forms: HitForms = {
       byResult: new Map([['EN:1:70a', ['esti', 'hn']], ['EN:1:70b', ['einai']]]), headwords: new Map(), failedWorks: [],
     };
+    // A Both "and" joins by chapter (John, 15 Nov), so 70b's Greek stays if it
+    // shares a chapter with a Rackham hit. Offsets put 70b in chapter 2.
+    const { loadOffsets } = await import('../lib/search');
+    vi.mocked(loadOffsets).mockResolvedValueOnce({ token_count: 6, seg_base_offset: [0, 4],
+      segments: [{ book: 1, column: '70a', line_runs: [[1, 1]] }, { book: 1, column: '70b', line_runs: [[1, 1]] }],
+      book_bounds: [{ book: 1, start: 0 }], chapter_bounds: [
+        { book: 1, chapter: '1', start: 0, accuracy: 'exact' },
+        { book: 1, chapter: '2', start: 4, accuracy: 'exact' },
+      ] } as never);
     const { panel } = await open(`${G}&e=one&t=rackham`, forms, results);
-    await vi.waitFor(() => expect(status()).toHaveTextContent(/3 (?:instances?|hits)/));
+    // The two Greek hits of 70a; the English word adds none.
+    await vi.waitFor(() => expect(status()).toHaveTextContent('1 chapter · 2 hits'));
     expect(rows(panel)).toEqual(['εστι 1 ✓', 'ην 1 ✓']);
   });
 
@@ -250,7 +264,7 @@ describe('Search.svelte: the form panel', () => {
     const { container } = render(Search);
     // The forms named in the address bar cannot be set aside: every hit shows,
     // and the page says why.
-    await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('5 hits'));
     const warning = await vi.waitFor(() => {
       const el = [...container.querySelectorAll('.sx-note.warn')].find(n => /forms/i.test(n.textContent ?? ''));
       if (!el) throw new Error('no warning yet');
@@ -259,7 +273,7 @@ describe('Search.svelte: the form panel', () => {
     expect(warning).toHaveTextContent('The list of forms did not load');
     vi.mocked(greekHitForms).mockResolvedValueOnce(FORMS);
     await fireEvent.click(within(warning).getByRole('button', { name: 'Try again' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 hits'));
     expect(search).toHaveBeenCalledTimes(1);
     expect(container.querySelector('.sx-note.warn')).toBeNull();
   });
@@ -281,7 +295,7 @@ describe('Search.svelte: the form panel', () => {
     window.history.replaceState(null, '', `/search?g=${encodeURIComponent('τὸ ὄν')}&gm=phrase`);
     const { container } = render(Search);
     const again = await screen.findByRole('button', { name: 'Try again' });
-    await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('5 hits'));
     // Widening starts, then the retry; widening lands first.
     let widen!: (outcome: unknown) => void;
     vi.mocked(searchPhraseVariants).mockReturnValueOnce(new Promise(resolve => { widen = resolve; }) as never);
@@ -291,12 +305,12 @@ describe('Search.svelte: the form panel', () => {
     await fireEvent.click(again);
     // Two hits in 70a, where the first search's forms would name two forms.
     widen({ results: [at('EN', '70a', [0, 1])], failedWorks: [], readings: [['x']], productive: [['x']] });
-    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 hits'));
     retried(FORMS);
     await new Promise(r => setTimeout(r, 30));
     // The forms were the first search's; these results are another's.
     expect(screen.queryByRole('group', { name: 'Greek forms found' })).toBeNull();
-    expect(status()).toHaveTextContent('2 instances');
+    expect(status()).toHaveTextContent('2 hits');
     expect(container.querySelector('.sx-note.warn')).toBeNull();
   });
 
@@ -347,7 +361,7 @@ describe('Search.svelte: the form panel prints accented spellings', () => {
       .toEqual(['ei.json', 'es.json', 'hn.json']);
     await fireEvent.click(box(panel, 'ἐστι'));
     await fireEvent.click(within(panel).getByRole('button', { name: 'Apply' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 hits'));
     expect(window.location.search).toContain('xf=esti');
   });
 });

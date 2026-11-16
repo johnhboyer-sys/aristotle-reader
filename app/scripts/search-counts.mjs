@@ -49,18 +49,20 @@ try {
       await page.waitForFunction(() => {
         const status = document.querySelector('[role="status"]')?.textContent?.trim();
         if (document.querySelector('.search-error')) throw new Error(document.querySelector('.search-error').textContent);
-        return status && (status === 'No passages found.' || /^\d[\d,]* instances?/.test(status));
+        return status && (status === 'No passages found.' || /^\d[\d,]* chapters?/.test(status));
       }, null, { timeout: 120000 });
       const counts = await page.evaluate(() => {
         const status = document.querySelector('[role="status"]').textContent.trim();
-        const match = status.match(/^([\d,]+) instances?/);
+        // The bar counts chapters, with the hits where it counts them (John, 15 Nov).
+        const match = status.match(/^([\d,]+) chapters?/);
         if (!match && status !== 'No passages found.') throw new Error(`Unreadable count: ${status}`);
+        const hits = status.match(/· ([\d,]+) hits?/);
         const pages = status.match(/page \d+ of (\d+)/i);
         const separate = {};
         for (const el of document.querySelectorAll('.result-count, .lang-count')) {
           for (const m of el.textContent.matchAll(/([\d,]+)\s+(Greek|English)/gi)) separate[m[2].toLowerCase()] = Number(m[1].replaceAll(',', ''));
         }
-        return { total: match ? Number(match[1].replaceAll(',', '')) : 0, pages: pages ? Number(pages[1]) : match ? 1 : 0, ...separate, shown: status };
+        return { total: match ? Number(match[1].replaceAll(',', '')) : 0, hits: hits ? Number(hits[1].replaceAll(',', '')) : null, pages: pages ? Number(pages[1]) : match ? 1 : 0, ...separate, shown: status };
       });
       results.push({ name, url, ...counts });
       console.log(name, counts);

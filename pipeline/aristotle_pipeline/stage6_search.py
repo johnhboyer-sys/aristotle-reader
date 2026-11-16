@@ -43,6 +43,11 @@ All of these are copied to build/dist/{work}/search/ by stage7.
                  indexes exactly the text the reader shows — a translation the
                  public manifest drops is in neither. A segment's word_pos runs
                  through its slices in order, as the reader lays them out.
+
+  eng-chapters.json — {slot: {seg_idx: [[word_pos, chapter], ...]}}: where a
+                 chapter begins in each translation's words ('english' is the
+                 primary), so the results page knows an English hit's chapter
+                 from the index alone. Built beside english-<slot>.json.
 """
 
 from __future__ import annotations
@@ -246,22 +251,61 @@ def segment_translations(seg: dict) -> dict[str, list[str]]:
     corpus is rebuilt under the new name, so both are read), 'third', and
     'overlay-<id>' for the fourth translation onward.
     """
-    out: dict[str, list[str]] = {}
+    return {slot: [p.get("text") or "" for p in pieces]
+            for slot, pieces in segment_pieces(seg).items()}
+
+
+def segment_pieces(seg: dict) -> dict[str, list[dict]]:
+    """The non-primary translation pieces of one segment, by slot, as
+    segment_translations names the slots."""
+    out: dict[str, list[dict]] = {}
     secondary = seg.get("secondary") or seg.get("ross")
     if secondary:
-        out["secondary"] = [p.get("text") or "" for p in secondary]
+        out["secondary"] = secondary
     if seg.get("third"):
-        out["third"] = [p.get("text") or "" for p in seg["third"]]
+        out["third"] = seg["third"]
     for tid, pieces in (seg.get("overlays") or {}).items():
         if not _OVERLAY_ID.fullmatch(tid):
             raise ValueError(f"overlay id {tid!r} cannot name an index file")
         if pieces:
-            out[f"overlay-{tid}"] = [p.get("text") or "" for p in pieces]
+            out[f"overlay-{tid}"] = pieces
     return out
 
 
 def translation_index_name(slot: str) -> str:
     return f"english-{slot}.json"
+
+
+def segment_chapter_starts(seg: dict) -> dict[str, list[list]]:
+    """Where a chapter begins in each translation of one emitted segment, by
+    slot ('english' for the primary): [[word_pos, chapter], ...], word_pos
+    counted as the slot's index counts it. The primary names only the chapters
+    that begin in the segment (its chapterStarts); a slot cut into pieces names
+    its first piece's chapter and each change after it."""
+    out: dict[str, list[list]] = {}
+    eng = seg.get("english")
+    if eng and seg.get("chapterStarts"):
+        text = eng["text"]
+        whole = english_words(text)
+        starts = []
+        for c in seg["chapterStarts"]:
+            off = c["engOffset"]
+            before = english_words(text[:off])
+            # A start inside a word would put the word in neither chapter.
+            if before + english_words(text[off:]) != whole:
+                raise ValueError(
+                    f"segment {seg['id']}: chapter {c['chapter']} starts inside a word"
+                )
+            starts.append([len(before), c["chapter"]])
+        out["english"] = starts
+    for slot, pieces in segment_pieces(seg).items():
+        starts, pos = [], 0
+        for piece in pieces:
+            if not starts or starts[-1][1] != piece.get("chapter"):
+                starts.append([pos, piece.get("chapter")])
+            pos += len(english_words(piece.get("text") or ""))
+        out[slot] = starts
+    return out
 
 
 def emit_translation_indexes(work_dir: Path) -> dict[str, dict[str, int]]:
@@ -279,18 +323,22 @@ def emit_translation_indexes(work_dir: Path) -> dict[str, dict[str, int]]:
 
     posts: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
     segments: dict[str, set[int]] = defaultdict(set)
+    chapters: dict[str, dict[str, list]] = defaultdict(dict)
     books = sorted(work_dir.glob("book-*.json"))
     for book_path in books:
         doc = json.loads(book_path.read_text(encoding="utf-8"))
         for seg in doc["segments"]:
             slots = segment_translations(seg)
-            if not slots:
+            starts = segment_chapter_starts(seg)
+            if not slots and not starts:
                 continue
             si = seg_idx.get(seg["id"])
             if si is None:
                 raise ValueError(
                     f"{book_path.name}: segment {seg['id']} is not in search/meta.json"
                 )
+            for slot, at in starts.items():
+                chapters[slot][str(si)] = at
             for slot, texts in slots.items():
                 pos = 0
                 for text in texts:
@@ -302,6 +350,9 @@ def emit_translation_indexes(work_dir: Path) -> dict[str, dict[str, int]]:
 
     for stale in search_dir.glob("english-*.json"):
         stale.unlink()
+    (search_dir / "eng-chapters.json").write_text(
+        json.dumps(chapters, ensure_ascii=False), encoding="utf-8"
+    )
     summary: dict[str, dict[str, int]] = {}
     for slot in sorted(posts):
         # In document order, as english.json is.

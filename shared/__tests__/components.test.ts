@@ -99,13 +99,14 @@ describe('Search.svelte', () => {
     expect(screen.getByLabelText('Greek')).toBeInTheDocument();
   });
 
-  it('counts every English word, shows hits by work, and says so in a live region', async () => {
+  it('counts the Greek words of a Both search, shows hits by work, and says so in a live region', async () => {
     const { search } = await import('../lib/search');
     const primary = searchableTranslations(getWork('EN')!)[0].id;
     const meta = { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', english_head: 'Virtue (test)' };
     vi.mocked(search).mockResolvedValueOnce({
       results: [
-        // One Greek word and two English ones: three hits.
+        // One Greek word and two English ones: in a Both search the hits are the
+        // Greek words only (John, 15-16 Nov), so EN has one.
         { work: 'EN', meta, grkMatch: true, engMatch: true, grkPositions: [0], engHits: [{ translation: primary, positions: [0, 1] }] },
         { work: 'Meta', meta, grkMatch: true, engMatch: false, grkPositions: [0, 1] },
       ],
@@ -117,17 +118,20 @@ describe('Search.svelte', () => {
 
     await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'λόγος' } });
     await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue test' } });
+    // "Either language": Metaphysics has no English hit, and "both" would drop
+    // its chapter (a Both "and" now joins by chapter, John, 15 Nov).
+    await fireEvent.click(screen.getByRole('radio', { name: 'Either language' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
-    await vi.waitFor(() => expect(status).toHaveTextContent(/5 (?:instances?|hits)/));
+    await vi.waitFor(() => expect(status).toHaveTextContent('2 chapters · 3 hits'));
     const works = screen.getByRole('group', { name: 'Show hits from one work' });
     const en = within(works).getByRole('button', { name: /^Nicomachean Ethics/ });
-    expect(en).toHaveTextContent('Nicomachean Ethics3');
+    expect(en).toHaveTextContent('Nicomachean Ethics1');
     expect(within(works).getByRole('button', { name: /^Metaphysics/ })).toHaveTextContent('Metaphysics2');
-    await vi.waitFor(() => expect(screen.getByText('3 instances', { selector: '.group-count' })).toBeInTheDocument());
+    await vi.waitFor(() => expect(screen.getByText('1 hit', { selector: '.group-count' })).toBeInTheDocument());
 
     await fireEvent.click(en);
-    await vi.waitFor(() => expect(status).toHaveTextContent(/3 (?:instances?|hits)/));
+    await vi.waitFor(() => expect(status).toHaveTextContent('1 chapter · 1 hit'));
     expect(en).toHaveAttribute('aria-pressed', 'true');
   });
 });
@@ -157,7 +161,7 @@ describe('Search.svelte "Match accents exactly"', () => {
     const { container } = render(Search);
     
     await vi.waitFor(() => expect(fetchBook).toHaveBeenCalled());
-    await vi.waitFor(() => expect(container.querySelector('.result-count')).toHaveTextContent(empty ? 'No passages found.' : /\d+ instances?/));
+    await vi.waitFor(() => expect(container.querySelector('.result-count')).toHaveTextContent(empty ? 'No passages found.' : /\d+ chapters?/));
     // A chapter with more than one instance starts folded.
     for (const head of container.querySelectorAll('button.group-head[aria-expanded="false"]')) {
       await fireEvent.click(head);
@@ -245,7 +249,8 @@ describe('Search.svelte in the address bar', () => {
     at(`/search?g=${encodeURIComponent('λόγος')}`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('λόγος', '', 'all', 'all', 'and', expect.any(Array), 'lemma', true, undefined);
+    // The engines always get 'or'; the user's and/or is applied by chapter afterwards (John, 15 Nov).
+    expect(search).toHaveBeenCalledWith('λόγος', '', 'all', 'all', 'or', expect.any(Array), 'lemma', true, undefined);
   });
 
   it('restores English "only as I typed it", and writes it as ef=0', async () => {
@@ -253,7 +258,7 @@ describe('Search.svelte in the address bar', () => {
     at('/search?e=virtue&ef=0');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('', 'virtue', 'all', 'all', 'and', expect.any(Array), 'lemma', false, undefined);
+    expect(search).toHaveBeenCalledWith('', 'virtue', 'all', 'all', 'or', expect.any(Array), 'lemma', false, undefined);
     expect(checked('Only as I typed it', 'engforms')).toBe(true);
 
     // Back to any form: the default, so ef leaves the URL.
@@ -292,7 +297,7 @@ describe('Search.svelte in the address bar', () => {
     const replace = vi.spyOn(window.history, 'replaceState');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('', 'happiness', 'all', 'all', 'and', expect.any(Array), 'lemma', true, undefined);
+    expect(search).toHaveBeenCalledWith('', 'happiness', 'all', 'all', 'or', expect.any(Array), 'lemma', true, undefined);
     await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled());
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     expect(window.location.search).toBe('?e=happiness');
@@ -498,12 +503,12 @@ describe('Search.svelte in the address bar', () => {
     const restored = await screen.findByRole('group', { name: 'Show hits from one work' });
     await vi.waitFor(() => expect(within(restored).getByRole('button', { name: /^Metaphysics/ }))
       .toHaveAttribute('aria-pressed', 'true'));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 hits'));
 
     // And the back button restores it, or clears it.
     at('/search?g=logos');
     window.dispatchEvent(new PopStateEvent('popstate'));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('3 hits'));
     expect(within(screen.getByRole('group', { name: 'Show hits from one work' })).getByRole('button', { name: /^Metaphysics/ }))
       .toHaveAttribute('aria-pressed', 'false');
 

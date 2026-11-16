@@ -233,7 +233,7 @@ describe('Search: dictionary words under the Greek box', () => {
   it('Back or Forward shuts the list over the restored search', async () => {
     window.history.replaceState(null, '', `/search?g=${encodeURIComponent('Σωκράτης')}`);
     render(Search);
-    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('instances'));
+    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('2 hits'));
     await type('log');
     await list();
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -422,7 +422,7 @@ describe('Search: capitals and accents', () => {
     const { fetchBook } = await import('../lib/data');
     window.history.replaceState(null, '', url);
     const { container } = render(Search);
-    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/\d+ instances?/));
+    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/\d+ chapters?/));
     await vi.waitFor(() => expect(fetchBook).toHaveBeenCalled());
     await vi.waitFor(() => expect(container.querySelector('.inst-body')).not.toBeNull());
     return [...container.querySelectorAll('mark')].map((m) => m.textContent ?? '');
@@ -438,7 +438,7 @@ describe('Search: capitals and accents', () => {
   // opens the search it names, and both cases hit.
   it.each(['Σωκράτης', 'σωκράτης'])('an old cs=1 address for %s still finds both cases', async (q) => {
     expect(await marksFor(`${g(q)}&cs=1`)).toEqual(['Σωκράτης', 'σωκράτης']);
-    expect(screen.getByRole('status')).toHaveTextContent('2 instances');
+    expect(screen.getByRole('status')).toHaveTextContent('2 hits');
   });
 
   it.each(['*swkra/ths', 'swkraths', '*sw*'])('reads Beta Code %s with case ignored under cs=1', async (q) => {

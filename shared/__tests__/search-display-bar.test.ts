@@ -271,9 +271,11 @@ describe('Search.svelte: the count row', () => {
 
   // S5b (§5.7, r34-11): the pager's page between its arrows, and View in
   // place of the sort icon; a display setting is View's, not Filter's.
+  // John, 15-16 Nov: the bar counts chapters, then Greek hits. The " · " before
+  // the hits is drawn by CSS, so the text has none; the title has it.
   it('holds the count, Save, the pager, Filter and View, in that order', async () => {
     const { container } = await open(`${G}&ps=20`, WIDE, WIDE_FORMS);
-    expect(names(container)).toEqual(['28 instances · page 1 of 2', 'Save search', 'Previous page', '1/2', 'Next page', 'Filter', 'View, 20 per page']);
+    expect(names(container)).toEqual(['7 chapters28 hits · page 1 of 2', 'Save search', 'Previous page', '1/2', 'Next page', 'Filter', 'View, 20 per page']);
     // Each is an icon; Save, Filter and View an icon over its label.
     for (const b of bar(container).querySelectorAll('button')) expect(b.querySelector('svg')).not.toBeNull();
     expect([...bar(container).querySelectorAll('.sx-lab')].map(text)).toEqual(['Save search', 'Filter', 'View']);
@@ -291,15 +293,15 @@ describe('Search.svelte: the count row', () => {
 
   it('has no arrows for one page', async () => {
     const { container } = await open(G);
-    expect(names(container)).toEqual(['6 instances', 'Save search', 'Filter', 'View']);
+    expect(names(container)).toEqual(['2 chapters6 hits', 'Save search', 'Filter', 'View']);
     expect(bar(container).querySelector('.sx-dot')).toBeNull();
   });
 
   it('tells the count how long it is, so it can shrink to fit', async () => {
     const { container } = await open(`${G}&ps=20`, WIDE, WIDE_FORMS);
     const count = container.querySelector<HTMLElement>('.result-count')!;
-    expect(count.style.getPropertyValue('--n')).toBe(String('28 instances · page 1 of 2'.length));
-    expect(count).toHaveAttribute('title', '28 instances · page 1 of 2');
+    expect(count.style.getPropertyValue('--n')).toBe(String('7 chapters · 28 hits · page 1 of 2'.length));
+    expect(count).toHaveAttribute('title', '7 chapters · 28 hits · page 1 of 2');
   });
 });
 
@@ -326,7 +328,7 @@ describe('Search.svelte: the rail\'s lists', () => {
     expect(on.querySelector('.i-x')).toHaveAttribute('aria-hidden', 'true');
     expect(works.querySelectorAll('.i-x')).toHaveLength(1);
     await fireEvent.click(on);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('28 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('28 hits'));
     expect(window.location.search).not.toContain('wf=');
     expect(works.querySelectorAll('.i-x')).toHaveLength(0);
     expect(search).toHaveBeenCalledTimes(1);
@@ -359,7 +361,7 @@ describe('Search.svelte: the Grammar row', () => {
       for (const b of boxes) expect(line.contains(b) && b.closest('label')?.parentElement).toBe(line);
     }
     await fireEvent.click(within(grammar).getByRole('checkbox', { name: 'Case gen' }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent('2 hits'));
   });
 });
 

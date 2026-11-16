@@ -196,8 +196,8 @@ function searchState() {
     const count = [...main.querySelectorAll('.result-count')].find(shown);
     if (!count) return {done: false, why: 'no visible .result-count'};
     const text = count.textContent.trim();
-    // A Both search counts passages, its hits labelled as hits (ruling 1, 14 Nov).
-    const m = /^(\d[\d,]*) (?:instances?|passages?)(?![a-z])|^No passages found\./.exec(text);
+    // The count is of chapters (John, 15 Nov), its hits labelled as hits.
+    const m = /^(\d[\d,]*) chapters?(?![a-z])|^No passages found\./.exec(text);
     if (!m) return {done: false, why: `result count reads ${JSON.stringify(text)}`};
     if (!m[1]) return {done: true, count: text, hits: 0};
     const hits = [...main.querySelectorAll('.instance, .cite-list .cite')].filter(el => shown(el)
@@ -3779,10 +3779,10 @@ if(stage>=4) Object.assign(gates, {
                 await want('empty page',{gOpts:false,eOpts:false,join:false,clears:''});
                 await p.locator('#grk-input').fill(G);
                 await want('Greek typed',{gOpts:true,eOpts:false,join:false,clears:'Clear Greek'});
-                await search('Greek',{g:G,e:null},/^instances?$/);
+                await search('Greek',{g:G,e:null},/^chapters?$/);
                 await p.locator('#eng-input').fill(E);
                 await want('English added',{gOpts:true,eOpts:true,join:true,clears:'Clear Greek,Clear English'});
-                await search('Both',{g:G,e:E},/^passages?$/);
+                await search('Both',{g:G,e:E},/^chapters?$/);
                 const clearG=p.locator('.query-clear[aria-label="Clear Greek"]');
                 if(prove&&proofCase==='dead-clear'&&size==='D1440')await clearG.evaluate(el=>el.addEventListener('click',e=>e.stopImmediatePropagation(),true));
                 await clearG.click();
@@ -3790,11 +3790,11 @@ if(stage>=4) Object.assign(gates, {
                 await want('Greek cleared',{gOpts:false,eOpts:true,join:false,clears:'Clear English'});
                 // A Greek query that survives its clear must make the next search Both, and fail.
                 if(prove&&proofCase==='kept-greek'&&size==='D1440')await p.locator('#grk-input').fill(G);
-                await search('English',{e:E,g:null},/^instances?$/);
+                await search('English',{e:E,g:null},/^chapters?$/);
                 await p.locator('#grk-input').fill(G);
                 await p.locator('.query-clear[aria-label="Clear English"]').click();
                 await want('English cleared',{gOpts:true,eOpts:false,join:false,clears:'Clear Greek'});
-                await search('Greek again',{g:G,e:null},/^instances?$/);
+                await search('Greek again',{g:G,e:null},/^chapters?$/);
             } finally {await close(p);}
         }
         console.log(`R-S2 field states and searches examined=${n}`);
@@ -3933,46 +3933,117 @@ if(stage>=4) Object.assign(gates, {
             return got.under+3;
         } finally {await close(p);}
     },
-    // R-S7: a Both search counts passages, its hit total labelled as hits (ruling 1, 14 Nov),
-    // in the results bar and the Filter sheet's foot alike.
+    // R-S7: the results count chapters (John, 15–16 Nov): Both + "and" is both terms anywhere in
+    // one chapter, its hits the Greek words; an English search over works with several
+    // translations shows no hit total. Every page draws, and the pages draw every chapter
+    // counted (page 67 of this search drew nothing, 16 Nov). The figures are pinned from
+    // docs/search-counting/brute.mjs, which counts the books themselves with no engine code.
     'R-S7': async()=>{
         let n=0;
+        const readBar=p=>p.evaluate(()=>{
+            const c=[...document.querySelectorAll('main.search-page .result-count')].find(el=>el.checkVisibility());
+            const num=t=>Number((t||'').replace(/,/g,''));
+            const hits=c?.querySelector('.rc-hits');
+            return {text:c?.innerText.replace(/\s+/g,' ').trim(), n:num(c?.querySelector('.rc-n')?.textContent), noun:c?.querySelector('.rc-w')?.textContent.trim(),
+                hitsText:hits&&hits.checkVisibility()&&hits.getBoundingClientRect().width>0?hits.textContent.trim():null};
+        });
+        const expectBar=(size,label,bar,chapters,hits)=>{
+            assert(bar.text,`${size} ${label} examined=0 result counts`);
+            assert(/^chapters?$/.test(bar.noun),`${size} ${label} count reads "${bar.text}": the big number is not counted in chapters`);
+            const hm=/^(\d[\d,]*) hits?$/.exec(bar.hitsText||'');
+            if(hits===null) { assert(!bar.hitsText,`${size} ${label} count shows a hit total, "${bar.hitsText}", where translators would be counted`); }
+            else assert(hm,`${size} ${label} count shows no hit total labelled as hits: "${bar.text}"`);
+            const got=hm?Number(hm[1].replace(/,/g,'')):null;
+            assert(bar.n===chapters&&got===hits,`${size} ${label} count reads ${bar.n} chapters and ${got} hits, expected ${chapters} and ${hits}`);
+        };
         for(const size of ['D1440','S844','P390']) {
             const p=await open(size,'light','/search?g=ἀρετή&e=virtue');
             try {
                 if(prove&&proofCase==='hits-as-count'&&size==='D1440')await p.locator('main.search-page .rc-n').first().evaluate(el=>{el.textContent=document.querySelector('main.search-page .rc-hits').textContent.match(/\d[\d,]*/)[0];});
-                if(prove&&proofCase==='off-by-one'&&size==='S844')await p.locator('main.search-page .result-count .rc-n').first().evaluate(el=>{el.textContent='310';});
+                if(prove&&proofCase==='off-by-one'&&size==='S844')await p.locator('main.search-page .result-count .rc-n').first().evaluate(el=>{el.textContent='228';});
+                if(prove&&proofCase==='passages'&&size==='D1440')await p.locator('main.search-page .rc-w').first().evaluate(el=>{el.textContent='passages';});
                 if(prove&&proofCase==='unlabelled'&&size==='D1440')await p.locator('main.search-page .rc-hits').first().evaluate(el=>el.remove());
-                const bar=await p.evaluate(()=>{
-                    const c=[...document.querySelectorAll('main.search-page .result-count')].find(el=>el.checkVisibility());
-                    const num=t=>Number((t||'').replace(/,/g,''));
-                    const hits=c?.querySelector('.rc-hits');
-                    return {text:c?.innerText.replace(/\s+/g,' ').trim(), n:num(c?.querySelector('.rc-n')?.textContent), noun:c?.querySelector('.rc-w')?.textContent.trim(),
-                        hitsText:hits?.textContent.trim()??null, hitsShown:!!hits&&hits.checkVisibility()&&hits.getBoundingClientRect().width>0};
-                });
-                assert(bar.text,`${size} examined=0 result counts`);
-                assert(/^passages?$/.test(bar.noun),`${size} Both count reads "${bar.text}": the big number is not counted in passages`);
-                const hm=/^(\d[\d,]*) hits?$/.exec(bar.hitsText||'');
-                assert(hm&&bar.hitsShown,`${size} Both count shows no hit total labelled as hits: "${bar.text}"`);
-                const hits=Number(hm[1].replace(/,/g,''));
-                // ἀρετή and virtue: 311 passages against 2952 word hits, pinned (measured 15 Nov; the
-                // engine is held by search-counts.mjs), not read back from the display under test.
-                assert(bar.n===311&&hits===2952,`${size} Both count reads ${bar.n} passages and ${hits} hits, expected 311 and 2952`);
+                const bar=await readBar(p);
+                expectBar(size,'Both',bar,229,940);
                 n++;
                 if(await p.locator('.sx-filter').isVisible()) {
                     await p.locator('.sx-filter').click();
                     const show=p.locator('.sx-panel.open .sx-show');
                     await show.waitFor({timeout:5000});
-                    if(prove&&proofCase==='foot-instances'&&size==='P390')await show.evaluate((el,h)=>{el.textContent=`Show ${h} instances`;},hits);
+                    if(prove&&proofCase==='foot-passages'&&size==='P390')await show.evaluate(el=>{el.textContent='Show 229 passages';});
                     const foot=(await show.textContent()).replace(/\s+/g,' ').trim();
-                    assert(foot===`Show ${bar.n} ${bar.n===1?'passage':'passages'}`,`${size} Filter sheet foot reads "${foot}", expected "Show ${bar.n} passages" as the results bar counts`);
+                    assert(foot===`Show ${bar.n} ${bar.n===1?'chapter':'chapters'}`,`${size} Filter sheet foot reads "${foot}", expected "Show ${bar.n} chapters" as the results bar counts`);
                     await p.keyboard.press('Escape');
                     n++;
                 }
                 console.log(`R-S7 ${size} bar="${bar.text}"`);
             } finally {await close(p);}
         }
-        assert(n===5,`R-S7 examined ${n} counts, expected 3 bars and 2 Filter sheet foots`);
+        // Either language: every chapter with either term, its hits still the Greek words.
+        {
+            const p=await open('D1440','light','/search?g=ἀρετή&e=virtue&op=or');
+            try {
+                if(prove&&proofCase==='or-counts-english')await p.locator('main.search-page .rc-hits').first().evaluate(el=>{el.textContent='3361 hits';});
+                const bar=await readBar(p);
+                expectBar('D1440','Either',bar,438,967);
+                n++;
+                console.log(`R-S7 D1440 either bar="${bar.text}"`);
+            } finally {await close(p);}
+        }
+        // English alone, over works with a second translation: chapters only.
+        {
+            const p=await open('D1440','light','/search?e=virtue');
+            try {
+                if(prove&&proofCase==='english-hits')await p.locator('main.search-page .result-count').first().evaluate(el=>{const s=document.createElement('span');s.className='rc-hits';s.textContent='2394 hits';el.append(s);});
+                const bar=await readBar(p);
+                expectBar('D1440','English',bar,415,null);
+                n++;
+                console.log(`R-S7 D1440 english bar="${bar.text}"`);
+            } finally {await close(p);}
+        }
+        // Every page of the Both search draws hits, and the pages draw every chapter counted, each
+        // once by its work, book, and chapter, and the hits counted: a page that left one chapter
+        // out and drew another twice would keep the number of headings.
+        {
+            const p=await open('D1440','light','/search?g=ἀρετή&e=virtue');
+            try {
+                const total=Number((await p.locator('.pager-status').first().textContent()).match(/of (\d+)/)[1]);
+                const seen=new Map();
+                const empty=[];
+                let hits=0;
+                for(let i=1;i<=total;i++) {
+                    await p.waitForFunction(k=>(document.querySelector('.pager-status')?.textContent??'').trim().startsWith(`Page ${k} of`),i,{timeout:60000});
+                    if(prove&&proofCase==='empty-page'&&i===67)await p.evaluate(()=>document.querySelectorAll('main.search-page .instance-list > li, main.search-page .sx-chap').forEach(el=>el.remove()));
+                    if(prove&&proofCase==='twice'&&i===2)await p.evaluate(()=>{const c=[...document.querySelectorAll('main.search-page .sx-chap-n')];c[1].textContent=c[0].textContent;});
+                    const got=await p.evaluate(()=>{
+                        const main=document.querySelector('main.search-page');
+                        let work='',book='',hits=0;
+                        const keys=[];
+                        for(const el of main.querySelectorAll('.work-name, .sx-book, .sx-chap-n')) {
+                            if(el.classList.contains('work-name')) {
+                                work=el.textContent.trim();book='';
+                                const n=el.closest('.group-head')?.querySelector('.group-count')?.textContent.match(/^(\d[\d,]*) hits?$/);
+                                if(n)hits+=Number(n[1].replace(/,/g,''));
+                            } else if(el.classList.contains('sx-book')) book=el.firstChild.textContent.trim();
+                            else keys.push(`${work} | ${book} | ${el.textContent.trim()}`);
+                        }
+                        return {rows:main.querySelectorAll('.instance-list > li').length,keys,hits};
+                    });
+                    if(!got.rows)empty.push(i);
+                    for(const k of got.keys)seen.set(k,[...(seen.get(k)??[]),i]);
+                    hits+=got.hits;
+                    if(i<total)await p.locator('.pager .pager-next').first().click();
+                }
+                assert(total>0,'D1440 Both search examined=0 pages');
+                assert(!empty.length,`D1440 Both search draws nothing on page${empty.length>1?'s':''} ${empty.join(', ')} of ${total}`);
+                const twice=[...seen].filter(([,pp])=>pp.length>1);
+                assert(!twice.length,`D1440 Both search draws ${twice.length} chapters more than once: ${twice.slice(0,3).map(([k,pp])=>`${k} (pages ${pp.join(', ')})`).join('; ')}`);
+                assert(seen.size===229,`D1440 Both search draws ${seen.size} chapters over its ${total} pages, expected the 229 it counts`);
+                assert(hits===940,`D1440 Both search's work headings count ${hits} hits over its ${total} pages, expected the 940 it counts`);
+                n+=total;
+                console.log(`R-S7 D1440 pages=${total} chapters drawn=${seen.size} hits drawn=${hits}`);
+            } finally {await close(p);}
+        }
         return n;
     },
 });
@@ -5022,14 +5093,14 @@ const stageFourProofs = {
     ...stageThreeProofs,
     'R-C1': {...stageThreeProofs['R-C1'],search:/search \.rc-n color=rgb\(0, 0, 0\)/},
     'R-C1-static': {'svelte-style':/B selectors in Svelte style:.*\.dir-b, \.b-rh/, 'no-styles':/examined=0 Svelte style blocks/},
-    'R-S1': {'overlap-ref':/D1440 hit ref overlaps column:/,'wrapped-ref':/D1440 hit ref wraps or is clipped: .*lines=([2-9]|\d\d) /,'clipped-ref':/D1440 hit ref wraps or is clipped: .*lines=1 before-dash=1 height=0 /,'no-suffix':/size=D1440 .*count "\d+ instances" lacks its pagination suffix while \d+ next-page controls are drawn/,'dead-filter':/D1440 work filter did not change hits:/,'hash-link':/D1440 page 1 search href="#" count=1/,'non-bekker-ref':/non-Bekker ref format: I\.1 wrong/,'late-hash':/D1440 page 2 search href="#" count=1/},
+    'R-S1': {'overlap-ref':/D1440 hit ref overlaps column:/,'wrapped-ref':/D1440 hit ref wraps or is clipped: .*lines=([2-9]|\d\d) /,'clipped-ref':/D1440 hit ref wraps or is clipped: .*lines=1 before-dash=1 height=0 /,'no-suffix':/size=D1440 .*count "\d+ chapters" lacks its pagination suffix while \d+ next-page controls are drawn/,'dead-filter':/D1440 work filter did not change hits:/,'hash-link':/D1440 page 1 search href="#" count=1/,'non-bekker-ref':/non-Bekker ref format: I\.1 wrong/,'late-hash':/D1440 page 2 search href="#" count=1/},
     'R-A1': {...stageThreeProofs['R-A1'],'search-target':/D1440 BUTTON Clear Greek 34×34/,'search-44':/P390 BUTTON Clear Greek 42×42 \(need 44×44\)/,'search-key':/P390 BUTTON smooth breathing 30×44 \(need 36×44\) state=search-keyboard/},
     'R-S2': {'switch':/D1440 empty page: a Greek \| English \| Both switch is drawn/,'dead-clear':/D1440 Clear Greek left the Greek query/,'kept-greek':/D1440 English: the search ran as .*expected \{"e":"virtue","g":null\}/},
     'R-S3': {'narrow-field':/D1152 Greek field width=412, the mock's is 468±4/,'clear-in-row':/D1152 Clear Greek is not on the Greek label line: .*in the field row=true/},
     'R-S4': {'split':/D1152 Accents and Lemma are split/,'three-rows':/D961 Greek options take [3-9] rows, expected 2 at most/,'phone-wrap':/P390 Greek options take 2 rows, expected 1/,'no-phone-menus':/P390 phone Match and Form menus: found \[\]/,'clipped':/P360 Greek options clipped: /},
     'R-S5': {'english-low':/D1152 English options row top=[\d.]+ is not level with Greek options row 1/},
     'R-S6': {'fixed-field':/S844 Greek field row is position: fixed/,'over-header':/S844 Greek field [-\d.]+–[-\d.]+ lies over the site header/,'gap':/S844 Greek field sits 2[89](\.\d)?px above the key sheet, expected 8±2/,'live-under':/S844 \d+ of \d+ controls under the key sheet are not inert/,'inert-clear':/S844 Clear Greek shown=true inert=true/},
-    'R-S7': {'hits-as-count':/D1440 Both count reads 2952 passages and 2952 hits, expected 311 and 2952/,'off-by-one':/S844 Both count reads 310 passages and 2952 hits, expected 311 and 2952/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-instances':/P390 Filter sheet foot reads "Show \d+ instances", expected "Show \d+ passages"/},
+    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'empty-page':/D1440 Both search draws nothing on page 67 of \d+/,'twice':/D1440 Both search draws 1 chapters more than once: /},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <textarea[^>]*id="grk-input"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},

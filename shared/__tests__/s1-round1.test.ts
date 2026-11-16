@@ -96,8 +96,8 @@ it('counts an AthPol English phrase once in its row and header', async () => {
  window.history.replaceState(null, '', '/search?e=virtue%20appears&em=phrase');
  const { container } = render(Search);
  await vi.waitFor(() => expect(container.querySelector('li.instance')).not.toBeNull());
- expect(container.querySelector('.result-count')).toHaveTextContent('1 instance');
- expect(container.querySelector('.group-count')).toHaveTextContent(/^1 instance$/);
+ expect(container.querySelector('.result-count')).toHaveTextContent('1 chapter1 hit');
+ expect(container.querySelector('.group-count')).toHaveTextContent(/^1 hit$/);
  expect(container.querySelectorAll('li.instance mark')).toHaveLength(2);
 });
 
