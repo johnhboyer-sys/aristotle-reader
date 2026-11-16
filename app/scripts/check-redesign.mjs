@@ -4056,6 +4056,69 @@ if(stage>=4) Object.assign(gates, {
                 console.log(`R-S7 D1440 english bar="${bar.text}"`);
             } finally {await close(p);}
         }
+        // English searched: one list, each work with its chapters and under it each translation with
+        // its hits there (John, 16 Nov), no separate Translations list. Counted from the books by
+        // brute.mjs: EN 84 chapters; Rackham 315, Ostwald 298, Ross 294, Peters 264 hits; Ross's 81
+        // chapters. A translation's row narrows to it in its work.
+        for(const size of ['D1440','P390']) {
+            const p=await open(size,'light','/search?e=virtue');
+            try {
+                if(await p.locator('.sx-filter').isVisible()) {
+                    await p.locator('.sx-filter').click();
+                    await p.locator('.sx-panel.open .sx-nav:has-text("Works")').click();
+                }
+                if(prove&&proofCase==='nest-order'&&size==='D1440')await p.evaluate(()=>{const subs=[...document.querySelectorAll('main.search-page .sx-nest .i.sub')];subs[0].before(subs[1]);});
+                if(prove&&proofCase==='nest-hits'&&size==='P390')await p.evaluate(()=>{[...document.querySelectorAll('main.search-page .sx-nest .i:not(.sub):not(.i-all)')].find(el=>el.checkVisibility()).querySelector('small').textContent='1171';});
+                const rows=await p.evaluate(()=>{
+                    const list=[...document.querySelectorAll('main.search-page .sx-nest')].find(el=>el.checkVisibility());
+                    const out=[];
+                    for(const el of list?.querySelectorAll('.i:not(.i-all)')??[]) {
+                        if(!el.classList.contains('sub')) { if(out.length) break; out.push(`${el.querySelector('.i-t').textContent.trim()} ${el.querySelector('small').textContent.replace(/\s+/g,' ').trim()}`); }
+                        else if(out.length) out.push(`  ${el.querySelector('.i-t').textContent.trim()} ${el.querySelector('small').textContent.trim()}`);
+                    }
+                    return out;
+                });
+                const want=['Nicomachean Ethics 84 chap.','  Rackham 315','  Ostwald 298','  Ross 294','  Peters 264'];
+                assert(rows.length,`${size} English examined=0 nested rows`);
+                assert(JSON.stringify(rows)===JSON.stringify(want),`${size} English nested list opens ${JSON.stringify(rows)}, expected ${JSON.stringify(want)}`);
+                n++;
+                const trans=await p.evaluate(()=>[...document.querySelectorAll('main.search-page .sx-trans')].filter(el=>el.checkVisibility()).length);
+                assert(trans===0,`${size} English shows a separate Translations list beside the nested one`);
+                n++;
+                await p.locator('main.search-page .sx-nest .i.sub:has-text("Ross") >> visible=true').first().click();
+                if(await p.locator('.sx-panel.open .sx-show').isVisible().catch(()=>false)) await p.locator('.sx-panel.open .sx-show').click();
+                await p.waitForFunction(()=>new URL(location.href).searchParams.get('t')==='ross',null,{timeout:60000});
+                await p.waitForFunction(()=>/^81 chapters/.test([...document.querySelectorAll('main.search-page .result-count')].find(el=>el.checkVisibility())?.textContent.trim()??''),null,{timeout:60000}).catch(()=>{});
+                if(prove&&proofCase==='nest-click'&&size==='D1440')await p.locator('main.search-page .rc-hits').first().evaluate(el=>{el.textContent='385 hits';});
+                const bar=await readBar(p);
+                expectBar(size,'Ross in the Nicomachean Ethics',bar,81,294);
+                const q=new URL(p.url()).searchParams;
+                assert(q.get('wf')==='EN'&&q.get('t')==='ross',`${size} Ross's row narrows to wf=${q.get('wf')} t=${q.get('t')}, expected wf=EN t=ross`);
+                n++;
+                console.log(`R-S7 ${size} nested ${JSON.stringify(rows)} → Ross bar="${bar.text}"`);
+            } finally {await close(p);}
+        }
+        // A search kept to one work, with a translation chosen in no work (an old link's t=): the
+        // phone's Works screen stays open on the list (it once fell back to the menu), and the
+        // translation's row is on there (it once was not, and choosing it narrowed further).
+        {
+            const p=await open('P390','light','/search?e=virtue&w=EN&t=ostwald');
+            try {
+                await p.locator('.sx-filter').click();
+                await p.locator('.sx-panel.open .sx-nav:has-text("Works")').click();
+                await p.waitForTimeout(800);
+                if(prove&&proofCase==='works-bounce')await p.evaluate(()=>document.querySelector('.sx-panel.open .sx-nest')?.remove());
+                if(prove&&proofCase==='cross-on')await p.evaluate(()=>document.querySelectorAll('.sx-panel.open .sx-nest .i.sub').forEach(el=>el.setAttribute('aria-pressed','false')));
+                const shown=await p.evaluate(()=>{
+                    const list=document.querySelector('.sx-panel.open .sx-nest');
+                    return list&&list.checkVisibility()?[...list.querySelectorAll('.i.sub[aria-pressed="true"] .i-t')].map(el=>el.textContent.trim()):null;
+                });
+                assert(shown!==null,'P390 w=EN Works screen falls back to the menu instead of showing the list');
+                assert(JSON.stringify(shown)==='["Ostwald"]',`P390 w=EN&t=ostwald marks ${JSON.stringify(shown)} on, expected ["Ostwald"]`);
+                n++;
+                console.log(`R-S7 P390 w=EN&t=ostwald Works screen on=${JSON.stringify(shown)}`);
+            } finally {await close(p);}
+        }
         // Every page of the Both search draws hits, and the pages draw every chapter counted, each
         // once by its work, book, and chapter, and the hits counted: a page that left one chapter
         // out and drew another twice would keep the number of headings.
@@ -5155,7 +5218,7 @@ const stageFourProofs = {
     'R-S4': {'split':/D1152 Accents and Lemma are split/,'three-rows':/D961 Greek options take [3-9] rows, expected 2 at most/,'phone-wrap':/P390 Greek options take 2 rows, expected 1/,'no-phone-menus':/P390 phone Match and Form menus: found \[\]/,'clipped':/P360 Greek options clipped: /},
     'R-S5': {'english-low':/D1152 English options row top=[\d.]+ is not level with Greek options row 1/},
     'R-S6': {'fixed-field':/S844 Greek field row is position: fixed/,'over-header':/S844 Greek field [-\d.]+–[-\d.]+ lies over the site header/,'gap':/S844 Greek field sits 2[89](\.\d)?px above the key sheet, expected 8±2/,'live-under':/S844 \d+ of \d+ controls under the key sheet are not inert/,'inert-clear':/S844 Clear Greek shown=true inert=true/},
-    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'empty-page':/D1440 Both search draws nothing on page 67 of \d+/,'twice':/D1440 Both search draws 1 chapters more than once: /,'split-number':/P390 Both split reads .*"Greek only 22 off".*, expected/,'split-lit':/D1440 Both split reads .*"English only 186"\].*, expected/,'xor-inclusive':/D1440 One language count reads 438 chapters and 27 hits, expected 209 and 27/,'xor-label':/D1440 One language switch reads "and\/or", expected "or"/,'default-and':/D1440 New search count reads 229 chapters and 940 hits, expected 438 and 967/},
+    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'empty-page':/D1440 Both search draws nothing on page 67 of \d+/,'twice':/D1440 Both search draws 1 chapters more than once: /,'split-number':/P390 Both split reads .*"Greek only 22 off".*, expected/,'split-lit':/D1440 Both split reads .*"English only 186"\].*, expected/,'xor-inclusive':/D1440 One language count reads 438 chapters and 27 hits, expected 209 and 27/,'xor-label':/D1440 One language switch reads "and\/or", expected "or"/,'default-and':/D1440 New search count reads 229 chapters and 940 hits, expected 438 and 967/,'nest-order':/D1440 English nested list opens .*"  Ostwald 298","  Rackham 315".*, expected/,'nest-hits':/P390 English nested list opens \["Nicomachean Ethics 1171",.*, expected/,'nest-click':/D1440 Ross in the Nicomachean Ethics count reads 81 chapters and 385 hits, expected 81 and 294/,'works-bounce':/P390 w=EN Works screen falls back to the menu/,'cross-on':/P390 w=EN&t=ostwald marks \[\] on, expected \["Ostwald"\]/},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <textarea[^>]*id="grk-input"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},

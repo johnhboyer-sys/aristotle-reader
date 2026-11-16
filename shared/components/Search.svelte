@@ -791,6 +791,47 @@
   })();
   $: workChoice = workFilter !== null || workCounts.length > 1;
 
+  // Where English was searched, one list (John, 16 Nov): each work with the
+  // chapters it has hits in, and under it each translation with its hits in
+  // that work, most first. Counted over every work and translation, so the
+  // list stays put while one of its rows narrows the results.
+  type NestRow = { id: string; title: string; n: number; subs: { id: string; short: string; n: number }[] };
+  $: nestRows = ((): NestRow[] | null => {
+    if (!searchCtx.engQuery) return null;
+    const shown = joined(formResults, places, joinBoth, searchCtx.langOp);
+    const rows: NestRow[] = [];
+    for (const work of new Set(shown.map(r => r.work))) {
+      const mine = shown.filter(r => r.work === work);
+      const n = measure(mine, places).chapters;
+      if (!n) continue;
+      const by = new Map<string, number>();
+      for (const r of mine) for (const h of r.engHits ?? []) by.set(h.translation, (by.get(h.translation) ?? 0) + engHitCount(h));
+      const subs = [...by].filter(([, k]) => k > 0)
+        .map(([id, k]) => ({ id, short: translationRef(work, id)?.short ?? id, n: k }))
+        .sort((a, b) => b.n - a.n || a.short.localeCompare(b.short));
+      rows.push({ id: work, title: getWork(work)?.title ?? work, n, subs });
+    }
+    return rows.sort((a, b) => b.n - a.n || (WORK_ORDER.get(a.id) ?? 0) - (WORK_ORDER.get(b.id) ?? 0));
+  })();
+  $: nestChoice = !!nestRows && (workFilter !== null || transFilter !== null || nestRows.length > 1 || nestRows.some(w => w.subs.length > 1));
+  // A work's row narrows to the work, every translation; a translation's row
+  // to that translation in that work. Chosen again, either lifts it.
+  // A row is on where its filter is in force: a work's, the work with every
+  // translation; a translation's, that translation in its work or in all.
+  const nestOn = (work: string, trans: string | null, wf: string | null, tf: string | null) =>
+    trans === null ? wf === work && tf === null : tf === trans && (wf === null || wf === work);
+  function setNest(work: string, trans: string | null) {
+    if (nestOn(work, trans, workFilter, transFilter)) narrowTo(null, null);
+    else narrowTo(work, trans);
+  }
+  const clearNest = () => { if (workFilter || transFilter) narrowTo(null, null); };
+  function narrowTo(work: string | null, trans: string | null) {
+    workFilter = work;
+    transFilter = trans;
+    if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter, xforms: [...excludedForms], view, facets, context, sort, pageSize }, 'replace');
+    showResults(allResults);
+  }
+
   $: countText = totalInstances === 0
     ? 'No passages found.'
     : `${mainCount} ${countNoun}` + (counted.hits !== null ? ` · ${hitsText(counted.hits)}` : '')
@@ -1070,7 +1111,7 @@
   // A screen whose filter has gone (new results, say) gives way to the menu,
   // and focus, which was on the screen, goes to the sheet.
   $: if (sheetOpen && sheetKind === 'filter' && sheetScreen !== 'menu'
-    && !({ works: workChoice, trans: transChoice, forms: formChoice, grammar: facetRows.length > 0 } as Record<string, boolean>)[sheetScreen]) toMenu();
+    && !({ works: nestRows ? nestChoice : workChoice, trans: transChoice && !nestRows, forms: formChoice, grammar: facetRows.length > 0 } as Record<string, boolean>)[sheetScreen]) toMenu();
   async function toMenu() {
     sheetScreen = 'menu';
     await tick();
@@ -5128,12 +5169,12 @@
           <!-- The sheet's menu: a line per filter, with what it is set to. -->
           {#if sheetOpen && sheetScreen === 'menu'}
             <div class="sx-menu">
-              {#if workChoice}
+              {#if nestRows ? nestChoice : workChoice}
                 <button type="button" class="sx-nav" bind:this={menuRows.works} on:click={() => openScreen('works')}>
                   <span>Works</span>{' '}<small>{workFilter ? getWork(workFilter)?.title ?? workFilter : `All ${workCounts.length}`}</small>{' '}<span class="gt">›</span>
                 </button>
               {/if}
-              {#if transChoice}
+              {#if transChoice && !nestRows}
                 <button type="button" class="sx-nav" bind:this={menuRows.trans} on:click={() => openScreen('trans')}>
                   <span>Translations</span>{' '}<small>{transFilter ? transCounts.find(t => t.id === transFilter)?.short ?? transFilter : `All ${transCounts.length}`}</small>{' '}<span class="gt">›</span>
                 </button>
@@ -5154,7 +5195,29 @@
                own that scrolls (§8 item 5). Choosing one narrows the results
                to it, drawn as an ink bar with its ×; choosing it again lifts
                the narrowing. -->
-          {#if workChoice && (!sheetOpen || sheetScreen === 'works')}
+          {#if nestRows && nestChoice && (!sheetOpen || sheetScreen === 'works')}
+            <div class="sx-row sx-works sx-nest" role="group" aria-label="Show hits from one work or one translation">
+              <span class="k">Works with hits <small>by count</small></span>
+              <div class="sx-list">
+                {#if sheetOpen}
+                  <button type="button" class="i i-all" class:on={!workFilter && !transFilter} aria-pressed={!workFilter && !transFilter}
+                    on:click={clearNest}><span class="i-t">All works</span></button>
+                {/if}
+                {#each nestRows as w (w.id)}
+                  {@const on = nestOn(w.id, null, workFilter, transFilter)}
+                  <button type="button" class="i" class:on aria-pressed={on}
+                    title={`Show only hits in the ${w.title}${on ? ' (again for all)' : ''}`}
+                    on:click={() => setNest(w.id, null)}><span class="i-t">{w.title}</span><small>{w.n}<span class="unit">&thinsp;chap.</span></small>{#if on}<span class="i-x" aria-hidden="true">×</span>{/if}</button>
+                  {#each w.subs as t (t.id)}
+                    {@const tOn = nestOn(w.id, t.id, workFilter, transFilter)}
+                    <button type="button" class="i sub" class:on={tOn} aria-pressed={tOn}
+                      title={`Show only ${t.short}’s hits in the ${w.title}${tOn ? ' (again for all)' : ''}`}
+                      on:click={() => setNest(w.id, t.id)}><span class="i-t">{t.short}</span><small>{t.n}</small>{#if tOn}<span class="i-x" aria-hidden="true">×</span>{/if}</button>
+                  {/each}
+                {/each}
+              </div>
+            </div>
+          {:else if workChoice && !nestRows && (!sheetOpen || sheetScreen === 'works')}
             <div class="sx-row sx-works" role="group" aria-label="Show hits from one work">
               <span class="k">Works with hits <small>by count</small></span>
               <div class="sx-list">
@@ -5171,7 +5234,7 @@
               </div>
             </div>
           {/if}
-          {#if transChoice && (!sheetOpen || sheetScreen === 'trans')}
+          {#if transChoice && !nestRows && (!sheetOpen || sheetScreen === 'trans')}
             <div class="sx-row sx-trans" role="group" aria-label="Show English hits from one translation">
               <span class="k">Translations <small>by count</small></span>
               <div class="sx-list">

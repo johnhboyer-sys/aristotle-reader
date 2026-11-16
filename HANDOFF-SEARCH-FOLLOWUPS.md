@@ -28,6 +28,26 @@ State on 16 Nov, end of the counting session:
   - Gate R-S7 rewritten to those numbers; `--prove` catches 9 of 9 cases. Two Codex reviews (gpt-6.1-sol,
     medium), and a third on the last fixes; all findings fixed. The last four have tests 6–8 in `search-chapter-draw.test.ts`, except
     partial marks when a row's words run past its window (finding 3), which has none.
+- **A is built: PR #198, merged 16 Nov** (the switch, the split rows, "and/or" by default, old links kept
+  as "and"). Back to a blank search unfolds the form: PR #199, merged.
+- **B is built** (branch `claude/search-nested`): where English was searched, one list, each work with
+  its chapters ("84 chap.") and under it each translation with its hits there, most first; no separate
+  Translations list (`nestRows`, `nestOn`, `setNest` in `Search.svelte`; `.sx-nest` in `b-search.css`).
+  A translation chosen in no one work (an old link's `t=`) is on in every work it has hits in, and
+  choosing it lifts it. Measured, English virtue: EN 84 chap.; Rackham 315, Ostwald 298, Ross 294,
+  Peters 264; Ross alone 81 chapters · 294 hits (`brute.mjs` agrees). R-S7 checks the list on desktop
+  and phone and the phone's Works screen with `w=EN&t=ostwald`. **Beyond the ruling, for John:** the
+  work rows of a Both search now count chapters too (they counted hits).
+  Next: D (rows, the 100 page), then C (phrases), each its own PR.
+- **D: rows cannot be counted from the index alone.** A row is what `buildGroups` draws: hits whose
+  windows share words merge into one row, a Greek and an English hit in one aligned unit
+  (`pairUnits`) become one row, a match can run on into the next sections, and the accent and case
+  filters drop hits by their surface form. All four need the book's text. So exact N rows a page
+  needs the search's books before the page count is known. **Ruled (John, 16 Nov): fill as books
+  load.** Page 1 draws as soon as its own books load; the rest load in the background, and the pager
+  reads "1 of …" until they finish and then the page count.
+- **C's list is ruled (John, 16 Nov: "Three-word runs"):** the phrases offered are three-word runs
+  around the hit that occur at least 5 times in the results, the top 10 shown and the rest under More.
 - **PR 2 onward: John's four questions** in the picture page,
   https://claude.ai/artifact/Vj23YYSeYLaJXrUwN75QkZ (source `docs/search-counting/pictures/`, kept out
   of git: 3.6 MB of JPEGs).
@@ -59,9 +79,10 @@ State on 16 Nov, end of the counting session:
     `citationsFor`; John, 16 Nov: "Yes, replace it"), which lists references alone.
   - **C is ruled (John, 16 Nov): Exclude only, no Include.** "Why doesn't the user just search that
     exact phrase with the 'exact phrase' setting?" An Include gives the hits an exact-phrase search
-    gives, so it goes, and with it the question of which wins an overlap (C4/C5). Still his to confirm,
-    choices the pictures made: an Exclude lowers other phrases' counts; rows do not re-sort; the badge;
-    "by virtue of" shows 32 hits, not 45.
+    gives, so it goes, and with it the question of which wins an overlap (C4/C5). And (John, 16 Nov):
+    an Exclude lowers the counts of phrases that overlap it ("virtue of the" 108 → 60 with "in virtue
+    of" excluded); the rows keep their order after an Exclude; on the phone the Filter button carries
+    a badge while a phrase is excluded. The phrase list does not exist on the site yet: C is new work.
 - **Follow-ups:** the desktop app's corpus needs `search/eng-chapters.json` too (without it English hits
   fall in the chapter their section's Greek opens in); three svelte-check errors in
   `app/src/__tests__/lemma-head.test.ts` predate this branch; the smaller items in §4.

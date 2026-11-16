@@ -2247,3 +2247,18 @@ body:has(.search-page) { background: #ebeae4; }
 @media not all and (min-width: 961px) {
   .search-page .sx-split { margin-top: 0; border-top: 0; }
 }
+
+/* Works with their translations under them (John, 16 Nov): a work counts
+   its chapters ("84 chap."), a translation its hits there, set in. */
+.search-page .sx-nest .i small .unit { font-weight: 500; color: var(--mid); }
+.search-page .sx-nest .i.sub { padding-left: 20px; font-weight: 500; color: var(--mid); }
+.search-page .sx-nest .i.sub small { color: var(--mid); }
+.search-page .sx-nest .i.on small .unit,
+.search-page .sx-nest .i.sub.on,
+.search-page .sx-nest .i.sub.on small { color: var(--bg); }
+.search-page .sx-nest .i.sub.on { padding-left: 32px; }
+.search-page .sx-panel.open .sx-nest .i.sub { width: calc(100% - 36px); margin-left: 36px; padding-left: 0; }
+.search-page .sx-panel.open .sx-nest .i.sub.on,
+.search-page .sx-panel.open .sx-nest .i.sub.on small,
+.search-page .sx-panel.open .sx-nest .i.on small .unit { color: var(--mid); }
+.search-page .sx-panel.open .sx-nest .i.sub { font-weight: 500; color: var(--mid); }
