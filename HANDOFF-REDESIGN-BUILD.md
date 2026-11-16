@@ -6,36 +6,28 @@ you hand off. The version before this one is at
 
 ## 0. Start here
 
-**The build is done and waits for John's yes to push and open the PR.** §1 to §4 below describe what
-was built and how; they stay as the record. What is left is §5 steps 3 to 7.
+**The build is done and open as PR #195** (https://github.com/johnhboyer-sys/aristotle-reader/pull/195),
+pushed 16 Nov on John's yes. Merge and deploy wait for his word. §1 to §4 below stay as the record of
+what was built.
 
 - **Worktree:** `~/Developer/aristotle-reader/.claude/worktrees/redesign-build`, branch
-  `claude/redesign-build`, HEAD `79e3e4b2e0`, **not pushed**. Commits this session, oldest first:
-  `ce4f044d79` reader stage 1, `4ba14cbeb7` stage 2 (English rows join across columns; pipeline
-  `paraStart`), `76a86f60cd` six pages and the 404, `92e5c0c471` ink titles, `f54ba67e7f`,
-  `d724a464d5` search form, `c447930672` reader gate fixes, `d1ac25e3b6` search tap boxes and the
-  light `--faint` (#6a6964), `89265efb08` gates, `1a0aa90852` Opus-review fixes, `9c504d6f29` the
-  sharded gate runner, `79e3e4b2e0` Codex-review fixes.
-- **State, 15 Nov 21:40:**
-  - check-redesign stage 5, 79 gates via `node app/scripts/check-redesign-shards.mjs --base URL
-    --stage 5 --jobs 4 --log FILE` (13.7 min): 78 pass; R-P4 failed under load, passes alone. Page
-    loads wait on outside hosts (Google Fonts), so a slow network fails gates in bulk: if many fail
-    with "no loaded Gentium" or `page.goto` timeouts, rerun those alone before believing them.
-  - search-shots 136/0 failed (both themes); 14 search-counts unchanged; shared vitest 1,891, app 247,
-    `test:scripts` 99, svelte-check 0 errors; `build:public` 0 broken links; `deploy:dry` ok at
-    `79e3e4b2e0` (add 271, change 17,204, delete 48; leak check clean).
-  - Reviews: Opus adversarial review of the Codex-written app code (1 blocker, 3 should-fix: all fixed
-    but the pre-existing one below); Codex review of the Claude-written gates and fixes (8
-    should-fix, all fixed). Grok is benched (John, 11 Nov).
-- **For John** (review page https://claude.ai/artifact/4MoW4SyZrTn5KQxby8hena: reader, search, empty
-  search, 404, built against live, both themes, three screens):
-  1. Push and open the PR? (`pr-body.md` in `.redesign-shots/notes/` is filled.)
-  2. The Greek word list covers the Lemma switch after typing (picture on the page). Not changed.
-  3. A Both search counts 311 passages but shows 83 pages: pages are cut by word hits (2,952) and
-     never split a chapter. Predates the count change. Not changed.
-- **Lost:** the `search-build` worktree was removed by another session; its untracked 13 Nov mock-up
-  folder went with it. The branches survive and are merged here; the published mock is
-  https://claude.ai/artifact/F1rX9UHRYpqEvyui5aUk7X. R-S3 takes its field widths from brief s4b.
+  `claude/redesign-build`. Auto-fix is on for the PR in the session that opened it.
+- **Last full check, 15 Nov at `79e3e4b2e0`:** check-redesign stage 5, 79 gates via
+  `node app/scripts/check-redesign-shards.mjs --base URL --stage 5 --jobs 4 --log FILE` (13.7 min):
+  78 pass, R-P4 load-flaky (passes alone). Many "no loaded Gentium" or `page.goto` timeouts at once
+  mean Google Fonts or the network: rerun those alone. search-shots 136/0, search-counts 14/14,
+  shared vitest 1,891, app 247, `test:scripts` 99, svelte-check 0, `build:public` 0 broken,
+  `deploy:dry` ok (add 271, change 17,204, delete 48; leak check clean). Opus reviewed the Codex app
+  code, Codex reviewed the Claude gates and fixes; all findings fixed but the pre-existing
+  `pieceCont` duplicate chapter (its own PR).
+- **John's rulings, 15–16 Nov:** the word list covering the Lemma switch is not a problem. Search
+  counting goes in its own PR after this one (the PR body's follow-ups list the model: count
+  chapters; Both + and = anywhere in the chapter; English hits only for one translation per work;
+  phrase Include and Exclude; the empty page 67). Explainer:
+  https://claude.ai/artifact/6MCS6YT13myEw7K2CVvGVx. The Plato search port waits for that PR.
+- **Next:** the site speed session; at deploy, the homepage card retake (`~/personal-website`) and
+  the Daily Nous pitch; then the search counting PR.
+- **Review page for John:** https://claude.ai/artifact/4MoW4SyZrTn5KQxby8hena.
 - **Load the `delegate` skill before the first spawn.** Pass `model:` on every Agent spawn; a Claude
   edit gets a Codex review.
 
