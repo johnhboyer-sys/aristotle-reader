@@ -4,20 +4,27 @@
 // table of contents (linking into the reader), surfaces the "start reading"
 // editions, and points to in-print modern translations/commentaries we can't
 // host. The reader itself lives at /<work>/book/<n> for every work.
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { publicDir } from 'astro:config/server';
+import plates from '../data/plates.json';
+import { nameYear, yearOnly } from '../lib/edition-label';
+import translationBib from '../data/translation-bib.json';
+import BFonts from './BFonts.astro';
+import BNav from './BNav.astro';
+import BFoot from './BFoot.astro';
 import ThemeInit from './ThemeInit.astro';
 import Pwa from './Pwa.astro';
-import ThemeToggle from './ThemeToggle.astro';
 import {
-  AUTHENTICITY_LABEL, getWork, bookLabel, isBookless, workPath, visibleTranslations,
+  AUTHENTICITY_LABEL, CATEGORIES, DIVISION_NAMES, getWork, bookLabel, workPath, visibleTranslations,
   furtherReading, inPrintHref, workLanding, resourcesFor,
 } from '@shared/lib/works';
-import { SUPPORT_URL } from '../lib/support';
 import { sanitizeHtml } from '../lib/html';
 import { isChapterSection } from '@shared/lib/data';
 import { jsonLdSafe } from '../lib/jsonld';
-import { bookSpan as bookSpanLabel, translatorName } from '../lib/nav';
+import { translatorName } from '../lib/nav';
 import '@shared/styles/global.css';
+import '@shared/styles/b.css';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
 
 interface Props { workId: string; }
@@ -28,14 +35,14 @@ const work = getWork(workId)!;
 // Author-facing strings (title, meta description, JSON-LD) derive from
 // work.author, not a hardcoded "Aristotle" — the Isagoge is Porphyry's.
 const author = work.author;
-const bookless = isBookless(work);
 // What the reader cites by: Bekker column and line, or (the Athenian
 // Constitution) chapter and section.
+const usesBekker = !work.citation || work.citation.scheme === 'bekker';
 const citationName = isChapterSection(work) ? 'chapter and section' : 'Bekker';
 
 interface ChapterRef { chapter: string; column: string; line: string; bekker: string; }
 const allChapters: Record<string, ChapterRef[]> = JSON.parse(
-  readFileSync(`public/data/${workId}/chapters.json`, 'utf-8'),
+  readFileSync(fileURLToPath(new URL(`data/${workId}/chapters.json`, publicDir)), 'utf-8'),
 );
 interface BookOutline { book: number; label: string; chapters: ChapterRef[]; }
 const outline: BookOutline[] = Array.from({ length: work.books }, (_, i) => {
@@ -43,25 +50,51 @@ const outline: BookOutline[] = Array.from({ length: work.books }, (_, i) => {
   return { book: b, label: bookLabel(work, b), chapters: allChapters[String(b)] ?? [] };
 });
 const totalChapters = outline.reduce((n, b) => n + b.chapters.length, 0);
-// "N chapters · <Bekker start>–<Bekker end>" for a book's row on the landing
-// (../lib/nav).
-const bookSpan = (b: BookOutline) => bookSpanLabel(b.chapters);
 
 const editions = visibleTranslations(work);
 const primary = editions.find((t) => t.id === work.defaultTranslation)
   ?? editions.find((t) => t.slot === 'english') ?? editions[0];
+
+editions.sort((a,b) => Number(b.id === primary?.id) - Number(a.id === primary?.id));
 const translatorNames = editions.map((t) => translatorName(t.name));
 const commentaries = (work.commentaries ?? [])
   .map((id) => getWork(id))
   .filter((w): w is NonNullable<typeof w> => Boolean(w));
 const resources = resourcesFor(workId);
 const reading = furtherReading(workId);
-const readingTrans = reading.filter((r) => r.kind === 'translation');
-const readingComm = reading.filter((r) => r.kind === 'commentary');
-const readingColl = reading.filter((r) => r.kind === 'collection');
 
 const readHref = (q = '') => `${base}${workPath(workId, 1)}${q}`;
 
+const dataFile = (name: string) => fileURLToPath(new URL(`data/${workId}/${name}`, publicDir));
+const readOptional = (name: string) => existsSync(dataFile(name)) ? JSON.parse(readFileSync(dataFile(name), 'utf8')) : {};
+const genericTitles = readOptional('chapter-titles.json');
+const translationTitles = readOptional('third-titles.json');
+const titles: Record<string, Record<string,string>> = translationTitles[primary?.id] || genericTitles;
+const ostwaldTitles = primary?.id === 'ostwald' && Object.values(translationTitles.ostwald || {}).some((chapters) => Object.keys(chapters as object).length);
+const division = CATEGORIES.find(c => [...(c.works || []), ...(c.subcategories || []).flatMap(g => g.works)].some(w => w.id === workId));
+const divisionName = division ? DIVISION_NAMES[division.title] : 'Commentary';
+const chapterTitle = (book: number, chapter: string) => (titles[String(book)]?.[chapter] || `Chapter ${chapter}`).replace(/\[\^[^\]]*\]/g, '');
+const chapterLink = (book: number, chapter: string) => `${base}${workPath(workId, book)}#ch-${book}-${chapter}`;
+const numbered = (b: BookOutline) => !b.chapters.some(c => titles[String(b.book)]?.[c.chapter]);
+const plainRange = (range: string) => range.replace(/^(.+)–\1$/, '$1').replace(/^(\d+[ab])(\d+)–\2$/, '$1$2');
+const bookRange = (b: BookOutline) => {
+  const first = b.chapters[0], last = b.chapters.at(-1);
+  if (!first || !last || !usesBekker) return '';
+  const end = last.bekker.split('–').at(-1)!;
+  return plainRange(`${first.column}${first.line}–${/^\d+[ab]/.test(end) ? end : last.column + end}`);
+};
+const hangs = (text = '') => /^[\u1F08-\u1F0F\u1F18-\u1F1D\u1F28-\u1F2F\u1F38-\u1F3F\u1F48-\u1F4D\u1F59-\u1F5F\u1F68-\u1F6F\u1FEC]/.test(text);
+const printGroups = [...new Set(reading.map(r => r.kind))].map(kind => {
+  const entries = reading.filter(r => r.kind === kind);
+  const label = kind === 'translation' ? (entries.length > 1 ? 'Other translations' : 'Another translation')
+    : kind === 'collection' ? (entries.length > 1 ? 'The translations read here' : 'The translation read here')
+    : entries.length > 1 ? 'Commentaries' : 'Commentary';
+  return { label, entries };
+});
+// Full entries for the Greek edition and every translation the page offers,
+// at the page foot (John, 14 Nov 2026); the facts list above gives name and year.
+const englishFull = editions.map(t => (translationBib as Record<string, string>)[`${workId}/${t.id}`]).filter(Boolean);
+const plate = plates[workId as keyof typeof plates];
 // ── SEO ─────────────────────────────────────────────────────────────────────
 const pageTitle = `${work.title} — ${author}, in Greek & English`;
 const metaDescription =
@@ -108,6 +141,10 @@ const breadcrumbLd = Astro.site
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script is:inline>
+    document.documentElement.classList.add('poster-fitting');
+    setTimeout(() => document.documentElement.classList.remove('poster-fitting'), 3000);
+  </script>
   <ThemeInit />
   <Pwa />
   <title>{pageTitle}</title>
@@ -130,263 +167,206 @@ const breadcrumbLd = Astro.site
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
-  <style>
-    .lp-body { max-width: 760px; margin: 0 auto; padding: 2rem 1rem 5rem; font-family: var(--font-english); color: var(--text); }
-    .lp-eyebrow { font-family: var(--font-ui); font-size: 0.8rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-mid); margin: 0 0 0.3rem; }
-    .lp-title { font-family: var(--font-english); font-size: 2rem; font-weight: 600; margin: 0 0 0.2rem; line-height: 1.15; }
-    .lp-greek { font-family: var(--font-greek); font-size: 1.15rem; color: var(--text-mid); margin: 0 0 1rem; }
-    .lp-lede { font-size: 1.1rem; line-height: 1.6; margin: 0 0 0.8rem; }
-    .lp-desc { font-size: 0.98rem; line-height: 1.7; color: var(--text-mid); margin: 0 0 1.5rem; }
-    .lp-cta-row { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 0 0 2.5rem; }
-    .lp-btn[hidden] { display: none; }
-    .lp-btn { display: inline-flex; align-items: center; gap: 0.4rem; font-family: var(--font-ui); font-size: 0.9rem; font-weight: 600; padding: 0.6rem 1.1rem; border-radius: 6px; text-decoration: none; border: 1px solid var(--border); color: var(--text); transition: transform .08s ease; }
-    .lp-btn:active { transform: scale(0.97); }
-    .lp-btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-    h2.lp-h { font-family: var(--font-ui); font-size: 0.95rem; font-weight: 700; letter-spacing: .03em; color: var(--accent); margin: 2.2rem 0 0.7rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
-    .ed-list, .book-list, .read-list { list-style: none; padding: 0; margin: 0; }
-    .ed-list li { margin: 0 0 0.5rem; }
-    .ed-list a { display: flex; justify-content: space-between; gap: 0.8rem; align-items: baseline; text-decoration: none; color: var(--text); padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 6px; }
-    .ed-list a:hover { border-color: var(--accent); }
-    .ed-name { font-family: var(--font-ui); font-weight: 600; font-size: 0.92rem; }
-    .ed-kind { font-size: 0.82rem; color: var(--text-mid); text-align: right; }
-    /* Commentary card: same full width / border as an edition row, but a richer
-       column layout (title, blurb, call-to-action). */
-    .comm-card { flex-direction: column; align-items: flex-start; gap: 0.45rem; padding: 0.9rem 1rem; }
-    .comm-title { font-family: var(--font-ui); font-weight: 700; font-size: 1rem; color: var(--text); }
-    .comm-greek { font-weight: 500; color: var(--text-mid); }
-    .comm-blurb { font-size: 0.86rem; line-height: 1.5; color: var(--text-mid); }
-    .comm-cta { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.2rem; font-family: var(--font-ui); font-weight: 600; font-size: 0.86rem; color: #fff; background: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 0.45rem 0.9rem; transition: transform .08s ease; }
-    .comm-card:hover .comm-cta { transform: translateX(2px); }
-    .book-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr)); gap: 0.5rem; }
-    .book-list a { display: flex; justify-content: space-between; gap: 0.6rem; align-items: baseline; text-decoration: none; color: var(--text); padding: 0.55rem 0.7rem; border: 1px solid var(--border); border-radius: 6px; }
-    .book-list a:hover { border-color: var(--accent); }
-    .bl-label { font-family: var(--font-ui); font-weight: 600; font-size: 0.92rem; }
-    .bl-meta { font-size: 0.78rem; color: var(--text-mid); font-variant-numeric: tabular-nums; text-align: right; }
-    .credits { font-size: 0.9rem; line-height: 1.7; color: var(--text-mid); }
-    .credits a { color: var(--accent); }
-    .read-list li { margin: 0 0 0.7rem; font-size: 0.9rem; line-height: 1.55; color: var(--text-mid); }
-    .read-list .rk { font-family: var(--font-ui); font-size: 0.68rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--text-mid); background: var(--border); border-radius: 3px; padding: 0.08em 0.45em; margin-right: 0.45em; vertical-align: 0.08em; }
-    .read-list a.buy { color: var(--accent); white-space: nowrap; }
-    .read-list a.res-link { font-family: var(--font-ui); font-size: 0.98rem; font-weight: 700; color: var(--accent); }
-    .lp-note { font-size: 0.82rem; color: var(--text-mid); margin-top: 0.8rem; }
-    .lp-support { margin-top: 2.75rem; }
-  </style>
+  <BFonts />
+
 </head>
 <body>
-  <header class="simple-header">
-    <div class="header-title">
-      <a class="home-link" href={`${base}/`}>Aristotle</a>
-      <span class="title-sep">›</span>
-      <span class="header-static">{work.title}</span>
+  <CommandPalette work={workId} client:load />
+  <div class="frame dir-b pg-work" data-work-page={workId}>
+    <div class="b-page">
+      <BNav />
+      <main>
+        <p class="b-crumb"><a href={`${base}/`}>Works</a> / <span>{divisionName}</span></p>
+        <div class={`b-top pl-${plate.place}`} style={`--ix:${plate.ink[0]};--iy:${plate.ink[1]};--iw:${plate.ink[2] - plate.ink[0]};--ih:${plate.ink[3] - plate.ink[1]}`}>
+        <section class="b-po work pl dp-paper tp-side" data-tp="side" data-ts="1" data-work={workId}>
+          <picture class="th-light"><source media="(max-width: 960px)" srcset={`${base}/plates/phone/${workId}.jpg`} width="640" height="558"/><img src={`${base}/plates/desk/${workId}.jpg`} width="1280" height="914" alt={plate.alt} loading="lazy" decoding="async"/></picture><picture class="th-dark"><source media="(max-width: 960px)" srcset={`${base}/plates/dark/phone/${workId}.webp`} width="640" height="558"/><img src={`${base}/plates/dark/desk/${workId}.webp`} width="1280" height="914" alt={plate.alt} loading="lazy" decoding="async"/></picture>
+          <h1 class="b-po-t b-natural-title" data-fit="poster" data-title={work.title}>{work.title.split(/(?<=,)\s+/).map((phrase,i) => <>{i > 0 && " "}<span class:list={[{"b-title-phrase": work.title.includes(",")}]}>{phrase}</span></>)}</h1>
+        </section>
+        <div class="b-po-below">
+          {work.greekTitle && <p class:list={["b-wk-gt", {"b-greek-hang": hangs(work.greekTitle)}]} lang="grc" data-fit="line">{work.greekTitle}</p>}
+          <div class="b-ctas" data-work={workId} data-books={JSON.stringify(work.bookLabels)} data-chapters={JSON.stringify(allChapters)}>
+            <a class="b-btn pri" data-start href={primary ? readHref(`?trans=${primary.id}`) : readHref()}>Start reading</a>
+            <span id="work-resume-slot"></span>
+            <a class="b-btn" data-greek href={readHref('?view=greek')}>Greek only</a>
+            {editions.length >= 2 && <a class="b-btn b-compare-mobile" data-compare href={readHref('?trans=compare')}>Compare translations</a>}
+            <p class="b-reading-mode">Greek and English · {primary?.short}</p>
+          </div>
+          <div class="b-words">
+            <p class="b-wk-blurb">{work.blurb}{work.authenticity && work.authenticity !== 'genuine' && <span class:list={["b-tag", {"b-redundant-tag": work.blurb.toLowerCase().includes(AUTHENTICITY_LABEL[work.authenticity].toLowerCase())}]}>{AUTHENTICITY_LABEL[work.authenticity]}</span>}</p>
+            {work.related?.map(r => getWork(r.id) && <p class="b-cred b-related"><a href={`${base}${workLanding(r.id)}`}>{r.label}</a></p>)}
+            <section class="b-wk" data-section="facts">
+              <dl class="b-facts">
+                <dt>Greek text</dt><dd>{nameYear(work.greekSource.short)}{work.greekSource.licence && <> <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a></>}</dd>
+                <dt>Open Greek and English with</dt><dd>{editions.map(t => {
+                  const revised = /, rev\. (?:\S+ )*\S+ \(/.test(t.name);
+                  const imprint = t.name.match(/\(.*\)$/)?.[0];
+                  return <a class="b-edition-row" href={readHref(`?trans=${t.id}`)}><span><span class="b-translator">{t.short}</span>{revised && ', rev.'}{imprint && ` ${yearOnly(imprint)}`}</span>{editions.length > 1 && primary?.id === t.id && <small class="b-opens-first">opens first</small>}</a>;
+                })}
+                <div class="b-edition-tools">
+                  {editions.length >= 2 && <a class="b-compare-tool" href={readHref('?trans=compare')}>Compare translations</a>}
+                  {workId === 'EN' && <a href={`${base}/EN/glossary`}>Glossary</a>}
+                </div></dd>
+              </dl>
+            </section>
+          </div>
+        </div>
+        </div>
+        <section class="b-sec" data-section="books">
+          <div class="b-contents-head">
+            <h2 class="b-h2">{work.books > 1 ? 'Books and chapters' : 'Chapters'}</h2>
+            {ostwaldTitles && <p class="b-note3">Chapter titles are Ostwald’s.</p>}
+            {work.books > 1 && <p class="b-bkall"><button type="button" data-books-open>Open all books</button><button type="button" data-books-close>Close all</button></p>}
+            {work.books === 1 && numbered(outline[0]) && totalChapters > 40 && <form class="b-chapter-go">
+              <label for="chapter-go">Chapter or Bekker number</label><input id="chapter-go" autocomplete="off" placeholder="12 or 831b1"/><button type="submit" class="b-btn">Go</button>
+            </form>}
+          </div>
+          <div class:list={[work.books > 1 && "b-bks", {"b-untitled-books": outline.every(numbered)}]}>
+          {outline.map(b => {
+            const rows = <ol class:list={["b-chs", {"b-numbered": numbered(b), "b-chapter-tens": numbered(b) && b.chapters.length > 40}]}>{b.chapters.map(c => <li><a href={chapterLink(b.book,c.chapter)} data-book={b.book} data-chapter={c.chapter}><span class="b-cn">{c.chapter}</span><span class="b-ct">{chapterTitle(b.book,c.chapter)}</span><span class="b-cb">{usesBekker ? plainRange(c.bekker) : ''}</span></a></li>)}</ol>;
+            return work.books > 1 ? <>
+              <details class="b-bk" data-book={b.book}><summary><span class="b-bkn" lang={/[α-ωΑ-Ω]/.test(b.label) ? 'grc' : 'en'}><span class="b-bkw">Book </span>{b.label}</span><span class="b-bkf">{titles[String(b.book)]?.[b.chapters[0]?.chapter] ? chapterTitle(b.book,b.chapters[0].chapter) : <span class="b-bks2">{usesBekker ? bookRange(b) : ''}</span>}</span><span class="b-bkc">{!numbered(b) && <span class="b-book-range">{bookRange(b)}</span>}{b.chapters.length} chapter{b.chapters.length === 1 ? '' : 's'}</span></summary>{rows}</details>
+            </> : rows;
+          })}
+          </div>
+        </section>
+        <section class="b-sec" data-section="texts">
+          <h2 class="b-h2">Texts</h2>
+          <div class="b-print-groups b-texts">
+            {work.greekSource.full && <div><h3>Greek text</h3><p set:html={sanitizeHtml(work.greekSource.full)}/></div>}
+            {englishFull.length > 0 && <div><h3>{englishFull.length > 1 ? 'English translations' : 'English translation'}</h3>{englishFull.map(e => <p set:html={sanitizeHtml(e)}/>)}</div>}
+          </div>
+        </section>
+        <section class="b-sec b-two" data-section="reference">
+          {(reading.length > 0 || resources.length > 0) && <div>
+            {reading.length > 0 && <section data-section="print"><h2 class="b-h2">In print</h2><ul class="b-print b-print-mobile">{reading.map(r => <li><small>{r.kind === 'collection' ? 'In print' : r.kind === 'translation' ? 'Translation' : 'Commentary'}</small><span><a data-citation href={inPrintHref(r)} target="_blank" rel="noopener nofollow" set:html={sanitizeHtml(r.cite)}/></span></li>)}</ul><div class="b-print-groups">{printGroups.map(group => <div><h3>{group.label}</h3>{group.entries.map(r => <p><a data-citation href={inPrintHref(r)} target="_blank" rel="noopener nofollow" set:html={sanitizeHtml(r.cite)}/></p>)}</div>)}</div></section>}
+            {resources.length > 0 && <section data-section="resources"><h2 class="b-h2">Resources</h2><ul class="b-print">{resources.map(r => <li><span><a href={r.url} target="_blank" rel="noopener">{r.label}</a>{' — '}{r.blurb}{r.exercises && <> See {r.exercises}, relevant to this work.</>}{' '}Developed by <a href={r.authorUrl} target="_blank" rel="noopener">{r.authorName}</a>.</span></li>)}</ul></section>}
+          </div>}
+          <div>
+            {commentaries.length > 0 && <section data-section="commentary"><h2 class="b-h2">Commentary</h2><ul class="b-trs">{commentaries.map(c => <li><a href={`${base}${workLanding(c.id)}`}><span>{c.author}, <i>{c.title}</i></span><small>{c.blurb}</small></a></li>)}</ul></section>}
+
+          </div>
+        </section>
+      </main>
+      <BFoot />
     </div>
-    <nav class="header-actions" aria-label="Navigation">
-      <a href={`${base}/`} class="search-link">All works</a>
-      <a href={`${base}/lemma/`} class="search-link">Lexicon</a>
-      <a href={`${base}/search`} class="search-link">Search</a>
-      <a href={`${base}/phrases`} class="search-link">Phrases</a>
-      <a href={`${base}/advanced`} class="search-link">Advanced</a>
-      <ThemeToggle />
-    </nav>
-  </header>
-
-  <main class="lp-body">
-    <p class="lp-eyebrow">{work.author} · {work.abbr}</p>
-    <h1 class="lp-title">{work.title}</h1>
-    {work.authenticity && work.authenticity !== 'genuine' && (
-      <p class="lp-status">
-        <span class="status-tag">{AUTHENTICITY_LABEL[work.authenticity]}</span>
-        <span class="lp-status-note">Authorship traditionally doubted — transmitted in the Aristotelian corpus but widely judged not to be by Aristotle.</span>
-      </p>
-    )}
-    {work.greekTitle && <p class="lp-greek" lang="grc">{work.greekTitle}</p>}
-    <p class="lp-lede">{work.blurb}</p>
-    <p class="lp-desc">
-      This edition presents the original Greek ({work.greekSource.short}) side by
-      side with {translatorNames.length > 1 ? 'English translations' : 'an English translation'}
-      {translatorNames.length ? ` (${translatorNames.join(', ')})` : ''} —
-      with click-to-parse morphology, dictionary entries, and exact
-      {work.citation?.scheme === 'busse' ? ' page' : ` ${citationName}`} citation.
-      {bookless ? ` ${totalChapters} chapters.` : ` ${work.books} books, ${totalChapters} chapters.`}
-    </p>
-
-    <div class="lp-cta-row">
-      <a class="lp-btn primary" href={primary ? readHref(`?trans=${primary.id}`) : readHref()}>
-        Start reading →
-      </a>
-      <a class="lp-btn resume-btn" id="lp-resume" href="#" hidden
-         data-work={workId} data-books={work.books}>Resume</a>
-      <a class="lp-btn" href={readHref('?view=greek')}>Greek only</a>
-      {editions.length > 1 && <a class="lp-btn" href={readHref('?trans=compare')}>Compare translations</a>}
-    </div>
-
-    {work.related && work.related.length > 0 && (
-      <p class="lp-related">
-        See also: {work.related.map((r, i) => {
-          const rw = getWork(r.id);
-          return rw ? (
-            <>
-              {i > 0 && <span> · </span>}
-              <a href={`${base}${workLanding(r.id)}`}>{r.label}</a>
-            </>
-          ) : null;
-        })}
-      </p>
-    )}
-
-    <h2 class="lp-h">Read this work</h2>
-    <ul class="ed-list">
-      {editions.map((t) => (
-        <li>
-          <a href={readHref(`?trans=${t.id}`)}>
-            <span class="ed-name">{t.short}</span>
-            <span class="ed-kind">Greek &amp; English · {t.name}</span>
-          </a>
-        </li>
-      ))}
-      {workId === 'EN' && (
-        <li>
-          <a href={`${base}/EN/glossary`}>
-            <span class="ed-name">Glossary of Technical Terms</span>
-            <span class="ed-kind">Ostwald’s Greek–English term glossary</span>
-          </a>
-        </li>
-      )}
-    </ul>
-
-    {!bookless && (
-      <>
-        <h2 class="lp-h">Books</h2>
-        <ul class="book-list">
-          {outline.map((b) => (
-            <li>
-              <a href={`${base}${workPath(workId, b.book)}`}>
-                <span class="bl-label">Book {b.label}</span>
-                <span class="bl-meta">{bookSpan(b)}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </>
-    )}
-
-    {commentaries.length > 0 && (
-      <>
-        <h2 class="lp-h">Commentary</h2>
-        <ul class="ed-list">
-          {commentaries.map((c) => (
-            <li>
-              <a class="comm-card" href={`${base}${workLanding(c.id)}`}>
-                <span class="comm-title">{c.author} — {c.title}{c.greekTitle && <span class="comm-greek"> · {c.greekTitle}</span>}</span>
-                <span class="comm-blurb">{c.blurb}</span>
-                <span class="comm-cta">Read the {c.title} →</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </>
-    )}
-
-    <h2 class="lp-h">Greek text &amp; translations</h2>
-    <p class="credits">
-      <strong>Greek:</strong> {work.greekSource.full}
-      {work.greekSource.licence && (
-        <> Licence: <a href={work.greekSource.licence.url}>{work.greekSource.licence.name}</a>.</>
-      )}<br />
-      <strong>{translatorNames.length > 1 ? 'Translations' : 'Translation'}:</strong>
-      {' '}{editions.map((t) => t.name).join('; ')}.<br />
-      Full source and licence details are on the
-      <a href={`${base}/attribution`}>Texts &amp; Licences</a> page.
-    </p>
-
-    {reading.length > 0 && (
-      <>
-        <h2 class="lp-h">In print</h2>
-        {(readingTrans.length > 0 || readingComm.length > 0) && (
-          <>
-            <p class="credits" style="margin-bottom:0.8rem;">
-              Modern, copyright-protected translations and commentaries we can’t
-              host here, for readers who want to go further:
-            </p>
-            <ul class="read-list">
-              {readingTrans.map((r) => (
-                <li>
-                  <span class="rk">Translation</span><span set:html={sanitizeHtml(r.cite)} />{' '}
-                  <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
-                </li>
-              ))}
-              {readingComm.map((r) => (
-                <li>
-                  <span class="rk">Commentary</span><span set:html={sanitizeHtml(r.cite)} />{' '}
-                  <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {readingColl.length > 0 && (
-          <>
-            <p class="credits" style="margin:1rem 0 0.8rem;">
-              Prefer a paper copy? These in-print editions carry the translation
-              read here (or a revision of it):
-            </p>
-            <ul class="read-list">
-              {readingColl.map((r) => (
-                <li>
-                  <span class="rk">In print</span><span set:html={sanitizeHtml(r.cite)} />{' '}
-                  <a class="buy" href={inPrintHref(r)} target="_blank" rel="noopener nofollow">Find in print →</a>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        <p class="lp-note">“Find in print” opens a Google Books search for the edition.</p>
-      </>
-    )}
-
-    {resources.length > 0 && (
-      <>
-        <h2 class="lp-h">Resources</h2>
-        <ul class="read-list">
-          {resources.map((r) => (
-            <li>
-              <a class="res-link" href={r.url} target="_blank" rel="noopener">{r.label}</a>
-              {' — '}{r.blurb}
-              {r.exercises && <> See {r.exercises}, relevant to this work.</>}
-              {' '}Developed by{' '}
-              <a class="buy" href={r.authorUrl} target="_blank" rel="noopener">{r.authorName}</a>.
-            </li>
-          ))}
-        </ul>
-      </>
-    )}
-
-    <section class="support-card lp-support">
-      <div class="eyebrow">Support <span class="gk">χάρις</span></div>
-      <h2>Support the Aristotle Reader</h2>
-      <p>The reader is free and open. A contribution helps defray development costs and keeps it that way.</p>
-      <a class="btn-donate" href={SUPPORT_URL} target="_blank" rel="noopener">Make a gift</a>
-    </section>
-  </main>
-<script>
-  // "Resume" CTA: appears when the reader has a saved position for this work
-  // (localStorage — see shared/lib/resume.ts), linking to the remembered
-  // book + Bekker citation.
-  import { citeShown, resumeFor } from '@shared/lib/resume';
-
-  const btn = document.getElementById('lp-resume') as HTMLAnchorElement | null;
-  if (btn) {
-    const pos = resumeFor(btn.dataset.work!);
-    if (pos) {
-      const books = Number(btn.dataset.books) || 1;
-      const book = Math.min(Math.max(1, pos.book), books);
-      const base = (import.meta.env.BASE_URL as string).replace(/\/$/, '');
-      btn.href = `${base}/${btn.dataset.work}/book/${book}${pos.cite ? `#${pos.cite}` : ''}`;
-      btn.textContent = pos.cite ? `Resume at ${citeShown(btn.dataset.work!, pos.cite)}` : (books > 1 ? `Resume Book ${book}` : 'Resume');
-      btn.hidden = false;
+  </div>
+  <script>
+    import { initPosters } from '../lib/poster-fit';
+    import { resumeFor } from '@shared/lib/resume';
+    import { parseBekker } from '@shared/lib/data';
+    initPosters();
+    // Phone furniture lives in the client so desktop markup stays unchanged.
+    const phoneBand = matchMedia('(max-width: 960px)');
+    const phoneFurniture = () => {
+      const top = document.querySelector<HTMLElement>('.b-top')!;
+      const facts = top.querySelector<HTMLElement>('[data-section="facts"]')!;
+      const books = document.querySelector<HTMLElement>('[data-section="books"]')!;
+      const words = top.querySelector<HTMLElement>('.b-words')!;
+      const controls = top.querySelector<HTMLElement>('.b-ctas')!;
+      const mode = controls.querySelector<HTMLElement>('.b-reading-mode')!;
+      const blurb = document.querySelector<HTMLElement>('.b-wk-blurb')!;
+      if (phoneBand.matches) {
+        books.id = 'contents';
+        if (!facts.querySelector('.b-editions-fold')) {
+          const fold = document.createElement('details'); fold.className = 'b-editions-fold';
+          const label = document.createElement('summary'); label.textContent = 'Editions and tools';
+          fold.append(label, ...facts.childNodes); facts.append(fold);
+        }
+        if (!controls.querySelector('.b-contents-button')) {
+          const button = document.createElement('a'); button.className = 'b-btn b-contents-button';
+          button.href = '#contents'; button.textContent = 'Contents'; controls.append(button);
+        }
+        if (controls.classList.contains('b-resumed')) {
+          let after = document.querySelector<HTMLElement>('.b-after-contents');
+          if (!after) { after = document.createElement('div'); after.className = 'b-after-contents'; books.after(after); }
+          after.append(blurb);
+        } else if (!mode.querySelector('.b-contents-link')) {
+          const text = document.createElement('span'); text.textContent = mode.textContent;
+          const link = document.createElement('a'); link.className = 'b-contents-link';
+          link.href = '#contents'; link.textContent = 'Contents'; mode.replaceChildren(text, link);
+        }
+      } else {
+        const fold = facts.querySelector('.b-editions-fold');
+        if (fold) fold.replaceWith(...[...fold.childNodes].slice(1));
+        controls.querySelector('.b-contents-button')?.remove();
+        mode.querySelector('.b-contents-link')?.remove();
+        const text = mode.querySelector('span'); if (text) mode.replaceChildren(...text.childNodes);
+        words.prepend(blurb); document.querySelector('.b-after-contents')?.remove();
+        books.removeAttribute('id');
+      }
+    };
+    phoneBand.addEventListener('change', phoneFurniture);
+    const go = document.querySelector<HTMLFormElement>('.b-chapter-go');
+    go?.addEventListener('submit', event => {
+      event.preventDefault();
+      const value = go.querySelector('input')!.value.trim();
+      const links = [...document.querySelectorAll<HTMLAnchorElement>('.b-chs a')];
+      const ref = parseBekker(value.replace(/\s+/g, '').toLowerCase());
+      const key = (column: string, line: number) => Number(column.slice(0,-1))*10000 + (column.endsWith('b') ? 1000 : 0) + line;
+      const target = ref ? links.filter(a => {
+        const start = parseBekker(a.querySelector('.b-cb')!.textContent!.split('–')[0]);
+        return start && key(start.column,start.line) <= key(ref.column,ref.line);
+      }).at(-1) : /^\d+$/.test(value) ? links[Number(value)-1] : null;
+      if (target) location.href = target.href;
+    });
+    // The plate can outgrow the words on a very short work. Measure only this
+    // optional tuck; the title, editions and contents already come from Astro.
+    const tuck = () => {
+      const section = document.querySelector<HTMLElement>('[data-section="books"]')!;
+      section.classList.remove('b-contents-tuck'); section.style.marginTop = ''; section.style.minHeight = '';
+      if (!matchMedia('(min-width: 961px)').matches) return;
+      const bottom = (selector: string) => document.querySelector(selector)?.getBoundingClientRect().bottom || 0;
+      // The words grid cell stretches to the plate; measure its content instead.
+      const textBottom = Math.max(bottom('.b-ctas'), bottom('.b-words .b-facts'), bottom('.b-words .b-edition-tools'), bottom('.b-reading-mode'));
+      // Two pictures, one per theme; measure the one on show.
+      const over = ([...document.querySelectorAll('.b-top picture')].find(el => el.getClientRects().length)?.getBoundingClientRect().bottom || 0) - textBottom;
+      if (over > 90 && section.offsetHeight < over + 150) {
+        section.classList.add('b-contents-tuck'); section.style.marginTop = `${-(over + 4)}px`; section.style.minHeight = `${over + 30}px`;
+      }
+    };
+    document.fonts.ready.then(() => {
+      requestAnimationFrame(tuck);
+      new ResizeObserver(tuck).observe(document.querySelector('.b-top')!);
+    });
+    window.addEventListener('resize', tuck);
+    for (const button of document.querySelectorAll<HTMLButtonElement>('[data-books-open],[data-books-close]')) button.addEventListener('click', () => {
+      for (const book of document.querySelectorAll<HTMLDetailsElement>('.b-bk')) book.open = button.hasAttribute('data-books-open');
+    });
+    const controls = document.querySelector<HTMLElement>('.b-ctas')!;
+    const id = controls.dataset.work!;
+    const saved = resumeFor(id);
+    if (saved) {
+      const labels: string[] = JSON.parse(controls.dataset.books!);
+      const chapters = JSON.parse(controls.dataset.chapters!);
+      const book = Math.max(1,Math.min(labels.length,saved.book));
+      const ref = saved.cite ? parseBekker(saved.cite) : null;
+      const index = (column: string,line: number) => Number(column.slice(0,-1))*100000+(column.endsWith('b')?10000:0)+line;
+      const chapter = ref ? [...(chapters[String(book)] || [])].reverse().find(c => {
+        const endText = String(c.bekker).split(/[–—]/).pop()!.trim();
+        const end = parseBekker(/^\d+[ab]\d/.test(endText) ? endText : `${c.column}${endText}`);
+        return end && index(c.column,Number(c.line)) <= index(ref.column,ref.line) && index(ref.column,ref.line) <= index(end.column,end.line);
+      }) : null;
+      const link = document.createElement('a'); link.className = 'b-btn'; link.dataset.resume = '';
+      const base = import.meta.env.BASE_URL.replace(/\/$/,'');
+      link.href = `${base}/${id}/book/${book}${saved.cite ? `#${saved.cite}` : ''}`;
+      link.textContent = `Continue at ${labels.length > 1 ? `Book ${labels[book-1]}` : ''}${chapter ? `${labels.length > 1 ? ', ' : ''}chapter ${chapter.chapter}` : labels.length === 1 ? 'the saved place' : ''}`;
+      document.getElementById('work-resume-slot')!.append(link);
+      {
+        link.classList.add('pri'); controls.classList.add('b-resumed'); controls.prepend(link);
+        document.getElementById('work-resume-slot')!.remove();
+        const start = controls.querySelector<HTMLAnchorElement>('[data-start]')!;
+        start.classList.remove('pri'); start.textContent = 'From the start';
+        link.after(controls.querySelector('.b-reading-mode')!);
+        const count = document.querySelector(`.b-bk[data-book="${book}"] .b-bkc`);
+        if (count && chapter) {
+          const note = document.createElement('span'); note.className = 'b-saved-chapter';
+          note.textContent = `saved at chapter ${chapter.chapter}`;
+          const range = count.querySelector('.b-book-range');
+          if (range) range.after(note); else count.prepend(note);
+        }
+      }
     }
-  }
-</script>
-<CommandPalette work={workId} client:load />
+    if (phoneBand.matches) phoneFurniture();
+  </script>
 </body>
 </html>

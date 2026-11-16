@@ -53,7 +53,7 @@ english:
   # seed a future anchors.yaml for a denser gutter.
   secondary:
     id: ellis
-    name: "William Ellis (1776; rev. 1912)"
+    name: "William Ellis (1776; repr. 1912)"
     model: archive
     dir: "pol-ellis"
     books: 8

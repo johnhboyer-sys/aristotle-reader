@@ -90,3 +90,10 @@ export function linkifyGlossaryRefs(html: string): string {
     return `<em>${linked}</em>`;
   });
 }
+
+// Additive body-only view for lexicon pages; the glossary keeps its full entries.
+export const GLOSSARY_BODIES = GLOSSARY_ENTRIES.map(entry => {
+  const parts = entry.html.match(/^<em>[^<]+<\/em> \(([^)]+)\):\s*([\s\S]*)$/);
+  if (!parts) throw new Error(`Invalid glossary entry: ${entry.slug}`);
+  return { ...entry, greek: parts[1].split(',').map(form => form.trim()), bodyHtml: parts[2] };
+});

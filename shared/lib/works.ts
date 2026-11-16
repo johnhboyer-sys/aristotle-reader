@@ -45,8 +45,10 @@ export interface MissingBooks {
 }
 
 export interface Work {
+  narrator?: string;
   id: string;       // slug + data dir, e.g. 'EN'
   title: string;
+  listTitle?: string;   // shorter title for the home page's list (John, 14 Nov: De Mirabilibus)
   greekTitle?: string;  // polytonic Greek title, shown in the print masthead
   abbr: string;     // display abbreviation (may differ from id styling)
   author: string;
@@ -136,7 +138,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Minio-Paluello, Aristotelis Categoriae (OCT, 1949)',
     greekSource: {
       short: 'Minio-Paluello (OCT, 1949)',
-      full: 'L. Minio-Paluello, ed. Aristotelis categoriae et liber de interpretatione. Oxford: Clarendon Press, 1949.',
+      full: 'L. Minio-Paluello, ed. <i>Aristotelis categoriae et liber de interpretatione</i>. Oxford: Clarendon Press, 1949.',
     },
     // Edghill (1928) + Taylor (1812) are public domain and ship publicly. Ackrill
     // (1963) is US-copyright: carried in Cat.yaml for the local build and gated
@@ -162,7 +164,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Minio-Paluello, Aristotelis De Interpretatione (OCT, 1949)',
     greekSource: {
       short: 'Minio-Paluello (OCT, 1949)',
-      full: 'L. Minio-Paluello, ed. Aristotelis categoriae et liber de interpretatione. Oxford: Clarendon Press, 1949.',
+      full: 'L. Minio-Paluello, ed. <i>Aristotelis categoriae et liber de interpretatione</i>. Oxford: Clarendon Press, 1949.',
     },
     // Edghill (1928) + Taylor (1812) public domain; Ackrill (1963) US-copyright,
     // local build only (same gating as Categories). Taylor's text and notes are
@@ -186,7 +188,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Busse, Porphyrii Isagoge (CAG IV.1, 1887)',
     greekSource: {
       short: 'Busse (CAG IV.1, 1887)',
-      full: 'A. Busse, ed. Porphyrii Isagoge et in Aristotelis Categorias commentarium. Commentaria in Aristotelem Graeca IV.1. Berlin: Reimer, 1887.',
+      full: 'A. Busse, ed. <i>Porphyrii Isagoge et in Aristotelis Categorias commentarium</i>. Commentaria in Aristotelem Graeca IV.1. Berlin: Reimer, 1887.',
     },
     // Porphyry's introduction to Aristotle's Categories; cited by Busse page,
     // not Bekker. Owen (1853) is public domain and translated from the Greek.
@@ -208,12 +210,12 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Physica (OCT, 1950)',
     greekSource: {
       short: 'Ross (OCT, 1950)',
-      full: 'W. D. Ross, ed. Aristotelis Physica. Oxford: Clarendon Press (Oxford Classical Texts), 1950.',
+      full: 'W. D. Ross, ed. <i>Aristotelis Physica</i>. Oxford: Clarendon Press (Oxford Classical Texts), 1950.',
     },
     translations: [
       { id: 'hardie', name: 'R. P. Hardie and R. K. Gaye (Oxford, 1930)', short: 'Hardie & Gaye', slot: 'english' },
     ],
-    blurb: 'Aristotle on nature, change, place, time, and the prime mover, in eight books.',
+    blurb: 'Aristotle on nature, change, place, time, and the prime mover.',
   },
   {
     id: 'Cael',
@@ -226,12 +228,12 @@ export const WORKS: Work[] = [
     greekEdition: 'Moraux, Aristote: Du ciel (Budé, 1965)',
     greekSource: {
       short: 'Moraux (Budé, 1965)',
-      full: 'P. Moraux, ed. Aristote: Du ciel. Paris: Les Belles Lettres (Budé), 1965.',
+      full: 'P. Moraux, ed. <i>Aristote: Du ciel</i>. Paris: Les Belles Lettres (Budé), 1965.',
     },
     translations: [
       { id: 'stocks', name: 'J. L. Stocks (Oxford, 1922)', short: 'Stocks', slot: 'english' },
     ],
-    blurb: 'Aristotle on the cosmos, the elements, and the eternity of the heavens, in four books.',
+    blurb: 'Aristotle on the cosmos, the elements, and the eternity of the heavens.',
   },
   {
     id: 'GC',
@@ -244,12 +246,12 @@ export const WORKS: Work[] = [
     greekEdition: 'Mugler, Aristote. De la génération et de la corruption (Les Belles Lettres, 1966)',
     greekSource: {
       short: 'Mugler (Les Belles Lettres, 1966)',
-      full: 'C. Mugler, ed. Aristote. De la génération et de la corruption. Paris: Les Belles Lettres, 1966.',
+      full: 'C. Mugler, ed. <i>Aristote. De la génération et de la corruption</i>. Paris: Les Belles Lettres, 1966.',
     },
     translations: [
       { id: 'joachim', name: 'H. H. Joachim (Oxford, 1922)', short: 'Joachim', slot: 'english' },
     ],
-    blurb: 'Aristotle on coming-to-be, passing-away, mixture, and the elements, in two books.',
+    blurb: 'Aristotle on coming-to-be, passing-away, mixture, and the elements.',
   },
   {
     id: 'Mete',
@@ -262,12 +264,12 @@ export const WORKS: Work[] = [
     greekEdition: 'Fobes, Aristotelis Meteorologicorum libri quattuor (1919)',
     greekSource: {
       short: 'Fobes (1919)',
-      full: 'F. H. Fobes, ed. Aristotelis meteorologicorum libri quattuor. Cambridge, Mass.: Harvard University Press, 1919; repr. 1967.',
+      full: 'F. H. Fobes, ed. <i>Aristotelis meteorologicorum libri quattuor</i>. Cambridge, Mass.: Harvard University Press, 1919; repr. 1967.',
     },
     translations: [
       { id: 'webster', name: 'E. W. Webster (Oxford, 1923)', short: 'Webster', slot: 'english' },
     ],
-    blurb: 'Aristotle on the phenomena of the upper air and the earth — weather, comets, rivers, and the sea, in four books.',
+    blurb: 'Aristotle on the phenomena of the upper air and the earth — weather, comets, rivers, and the sea.',
   },
   {
     id: 'DA',
@@ -280,7 +282,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: De Anima (Oxford, 1961)',
     greekSource: {
       short: 'Ross (Oxford, 1961)',
-      full: 'W. D. Ross, ed. Aristotle: De Anima. Oxford: Clarendon Press, 1961.',
+      full: 'W. D. Ross, ed. <i>Aristotle: De Anima</i>. Oxford: Clarendon Press, 1961.',
     },
     // Wallace (Cambridge, 1882) is public domain and a Tier 0 secondary: chapter
     // divisions match the Greek spine exactly (5/12/13), no anchors file.
@@ -288,7 +290,7 @@ export const WORKS: Work[] = [
       { id: 'smith', name: 'J. A. Smith (Oxford, 1931)', short: 'Smith', slot: 'english' },
       { id: 'wallace', name: 'Edwin Wallace (Cambridge, 1882)', short: 'Wallace', slot: 'secondary' },
     ],
-    blurb: 'Aristotle on the soul, perception, and intellect, in three books.',
+    blurb: 'Aristotle on the soul, perception, and intellect.',
   },
   // The Parva Naturalia — Aristotle's short treatises on psycho-physical
   // topics. All single-book (bookless) works whose TLG Greek comes from Ross's
@@ -306,7 +308,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -324,7 +326,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -342,7 +344,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -360,7 +362,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -378,7 +380,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'beare', name: 'J. I. Beare (Oxford, 1908)', short: 'Beare', slot: 'english' },
@@ -396,7 +398,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'ross', name: 'G. R. T. Ross (Oxford, 1908)', short: 'Ross', slot: 'english' },
@@ -414,7 +416,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle: Parva Naturalia (Oxford, 1955)',
     greekSource: {
       short: 'Ross (Oxford, 1955)',
-      full: 'W. D. Ross, ed. Aristotle: Parva Naturalia. Oxford: Clarendon Press, 1955; repr. 1970.',
+      full: 'W. D. Ross, ed. <i>Aristotle: Parva Naturalia</i>. Oxford: Clarendon Press, 1955; repr. 1970.',
     },
     translations: [
       { id: 'ross', name: 'G. R. T. Ross (Oxford, 1908)', short: 'Ross', slot: 'english' },
@@ -435,12 +437,12 @@ export const WORKS: Work[] = [
     greekEdition: 'Louis, Aristote: Histoire des animaux (Budé, 1964–69)',
     greekSource: {
       short: 'Louis (Budé, 1964–69)',
-      full: 'P. Louis, ed. Aristote: Histoire des animaux. 3 vols. Paris: Les Belles Lettres (Budé), 1964–69.',
+      full: 'P. Louis, ed. <i>Aristote: Histoire des animaux</i>. 3 vols. Paris: Les Belles Lettres (Budé), 1964–69.',
     },
     translations: [
       { id: 'thompson', name: 'D’Arcy Wentworth Thompson (Oxford, 1910)', short: 'Thompson', slot: 'english' },
     ],
-    blurb: 'Aristotle’s great survey of animal life — anatomy, reproduction, habits, and behaviour — in nine books.',
+    blurb: 'Aristotle’s great survey of animal life — anatomy, reproduction, habits, and behaviour.',
   },
   {
     id: 'PA',
@@ -453,12 +455,12 @@ export const WORKS: Work[] = [
     greekEdition: 'Louis, Aristote: Les parties des animaux (Budé, 1956)',
     greekSource: {
       short: 'Louis (Budé, 1956)',
-      full: 'P. Louis, ed. Aristote: Les parties des animaux. Paris: Les Belles Lettres (Budé), 1956.',
+      full: 'P. Louis, ed. <i>Aristote: Les parties des animaux</i>. Paris: Les Belles Lettres (Budé), 1956.',
     },
     translations: [
       { id: 'ogle', name: 'William Ogle (Oxford, 1912)', short: 'Ogle', slot: 'english' },
     ],
-    blurb: 'Aristotle’s study of the causes and functions of animal parts — the foundational work of his biology — in four books.',
+    blurb: 'Aristotle’s study of the causes and functions of animal parts — the foundational work of his biology.',
   },
   {
     id: 'MA',
@@ -471,7 +473,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Jaeger, Aristotelis De animalium motione (Teubner, 1913)',
     greekSource: {
       short: 'Jaeger (Teubner, 1913)',
-      full: 'W. Jaeger, ed. Aristotelis de animalium motione et de animalium incessu. Leipzig: Teubner, 1913.',
+      full: 'W. Jaeger, ed. <i>Aristotelis de animalium motione et de animalium incessu</i>. Leipzig: Teubner, 1913.',
     },
     translations: [
       { id: 'farquharson', name: 'A. S. L. Farquharson (Oxford, 1912)', short: 'Farquharson', slot: 'english' },
@@ -489,7 +491,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Jaeger, Aristotelis De animalium incessu (Teubner, 1913)',
     greekSource: {
       short: 'Jaeger (Teubner, 1913)',
-      full: 'W. Jaeger, ed. Aristotelis de animalium motione et de animalium incessu. Leipzig: Teubner, 1913.',
+      full: 'W. Jaeger, ed. <i>Aristotelis de animalium motione et de animalium incessu</i>. Leipzig: Teubner, 1913.',
     },
     translations: [
       { id: 'farquharson', name: 'A. S. L. Farquharson (Oxford, 1912)', short: 'Farquharson', slot: 'english' },
@@ -507,12 +509,12 @@ export const WORKS: Work[] = [
     greekEdition: 'Drossaart Lulofs, Aristotelis De Generatione Animalium (OCT, 1965)',
     greekSource: {
       short: 'Drossaart Lulofs (OCT, 1965)',
-      full: 'H. J. Drossaart Lulofs, ed. Aristotelis de generatione animalium. Oxford: Clarendon Press (Oxford Classical Texts), 1965; repr. 1972.',
+      full: 'H. J. Drossaart Lulofs, ed. <i>Aristotelis de generatione animalium</i>. Oxford: Clarendon Press (Oxford Classical Texts), 1965; repr. 1972.',
     },
     translations: [
       { id: 'platt', name: 'Arthur Platt (Oxford, 1910)', short: 'Platt', slot: 'english' },
     ],
-    blurb: 'Aristotle on animal reproduction — the sexes, semen, heredity, and the formation of the embryo — in five books.',
+    blurb: 'Aristotle on animal reproduction — the sexes, semen, heredity, and the formation of the embryo.',
   },
   {
     id: 'Meta',
@@ -527,7 +529,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotle’s Metaphysics (Oxford, 1953)',
     greekSource: {
       short: 'Ross (Oxford, 1953)',
-      full: 'W. D. Ross, ed. Aristotle’s Metaphysics. 2 vols. Oxford: Clarendon Press, 1924; repr. 1970 [of 1953 corr. edn.].',
+      full: 'W. D. Ross, ed. <i>Aristotle’s Metaphysics</i>. 2 vols. Oxford: Clarendon Press, 1924; repr. 1970 [of 1953 corr. edn.].',
     },
     // Public build ships the public-domain Ross (1928) only. The copyrighted
     // Tredennick (Loeb 1933) primary + aligned-Ross overlay live in Meta.yaml
@@ -535,7 +537,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'ross', name: 'W. D. Ross (Oxford, 1928)', short: 'Ross', slot: 'english' },
     ],
-    blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover, in fourteen books.',
+    blurb: 'Aristotle’s inquiry into being, substance, and the unmoved mover.',
     quotations: true,
   },
   {
@@ -549,13 +551,13 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)',
     greekSource: {
       short: 'Ross (OCT, 1964)',
-      full: 'W. D. Ross, ed. Aristotelis analytica priora et posteriora. Oxford: Clarendon Press, 1964.',
+      full: 'W. D. Ross, ed. <i>Aristotelis analytica priora et posteriora</i>. Oxford: Clarendon Press, 1964.',
     },
     translations: [
       { id: 'jenkinson', name: 'A. J. Jenkinson (Oxford, 1928)', short: 'Jenkinson', slot: 'english' },
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'secondary' },
     ],
-    blurb: 'Aristotle’s theory of the syllogism and deductive inference, in two books.',
+    blurb: 'Aristotle’s theory of the syllogism and deductive inference.',
   },
   {
     id: 'APo',
@@ -568,7 +570,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Analytica Priora et Posteriora (OCT, 1964)',
     greekSource: {
       short: 'Ross (OCT, 1964)',
-      full: 'W. D. Ross, ed. Aristotelis analytica priora et posteriora. Oxford: Clarendon Press, 1964.',
+      full: 'W. D. Ross, ed. <i>Aristotelis analytica priora et posteriora</i>. Oxford: Clarendon Press, 1964.',
     },
     // Mure (Oxford, 1928) primary + Bouchier (Blackwell, 1901) overlay — both PD.
     // Bouchier is a Tier 0 secondary: "Part" divisions match the 34/19 Bekker
@@ -578,7 +580,7 @@ export const WORKS: Work[] = [
       { id: 'bouchier', name: 'E. S. Bouchier (Blackwell, 1901)', short: 'Bouchier', slot: 'secondary' },
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'third' },
     ],
-    blurb: 'Aristotle on demonstration, scientific knowledge, and first principles, in two books.',
+    blurb: 'Aristotle on demonstration, scientific knowledge, and first principles.',
   },
   {
     id: 'Top',
@@ -591,13 +593,13 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)',
     greekSource: {
       short: 'Ross (OCT, 1958)',
-      full: 'W. D. Ross, ed. Aristotelis topica et sophistici elenchi. Oxford: Clarendon Press, 1958.',
+      full: 'W. D. Ross, ed. <i>Aristotelis topica et sophistici elenchi</i>. Oxford: Clarendon Press, 1958.',
     },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
       { id: 'owen', name: 'O. F. Owen (Bohn, 1853)', short: 'Owen', slot: 'secondary' },
     ],
-    blurb: 'Aristotle’s manual of dialectical argument and the topoi, in eight books.',
+    blurb: 'Aristotle’s manual of dialectical argument and the topoi.',
   },
   {
     id: 'SE',
@@ -610,7 +612,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Topica et Sophistici Elenchi (OCT, 1958)',
     greekSource: {
       short: 'Ross (OCT, 1958)',
-      full: 'W. D. Ross, ed. Aristotelis topica et sophistici elenchi. Oxford: Clarendon Press, 1958.',
+      full: 'W. D. Ross, ed. <i>Aristotelis topica et sophistici elenchi</i>. Oxford: Clarendon Press, 1958.',
     },
     translations: [
       { id: 'pickard', name: 'W. A. Pickard-Cambridge (Oxford, 1928)', short: 'Pickard-Cambridge', slot: 'english' },
@@ -629,11 +631,11 @@ export const WORKS: Work[] = [
     greekEdition: 'Bywater, Aristotelis Ethica Nicomachea (OCT, 1894)',
     greekSource: {
       short: 'Bywater (OCT, 1894)',
-      full: 'Ingram Bywater, ed. Aristotelis Ethica Nicomachea. Oxford: Clarendon Press (Oxford Classical Texts), 1894; repr. 1962.',
+      full: 'Ingram Bywater, ed. <i>Aristotelis Ethica Nicomachea</i>. Oxford: Clarendon Press (Oxford Classical Texts), 1894; repr. 1962.',
     },
     translations: [
       { id: 'rackham', name: 'H. Rackham (Loeb, 1926)', short: 'Rackham', slot: 'english' },
-      { id: 'ross', name: 'W. D. Ross (Oxford, 1908)', short: 'Ross', slot: 'secondary' },
+      { id: 'ross', name: 'W. D. Ross (Oxford, 1925)', short: 'Ross', slot: 'secondary' },
       // Public domain (Bobbs-Merrill 1962, copyright not renewed — verified), so
       // it ships in the public build. Bekker-keyed from its inline apparatus and
       // carries Ostwald's 505 footnotes (shown as popups in the reader).
@@ -644,7 +646,7 @@ export const WORKS: Work[] = [
     ],
     // The modern, Bekker-keyed Ostwald is the default English on first load.
     defaultTranslation: 'ostwald',
-    blurb: 'Aristotle’s central work of moral philosophy, in ten books.',
+    blurb: 'Aristotle’s central work of moral philosophy.',
   },
   {
     id: 'EE',
@@ -669,7 +671,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Susemihl, Aristotelis Ethica Eudemia (Teubner, 1884)',
     greekSource: {
       short: 'Susemihl (Teubner, 1884)',
-      full: 'F. Susemihl, ed. Aristotelis ethica Eudemia. Leipzig: Teubner, 1884.',
+      full: 'F. Susemihl, ed. <i>Aristotelis ethica Eudemia</i>. Leipzig: Teubner, 1884.',
     },
     // Public build ships the public-domain Solomon (1915) only. The copyrighted
     // Rackham (Loeb 1935) overlay lives in EE.yaml for the local/private build
@@ -691,7 +693,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Politica (OCT, 1957)',
     greekSource: {
       short: 'Ross (OCT, 1957)',
-      full: 'W. D. Ross, ed. Aristotelis politica. Oxford: Clarendon Press, 1957.',
+      full: 'W. D. Ross, ed. <i>Aristotelis politica</i>. Oxford: Clarendon Press, 1957.',
     },
     // Public build ships the public-domain Jowett (1885) + Ellis (1776/1912)
     // only. The copyrighted Rackham (Loeb 1932) primary + aligned-Jowett
@@ -700,9 +702,9 @@ export const WORKS: Work[] = [
     // divisions match the Greek spine exactly (13/12/18/16/12/8/17/7).
     translations: [
       { id: 'jowett', name: 'Benjamin Jowett, rev. W. D. Ross (Oxford, 1921)', short: 'Jowett', slot: 'english' },
-      { id: 'ellis', name: 'William Ellis (1776; rev. 1912)', short: 'Ellis', slot: 'secondary' },
+      { id: 'ellis', name: 'William Ellis (1776; repr. 1912)', short: 'Ellis', slot: 'secondary' },
     ],
-    blurb: 'Aristotle on the city, citizenship, constitutions, and the best life, in eight books.',
+    blurb: 'Aristotle on the city, citizenship, constitutions, and the best life.',
   },
   {
     id: 'Oec',
@@ -715,7 +717,7 @@ export const WORKS: Work[] = [
     greekEdition: 'van Groningen and Wartelle, Aristote. Économique (Les Belles Lettres, 1968)',
     greekSource: {
       short: 'van Groningen and Wartelle (Les Belles Lettres, 1968)',
-      full: 'B. A. van Groningen and A. Wartelle, eds. Aristote. Économique. Paris: Les Belles Lettres, 1968.',
+      full: 'B. A. van Groningen and A. Wartelle, eds. <i>Aristote. Économique</i>. Paris: Les Belles Lettres, 1968.',
     },
     authenticity: 'dubious',
     // Dubious (Barnes 1984 marks it *): Book I is possibly by a pupil, Book II by a
@@ -738,7 +740,7 @@ export const WORKS: Work[] = [
     greekEdition: 'F. Susemihl, Aristotelis quae feruntur Magna moralia (Teubner, 1883)',
     greekSource: {
       short: 'Susemihl (Teubner, 1883)',
-      full: 'F. Susemihl, ed. Aristotelis quae feruntur Magna moralia. Leipzig: Teubner, 1883; text as printed by G. C. Armstrong (Loeb, 1935). Lines as in I. Bekker, ed. Aristotelis opera, vol. II. Berlin: Georg Reimer, 1831.',
+      full: 'F. Susemihl, ed. <i>Aristotelis quae feruntur Magna moralia</i>. Leipzig: Teubner, 1883; text as printed by G. C. Armstrong (Loeb, 1935). Lines as in I. Bekker, ed. <i>Aristotelis opera</i>, vol. II. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'dubious',
     // Contested: some hold it Aristotle's earliest ethics, most a Peripatetic
@@ -748,7 +750,7 @@ export const WORKS: Work[] = [
     translations: [
       { id: 'stock', name: 'St. G. Stock (Oxford, 1915)', short: 'Stock', slot: 'english' },
     ],
-    blurb: 'An ethics in two books over the ground of the Nicomachean and Eudemian Ethics; whether Aristotle wrote it is disputed.',
+    blurb: 'An ethics over the ground of the Nicomachean and Eudemian Ethics; whether Aristotle wrote it is disputed.',
   },
   {
     id: 'VV',
@@ -761,7 +763,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -780,7 +782,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Lorimer, Aristotelis qui fertur libellus De mundo (Les Belles Lettres, 1933)',
     greekSource: {
       short: 'Lorimer (Les Belles Lettres, 1933)',
-      full: 'W. L. Lorimer, ed. Aristotelis qui fertur libellus De mundo. Paris: Les Belles Lettres, 1933.',
+      full: 'W. L. Lorimer, ed. <i>Aristotelis qui fertur libellus De mundo</i>. Paris: Les Belles Lettres, 1933.',
     },
     authenticity: 'spurious',
     translations: [
@@ -799,7 +801,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -818,13 +820,13 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'dubious',
     translations: [
       { id: 'forster', name: 'E. S. Forster (Oxford, 1927)', short: 'Forster', slot: 'english' },
     ],
-    blurb: 'Nearly nine hundred questions of natural science, each asked as “Why…?” and answered with a conjecture, gathered into thirty-eight books.',
+    blurb: 'Nearly nine hundred questions of natural science, each asked as “Why…?” and answered with a conjecture.',
   },
   {
     id: 'Col',
@@ -837,7 +839,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -856,7 +858,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -877,14 +879,14 @@ export const WORKS: Work[] = [
     // laid on the Berlin edition's printed lines (sources/plant-greek/).
     greekSource: {
       short: 'Bekker (Oxford, 1837)',
-      full: 'I. Bekker, ed. Aristotelis opera, vol. 6. Oxford: Oxford University Press, 1837; lines as in Bekker, Aristotelis opera, vol. 2, Berlin: Georg Reimer, 1831. Text from Open Greek and Latin First1KGreek.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>, vol. 6. Oxford: Oxford University Press, 1837; lines as in Bekker, <i>Aristotelis opera</i>, vol. 2, Berlin: Georg Reimer, 1831. Text from Open Greek and Latin First1KGreek.',
       licence: { name: 'CC BY-SA 4.0', url: 'https://creativecommons.org/licenses/by-sa/4.0/' },
     },
     authenticity: 'spurious',
     translations: [
       { id: 'forster', name: 'E. S. Forster (Oxford, 1913)', short: 'Forster', slot: 'english' },
     ],
-    blurb: 'A short spurious work on plants, their parts and their growth, in two books.',
+    blurb: 'A short spurious work on plants, their parts and their growth.',
   },
   {
     id: 'MXG',
@@ -897,7 +899,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -916,7 +918,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -935,7 +937,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -954,7 +956,7 @@ export const WORKS: Work[] = [
     greekEdition: 'W. Jaeger, Ps.-Aristotelis De spiritu libellus (Leipzig, 1913)',
     greekSource: {
       short: 'Jaeger (Teubner, 1913)',
-      full: 'W. Jaeger, ed. Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus. Leipzig: Teubner, 1913.',
+      full: 'W. Jaeger, ed. <i>Aristotelis De animalium motione et De animalium incessu; Ps.-Aristotelis De spiritu libellus</i>. Leipzig: Teubner, 1913.',
     },
     authenticity: 'spurious',
     translations: [
@@ -973,7 +975,7 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -984,6 +986,7 @@ export const WORKS: Work[] = [
   {
     id: 'Mirab',
     title: 'De Mirabilibus Auscultationibus',
+    listTitle: 'De Mirabilibus',
     greekTitle: 'Περὶ θαυμασίων ἀκουσμάτων',
     abbr: 'Mir.',
     author: 'Aristotle',
@@ -992,13 +995,13 @@ export const WORKS: Work[] = [
     greekEdition: 'I. Bekker, Aristotelis Opera (Berlin, 1831)',
     greekSource: {
       short: 'Bekker (Berlin, 1831)',
-      full: 'I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
       { id: 'dowdall', name: 'L. D. Dowdall (Oxford, 1909)', short: 'Dowdall', slot: 'english' },
     ],
-    blurb: 'A short spurious collection of about 178 reported marvels.',
+    blurb: 'A short spurious collection of 178 reported marvels.',
   },
   {
     id: 'Rhet',
@@ -1011,7 +1014,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Ross, Aristotelis Ars Rhetorica (OCT, 1959)',
     greekSource: {
       short: 'Ross (OCT, 1959)',
-      full: 'W. D. Ross, ed. Aristotelis ars rhetorica. Oxford: Clarendon Press, 1959.',
+      full: 'W. D. Ross, ed. <i>Aristotelis ars rhetorica</i>. Oxford: Clarendon Press, 1959.',
     },
     // Freese (Loeb, 1926) primary + Roberts (Oxford, 1924) overlay — both PD.
     // Roberts is a Tier 0 secondary: "Part" divisions match the 15/26/19 Bekker
@@ -1020,7 +1023,7 @@ export const WORKS: Work[] = [
       { id: 'freese', name: 'J. H. Freese (Loeb, 1926)', short: 'Freese', slot: 'english' },
       { id: 'roberts', name: 'W. Rhys Roberts (Oxford, 1924)', short: 'Roberts', slot: 'secondary' },
     ],
-    blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator, in three books.',
+    blurb: 'Aristotle on persuasion — ēthos, pathos, logos, and the art of the orator.',
   },
   {
     id: 'RhetAl',
@@ -1035,7 +1038,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Fuhrmann, Anaximenis Ars Rhetorica (Teubner, 1966), on Bekker’s lines',
     greekSource: {
       short: 'Fuhrmann (Teubner, 1966)',
-      full: 'M. Fuhrmann, ed. Anaximenis ars rhetorica quae vulgo fertur Aristotelis ad Alexandrum. Leipzig: Teubner, 1966. Lines and numbers from I. Bekker, ed. Aristotelis opera. Berlin: Georg Reimer, 1831.',
+      full: 'M. Fuhrmann, ed. <i>Anaximenis ars rhetorica quae vulgo fertur Aristotelis ad Alexandrum</i>. Leipzig: Teubner, 1966. Lines and numbers from I. Bekker, ed. <i>Aristotelis opera</i>. Berlin: Georg Reimer, 1831.',
     },
     authenticity: 'spurious',
     translations: [
@@ -1054,7 +1057,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Kassel, Aristotelis De Arte Poetica (OCT, 1966)',
     greekSource: {
       short: 'Kassel (OCT, 1966)',
-      full: 'R. Kassel, ed. Aristotelis de arte poetica liber. Oxford: Clarendon Press, 1965; repr. 1968 [of 1966 corr. edn.].',
+      full: 'R. Kassel, ed. <i>Aristotelis de arte poetica liber</i>. Oxford: Clarendon Press, 1965; repr. 1968 [of 1966 corr. edn.].',
     },
     // Fyfe (Loeb, 1932) primary + Butcher (Macmillan, 1907) overlay — both PD.
     // Butcher is a Tier 0 secondary: chapters pinned to the Greek spine, gutter
@@ -1076,7 +1079,7 @@ export const WORKS: Work[] = [
     greekEdition: 'Oppermann, Aristotelis Ἀθηναίων πολιτεία (Teubner, 1928)',
     greekSource: {
       short: 'Oppermann (Teubner, 1928)',
-      full: 'H. Oppermann, ed. Aristotelis Ἀθηναίων πολιτεία. Leipzig: Teubner, 1928; repr. 1968.',
+      full: 'H. Oppermann, ed. <i>Aristotelis Ἀθηναίων πολιτεία</i>. Leipzig: Teubner, 1928; repr. 1968.',
     },
     // Cited by chapter.section, not Bekker: the papyrus came to light in 1890.
     // Chapter N rides synthetic column "Na", section S line S (plan:
@@ -1112,6 +1115,13 @@ export function greekSourcesByLicence(works: Work[]): {
 export function getWork(id: string): Work | undefined {
   return BY_ID.get(id);
 }
+
+/** Authentic: Aristotle's, with no authenticity flag or 'genuine' (so not
+ * Porphyry's Isagoge). The search's "Authentic works" is this list, read from
+ * the registry, never written out by hand. */
+export const isAuthentic = (w: Work) =>
+  w.author === 'Aristotle' && (!w.authenticity || w.authenticity === 'genuine');
+export const AUTHENTIC_IDS: string[] = WORKS.filter(isAuthentic).map((w) => w.id);
 
 export function bookLabel(work: Work, n: number): string {
   return work.bookLabels[n - 1] ?? String(n);
@@ -1157,6 +1167,9 @@ export function workLanding(workId: string): string {
 export function searchableTranslations(work: Work): TranslationRef[] {
   return work.translations.filter(t => !t.private || SHOW_PRIVATE);
 }
+
+/** greekSource.full without its <i> title marks, for places that print it as text. */
+export const plainFull = (full: string): string => full.replace(/<\/?i>/g, '');
 
 export function visibleTranslations(work: Work): TranslationRef[] {
   const extra = (globalThis as {
@@ -1426,6 +1439,10 @@ export const CATEGORIES: Category[] = [
       { id: 'SE' },
     ],
   },
+  // The works whose authenticity is doubted or denied (Barnes 1984: * or **)
+  // stand in the division their subject gives them, in Bekker's order; each
+  // carries its dubious/spurious tag (John, 10 Nov 2026). The small treatises
+  // of Oxford vol. VI (1913), with the Problemata, are the Opuscula.
   {
     numeral: 'II',
     title: 'Natural Philosophy',
@@ -1438,6 +1455,7 @@ export const CATEGORIES: Category[] = [
           { id: 'Cael' },
           { id: 'GC' },
           { id: 'Mete' },
+          { id: 'DM' },
           { id: 'DA' },
         ],
       },
@@ -1452,6 +1470,7 @@ export const CATEGORIES: Category[] = [
           { id: 'DivSomn' },
           { id: 'Long' },
           { id: 'Juv' },
+          { id: 'Spir' },
         ],
       },
       {
@@ -1463,6 +1482,22 @@ export const CATEGORIES: Category[] = [
           { id: 'MA' },
           { id: 'IA' },
           { id: 'GA' },
+        ],
+      },
+      {
+        ref: 'II.d',
+        label: 'Minor Works (Opuscula)',
+        works: [
+          { id: 'Col' },
+          { id: 'Aud' },
+          { id: 'Phgn' },
+          { id: 'Plant' },
+          { id: 'Mirab' },
+          { id: 'Mech' },
+          { id: 'Prob' },
+          { id: 'Lin' },
+          { id: 'Vent' },
+          { id: 'MXG' },
         ],
       },
     ],
@@ -1479,8 +1514,12 @@ export const CATEGORIES: Category[] = [
     title: 'Moral and Political Philosophy',
     works: [
       { id: 'EN' },
+      { id: 'MM' },
       { id: 'EE' },
+      { id: 'VV' },
       { id: 'Pol' },
+      { id: 'Oec' },
+      { id: 'AthPol' },
     ],
   },
   {
@@ -1488,34 +1527,8 @@ export const CATEGORIES: Category[] = [
     title: 'Rhetoric and Poetics',
     works: [
       { id: 'Rhet' },
-      { id: 'Poet' },
-      { id: 'AthPol' },
-    ],
-  },
-  // Appendix — the works transmitted under Aristotle's name whose authenticity is
-  // doubted or denied (Barnes 1984: * or **). Grouped OUTSIDE the numbered divisions
-  // (no numeral); each card still carries its Dubious/Spurious badge.
-  {
-    numeral: '',
-    title: 'Doubtful and Spurious Works',
-    appendix: true,
-    works: [
-      { id: 'DM' },
-      { id: 'MXG' },
-      { id: 'Mech' },
-      { id: 'Prob' },
-      { id: 'Col' },
-      { id: 'Aud' },
-      { id: 'Phgn' },
-      { id: 'Plant' },
-      { id: 'Mirab' },
-      { id: 'Lin' },
-      { id: 'Vent' },
-      { id: 'MM' },
-      { id: 'VV' },
-      { id: 'Oec' },
-      { id: 'Spir' },
       { id: 'RhetAl' },
+      { id: 'Poet' },
     ],
   },
   // Porphyry's Isagoge (id 'Isa') is intentionally NOT a home division: it's
@@ -1549,6 +1562,17 @@ export const WORK_GROUPS: WorkGroup[] = (() => {
   return groups;
 })();
 
+// The search's works picker: the home divisions, then one more group for the
+// searchable works no division holds (today Porphyry's Isagoge), named by
+// their author, so every work can be ticked and unticked.
+export const SEARCH_GROUPS: WorkGroup[] = (() => {
+  const grouped = new Set(WORK_GROUPS.flatMap(g => g.ids));
+  const rest = WORKS.filter(w => !grouped.has(w.id));
+  if (!rest.length) return WORK_GROUPS;
+  const label = [...new Set(rest.map(w => w.author))].join(', ');
+  return [...WORK_GROUPS, { ref: '', label, ids: rest.map(w => w.id) }];
+})();
+
 // Cross-work ordering for search results, matching the home page's CATEGORIES
 // flatten order (which differs from the raw WORKS/corpus order). Any real work
 // not referenced by CATEGORIES is appended in WORKS order so every searchable
@@ -1559,3 +1583,15 @@ export const WORK_ORDER: Map<string, number> = (() => {
   for (const w of WORKS) if (!order.includes(w.id)) order.push(w.id);
   return new Map(order.map((id, i) => [id, i]));
 })();
+
+// Shared display names for the home list, work crumbs and picture credits.
+export const DIVISION_NAMES: Record<string, string> = {
+  'Logic (Organon)': 'Logic',
+  'Natural Philosophy': 'Natural philosophy',
+  Metaphysics: 'Metaphysics',
+  'Moral and Political Philosophy': 'Ethics and politics',
+  'Rhetoric and Poetics': 'Rhetoric and poetics',
+};
+
+// This corpus has no speaker or turn search controls.
+export const HAS_SPEAKERS = false;

@@ -22,6 +22,8 @@ Emits these files under build/stage6/:
                  Ordered list of segment metadata, indexed by seg_idx: the
                  search names a hit's passage from it.
 
+  running.json — {v: 1, token_count, text}: Greek running text with marks.
+
   offsets.json — the word-offset primitive: one running token number per work,
                  in document order, plus the structural coordinates beside it.
                  {token_count, seg_base_offset[], segments[{book, column,
@@ -53,6 +55,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from .config import BUILD_DIR, Manifest
+from .running_text import build_running_text, check_alignment
 from .stage2_validate import check_grammar, check_ngram_streams, check_offsets
 
 _FOLD = re.compile(r"[^a-z']")  # keep only base letters and apostrophe
@@ -171,16 +174,30 @@ def signature(entries: list[dict]) -> tuple:
     Whole readings are kept rather than a per-category union, so correlations
     survive: analyses {masc nom sg, fem acc pl} must not satisfy a query for
     masc + acc + sg, which a flattened union would wrongly allow.
+
+    Each reading also names the headwords whose analyses give it, under
+    "lemma", folded as the lemma index keys them: a spelling shared by two
+    words (ἀρετῇ, the noun's dative and a verb form of ἀρετάω) otherwise lends
+    the verb's parses to a search for the noun. One parse stays one reading
+    whatever its headwords, so the reading counts the ambiguity rates and a
+    grammatical hit's certainty rest on do not move. "lemma" is not a
+    category: no query or facet asks for it. An analysis with no lemma adds
+    none, and a reading with none carries no "lemma" key.
     """
-    readings = []
+    lemmas: dict[tuple, set[str]] = {}
     for entry in entries:
         reading = parse_reading(entry.get("parse") or "")
         if not reading:
             continue
         key = tuple((c, tuple(v)) for c, v in sorted(reading.items()))
-        if key not in readings:
-            readings.append(key)
-    return tuple(sorted(readings))
+        heads = lemmas.setdefault(key, set())
+        folded = fold_lemma(entry["lemma"]) if entry.get("lemma") else ""
+        if folded:
+            heads.add(folded)
+    return tuple(sorted(
+        tuple(sorted(key + ((("lemma", tuple(sorted(heads))),) if heads else ())))
+        for key, heads in lemmas.items()
+    ))
 
 
 def remap_word_index(line_text: str, tokens: list[dict], word_index: int) -> int | None:
@@ -312,6 +329,13 @@ def run(manifest: Manifest) -> Path:
     spine = json.loads(
         (BUILD_DIR / "stage1" / "greek_spine.json").read_text(encoding="utf-8")
     )
+
+    for name, doc in (("stage3 tokens", tokens_doc), ("stage1 spine", spine)):
+        if doc["work"] != manifest.work_id:
+            raise ValueError(
+                f"stage6: {manifest.work_id}: {name} belongs to {doc['work']}; "
+                "restore this work's stage files before running stage6"
+            )
 
     # Ordered segment list for index keys
     segments = tokens_doc["segments"]
@@ -566,8 +590,15 @@ def run(manifest: Manifest) -> Path:
                 + "\n  ".join(check["problems"][:20])
             )
 
+    running = build_running_text(segments, spine)
+    check_alignment(manifest.work_id, running, segments, offsets["token_count"])
+
     out_dir = BUILD_DIR / "stage6"
     out_dir.mkdir(parents=True, exist_ok=True)
+    (out_dir / "running.json").write_text(
+        json.dumps({"v": 1, "token_count": token_count, "text": running}, ensure_ascii=False),
+        encoding="utf-8",
+    )
     (out_dir / "offsets.json").write_text(
         json.dumps(offsets, ensure_ascii=False), encoding="utf-8"
     )
@@ -617,6 +648,7 @@ def run(manifest: Manifest) -> Path:
         "english_terms": len(english_idx),
         "segments": len(meta),
         "tokens": token_count,
+        "running_text_chars": len(running),
         "chapter_bounds": len(chapter_bounds),
         "chapter_bounds_line_snapped": sum(
             1 for c in chapter_bounds if c["accuracy"] != "exact"

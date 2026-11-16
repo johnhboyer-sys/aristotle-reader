@@ -76,6 +76,14 @@ describe('betaToGreek', () => {
     expect(betaToGreek('*|a')).toBe('ᾼ');
   });
 
+  it('takes a capital\'s marks after the letter too', () => {
+    // The lexicon key for Hades is '*(/a|dhs': the iota subscript follows the
+    // letter, and the picker showed "Ἅ|δης" (14 Nov).
+    expect(betaToGreek('*(/a|dhs')).toBe('ᾍδης');
+    expect(betaToGreek('*a(/|dhs')).toBe('ᾍδης');
+    expect(betaToGreek('*w)=|dh')).toBe('ᾮδη');
+  });
+
   it('composes diaeresis with an accent', () => {
     expect(betaToGreek('i+/')).toBe('ΐ');
     expect(betaToGreek('u+\\')).toBe('ῢ');

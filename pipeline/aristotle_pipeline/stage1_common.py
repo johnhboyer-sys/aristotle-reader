@@ -71,6 +71,34 @@ def write_json(path: Path, obj) -> None:
     path.write_text(json.dumps(obj, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
+def carry_trailing_paragraphs(chunks: list[dict], keep) -> list[dict]:
+    """Drop the chunks `keep` rejects, keeping every paragraph start.
+
+    A <p> that opens just before a column milestone leaves its paragraph
+    marker at the very end of the previous column's text; the paragraph itself
+    starts the next column, so that column gets `paraStart`. A paragraph start
+    on a chunk that is dropped (an empty column) passes to the next kept chunk
+    of the same book."""
+    out: list[dict] = []
+    pending = False
+    for i, c in enumerate(chunks):
+        prev = chunks[i - 1] if i else None
+        if prev is not None and prev.get("book") == c.get("book"):
+            end = len(prev["text"].rstrip())
+            if any(m["kind"] == "paragraph" and m["offset"] >= end for m in prev["markers"]):
+                c["paraStart"] = True
+        elif prev is not None:
+            pending = False   # a new book always breaks
+        if not keep(c):
+            pending = pending or bool(c.get("paraStart"))
+            continue
+        if pending:
+            c["paraStart"] = True
+            pending = False
+        out.append(c)
+    return out
+
+
 class StandoffChunkMixin:
     """Chunk text plus standoff notes/markers for TEI walkers.
 
@@ -121,7 +149,9 @@ class StandoffChunkMixin:
 
     def add_paragraph(self):
         chunk = self._chunk()
-        if chunk["text"]:
+        if not chunk["text"]:
+            chunk["paraStart"] = True
+        else:
             offset = len(chunk["text"].rstrip())
             marker = {"kind": "paragraph", "n": "", "offset": offset}
             if not chunk["markers"] or chunk["markers"][-1] != marker:

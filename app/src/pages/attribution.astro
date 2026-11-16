@@ -1,10 +1,14 @@
 ---
 import ThemeInit from '../components/ThemeInit.astro';
 import Pwa from '../components/Pwa.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
+import BFonts from '../components/BFonts.astro';
+import BNav from '../components/BNav.astro';
+import BFoot from '../components/BFoot.astro';
 import '@shared/styles/global.css';
+import '@shared/styles/b.css';
 import { WORKS, greekSourcesByLicence } from '@shared/lib/works';
 import { jsonLdSafe } from '../lib/jsonld';
+import { sanitizeHtml } from '../lib/html';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // True only in the local/full build (PUBLIC_SHOW_PRIVATE=1), where copyright-
 // encumbered overlays are carried; every production/public build drops them
@@ -46,110 +50,23 @@ const jsonLd = {
   {ogImage && <meta name="twitter:image" content={ogImage} />}
   <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
-  <style>
-    .attr-body {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 2rem 1rem 4rem;
-      font-family: var(--font-english);
-      font-size: 0.95rem;
-      line-height: 1.75;
-      color: var(--text);
-    }
-    h2 {
-      font-family: var(--font-ui);
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--accent);
-      margin: 2rem 0 0.4rem;
-      letter-spacing: .02em;
-    }
-    h2:first-of-type { margin-top: 1rem; }
-    p { margin: 0 0 0.6rem; }
-    ul { margin: 0 0 0.6rem; padding-left: 1.3rem; }
-    li { margin: 0 0 0.35rem; }
-    a { color: var(--accent); }
-    .licence-badge {
-      display: inline-block;
-      font-family: var(--font-ui);
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: .06em;
-      background: var(--border);
-      border-radius: 3px;
-      padding: 0.1em 0.5em;
-      margin-left: 0.4em;
-      vertical-align: middle;
-      color: var(--text-mid);
-    }
-    .licence-badge.cc { background: #e8f4e8; color: #2a6a2a; }
-    .licence-badge.pd { background: #e8eef4; color: #2a4a6a; }
-    .licence-badge.mit { background: #f4f0e8; color: #6a4a2a; }
-    .licence-badge.local {
-      font-size: 0.65rem;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      background: #f4e8e8; color: #8a3a3a;
-    }
-    :global(html[data-theme="dark"]) .licence-badge.cc { background: #1f3320; color: #9ed3a0; }
-    :global(html[data-theme="dark"]) .licence-badge.pd { background: #1c2a3a; color: #9cc2e6; }
-    :global(html[data-theme="dark"]) .licence-badge.mit { background: #33291c; color: #e0b483; }
-    :global(html[data-theme="dark"]) .licence-badge.local { background: #3a1c1c; color: #e69c9c; }
-    .trans-list { list-style: none; padding-left: 0; margin: 0.75rem 0 1rem; }
-    .trans-list > li { margin: 0 0 0.9rem; }
-    .trans-list > li > strong {
-      font-family: var(--font-ui);
-      font-size: 0.9rem;
-      color: var(--text);
-    }
-    .trans-list ul {
-      list-style: none;
-      padding-left: 0.9rem;
-      margin: 0.15rem 0 0;
-      border-left: 1px solid var(--border);
-    }
-    .trans-list ul li {
-      margin: 0.1rem 0;
-      color: var(--text-mid);
-      font-size: 0.9rem;
-    }
-    blockquote {
-      border-left: 3px solid var(--border);
-      margin: 0.75rem 0 0.75rem 1rem;
-      padding: 0.25rem 0 0.25rem 1rem;
-      color: var(--text-mid);
-      font-size: 0.9rem;
-    }
-    .greek { font-family: var(--font-greek); }
-  </style>
+  <BFonts />
 </head>
 <body>
-  <header class="simple-header">
-    <div class="header-title">
-      <a class="home-link" href={`${base}/`}>Aristotle</a>
-      <span class="title-sep">›</span>
-      <span class="header-static">Texts &amp; Licences</span>
-    </div>
-    <nav class="header-actions" aria-label="Navigation">
-      <a href={`${base}/`} class="search-link">All works</a>
-      <a href={`${base}/search`} class="search-link">Search</a>
-      <ThemeToggle />
-    </nav>
-  </header>
+  <div class="frame dir-b pg-attribution"><div class="b-page">
+  <BNav active="" />
 
-  <main class="attr-body">
-    <h1 class="sr-only">Texts and licences for the Aristotle Reader</h1>
-    <h2>Texts &amp; Licences</h2>
+
+  <main class="b-info attr-body">
+    <h1 class="b-pc-h">Texts and licences for the Aristotle Reader</h1>
+    <h2 class="b-h2">Texts &amp; Licences</h2>
     <p>
       This reader presents Greek texts, English translations, and reference
       works compiled from public-domain editions and openly licensed sources.
       Their sources and licence terms are listed below.
     </p>
 
-    <h2>
+    <h2 class="b-h2">
       Greek Lexicon (LSJ)
       <span class="licence-badge cc">CC BY-SA 3.0</span>
     </h2>
@@ -182,7 +99,7 @@ const jsonLd = {
       attribution notice and the same CC BY-SA licence.
     </p>
 
-    <h2>
+    <h2 class="b-h2">
       English Translations
       <span class="licence-badge pd">Public Domain &amp; archival</span>
     </h2>
@@ -220,7 +137,7 @@ const jsonLd = {
       touch.
     </p>
 
-    <h2>Bekker Line Numbers</h2>
+    <h2 class="b-h2">Bekker Line Numbers</h2>
     <p>
       Bekker numbers (e.g.&nbsp;<em>1094a1</em>) are the standard way to cite
       Aristotle, keyed to Immanuel Bekker's 1831 Berlin edition. The Greek text
@@ -250,7 +167,7 @@ const jsonLd = {
       (upright) number beside the translation.
     </p>
 
-    <h2>
+    <h2 class="b-h2">
       Greek Text
       <span class="licence-badge pd">Public Domain</span>
     </h2>
@@ -260,7 +177,7 @@ const jsonLd = {
     </p>
     <ul>
       {greek.publicDomain.map((w) => (
-        <li><strong>{w.title}</strong> — {w.greekSource.full}</li>
+        <li><strong>{w.title}</strong> — <span set:html={sanitizeHtml(w.greekSource.full)} /></li>
       ))}
     </ul>
     <p>
@@ -270,7 +187,7 @@ const jsonLd = {
     </p>
     {greek.licensed.map((g) => (
       <>
-        <h2>
+        <h2 class="b-h2">
           Greek Text
           <span class="licence-badge cc">{g.licence.name}</span>
         </h2>
@@ -281,14 +198,14 @@ const jsonLd = {
         </p>
         <ul>
           {g.works.map((w) => (
-            <li><strong>{w.title}</strong> — {w.greekSource.full}
+            <li><strong>{w.title}</strong> — <span set:html={sanitizeHtml(w.greekSource.full)} />
               Licence: <a href={g.licence.url}>{g.licence.name}</a>.</li>
           ))}
         </ul>
       </>
     ))}
 
-    <h2>
+    <h2 class="b-h2">
       Morphological Data
       <span class="licence-badge pd">Open</span>
     </h2>
@@ -299,7 +216,7 @@ const jsonLd = {
       See the Diogenes and Perseus project pages for applicable terms.
     </p>
 
-    <h2>
+    <h2 class="b-h2">
       Application Code
       <span class="licence-badge mit">MIT</span>
     </h2>
@@ -314,5 +231,7 @@ const jsonLd = {
       Site by <a href="https://x.com/johnhboyer" target="_blank" rel="noopener">John H. Boyer</a>.
     </p>
   </main>
+  <BFoot />
+  </div></div>
 </body>
 </html>

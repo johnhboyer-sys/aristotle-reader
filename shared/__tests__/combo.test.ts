@@ -150,7 +150,7 @@ describe('searchCombo', () => {
       [slot('iota'), slot('kappa'), slot('lambda')], opts({ window: 8 }), ['CG1'],
     );
     expect(results).toHaveLength(1);
-    expect(results[0].grkPositions).toEqual([10, 12, 18]);
+    expect(results[0].grkPositions).toEqual([5, 10, 12, 18]);
   });
 
   it('still rejects that group when the window is genuinely too small', async () => {
@@ -166,8 +166,7 @@ describe('searchCombo', () => {
     // of its terms missing.
     const { results } = await searchCombo([slot('mu'), slot('nu')], opts({ window: 5 }), ['CX1']);
     expect(results.map((r) => [r.meta.id, r.grkPositions])).toEqual([
-      ['2:1001a', [9]],
-      ['2:1001b', [0]],
+      ['2:1001a', [9, 10]],
     ]);
   });
 
@@ -203,18 +202,18 @@ describe('searchCombo', () => {
     expect(results).toHaveLength(0);
   });
 
-  // The window bounds the WHOLE match, not each slot's distance from the first
-  // one. Measured from slot 0 these two orderings disagree, and a window of W
-  // would quietly admit a span of 2W.
-  it('gives the same unordered result however the slots are ordered', async () => {
-    // alpha@2, beta@4, epsilon@8: the extent is 6, so W=5 must reject and W=6
-    // must accept, whichever slot is listed first.
-    for (const order of [['alpha', 'beta', 'epsilon'], ['beta', 'alpha', 'epsilon'], ['epsilon', 'beta', 'alpha']]) {
+  // The window bounds each slot's distance from the slot it is measured from
+  // (here the first), pair by pair and nothing more (John, 12 Nov). So which
+  // slot is listed first decides the reach a match needs.
+  it('measures each slot from the first slot, whichever is listed first', async () => {
+    // alpha@2, beta@4, epsilon@8. From alpha the farthest is epsilon, 6 away;
+    // from beta, epsilon, 4 away (alpha is 2); from epsilon, alpha, 6 away.
+    for (const [order, need] of [[['alpha', 'beta', 'epsilon'], 6], [['beta', 'alpha', 'epsilon'], 4], [['epsilon', 'beta', 'alpha'], 6]] as const) {
       const slots = order.map((t) => slot(t));
-      const tight = await searchCombo(slots, opts({ window: 5 }), [`CO5-${order[0]}`]);
-      expect(tight.results, `W=5 with ${order.join(',')}`).toHaveLength(0);
-      const loose = await searchCombo(slots, opts({ window: 6 }), [`CO6-${order[0]}`]);
-      expect(loose.results, `W=6 with ${order.join(',')}`).toHaveLength(1);
+      const tight = await searchCombo(slots, opts({ window: need - 1 }), [`CO5-${order[0]}`]);
+      expect(tight.results, `W=${need - 1} with ${order.join(',')}`).toHaveLength(0);
+      const loose = await searchCombo(slots, opts({ window: need }), [`CO6-${order[0]}`]);
+      expect(loose.results, `W=${need} with ${order.join(',')}`).toHaveLength(1);
     }
   });
 

@@ -32,7 +32,11 @@ app/.astro/
 planned changes.md
 
 # Pipeline-generated app data (same category as build/ — never committed)
-app/src/data/
+app/src/data/*
+# ...except the plate manifest, which is hand-curated, not generated.
+!app/src/data/plates.json
+# ...and the translations' full entries for the work page's Texts section (hand-written).
+!app/src/data/translation-bib.json
 
 # ...but `*.TXT` above matches lowercase `.txt` too, because git on macOS is
 # case-insensitive. Model transcriptions live under sources/*/work/ and must not

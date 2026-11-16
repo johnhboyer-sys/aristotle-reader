@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/svelte';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Window } from 'happy-dom';
 import Reader from '../components/Reader.svelte';
 import Search from '../components/Search.svelte';
 import type { BookData } from '../lib/data';
@@ -118,15 +119,15 @@ describe('Search.svelte', () => {
     await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue test' } });
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
-    await vi.waitFor(() => expect(status).toHaveTextContent('5 instances'));
-    const works = screen.getByRole('group', { name: 'Show hits from' });
-    const en = within(works).getByRole('button', { name: /^EN/ });
-    expect(en).toHaveTextContent('EN3');
-    expect(within(works).getByRole('button', { name: /^Met\./ })).toHaveTextContent('Met.2');
-    await vi.waitFor(() => expect(screen.getByText('3 instances')).toBeInTheDocument());
+    await vi.waitFor(() => expect(status).toHaveTextContent(/5 (?:instances?|hits)/));
+    const works = screen.getByRole('group', { name: 'Show hits from one work' });
+    const en = within(works).getByRole('button', { name: /^Nicomachean Ethics/ });
+    expect(en).toHaveTextContent('Nicomachean Ethics3');
+    expect(within(works).getByRole('button', { name: /^Metaphysics/ })).toHaveTextContent('Metaphysics2');
+    await vi.waitFor(() => expect(screen.getByText('3 instances', { selector: '.group-count' })).toBeInTheDocument());
 
     await fireEvent.click(en);
-    await vi.waitFor(() => expect(status).toHaveTextContent('3 instances'));
+    await vi.waitFor(() => expect(status).toHaveTextContent(/3 (?:instances?|hits)/));
     expect(en).toHaveAttribute('aria-pressed', 'true');
   });
 });
@@ -145,18 +146,18 @@ describe('Search.svelte "Match accents exactly"', () => {
   });
 
   // `token` swaps the word at position 0 for one surface form.
-  async function marksFor(url: string, token?: string): Promise<string[]> {
+  async function marksFor(url: string, token?: string, empty = false): Promise<string[]> {
     const { fetchBook } = await import('../lib/data');
     if (token) {
       const book = structuredClone(fixtureBook);
       book.segments[0].greek[0] = { n: 1, text: token, tokens: [{ t: token, o: 0, k: 'x' }] };
-      vi.mocked(fetchBook).mockResolvedValueOnce(book);
+      vi.mocked(fetchBook).mockResolvedValue(book);
     }
     window.history.replaceState(null, '', url);
     const { container } = render(Search);
-    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('before accent filtering'));
+    
     await vi.waitFor(() => expect(fetchBook).toHaveBeenCalled());
-    await new Promise((r) => setTimeout(r, 50));
+    await vi.waitFor(() => expect(container.querySelector('.result-count')).toHaveTextContent(empty ? 'No passages found.' : /\d+ instances?/));
     // A chapter with more than one instance starts folded.
     for (const head of container.querySelectorAll('button.group-head[aria-expanded="false"]')) {
       await fireEvent.click(head);
@@ -169,7 +170,7 @@ describe('Search.svelte "Match accents exactly"', () => {
   });
 
   it('drops a hit typed in Greek with a different accent', async () => {
-    expect(await marksFor(`/search?g=${encodeURIComponent('λὸγος')}&acc=1`)).toEqual([]);
+    expect(await marksFor(`/search?g=${encodeURIComponent('λὸγος')}&acc=1`, undefined, true)).toEqual([]);
   });
 
   it('keeps a hit typed in Beta Code with the same accent', async () => {
@@ -189,11 +190,11 @@ describe('Search.svelte "Match accents exactly"', () => {
   });
 
   it('drops a hit typed in Beta Code with a different accent', async () => {
-    expect(await marksFor(`/search?g=${encodeURIComponent('lo\\gos')}&acc=1`)).toEqual([]);
+    expect(await marksFor(`/search?g=${encodeURIComponent('lo\\gos')}&acc=1`, undefined, true)).toEqual([]);
   });
 
   it('drops a hit typed in Beta Code with no accent', async () => {
-    expect(await marksFor('/search?g=logos&acc=1')).toEqual([]);
+    expect(await marksFor('/search?g=logos&acc=1', undefined, true)).toEqual([]);
   });
 
   // The text stores elision mostly as ' (U+0027) and in a few works as
@@ -213,7 +214,7 @@ describe('Search.svelte "Match accents exactly"', () => {
   });
 
   it('still drops an elided word with the wrong letter', async () => {
-    expect(await marksFor(`/search?g=${encodeURIComponent("τ'")}&acc=1`, 'δ’')).toEqual([]);
+    expect(await marksFor(`/search?g=${encodeURIComponent("τ'")}&acc=1`, 'δ’', true)).toEqual([]);
   });
 });
 
@@ -229,13 +230,14 @@ describe('Search.svelte in the address bar', () => {
     at('/search?g=logos&gm=phrase&m=form&acc=1&e=virtue&em=any&op=or&w=EN,Pol');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('logos', 'virtue', 'phrase', 'any', 'or', ['EN', 'Pol'], 'form', true);
+    expect(search).toHaveBeenCalledWith('logos', 'virtue', 'phrase', 'any', 'or', ['EN', 'Pol'], 'form', true, undefined);
     expect(screen.getByLabelText('Greek')).toHaveValue('logos');
     expect(screen.getByLabelText('English')).toHaveValue('virtue');
     expect(checked('Only as I typed it', 'matchmode')).toBe(true);
     expect(checked('Any form of this word', 'engforms')).toBe(true);
-    expect(checked('Match accents exactly')).toBe(true);
-    expect(checked('Either query')).toBe(true);
+    // Accents is a switch drawn alone (ruling 5); "Hits match" joins the two queries (d20).
+    expect(screen.getByRole('button', { name: 'Accents' })).toHaveAttribute('aria-pressed', 'true');
+    expect(checked('Either language')).toBe(true);
   });
 
   it('runs the command palette hand-off with every default', async () => {
@@ -243,7 +245,7 @@ describe('Search.svelte in the address bar', () => {
     at(`/search?g=${encodeURIComponent('λόγος')}`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('λόγος', '', 'all', 'all', 'and', expect.any(Array), 'lemma', true);
+    expect(search).toHaveBeenCalledWith('λόγος', '', 'all', 'all', 'and', expect.any(Array), 'lemma', true, undefined);
   });
 
   it('restores English "only as I typed it", and writes it as ef=0', async () => {
@@ -251,7 +253,7 @@ describe('Search.svelte in the address bar', () => {
     at('/search?e=virtue&ef=0');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('', 'virtue', 'all', 'all', 'and', expect.any(Array), 'lemma', false);
+    expect(search).toHaveBeenCalledWith('', 'virtue', 'all', 'all', 'and', expect.any(Array), 'lemma', false, undefined);
     expect(checked('Only as I typed it', 'engforms')).toBe(true);
 
     // Back to any form: the default, so ef leaves the URL.
@@ -290,7 +292,7 @@ describe('Search.svelte in the address bar', () => {
     const replace = vi.spyOn(window.history, 'replaceState');
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
-    expect(search).toHaveBeenCalledWith('', 'happiness', 'all', 'all', 'and', expect.any(Array), 'lemma', true);
+    expect(search).toHaveBeenCalledWith('', 'happiness', 'all', 'all', 'and', expect.any(Array), 'lemma', true, undefined);
     await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).toBeEnabled());
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     expect(window.location.search).toBe('?e=happiness');
@@ -338,7 +340,7 @@ describe('Search.svelte in the address bar', () => {
     const { search, searchPhraseVariants } = await import('../lib/search');
     let finish!: (v: Awaited<ReturnType<typeof searchPhraseVariants>>) => void;
     vi.mocked(searchPhraseVariants).mockReturnValue(new Promise(r => { finish = r; }));
-    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}&gm=phrase`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
     await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
@@ -400,7 +402,7 @@ describe('Search.svelte in the address bar', () => {
   it('frees the inflection lookup when a new search retires it', async () => {
     const { search, searchPhraseVariants } = await import('../lib/search');
     vi.mocked(searchPhraseVariants).mockReturnValue(new Promise(() => {}));
-    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}&gm=phrase`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
     await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
@@ -421,7 +423,7 @@ describe('Search.svelte in the address bar', () => {
     } as Awaited<ReturnType<typeof searchPhraseVariants>>);
     const offsetsV = held<Awaited<ReturnType<typeof loadOffsets>>>();
     vi.mocked(loadOffsets).mockRejectedValueOnce(noOffsets).mockReturnValueOnce(offsetsV.promise);
-    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}&gm=phrase`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
     await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
@@ -482,19 +484,19 @@ describe('Search.svelte in the address bar', () => {
     at('/search?g=logos');
     const push = vi.spyOn(window.history, 'pushState');
     const { unmount } = render(Search);
-    const works = await screen.findByRole('group', { name: 'Show hits from' });
-    await fireEvent.click(within(works).getByRole('button', { name: /^Met\./ }));
+    const works = await screen.findByRole('group', { name: 'Show hits from one work' });
+    await fireEvent.click(within(works).getByRole('button', { name: /^Metaphysics/ }));
     expect(window.location.search).toBe('?g=logos&wf=Meta');
     expect(push).not.toHaveBeenCalled();
-    await fireEvent.click(within(works).getByRole('button', { name: /^Met\./ }));
+    await fireEvent.click(within(works).getByRole('button', { name: /^Metaphysics/ }));
     expect(window.location.search).toBe('?g=logos');
     push.mockRestore();
     unmount();
 
     at('/search?g=logos&wf=Meta');
     const second = render(Search);
-    const restored = await screen.findByRole('group', { name: 'Show hits from' });
-    await vi.waitFor(() => expect(within(restored).getByRole('button', { name: /^Met\./ }))
+    const restored = await screen.findByRole('group', { name: 'Show hits from one work' });
+    await vi.waitFor(() => expect(within(restored).getByRole('button', { name: /^Metaphysics/ }))
       .toHaveAttribute('aria-pressed', 'true'));
     await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
 
@@ -502,14 +504,14 @@ describe('Search.svelte in the address bar', () => {
     at('/search?g=logos');
     window.dispatchEvent(new PopStateEvent('popstate'));
     await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
-    expect(within(screen.getByRole('group', { name: 'Show hits from' })).getByRole('button', { name: /^Met\./ }))
+    expect(within(screen.getByRole('group', { name: 'Show hits from one work' })).getByRole('button', { name: /^Metaphysics/ }))
       .toHaveAttribute('aria-pressed', 'false');
 
     // A work this search did not find is dropped from the URL.
     second.unmount();
     at('/search?g=logos&wf=Pol');
     render(Search);
-    await screen.findByRole('group', { name: 'Show hits from' });
+    await screen.findByRole('group', { name: 'Show hits from one work' });
     await vi.waitFor(() => expect(window.location.search).toBe('?g=logos'));
   });
 });
@@ -1072,4 +1074,266 @@ describe('Reader.svelte', () => {
     expect(container.querySelectorAll('.overlay-chapter-title-gap').length).toBe(0);
     expect(container.querySelectorAll('.overlay-chapter-title-spacer').length).toBe(0);
   });
+});
+
+
+it('B rereads the settled viewport on mount before opening Aa', async () => {
+  const width = vi.spyOn(window, 'innerWidth', 'get').mockReturnValueOnce(980).mockReturnValue(844);
+  render(Reader, { props: { work: 'EN', bookNum: 1, bookData: fixtureBook, b: true } });
+  // The first read belongs to script init; mount must read the settled width.
+  expect(width.mock.calls.length).toBeGreaterThanOrEqual(2);
+  await fireEvent(window, new CustomEvent('toggle-settings'));
+  expect(screen.queryByRole('group', { name: 'Word panel' })).toBeNull();
+});
+
+it('B refreshes the viewport whenever Aa or the translation picker opens', async () => {
+  const width = vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1440);
+  const picker = document.createElement('button');
+  picker.dataset.readerPicker = '';
+  document.body.append(picker);
+  try {
+    render(Reader, { props: { work: 'EN', bookNum: 1, bookData: fixtureBook, b: true } });
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    expect(screen.getByRole('group', { name: 'Word panel' })).toBeTruthy();
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    width.mockReturnValue(844);
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    expect(screen.queryByRole('group', { name: 'Word panel' })).toBeNull();
+    width.mockReturnValue(390);
+    width.mockClear();
+    await fireEvent.click(picker);
+    // Placement reads innerWidth once for this button; opening also refreshes vw.
+    expect(width.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(screen.queryByRole('group', { name: 'Text and view settings' })).toBeNull();
+  } finally { picker.remove(); }
+});
+
+describe('B reader fonts', () => {
+  let cssLoadingDisabled: boolean;
+  let disabledLoadingSucceeds: boolean;
+  beforeEach(() => {
+    const settings = (window as unknown as Window).happyDOM.settings;
+    cssLoadingDisabled = settings.disableCSSFileLoading;
+    disabledLoadingSucceeds = settings.handleDisabledFileLoadingAsSuccess;
+    settings.disableCSSFileLoading = true;
+    settings.handleDisabledFileLoadingAsSuccess = true;
+  });
+
+  afterEach(() => {
+    localStorage.removeItem('reader-gfont');
+    localStorage.removeItem('reader-efont');
+    localStorage.removeItem('reader-full-greek');
+    document.querySelectorAll('link[data-reader-font]').forEach((link) => link.remove());
+    const settings = (window as unknown as Window).happyDOM.settings;
+    settings.disableCSSFileLoading = cssLoadingDisabled;
+    settings.handleDisabledFileLoadingAsSuccess = disabledLoadingSucceeds;
+  });
+
+  it('shows Greek choices in order, then the English font row, and loads faces only when picked', async () => {
+    const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    const greek = screen.getByRole('group', { name: 'Greek font' });
+    const english = screen.getByRole('group', { name: 'English font' });
+    expect(within(greek).getAllByRole('button').map((button) => button.textContent?.trim()))
+      .toEqual(['Literata αβγ', 'Gentium αβγ', 'Cardo αβγ']);
+    expect(greek.previousElementSibling).toHaveClass('b-mk');
+    expect(greek.previousElementSibling).toHaveTextContent('Greek font');
+    expect(greek.nextElementSibling).toHaveClass('b-mk');
+    expect(greek.nextElementSibling).toHaveTextContent('English font');
+    expect(greek.nextElementSibling?.nextElementSibling).toBe(english);
+    expect(english).toHaveClass('b-seg', 'wide');
+    expect(within(english).getAllByRole('button').map((button) => button.textContent?.trim()))
+      .toEqual(['Gentium Abc', 'Literata Abc', 'EB Garamond Abc']);
+    expect(document.querySelector('link[data-reader-font]')).toBeNull();
+    const body = container.querySelector('.reader-body');
+    expect(body).toHaveAttribute('data-gfont', 'gentium');
+    expect(body).toHaveAttribute('data-efont', 'gentium');
+
+    await fireEvent.click(within(greek).getByRole('button', { name: 'Cardo αβγ' }));
+    await fireEvent.click(within(english).getByRole('button', { name: 'EB Garamond Abc' }));
+    expect(body).toHaveAttribute('data-gfont', 'cardo');
+    expect(body).toHaveAttribute('data-efont', 'garamond');
+    expect(localStorage.getItem('reader-gfont')).toBe('cardo');
+    expect(localStorage.getItem('reader-efont')).toBe('garamond');
+    expect(document.querySelector('link[data-reader-font="cardo"]')).toHaveAttribute('href',
+      'https://fonts.googleapis.com/css2?family=Cardo:ital,wght@0,400;0,700;1,400&display=swap');
+    expect(document.querySelector('link[data-reader-font="garamond"]')).toHaveAttribute('href',
+      'https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+
+    await fireEvent.click(screen.getByRole('button', { name: /Reset/ }));
+    expect(body).toHaveAttribute('data-gfont', 'gentium');
+    expect(body).toHaveAttribute('data-efont', 'gentium');
+    expect(localStorage.getItem('reader-gfont')).toBeNull();
+    expect(localStorage.getItem('reader-efont')).toBeNull();
+  });
+
+  it('renders typography at display time, copies it without the dash joiner, and leaves the data alone', async () => {
+    const book = structuredClone(fixtureBook);
+    const original = "\"Don't\" stop  —\"yes\".";
+    book.segments[0].third[0].text = original;
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    const prose = [...container.querySelectorAll<HTMLElement>('.b-ec .bk-seg')].find(el => el.textContent!.includes('stop'))!;
+    expect(prose.textContent).toContain('“Don’t” stop\u2060—“yes”.');
+    const range = document.createRange();
+    range.selectNodeContents(prose);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const setData = vi.fn();
+    await fireEvent.copy(prose, { clipboardData: { setData } });
+    expect(setData).toHaveBeenCalledWith('text/plain', expect.stringContaining('“Don’t” stop—“yes”.'));
+    expect(setData.mock.calls[0][1]).not.toContain('\u2060');
+    selection.removeAllRanges();
+    expect(book.segments[0].third[0].text).toBe(original);
+  });
+
+  it('leaves a copy with no dash joiner to the browser, edge spaces and all', async () => {
+    const book = structuredClone(fixtureBook);
+    book.segments[0].third[0].text = 'plain words here';
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    const prose = [...container.querySelectorAll<HTMLElement>('.b-ec .bk-seg')].find(el => el.textContent!.includes('plain'))!;
+    const range = document.createRange();
+    range.selectNodeContents(prose);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+    const setData = vi.fn();
+    await fireEvent.copy(prose, { clipboardData: { setData } });
+    expect(setData).not.toHaveBeenCalled();
+    selection.removeAllRanges();
+  });
+
+  it('saves full Greek lines and resets the setting', async () => {
+    const { unmount } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    await fireEvent.click(screen.getByLabelText('Full Greek lines'));
+    expect(localStorage.getItem('reader-full-greek')).toBe('1');
+    unmount();
+    render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    expect(screen.getByLabelText('Full Greek lines')).toBeChecked();
+    await fireEvent.click(screen.getByRole('button', { name: /Reset/ }));
+    expect(screen.getByLabelText('Full Greek lines')).not.toBeChecked();
+    expect(localStorage.getItem('reader-full-greek')).toBeNull();
+  });
+
+  it('restores and loads saved Cardo and EB Garamond faces once', async () => {
+    localStorage.setItem('reader-gfont', 'cardo');
+    localStorage.setItem('reader-efont', 'garamond');
+    const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-gfont', 'cardo');
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-efont', 'garamond');
+    expect(document.querySelectorAll('link[data-reader-font]')).toHaveLength(2);
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Cardo αβγ' }));
+    await fireEvent.click(screen.getByRole('button', { name: 'EB Garamond Abc' }));
+    expect(document.querySelectorAll('link[data-reader-font]')).toHaveLength(2);
+  });
+
+  it('removes the retired didot preference when restoring Gentium', () => {
+    localStorage.setItem('reader-gfont', 'didot');
+    const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-gfont', 'gentium');
+    expect(localStorage.getItem('reader-gfont')).toBeNull();
+    expect(document.querySelector('link[data-reader-font]')).toBeNull();
+  });
+});
+
+it.each([false, true])('B joins column rows unless primary starts a paragraph (%s)', async (paraStart) => {
+  const { fetchBook } = await import('../lib/data');
+  const book: BookData = {
+    book: 1,
+    segments: [fixtureBook.segments[0], {
+      id: 'seg2', column: '1094b',
+      greek: [{ n: 1, text: 'δεύτερος', tokens: [] }],
+      english: { text: 'Continued English.', notes: [], markers: [],
+        bekker: [{ n: 1, offset: 0, real: true }], ...(paraStart ? { paraStart: true } : {}) },
+    }],
+  };
+  vi.mocked(fetchBook).mockResolvedValueOnce(book);
+  window.history.replaceState(null, '', '/EN/1?trans=rackham');
+  const { container } = render(Reader, { props: { work: 'EN', bookNum: 1, b: true } });
+  await screen.findByText('Continued English.');
+  expect(container.querySelectorAll('.b-row')).toHaveLength(paraStart ? 2 : 1);
+  expect([...container.querySelectorAll('.b-ln.col')].map(el => el.textContent)).toEqual(['1094a', '1094b']);
+  expect(container.querySelector('#L1094b-1')).toBeTruthy();
+  if (!paraStart) {
+    const row = container.querySelector('.b-row')!;
+    expect(row.querySelectorAll('.b-ln.col')).toHaveLength(2);
+    expect(row.querySelectorAll('.english-col .overlay-prose')).toHaveLength(1);
+    expect(row.querySelector('.para-br')).toBeNull();
+    expect(row.querySelector('.english-col')?.textContent).toContain('here. 1094bContinued');
+  }
+});
+
+it.each([700, 701])('B keeps column anchors and responsive ticks in English view at %spx', async (width) => {
+  vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(width);
+  localStorage.setItem('reader-view', 'english');
+  window.history.replaceState(null, '', '/EN/1?trans=rackham');
+  const book: BookData = { book: 1, segments: [fixtureBook.segments[0], {
+    id: 'seg2', column: '1094b', greek: [{ n: 1, text: 'δεύτερος', tokens: [] }],
+    english: { text: 'Continued.', notes: [], markers: [], bekker: [
+      { n: 1, offset: 0, real: true }, { n: 5, offset: 4, real: false },
+    ] },
+  }] };
+  try {
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    await screen.findByText('Cont');
+    expect(container.querySelectorAll('.b-row')).toHaveLength(1);
+    expect(container.querySelectorAll('#col-1094b')).toHaveLength(1);
+    const tick = container.querySelector('.english-col #col-1094b')!;
+    expect(tick.classList.contains('col-num')).toBe(true);
+    expect(tick.textContent).toBe(width > 700 ? '1094b' : '1');
+    expect(container.querySelectorAll('.english-col .segment[id]')).toHaveLength(1);
+  } finally {
+    localStorage.removeItem('reader-view');
+  }
+});
+
+// Review, 15 Nov: a joined column whose English starts after line 1, or has no
+// tick at all, had no #col- target in English view, so links to it went nowhere.
+it.each([
+  ['starts at line 5', [{ n: 5, offset: 4, real: true }], '.english-col .bk-num#col-1094b'],
+  ['has no tick', [], '.english-col .col-anchor#col-1094b'],
+] as const)('B English view keeps a link target for a joined column whose English %s', async (_label, bekker, where) => {
+  localStorage.setItem('reader-view', 'english');
+  window.history.replaceState(null, '', '/EN/1?trans=rackham');
+  const book: BookData = { book: 1, segments: [fixtureBook.segments[0], {
+    id: 'seg2', column: '1094b', greek: [{ n: 1, text: 'δεύτερος', tokens: [] }],
+    english: { text: 'Continued English.', notes: [], markers: [], bekker: [...bekker] },
+  }] };
+  try {
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    await screen.findByText(/English\./);
+    expect(container.querySelectorAll('.b-row')).toHaveLength(1);
+    expect(container.querySelectorAll('#col-1094b')).toHaveLength(1);
+    expect(container.querySelector(where)).toBeTruthy();
+    // The scroll spy reads each shown tick's own column and line.
+    if (bekker.length) expect(container.querySelector('#col-1094b')).toHaveAttribute('data-cite', '1094b5');
+  } finally {
+    localStorage.removeItem('reader-view');
+  }
+});
+
+it.each([false, true])('B Compare breaks when an overlay starts a paragraph (%s)', async (para) => {
+  window.history.replaceState(null, '', '/EN/1?trans=compare');
+  localStorage.setItem('reader-cmpl-EN', 'rackham');
+  localStorage.setItem('reader-cmpr-EN', 'ross');
+  const book: BookData = { book: 1, segments: [
+    { ...fixtureBook.segments[0], ross: [{ chapter: '1', cont: false, text: 'Ross starts.', bekker: [{ n: 1, offset: 0, real: true }] }] },
+    { id: 'seg2', column: '1094b', greek: [{ n: 1, text: 'δεύτερος', tokens: [] }],
+      english: { text: 'Primary continues.', notes: [], markers: [], bekker: [{ n: 1, offset: 0, real: true }] },
+      ross: [{ chapter: '1', cont: true, text: 'Ross continues.', ...(para ? { para: true } : {}), bekker: [{ n: 1, offset: 0, real: true }] }],
+    },
+  ] };
+  try {
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    await screen.findByText('Ross continues.');
+    expect(container.querySelectorAll('.b-row')).toHaveLength(para ? 2 : 1);
+    expect(container.querySelectorAll('.english-col .overlay-prose')).toHaveLength(para ? 2 : 1);
+    expect(container.querySelectorAll('.overlay-col .overlay-prose')).toHaveLength(para ? 2 : 1);
+  } finally {
+    localStorage.removeItem('reader-cmpl-EN');
+    localStorage.removeItem('reader-cmpr-EN');
+  }
 });

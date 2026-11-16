@@ -4,10 +4,13 @@
 // our own domain with a branded Open Graph card (public/og-support.png).
 import ThemeInit from '../components/ThemeInit.astro';
 import Pwa from '../components/Pwa.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
+import BFonts from '../components/BFonts.astro';
+import BNav from '../components/BNav.astro';
+import BFoot from '../components/BFoot.astro';
 import { SUPPORT_URL } from '../lib/support';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
+import '@shared/styles/b.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const pageTitle = 'Support the Aristotle Reader';
@@ -55,45 +58,16 @@ const jsonLd = {
   {ogImage && <meta name="twitter:image" content={ogImage} />}
   <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
-  <style>
-    .sp-body { max-width: 600px; margin: 0 auto; padding: 3rem 1rem 5rem; font-family: var(--font-english); color: var(--text); }
-    .sp-eyebrow {
-      font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600;
-      letter-spacing: .12em; text-transform: uppercase; color: var(--text-light);
-      display: flex; align-items: baseline; gap: 0.55rem; margin: 0 0 0.5rem;
-    }
-    .sp-eyebrow .gk { font-family: var(--font-greek); font-size: 1.05rem; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--accent-light); }
-    .sp-body h1 { font-family: var(--font-english); font-weight: 600; font-size: 2rem; line-height: 1.15; margin: 0 0 1rem; }
-    .sp-lede { font-size: 1.12rem; line-height: 1.6; margin: 0 0 1.1rem; }
-    .sp-body p { font-size: 1rem; line-height: 1.7; color: var(--text-mid); margin: 0 0 1.1rem; }
-    .sp-cta { margin: 1.6rem 0 1.2rem; }
-    .sp-list { list-style: none; padding: 0; margin: 0 0 1.6rem; display: grid; gap: 0.55rem; }
-    .sp-list li { font-size: 0.97rem; line-height: 1.55; color: var(--text-mid); padding-left: 1.4rem; position: relative; }
-    .sp-list li::before { content: "χ"; font-family: var(--font-greek); color: var(--accent-light); position: absolute; left: 0; top: 0; }
-    .sp-note { font-size: 0.85rem; color: var(--text-light); }
-    .sp-note a { color: var(--accent); }
-  </style>
+  <BFonts />
 </head>
 <body>
-  <header class="simple-header">
-    <div class="header-title">
-      <a class="home-link" href={`${base}/`}>Aristotle</a>
-      <span class="title-sep">›</span>
-      <span class="header-static">Support</span>
-    </div>
-    <nav class="header-actions" aria-label="Navigation">
-      <a href={`${base}/`} class="search-link">All works</a>
-      <a href={`${base}/search`} class="search-link">Search</a>
-      <ThemeToggle />
-    </nav>
-  </header>
+  <div class="frame dir-b pg-support"><div class="b-page">
+  <BNav active="/support" />
 
-  <main class="sp-body">
+
+  <main class="b-info sp-body">
     <p class="sp-eyebrow">Support <span class="gk">χάρις</span></p>
-    <h1>Support the Aristotle Reader</h1>
+    <h1 class="b-pc-h">Support the Aristotle Reader</h1>
     <p class="sp-lede">
       The Aristotle Reader is an ad-free parallel Greek–English edition of
       Aristotle’s complete works — with click-to-parse morphology, dictionary
@@ -109,13 +83,15 @@ const jsonLd = {
       <li>Aligning more public-domain translations to the Greek, line by line.</li>
       <li>Adding works, glossaries, and reading aids across the corpus.</li>
     </ul>
-    <div class="sp-cta">
-      <a class="btn-donate" href={SUPPORT_URL} target="_blank" rel="noopener">Make a gift</a>
+    <div class="b-ctas sp-cta">
+      <a class="b-btn pri" href={SUPPORT_URL} target="_blank" rel="noopener">Make a gift</a>
     </div>
     <p class="sp-note">
       Gifts are processed securely by Stripe — you choose the amount. Thank you
-      for keeping the reader free. <span class="gk" style="font-family:var(--font-greek);color:var(--accent-light);">χάρις</span>.
+      for keeping the reader free. <span class="gk">χάρις</span>.
     </p>
   </main>
+  <BFoot />
+  </div></div>
 </body>
 </html>

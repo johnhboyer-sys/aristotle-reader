@@ -5,8 +5,9 @@
 import { render, screen } from '@testing-library/svelte';
 import { tick } from 'svelte';
 import WordPopup from '../components/WordPopup.svelte';
+import FootnotePopup from '../components/FootnotePopup.svelte';
 import { prefixLsjCitationHrefs } from '../lib/html';
-import { fetchLemmata, fetchLsjHeads, lookupWord } from '../lib/data';
+import { fetchFootnotes, fetchLemmata, fetchLsjHeads, lookupWord } from '../lib/data';
 
 // The grammata widget is loaded over the network by URL; mocked here by that
 // exact specifier so the site path can be exercised without it.
@@ -19,6 +20,7 @@ vi.mock('../lib/data', async (importOriginal) => {
     ...actual,
     fetchLemmata: vi.fn(async () => ({})),
     fetchLsjHeads: vi.fn(async () => ({})),
+    fetchFootnotes: vi.fn(async () => ({})),
     lookupWord: vi.fn(async (_work: string, k: string) => ({
       analyses: [
         k === 'logos'
@@ -236,7 +238,7 @@ describe('WordPopup', () => {
       lsj: [],
     });
     render(WordPopup, { props: { ...baseProps, onClose: vi.fn() } });
-    expect(await screen.findByText('coined by Aristotle')).toBeInTheDocument();
+    expect(await screen.findByText('coined by Aristotle')).toHaveClass('distinct-label');
     expect(screen.getByText(/Appears 10/)).toBeInTheDocument();
   });
 
@@ -252,7 +254,8 @@ describe('WordPopup', () => {
     await screen.findByText(/Appears 10/);
     expect(screen.queryByText('coined by Aristotle')).toBeNull();
     expect(screen.queryByText('rare before Aristotle')).toBeNull();
-    expect(document.querySelector('.distinct-label')).toBeNull();
+    expect(document.querySelector('.word-sidebar')).not.toHaveTextContent(/coined by Aristotle|rare before Aristotle/);
+    expect(document.querySelector('em')).toBeNull();
   });
   it('makes one card per dictionary entry, not one per analysis', async () => {
     // δεῖ's real shape: nine analyses naming three entries. Two of them are
@@ -478,5 +481,34 @@ describe('WordPopup', () => {
     expect(dd[2]).toBe('epic ionic');  // two dialects, still no attic
     // The dialect is stripped from the parse text itself, not left doubled.
     expect(container.querySelector('.parse-rows dt')!.textContent).toBe('masc acc pl');
+  });
+
+  // The site's B panel and note: a failed request says so, rather than
+  // looking like a form with no analysis or an empty note.
+  it('B: a failed lookup shows as failed', async () => {
+    vi.mocked(lookupWord).mockRejectedValueOnce(new Error('offline'));
+    const { container } = render(WordPopup, { props: { ...baseProps, onClose: vi.fn(), b: true } });
+    expect(await screen.findByText('Lookup failed')).toBeTruthy();
+    expect(container.querySelector('.b-card')).toBeNull();
+  });
+
+  it('B: a note that fails to load shows as failed', async () => {
+    vi.mocked(fetchFootnotes).mockRejectedValueOnce(new Error('offline'));
+    render(FootnotePopup, { props: { work: 'EN', n: '1', anchor: { x: 0, y: 0 }, onClose: vi.fn(), b: true, label: 'Ostwald’s note' } });
+    expect(await screen.findByText('Note not available')).toBeTruthy();
+  });
+
+  // Only the site's B note spends Escape; the desktop app's note closes on it
+  // and leaves the key to whatever else listens.
+  it('Escape: the B note spends the key, the desktop note does not', async () => {
+    for (const b of [true, false]) {
+      const onClose = vi.fn();
+      const { unmount } = render(FootnotePopup, { props: { work: 'EN', n: '1', anchor: { x: 0, y: 0 }, onClose, b, label: b ? 'Ostwald’s note' : '' } });
+      const e = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+      window.dispatchEvent(e);
+      expect(onClose).toHaveBeenCalledTimes(1);
+      expect(e.defaultPrevented).toBe(b);
+      unmount();
+    }
   });
 });

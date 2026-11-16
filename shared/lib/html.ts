@@ -891,3 +891,4 @@ export function renderLsjEntry(
   const cls = scale === 'page' ? 'lsj-entry lsj-entry-page' : 'lsj-entry';
   return `<div class="${cls}">${nav}${html}</div>`;
 }
+

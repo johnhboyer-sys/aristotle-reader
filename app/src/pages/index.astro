@@ -1,13 +1,19 @@
 ---
-import { AUTHENTICITY_LABEL, CATEGORIES, workLanding } from '@shared/lib/works';
+import { AUTHENTICITY_LABEL, CATEGORIES, DIVISION_NAMES, workLanding, type Work } from '@shared/lib/works';
 import { builtWorkCards, buildDivisions } from '../lib/corpus';
-import { SUPPORT_URL } from '../lib/support';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { publicDir } from 'astro:config/server';
+import plates from '../data/plates.json';
+import BFonts from '../components/BFonts.astro';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
 import ThemeInit from '../components/ThemeInit.astro';
 import Pwa from '../components/Pwa.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
+import BNav from '../components/BNav.astro';
+import BFoot from '../components/BFoot.astro';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
+import '@shared/styles/b.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -22,6 +28,15 @@ const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href 
 // Each card row becomes a single tappable card; the editions/translations live
 // on the work's landing page (/<work>).
 const divisions = buildDivisions(CATEGORIES);
+const hangs = (text = '') => /^[\u1F08-\u1F0F\u1F18-\u1F1D\u1F28-\u1F2F\u1F38-\u1F3F\u1F48-\u1F4D\u1F59-\u1F5F\u1F68-\u1F6F\u1FEC]/.test(text);
+const subjectRanges = ['1–184', '184–980', '980–1093', '1094–1353', '1354–1462'];
+// The bust is cut to its ink box in the desk plate (scripts/measure-plate-ink.mjs).
+const ink = plates.home.ink;
+const extent = (w: Work) => {
+  const chapters: Record<string, {chapter: string; column: string; line: string}[]> = JSON.parse(readFileSync(fileURLToPath(new URL(`data/${w.id}/chapters.json`, publicDir)), 'utf8'));
+  const n = Object.values(chapters).reduce((sum, book) => sum + book.length, 0);
+  return `${w.books > 1 ? `${w.books} books, ` : ''}${n} chapter${n === 1 ? '' : 's'}`;
+};
 
 // Structured data: identify the site (WebSite) and enumerate every built work as
 // an ItemList of CreativeWorks linking to its landing page. This tells Google the
@@ -29,6 +44,7 @@ const divisions = buildDivisions(CATEGORIES);
 // carry the long-tail "<work> greek & english" queries. Absolute URLs need
 // Astro.site (set in config); emitted only when present.
 const builtWorks = builtWorkCards(divisions);
+const extents = Object.fromEntries(builtWorks.map(c => [c.work.id, extent(c.work)]));
 const structuredData = Astro.site
   ? [
       {
@@ -60,6 +76,10 @@ const structuredData = Astro.site
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Google Search Console ownership verification (URL-prefix property). -->
   <meta name="google-site-verification" content="tlPYj47QxxAGIB0RGMjr2fycUYsaqZK-yeOj9SmIjE4" />
+  <script is:inline>
+    document.documentElement.classList.add('poster-fitting');
+    setTimeout(() => document.documentElement.classList.remove('poster-fitting'), 3000);
+  </script>
   <ThemeInit />
   <Pwa />
   <title>The Aristotle Reader — Complete Works in Greek &amp; English</title>
@@ -83,587 +103,125 @@ const structuredData = Astro.site
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+  <BFonts />
 </head>
 <body class="home">
-  <div class="home-theme"><ThemeToggle /></div>
   <CommandPalette client:load />
-  <main class="corpus">
-    <header class="masthead">
-      <p class="eyebrow">Aristotle</p>
-      <h1>The Aristotle Reader</h1>
-      <p class="lede">A parallel-text reader with morphology, dictionary, and Bekker citation. Choose a work to begin.</p>
-      <p class="wip-note">
-        <strong>Work in progress.</strong> The translation alignment is still
-        being refined. Spotted an error or have a suggestion?
-        <button id="feedback-btn-wip" style="background:none;border:none;padding:0;cursor:pointer;font:inherit;color:var(--accent);text-decoration:underline;">Let me know</button>.
-      </p>
-    </header>
-
-    <a
-      class="search-card resume-card"
-      id="resume-card"
-      href="#"
-      hidden
-      data-works={JSON.stringify(Object.fromEntries(
-        builtWorks.map((c) => [c.work.id, { title: c.work.title, books: c.work.books }]),
-      ))}
-    >
-      <span class="search-card-name">Continue reading</span>
-      <span class="search-card-meta" id="resume-meta"></span>
-      <span class="chev-right" aria-hidden="true">›</span>
-    </a>
-
-    <a class="search-card" href={`${base}/search`}>
-      <span class="search-card-name">Search the Corpus</span>
-      <span class="search-card-meta">Greek &amp; English · all works</span>
-      <span class="chev-right" aria-hidden="true">›</span>
-    </a>
-
-    <a class="search-card" href={`${base}/lemma/`}>
-      <span class="search-card-name">Greek Lexicon</span>
-      <span class="search-card-meta">Key words · frequency &amp; concordance</span>
-      <span class="chev-right" aria-hidden="true">›</span>
-    </a>
-
-    <section class="support-card">
-      <div class="eyebrow">Support <span class="gk">χάρις</span></div>
-      <h2>Support the Aristotle Reader</h2>
-      <p>The reader is free and open. A contribution helps defray development costs and keeps it that way.</p>
-      <a class="btn-donate" href={SUPPORT_URL} target="_blank" rel="noopener">Make a gift</a>
-    </section>
-
-    <hr class="home-rule" />
-    <h2 class="works-heading">Open a Work</h2>
-
-    <div class="toc">
-      {divisions.map((d) => (
-        <section class={d.appendix ? 'cat cat-appendix' : 'cat'}>
-          <button class="cat-toggle" type="button" aria-expanded="false">
-            <span class="cat-head">
-              {d.numeral && <span class="cat-num">{d.numeral}.</span>} {d.title}
-              <span class="cat-count">· {d.count} work{d.count > 1 ? 's' : ''}</span>
-            </span>
-            <span class="cat-chev" aria-hidden="true"></span>
-          </button>
-          <div class="cat-body">
-            {d.groups.map((g) => {
-              const grid = (
-                <div class="works-grid">
-                  {g.cards.map((c) => (
-                    c.kind === 'work' ? (
-                      <a class="work-card" href={`${base}${workLanding(c.work.id)}`}>
-                        <span class="work-name">{c.work.title}</span>
-                        <span class="work-blurb">{c.work.blurb}</span>
-                        <span class="work-meta">{c.work.abbr} · {c.work.books} book{c.work.books > 1 ? 's' : ''}</span>
-                        {c.work.authenticity && c.work.authenticity !== 'genuine' &&
-                          <span class="status-tag">{AUTHENTICITY_LABEL[c.work.authenticity]}</span>}
-                      </a>
-                    ) : (
-                      <div class="work-card soon" aria-disabled="true">
-                        <span class="work-name">{c.title}</span>
-                        <span class="soon-tag">Coming soon</span>
-                      </div>
-                    )
-                  ))}
-                </div>
-              );
-              return g.label ? (
-                <div class="subcat">
-                  <button class="subcat-toggle" type="button" aria-expanded="false">
-                    <span class="subcat-head"><span class="subcat-ref">{g.ref}</span> {g.label}
-                      <span class="subcat-count">· {g.cards.length} work{g.cards.length > 1 ? 's' : ''}</span>
-                    </span>
-                    <span class="subcat-chev" aria-hidden="true"></span>
-                  </button>
-                  <div class="subcat-body">{grid}</div>
-                </div>
-              ) : grid;
-            })}
-          </div>
+  <div class="frame dir-b pg-home">
+    <div class="b-page">
+      <BNav />
+      <main>
+        <div class="b-top">
+        <section class="b-po hero pl dp-paper tp-side pl-l hp-p-side" data-tp="side" data-ts="1" aria-label="The complete works of Aristotle" style={`--ix:${ink[0]};--iy:${ink[1]};--iw:${ink[2] - ink[0]};--ih:${ink[3] - ink[1]}`}>
+          <picture class="th-light"><source media="(max-width: 960px)" srcset={`${base}/plates/phone/home.jpg`} width="640" height="558"/><img src={`${base}/plates/desk/home.jpg`} width="1280" height="914" alt={plates.home.alt} loading="lazy" decoding="async"/></picture><picture class="th-dark"><source media="(max-width: 960px)" srcset={`${base}/plates/dark/phone/home.webp`} width="640" height="558"/><img src={`${base}/plates/dark/desk/home.webp`} width="1280" height="914" alt={plates.home.alt} loading="lazy" decoding="async"/></picture>
+          <h1 class="b-po-t" data-fit="poster" data-title="The complete works of Aristotle">The complete works of Aristotle</h1>
+          <p class="b-gt b-greek-hang" lang="grc" data-fit="line" data-fill>Ἀριστοτέλους ἅπαντα τὰ σῳζόμενα</p>
         </section>
-      ))}
-    </div>
-
-    <nav class="home-foot">
-      <a href={`${base}/attribution`}>Texts &amp; Licences</a>
-      <span aria-hidden="true">·</span>
-      <a href={`${base}/support`}>Support</a>
-      <span aria-hidden="true">·</span>
-      <button id="feedback-btn">Request a Feature / Report an Error</button>
-      <span aria-hidden="true">·</span>
-      <a href={`${base}/game/`}>Play a game</a>
-      <span aria-hidden="true">·</span>
-      <a href="https://x.com/johnhboyer" target="_blank" rel="noopener">Site by John H. Boyer</a>
-    </nav>
-  </main>
-  <style>
-    .wip-note {
-      margin: 1rem auto 0;
-      max-width: 40rem;
-      font-size: 0.85rem;
-      line-height: 1.5;
-      opacity: 0.8;
-      text-wrap: pretty;
-    }
-    .wip-note a { text-decoration: underline; }
-  </style>
-
-  <style>
-    body.home { background: var(--page-bg); color: var(--text); }
-    .home-theme { position: fixed; top: 1rem; right: 1rem; z-index: 10; }
-    .corpus {
-      max-width: 56rem;
-      margin: 0 auto;
-      padding: clamp(2.5rem, 8vh, 6rem) 1.5rem 4rem;
-    }
-    /* The intro column stays narrow and centred; only the works grid widens. */
-    .masthead, .search-card, .support-card {
-      max-width: 40rem;
-      margin-inline: auto;
-    }
-    .masthead { text-align: center; margin-bottom: 2.75rem; }
-    .eyebrow {
-      font-family: var(--font-ui);
-      text-transform: uppercase;
-      letter-spacing: .28em;
-      font-size: .72rem;
-      color: var(--accent-light);
-      margin-bottom: .6rem;
-    }
-    .masthead h1 {
-      font-family: var(--font-greek);
-      font-weight: 400;
-      font-size: clamp(2.1rem, 6vw, 2.9rem);
-      letter-spacing: .01em;
-      color: var(--text);
-      text-wrap: balance;
-    }
-    .lede {
-      font-family: var(--font-english);
-      color: var(--text-mid);
-      font-size: 1.02rem;
-      max-width: 28rem;
-      margin: .9rem auto 0;
-      line-height: 1.5;
-      text-wrap: pretty;
-    }
-
-    .search-card {
-      display: flex;
-      align-items: baseline;
-      gap: .75rem;
-      background: var(--col-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.05rem 1.3rem;
-      text-decoration: none;
-      color: var(--text);
-      transition: border-color .15s ease, box-shadow .15s ease;
-    }
-    .search-card:hover { border-color: var(--accent-light); box-shadow: 0 6px 22px rgba(0,0,0,.05); }
-    .search-card-name {
-      font-family: var(--font-english);
-      font-weight: 600;
-      font-size: 1.2rem;
-      color: var(--accent);
-    }
-    .search-card-meta {
-      font-family: var(--font-ui);
-      font-size: .76rem;
-      letter-spacing: .04em;
-      color: var(--text-light);
-      text-transform: uppercase;
-    }
-    .search-card .chev-right {
-      margin-left: auto;
-      align-self: center;
-      color: var(--text-light);
-      font-size: 1.5rem;
-      line-height: 1;
-    }
-    .search-card:hover .chev-right { color: var(--accent-light); }
-
-    /* Continue-reading card: same idiom as .search-card, tinted so returning
-       readers spot it first. Hidden until the script finds a saved position. */
-    .resume-card { border-color: var(--accent-light); margin-bottom: .55rem; }
-    .resume-card[hidden] { display: none; }
-    .search-card + .search-card { margin-top: .55rem; }
-
-    /* Support / donation card — sits below the search card, above the works
-       list. Same panel idiom as .search-card (col-bg, border, 8px radius), but
-       with a heading + body + filled CTA rather than a single row. */
-    /* .support-card / .btn-donate styles now live in global.css (shared with
-       the work landing pages). */
-
-    .home-rule {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 1.6rem 0 1.3rem;
-    }
-    .works-heading {
-      font-family: var(--font-ui);
-      font-size: .78rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .12em;
-      color: var(--text-light);
-      margin-bottom: 1rem;
-    }
-
-    .toc { display: flex; flex-direction: column; }
-
-    /* ── Division (category) ─────────────────────────────────────────────── */
-    .cat-toggle {
-      width: 100%;
-      background: none;
-      border: none;
-      padding: 0;
-      margin: 1.9rem 0 .85rem;
-      display: flex;
-      align-items: baseline;
-      gap: .55rem;
-      text-align: left;
-      color: inherit;
-      font: inherit;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: .35rem;
-    }
-    .toc > .cat:first-child .cat-toggle { margin-top: 0; }
-    .cat-head {
-      font-family: var(--font-greek);
-      font-weight: 400;
-      font-size: 1.5rem;
-      color: var(--text);
-      flex: 1;
-    }
-    .cat-num {
-      font-family: var(--font-ui);
-      font-size: .95rem;
-      font-weight: 600;
-      letter-spacing: .04em;
-      color: var(--accent-light);
-    }
-    .cat-count {
-      font-family: var(--font-ui);
-      font-size: .72rem;
-      letter-spacing: .04em;
-      text-transform: uppercase;
-      color: var(--text-light);
-    }
-    /* Appendix — the doubtful and spurious works, set OUTSIDE the numbered corpus above and
-       separated by a stronger rule + extra space. */
-    .cat-appendix { margin-top: 2.4rem; padding-top: 1.7rem; border-top: 2px solid var(--border); }
-    .cat-appendix .cat-toggle { margin-top: 0; }
-    .cat-appendix .cat-head { font-style: italic; }
-    /* Chevron shown only on mobile (where the header is a real toggle). */
-    .cat-chev {
-      align-self: center;
-      flex-shrink: 0;
-      width: .5rem; height: .5rem;
-      border-right: 1.5px solid var(--text-light);
-      border-bottom: 1.5px solid var(--text-light);
-      transform: rotate(45deg) translateY(-2px);
-      transition: transform .18s ease;
-    }
-    .cat[data-open] .cat-chev { transform: rotate(225deg); }
-
-    .subcat-toggle {
-      width: 100%;
-      background: none;
-      border: none;
-      margin: 1rem 0 .55rem;
-      padding: 0;
-      display: flex;
-      align-items: baseline;
-      gap: .5rem;
-      text-align: left;
-      color: inherit;
-      font: inherit;
-    }
-    .cat-body > .subcat:first-child .subcat-toggle { margin-top: 0; }
-    .subcat-head {
-      font-family: var(--font-ui);
-      font-size: .76rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      color: var(--text-light);
-      flex: 1;
-    }
-    .subcat-ref { color: var(--accent-light); letter-spacing: .04em; }
-    .subcat-count { letter-spacing: .04em; opacity: .85; }
-    .subcat-chev {
-      align-self: center;
-      flex-shrink: 0;
-      width: .42rem; height: .42rem;
-      border-right: 1.5px solid var(--text-light);
-      border-bottom: 1.5px solid var(--text-light);
-      transform: rotate(45deg) translateY(-2px);
-      transition: transform .18s ease;
-    }
-    .subcat[data-open] .subcat-chev { transform: rotate(225deg); }
-
-    /* ── Work cards ──────────────────────────────────────────────────────── */
-    .works-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-      gap: .55rem;
-      margin-bottom: .55rem;
-    }
-    .work-card {
-      display: flex;
-      flex-direction: column;
-      gap: .18rem;
-      background: var(--col-bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: .9rem 1.1rem;
-      text-decoration: none;
-      color: var(--text);
-      transition: border-color .15s ease, box-shadow .15s ease;
-    }
-    .work-card:not(.soon):hover {
-      border-color: var(--accent-light);
-      box-shadow: 0 6px 22px rgba(0,0,0,.05);
-    }
-    .work-name {
-      font-family: var(--font-greek);
-      font-size: 1.3rem;
-      color: var(--text);
-      line-height: 1.25;
-    }
-    .work-blurb {
-      font-family: var(--font-english);
-      font-size: .8rem;
-      color: var(--text-light);
-      line-height: 1.4;
-      text-wrap: pretty;
-    }
-    .work-meta {
-      font-family: var(--font-ui);
-      font-size: .72rem;
-      letter-spacing: .04em;
-      color: var(--text-light);
-      text-transform: uppercase;
-      white-space: nowrap;
-      margin-top: .1rem;
-    }
-
-    /* Not-yet-added works: a quiet, non-interactive placeholder. */
-    .work-card.soon {
-      background: transparent;
-      border-style: dashed;
-      cursor: default;
-      flex-direction: row;
-      align-items: baseline;
-      gap: .75rem;
-    }
-    .work-card.soon .work-name {
-      font-size: 1.15rem;
-      color: var(--text-light);
-    }
-    .work-card.soon .soon-tag {
-      margin-left: auto;
-      align-self: center;
-      font-family: var(--font-ui);
-      font-size: .66rem;
-      text-transform: uppercase;
-      letter-spacing: .1em;
-      color: var(--text-light);
-      opacity: .8;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: .12rem .5rem;
-      white-space: nowrap;
-    }
-
-    /* ── Mobile-only collapse ────────────────────────────────────────────── */
-    /* Base (mobile-first): divisions and Natural Philosophy's sub-divisions
-       collapse; tapping a header opens its body. */
-    .cat:not([data-open]) .cat-body { display: none; }
-    .subcat:not([data-open]) .subcat-body { display: none; }
-    .cat-toggle, .subcat-toggle { cursor: pointer; }
-
-    /* Desktop: everything expanded, headers are static (no toggle / chevron). */
-    @media (min-width: 48rem) {
-      .cat-body, .subcat-body { display: block !important; }
-      .cat-toggle, .subcat-toggle { pointer-events: none; cursor: default; }
-      .cat-chev, .cat-count, .subcat-chev, .subcat-count { display: none; }
-    }
-
-    .home-foot {
-      margin-top: 2.5rem;
-      text-align: center;
-      font-family: var(--font-ui);
-      font-size: .85rem;
-      color: var(--text-light);
-      display: flex; justify-content: center; gap: .7rem;
-    }
-    .home-foot a { color: var(--text-mid); text-decoration: none; }
-    .home-foot a:hover { color: var(--accent); }
-    .home-foot button {
-      background: none; border: none; padding: 0; cursor: pointer;
-      font: inherit; font-size: .85rem; color: var(--text-mid);
-    }
-    .home-foot button:hover { color: var(--accent); }
-
-    /* Feedback modal */
-    #feedback-modal {
-      display: none; position: fixed; inset: 0; z-index: 1000;
-      background: rgba(0,0,0,.45); align-items: center; justify-content: center;
-    }
-    #feedback-modal.open { display: flex; }
-    .fb-box {
-      background: var(--page-bg); border: 1px solid var(--rule);
-      border-radius: 8px; padding: 1.75rem 2rem; width: min(440px, 90vw);
-      font-family: var(--font-ui); box-shadow: 0 8px 32px rgba(0,0,0,.18);
-    }
-    .fb-box h2 {
-      margin: 0 0 1.1rem; font-size: 1rem; font-weight: 600; color: var(--text);
-    }
-    .fb-type { display: flex; gap: 1.25rem; margin-bottom: 1rem; }
-    .fb-type label { display: flex; align-items: center; gap: .4rem; cursor: pointer;
-      font-size: .875rem; color: var(--text); }
-    .fb-box textarea {
-      width: 100%; box-sizing: border-box; min-height: 110px; resize: vertical;
-      border: 1px solid var(--rule); border-radius: 4px; padding: .6rem .75rem;
-      font-family: var(--font-ui); font-size: .875rem;
-      background: var(--page-bg); color: var(--text);
-    }
-    .fb-box textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
-    .fb-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: .9rem; }
-    .fb-cancel {
-      background: none; border: 1px solid var(--rule); border-radius: 4px;
-      padding: .4rem .9rem; cursor: pointer; font: inherit; font-size: .85rem;
-      color: var(--text-mid);
-    }
-    .fb-cancel:hover { border-color: var(--text-mid); }
-    .fb-submit {
-      background: var(--accent); color: #fff; border: none; border-radius: 4px;
-      padding: .4rem 1rem; cursor: pointer; font: inherit; font-size: .85rem;
-      font-weight: 600;
-    }
-    .fb-submit:hover { opacity: .88; }
-    .fb-submit:disabled { opacity: .45; cursor: default; }
-  </style>
-
-  <!-- Feedback modal -->
-  <div id="feedback-modal" role="dialog" aria-modal="true" aria-labelledby="fb-title" tabindex="-1">
-    <div class="fb-box">
-      <h2 id="fb-title">Request a Feature / Report an Error</h2>
-      <div class="fb-type">
-        <label><input type="radio" name="fb-type" value="feature" checked /> Feature request</label>
-        <label><input type="radio" name="fb-type" value="bug" /> Bug / error report</label>
-      </div>
-      <textarea id="fb-message" placeholder="Describe the feature or error…"></textarea>
-      <div class="fb-actions">
-        <button class="fb-cancel" id="fb-cancel">Cancel</button>
-        <button class="fb-submit" id="fb-submit">Send</button>
-      </div>
+        <section class="b-intro">
+          <p class="b-lead">Read and search every work of Aristotle in Greek and English. <span id="touch-verb">Click</span> any Greek word to parse and define it.</p>
+          <div class="b-intro-r">
+            <div id="resume-slot" data-works={JSON.stringify(Object.fromEntries(builtWorks.map(c => [c.work.id,{title:c.work.title,books:c.work.books,bookLabels:c.work.bookLabels}])))}></div>
+            <form class="b-search" action={`${base}/search`} method="get" role="search">
+              <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><circle cx="6.8" cy="6.8" r="4.6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M10.4 10.4 14 14" stroke="currentColor" stroke-width="1.4"/></svg>
+              <input name="q" autocomplete="off" spellcheck="false" placeholder="φύσις, justice, ἀρετή …" aria-label="Search the corpus"/><button type="submit">Search</button>
+            </form>
+          </div>
+          <div class="b-resume-work" hidden>
+            <a class="b-resume-title"></a><p class="b-resume-location"></p><a class="b-btn pri">Continue reading</a>
+          </div>
+          <a class="b-resume-passage" hidden><p lang="grc"></p><p lang="en"></p></a>
+        </section>
+        </div>
+        <nav class="b-subjects" aria-label="Subjects">{divisions.map((d,i) => <a href={`#division-${d.numeral}`}><span>{DIVISION_NAMES[d.title]}</span><span class="b-subject-range">{subjectRanges[i]}</span></a>)}</nav>
+        {divisions.map(d => <section id={`division-${d.numeral}`} class="b-div" data-division={d.numeral}>
+          <h2 class="b-dh">{DIVISION_NAMES[d.title]}</h2>
+          <div class="b-dw">{d.groups.map(g => <>
+            {g.label && <h3 class="b-sub sub-label">{g.label}</h3>}
+            <ul class="b-works">{g.cards.filter(c => c.kind === 'work' && c.work.id !== 'Isa').map(c => c.kind === 'work' && <li><a href={`${base}${workLanding(c.work.id)}`} data-work={c.work.id}>
+              <span class="b-wt">{c.work.listTitle ?? c.work.title}{c.work.authenticity && c.work.authenticity !== 'genuine' && <span class="b-tag">{AUTHENTICITY_LABEL[c.work.authenticity]}</span>}</span>
+              <span class:list={["b-wg", {"b-greek-hang": hangs(c.work.greekTitle)}]} lang="grc">{c.work.greekTitle}</span><span class="b-we">{extents[c.work.id]}</span>
+            </a></li>)}</ul>
+          </>)}</div>
+        </section>)}
+      </main>
+      <BFoot />
     </div>
   </div>
-
+  <script is:inline>
+    if (matchMedia('(hover: none) and (pointer: coarse)').matches) document.getElementById('touch-verb').textContent = 'Tap';
+  </script>
   <script>
-    const modal = document.getElementById('feedback-modal')!;
-    const openBtn = document.getElementById('feedback-btn')!;
-    const cancelBtn = document.getElementById('fb-cancel')!;
-    const submitBtn = document.getElementById('fb-submit')!;
-    const textarea = document.getElementById('fb-message') as HTMLTextAreaElement;
-    let feedbackTrigger: HTMLElement | null = null;
+    import { fitPoster, initPosters } from '../lib/poster-fit';
+    import { lastRead, resumeFor } from '@shared/lib/resume';
+    import { fetchBook } from '@shared/lib/data';
+    import { initReturningLayout, updateTouchVerb, resolveHomePlace } from '../lib/home-resume';
 
-    const open = (e?: Event) => {
-      feedbackTrigger = e?.currentTarget instanceof HTMLElement ? e.currentTarget : null;
-      modal.classList.add('open');
-      textarea.value = '';
-      textarea.focus();
-    };
-    const close = () => {
-      modal.classList.remove('open');
-      feedbackTrigger?.focus();
-      feedbackTrigger = null;
-    };
-
-    openBtn.addEventListener('click', open);
-    document.getElementById('feedback-btn-wip')?.addEventListener('click', open);
-    cancelBtn.addEventListener('click', close);
-    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
-    document.addEventListener('keydown', (e) => {
-      if (!modal.classList.contains('open')) return;
-      if (e.key === 'Escape') {
-        close();
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    const slot = document.getElementById('resume-slot');
+    const phoneBand = matchMedia('(max-width: 960px)');
+    const touchVerb = () => updateTouchVerb(document, phoneBand.matches);
+    touchVerb();
+    phoneBand.addEventListener('change', touchVerb);
+    async function resume() {
+      if (!slot) return;
+      const works = JSON.parse(slot.dataset.works || '{}');
+      const last = lastRead(w => Object.hasOwn(works,w)) ?? (matchMedia('(min-width: 961px)').matches ? Object.keys(works).map(work => {
+        const pos = resumeFor(work); return pos ? { work, ...pos } : null;
+      }).find(Boolean) : null);
+      if (!last) return;
+      const w = works[last.work];
+      let book = Math.min(Math.max(1,last.book),w.books);
+      let cite = last.cite;
+      let chapter: string | undefined;
+      if (cite) {
+        try {
+          const [chaptersResponse, columnsResponse] = await Promise.all([
+            fetch(`${base}/data/${last.work}/chapters.json`),
+            fetch(`${base}/data/${last.work}/columns.json`),
+          ]);
+          if (!chaptersResponse.ok || !columnsResponse.ok) throw new Error('Missing saved-place data');
+          const place = resolveHomePlace(book, cite, await chaptersResponse.json(), await columnsResponse.json());
+          ({ book, cite, chapter } = place);
+        } catch { cite = null; }
+      }
+      {
+        const top = document.querySelector<HTMLElement>('.b-top')!;
+        initReturningLayout(top, phoneBand, () => fitPoster(top.querySelector<HTMLElement>('h1')!));
+        const resume = top.querySelector<HTMLElement>('.b-resume-work')!;
+        const href = `${base}/${last.work}/book/${book}${cite ? `#${cite}` : ''}`;
+        const title = resume.querySelector<HTMLAnchorElement>('.b-resume-title')!;
+        title.href = href; title.textContent = w.title;
+        const location = resume.querySelector('.b-resume-location')!;
+        const showLocation = (chapter?: string) => {
+          location.textContent = [
+            w.books > 1 ? `Book ${w.bookLabels[book-1]}${chapter ? `, chapter ${chapter}` : ''}` : chapter ? `Chapter ${chapter}` : '', cite,
+          ].filter(Boolean).join(' · ');
+        };
+        showLocation(chapter);
+        const button = resume.querySelector<HTMLAnchorElement>('.b-btn')!;
+        button.href = href; button.setAttribute('aria-label', `Continue reading ${w.title}`);
+        resume.hidden = false;
+        if (cite) try {
+          const [data, { resumePassage }, { getWork }] = await Promise.all([
+            fetchBook(last.work, book),
+            import('@shared/lib/resume-passage'),
+            import('@shared/lib/works'),
+          ]);
+          const work = getWork(last.work);
+          const passage = work && resumePassage(data, work, cite);
+          if (passage) {
+            const link = top.querySelector<HTMLAnchorElement>('.b-resume-passage')!;
+            link.href = href; link.querySelector('[lang="grc"]')!.textContent = passage.greek;
+            const english = link.querySelector<HTMLElement>('[lang="en"]')!;
+            english.textContent = passage.english; english.hidden = !passage.english;
+            link.hidden = false;
+          }
+        } catch { /* Keep the card alone when the book cannot load. */ }
         return;
       }
-      if (e.key !== 'Tab') return;
-      const els = Array.from(modal.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      )).filter((el) => !el.hasAttribute('disabled') && el.tabIndex !== -1);
-      if (els.length === 0) {
-        e.preventDefault();
-        modal.focus();
-        return;
-      }
-      const first = els[0];
-      const last = els[els.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    });
-
-    submitBtn.addEventListener('click', () => {
-      const msg = textarea.value.trim();
-      if (!msg) return;
-      const type = (document.querySelector('input[name="fb-type"]:checked') as HTMLInputElement).value;
-      const subject = type === 'feature'
-        ? 'Aristotle Reader: Feature Request'
-        : 'Aristotle Reader: Bug Report';
-      window.location.href =
-        `mailto:jhboyer@loyno.edu?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(msg)}`;
-      close();
-    });
-  </script>
-
-  <script>
-    // "Continue reading" card: shown only when the reader has saved a recent
-    // position (localStorage — see shared/lib/resume.ts), pointing back into
-    // the reader at the remembered book + Bekker citation.
-    import { citeShown, lastRead } from '@shared/lib/resume';
-
-    const card = document.getElementById('resume-card') as HTMLAnchorElement | null;
-    if (card) {
-      const works: Record<string, { title: string; books: number }> =
-        JSON.parse(card.dataset.works || '{}');
-      const last = lastRead((w) => Object.hasOwn(works, w));
-      if (last) {
-        const w = works[last.work];
-        const book = Math.min(Math.max(1, last.book), w.books);
-        const bookBit = w.books > 1 ? ` · Book ${book}` : '';
-        const citeBit = last.cite ? ` · ${citeShown(last.work, last.cite)}` : '';
-        card.querySelector('#resume-meta')!.textContent = `${w.title}${bookBit}${citeBit}`;
-        const base = (import.meta.env.BASE_URL as string).replace(/\/$/, '');
-        card.href = `${base}/${last.work}/book/${book}${last.cite ? `#${last.cite}` : ''}`;
-        card.hidden = false;
-      }
     }
-  </script>
-
-  <script>
-    // Mobile-only collapse: tapping a division (or Natural Philosophy
-    // sub-division) header toggles its body. On desktop the buttons are
-    // pointer-events:none (see CSS), so these never fire.
-    const toggles: [string, string][] = [['.cat-toggle', '.cat'], ['.subcat-toggle', '.subcat']];
-    for (const [btnSel, boxSel] of toggles) {
-      for (const btn of document.querySelectorAll<HTMLButtonElement>(btnSel)) {
-        btn.addEventListener('click', () => {
-          const open = btn.closest(boxSel)!.toggleAttribute('data-open');
-          btn.setAttribute('aria-expanded', String(open));
-        });
-      }
-    }
+    void resume();
+    initPosters();
   </script>
 </body>
 </html>

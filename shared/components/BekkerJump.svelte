@@ -15,7 +15,8 @@
 
   $: workMeta = getWork(work);
 
-  let open = false;
+  export let alwaysOpen = false;
+  let open = alwaysOpen;
   let value = '';
   let error = '';
   let columns: Record<string, ColumnRef[]> | null = null;
@@ -38,7 +39,7 @@
   }
 
   function closeBox() {
-    open = false;
+    open = alwaysOpen;
     error = '';
     value = '';
   }
@@ -79,7 +80,7 @@
   </button>
 {:else}
   <form class="bekker-jump" on:submit|preventDefault={go} role="search">
-    <label class="bekker-label" for={inputId}>Bekker line</label>
+    <label class="bekker-label" for={inputId}>{alwaysOpen ? 'Go to a Bekker line' : 'Bekker line'}</label>
     <input
       id={inputId}
       type="text"
@@ -94,7 +95,7 @@
       autocomplete="off"
     />
     <button type="submit">Go</button>
-    <button type="button" class="bekker-close" on:click={closeBox} aria-label="Close">✕</button>
+    {#if !alwaysOpen}<button type="button" class="bekker-close" on:click={closeBox} aria-label="Close">✕</button>{/if}
     {#if error}<span class="bekker-err" role="alert">{error}</span>{/if}
   </form>
 {/if}

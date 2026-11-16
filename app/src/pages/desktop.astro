@@ -5,8 +5,11 @@
 // exists — see app/src/pages/support.astro for the pattern this follows.
 import ThemeInit from '../components/ThemeInit.astro';
 import Pwa from '../components/Pwa.astro';
-import ThemeToggle from '../components/ThemeToggle.astro';
+import BFonts from '../components/BFonts.astro';
+import BNav from '../components/BNav.astro';
+import BFoot from '../components/BFoot.astro';
 import '@shared/styles/global.css';
+import '@shared/styles/b.css';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const pageTitle = 'Desktop app — The Aristotle Reader';
@@ -33,87 +36,16 @@ const canonical = Astro.site
   <meta property="og:site_name" content="The Aristotle Reader" />
   <meta name="twitter:card" content="summary" />
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cardo:ital@0;1&family=EB+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
-  <style>
-    .dt-body { max-width: 680px; margin: 0 auto; padding: 3rem 1rem 5rem; font-family: var(--font-english); color: var(--text); }
-    .dt-eyebrow {
-      font-family: var(--font-ui); font-size: 0.8rem; font-weight: 600;
-      letter-spacing: .12em; text-transform: uppercase; color: var(--text-light);
-      margin: 0 0 0.5rem;
-    }
-    .dt-body h1 { font-family: var(--font-english); font-weight: 600; font-size: 2rem; line-height: 1.15; margin: 0 0 1rem; }
-    .dt-lede { font-size: 1.12rem; line-height: 1.6; margin: 0 0 1.1rem; color: var(--text); }
-    .dt-body h2 {
-      font-family: var(--font-ui); font-size: 1rem; font-weight: 600;
-      color: var(--accent); margin: 2.4rem 0 0.7rem; letter-spacing: .02em;
-    }
-    .dt-body p { font-size: 1rem; line-height: 1.7; color: var(--text-mid); margin: 0 0 1.1rem; }
-    .dt-body ul, .dt-body ol { margin: 0 0 1.1rem; padding-left: 1.3rem; color: var(--text-mid); }
-    .dt-body li { font-size: 1rem; line-height: 1.65; margin: 0 0 0.5rem; }
-    .dt-body li > strong { color: var(--text); }
-    .dt-body a { color: var(--accent); }
-    .dt-body code {
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 0.9em;
-      background: var(--border);
-      border-radius: 3px;
-      padding: 0.05em 0.35em;
-      color: var(--text);
-    }
-    .dt-body pre {
-      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 0.88rem;
-      line-height: 1.6;
-      background: var(--col-bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 0.9rem 1.1rem;
-      margin: 0 0 1.2rem;
-      overflow-x: auto;
-      color: var(--text);
-    }
-    .dt-cta {
-      display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.75rem;
-      margin: 1.4rem 0 0.5rem;
-    }
-    .btn-download {
-      display: inline-block;
-      font-family: var(--font-ui);
-      font-size: .9rem;
-      font-weight: 600;
-      letter-spacing: .02em;
-      text-decoration: none;
-      padding: .6rem 1.2rem;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      background: var(--border);
-      color: var(--text-light);
-      cursor: default;
-    }
-    .dt-version { font-size: 0.9rem; color: var(--text-light); }
-    .dt-note { font-size: 0.9rem; color: var(--text-light); margin: 0.9rem 0 1.1rem; }
-    .dt-note a { color: var(--accent); }
-  </style>
+  <BFonts />
 </head>
 <body>
-  <header class="simple-header">
-    <div class="header-title">
-      <a class="home-link" href={`${base}/`}>Aristotle</a>
-      <span class="title-sep">›</span>
-      <span class="header-static">Desktop app</span>
-    </div>
-    <nav class="header-actions" aria-label="Navigation">
-      <a href={`${base}/`} class="search-link">All works</a>
-      <a href={`${base}/search`} class="search-link">Search</a>
-      <ThemeToggle />
-    </nav>
-  </header>
+  <div class="frame dir-b pg-desktop"><div class="b-page">
+  <BNav active="" />
 
-  <main class="dt-body">
+
+  <main class="b-info dt-body">
     <p class="dt-eyebrow">Desktop app</p>
-    <h1>The Aristotle Reader — Desktop</h1>
+    <h1 class="b-pc-h">The Aristotle Reader — Desktop</h1>
     <p class="dt-lede">
       The Aristotle Reader is free online — this is the same reader, off the
       grid. The desktop app carries the whole public-domain corpus with it:
@@ -127,12 +59,12 @@ const canonical = Astro.site
       website, just private and offline.
     </p>
 
-    <h2>Download</h2>
+    <h2 class="b-h2">Download</h2>
     <!-- TODO: DOWNLOAD_URL_TBD — wire up the real .dmg URL once the first
          release is built and the macOS minimum version / architecture
          coverage is confirmed (see src-tauri bundle config). -->
-    <div class="dt-cta">
-      <span class="btn-download" aria-disabled="true">Download for macOS</span>
+    <div class="b-ctas dt-cta">
+      <span class="b-btn pri" aria-disabled="true">Download for macOS</span>
       <span class="dt-version">version 0.2.0</span>
     </div>
     <p class="dt-note">Download link coming with the first release.</p>
@@ -142,7 +74,7 @@ const canonical = Astro.site
     </p>
     <p>Windows and Linux builds aren't available yet — see the FAQ below.</p>
 
-    <h2>Installing</h2>
+    <h2 class="b-h2">Installing</h2>
     <p>
       The app isn't signed with an Apple Developer certificate, so the first
       time you open it, macOS Gatekeeper will step in and refuse a normal
@@ -159,7 +91,7 @@ const canonical = Astro.site
     </ol>
     <p>After that first time, it opens normally, like any other app.</p>
 
-    <h2>Importing your own translations</h2>
+    <h2 class="b-h2">Importing your own translations</h2>
     <p>
       You're not limited to the built-in corpus. The app can import a
       plain-text or Markdown file of your own translation and align it to the
@@ -193,7 +125,7 @@ const canonical = Astro.site
       can say so instead.
     </p>
 
-    <h2>Annotations &amp; data</h2>
+    <h2 class="b-h2">Annotations &amp; data</h2>
     <p>
       Everything you do in the app — highlights, notes, imported
       translations — is stored as plain files on your own machine, under your
@@ -206,7 +138,7 @@ const canonical = Astro.site
       move to another machine.
     </p>
 
-    <h2>FAQ</h2>
+    <h2 class="b-h2">FAQ</h2>
     <p><strong>Is it free?</strong><br />
       Yes. Same as the website — no account, no paywall, no ads.</p>
     <p><strong>Does it phone home?</strong><br />
@@ -219,5 +151,7 @@ const canonical = Astro.site
       on; other platforms are possible later but aren't planned for a
       specific date.</p>
   </main>
+  <BFoot />
+  </div></div>
 </body>
 </html>

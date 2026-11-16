@@ -39,11 +39,11 @@ describe('titles, headwords and reading text never truncate', () => {
   // class → the file whose <style> owns it. Listed by hand so that renaming a
   // class without revisiting this rule fails loudly rather than passing vacuously.
   const NAMED: [string, string][] = [
-    ['work-name', 'src/pages/index.astro'],        // a work title on the home grid
-    ['fb-name', 'src/components/LemmaPage.astro'], // a work title in frequency-by-work
-    ['lx-head-gk', 'src/components/LemmaPage.astro'], // the lemma headword
-    ['lxi-gk', 'src/pages/lemma/index.astro'],     // a headword in the lexicon grid
-    ['lp-title', 'src/components/Landing.astro'],  // the work title on its landing page
+    ['b-wt', '../shared/styles/b.css'],           // redesigned home work titles ship in B's global CSS
+    ['b-bw', '../shared/styles/b.css'], // D23 work-search rows
+    ['b-wp', '../shared/styles/b.css'], // R-L1 fits this one-line headword to its width
+    ['lxi-gk', '../shared/styles/b.css'],     // a headword in the lexicon grid
+    ['b-po-t', '../shared/styles/b.css'],  // the work title on its landing page
   ];
 
   for (const [cls, file] of NAMED) {
@@ -54,18 +54,19 @@ describe('titles, headwords and reading text never truncate', () => {
       expect(rules.length, `no rule styles .${cls} — was it renamed?`).toBeGreaterThan(0);
       for (const [sel, decls] of rules) {
         expect(decls, sel).not.toMatch(/text-overflow/);
-        expect(decls, sel).not.toMatch(/white-space:\s*nowrap/);
+        if (cls !== 'b-wp') expect(decls, sel).not.toMatch(/white-space:\s*nowrap/);
+        expect(decls, sel).not.toMatch(/overflow:\s*hidden/);
       }
     });
   }
 
-  it('never truncates a work title with an ellipsis (frequency-by-work rows)', () => {
-    const fbName = rule(src('LemmaPage.astro'), '.fb-name');
+  it('never truncates a work title with an ellipsis (By work search rows)', () => {
+    const fbName = rule(read('../shared/styles/b.css'), '.b-bw a > span');
     // "De Generatione et Corruptione" is wider than the 12rem name column on a
     // phone; nowrap + hidden + ellipsis cut it to "De Generatione et…".
     expect(fbName).not.toMatch(/text-overflow/);
     expect(fbName).not.toMatch(/white-space:\s*nowrap/);
-    // The row is a grid, so a two-line title just makes its row taller.
+    // A wrapped title makes the flex row taller.
     expect(fbName).toMatch(/overflow-wrap:\s*anywhere/);
   });
 });
@@ -102,7 +103,7 @@ describe('the reading text keeps its size', () => {
 const SOURCE_FILES = [
   'src/components/Landing.astro', 'src/components/LemmaPage.astro',
   'src/components/ReaderShell.astro', 'src/components/ThemeToggle.astro',
-  'src/components/HelpButton.svelte', 'src/components/WorkSwitcher.svelte',
+  'src/components/HelpButton.svelte',
   'src/pages/index.astro', 'src/pages/advanced.astro', 'src/pages/search.astro',
   'src/pages/phrases.astro', 'src/pages/support.astro', 'src/pages/attribution.astro',
   'src/pages/desktop.astro', 'src/pages/404.astro', 'src/pages/lemma/index.astro',
@@ -133,46 +134,11 @@ describe('icon-only controls carry an accessible name', () => {
       }
     });
   }
-
-  it('the work switcher, whose only label is its own selected option, is labelled', () => {
-    expect(src('WorkSwitcher.svelte')).toMatch(/<select[^>]*aria-label=/);
-  });
 });
 
-// A control whose accessible name comes only from a text span that CSS hides on
-// a phone has NO name on a phone. global.css sets `display: none` on each of
-// these in the ≤680px block and again in the landscape block, so the element
-// that carries one must name itself with aria-label.
-describe('controls whose label text is hidden on a phone name themselves', () => {
-  const HIDDEN_ON_PHONE = ['toc-toggle-text', 'hs-text', 'hsup-text', 'settings-text'];
-  const globalCss = read('../shared/styles/global.css');
-
-  it('those label spans really are hidden on a phone (the premise of this rule)', () => {
-    const phone = globalCss.slice(globalCss.indexOf('@media (max-width: 680px)'));
-    for (const cls of HIDDEN_ON_PHONE) {
-      expect(phone, cls).toMatch(new RegExp(`\\.${cls}[^{}]*\\{[^{}]*display:\\s*none`));
-    }
-  });
-
-  it('every control carrying one of them has an aria-label', () => {
-    const shell = src('ReaderShell.astro');
-    const elements = [...shell.matchAll(/<(button|a)\b[^>]*>[\s\S]*?<\/\1>/g)].map((m) => m[0]);
-    const carriers = elements.filter((el) =>
-      HIDDEN_ON_PHONE.some((cls) => el.includes(`class="${cls}"`)));
-
-    // Every one of them is still on a control (.hs-text is on two: Search and
-    // Lexicon), so a class dropped from the markup fails here rather than
-    // quietly making this rule vacuous.
-    for (const cls of HIDDEN_ON_PHONE) {
-      expect(carriers.filter((el) => el.includes(`class="${cls}"`)).length, cls)
-        .toBeGreaterThan(0);
-    }
-    for (const el of carriers) {
-      expect(el.slice(0, el.indexOf('>')), 'label text is hidden on a phone and no aria-label')
-        .toMatch(/aria-label=/);
-    }
-  });
-});
+// The B reader head hides whole controls on a phone (`hide-s`), never a
+// control's label text, so no control loses its name there; its icon-only
+// controls are covered by the rule above.
 
 // ── 4. Bypass blocks ───────────────────────────────────────────────────────
 describe('the reader page can be skipped into', () => {
@@ -202,21 +168,23 @@ describe('the reader page can be skipped into', () => {
     // `.sr-only` clips its element unconditionally, so a skip link built on it
     // is announced but never seen — no use to a sighted keyboard user.
     expect(shell).not.toMatch(/class="skip-to-text[^"]*sr-only/);
-    expect(shell).toMatch(/\.skip-to-text:focus\s*\{[^}]*top:/);
+    // Component <style> blocks ship nowhere in the built site; B's CSS does.
+    expect(read('../shared/styles/b.css')).toMatch(/\.skip-to-text:focus\s*\{[^}]*top:/);
   });
 });
 
 describe('ReaderShell contents drawer', () => {
   const shell = src('ReaderShell.astro');
 
-  it('is inert while closed, so its off-screen links are not tab stops', () => {
-    const aside = shell.match(/<aside class="toc-sidebar"[^>]*>/)?.[0] ?? '';
-    expect(aside).toContain('aria-hidden="true"');
+  it('is hidden and inert while closed, so its links are not tab stops', () => {
+    const aside = shell.match(/<aside class="b-toc"[^>]*>/)?.[0] ?? '';
+    expect(aside).toMatch(/\bhidden\b/);
     expect(aside).toMatch(/\binert\b/);
   });
 
-  it('toggles inert together with aria-hidden when the drawer opens and closes', () => {
+  it('toggles inert together with hidden when the drawer opens and closes', () => {
     const setToc = shell.slice(shell.indexOf('const setToc'), shell.indexOf('};', shell.indexOf('const setToc')));
+    expect(setToc).toMatch(/hidden = !open/);
     expect(setToc).toMatch(/inert = !open/);
   });
 });

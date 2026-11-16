@@ -27,3 +27,13 @@ describe('glossary helpers', () => {
     );
   });
 });
+
+it('exports Greek forms and body-only HTML while keeping full entries', async () => {
+  const { GLOSSARY_BODIES } = await import('../lib/glossary');
+  expect(GLOSSARY_BODIES).toHaveLength(50);
+  const akon = GLOSSARY_BODIES.find(e=>e.slug==='akon')!;
+  expect(akon.greek).toEqual(['ἄκων','ἀκούσιον']);
+  expect(akon.bodyHtml).toBe('See <em>hekōn</em>.');
+  expect(akon.html).toContain('<em>akōn, akousion</em>');
+  expect(GLOSSARY_BODIES.every(e=>e.greek.length>0&&e.bodyHtml.length>0)).toBe(true);
+});

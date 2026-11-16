@@ -382,6 +382,7 @@ def emit_books(spine, tokens_doc, english, range_map, out_dir: Path, ross=None,
                 "english": (
                     {
                         "text": eng["text"],
+                        **({"paraStart": eng["paraStart"]} if "paraStart" in eng else {}),
                         "notes": eng["notes"],
                         "markers": eng["markers"],
                         "bekker": eng.get("bekker", []),
@@ -658,6 +659,7 @@ def run(manifest: Manifest) -> Path:
         "english.json",
         "meta.json",
         "offsets.json",
+        "running.json",
         "grammar-dict.json",
         "grammar-col.bin",
     ]:

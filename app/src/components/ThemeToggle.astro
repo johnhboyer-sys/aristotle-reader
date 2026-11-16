@@ -1,11 +1,13 @@
 ---
-// Night-mode toggle button. The icon shows the theme you'll switch TO:
-// a moon in light mode, a sun in dark mode. Choice is persisted in localStorage
-// and, until the reader makes an explicit choice, the OS preference is followed.
+// B's home navigation keeps its moon in both themes. Other pages show the target theme.
+const { bMoon = false } = Astro.props;
+// Keep the existing saved choice and OS preference behaviour.
 ---
 <button
   type="button"
-  class="theme-toggle"
+  class={bMoon ? 'b-ib' : 'theme-toggle'}
+  data-theme-toggle
+  data-b-moon={bMoon ? true : undefined}
   aria-label="Toggle night mode"
   title="Toggle night mode"
 >
@@ -14,7 +16,7 @@
 
 <script is:inline>
   (function () {
-    var btn = document.querySelector('.theme-toggle');
+    var btn = document.querySelector('[data-theme-toggle]');
     if (!btn) return;
     var icon = btn.querySelector('.theme-icon');
 
@@ -25,10 +27,12 @@
     var SUN =
       '<svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.4 4.4l1.6 1.6M18 18l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.4 19.6l1.6-1.6M18 6l1.6-1.6"/></svg>';
 
+    var B_MOON = '<svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path d="M13.2 10.1A5.6 5.6 0 0 1 5.9 2.8a5.6 5.6 0 1 0 7.3 7.3z" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
+
     function render() {
       var dark = document.documentElement.dataset.theme === 'dark';
-      // Icon shows the theme you'll switch TO: moon in light, sun in dark.
-      icon.innerHTML = dark ? SUN : MOON;
+      // Home keeps B's moon; other pages show the target theme.
+      icon.innerHTML = btn.hasAttribute('data-b-moon') ? B_MOON : dark ? SUN : MOON;
       btn.setAttribute('aria-pressed', String(dark));
     }
     render();
