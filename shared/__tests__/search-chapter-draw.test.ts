@@ -242,3 +242,37 @@ it('keeps the split rows when "and" finds no chapter with both', async () => {
   await vi.waitFor(() => expect(c.textContent).toMatch(/No passages found/));
   await vi.waitFor(() => expect(splitOf(c)).toEqual(['Greek and English 0', 'Greek only 1 off', 'English only 1 off']));
 });
+
+// 14–15. English searched: one list, a work with its chapters, under it each
+// translation with its hits there (John, 16 Nov). Chapter 1 has Rackham's
+// word 0; chapter 2 Ross's two words (Ross's slot has no chapter starts, so
+// its words fall in the chapter the section's Greek opens in: chapter 1).
+const nestOf = (c: Element) => [...c.querySelectorAll('.sx-nest .i:not(.i-all)')]
+  .map(i => `${i.classList.contains('sub') ? '  ' : ''}${text(i.querySelector('.i-t'))} ${text(i.querySelector('small'))}`);
+async function openNest() {
+  const { loadOffsets, loadEngChapters } = await import('../lib/search');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(10));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [2, '2']] } });
+  const r: SearchResult = { ...base, grkMatch: false, engMatch: true, grkPositions: [],
+    engHits: [{ translation: 'rackham', positions: [0, 2] }, { translation: 'ross', positions: [1, 4, 6] }] };
+  return open(book(Array.from({ length: 22 }, (_, i) => line(i + 1, 'α')), 'Virtue one. Virtue two.'), [r], 'e=virtue');
+}
+it('lists each work with its chapters, and its translations with their hits', async () => {
+  const c = await openNest();
+  await vi.waitFor(() => expect(nestOf(c)).toEqual(['Nicomachean Ethics 2 chap.', '  Ross 3', '  Rackham 2']));
+  expect(c.querySelector('.sx-trans')).toBeNull();
+});
+it('narrows to a translation in its work, and lifts it when chosen again', async () => {
+  const c = await openNest();
+  await vi.waitFor(() => expect(nestOf(c)).toHaveLength(3));
+  const ross = () => [...c.querySelectorAll<HTMLElement>('.sx-nest .i.sub')].find(i => /Ross/.test(i.textContent ?? ''))!;
+  await fireEvent.click(ross());
+  await vi.waitFor(() => expect(new URLSearchParams(window.location.search).get('t')).toBe('ross'));
+  expect(new URLSearchParams(window.location.search).get('wf')).toBe('EN');
+  await vi.waitFor(() => expect(text(c.querySelector('.result-count'))).toMatch(/^1 chapter\s*3 hits\b/));
+  expect(ross()).toHaveAttribute('aria-pressed', 'true');
+  expect(nestOf(c)).toEqual(['Nicomachean Ethics 2 chap.', '  Ross 3', '  Rackham 2']);
+  await fireEvent.click(ross());
+  await vi.waitFor(() => expect(new URLSearchParams(window.location.search).get('t')).toBeNull());
+  expect(new URLSearchParams(window.location.search).get('wf')).toBeNull();
+});

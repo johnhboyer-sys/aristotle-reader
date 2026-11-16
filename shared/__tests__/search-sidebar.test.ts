@@ -184,16 +184,19 @@ describe('Search.svelte: the side column', () => {
     expect(search).toHaveBeenCalledTimes(1);
   });
 
-  it('lists every translation with hits, by count, in a box of its own', async () => {
-    await open(`${G}&e=one`, BILINGUAL);
-    const trans = screen.getByRole('group', { name: 'Show English hits from one translation' });
-    expect(text(trans.querySelector('.k'))).toBe('Translations by count');
-    const box = trans.querySelector(':scope > .sx-list')!;
-    expect(box.querySelectorAll('button.i')).toHaveLength(3);
-    expect(within(trans).queryByRole('button', { name: /more$|^fewer$/ })).toBeNull();
-    await fireEvent.click(within(trans).getByRole('button', { name: /^Rackham/ }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('1 chapter · 4 hits'));
-    expect(within(trans).getByRole('button', { pressed: true }).querySelector('.i-x')).toHaveTextContent('×');
+  // One list where English was searched (John, 16 Nov): each work, and under
+  // it each translation with hits there; no separate Translations list.
+  it('lists every translation with hits under its work, in one box', async () => {
+    await open(`${G}&e=one&op=or`, BILINGUAL);
+    const list = screen.getByRole('group', { name: 'Show hits from one work or one translation' });
+    expect(screen.queryByRole('group', { name: 'Show English hits from one translation' })).toBeNull();
+    const box = list.querySelector(':scope > .sx-list')!;
+    expect([...box.querySelectorAll('button.i')].map(b => `${b.classList.contains('sub') ? '  ' : ''}${text(b)}`))
+      .toEqual(['De Interpretatione1 chap.', '  cooke1', 'Nicomachean Ethics1 chap.', '  Rackham1', '  Ross1']);
+    await fireEvent.click(within(list).getByRole('button', { name: /^Rackham/ }));
+    await vi.waitFor(() => expect(window.location.search).toContain('t=rackham'));
+    expect(window.location.search).toContain('wf=EN');
+    expect(within(list).getByRole('button', { pressed: true }).querySelector('.i-x')).toHaveTextContent('×');
   });
 });
 
@@ -242,7 +245,7 @@ describe('Search.svelte: "This search"', () => {
     },
     {
       what: 'Rackham', url: `${G}&e=one&t=rackham`, results: BILINGUAL, before: '4 hits', after: '6 hits', param: 't=',
-      control: () => expect(pressed('Show English hits from one translation')).toEqual([]),
+      control: () => expect(pressed('Show hits from one work or one translation')).toEqual([]),
     },
     {
       what: '1 form set aside', url: `${G}&xf=ths`, before: '4 hits', after: '6 hits', param: 'xf=',

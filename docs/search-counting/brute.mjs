@@ -12,7 +12,7 @@ const words = t => (t.toLowerCase().replace(/[‘’]/g, "'").match(/[a-z']+/g) 
   .map(w => w.replace(/^'+|'+$/g, '')).filter(Boolean);
 // "virtue" in any form: virtue, virtues, virtue's, virtues'.
 const isVirtue = w => w === 'virtue' || w === 'virtues' || w === "virtue's" || w === "virtues'";
-const grk = new Map(), eng = new Map(), slots = new Map();
+const grk = new Map(), eng = new Map(), slots = new Map(), bySlot = new Map(), chBySlot = new Map();
 const bump = (m, k, n = 1) => m.set(k, (m.get(k) || 0) + n);
 for (const work of readdirSync(DIST).sort()) {
   const dir = join(DIST, work);
@@ -35,7 +35,7 @@ for (const work of readdirSync(DIST).sort()) {
           if (areth(t.k)) bump(grk, key(ch));
         });
       }
-      const add = (c, slot, n) => { if (n) { bump(eng, key(c), n); (slots.get(key(c)) ?? slots.set(key(c), new Set()).get(key(c))).add(slot); } };
+      const add = (c, slot, n) => { if (n) { bump(eng, key(c), n); bump(bySlot, `${work}|${slot}`, n); (chBySlot.get(`${work}|${slot}`) ?? chBySlot.set(`${work}|${slot}`, new Set()).get(`${work}|${slot}`)).add(key(c)); (slots.get(key(c)) ?? slots.set(key(c), new Set()).get(key(c))).add(slot); } };
       // The main translation: a chapter begins at its engOffset.
       if (seg.english?.text) {
         const text = seg.english.text;
@@ -64,5 +64,9 @@ console.log(JSON.stringify({
   'Greek hits, both chapters': sum(grk, both), 'Greek hits, all': sum(grk, [...G]),
   'Greek hits, Greek-only chapters': sum(grk, [...G].filter(k => !E.has(k))),
   'English hits, all translations': sum(eng, [...E]),
-  'virtue: chapters': E.size, 'virtue: chapters with more than one translation': [...slots.values()].filter(s => s.size > 1).length,
+  'virtue: chapters': E.size,
+  // The nested list (John, 16 Nov): EN's chapters with virtue in any translation, and each slot's hits.
+  'virtue: EN chapters': [...E].filter(k => k.startsWith('EN:')).length,
+  'virtue: EN chapters by slot': Object.fromEntries([...chBySlot].filter(([k]) => k.startsWith('EN|')).map(([k, v]) => [k.slice(3), v.size])),
+  'virtue: EN hits by slot': Object.fromEntries([...bySlot].filter(([k]) => k.startsWith('EN|')).map(([k, n]) => [k.slice(3), n])), 'virtue: chapters with more than one translation': [...slots.values()].filter(s => s.size > 1).length,
 }, null, 1));

@@ -124,10 +124,14 @@ describe('Search.svelte', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
     await vi.waitFor(() => expect(status).toHaveTextContent('2 chapters · 3 hits'));
-    const works = screen.getByRole('group', { name: 'Show hits from one work' });
+    // One list where English was searched (John, 16 Nov): a work counts its
+    // chapters, a translation its English hits there.
+    const works = screen.getByRole('group', { name: 'Show hits from one work or one translation' });
     const en = within(works).getByRole('button', { name: /^Nicomachean Ethics/ });
-    expect(en).toHaveTextContent('Nicomachean Ethics1');
-    expect(within(works).getByRole('button', { name: /^Metaphysics/ })).toHaveTextContent('Metaphysics2');
+    expect(en).toHaveTextContent('Nicomachean Ethics1 chap.');
+    expect(within(works).getByRole('button', { name: /^Metaphysics/ })).toHaveTextContent('Metaphysics1 chap.');
+    expect(en.nextElementSibling).toHaveClass('sub');
+    expect(en.nextElementSibling).toHaveTextContent(/2$/);
     await vi.waitFor(() => expect(screen.getByText('1 hit', { selector: '.group-count' })).toBeInTheDocument());
 
     await fireEvent.click(en);
@@ -459,7 +463,8 @@ describe('Search.svelte in the address bar', () => {
     const { unmount } = render(Search);
     const chip = await screen.findByRole('button', { name: /^Ostwald/ });
     await fireEvent.click(chip);
-    expect(window.location.search).toBe('?e=virtue&t=ostwald');
+    // A translation's row narrows to it in its work (John, 16 Nov).
+    expect(window.location.search).toBe('?e=virtue&t=ostwald&wf=EN');
     expect(push).not.toHaveBeenCalled();
     push.mockRestore();
     unmount();
