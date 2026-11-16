@@ -287,15 +287,17 @@ const intro =
   const bookMenu = head.querySelector<HTMLDetailsElement>('.b-bkm');
   const viewToggle = head.querySelector<HTMLButtonElement>('[data-view-toggle]')!;
   const viewMenu = head.querySelector<HTMLElement>('#phone-view-menu')!;
-  const setViewMenu = (open: boolean) => {
+  // Focus returns to the toggle only when the menu itself closed it (a choice,
+  // Escape); a tap elsewhere keeps focus where the tap put it.
+  const setViewMenu = (open: boolean, refocus = true) => {
     viewMenu.hidden = !open;
     viewToggle.setAttribute('aria-expanded', String(open));
     if (open) viewMenu.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus();
-    else viewToggle.focus();
+    else if (refocus) viewToggle.focus();
   };
   viewToggle.addEventListener('click', () => setViewMenu(viewMenu.hidden));
   window.matchMedia('(max-width: 700px)').addEventListener('change', () => {
-    if (!viewMenu.hidden) setViewMenu(false);
+    if (!viewMenu.hidden) setViewMenu(false, false);
   });
   viewMenu.addEventListener('click', (e) => {
     if ((e.target as HTMLElement).closest('[data-reader-view]')) setViewMenu(false);
@@ -312,7 +314,7 @@ const intro =
   toc.querySelectorAll('a[href^="#"]').forEach((a) => a.addEventListener('click', () => setToc(false)));
   document.addEventListener('click', (e) => {
     const t = e.target as HTMLElement;
-    if (!viewMenu.hidden && !viewMenu.contains(t) && !viewToggle.contains(t)) setViewMenu(false);
+    if (!viewMenu.hidden && !viewMenu.contains(t) && !viewToggle.contains(t)) setViewMenu(false, false);
     if (!toc.hidden && !toc.contains(t) && !tocToggle.contains(t)) setToc(false);
     if (bookMenu?.open && !bookMenu.contains(t)) bookMenu.open = false;
   });

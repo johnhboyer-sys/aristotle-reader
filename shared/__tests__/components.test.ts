@@ -1290,6 +1290,31 @@ it.each([700, 701])('B keeps column anchors and responsive ticks in English view
   }
 });
 
+// Review, 15 Nov: a joined column whose English starts after line 1, or has no
+// tick at all, had no #col- target in English view, so links to it went nowhere.
+it.each([
+  ['starts at line 5', [{ n: 5, offset: 4, real: true }], '.english-col .bk-num#col-1094b'],
+  ['has no tick', [], '.english-col .col-anchor#col-1094b'],
+] as const)('B English view keeps a link target for a joined column whose English %s', async (_label, bekker, where) => {
+  localStorage.setItem('reader-view', 'english');
+  window.history.replaceState(null, '', '/EN/1?trans=rackham');
+  const book: BookData = { book: 1, segments: [fixtureBook.segments[0], {
+    id: 'seg2', column: '1094b', greek: [{ n: 1, text: 'δεύτερος', tokens: [] }],
+    english: { text: 'Continued English.', notes: [], markers: [], bekker: [...bekker] },
+  }] };
+  try {
+    const { container } = render(Reader, { props: { work: 'EN', bookData: book, b: true } });
+    await screen.findByText(/English\./);
+    expect(container.querySelectorAll('.b-row')).toHaveLength(1);
+    expect(container.querySelectorAll('#col-1094b')).toHaveLength(1);
+    expect(container.querySelector(where)).toBeTruthy();
+    // The scroll spy reads each shown tick's own column and line.
+    if (bekker.length) expect(container.querySelector('#col-1094b')).toHaveAttribute('data-cite', '1094b5');
+  } finally {
+    localStorage.removeItem('reader-view');
+  }
+});
+
 it.each([false, true])('B Compare breaks when an overlay starts a paragraph (%s)', async (para) => {
   window.history.replaceState(null, '', '/EN/1?trans=compare');
   localStorage.setItem('reader-cmpl-EN', 'rackham');

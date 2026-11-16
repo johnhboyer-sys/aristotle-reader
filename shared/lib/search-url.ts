@@ -339,7 +339,9 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
   s.context = pick(p.get('ctx'), RESULT_CONTEXTS, '3');
   s.sort = pick(p.get('so'), RESULT_SORTS, 'page');
   s.pageSize = pick(p.get('ps'), PAGE_SIZES, '40');
-  // Old citations URLs used Per page; keep those searches readable.
+  // Old citations URLs used Per page (ps=c, 400 a page). Citations only is now
+  // a Context choice and Per page is 20, 40, or 100 (John, 15 Nov), so such a
+  // link opens as citations at 40 a page.
   if (p.get('ps') === 'c') s.context = 'c';
   for (const pair of list(p.get('gf'))) {
     const [k, v, extra] = pair.split('.');

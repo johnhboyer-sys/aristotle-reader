@@ -761,8 +761,14 @@
           const first = sources[0];
           const joinFlow = (id: string): FlowPart[] => sources.flatMap((source, i) => {
             const flow = id === engSlot?.id ? source.block.flow : (source.block.oflows[id] ?? []);
-            const marked = flow.map(p => ({ ...p, sourceColumn: source.seg.column,
+            // A joined column's link target (#col-X) is its first tick in this
+            // flow, numbered 1 or not: some columns' English starts at a later
+            // line. A column with no tick here gets a bare anchor (anchorless).
+            const opens = source.bi === 0 && source.seg.column !== first.seg.column;
+            const firstTick = opens ? flow.findIndex(p => p.text === null && p.n !== null && !p.para) : -1;
+            const marked = flow.map((p, j) => ({ ...p, sourceColumn: source.seg.column,
               ...(p.n === 1 && !p.para ? { column: source.seg.column } : {}),
+              ...(j === firstTick ? { anchor: source.seg.column } : {}),
             }));
             return i && marked.length ? [{ text: ' ', n: null, real: false }, ...marked] : marked;
           });
@@ -772,6 +778,10 @@
             flow: joinFlow(engSlot?.id ?? ''),
             oflows: Object.fromEntries(secondaries.map(t => [t.id, joinFlow(t.id)])),
             otables: Object.fromEntries(secondaries.map(t => [t.id, sources.flatMap(s => (s.block.otables[t.id] ?? []).map(table => ({ ...table, column: s.seg.column })))])),
+            anchorless: Object.fromEntries([engSlot?.id ?? '', ...secondaries.map(t => t.id)].map(id => [id,
+              sources.filter(src => src.bi === 0 && src.seg.column !== first.seg.column &&
+                !(id === engSlot?.id ? src.block.flow : (src.block.oflows[id] ?? [])).some(p => p.text === null && p.n !== null && !p.para))
+                .map(src => src.seg.column)])),
           };
           return { seg: first.seg, blocks: [block], key: `${first.seg.id}:${first.bi}` };
         })
@@ -803,6 +813,8 @@
     if (chapterSection && el.classList.contains('bk-num')) {
       return tickCite(el.closest('.segment')?.id ?? '', el.textContent ?? '');
     }
+    const tick = (el as HTMLElement).dataset?.cite;
+    if (tick) return tick;
     return citeOfId(el.id);
   }
 
@@ -878,8 +890,10 @@
     const greekVisible = view === 'greek' || view === 'both';
     // With the Greek hidden a chapter-section work watches its English section
     // ticks, so the hash stays a section (#49a3), not a chapter (#49a).
+    // Joined English rows: every tick of the shown translation, since a row's
+    // only ids may lie further apart than a page jump.
     const els = Array.from(document.querySelectorAll(greekVisible ? '.greek-line[id]'
-      : chapterSection ? '.english-col .bk-num' : '.segment[id]'));
+      : chapterSection ? '.english-col .bk-num' : joinColumns ? '.segment[id], .bk-num[data-cite]' : '.segment[id]'));
     if (!els.length) return;
     const topInset = readingTop();
     // Detection band: a strip just below the sticky chrome. The intersecting
@@ -927,8 +941,12 @@
       if (el) alignSection(el);
       return;
     }
+    // English view, rows joined: the English tick for that line, if it has one.
+    const tickEl = sub ? null : document.querySelector<HTMLElement>(`.bk-num[data-cite="${column}${line}"]`);
     if (lineEl && (lineEl as HTMLElement).offsetParent !== null) {
       lineEl.scrollIntoView({ behavior: 'auto', block: 'center' });
+    } else if (tickEl && tickEl.offsetParent !== null) {
+      tickEl.scrollIntoView({ behavior: 'auto', block: 'center' });
     } else {
       document.getElementById(`col-${column}`)?.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
@@ -1041,13 +1059,13 @@
   // flowParts). A GreekLine may be a partial slice of a real line (cont = its
   // tail half, after a mid-line chapter split): it suppresses the repeated id.
   type RLine = GreekLine & { cont?: boolean };
-  interface Block { sources?: { seg: Segment; block: Block; bi: number }[]; chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][]; column?: string }[]>; sidenotes: number[]; figs: number[]; }
+  interface Block { sources?: { seg: Segment; block: Block; bi: number }[]; chapter: string | null; bekker: string; lines: RLine[]; flow: FlowPart[]; oflows: Record<string, FlowPart[]>; otables: Record<string, { n: number; rows: string[][]; column?: string }[]>; sidenotes: number[]; figs: number[]; anchorless?: Record<string, string[]>; }
   // EnrichedBlock annotates each block with the chapter it belongs to (tracking
   // across segments so continuation blocks know their chapter too).
   interface EnrichedBlock extends Block { currentChapter: string; }
   // A flowing-prose part: either a text run (n null) or a Bekker margin marker
   // (text null) placed at an exact mid-sentence offset — no row break.
-  interface FlowPart { text: string | null; n: number | null; real: boolean; para?: boolean; column?: string; sourceColumn?: string; }
+  interface FlowPart { text: string | null; n: number | null; real: boolean; para?: boolean; column?: string; sourceColumn?: string; anchor?: string; }
 
   // The char position where token `w` begins in a line's text (0 at the start,
   // text.length at/after the end), so a cut preserves the verbatim
@@ -1137,7 +1155,8 @@
   // marks. (It also keeps `.para-br + .bk-seg` adjacency intact when a tick
   // lands exactly on a paragraph start.) Ticks with an attached table — or
   // with no following text run — keep the standalone rendering.
-  type RenderPart = FlowPart & { tick?: { n: number; real: boolean; column?: string } };
+  type Tick = { n: number | null; real: boolean; column?: string; sourceColumn?: string; anchor?: string };
+  type RenderPart = FlowPart & { tick?: Tick };
   function attachTicks(parts: FlowPart[], tableNs: Set<string> = new Set()): RenderPart[] {
     const isText = (p: FlowPart | undefined): p is FlowPart => !!p && p.text !== null && p.text !== '\n';
     const isBreak = (p: FlowPart | undefined): boolean => !!p && (p.text === '\n' || p.para === true);
@@ -1148,7 +1167,7 @@
       if (isTick && part.n !== null && !tableNs.has(`${part.sourceColumn ?? ''}:${part.n}`)) {
         const next = parts[i + 1];
         if (isText(next)) {
-          out.push({ ...next, tick: { n: part.n, real: part.real, column: part.column } });
+          out.push({ ...next, tick: { n: part.n, real: part.real, column: part.column, sourceColumn: part.sourceColumn, anchor: part.anchor } });
           i += 1;
           continue;
         }
@@ -1158,7 +1177,7 @@
         // previous-line attachment this helper exists to prevent).
         if (isBreak(next) && isText(parts[i + 2])) {
           out.push(next);
-          out.push({ ...parts[i + 2], tick: { n: part.n, real: part.real, column: part.column } });
+          out.push({ ...parts[i + 2], tick: { n: part.n, real: part.real, column: part.column, sourceColumn: part.sourceColumn, anchor: part.anchor } });
           i += 2;
           continue;
         }
@@ -1817,12 +1836,12 @@
        Bekker numbers. The footnote/table-bearing translation ('third' slot)
        uses renderThird + clickable `[^N]` markers + diagram tables; the rest
        use plain highlightEng. Works for any number of translations. -->
-  {#snippet bekkerNum(tick: { n: number | null; real: boolean; column?: string }, block: Block, transId: string)}
-    {@const columnAnchor = joinColumns && view === 'english' && tick.column &&
-      transId === (trans === 'compare' ? compareLeft : trans) &&
-      tick.column !== block.sources?.[0].seg.column ? `col-${tick.column}` : undefined}
+  {#snippet bekkerNum(tick: Tick, block: Block, transId: string)}
+    {@const spied = joinColumns && view === 'english' && transId === (trans === 'compare' ? compareLeft : trans)}
+    {@const columnAnchor = spied && tick.anchor ? `col-${tick.anchor}` : undefined}
     <span class="bk-num" class:col-num={!!tick.column} class:approx={!tick.real}
-      class:segment={!!columnAnchor} id={columnAnchor}>{tick.column && vw > 700 ? tick.column : tick.n}</span>
+      class:segment={!!columnAnchor} id={columnAnchor}
+      data-cite={spied && tick.sourceColumn && tick.n !== null ? `${tick.sourceColumn}${tick.n}` : undefined}>{tick.column && vw > 700 ? tick.column : tick.n}</span>
   {/snippet}
 
   {#snippet transFlow(block: Block, transId: string)}
@@ -2051,6 +2070,8 @@
                  gutter — real anchors full weight, estimates lighter/italic. -->
             <div class="english-col" class:b-ec={b} data-trans={trans === 'compare' ? compareLeft : trans} data-t={b && trans === 'compare' ? transById(compareLeft)?.short : undefined}>
               {#if trans === 'compare'}<div class="col-label">{transById(compareLeft)?.short ?? 'English'}</div>{/if}
+              <!-- A joined column with no English tick here: its link lands at the row. -->
+              {#if joinColumns && view === 'english'}{#each block.anchorless?.[trans === 'compare' ? compareLeft : trans] ?? [] as col}<span class="col-anchor" id={`col-${col}`}></span>{/each}{/if}
               <!-- No title of its own, but the right column has one: take the
                    gap at this column's own width so it wraps to the same
                    height the visible title does. A column with no prose in

@@ -5138,7 +5138,7 @@
             {#if pages.length > 1}{@render pager('')}{/if}
           </div>
         {/if}
-        {#if failedWorks.length || formsFailed || grammarFailed || unsearched.length || unresolved.length || approximateTurns.length || approximateChapters.length}
+        {#if failedWorks.length || formsFailed || grammarFailed || unsearched.length || unresolved.length || approximateTurns.length}
           <!-- Notices are rows: what kind, what happened, and what to do. -->
           <div class="sx-notes">
             {#if failedWorks.length}
