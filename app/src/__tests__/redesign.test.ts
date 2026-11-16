@@ -95,7 +95,8 @@ test('R-P2 plate URLs check every composite href', () => {
     expect(validPlateUrl([{part: '', href: 'https://example.com/a'}])).toBe(false);
 });
 // CI runs these tests before it builds the site; the two built-page checks skip there, and say so.
-const built = existsSync(resolve(root, 'dist/index.html'));
+// Any build at all (dist/) runs them, so a build missing either page fails.
+const built = existsSync(resolve(root, 'dist'));
 test.skipIf(!built)('R-P3 built Juv credits link both source records (needs the built site)', () => {
     const html = readFileSync(resolve(root, 'dist/picture-credits/index.html'), 'utf8');
     const doc = new DOMParser().parseFromString(html.match(/<li data-plate="Juv"[\s\S]*?<\/li>/)![0], 'text/html');

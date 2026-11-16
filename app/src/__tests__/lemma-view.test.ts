@@ -36,8 +36,8 @@ it('encodes one lemma key and one work for Search to restore', () => {
   expect(state.grk).toBe('');
   expect(state.workFilter).toBeNull();
 });
-// CI has no built corpus, so no lemmata.json.
-it.skipIf(!existsSync('public/data/lemmata.json'))('maps all real glossary forms and reports forms needing a ruling (needs the built corpus)', () => {
+// CI has no built corpus. With it built (s1-corpus-check's marker), a missing lemmata.json fails.
+it.skipIf(!existsSync('public/data/EN/search/offsets.json'))('maps all real glossary forms and reports forms needing a ruling (needs the built corpus)', () => {
   const manifest = JSON.parse(readFileSync('public/data/lemmata.json','utf8'));
   const heads = Object.entries(manifest).map(([key,e])=>({...e as {slug:string;head:string},key}));
   const mapping = mapGlossary(GLOSSARY_BODIES,heads);

@@ -34,8 +34,9 @@ describe('returning home layout', () => {
   });
 });
 
-// CI has no built corpus: the EN chapter and column maps come from it.
-const dataPresent = existsSync(resolve('public/data/EN/chapters.json'));
+// CI has no built corpus: the EN chapter and column maps come from it. With the corpus built
+// (s1-corpus-check's marker), a missing map fails rather than skips.
+const dataPresent = existsSync(resolve('public/data/EN/search/offsets.json'));
 const load = (file: string) => JSON.parse(readFileSync(resolve(`public/data/EN/${file}.json`), 'utf8'));
 const chapters = dataPresent ? load('chapters') : null;
 const columns = dataPresent ? load('columns') : null;

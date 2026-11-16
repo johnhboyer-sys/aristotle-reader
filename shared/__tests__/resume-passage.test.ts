@@ -8,8 +8,9 @@ const translation = (slot: TranslationRef['slot'] = 'english', extra = {}): Tran
 const work = (slot: TranslationRef['slot'] = 'english', extra = {}) => ({ translations: [translation(slot, extra)], defaultTranslation: 'chosen' });
 const book = (segment: Partial<Segment>): BookData => ({ book: 1, segments: [{ id: '1:1a', column: '1a', greek: [], english: null, ...segment }] });
 const greek = (n: number, text: string) => ({ n, text, tokens: [] });
-// CI has no built corpus; these three read it, as s1-corpus-check does.
-const dataPresent = existsSync(resolve('../app/public/data/EN/book-02.json'));
+// CI has no built corpus; these three read it. The marker is s1-corpus-check's, so with the corpus
+// built, a missing book fails rather than skips.
+const dataPresent = existsSync(resolve('../app/public/data/EN/search/offsets.json'));
 
 describe('saved passage', () => {
   it.skipIf(!dataPresent)('keeps the suffix of Physics VII lettered lines (needs the built corpus)', () => {
