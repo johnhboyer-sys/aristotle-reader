@@ -3947,6 +3947,17 @@ if(stage>=4) Object.assign(gates, {
             return {text:c?.innerText.replace(/\s+/g,' ').trim(), n:num(c?.querySelector('.rc-n')?.textContent), noun:c?.querySelector('.rc-w')?.textContent.trim(),
                 hitsText:hits&&hits.checkVisibility()&&hits.getBoundingClientRect().width>0?hits.textContent.trim():null};
         });
+        // The rows under the count: chapters with both languages, Greek only, English only (John, 16 Nov),
+        // lit where the and | and/or | or switch lists them. Counted from the books by
+        // docs/search-counting/brute.mjs: 229, 23, 186.
+        const readSplit=p=>p.evaluate(()=>[...document.querySelectorAll('main.search-page .sx-split .i')].filter(el=>el.checkVisibility())
+            .map(el=>`${el.querySelector('.i-t')?.textContent.trim()} ${el.querySelector('small')?.textContent.trim()}${el.classList.contains('off')?' off':''}`));
+        const expectSplit=(size,label,rows,lit)=>{
+            const want=[['Greek and English',229],['Greek only',23],['English only',186]].map(([t,k],i)=>`${t} ${k}${lit[i]?'':' off'}`);
+            assert(rows.length,`${size} ${label} examined=0 split rows`);
+            assert(JSON.stringify(rows)===JSON.stringify(want),`${size} ${label} split reads ${JSON.stringify(rows)}, expected ${JSON.stringify(want)}`);
+        };
+        const switchLabel=p=>p.evaluate(()=>[...document.querySelectorAll('main.search-page details.opt.join summary b')].find(el=>el.checkVisibility())?.textContent.trim());
         const expectBar=(size,label,bar,chapters,hits)=>{
             assert(bar.text,`${size} ${label} examined=0 result counts`);
             assert(/^chapters?$/.test(bar.noun),`${size} ${label} count reads "${bar.text}": the big number is not counted in chapters`);
@@ -3965,6 +3976,10 @@ if(stage>=4) Object.assign(gates, {
                 if(prove&&proofCase==='unlabelled'&&size==='D1440')await p.locator('main.search-page .rc-hits').first().evaluate(el=>el.remove());
                 const bar=await readBar(p);
                 expectBar(size,'Both',bar,229,940);
+                n++;
+                if(prove&&proofCase==='split-number'&&size==='P390')await p.locator('main.search-page .sx-split .i small').nth(1).evaluate(el=>{el.textContent='22';});
+                if(prove&&proofCase==='split-lit'&&size==='D1440')await p.locator('main.search-page .sx-split .i').nth(2).evaluate(el=>el.classList.remove('off'));
+                expectSplit(size,'Both',await readSplit(p),[true,false,false]);
                 n++;
                 if(await p.locator('.sx-filter').isVisible()) {
                     await p.locator('.sx-filter').click();
@@ -3988,6 +4003,46 @@ if(stage>=4) Object.assign(gates, {
                 expectBar('D1440','Either',bar,438,967);
                 n++;
                 console.log(`R-S7 D1440 either bar="${bar.text}"`);
+            } finally {await close(p);}
+        }
+        // A new search opens on "and/or" (John, 16 Nov): typed into a blank page and run with the switch
+        // untouched, it counts every chapter with either term, and its link names op=or. (The Both
+        // searches above load a link with no op, which still means "and", as it did when it was written.)
+        {
+            const p=await open('D1440','light','/search');
+            try {
+                await p.fill('#grk-input','ἀρετή');
+                await p.fill('#eng-input','virtue');
+                if(prove&&proofCase==='default-and')await p.evaluate(()=>{const r=document.querySelector('main.search-page input[name="op"][value="and"]');r.checked=true;r.dispatchEvent(new Event('change',{bubbles:true}));});
+                const label=await switchLabel(p);
+                await p.click('main.search-page button.search-btn');
+                await p.waitForFunction(()=>/^\d[\d,]* chapters?/.test(document.querySelector('[role="status"]')?.textContent?.trim()??''),null,{timeout:120000});
+                const bar=await readBar(p);
+                expectBar('D1440','New search',bar,438,967);
+                n++;
+                assert(label==='and/or',`D1440 New search switch reads "${label}" before the search, expected "and/or"`);
+                const op=new URL(p.url()).searchParams.get('op');
+                assert(op==='or',`D1440 New search link has op=${op}, expected op=or`);
+                n++;
+                console.log(`R-S7 D1440 new search bar="${bar.text}" switch="${label}" op=${op}`);
+            } finally {await close(p);}
+        }
+        // "or", the exclusive or (op=xor): the chapters with one language, not both. The hits are the
+        // Greek words of the Greek-only chapters, 27 by brute.mjs.
+        {
+            const p=await open('D1440','light','/search?g=ἀρετή&e=virtue&op=xor');
+            try {
+                if(prove&&proofCase==='xor-inclusive')await p.locator('main.search-page .rc-n').first().evaluate(el=>{el.textContent='438';});
+                if(prove&&proofCase==='xor-label')await p.locator('main.search-page details.opt.join summary b').first().evaluate(el=>{el.firstChild.textContent='and/or';});
+                const bar=await readBar(p);
+                expectBar('D1440','One language',bar,209,27);
+                n++;
+                expectSplit('D1440','One language',await readSplit(p),[false,true,true]);
+                n++;
+                const label=await switchLabel(p);
+                assert(label==='or',`D1440 One language switch reads "${label}", expected "or"`);
+                n++;
+                console.log(`R-S7 D1440 one-language bar="${bar.text}" switch="${label}"`);
             } finally {await close(p);}
         }
         // English alone, over works with a second translation: chapters only.
@@ -5100,7 +5155,7 @@ const stageFourProofs = {
     'R-S4': {'split':/D1152 Accents and Lemma are split/,'three-rows':/D961 Greek options take [3-9] rows, expected 2 at most/,'phone-wrap':/P390 Greek options take 2 rows, expected 1/,'no-phone-menus':/P390 phone Match and Form menus: found \[\]/,'clipped':/P360 Greek options clipped: /},
     'R-S5': {'english-low':/D1152 English options row top=[\d.]+ is not level with Greek options row 1/},
     'R-S6': {'fixed-field':/S844 Greek field row is position: fixed/,'over-header':/S844 Greek field [-\d.]+–[-\d.]+ lies over the site header/,'gap':/S844 Greek field sits 2[89](\.\d)?px above the key sheet, expected 8±2/,'live-under':/S844 \d+ of \d+ controls under the key sheet are not inert/,'inert-clear':/S844 Clear Greek shown=true inert=true/},
-    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'empty-page':/D1440 Both search draws nothing on page 67 of \d+/,'twice':/D1440 Both search draws 1 chapters more than once: /},
+    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'empty-page':/D1440 Both search draws nothing on page 67 of \d+/,'twice':/D1440 Both search draws 1 chapters more than once: /,'split-number':/P390 Both split reads .*"Greek only 22 off".*, expected/,'split-lit':/D1440 Both split reads .*"English only 186"\].*, expected/,'xor-inclusive':/D1440 One language count reads 438 chapters and 27 hits, expected 209 and 27/,'xor-label':/D1440 One language switch reads "and\/or", expected "or"/,'default-and':/D1440 New search count reads 229 chapters and 940 hits, expected 438 and 967/},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <textarea[^>]*id="grk-input"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},

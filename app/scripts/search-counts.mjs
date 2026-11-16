@@ -22,6 +22,13 @@ if (!args.includes('--base') || !args.includes('--out')) throw new Error('Usage:
 const queries = [
   ['Greek any form', { g: 'ἀρετή' }],
   ['English virtue', { e: 'virtue' }],
+  // Greek and English (John, 16 Nov): a link from before the switch had three
+  // choices, with no op, still means "and"; a search typed into a blank page
+  // with the switch untouched is "and/or".
+  ['Both, a link with no op (and)', { g: 'ἀρετή', e: 'virtue' }],
+  ['Both, typed into a blank page (and/or)', { typed: { g: 'ἀρετή', e: 'virtue' } }],
+  ['Both and/or', { g: 'ἀρετή', e: 'virtue', op: 'or' }],
+  ['Both or: one language, not both', { g: 'ἀρετή', e: 'virtue', op: 'xor' }],
   ['Greek any word', { g: 'ἀρετή ἕξις', gm: 'any' }],
   ['Exact phrase', { g: 'τὸ τί ἦν εἶναι', gm: 'phrase', m: 'form' }],
   ['Virtue near habit', [['c', 'l:areth'], ['c', 'l:ecis'], ['cw', '10']]],
@@ -43,8 +50,15 @@ try {
   const page = await browser.newPage();
   for (const [name, params] of queries) {
     try {
-      const url = new URL(`/search?${new URLSearchParams(params)}`, flag('--base')).href;
+      let url = new URL(params.typed ? '/search' : `/search?${new URLSearchParams(params)}`, flag('--base')).href;
       await page.goto(url);
+      if (params.typed) {
+        await page.fill('#grk-input', params.typed.g);
+        await page.fill('#eng-input', params.typed.e);
+        await page.click('button.search-btn');
+        await page.waitForURL(u => u.search.includes('e='));
+        url = page.url();
+      }
       await page.evaluate(() => document.fonts.ready);
       await page.waitForFunction(() => {
         const status = document.querySelector('[role="status"]')?.textContent?.trim();

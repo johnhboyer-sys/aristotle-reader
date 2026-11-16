@@ -170,3 +170,57 @@ it('does not stretch a one-word term over the next term\'s words', async () => {
   expect(rows.map(i => [...i.querySelectorAll('.inst-en mark')].map(m => m.textContent).join(' ').trim().toLowerCase()))
     .toEqual(['virtue', 'well being']);
 });
+
+// 9–11. The switch: and | and/or | or (John, 16 Nov). Chapter 1 has Greek
+// (token 3) and English (word 0); chapter 2 has Greek alone (token 15).
+const splitOf = (c: Element) => [...c.querySelectorAll('.sx-split .i')]
+  .map(i => `${text(i.querySelector('.i-t'))} ${text(i.querySelector('small'))}${i.classList.contains('off') ? ' off' : ''}`);
+async function openSplit(op: string) {
+  const { loadOffsets, loadEngChapters } = await import('../lib/search');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(10));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [2, '2']] } });
+  const r: SearchResult = { ...base, grkMatch: true, engMatch: true, grkPositions: [3, 15],
+    engHits: [{ translation: 'rackham', positions: [0] }] };
+  return open(book(Array.from({ length: 22 }, (_, i) => line(i + 1, 'α')), 'Virtue one. Two.'), [r], `g=α&e=virtue${op}`);
+}
+it('"and" counts the chapters with both, and lights only that row', async () => {
+  const c = await openSplit('');
+  await vi.waitFor(() => expect(splitOf(c)).toEqual(['Greek and English 1', 'Greek only 1 off', 'English only 0 off']));
+  expect(text(c.querySelector('.result-count'))).toMatch(/^1 chapter\s*1 hit\b/);
+  expect(text(c.querySelector('details.opt.join summary b'))).toBe('and');
+});
+it('"and/or" (op=or) counts every chapter with a hit', async () => {
+  const c = await openSplit('&op=or');
+  await vi.waitFor(() => expect(splitOf(c)).toEqual(['Greek and English 1', 'Greek only 1', 'English only 0']));
+  expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters\s*2 hits\b/);
+  expect(text(c.querySelector('details.opt.join summary b'))).toBe('and/or');
+});
+it('"or" (op=xor) counts the chapters with one language, not both', async () => {
+  const c = await openSplit('&op=xor');
+  await vi.waitFor(() => expect(splitOf(c)).toEqual(['Greek and English 1 off', 'Greek only 1', 'English only 0']));
+  expect(text(c.querySelector('.result-count'))).toMatch(/^1 chapter\s*1 hit\b/);
+  expect(text(c.querySelector('details.opt.join summary b'))).toBe('or');
+  expect(headings(c)).toEqual(['Chapter 2']);
+});
+
+// 12. A new search opens on "and/or" (John, 16 Nov): typed into a blank page
+// and run with the switch untouched, it counts every chapter with a hit, and
+// its link names the op.
+it('runs a new Greek and English search as "and/or" by default', async () => {
+  const { loadOffsets, loadEngChapters, search } = await import('../lib/search');
+  const { fetchBook, fetchChapters } = await import('../lib/data');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(10));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [2, '2']] } });
+  vi.mocked(fetchBook).mockResolvedValue(book(Array.from({ length: 22 }, (_, i) => line(i + 1, 'α')), 'Virtue one. Two.'));
+  vi.mocked(fetchChapters).mockResolvedValue({ '1': [{ column: '70a', chapter: '1', line: '1', bekker: '70a' }] });
+  vi.mocked(search).mockResolvedValue({ results: [{ ...base, grkMatch: true, engMatch: true, grkPositions: [3, 15],
+    engHits: [{ translation: 'rackham', positions: [0] }] }], failedWorks: [] });
+  window.history.replaceState(null, '', '/search');
+  const { container: c } = render(Search);
+  await fireEvent.input(c.querySelector('#grk-input')!, { target: { value: 'α' } });
+  await fireEvent.input(c.querySelector('#eng-input')!, { target: { value: 'virtue' } });
+  await vi.waitFor(() => expect(text(c.querySelector('details.opt.join summary b'))).toBe('and/or'));
+  await fireEvent.click(c.querySelector('button.search-btn')!);
+  await vi.waitFor(() => expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters\s*2 hits\b/));
+  expect(new URLSearchParams(window.location.search).get('op')).toBe('or');
+});

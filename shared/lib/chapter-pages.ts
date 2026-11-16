@@ -143,10 +143,21 @@ export function eachHit(
  * in a Both search, both terms anywhere in the same chapter (John, 15 Nov).
  * A result left with no hit drops out. */
 export function chapterJoin(results: SearchResult[], places: ChapterPlaces): SearchResult[] {
+  return chapterKeep(results, places, (grk, eng) => grk && eng);
+}
+
+/** The hits of `results` in chapters where one language has hits and the
+ * other none: "or" in a Both search, the exclusive or (John, 16 Nov). */
+export function chapterOnly(results: SearchResult[], places: ChapterPlaces): SearchResult[] {
+  return chapterKeep(results, places, (grk, eng) => grk !== eng);
+}
+
+// The hits in the chapters `want` keeps, told whether each language has a hit there.
+function chapterKeep(results: SearchResult[], places: ChapterPlaces, want: (grk: boolean, eng: boolean) => boolean): SearchResult[] {
   const grk = new Set<string>();
   const eng = new Set<string>();
   for (const r of results) eachHit(r, places, (at, lang) => (lang === 'grk' ? grk : eng).add(at.key));
-  const keep = (at: ChapterAt) => grk.has(at.key) && eng.has(at.key);
+  const keep = (at: ChapterAt) => want(grk.has(at.key), eng.has(at.key));
   return results.flatMap(r => {
     let left = r;
     if (r.grkMatch) {

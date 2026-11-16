@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Offsets, SearchResult } from '../lib/search';
-import { chapterJoin, chapterPlaces, measure } from '../lib/chapter-pages';
+import { chapterJoin, chapterOnly, chapterPlaces, measure } from '../lib/chapter-pages';
 
 // One book of two 100-token sections; chapter 2 begins at token 105, five
 // words into 164b. The main translation's chapter 2 begins at word 3 of 164b.
@@ -49,5 +49,33 @@ describe('chapterJoin: both terms anywhere in one chapter', () => {
   it('counts each translation\'s words where that translation puts them', () => {
     // Word 2 is chapter 1's, word 3 chapter 2's.
     expect(measure([res('164b', [], [2, 3])], places)).toMatchObject({ chapters: 2, engOnly: 2, engHits: 2 });
+  });
+});
+
+describe('chapterOnly: one language and not both (the exclusive or)', () => {
+  it('keeps the chapters with one language and drops those with both', () => {
+    // 164a: Greek alone in chapter 1. 164b: English word 1 (chapter 1, before
+    // word 3), and Greek 10 with English 5 in chapter 2.
+    const results = [res('164a', [4]), res('164b', [10], [1, 5])];
+    const out = chapterOnly(results, places);
+    // Chapter 1 has Greek (164a) and English (164b word 1): both, so it goes.
+    // Chapter 2 has both: it goes too.
+    expect(out).toEqual([]);
+  });
+
+  it('keeps a Greek-only chapter and an English-only one, each with its own hits', () => {
+    // Chapter 1: Greek at 164a 4 only. Chapter 2: English at 164b word 5 only.
+    const results = [res('164a', [4]), res('164b', [], [5])];
+    const out = chapterOnly(results, places);
+    expect(out.map(r => r.meta.column)).toEqual(['164a', '164b']);
+    expect(measure(out, places)).toMatchObject({ chapters: 2, both: 0, grkOnly: 1, engOnly: 1, grkHits: 1, engHits: 1 });
+  });
+
+  it('cuts a section across a chapter start to the half with one language', () => {
+    // 164b: Greek 2 (chapter 1) and Greek 10 (chapter 2); English word 5
+    // (chapter 2). Chapter 1 is Greek alone; chapter 2 has both.
+    const [out] = chapterOnly([res('164b', [2, 10], [5])], places);
+    expect(out.grkPositions).toEqual([2]);
+    expect(out.engMatch).toBe(false);
   });
 });

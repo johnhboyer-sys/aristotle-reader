@@ -50,7 +50,7 @@
   import { isChapterSection } from '../lib/data';
   import { loadEngChapters, loadOffsets, offsetRef, type EngChapters, type Offsets } from '../lib/search';
   import { engHitCount, hitCount } from '../lib/search-pages';
-  import { chapterJoin, chapterPlaces, measure, paginatePlaces, type ChapterAt, type ChapterPlaces } from '../lib/chapter-pages';
+  import { chapterJoin, chapterOnly, chapterPlaces, measure, paginatePlaces, type ChapterAt, type ChapterPlaces, type Measure } from '../lib/chapter-pages';
   import {
     fetchBook,
     fetchChapters,
@@ -192,7 +192,7 @@
   // Greek and English each get an independent match mode (Change 5).
   let grkMode: SearchMode = 'all';
   let engMode: SearchMode = 'all';
-  let langOp: LangOp = 'and';
+  let langOp: LangOp = 'or';   // a search opens on "and/or" (John, 16 Nov)
   // 'text': the running text (PR 9): the Greek box is a regular expression
   // over each work's Greek as one text (lib/running-text).
   let matchMode: MatchMode | 'text' = 'lemma';
@@ -219,6 +219,15 @@
   // word where no work answers in more than one translation, since otherwise
   // the total counts translators.
   let counted = { chapters: 0, hits: null as number | null };
+  // A Both search's chapters by language, before the join: the rows under
+  // the count (John, 16 Nov), each lit when the switch lists it.
+  let split: Measure | null = null;
+  const OP_LABEL: Record<LangOp, string> = { and: 'and', or: 'and/or', xor: 'or' };
+  $: splitRows = split ? [
+    { label: 'Greek and English', n: split.both, on: searchCtx.langOp !== 'xor' },
+    { label: 'Greek only', n: split.grkOnly, on: searchCtx.langOp !== 'and' },
+    { label: 'English only', n: split.engOnly, on: searchCtx.langOp !== 'and' },
+  ] : [];
   $: mainCount = counted.chapters;
   $: countNoun = mainCount === 1 ? 'chapter' : 'chapters';
   let totalInstances = 0;                 // across the whole result set (all pages)
@@ -837,7 +846,8 @@
   // filter as arguments, so a reactive count that calls it re-runs when they
   // change.
   function joined(results: SearchResult[], P: ChapterPlaces, both: boolean, op: LangOp): SearchResult[] {
-    return both && op === 'and' ? chapterJoin(results, P) : results;
+    if (!both) return results;
+    return op === 'and' ? chapterJoin(results, P) : op === 'xor' ? chapterOnly(results, P) : results;
   }
   // A Both search's results, joined by chapter: not the widened ones
   // ("any inflection"), which are a Greek search's.
@@ -866,7 +876,10 @@
     chaptersFailed = found.failed;
     // Read fresh, not from the reactive copies: a widening sets searchCtx
     // and comes straight here, before they catch up.
-    const shown = joined(narrowWork(narrow(withoutForms(results), transFilter, searchCtx), workFilter), places, joinsBoth(lastSearch, searchCtx), searchCtx.langOp);
+    const both = joinsBoth(lastSearch, searchCtx);
+    const unjoined = narrowWork(narrow(withoutForms(results), transFilter, searchCtx), workFilter);
+    split = both ? measure(unjoined, places) : null;
+    const shown = joined(unjoined, places, both, searchCtx.langOp);
     totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
     counted = countOf(shown, places, !!lastSearch?.eng.trim() && !isBoth(lastSearch), transFilter);
     shownResults = shown;
@@ -4330,7 +4343,7 @@
 
     <div class="d6 v-H3" class:has-join={lang === 'both'} class:no-opts={!grkQuery.trim() && !engQuery.trim()}>
       {#if sideways && formFolded}<div class="d6-fold">
-        <p class="fq">{#if proxLive}{proxSentence}{:else}<span lang="grc">{grkQuery}</span>{#if lang === 'both'}<span class="fj">{langOp}</span>{/if}{engQuery}{#each foldedChoices as choice}<span class="fo">{choice}</span>{/each}{/if}</p>
+        <p class="fq">{#if proxLive}{proxSentence}{:else}<span lang="grc">{grkQuery}</span>{#if lang === 'both'}<span class="fj">{OP_LABEL[langOp]}</span>{/if}{engQuery}{#each foldedChoices as choice}<span class="fo">{choice}</span>{/each}{/if}</p>
         <button type="button" class="fchg" on:click={() => { formFolded = false; if (proxLive) void openEditor(); }}>Change</button>
       </div>
       {/if}
@@ -4465,11 +4478,12 @@
 {/if}
       </div>
       {#if lang === 'both'}          <details class="opt join" on:toggle={closeOtherOpts}>
-            <summary><span class="sr-only">Hits match </span><b>{langOp}{@render caret()}</b></summary>
+            <summary><span class="sr-only">Hits match </span><b>{OP_LABEL[langOp]}{@render caret()}</b></summary>
             <fieldset class="opt-panel sheet op-group" {...optSheetAttrs('hits-match-head', optSheetHead, narrowScreen)}>
               <legend class="opt-title sheet-head" id="hits-match-head">Hits match</legend>
-              <div class="opt-row"><label class="ck" title="Only passages matching both queries"><input type="radio" name="op" value="and" bind:group={langOp} /><span>Both languages</span></label></div>
-              <div class="opt-row"><label class="ck" title="Passages matching either query"><input type="radio" name="op" value="or" bind:group={langOp} /><span>Either language</span></label></div>
+              <div class="opt-row"><label class="ck"><input type="radio" name="op" value="and" bind:group={langOp} /><span>Both languages</span></label></div>
+              <div class="opt-row"><label class="ck"><input type="radio" name="op" value="or" bind:group={langOp} /><span>Either or both</span></label></div>
+              <div class="opt-row"><label class="ck"><input type="radio" name="op" value="xor" bind:group={langOp} /><span>One language, not both</span></label></div>
               {@render sheetDone()}
             </fieldset>
           </details>
@@ -4992,6 +5006,13 @@
             </button>
           {/if}
         </div>
+        {#if splitRows.length && totalInstances > 0}
+          <ul class="sx-split">
+            {#each splitRows as row (row.label)}
+              <li class="i" class:off={!row.on}><span class="i-t">{row.label}</span><small>{row.n}</small></li>
+            {/each}
+          </ul>
+        {/if}
         <!-- Under the count on a desktop (d21, d23, r34-05); on a narrow
              screen these are in the sheet. -->
         {#if !sheetOpen}

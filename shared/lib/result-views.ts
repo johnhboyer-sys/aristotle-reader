@@ -257,7 +257,7 @@ export function refine(
     if (keep.every(Boolean)) return [r];
     const left = cutPositions(r, keep);
     if (left.grkPositions.length) return [left];
-    return r.engMatch && langOp === 'or' ? [{ ...left, grkMatch: false }] : [];
+    return r.engMatch && langOp !== 'and' ? [{ ...left, grkMatch: false }] : [];
   });
 }
 

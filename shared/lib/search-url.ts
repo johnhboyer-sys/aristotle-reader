@@ -113,7 +113,7 @@ export interface UrlSearch {
 
 export const emptyUrlSearch = (allWorks: string[]): UrlSearch => ({
   grk: '', eng: '', grkMode: 'all', engMode: 'all', matchMode: 'lemma',
-  accent: false, punctuation: false, caseExact: false, langOp: 'and', engForms: true, works: [...allWorks], trans: null, workFilter: null,
+  accent: false, punctuation: false, caseExact: false, langOp: 'or', engForms: true, works: [...allWorks], trans: null, workFilter: null,
   lemmas: [], xforms: [], combo: null, speaker: null, view: 'page', facets: {},
   context: '3', sort: 'page', pageSize: '40',
 });
@@ -255,7 +255,7 @@ export function encodeSearchUrl(s: UrlSearch, allWorks: string[]): string {
       put('e', eng);
       if (s.engMode !== 'all') put('em', s.engMode);
       if (!s.engForms) put('ef', '0');
-      if ((s.lemmas.length || grk) && s.langOp === 'or') put('op', 'or');
+      if (s.lemmas.length || grk) put('op', s.langOp);
       if (s.trans) put('t', s.trans);
     }
   }
@@ -307,12 +307,16 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
   s.accent = p.get('acc') === '1';
   s.punctuation = p.get('pu') === '1';
   s.caseExact = false;   // cs is ignored: case never matters
-  s.langOp = p.get('op') === 'or' ? 'or' : 'and';
   s.engForms = p.get('ef') !== '0';
   s.trans = p.get('t') || null;
   const wf = p.get('wf');
   s.workFilter = wf && allWorks.includes(wf) ? wf : null;
   s.lemmas = list(p.get('l'));
+  // A search opens on "and/or" (John, 16 Nov). A link from before that, a
+  // Greek and English search with no op, meant "and" and still does; every
+  // link written since names its op. op=or stays the inclusive or.
+  const op = p.get('op');
+  s.langOp = op === 'and' || op === 'or' || op === 'xor' ? op : s.eng && (s.grk || s.lemmas.length) ? 'and' : 'or';
   s.xforms = list(p.get('xf'));
 
   const decoded = p.getAll('c').map(decodeSlot);
