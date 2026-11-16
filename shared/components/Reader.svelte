@@ -343,8 +343,10 @@
     if (!body) return;
     const phone = window.innerWidth <= 700;
     const gap = phone ? parseFloat(getComputedStyle(body).getPropertyValue('--chgap')) || 4 : 12;
-    for (const n of body.querySelectorAll<HTMLElement>('.b-chn')) {
+    const nums = [...body.querySelectorAll<HTMLElement>('.b-chn')];
+    for (const n of nums) {
       n.style.removeProperty('font-size');
+      n.style.removeProperty('bottom');
       let fs = parseFloat(getComputedStyle(n).fontSize);
       const room = n.parentElement!.getBoundingClientRect().left - gap - (phone ? 2 : 8);
       while (n.getBoundingClientRect().width > room && fs > 24) {
@@ -354,6 +356,23 @@
         fs--; n.style.fontSize = `${fs}px`;
       }
     }
+    // A stepped-down number's line box rounds differently, which drops its
+    // baseline up to 3px below the "Chapter n" line's; lift it back. Probes go
+    // in, are read, and come out in three passes, so the page lays out once.
+    const probe = (el: HTMLElement) => {
+      const m = document.createElement('span');
+      m.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+      el.prepend(m);
+      return m;
+    };
+    const shown = nums.flatMap(n => {
+      const chb = n.closest('.b-chh')?.querySelector<HTMLElement>('.b-chb');
+      return chb && n.getClientRects().length && chb.getClientRects().length ? [{n, chb}] : [];
+    });
+    const pairs = shown.map(({n, chb}) => ({n, a: probe(n), b: probe(chb)}));
+    const drops = pairs.map(({n, a, b}) => ({n, drop: a.getBoundingClientRect().top - b.getBoundingClientRect().top, bottom: parseFloat(getComputedStyle(n).bottom)}));
+    for (const {a, b} of pairs) { a.remove(); b.remove(); }
+    for (const {n, drop, bottom} of drops) if (Math.abs(drop) > 0.25) n.style.bottom = `${bottom + drop}px`;
   }
   // The arguments are the reactive dependencies that call it; unused here.
   function scheduleEven(..._deps: unknown[]) {

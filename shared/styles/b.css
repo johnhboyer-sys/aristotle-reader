@@ -174,6 +174,8 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-rh > * { flex: none; min-height: 40px; }
 .dir-b .b-rh-w { display: inline-flex; align-items: center; min-height: 40px; font: 500 18px/1 var(--sans); text-transform: uppercase; color: var(--ink); white-space: nowrap; }
 .dir-b .b-rh-w .short { display: none; }
+/* A short name ("EN") is narrower than a finger: hold the 44px tap box. */
+@media (max-width: 960px) { .dir-b .b-rh-w { min-width: 44px; min-height: 44px; } }
 .dir-b .b-rh-b { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; min-height: 40px; padding: 0 4px; border: 0; background: none; color: var(--ink); font: 500 14.5px/1 var(--sans); cursor: pointer; }
 .dir-b .b-rh-b:hover, .dir-b .b-bkm[open] > .b-rh-b { color: var(--red-ink); }
 .dir-b .b-bkm > summary { list-style: none; }
@@ -300,7 +302,12 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-text[data-efont="garamond"] .b-ec { --b-text-ad: .3545; }
 /* Greek uses background marks for chosen or found words, never bold or italic. */
 .dir-b .b-gc, .dir-b .b-gc * { font-weight: 400; font-style: normal; }
-.dir-b .b-gl { display: block; position: relative; gap: 0; line-height: 1.4; padding-block: .16em; padding-left: 1em; text-indent: -1em; }
+/* Literata reads at 300 (13 Nov); Gentium, Cardo, and Garamond at 400. */
+.dir-b .b-text[data-gfont="literata"] :is(.b-gc, .b-gc .b-lt, .b-gc .b-lt *),
+.dir-b .b-text[data-efont="literata"] .b-ec { font-weight: 300; }
+/* Wrap as a unit (round 3): 1.4 inside a Bekker line, .16em above and below it,
+   the 1.72 line in all. Both scale with the reader's line spacing. */
+.dir-b .b-gl { display: block; position: relative; gap: 0; line-height: calc(1.4 * var(--lh)); padding-block: calc(.16em * var(--lh)); padding-left: 1em; text-indent: -1em; }
 .dir-b .b-gl.cont { padding-left: 3em; }
 .dir-b .b-gl.cont .b-lt { padding-left: 0; }
 /* However narrow the formula makes the column, a long word breaks rather
@@ -327,6 +334,11 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
   --b-number-correction: 0px;
   --b-number-top: calc(var(--b-number-text-size) * var(--b-number-lh, 1.72) * var(--lh) / 2 + var(--b-number-text-size) * var(--b-text-ad, .4345) - var(--b-number-size) * .8 - var(--b-number-correction));
 }
+/* Chrome floors the English line's half-leading and rounds its ascent to whole
+   pixels, and a 15px number's baseline sits at 11px, not 12. Over text size and
+   line spacing 75–140% the number lands 0.1–1.1px high; half a pixel down
+   centres that. The phone sets its own correction. */
+.dir-b .b-ec .bk-num { --b-number-correction: -.5px; }
 .dir-b .b-ln { position: absolute; left: -60px; top: var(--b-number-top); width: 48px; min-width: 0; text-align: right; font: 400 var(--b-number-size)/1 var(--sans); font-weight: 400 !important; color: var(--faint); }
 .dir-b .b-ln.col { color: var(--red-ink); }
 .dir-b .b-ln:empty { display: none; }
@@ -419,8 +431,12 @@ body:has(> .pg-reader) { margin: 0; padding: 0; max-width: none; background: var
 .dir-b .b-keys button:hover { color: var(--red-ink); }
 .dir-b .b-err { margin: 18px 0 0; font: 500 15px/1.4 var(--sans); color: var(--red-ink); }
 .dir-b .b-note .b-err { margin: 0; }
-/* The word panel keeps its shadow; round 4 fixes the reading margins. */
+/* Keep English visible: the text makes room for the panel (Compare too). These
+   outrank the [data-view] margins below, which would otherwise put the English
+   under the panel. */
 @media (min-width: 961px) {
+  .dir-b .b-text.word-open:not(.wp-over) { margin-right: 0; padding-left: 84px; padding-right: calc(400px + 36px); }
+  .dir-b .b-text.word-open:not(.wp-over) .b-row { column-gap: 56px; }
   .dir-b .b-text.wp-over .b-side, .dir-b .wp-over ~ .b-side { box-shadow: -14px 0 40px rgba(0,0,0,.18); }
 }
 .dir-b .b-text.word-open { margin-right: 0; transition: none; }
