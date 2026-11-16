@@ -502,7 +502,7 @@
     const out: PhraseHit[] = [];
     for (const r of results) for (const h of r.engHits ?? []) {
       const text = texts.get(phraseKey(r, h.translation));
-      if (text) for (const at of h.positions) out.push({ text, at });
+      if (text) for (const at of h.matches ?? h.positions) out.push({ text, at });
     }
     return out;
   }
@@ -518,8 +518,9 @@
         if (!text || !h.positions.length) return [h];
         const positions = h.positions.filter(at => !setAside({ text, at }, aside));
         if (positions.length === h.positions.length) return [h];
-        // A run of a term of several words (a hyphenated one) goes with its first word.
-        const matches = h.matches?.filter(m => positions.includes(m));
+        // A run of a term of several words (a hyphenated one) is one hit, at
+        // its first word, as the list counts it.
+        const matches = h.matches?.filter(m => !setAside({ text, at: m }, aside));
         return positions.length && (!matches || matches.length) ? [{ ...h, positions, ...(matches ? { matches } : {}) }] : [];
       });
       if (!engHits.length && !r.grkMatch) continue;
@@ -2739,7 +2740,9 @@
   // `clipped` with only `words` marked: the words' places in the text the
   // index counted (`indexed`), found again in the clipped window. Null where
   // the window is not cut from that text, and the query's marks stand.
-  function ownMarks(clipped: string, indexed: string, words: number[]): string | null {
+  // `bare`: a window holding none of the words is drawn with no mark, where
+  // a phrase set aside took the others (the query's marks would mark it).
+  function ownMarks(clipped: string, indexed: string, words: number[], bare = false): string | null {
     const core = clipped.replace(/^…\s*/, '').replace(/\s*…$/, '');
     const at = indexed.indexOf(core);
     if (!core || at < 0) return null;
@@ -2753,7 +2756,7 @@
       if (i >= 0) marks.add(i);
     }
     // Words past the window's edge are not drawn, and not marked.
-    return marks.size ? markWordsHtml(clipped, marks) : null;
+    return marks.size || bare ? markWordsHtml(clipped, marks) : null;
   }
 
   // Build the Stephanus-page groups for a slice of results: load the books and
@@ -3020,7 +3023,7 @@
             // A unit a chapter starts in is a row in each chapter, and each
             // row marks only its own words, as it counts only them.
             // So with phrases set aside: a word inside one is not marked.
-            const own = (split.get(unit) ?? 0) > 1 || asidePhrases.size ? ownMarks(clipped, indexedText, words) : null;
+            const own = (split.get(unit) ?? 0) > 1 || asidePhrases.size ? ownMarks(clipped, indexedText, words, asidePhrases.size > 0) : null;
             // A row for each passage the words fall in; the count goes on the first.
             const rows = [own ?? markEnglishHtml(clipped, ctx.engUnits, ctx.engPhrase, ctx.engForms)]
               .map((html, j): TransRow => ({

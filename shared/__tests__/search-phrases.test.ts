@@ -128,3 +128,12 @@ it('sets aside the words of a search with a term of several words', async () => 
   await fireEvent.click(within(list()).getByRole('checkbox', { name: 'Exclude in virtue of' }));
   await vi.waitFor(() => expect(status()).toContain('12 hits'));
 });
+
+// Codex's second look at C: a term of several words is one hit, at its first
+// word, in the list as on the page.
+it('counts a run of a term of several words once, at its first word', async () => {
+  // he acts in virtue of coming(5) to(6) be(7)
+  await open('', bookOf('He acts in virtue of coming to be.'), resultsOf(() => ({ positions: [5, 6, 7], matches: [5] })), 'coming-to-be');
+  await vi.waitFor(() => expect(status()).toContain('12 hits'));
+  await vi.waitFor(() => expect(rows()).toEqual(['coming to be 12', 'of coming to 12', 'virtue of coming 12']));
+});
