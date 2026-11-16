@@ -1295,6 +1295,16 @@
   .search-page .sx-forms .fx-foot .fx-apply:disabled { display: none; }
   .search-page .sx-forms .fx-foot .more:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 
+  /* Phrases (John, 16 Nov): a phrase, its hits, and a box to exclude it under
+     the column's one label; a phrase excluded keeps its row, its words grey. */
+  .search-page .sx-phr .ph-head { display: flex; justify-content: flex-end; padding: 6px 0 2px; border-bottom: 1px solid var(--line); }
+  .search-page .sx-phr .ph-head span { width: 58px; font: 500 14px/1.2 var(--sans); color: var(--mid); text-align: center; }
+  .search-page .sx-phr .fx { gap: 6px; cursor: pointer; }
+  .search-page .sx-phr .fx .ph-t { flex: 1 1 auto; min-width: 0; padding: 8px 0; }
+  .search-page .sx-phr .fx small { flex: none; margin-left: 0; font-variant-numeric: tabular-nums; }
+  .search-page .sx-phr .ph-b { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 58px; min-height: 44px; }
+  .search-page .sx-phr .fx.aside .ph-t { color: var(--mid); }
+
   /* Grammar, with the grammar view: a line per category, its values as chips. */
   .search-page .sx-facets .gx-group { padding: 4px 0; border-bottom: 1px solid var(--line); }
   .search-page .sx-facets .gx-head { flex-basis: 76px; font: 600 14px/1.2 var(--sans); letter-spacing: 0; color: var(--mid); }
@@ -1780,7 +1790,7 @@
   .search-page :is(.sx-close, .sx-back):focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
   /* A filter's own screen fills the window under the site header; its
      list scrolls, and ends where the foot band begins (§5.9). */
-  .search-page .sx-panel.open.sheet:is([data-screen="works"], [data-screen="trans"], [data-screen="forms"], [data-screen="grammar"]) {
+  .search-page .sx-panel.open.sheet:is([data-screen="works"], [data-screen="trans"], [data-screen="phrases"], [data-screen="forms"], [data-screen="grammar"]) {
     top: 52px;
     max-height: none;
   }

@@ -4172,6 +4172,50 @@ if(stage>=4) Object.assign(gates, {
                 console.log(`R-S7 D1440 pages=${total} rows=${rows} last page=${pages.at(-1).rows} chapters drawn=${where.size} split across pages=${split.length} hits drawn=${hits}`);
             } finally {await close(p);}
         }
+        // The phrase list (John, 16 Nov): an English search lists the three-word runs around its
+        // hits, five hits or more, most first, ten shown; an Exclude drops the hits inside a phrase,
+        // lowers the phrases that overlap it, moves no row, goes in the address, and counts on the
+        // phone's Filter button. Counted from the books by docs/search-counting/brute.mjs.
+        {
+            const TOP=[['in virtue of',335],['virtue of the',108],['the virtue of',97],['virtue of a',68],['virtue of which',67],['of the virtues',65],['virtue or excellence',51],['the virtues are',46],['of virtue and',41],['the other virtues',39]];
+            const ASIDE={'virtue of the':60,'virtue of a':34,'virtue of which':3};
+            const readPhrases=p=>p.evaluate(()=>[...document.querySelectorAll('main.search-page .sx-phr label.fx')].filter(el=>el.checkVisibility())
+                .map(el=>`${el.querySelector('.ph-t').textContent.trim()} ${el.querySelector('small').textContent.trim()}${el.querySelector('input').checked?' x':''}`));
+            for(const size of ['D1440','P390']) {
+                const p=await open(size,'light','/search?e=virtue');
+                try {
+                    if(await p.locator('.sx-filter').isVisible()) {
+                        await p.locator('.sx-filter').click();
+                        await p.locator('.sx-panel.open .sx-nav:has-text("Phrases")').click({timeout:60000});
+                    }
+                    await p.waitForFunction(()=>[...document.querySelectorAll('main.search-page .sx-phr label.fx')].some(el=>el.checkVisibility()),null,{timeout:120000});
+                    if(prove&&proofCase==='phrase-count'&&size==='D1440')await p.evaluate(()=>{document.querySelectorAll('main.search-page .sx-phr label.fx small')[1].textContent='107';});
+                    if(prove&&proofCase==='phrase-order'&&size==='P390')await p.evaluate(()=>{const r=[...document.querySelectorAll('main.search-page .sx-phr label.fx')].filter(el=>el.checkVisibility());r[2].before(r[3]);});
+                    const before=await readPhrases(p);
+                    const want=TOP.map(([t,n])=>`${t} ${n}`);
+                    assert(before.length,`${size} examined=0 phrase rows`);
+                    assert(JSON.stringify(before)===JSON.stringify(want),`${size} phrase list reads ${JSON.stringify(before)}, expected ${JSON.stringify(want)}`);
+                    n++;
+                    await p.locator('main.search-page .sx-phr input[aria-label="Exclude in virtue of"] >> visible=true').check();
+                    await p.waitForFunction(()=>new URL(location.href).searchParams.get('xp')==='in virtue of',null,{timeout:60000});
+                    await p.waitForFunction(()=>[...document.querySelectorAll('main.search-page .sx-phr label.fx')].some(el=>el.checkVisibility()&&/^virtue of the 60$/.test(`${el.querySelector('.ph-t').textContent.trim()} ${el.querySelector('small').textContent.trim()}`)),null,{timeout:60000}).catch(()=>{});
+                    if(prove&&proofCase==='phrase-after'&&size==='D1440')await p.evaluate(()=>{document.querySelectorAll('main.search-page .sx-phr label.fx small')[1].textContent='108';});
+                    const after=await readPhrases(p);
+                    const wantAfter=TOP.map(([t,n])=>`${t} ${ASIDE[t]??n}${t==='in virtue of'?' x':''}`);
+                    assert(JSON.stringify(after)===JSON.stringify(wantAfter),`${size} phrase list with "in virtue of" excluded reads ${JSON.stringify(after)}, expected ${JSON.stringify(wantAfter)}`);
+                    n++;
+                    if(size==='P390') {
+                        await p.locator('.sx-panel.open .sx-show, .sx-panel.open .sheet-done').first().click();
+                        const label=await p.locator('.sx-filter').getAttribute('aria-label');
+                        if(prove&&proofCase==='phrase-badge')await p.evaluate(()=>document.querySelector('main.search-page .sx-filter .sx-badge')?.remove());
+                        const badge=await p.evaluate(()=>document.querySelector('main.search-page .sx-filter .sx-badge')?.textContent.trim()??'');
+                        assert(label==='Filter, 1 chosen'&&badge==='1',`P390 Filter with a phrase excluded reads "${label}" badge="${badge}", expected "Filter, 1 chosen" and 1`);
+                        n++;
+                    }
+                    console.log(`R-S7 ${size} phrases ${JSON.stringify(before.slice(0,3))} → excluded ${JSON.stringify(after.slice(0,3))}`);
+                } finally {await close(p);}
+            }
+        }
         // The 100 page (John, 16 Nov, after the TLG): each row its reference and the words around
         // its first hit, marked, opening in place to the passage with its reader link; an old
         // Citations only link (ctx=c) opens it.
@@ -5260,7 +5304,7 @@ const stageFourProofs = {
     'R-S4': {'split':/D1152 Accents and Lemma are split/,'three-rows':/D961 Greek options take [3-9] rows, expected 2 at most/,'phone-wrap':/P390 Greek options take 2 rows, expected 1/,'no-phone-menus':/P390 phone Match and Form menus: found \[\]/,'clipped':/P360 Greek options clipped: /},
     'R-S5': {'english-low':/D1152 English options row top=[\d.]+ is not level with Greek options row 1/},
     'R-S6': {'fixed-field':/S844 Greek field row is position: fixed/,'over-header':/S844 Greek field [-\d.]+–[-\d.]+ lies over the site header/,'gap':/S844 Greek field sits 2[89](\.\d)?px above the key sheet, expected 8±2/,'live-under':/S844 \d+ of \d+ controls under the key sheet are not inert/,'inert-clear':/S844 Clear Greek shown=true inert=true/},
-    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'short-page':/D1440 Both search page 2 of \d+ draws 39 rows, expected 40/,'twice':/D1440 Both search draws .* twice on page 2/,'cmp-unmarked':/D1440 the 100 page draws 100 rows with no hit marked in the summary/,'cmp-nolink':/D1440 the 100 page's first row opens with reader link href="" /,'split-number':/P390 Both split reads .*"Greek only 22 off".*, expected/,'split-lit':/D1440 Both split reads .*"English only 186"\].*, expected/,'xor-inclusive':/D1440 One language count reads 438 chapters and 27 hits, expected 209 and 27/,'xor-label':/D1440 One language switch reads "and\/or", expected "or"/,'default-and':/D1440 New search count reads 229 chapters and 940 hits, expected 438 and 967/,'nest-order':/D1440 English nested list opens .*"  Ostwald 298","  Rackham 315".*, expected/,'nest-hits':/P390 English nested list opens \["Nicomachean Ethics 1171",.*, expected/,'nest-click':/D1440 Ross in the Nicomachean Ethics count reads 81 chapters and 385 hits, expected 81 and 294/,'works-bounce':/P390 w=EN Works screen falls back to the menu/,'cross-on':/P390 w=EN&t=ostwald marks \[\] on, expected \["Ostwald"\]/},
+    'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'short-page':/D1440 Both search page 2 of \d+ draws 39 rows, expected 40/,'twice':/D1440 Both search draws .* twice on page 2/,'phrase-count':/D1440 phrase list reads \["in virtue of 335","virtue of the 107".*, expected/,'phrase-order':/P390 phrase list reads .*"the virtue of 97","virtue of a 68".*"virtue of the 108".*|P390 phrase list reads \["in virtue of 335","virtue of the 108","virtue of a 68","the virtue of 97".*, expected/,'phrase-after':/D1440 phrase list with "in virtue of" excluded reads \["in virtue of 335 x","virtue of the 108".*, expected/,'phrase-badge':/P390 Filter with a phrase excluded reads "Filter, 1 chosen" badge="", expected/,'cmp-unmarked':/D1440 the 100 page draws 100 rows with no hit marked in the summary/,'cmp-nolink':/D1440 the 100 page's first row opens with reader link href="" /,'split-number':/P390 Both split reads .*"Greek only 22 off".*, expected/,'split-lit':/D1440 Both split reads .*"English only 186"\].*, expected/,'xor-inclusive':/D1440 One language count reads 438 chapters and 27 hits, expected 209 and 27/,'xor-label':/D1440 One language switch reads "and\/or", expected "or"/,'default-and':/D1440 New search count reads 229 chapters and 940 hits, expected 438 and 967/,'nest-order':/D1440 English nested list opens .*"  Ostwald 298","  Rackham 315".*, expected/,'nest-hits':/P390 English nested list opens \["Nicomachean Ethics 1171",.*, expected/,'nest-click':/D1440 Ross in the Nicomachean Ethics count reads 81 chapters and 385 hits, expected 81 and 294/,'works-bounce':/P390 w=EN Works screen falls back to the menu/,'cross-on':/P390 w=EN&t=ostwald marks \[\] on, expected \["Ostwald"\]/},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <textarea[^>]*id="grk-input"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},

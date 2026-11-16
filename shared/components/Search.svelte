@@ -51,6 +51,7 @@
   import { loadEngChapters, loadOffsets, offsetRef, type EngChapters, type Offsets } from '../lib/search';
   import { engHitCount, hitCount } from '../lib/search-pages';
   import { chapterJoin, chapterOnly, chapterPlaces, measure, type ChapterAt, type ChapterPlaces, type Measure } from '../lib/chapter-pages';
+  import { phraseRows, phraseText, setAside, type PhraseHit, type PhraseText } from '../lib/phrase-list';
   import {
     fetchBook,
     fetchChapters,
@@ -408,12 +409,13 @@
   function withoutForms(results: SearchResult[]): SearchResult[] {
     return refine(results, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: grammarOwn(hitGrammar, lastSearch, hitForms) ?? undefined, facets }, keepOp(searchCtx));
   }
-  $: formResults = refine(allResults, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: ownG ?? undefined, facets }, keepOp(searchCtx));
+  $: refinedResults = refine(allResults, { forms: hitForms ?? undefined, excluded: excludedForms, grammar: ownG ?? undefined, facets }, keepOp(searchCtx));
+  $: formResults = withoutPhrases(refinedResults, asidePhrases, phraseTexts);
   // Counted before any form is set aside, so one set aside stays listed, and
   // within the translation and work chosen and the facets ticked, so the
   // counts add up to the Greek hits shown.
   $: keepFacet = facetKeep(ownG, facets);
-  $: formPanel = hitForms ? formGroups(joined(narrowWork(narrow(allResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), hitForms, keepFacet) : [];
+  $: formPanel = hitForms ? formGroups(joined(narrowWork(narrow(withoutPhrases(allResults, asidePhrases, phraseTexts), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), hitForms, keepFacet) : [];
   $: formKeys = [...new Set(formPanel.flatMap(g => g.forms.map(f => f.form)))];
   $: formChoice = formKeys.length > 1 || excludedForms.size > 0;
   // Apply has something to do when the ticks differ from what is in force.
@@ -483,6 +485,113 @@
     if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter, xforms: [...excludedForms], view, facets, context, sort, pageSize }, 'replace');
     showResults(allResults);
   }
+  // ── English phrases (C) ────────────────────────────────────────────────────
+  // The three-word runs around the English hits (lib/phrase-list), five hits
+  // or more, to set aside (John, 16 Nov). Their words are the books', read
+  // once after the search; setting one aside then filters the results in
+  // hand, as setting a form aside does, and every count follows.
+  let phraseTexts: Map<string, PhraseText> | null = null;   // work:section:translation
+  let phrasesFailed = false;
+  let asidePhrases = new Set<string>();                      // ?xp=
+  let phrasesMore = false;
+  const PHRASES_SHOWN = 10;
+  const phraseKey = (r: SearchResult, translation: string) => `${r.work}:${r.meta.id}:${translation}`;
+  // A phrase search's hits are its runs already: no list for it.
+  $: phrasesOffered = !!searchCtx.engQuery && !searchCtx.engPhrase && !lastSearch?.combo;
+  function phraseHitsOf(results: SearchResult[], texts: Map<string, PhraseText>): PhraseHit[] {
+    const out: PhraseHit[] = [];
+    for (const r of results) for (const h of r.engHits ?? []) {
+      const text = texts.get(phraseKey(r, h.translation));
+      if (text) for (const at of h.matches ?? h.positions) out.push({ text, at });
+    }
+    return out;
+  }
+  // The hits left once the phrases set aside are gone. A translation left
+  // with none goes from the result, and a result left with no hit at all.
+  function withoutPhrases(results: SearchResult[], aside: ReadonlySet<string>, texts: Map<string, PhraseText> | null): SearchResult[] {
+    if (!aside.size || !texts) return results;
+    const out: SearchResult[] = [];
+    for (const r of results) {
+      if (!r.engHits?.length) { out.push(r); continue; }
+      const engHits = r.engHits.flatMap(h => {
+        const text = texts.get(phraseKey(r, h.translation));
+        if (!text || !h.positions.length) return [h];
+        const positions = h.positions.filter(at => !setAside({ text, at }, aside));
+        if (positions.length === h.positions.length) return [h];
+        // A run of a term of several words (a hyphenated one) is one hit, at
+        // its first word, as the list counts it.
+        const matches = h.matches?.filter(m => !setAside({ text, at: m }, aside));
+        return positions.length && (!matches || matches.length) ? [{ ...h, positions, ...(matches ? { matches } : {}) }] : [];
+      });
+      if (!engHits.length && !r.grkMatch) continue;
+      out.push(engHits.length === r.engHits.length && engHits.every((h, i) => h === r.engHits![i]) ? r : { ...r, engHits, engMatch: engHits.length > 0 });
+    }
+    return out;
+  }
+  // Counted within the translation and work chosen and the forms and facets
+  // in force, as the forms are, and over every phrase in, so a row set aside
+  // keeps its count and its place.
+  $: phraseList = phraseTexts && phrasesOffered
+    ? phraseRows(phraseHitsOf(joined(narrowWork(narrow(refinedResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), phraseTexts), asidePhrases)
+    : [];
+  $: phraseChoice = phraseList.length > 0 || (phrasesOffered && asidePhrases.size > 0);
+  $: phrasesShown = phrasesMore ? phraseList : phraseList.slice(0, PHRASES_SHOWN);
+  // The words of every passage an English hit stands in, as the index counts
+  // them (the pieces buildGroups cuts), read once for the results on screen.
+  async function loadPhrases(results: SearchResult[]) {
+    const want = results.filter(r => r.engHits?.some(h => h.positions.length));
+    const pairs = [...new Set(want.map(r => `${r.work}:${r.meta.book}`))];
+    const texts = new Map<string, PhraseText>();
+    let failed = false;
+    await pool(pairs, 8, async pair => {
+      const at = pair.lastIndexOf(':');
+      const work = pair.slice(0, at);
+      const n = Number(pair.slice(at + 1));
+      try {
+        const book = await fetchBook(work, n);
+        const segs = new Map(book.segments.map(sg => [sg.id, sg]));
+        const ts = translationsOf(work);
+        const ix = pairUnits(book, ts);
+        const turns = new Map<string, Map<string, string[]>>();
+        for (const r of want) {
+          if (r.work !== work || r.meta.book !== n) continue;
+          const seg = segs.get(r.meta.id);
+          if (!seg) continue;
+          for (const h of r.engHits ?? []) {
+            const t = ts.find(x => x.id === h.translation)
+              ?? { id: h.translation, slot: 'english' as const, short: h.translation, name: h.translation };
+            const turnsOf = () => turns.get(t.id) ?? turns.set(t.id, turnTranslationTexts(book, t.id)).get(t.id)!;
+            const pieces = unitPieces(ix, seg, t)?.map(piece => piece.text)
+              ?? translationTexts(seg, t, t.slot === 'overlay' ? turnsOf() : undefined);
+            texts.set(phraseKey(r, h.translation), phraseText(pieces));
+          }
+        }
+      } catch (err) {
+        console.warn(`search: phrases failed for ${pair} —`, err);
+        failed = true;
+      }
+    });
+    // Kept only while these are still the results on screen.
+    if (results !== allResults) return;
+    phraseTexts = texts;
+    phrasesFailed = failed;
+  }
+  // A tick sets a phrase aside at once; a filter, not a new search.
+  function togglePhrase(phrase: string) {
+    if (asidePhrases.has(phrase)) asidePhrases.delete(phrase);
+    else asidePhrases.add(phrase);
+    asidePhrases = asidePhrases;
+    if (lastSearch) lastSearch = { ...lastSearch, xphrases: [...asidePhrases] };
+    if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter, xforms: [...excludedForms], view, facets, context, sort, pageSize }, 'replace');
+    showResults(allResults);
+  }
+  function restorePhrases() {
+    asidePhrases = new Set();
+    if (lastSearch) lastSearch = { ...lastSearch, xphrases: [] };
+    if (lastSearch) writeUrl({ ...lastSearch, trans: transFilter, workFilter, xforms: [...excludedForms], view, facets, context, sort, pageSize }, 'replace');
+    showResults(allResults);
+  }
+
   // ── Views and grammar ──────────────────────────────────────────────────────
   // The hits of the page in view listed under their work (the default), or
   // grouped by form, or as each headword's paradigm; and narrowed by those
@@ -1042,7 +1151,7 @@
     // Read fresh, not from the reactive copies: a widening sets searchCtx
     // and comes straight here, before they catch up.
     const both = joinsBoth(lastSearch, searchCtx);
-    const unjoined = narrowWork(narrow(withoutForms(results), transFilter, searchCtx), workFilter);
+    const unjoined = narrowWork(narrow(withoutPhrases(withoutForms(results), asidePhrases, phraseTexts), transFilter, searchCtx), workFilter);
     split = both ? measure(unjoined, places) : null;
     const shown = joined(unjoined, places, both, searchCtx.langOp);
     totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
@@ -1079,6 +1188,8 @@
     }
     const n = excludedForms.size;
     if (n) out.push({ key: 'xf', label: `${n} form${n === 1 ? '' : 's'} set aside`, remove: restoreForms });
+    const np = phrasesOffered ? asidePhrases.size : 0;
+    if (np) out.push({ key: 'xp', label: `${np} phrase${np === 1 ? '' : 's'} set aside`, remove: restorePhrases });
     for (const [category, values] of Object.entries(facets)) {
       for (const value of values) {
         out.push({ key: `gf:${category}.${value}`, label: `${categoryLabel(category)} ${valueName(category, value)}`, remove: () => toggleFacet(category, value) });
@@ -1192,8 +1303,8 @@
   // search" at its head, each filter on a screen of its own; the sort icon
   // opens it as the display settings. Focus goes into it, and back to the
   // icon that opened it when it shuts.
-  type SheetScreen = 'menu' | 'works' | 'trans' | 'forms' | 'grammar';
-  const SCREEN_LABELS: Record<SheetScreen, string> = { menu: 'Filter', works: 'Works', trans: 'Translations', forms: 'Forms', grammar: 'Grammar' };
+  type SheetScreen = 'menu' | 'works' | 'trans' | 'phrases' | 'forms' | 'grammar';
+  const SCREEN_LABELS: Record<SheetScreen, string> = { menu: 'Filter', works: 'Works', trans: 'Translations', phrases: 'Phrases', forms: 'Forms', grammar: 'Grammar' };
   let sheetOpen = false;
   let sheetKind: 'filter' | 'sort' = 'filter';
   let sheetScreen: SheetScreen = 'menu';
@@ -1233,7 +1344,7 @@
   // A screen whose filter has gone (new results, say) gives way to the menu,
   // and focus, which was on the screen, goes to the sheet.
   $: if (sheetOpen && sheetKind === 'filter' && sheetScreen !== 'menu'
-    && !({ works: nestRows ? nestChoice : workChoice, trans: transChoice && !nestRows, forms: formChoice, grammar: facetRows.length > 0 } as Record<string, boolean>)[sheetScreen]) toMenu();
+    && !({ works: nestRows ? nestChoice : workChoice, trans: transChoice && !nestRows, phrases: phraseChoice, forms: formChoice, grammar: facetRows.length > 0 } as Record<string, boolean>)[sheetScreen]) toMenu();
   async function toMenu() {
     sheetScreen = 'menu';
     await tick();
@@ -2629,7 +2740,9 @@
   // `clipped` with only `words` marked: the words' places in the text the
   // index counted (`indexed`), found again in the clipped window. Null where
   // the window is not cut from that text, and the query's marks stand.
-  function ownMarks(clipped: string, indexed: string, words: number[]): string | null {
+  // `bare`: a window holding none of the words is drawn with no mark, where
+  // a phrase set aside took the others (the query's marks would mark it).
+  function ownMarks(clipped: string, indexed: string, words: number[], bare = false): string | null {
     const core = clipped.replace(/^…\s*/, '').replace(/\s*…$/, '');
     const at = indexed.indexOf(core);
     if (!core || at < 0) return null;
@@ -2643,7 +2756,7 @@
       if (i >= 0) marks.add(i);
     }
     // Words past the window's edge are not drawn, and not marked.
-    return marks.size ? markWordsHtml(clipped, marks) : null;
+    return marks.size || bare ? markWordsHtml(clipped, marks) : null;
   }
 
   // Build the Stephanus-page groups for a slice of results: load the books and
@@ -2909,7 +3022,8 @@
               greekWindow.greek.reduce((n, l) => n + l.text.split(/\s+/).length, 0), hitOffset);
             // A unit a chapter starts in is a row in each chapter, and each
             // row marks only its own words, as it counts only them.
-            const own = (split.get(unit) ?? 0) > 1 ? ownMarks(clipped, indexedText, words) : null;
+            // So with phrases set aside: a word inside one is not marked.
+            const own = (split.get(unit) ?? 0) > 1 || asidePhrases.size ? ownMarks(clipped, indexedText, words, asidePhrases.size > 0) : null;
             // A row for each passage the words fall in; the count goes on the first.
             const rows = [own ?? markEnglishHtml(clipped, ctx.engUnits, ctx.engPhrase, ctx.engForms)]
               .map((html, j): TransRow => ({
@@ -3238,6 +3352,7 @@
       trans: null,
       workFilter: null,
       xforms: [],
+      xphrases: [],
       lemmas: [...soloLemma.picked],
       combo: comboActive ? comboNow : null,
       speaker: speakerFilter ?? null,
@@ -3349,7 +3464,7 @@
     // reads must catch up with the controls just set.
     await tick();
     if (hasSearch(s)) {
-      await doSearch(undefined, { history: 'none', trans: s.trans, work: s.workFilter, xforms: s.xforms, facets: s.facets });
+      await doSearch(undefined, { history: 'none', trans: s.trans, work: s.workFilter, xforms: s.xforms, xphrases: s.xphrases, facets: s.facets });
       return;
     }
     searchRun++;
@@ -3438,7 +3553,7 @@
     if (typeof document !== 'undefined') document.documentElement.style.overflow = '';
   });
 
-  async function doSearch(e?: Event, opts: { history?: 'push' | 'none'; trans?: string | null; work?: string | null; xforms?: string[]; facets?: Facets } = {}) {
+  async function doSearch(e?: Event, opts: { history?: 'push' | 'none'; trans?: string | null; work?: string | null; xforms?: string[]; xphrases?: string[]; facets?: Facets } = {}) {
     e?.preventDefault();
     if (!grkQuery.trim() && !engQuery.trim() && !comboActive && !soloLemmaActive) return;
     // Lemma on and no word picked yet: the list to pick from, not a search.
@@ -3477,6 +3592,12 @@
     formsMode = soloLemmaActive ? 'headword' : matchMode === 'text' ? 'form' : matchMode;
     excludedForms = new Set(opts.xforms ?? []);
     lastSearch.xforms = [...excludedForms];
+    // So with the phrases set aside, and their words, read again below.
+    phraseTexts = null;
+    phrasesFailed = false;
+    phrasesMore = false;
+    asidePhrases = new Set(opts.xphrases ?? []);
+    lastSearch.xphrases = [...asidePhrases];
     // Likewise no facet is ticked, in whatever view the reader is in.
     resetGrammar();
     facets = opts.facets ?? {};
@@ -3589,6 +3710,13 @@
       if (searchCtx.grkQuery) {
         const forms = loadForms(results);
         if (excludedForms.size) await forms;
+        if (run !== searchRun) return;
+      }
+      // The phrases' words likewise: the first page waits only for phrases
+      // the address sets aside.
+      if (phrasesOffered) {
+        const phrases = loadPhrases(results);
+        if (asidePhrases.size) await phrases;
         if (run !== searchRun) return;
       }
       if (grammar && hasFacets(facets)) {
@@ -5269,6 +5397,11 @@
                   <span>Translations</span>{' '}<small>{transFilter ? transCounts.find(t => t.id === transFilter)?.short ?? transFilter : `All ${transCounts.length}`}</small>{' '}<span class="gt">›</span>
                 </button>
               {/if}
+              {#if phraseChoice}
+                <button type="button" class="sx-nav" bind:this={menuRows.phrases} on:click={() => openScreen('phrases')}>
+                  <span>Phrases</span>{' '}<small>{asidePhrases.size ? `${asidePhrases.size} set aside` : 'All in'}</small>{' '}<span class="gt">›</span>
+                </button>
+              {/if}
               {#if formChoice}
                 <button type="button" class="sx-nav" bind:this={menuRows.forms} on:click={() => openScreen('forms')}>
                   <span>Forms</span>{' '}<small>{shownForms === formKeys.length ? `All ${formKeys.length}` : `${shownForms} of ${formKeys.length}`}</small>{' '}<span class="gt">›</span>
@@ -5339,6 +5472,32 @@
                 {/each}
               </div>
               {#if secondScope}<span class="note">{secondScope}</span>{/if}
+            </div>
+          {/if}
+          <!-- The phrases around the English hits, most first: a tick sets one
+               aside, its hits gone from every count. -->
+          {#if phraseChoice && (!sheetOpen || sheetScreen === 'phrases')}
+            <div class="sx-row sx-forms sx-phr" role="group" aria-label="English phrases">
+              <span class="k">Phrases</span>
+              <div class="ph-head" aria-hidden="true"><span>Exclude</span></div>
+              <div class="fx-list">
+                {#each phrasesShown as row (row.phrase)}
+                  <label class="fx" class:aside={asidePhrases.has(row.phrase)}>
+                    <span class="ph-t">{row.phrase}</span> <small>{row.n}</small>
+                    <span class="ph-b"><input type="checkbox" checked={asidePhrases.has(row.phrase)} aria-label={`Exclude ${row.phrase}`} on:change={() => togglePhrase(row.phrase)} /></span>
+                  </label>
+                {/each}
+              </div>
+              {#if phraseList.length > PHRASES_SHOWN || asidePhrases.size}
+                <div class="sx-foot fx-foot">
+                  {#if phraseList.length > PHRASES_SHOWN}
+                    <button type="button" class="more" aria-expanded={phrasesMore} on:click={() => (phrasesMore = !phrasesMore)}>{phrasesMore ? 'Fewer' : 'More'}</button>
+                  {/if}
+                  {#if asidePhrases.size}
+                    <button type="button" class="more" on:click={restorePhrases}>Clear</button>
+                  {/if}
+                </div>
+              {/if}
             </div>
           {/if}
           <!-- What the Greek result is made of. A tick box each; Apply drops the
