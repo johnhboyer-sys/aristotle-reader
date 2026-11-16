@@ -206,6 +206,55 @@ describe('Search.svelte: the card goes with its hits', () => {
     vi.mocked(fetchBook).mockReset().mockResolvedValue(fixture);
   });
 
+  // Codex's review of D: a book that fails past the page in view is still
+  // reported, and Retry fetches it again.
+  it('reports a book that did not load past the page in view, and fetches it again on Retry', async () => {
+    const { fetchBook } = await import('../lib/data');
+    // 20 rows in Book 1 and 7 in Book 2, at 20 a page.
+    const MANY = Array.from({ length: 27 }, (_, i) => ({ ...grk(`${71 + i}a`, [0, 1, 2]), meta: { id: `1:${71 + i}a`, book: i < 20 ? 1 : 2, column: `${71 + i}a` } }));
+    let down = true;
+    vi.mocked(fetchBook).mockImplementation(async (_work, book) => {
+      if (book === 2 && down) throw new Error('Load failed');
+      return fixture;
+    });
+    const { container } = await open(`${G('ο')}&ps=20`, MANY, 81);
+    const warn = () => text(container.querySelector('.search-note.warn'));
+    await vi.waitFor(() => expect(warn()).toContain('1 passage source didn’t load'));
+    expect(container.querySelector('.pager')).toBeNull();
+    down = false;
+    await fireEvent.click(within(container.querySelector('.search-note.warn')! as HTMLElement).getByRole('button', { name: 'Retry' }));
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of 2'));
+    expect(container.querySelector('.search-note.warn')).toBeNull();
+    vi.mocked(fetchBook).mockReset().mockResolvedValue(fixture);
+  });
+
+  // Codex's review of D: a layout retired while its books load (a Context
+  // change) starts no more of them; the new layout fetches each once.
+  it('starts no more books for a layout a Context change retired', async () => {
+    const { fetchBook, fetchChapters } = await import('../lib/data');
+    const chapters = vi.mocked(fetchChapters).getMockImplementation()!;
+    const one = (await chapters('EN'))['1'];
+    vi.mocked(fetchChapters).mockImplementation(async () => Object.fromEntries(Array.from({ length: 7 }, (_, i) => [String(i + 1), one])));
+    // 20 rows in Book 1, then a row in each of Books 2 to 7.
+    const MANY = Array.from({ length: 26 }, (_, i) => ({ ...grk(`${71 + i}a`, [0, 1, 2]), meta: { id: `1:${71 + i}a`, book: i < 20 ? 1 : i - 18, column: `${71 + i}a` } }));
+    const held: (() => void)[] = [];
+    let free = false;
+    vi.mocked(fetchBook).mockImplementation((_work, book) => book === 1 || free
+      ? Promise.resolve(fixture) : new Promise(resolve => { held.push(() => resolve(fixture)); }));
+    const { container } = await open(`${G('ο')}&ps=20`, MANY, 78);
+    expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of …');
+    await press('Context', '1 line');
+    await vi.waitFor(() => expect(window.location.search).toContain('ctx=1'));
+    free = true;
+    for (const go of held.splice(0)) go();
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of 2'));
+    await new Promise(r => setTimeout(r, 50));
+    const calls = (n: number) => vi.mocked(fetchBook).mock.calls.filter(([, b]) => b === n).length;
+    expect([6, 7].map(calls)).toEqual([1, 1]);
+    vi.mocked(fetchBook).mockReset().mockResolvedValue(fixture);
+    vi.mocked(fetchChapters).mockImplementation(chapters);
+  });
+
   it('closes on a change of page, and of sort', async () => {
     // 27 rows at 20 a page: two pages.
     const MANY = Array.from({ length: 27 }, (_, i) => grk(`${71 + i}a`, [0, 1, 2]));
@@ -613,12 +662,13 @@ describe('Search.svelte: page size', () => {
       expect(li).not.toBeNull();
       return li!;
     });
-    expect(open.querySelector('.cmp-head')).toHaveAttribute('aria-expanded', 'true');
+    expect(open.querySelector('.cmp-shut')).toHaveAttribute('aria-expanded', 'true');
     expect(marks(open.querySelector('.inst-snippet.greek')!)).toEqual(['α']);
-    expect(open.querySelector('.inst-ref')!.getAttribute('href')).toContain('/Int/book/1');
-    expect(open.querySelector('.inst-ref')!.getAttribute('href')).toContain('loc=70a:1');
+    // Its reference is the reader's link, as a row's is at the other sizes.
+    expect(open.querySelector('.cmp-head a.cmp-ref')!.getAttribute('href')).toContain('/Int/book/1');
+    expect(open.querySelector('.cmp-head a.cmp-ref')!.getAttribute('href')).toContain('loc=70a:1');
     expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(3);
-    await fireEvent.click(open.querySelector('.cmp-head')!);
+    await fireEvent.click(open.querySelector('.cmp-shut')!);
     await vi.waitFor(() => expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(4));
   });
 

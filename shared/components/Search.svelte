@@ -932,11 +932,12 @@
   // page draws once the books through its last row have, and the page count
   // shows when every book has (John, 16 Nov: "fill as books load").
   type Built = Awaited<ReturnType<typeof buildGroups>>;
-  interface RowBook { results: SearchResult[]; built?: Promise<Built>; rows?: number }
+  interface RowBook { results: SearchResult[]; built?: Promise<Built>; rows?: number; failed?: boolean }
   let rowBooks: RowBook[] = [];
   let pageTotal: number | null = 0;   // null while books are still being laid out
   let rowsRun = 0;                    // a new layout of the rows retires the old
   let moreRows = false;               // a page after the one in view, while pageTotal is unknown
+  let rowsFailed = 0;                 // books that did not load, wherever their rows fall
   $: paged = pageTotal === null ? pageIdx > 0 || moreRows : pageTotal > 1;
   $: pageOf = pageTotal === null ? '…' : String(pageTotal);
   $: lastPage = pageTotal === null ? !moreRows : pageIdx >= pageTotal - 1;
@@ -953,23 +954,40 @@
       .map(results => ({ results }));
     startRows();
   }
-  // Every book laid out, the next few at a time behind the page in view;
-  // then the page count.
   function startRows() {
     const run = ++rowsRun;
     pageTotal = rowBooks.length ? null : 0;
     moreRows = false;
+    rowsFailed = 0;
+    countRows(run);
+  }
+  // Every book laid out, the next few at a time behind the page in view;
+  // then the page count, and the books that did not load. A layout retired
+  // meanwhile starts no more books.
+  function countRows(run: number) {
     if (!rowBooks.length) return;
-    void pool(rowBooks, 4, b => bookRows(b, run)).then(() => {
-      if (run === rowsRun) pageTotal = pagesFor(rowBooks);
+    void pool(rowBooks, 4, async b => { if (run === rowsRun) await bookRows(b, run); }).then(() => {
+      if (run !== rowsRun) return;
+      pageTotal = pagesFor(rowBooks);
+      rowsFailed = rowBooks.filter(b => b.failed).length;
     });
   }
   function bookRows(b: RowBook, run: number): Promise<Built> {
     b.built ??= buildGroups(b.results, searchCtx, context).then(x => {
-      if (run === rowsRun) b.rows = rowsOf(x);
+      if (run === rowsRun) {
+        b.rows = rowsOf(x);
+        b.failed = x.failed.length > 0;
+        if (pageTotal !== null) pageTotal = pagesFor(rowBooks);
+      }
+      // A book that did not load is asked for again next time (Retry).
+      if (x.failed.length) b.built = undefined;
       return x;
     });
     return b.built;
+  }
+  function retryPage() {
+    renderPage(pageIdx);
+    if (rowsFailed) { rowsFailed = 0; countRows(rowsRun); }
   }
   // Page i's rows, under their chapters: the books through its last row,
   // then the slice. Null when a newer layout has retired this one.
@@ -4391,9 +4409,10 @@
           {:else}
           <li class="instance" class:open={opened} class:cmp-open={compact}>
             {#if compact}
-              <button type="button" class="cmp-row cmp-head" aria-expanded="true" on:click={() => toggleRow(inst)}>
-                <span class="cmp-ref">{citeText(inst, view)}</span><span class="cmp-sum"></span><span class="cmp-x" aria-hidden="true"></span>
-              </button>
+              <div class="cmp-row cmp-head">
+                <a class="cmp-ref" href={inst.lang === 'eng' && shown ? shown.jumpUrl : inst.jumpUrl} target="_blank" rel="noopener" title="Open in reader (new tab)">{citeText(inst, view)}</a>
+                <button type="button" class="cmp-shut" aria-expanded="true" aria-label="Show less" on:click={() => toggleRow(inst)}><span class="cmp-x" aria-hidden="true"></span></button>
+              </div>
             {/if}
             <a class="inst-ref" href={inst.lang === 'eng' && shown ? shown.jumpUrl : inst.jumpUrl} target="_blank" rel="noopener" title="Open in reader (new tab)">{#each citeText(inst, view).split('–') as part, i}{#if i}–<wbr>{/if}{part}{/each}</a>
             <div class="inst-body">
@@ -5489,10 +5508,10 @@
         {/if}
 
 
-        {#if pageError}
+        {#if pageError || rowsFailed}
           <p class="search-note warn">
-            {pageError}
-            <button type="button" class="retry-btn" on:click={() => renderPage(pageIdx)} disabled={pageLoading}>Retry</button>
+            {pageError || `${rowsFailed} passage source${rowsFailed === 1 ? '' : 's'} didn’t load — some hits may be missing.`}
+            <button type="button" class="retry-btn" on:click={retryPage} disabled={pageLoading}>Retry</button>
           </p>
         {/if}
 

@@ -102,5 +102,5 @@ it('links the 6b citation to the same lettered reader target as its snippet', as
   expect(row.querySelector('.cmp-ref')).toHaveTextContent('2b6b');
   expect(row.querySelector('.cmp-sum mark')).toHaveTextContent('γάμμα');
   await fireEvent.click(row);
-  await vi.waitFor(() => expect(rows.container.querySelector('.inst-ref')).toHaveAttribute('href', href));
+  await vi.waitFor(() => expect(rows.container.querySelector('.cmp-head a.cmp-ref')).toHaveAttribute('href', href));
 });

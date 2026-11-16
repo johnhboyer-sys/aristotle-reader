@@ -926,7 +926,8 @@
 
 /* The 100 page (John, 16 Nov, after the TLG): each row its reference and the
    words around its first hit, on one line; a tap opens the row in place as
-   the other page sizes draw it, under a head that shuts it again. */
+   the other page sizes draw it, under a head of its reference, the reader's
+   link, and the rest of the line, which shuts it again. */
 .search-page li.instance.cmp { display: block; padding: 0; }
 .search-page li.instance.cmp-open { display: block; padding-top: 0; }
 .search-page .cmp-row { display: flex; align-items: baseline; gap: 16px; width: 100%; min-height: 44px; padding: 10px 0; border: 0; background: none; text-align: left; color: var(--ink); cursor: pointer; font: inherit; }
@@ -937,7 +938,12 @@
 .search-page .cmp-sum mark { padding: 0; background: var(--hl); color: inherit; }
 .search-page .cmp-x { flex: none; width: 10px; height: 10px; margin-right: 6px; border-right: 2px solid var(--mid); border-bottom: 2px solid var(--mid); transform: translateY(-3px) rotate(45deg); }
 .search-page .cmp-open .cmp-x { transform: translateY(2px) rotate(-135deg); }
-.search-page .cmp-open .cmp-head { padding-bottom: 6px; }
+.search-page .cmp-open .cmp-head { padding: 0; cursor: default; }
+.search-page .cmp-head .cmp-ref { padding: 10px 0; text-decoration: none; }
+.search-page .cmp-head .cmp-ref:hover { color: var(--red-ink); }
+.search-page .cmp-head .cmp-ref:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.search-page .cmp-shut { flex: 1 1 auto; display: flex; justify-content: flex-end; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: var(--ink); cursor: pointer; }
+.search-page .cmp-shut:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .search-page .cmp-open .inst-ref { display: none; }
 @media not all and (min-width: 961px) {
   @media not all and (max-height: 500px) {
