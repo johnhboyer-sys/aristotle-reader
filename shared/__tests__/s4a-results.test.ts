@@ -114,8 +114,8 @@ describe('Search.svelte S4a: a chapter name line over its hits (ruling 17)', () 
     // Chapter 8 has no title: the number alone.
     expect(lines[1].querySelector('.sx-chap-t')).toBeNull();
     // Each line stands over its own hits.
-    expect(lines[0].nextElementSibling!.querySelector('.inst-ref')).toHaveTextContent('70a');
-    expect(lines[1].nextElementSibling!.querySelector('.inst-ref')).toHaveTextContent('71a');
+    expect(lines[0].closest('.run-heading')!.nextElementSibling!.querySelector('.inst-ref')).toHaveTextContent('70a');
+    expect(lines[1].closest('.run-heading')!.nextElementSibling!.querySelector('.inst-ref')).toHaveTextContent('71a');
   });
 });
 
@@ -205,12 +205,10 @@ describe('Search.svelte S4a: the menus over the hits', () => {
       [text(r.querySelector('label')), text(r.querySelector('.opt-gloss'))].filter(Boolean).join(': '))]);
     expect(read).toEqual([
       // One word as spelled: By grammar is a dictionary word's (John, 13 Nov).
-      ['Group by', 'By work: a heading for each work', 'By form: each spelling apart'],
-      ['Sort', 'Bekker order: page, column, and line', 'Works A–Z: by title', 'Forms A–Z: by spelling', 'Commonest form first: the biggest group on top'],
-      ['Context', '1 line: the line with the hit', '3 lines: a line either side', 'Whole section: the section the hit is in'],
-      ['Per page', '20', '40', '100', 'Citations only: places, no text'],
+      ['Group by', 'By work', 'By form'],
+      ['Sort', 'Bekker order', 'Works A–Z', 'Forms A–Z', 'Commonest form first'],
+      ['Context', '1 line', '3 lines', 'Whole section', 'Citations only'],
+      ['Per page', '20', '40', '100'],
     ]);
-    // Citations only is set off by a rule.
-    expect(menus[3].querySelectorAll('.opt-row')[3]).toHaveClass('opt-rule');
   });
 });

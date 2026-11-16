@@ -188,7 +188,7 @@ describe('Search.svelte: the side column', () => {
     expect(box.querySelectorAll('button.i')).toHaveLength(3);
     expect(within(trans).queryByRole('button', { name: /more$|^fewer$/ })).toBeNull();
     await fireEvent.click(within(trans).getByRole('button', { name: /^Rackham/ }));
-    await vi.waitFor(() => expect(status()).toHaveTextContent('4 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent(/4 (?:instances?|hits)/));
     expect(within(trans).getByRole('button', { pressed: true }).querySelector('.i-x')).toHaveTextContent('×');
   });
 });
@@ -205,7 +205,7 @@ describe('Search.svelte: "This search"', () => {
   // Filter badge counts them; display settings are View's.
   it('lists exactly what narrows the results, in the order of the controls', async () => {
     await open(`${G}&e=one&t=rackham&wf=EN&xf=tais&gf=case.gen&v=form&so=form&ctx=1&ps=20&sp=only&sn=EN`, BILINGUAL);
-    await vi.waitFor(() => expect(status()).toHaveTextContent(/\d+ instances?/));
+    await vi.waitFor(() => expect(status()).toHaveTextContent(/\d+ (?:instances?|hits)/));
     // Round 34: the rail undoes each where it is set, with no summary.
     expect(screen.queryByRole('group', { name: 'This search' })).toBeNull();
     await openSheet();
@@ -260,12 +260,12 @@ describe('Search.svelte: "This search"', () => {
     it(`undoes "${c.what}" alone, without a new search`, async () => {
       const { search } = await import('../lib/search');
       await open(c.url, c.results);
-      await vi.waitFor(() => expect(status()).toHaveTextContent(c.before));
+      await vi.waitFor(() => expect(status()).toHaveTextContent(new RegExp(c.before.replace('instances', '(?:instances|hits)'))));
       expect(window.location.search).toContain(c.param);
       await openSheet();
       const others = chosen().filter(w => w !== c.what);
       await fireEvent.click(remove(c.what));
-      await vi.waitFor(() => expect(status()).toHaveTextContent(c.after));
+      await vi.waitFor(() => expect(status()).toHaveTextContent(new RegExp(c.after.replace('instances', '(?:instances|hits)'))));
       expect(window.location.search).not.toContain(c.param);
       expect(chosen()).toEqual(others);
       // The control, in the rail again once the sheet is shut.
@@ -381,6 +381,15 @@ describe('Search.svelte: the Filter sheet', () => {
     await fireEvent.click(container.querySelector('.sx-scrim')!);
     await vi.waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(document.activeElement).toBe(filter());
+  });
+
+  it('uses passages in the Filter foot for Both, with hits named in the results bar', async () => {
+    await open(`${G}&e=one`, BILINGUAL);
+    await fireEvent.click(filter());
+    const sheet = await screen.findByRole('dialog', { name: 'Filter' });
+    expect(within(sheet).getByRole('button', { name: 'Show 3 passages' })).toBeInTheDocument();
+    expect(within(sheet).queryByRole('button', { name: 'Show 9 instances' })).toBeNull();
+    expect(status()).toHaveTextContent('3 passages · 9 hits');
   });
 
   it('lists the filters as a menu, each with what is set, and no filter itself', async () => {
@@ -524,8 +533,8 @@ describe('Search.svelte: the View sheet', () => {
     expect([...sheet.querySelectorAll('fieldset')].map(fs => [...fs.querySelectorAll('label')].map(text))).toEqual([
       ['By work', 'By form'],
       ['Bekker order', 'Works A–Z', 'Forms A–Z', 'Commonest form'],
-      ['1 line', '3 lines', 'Whole section'],
-      ['20', '40', '100', 'Citations only'],
+      ['1 line', '3 lines', 'Whole section', 'Citations only'],
+      ['20', '40', '100'],
     ]);
     const on = [...sheet.querySelectorAll<HTMLInputElement>('input:checked')].map(i => text(i.closest('label')));
     expect(on).toEqual(['By work', 'Bekker order', '3 lines', '40']);
@@ -567,7 +576,7 @@ describe('Search.svelte: the View sheet', () => {
     const done = within(sheet).getByRole('button', { name: 'Done' });
     done.focus();
     await fireEvent.keyDown(done, { key: 'Tab' });
-    expect(document.activeElement).toBe(within(sheet).getByRole('button', { name: 'Close' }));
+    expect(document.activeElement).toBe(within(sheet).getByRole('radio', { name: 'By work' }));
     await fireEvent.keyDown(document.activeElement!, { key: 'Tab', shiftKey: true });
     expect(document.activeElement).toBe(done);
   });
@@ -596,7 +605,7 @@ describe('Search.svelte: the View sheet', () => {
     await open(`${G}&ps=c`);
     await fireEvent.click(sortBtn());
     const sheet = await screen.findByRole('dialog', { name: 'View' });
-    expect([...sheet.querySelectorAll('fieldset legend')].map(text)).toEqual(['Per page']);
+    expect([...sheet.querySelectorAll('fieldset legend')].map(text)).toEqual(['Context', 'Per page']);
   });
 });
 
@@ -674,7 +683,7 @@ describe('Search.svelte: the Filter sheet and the page behind it', () => {
 });
 
 describe('Search.svelte: the sidebar and widened results', () => {
-  const PHRASE = `/search?g=${encodeURIComponent('τῆς ἐστι')}`;
+  const PHRASE = `/search?g=${encodeURIComponent('τῆς ἐστι')}&gm=phrase`;
   const widened = { results: RESULTS, failedWorks: [], readings: [['x']], productive: [['x']] };
   const widen = async () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Find this phrase in any inflection' }));
@@ -756,7 +765,8 @@ describe('Search.svelte: removing the chapter limit', () => {
     await chapter();
     const { searchCombo } = await import('../lib/search');
     const before = structuredClone(vi.mocked(searchCombo).mock.calls[0]);
-    await fireEvent.input(screen.getByLabelText('English'), {target:{value:'never submitted'}});
+    await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+    await fireEvent.change(screen.getByRole('combobox', { name: 'Relation of term 2' }), { target: { value: 'before' } });
     await fireEvent.click(remove('Within a chapter'));
     await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(2));
     expect(vi.mocked(searchCombo).mock.calls[1][0]).toEqual(before[0]);
@@ -768,7 +778,7 @@ describe('Search.svelte: removing the chapter limit', () => {
     await vi.waitFor(async () => expect(await sheetChosen()).toEqual([]));
     // The editor is shut on a proximity search from the address (S3).
     await fireEvent.click(screen.getByRole('button', {name:'Change'}));
-    await fireEvent.click(screen.getByRole('checkbox', {name:'Keep hits that cross a chapter'}));
+    await fireEvent.click(screen.getByRole('switch', {name:'Keep hits that cross a chapter'}));
     expect(await sheetChosen()).toEqual([]);
   });
   it('clear all resets the chapter checkbox and address', async () => {
@@ -776,7 +786,7 @@ describe('Search.svelte: removing the chapter limit', () => {
     await fireEvent.click(within(summary()).getByRole('button',{name:'Clear all'}));
     await vi.waitFor(async () => expect(await sheetChosen()).toEqual([]));
     await fireEvent.click(screen.getByRole('button', {name:'Change'}));
-    expect(screen.getByRole('checkbox',{name:'Keep hits that cross a chapter'})).toBeChecked();
+    expect(screen.getByRole('switch',{name:'Keep hits that cross a chapter'})).toHaveAttribute('aria-checked', 'true');
     expect(location.search).not.toContain('cx='); expect(location.search).not.toContain('wf=');
   });
   it('keeps forms set aside', async () => {

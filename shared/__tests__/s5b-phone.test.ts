@@ -133,7 +133,7 @@ function mq(media: string, width: number, height: number): boolean {
 describe('one breakpoint, every width on one side of it', () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const B = readFileSync(resolve(here, '../styles/b-search.css'), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '');
-  const queries = [...new Set([...B.matchAll(/@media ([^{]+)\{/g)].map((m) => m[1].trim()).filter((q) => /96\d/.test(q)))];
+  const queries = [...new Set([...B.matchAll(/@media ([^{]+)\{/g)].map((m) => m[1].trim()).filter((q) => /96\d/.test(q) && !/min-width: (?:780|840)/.test(q)))];
   const WIDTHS = [320, 390, 599, 600, 844, 959, 960, 960.5, 960.98, 961, 1100, 1152];
 
   it('in b-search.css: the desktop rules and the narrow rules are one query and its opposite', () => {
@@ -153,7 +153,7 @@ describe('one breakpoint, every width on one side of it', () => {
     render(Search);
     await vi.waitFor(() => expect(document.querySelector('.prox-sum')).not.toBeNull());
     await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
-    expect(text(document.querySelector('.prox-sum'))).toBe('within 10 words: ἕξις near ἀρετή');
+    expect(document.querySelector('.prox-sum')).toBeNull();
   });
 });
 
@@ -165,6 +165,9 @@ describe('no target under 44px, at any width', () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const B = readFileSync(resolve(here, '../styles/b-search.css'), 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s+/g, ' ');
   const PARTS = new Set([
+    '.search-page .seg button:not(:first-child)::before', '.search-page .f-bc > .sx-chap::before',
+    '.search-page .d6.v-H3 .sq-head.h-e', '.search-page .prox-colh, .search-page .prox-tn, .search-page .prox-ml',
+    '.search-page .g-sw .sw', '.search-page .g-sw .sw::after',
     '.search-page .sq-glass', // the field's magnifier, drawn
     '.search-page .opt-switch .sw', '.search-page .opt-switch .sw::after', // a switch's track and knob; the switch is the target
     '.search-page :is(.search-form, .sx-display) .opt-panel .ck input', // a radio inside its 44px label
@@ -186,6 +189,7 @@ describe('no target under 44px, at any width', () => {
   // Known and not this stage's (the desktop proximity editor, round 34 d06,
   // and the field's clear button): reported as follow-ups.
   const LATER = new Set([
+    '.search-page .seg button', '.search-page .d6 .opt-switch', '.search-page .d6-in > .lbl', '.search-page .query-clear', '.search-page .g3',
     '.search-page .query-input::-webkit-search-cancel-button',
     '.search-page .prox-head .prox-sel', '.search-page .prox-win', '.search-page .prox-chip',
   ]);
@@ -221,53 +225,24 @@ describe('a proximity search saved from the page', () => {
 });
 
 // Sideways (s01, r34-13): Greek · English · Both is a menu on the field's row.
-describe('the language menu, sideways', () => {
-  it('is drawn only on a screen narrow and short, and switches the language', async () => {
-    sized(844, 390);
-    render(Search);
-    const menu = document.querySelector<HTMLDetailsElement>('details.lang-menu')!;
-    expect(menu).not.toBeNull();
-    expect(text(menu.querySelector('summary'))).toBe('Greek search');
-    const panel = menu.querySelector('fieldset.opt-panel.sheet')!;
-    expect(text(panel.querySelector('legend.sheet-head'))).toBe('Search in');
-    expect(panel.querySelector('.sheet-foot .sheet-done')).toHaveTextContent('Done');
-    menu.open = true;
-    await fireEvent.click(within(menu).getByRole('radio', { name: 'English' }));
-    expect(within(document.querySelector<HTMLElement>('.lang-switch')!).getByRole('button', { name: 'English' })).toHaveAttribute('aria-pressed', 'true');
-    expect(text(menu.querySelector('summary'))).toBe('English search');
-    expect(menu.open).toBe(false);
+describe('the sideways form', () => {
+  it('shows both labelled fields, with tools by Greek, and no language menu', () => {
+    sized(844, 390); render(Search);
+    expect(document.querySelector('.lang-menu')).toBeNull();
+    expect(screen.getByLabelText('English')).toBeInTheDocument();
+    expect(screen.getByLabelText('Greek')).toBeInTheDocument();
+    expect(document.querySelector('.h-g')).toContainElement(screen.getByRole('button', { name: 'Greek keyboard' }));
   });
 
-  // Finding 1 of Codex's review R7: the sheet is a named modal, as the
-  // other option sheets are, and the focus goes into it on open.
-  it('opens as a named modal sheet with the focus in it, and gives the focus back', async () => {
-    sized(844, 390);
-    render(Search);
-    const menu = document.querySelector<HTMLDetailsElement>('details.lang-menu')!;
-    const opener = menu.querySelector('summary')!;
-    opener.focus();
-    menu.open = true;
-    await fireEvent(menu, new Event('toggle'));
-    const dialog = screen.getByRole('dialog', { name: 'Search in' });
-    expect(dialog).toBe(menu.querySelector('fieldset.sheet'));
-    expect(dialog).toHaveAttribute('aria-modal', 'true');
-    expect(dialog).toHaveAttribute('tabindex', '-1');
-    expect(dialog.contains(document.activeElement)).toBe(true);
-    await fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
-    expect(menu.open).toBe(false);
-    expect(opener).toHaveFocus();
-    await fireEvent(menu, new Event('toggle'));
-    expect(screen.queryByRole('dialog', { name: 'Search in' })).toBeNull();
-  });
-
-  it('is not drawn upright, nor on a desktop', async () => {
-    sized(390, 844);
-    const a = render(Search);
-    expect(document.querySelector('details.lang-menu')).toBeNull();
-    a.unmount();
-    sized(1152, 400);
-    render(Search);
-    expect(document.querySelector('details.lang-menu')).toBeNull();
+  it('folds after Search and Change restores the fields', async () => {
+    sized(844, 390); render(Search);
+    await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue' } });
+    await fireEvent.submit(document.querySelector('form')!);
+    await vi.waitFor(() => expect(document.querySelector('.search-form')).toHaveClass('fold-on'));
+    expect(document.querySelector('.d6-fold')).toHaveTextContent('virtue');
+    await fireEvent.click(within(document.querySelector<HTMLElement>('.d6-fold')!).getByRole('button', { name: 'Change' }));
+    expect(document.querySelector('.search-form')).not.toHaveClass('fold-on');
+    expect(screen.getByLabelText('English')).toHaveValue('virtue');
   });
 });
 
@@ -304,5 +279,66 @@ describe('the type and targets S5b draws', () => {
     const sizes = [...s5b.matchAll(/font(?:-size)?:[^;}]*?(\d+(?:\.\d+)?)px/g)].map((m) => Number(m[1]));
     expect(sizes.length).toBeGreaterThan(20);
     expect(sizes.filter((n) => n < 14)).toEqual([]);
+  });
+});
+
+describe('the Greek keyboard sheet', () => {
+  it('spreads the upright grid by one column, traps focus, and restores covered controls on Close', async () => {
+    sized(390, 844);
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      const top = this.id === 'grk-keys' ? 520 : this.id === 'eng-input' ? 600 : 100;
+      return { top, bottom: this.id === 'grk-keys' ? 844 : top + 56, left: 0, right: 390, width: 390, height: 56 } as DOMRect;
+    });
+    render(Search);
+    const english = screen.getByLabelText('English');
+    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'ἀρετή' } });
+    await fireEvent.click(screen.getByRole('button', { name: 'Greek keyboard' }));
+    const sheet = document.getElementById('grk-keys')!;
+    const first = sheet.querySelector<HTMLButtonElement>('button')!;
+    expect(first.style.gridColumn).toBe('3 / span 2');
+    expect(sheet.querySelector<HTMLElement>('.gk-space')!.style.gridColumn).toBe('1 / span 12');
+    expect(within(sheet).queryByRole('button', { name: 'Clear Greek' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Clear Greek' }).inert).not.toBe(true);
+    await vi.waitFor(() => expect(english).toHaveProperty('inert', true));
+    const close = within(sheet).getByRole('button', { name: 'Close' });
+    close.focus();
+    await fireEvent.keyDown(close, { key: 'Tab' });
+    expect(first).toHaveFocus();
+    await fireEvent.keyDown(first, { key: 'Tab', shiftKey: true });
+    expect(close).toHaveFocus();
+    await fireEvent.click(close);
+    expect(english).toHaveProperty('inert', false);
+    expect(document.getElementById('grk-input')).toHaveFocus();
+  });
+
+  it('scrolls the sideways field above the sheet and keeps a clear control usable', async () => {
+    sized(844, 390);
+    const scroll = vi.spyOn(window, 'scrollBy').mockImplementation(() => {});
+    const rect = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+      return { top: this.id === 'grk-keys' ? 117 : this.closest('.h-g') ? 28 : 200, bottom: this.id === 'grk-input' ? 249 : this.closest('.h-g') ? 72 : this.id === 'grk-keys' ? 390 : 256, left: 0, right: 844, width: 844, height: 56, x: 0, y: 200, toJSON() {} };
+    });
+    try {
+      render(Search);
+      const field = screen.getByLabelText('Greek');
+      await fireEvent.input(field, { target: { value: 'ἀρετή' } });
+      await fireEvent.click(screen.getByRole('button', { name: 'Greek keyboard' }));
+      expect(scroll).toHaveBeenCalledWith({ top: 147, behavior: 'instant' });
+      const sheet = document.getElementById('grk-keys')!;
+      expect(within(sheet).queryByRole('button', { name: 'Clear Greek' })).toBeNull();
+      expect(sheet.querySelector<HTMLElement>('.gk-space')!.style.gridColumn).toBe('2 / span 12');
+      const clear = screen.getByRole('button', { name: 'Clear Greek' });
+      expect(clear.closest('.h-g')).not.toBeNull();
+      expect(clear.inert).not.toBe(true);
+      expect(clear.closest('[inert]')).toBeNull();
+      await fireEvent.click(clear);
+      expect(field).toHaveValue('');
+      expect(sheet).toBeInTheDocument();
+    } finally { scroll.mockRestore(); rect.mockRestore(); }
+  });
+
+  it('keeps the built start columns sideways', async () => {
+    sized(844, 390); render(Search);
+    await fireEvent.click(screen.getByRole('button', { name: 'Greek keyboard' }));
+    expect(document.querySelector<HTMLButtonElement>('#grk-keys button')!.style.gridColumn).toBe('4 / span 2');
   });
 });

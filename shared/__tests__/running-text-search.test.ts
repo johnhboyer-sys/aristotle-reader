@@ -55,19 +55,20 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-const formMenu = () => screen.getByText('Form', { selector: 'summary' }).closest('details')!;
+const formMenu = () => document.querySelector('details:has(input[name=matchmode])')!;
 
 describe('Search: running text', () => {
   // Capitals is gone (ruling 5); Lemma took its place, and gives way to
   // Punctuation here as Case did.
   it('is the third choice of the Form menu, and brings a Punctuation switch in place of Match and Lemma', async () => {
     render(Search);
+    await fireEvent.input(document.getElementById('grk-input')!, { target: { value: 'λογ' } });
     const radios = [...formMenu().querySelectorAll<HTMLInputElement>('input[name="matchmode"]')];
     expect(radios.map((r) => r.closest('label')!.textContent)).toEqual(['Any form of this word', 'Only as I typed it', 'Running text']);
     expect(screen.queryByRole('button', { name: 'Punctuation' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Lemma' })).toBeInTheDocument();
     await fireEvent.click(radios[2]);
-    expect(formMenu().querySelector('summary')).toHaveTextContent('Form running text');
+    expect(formMenu().querySelector('summary')).toHaveTextContent('Greek form running text');
     const pu = screen.getByRole('button', { name: 'Punctuation' });
     expect(pu).toHaveTextContent(/^Punctuation$/);
     expect(pu).toHaveAttribute('aria-pressed', 'false');

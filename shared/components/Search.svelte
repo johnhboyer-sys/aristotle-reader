@@ -67,7 +67,7 @@
   import { WORKS, getWork, workPath, WORK_ORDER, SEARCH_GROUPS, searchableTranslations, type TranslationRef } from '../lib/works';
   import { formatCite, formatLocValue, schemeFor } from '../lib/citation';
   import { decodeSearchUrl, encodeSearchUrl, hasSearch, type UrlCombo, type UrlSearch } from '../lib/search-url';
-  import { grammarWords, proximitySentence, proximityTerms, termWords } from '../lib/proximity-sentence';
+  import { grammarWords, proximitySentence, termWords } from '../lib/proximity-sentence';
   import { FULL, addSaved, findSaved, savedAvailable, summarizeSearch } from '../lib/saved-searches';
   import { betaQueryToGreek, betaToGreek, liveGreek } from '../lib/betacode';
   import { addMark, deleteBack, GREEK_MARKS, insertText, KEY_ROWS, type KeyEdit } from '../lib/greek-keys';
@@ -202,6 +202,10 @@
   let selectedWorks = new Set<string>(WORKS.map(w => w.id));
   let worksOpen = false;  // is the works "Refine" panel expanded?
   let groups: ChapterGroup[] = [];        // chapter groups of the CURRENT page
+  let totalPassages = 0;
+  $: bothSearch = !!lastSearch?.eng.trim() && (!!lastSearch?.grk.trim() || !!lastSearch?.lemmas.length);
+  $: mainCount = bothSearch ? totalPassages : totalInstances;
+  $: countNoun = bothSearch ? (mainCount === 1 ? 'passage' : 'passages') : (mainCount === 1 ? 'instance' : 'instances');
   let totalInstances = 0;                 // across the whole result set (all pages)
   let expanded = new Set<string>();
   let loading = false;                    // running the index search
@@ -219,13 +223,9 @@
   let variantNote = '';
   let variantBusy = false;
   let variantsShown = false;
-  // Offered for ANY multi-word Greek query, not only a form-phrase one. Tying it
-  // to "Exact phrase" + "Exact form" hid it behind two controls a reader has no
-  // reason to touch, so the people it helps most were the least likely to meet
-  // it. What it does does not depend on the current mode: it finds the phrase
-  // under every dictionary form of its words.
+  // Offer phrase widening only for a phrase, not an all-words search.
   $: canWiden = !comboActive && !soloLemmaActive && matchMode !== 'text'
-    && grkQuery.trim().split(/\s+/).filter(Boolean).length > 1;
+    && grkMode === 'phrase' && grkQuery.trim().split(/\s+/).filter(Boolean).length > 1;
 
   // Lemma mode matches dictionary forms, so a phrase typed as it stands on the
   // page (ἦν δ’ ἐγώ) finds nothing — ἦν is not a headword, εἰμί is. That reads
@@ -318,9 +318,8 @@
   // (lib/search-pages) so a card never splits across result pages — and so only
   // the current page's books are fetched. That keeps the request burst small
   // however broad the query is, instead of loading every result's book at once.
-  // ~instances per page (whole chapters): the Page-size control, and
-  // more for a list of citations alone.
-  const pageTarget = (ps: PageSize) => (ps === 'c' ? 400 : Number(ps));
+  // About this many hits per page, breaking between whole chapters.
+  const pageTarget = (ps: PageSize) => Number(ps);
   let pages: SearchResult[][] = [];       // each page's slice of the result set
   let shownResults: SearchResult[] = [];  // every page's results, once each
   let pageIdx = 0;
@@ -552,6 +551,7 @@
     { id: '1', label: '1 line', value: '1 line', gloss: 'the line with the hit' },
     { id: '3', label: '3 lines', value: '3 lines', gloss: 'a line either side' },
     { id: 's', label: 'Whole section', value: 'whole section', gloss: 'the section the hit is in' },
+    { id: 'c', label: 'Citations only', value: 'citations only' },
   ];
   function setContext(next: ResultContext) {
     if (next === context) return;
@@ -565,7 +565,6 @@
     { id: '20', label: '20', value: '20' },
     { id: '40', label: '40', value: '40' },
     { id: '100', label: '100', value: '100' },
-    { id: 'c', label: 'Citations only', value: 'citations only', gloss: 'places, no text', rule: true },
   ];
   let citeList: CiteGroup[] = [];      // the page in view, under citations only
   function setPageSize(next: PageSize) {
@@ -664,6 +663,12 @@
     const readings = hasFacets(ticked) && seg ? at.get(`${inst.work}:${seg}:${pos}`) : undefined;
     return readings && ambiguityNote(readings, ticked);
   }
+  function noteWords(note: string): string {
+    return note.replace(/\b(case|number|gender|tense|mood|voice|person|degree|marker)\s+([^·;:]+)/g, (_all, category: string, values: string) => {
+      const words = values.trim().split(/\s+or\s+/).map(value => grammarWords({ [category]: value }));
+      return (words.length < 3 ? words.join(' or ') : `${words.slice(0, -1).join(', ')}, or ${words.at(-1)}`) + (/\s$/.test(values) ? ' ' : '');
+    });
+  }
   // What an instance says of its ambiguous words: the grammatical search's
   // note on each, else the facets'. A hit of one word, its note; of several
   // (a window, a section), each distinct note with the word it is about, so
@@ -679,7 +684,7 @@
       const mine = new Set(own.map(h => h.pos));
       out.push(...notes((inst.whole?.held ?? []).filter(h => !mine.has(h.pos))).map(x => `${x.surface}: ${x.note}`));
     }
-    return out.length ? [...new Set(out)].join(' · ') : undefined;
+    return out.length ? [...new Set(out)].map(noteWords).join(' · ') : undefined;
   }
   // Who speaks the words held, each once, in order.
   const speakersOf = (held: HeldTok[]) => [...new Set(held.map(h => h.speaker).filter(Boolean))].join(' · ') || undefined;
@@ -757,7 +762,7 @@
 
   $: countText = totalInstances === 0
     ? 'No passages found.'
-    : `${totalInstances} instance${totalInstances === 1 ? '' : 's'}`
+    : `${mainCount} ${countNoun}` + (bothSearch ? ` · ${totalInstances} hits` : '')
       + (pages.length > 1 ? ` · page ${pageIdx + 1} of ${pages.length}` : '');
 
   function setWorkFilter(id: string | null) {
@@ -791,6 +796,7 @@
     const run = ++layoutRun;
     const shown = narrowWork(narrow(withoutForms(results), transFilter, searchCtx), workFilter);
     totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
+    totalPassages = shown.length;
     shownResults = shown;
     // Load chapter offsets to cut pages at chapter boundaries before fetching books.
     const offsets = new Map<string, Awaited<ReturnType<typeof loadOffsets>> | null>();
@@ -1000,7 +1006,7 @@
       .reduce((n, r) => n + hitCount(r), 0)
     : totalInstances;
   const instancesLabel = (n: number) => `Show ${n} instance${n === 1 ? '' : 's'}`;
-  $: hitsLabel = instancesLabel(totalInstances);
+  $: hitsLabel = `Show ${mainCount} ${countNoun}`;
   // What the forms ticked on the sheet would leave (q08), and its button:
   // the ticks applied, then the hits.
   $: formsPreview = formsDirty
@@ -1029,7 +1035,7 @@
     }
     if (e.key !== 'Tab') return;
     // A radio group is one stop: its checked radio, or its first if none is.
-    const els = [...root.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled])')].filter(el => {
+    const els = [...root.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])')].filter(el => {
       if (!(el instanceof HTMLInputElement) || el.type !== 'radio' || !el.name) return true;
       const group = [...root.querySelectorAll<HTMLInputElement>(`input[type="radio"][name="${el.name}"]:not([disabled])`)];
       return el.checked || (!group.some(r => r.checked) && group[0] === el);
@@ -1203,6 +1209,8 @@
     text: string;
     picked: string[];
     grammar: GrammarQuery;
+    grammarOpen?: boolean;
+    wordClass?: string;
     lemmaInput: string;
     lemmaMatches: LemmaMatch[];
     lemmaCapped: boolean;
@@ -1359,57 +1367,18 @@
       : sameSet(works, chosen) ? label
       : `${works.length} works`;
   $: proxSentence = proxLive && lastSearch?.combo
-    ? proximitySentence(lastSearch.combo.slots, lastSearch.combo, headsOf(pickInfo), inValue(lastSearch.works, selectedWorks, worksValue), narrowScreen && advancedOpen) : '';
-  // While proximity holds the box, it shows the terms, "; " between them
-  // (John, 12 Nov): the search shown, or the open editor's before one is.
-  $: proxTerms = !comboActive ? ''
-    : proximityTerms((proxLive && lastSearch?.combo ? lastSearch.combo : comboNow)?.slots ?? [], headsOf(pickInfo));
-  $: pendingSentence = comboPending && comboNow
-    ? proximitySentence(comboNow.slots, comboNow, headsOf(pickInfo), inValue(WORK_IDS.filter(id => selectedWorks.has(id)), selectedWorks, worksValue)) : '';
-
+    ? proximitySentence(lastSearch.combo.slots, lastSearch.combo, headsOf(pickInfo), inValue(lastSearch.works, selectedWorks, worksValue), false) + (lastSearch.combo.crossChapter === false ? ', inside one chapter' : '') : '';
   // Proximity opens the editor in one click (ruling 2), and shuts it.
   let proxTrigger: HTMLButtonElement | undefined;
   function toggleAdvanced() {
     advancedOpen = !advancedOpen;
-    if (advancedOpen) { optsOpen = false; void seedFromQuery(); }
+    if (advancedOpen) { void seedFromQuery(); }
   }
-  // A phone folds the options under "Options" (§5.7): open, they are a grid
-  // of two columns; shut, a line under the row says what they are set to.
-  // Options and the editor are open one at a time there. A wide screen
-  // draws neither the link nor the line, so this never shows on it.
-  let optsOpen = false;
-  function toggleOpts() {
-    optsOpen = !optsOpen;
-    if (optsOpen) {
-      if (advancedOpen && comboReady) proxOn = true;
-      advancedOpen = false;
-    }
-    else for (const m of document.querySelectorAll<HTMLDetailsElement>('.sopt:not(.sx-display) .opt[open]')) m.open = false;
-  }
-  $: optsLine = optionWords(lang, soloLemmaActive ? 'any' : grkMode, engMode, soloLemmaActive ? 'lemma' : matchMode, engForms, accentSensitive, punctuation, lemmaOn, langOp, soloLemmaActive && !!engQuery.trim(), worksValue);
-  function optionWords(lang: Lang, gm: SearchMode, em: SearchMode, form: MatchMode | 'text', engAny: boolean, accents: boolean,
-    stops: boolean, lemma: boolean, op: LangOp, joined: boolean, works: string): string[] {
-    const g = lang !== 'english', en = lang !== 'greek';
-    const both = (gw: string | null, ew: string | null) =>
-      !gw ? (ew ? [ew] : []) : !ew || gw === ew ? [gw] : [`Greek ${gw}`, `English ${ew}`];
-    const gForm = form === 'text' ? 'running text' : form === 'lemma' ? 'any form' : 'as typed';
-    return [
-      ...both(g && form !== 'text' ? lower1(modeLabel(gm)) : null, en ? lower1(modeLabel(em)) : null),
-      ...both(g ? gForm : null, en ? (engAny ? 'any form' : 'as typed') : null),
-      ...(g ? [accents ? 'accents observed' : 'accents ignored'] : []),
-      ...(g && form === 'text' && stops ? ['punctuation observed'] : []),
-      ...(g && form !== 'text' && lemma ? ['by lemma'] : []),
-      ...(lang === 'both' || joined ? [op === 'and' ? 'both languages' : 'either language'] : []),
-      `in ${works}`,
-    ];
-  }
-  // The settings of the results that are not their defaults, in red after
-  // the options ("grouped by grammar").
   $: viewLine = [
     ...(view !== 'page' ? [`grouped by ${VIEWS.find(v => v.id === view)?.value ?? view}`] : []),
     ...(sort !== 'page' ? [lower1(SORTS.find(v => v.id === sort)?.value ?? sort)] : []),
     ...(context !== '3' ? [CONTEXTS.find(v => v.id === context)?.value ?? context] : []),
-    ...(pageSize === 'c' ? ['citations only'] : pageSize !== '40' ? [`${pageSize} per page`] : []),
+    ...(pageSize !== '40' ? [`${pageSize} per page`] : []),
   ];
   async function closeEditor() {
     advancedOpen = false;
@@ -1417,7 +1386,7 @@
     proxTrigger?.focus();
   }
   async function openEditor() {
-    optsOpen = false;
+    formFolded = false;
     advancedOpen = true;
     await tick();
     document.querySelector<HTMLElement>('#advanced-tools .combo-slot :is(input, select, button)')?.focus();
@@ -1443,7 +1412,7 @@
   async function foldEditor() {
     advancedOpen = false;
     await tick();
-    proxChange?.focus({ preventScroll: !editorKeyed });
+    (sideways ? document.querySelector<HTMLButtonElement>('.d6-fold .fchg') : proxChange)?.focus({ preventScroll: !editorKeyed });
   }
   // Measure the whole bar, including wrapped text, border and safe area.
   // Both reserves inherit this value; only the narrow layout uses it.
@@ -1678,13 +1647,30 @@
     comboEditors = comboEditors.filter((slot) => slot.id !== id);
   }
 
-  // One value per category: a chip picks it, the chosen chip unpicks it.
+  const wordClass = (slot: ComboEditor) => slot.wordClass ?? (slot.grammar.mood || slot.grammar.tense || slot.grammar.voice || slot.grammar.person ? 'verb' : slot.grammar.case ? 'declined word' : slot.grammar.marker ?? 'declined word');
+  const grammarKeys = (cls: string, mood?: string) => cls === 'declined word' ? ['case', 'number', 'gender', 'degree']
+    : cls !== 'verb' ? [] : mood === 'inf' ? ['tense', 'mood', 'voice']
+    : mood === 'part' ? ['tense', 'mood', 'voice', 'case', 'number', 'gender']
+    : ['tense', 'mood', 'voice', 'person', 'number'];
+  function grammarCategories(slot: ComboEditor) {
+    return grammarKeys(wordClass(slot), slot.grammar.mood).map(key => GRAMMAR_CATEGORIES.find(cat => cat.key === key)!);
+  }
+  function setWordClass(id: number, cls: string) {
+    const slot = comboEditors.find(slot => slot.id === id);
+    if (!slot) return;
+    slot.wordClass = cls;
+    const keys = grammarKeys(cls, slot.grammar.mood);
+    slot.grammar = cls === 'verb' || cls === 'declined word'
+      ? Object.fromEntries(Object.entries(slot.grammar).filter(([key]) => keys.includes(key))) : { marker: cls };
+    comboEditors = [...comboEditors];
+  }
   function setComboGrammar(id: number, key: string, value: string) {
-    const editor = comboEditors.find((slot) => slot.id === id);
-    if (!editor) return;
-    const next = { ...editor.grammar };
-    if (value && next[key] !== value) next[key] = value; else delete next[key];
-    editor.grammar = next;
+    const slot = comboEditors.find(slot => slot.id === id);
+    if (!slot) return;
+    const next = { ...slot.grammar };
+    if (value) next[key] = value; else delete next[key];
+    const keys = grammarKeys(wordClass(slot), next.mood);
+    slot.grammar = Object.fromEntries(Object.entries(next).filter(([key]) => keys.includes(key)));
     comboEditors = [...comboEditors];
   }
 
@@ -1909,7 +1895,7 @@
   }
   function closeWorks() {
     worksOpen = false;
-    document.querySelector<HTMLElement>('.opt-in > summary')?.focus();
+    document.querySelector<HTMLElement>('.d6-in [role=radio]:last-child')?.focus();
   }
   // The picker's "Find a work": title or abbreviation, any case.
   let worksFind = '';
@@ -2172,13 +2158,14 @@
     const list = [...sections.values()];
     return by === 'work' ? list.sort((a, b) => title(a.work!).localeCompare(title(b.work!))) : list;
   }
+  // Grammar headings count the shown page; totals must not load other books.
   $: viewSections = sectionsFor(groups, view, sort, grammarAt, hitForms, headsSearched(lastSearch, hitForms), pickInfo, lastSearch?.lemmas ?? []);
   // By work a reference is the section alone, so its column is narrow, unless
   // a hit on the page puts a speaker's name or a reading's note under it.
   $: narrowRefs = view === 'page' && !viewSections.some(sec => sec.groups.some(g => g.instances.some(inst =>
     inst.speaker || noteOf(inst, grammarAt, facets, more.has(inst)))));
-  // Every heading starts open (John, 2026-11-10): no hit waits behind a click.
-  $: expanded = new Set(viewSections.flatMap(sec => sec.groups.flatMap(g => [g.key, ...(g.rows ?? []).map(row => row.key)])));
+  // Work and headword headings start open; paradigm rows start shut (14 Nov).
+  $: expanded = new Set(viewSections.flatMap(sec => sec.groups.flatMap(g => [g.key])));
 
   // A shut group is not in the page, so it would not print: every group is
   // opened for printing, and the ones the reader had shut are shut after.
@@ -2396,10 +2383,8 @@
       + `${hits?.length ? `hlt=${column}:${hits.join(',')}&` : ''}loc=${formatLocValue(work, column, line)}`;
   }
 
-  // Citations only: each place with hits and its count, read off the results
-  // and the search index's offsets alone, so no book is fetched. A Greek hit
-  // is cited to its line (a match of several words, to its first word's);
-  // an English one to its section, as its line is known only from the book.
+  // Citations only: count hits by column, without fetching books. Links
+  // retain each hit's line; the visible citation omits line numbers.
   // By work and book, in corpus order.
   interface CiteGroup { key: string; work: string; book: number; cites: { ref: string; href: string; n: number }[] }
   function citationsFor(results: SearchResult[], ctx: SearchCtx, offsets: Map<string, Offsets | null>): CiteGroup[] {
@@ -2435,7 +2420,7 @@
       for (const w of r.windows ?? r.grkPositions.map(p => [p])) {
         const at = o && i >= 0 ? offsetRef(o, o.seg_base_offset[i] + w[0]) : null;
         if (!at) { add(formatCite(r.work, column), jump(r.work, r.meta.book, column, 1, undefined, r.grkPositions), 1); continue; }
-        add(formatCite(r.work, at.column, at.line, at.sub),
+        add(formatCite(r.work, at.column),
           jump(r.work, r.meta.book, at.column, at.line, undefined, at.column === column ? r.grkPositions : undefined) + (at.sub ?? ''), 1);
       }
     }
@@ -2453,6 +2438,7 @@
     context: ResultContext,
     allPages = false,
   ): Promise<{ groups: ChapterGroup[]; failed: string[]; segs: Map<string, Segment> }> {
+    const textContext = context === 'c' ? '3' : context;
     const wbPairs = [...new Set(results.map(r => `${r.work}:${r.meta.book}`))];
     const workSet = [...new Set(results.map(r => r.work))];
     const failed: string[] = [];
@@ -2605,7 +2591,7 @@
           const last = own[own.length - 1];
           if (!books.get(pair)!.turnFlow && seg.english?.bekker?.length && !isChapterSection(getWork(r.work))
             && last < segTokens(seg).length) {
-            const win = pairGreekWindow(seg, unit, line, context, windows?.length ? last : undefined, sub);
+            const win = pairGreekWindow(seg, unit, line, textContext, windows?.length ? last : undefined, sub);
             inst.html = pairGreekHtml(r.work, seg, win, true, new Set(own));
             // By whole lines: the stretch is the lines it touches.
             const span = lineTokens(seg);
@@ -2672,9 +2658,9 @@
             const n = exact ? words.reduce((sum, w) => sum + (counted.get(w) ?? 0), 0) : k ? 0 : engHitCount(hit);
             k++;
             const line = firstLine(unit);
-            const display = { ...pairContext(ix, seg, unit, context) };
+            const display = { ...pairContext(ix, seg, unit, textContext) };
             const hitLine = englishPlace(seg, t, words, ctx.engUnits.flat(), ctx.engPhrase, ctx.engForms)?.line ?? line;
-            const greekWindow = books.get(pair)!.turnFlow ? display : pairGreekWindow(seg, display, hitLine, context);
+            const greekWindow = books.get(pair)!.turnFlow ? display : pairGreekWindow(seg, display, hitLine, textContext);
             const spanText = plainEnglish(display.english[t.id] ?? bekkerEnglish(seg, t, display.greek[0]?.n ?? line, (display.greek.at(-1)?.n ?? line)+1));
             display.english = { ...display.english, [t.id]: spanText };
             const firstMark = englishMarked([spanText], [], ctx.engUnits, ctx.engPhrase, ctx.engForms)[0];
@@ -2729,7 +2715,7 @@
       if (grk) { grk.rows = inst.rows; merged.add(inst); }
       else {
         const seg = books.get(`${work}:${book}`)?.segments.find(x => x.column === inst.unit!.section);
-        inst.pairGreek = inst.pairGreek || (seg && pairGreekHtml(work, seg, pairContext(pairsOf(`${work}:${book}`, work), seg, inst.unit!, context), !books.get(`${work}:${book}`)!.turnFlow)) || undefined;
+        inst.pairGreek = inst.pairGreek || (seg && pairGreekHtml(work, seg, pairContext(pairsOf(`${work}:${book}`, work), seg, inst.unit!, textContext), !books.get(`${work}:${book}`)!.turnFlow)) || undefined;
       }
     }
     // Hits whose passages share words are one instance, every hit of them
@@ -2810,8 +2796,8 @@
         const ts = translationsOf(work);
         const ref = ts.find(t => t.slot === 'english') ?? ts[0];
         const seg = books.get(`${work}:${book}`)!.segments.find(s => s.column === inst.column)!;
-        const display = pairContext(ix, seg, inst.unit!, context);
-        const greekWindow = pairGreekWindow(seg, display, inst.line ?? firstLine(inst.unit!), context, undefined, inst.sub);
+        const display = pairContext(ix, seg, inst.unit!, textContext);
+        const greekWindow = pairGreekWindow(seg, display, inst.line ?? firstLine(inst.unit!), textContext, undefined, inst.sub);
         const words = greekWindow.greek.reduce((n, l) => n + l.text.split(/\s+/).length, 0);
         const pairEnglish: PairEnglish[] = [];
         for (const t of ts) {
@@ -2951,7 +2937,7 @@
     const set = pages;
     const layout = layoutRun;
     const stale = () => seq !== renderSeq || set !== pages || layout !== layoutRun;
-    if (pageSize === 'c') {
+    if (context === 'c') {
       groups = [];
       citeList = citationsFor(set[i] ?? [], searchCtx, pageOffsets);
       pageLoading = false;
@@ -3169,8 +3155,7 @@
   // A phone or a tablet (under 961px): the open editor's sentence leads
   // with its distance (§5.7).
   let narrowScreen = false;
-  // Sideways: narrow and no more than 500px tall; the language switch is a
-  // menu (b-search.css draws it so on the same lines).
+  // Sideways: a narrow screen no more than 500px tall; fold after Search.
   let shortQuery: MediaQueryList | undefined;
   let short = false;
   const onShort = (e: MediaQueryListEvent) => { short = e.matches; };
@@ -3317,6 +3302,7 @@
         await showNarrowPrompt(opts.history ?? 'push');
         return;
       }
+      formFolded = true;
       if (fromEditor && advancedOpen) void foldEditor();
       failedWorks = failed;
       approximateTurns = approximate ?? [];
@@ -3639,47 +3625,115 @@
   }
 
   function onEnter(e: KeyboardEvent) {
-    if (e.key === 'Enter') doSearch();
+    if (e.key === 'Enter') { e.preventDefault(); doSearch(); }
   }
 
-  // ── The field: Greek, English or Both ───────────────────────────────────────
-  //
-  // One field searches one language; Both shows the second. Switching empties
-  // the box that goes out of view, so a hidden box never searches, and a query
-  // that arrives in a hidden box (a URL, a step back) brings it into view.
   type Lang = 'greek' | 'english' | 'both';
-  const LANGS: { v: Lang; l: string }[] = [
-    { v: 'greek', l: 'Greek' },
-    { v: 'english', l: 'English' },
-    { v: 'both', l: 'Both' },
-  ];
   let lang: Lang = 'greek';
-  function setLang(next: Lang) {
-    if (next === 'greek') engQuery = '';
-    // Leaving Greek drops all of the Greek search: the typed word, and a
-    // picked dictionary word with the Lemma switch that holds it.
-    if (next === 'english') {
-      grkQuery = '';
-      lemmaOn = false;
-      soloLemma = { ...soloLemma, picked: [] };
-      closeSugg();
-    }
-    lang = next;
+  $: lang = engQuery.trim() ? (grkQuery.trim() || soloLemmaActive ? 'both' : 'english') : 'greek';
+  function clearGreek() {
+    grkQuery = '';
+    lemmaOn = false;
+    soloLemma = { ...soloLemma, picked: [] };
+    closeSugg();
+    grkInput?.focus();
   }
-  $: if (engQuery.trim() && lang === 'greek') lang = grkQuery.trim() ? 'both' : 'english';
-  $: if (grkQuery.trim() && lang === 'english') lang = engQuery.trim() ? 'both' : 'greek';
+  function clearEnglish() { engQuery = ''; document.getElementById('eng-input')?.focus(); }
+
+  function fitGloss(node: HTMLElement) {
+    const parent = node.parentElement!;
+    const fit = () => { node.hidden = false; node.hidden = node.scrollWidth > node.clientWidth || node.clientWidth === 0; };
+    const observer = new ResizeObserver(fit); observer.observe(parent); fit();
+    return { destroy() { observer.disconnect(); } };
+  }
+
+  function keepKeyboardFocus(node: HTMLElement, sheet: boolean) {
+    const restore = new Map<HTMLElement, boolean>();
+    let active = sheet, alive = true, root: HTMLElement | null = null;
+    const release = () => { for (const [el, before] of restore) el.inert = before; restore.clear(); };
+    const refresh = () => {
+      release();
+      if (!active || !root) return;
+      const sheetRect = node.getBoundingClientRect();
+      for (const el of root.querySelectorAll<HTMLElement>('button, input, textarea, select, summary, a[href]')) {
+        if (node.contains(el)) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom <= sheetRect.top || rect.top >= sheetRect.bottom
+          || rect.right <= sheetRect.left || rect.left >= sheetRect.right) continue;
+        restore.set(el, !!el.inert); el.inert = true;
+      }
+    };
+    const observer = new MutationObserver(refresh);
+    window.addEventListener('scroll', refresh, { passive: true });
+    window.addEventListener('resize', refresh);
+    // Actions run while the form's later siblings are still being mounted.
+    void tick().then(() => {
+      if (!alive) return;
+      root = node.closest<HTMLElement>('main');
+      if (root) observer.observe(root, { childList: true, subtree: true });
+      refresh();
+    });
+    return {
+      update(enabled: boolean) { active = enabled; release(); refresh(); },
+      destroy() { alive = false; observer.disconnect(); window.removeEventListener('scroll', refresh); window.removeEventListener('resize', refresh); release(); },
+    };
+  }
+
+  function growQuery(node: HTMLTextAreaElement, value: string) {
+    let alive = true;
+    const grow = () => { if (!alive) return; node.style.height = 'auto'; node.style.height = `${node.scrollHeight}px`; };
+    const observer = new ResizeObserver(grow);
+    observer.observe(node);
+    grow();
+    const fonts = document.fonts;
+    void fonts?.ready.then(grow);
+    fonts?.addEventListener('loadingdone', grow);
+    return { update(_value: string) { grow(); }, destroy() {
+      alive = false;
+      observer.disconnect();
+      fonts?.removeEventListener('loadingdone', grow);
+    } };
+  }
+
+  // One tab stop per group; arrows both select and move focus.
+  function segmentKey(e: KeyboardEvent) {
+    const root = e.currentTarget as HTMLElement;
+    const radios = [...root.querySelectorAll<HTMLButtonElement>('[role="radio"]')];
+    let at = radios.indexOf(e.target as HTMLButtonElement);
+    if (at < 0) return;
+    if (e.key === 'Home') at = 0;
+    else if (e.key === 'End') at = radios.length - 1;
+    else if (['ArrowRight', 'ArrowDown'].includes(e.key)) at = (at + 1) % radios.length;
+    else if (['ArrowLeft', 'ArrowUp'].includes(e.key)) at = (at + radios.length - 1) % radios.length;
+    else return;
+    e.preventDefault(); radios[at].click(); radios[at].focus();
+  }
+  let formFolded = false;
+  $: foldedChoices = [
+    ...(grkQuery.trim() ? [
+      ...(grkMode !== 'all' && matchMode !== 'text' ? [lower1(modeLabel(grkMode))] : []),
+      ...(matchMode !== 'lemma' ? [matchMode === 'form' ? 'exact form' : 'running text'] : []),
+      ...(accentSensitive ? ['accents observed'] : []),
+      ...(lemmaOn ? ['by lemma'] : []),
+      ...(punctuation && matchMode === 'text' ? ['punctuation observed'] : []),
+    ].map(word => lang === 'both' ? `Greek ${word}` : word) : []),
+    ...(engQuery.trim() ? [
+      ...(engMode !== 'all' ? [lower1(modeLabel(engMode))] : []),
+      ...(!engForms ? ['exact form'] : []),
+    ].map(word => lang === 'both' ? `English ${word}` : word) : []),
+    ...(worksScope !== 'all' ? [worksValue] : []),
+  ];
 
   // "β Beta Code": with the toggle on, the Greek box turns Beta Code into
   // Greek as you type (lo/gos → λόγος), caret kept. Off on every visit: a
   // toggle that outlived the visit would quietly turn the next query Greek.
-  // Greek and Both only: it converts the Greek field alone, never the English
-  // one, and the English tab hides it.
+  // It converts the Greek field alone, whatever the English field holds.
   let betaMode = false;
-  let grkInput: HTMLInputElement;
+  let grkInput: HTMLTextAreaElement;
 
   function toggleBeta() {
     betaMode = !betaMode;
-    if (betaMode && lang !== 'english' && grkQuery) grkQuery = liveGreek(grkQuery);
+    if (betaMode && grkQuery) grkQuery = liveGreek(grkQuery);
     grkInput?.focus();
   }
 
@@ -3691,8 +3745,8 @@
     // An edit to a picked dictionary word unpicks it: the box no longer says it.
     if (soloLemma.picked.length) soloLemma = { ...soloLemma, picked: [] };
     if (ie.isComposing) return;
-    if (ie.inputType !== 'historyUndo' && ie.inputType !== 'historyRedo') convertGreekBox(e.currentTarget as HTMLInputElement);
-    suggest((e.currentTarget as HTMLInputElement).value);
+    if (ie.inputType !== 'historyUndo' && ie.inputType !== 'historyRedo') convertGreekBox(e.currentTarget as HTMLTextAreaElement);
+    suggest((e.currentTarget as HTMLTextAreaElement).value);
   }
 
   // ── Dictionary words under the Greek box ───────────────────────────────────
@@ -3715,7 +3769,7 @@
     // click would pick a word the box no longer reads.
     closeSugg();
     const request = suggRequest;
-    const pieces = term && !/\s/.test(term) && lang !== 'english' && matchMode !== 'text' ? patternPieces(term) : null;
+    const pieces = term && !/\s/.test(term) && matchMode !== 'text' ? patternPieces(term) : null;
     const folded = pieces?.every((p) => p.kind === 'char') ? greekFold(term) : '';
     let found: LemmaMatch[] = [];
     if (folded) {
@@ -3792,7 +3846,7 @@
   let kbdOpen = false;
   let kbdSheet = false;
   // Proximity takes the box, so the keyboard has nothing to type into.
-  $: if (comboActive && kbdOpen) kbdOpen = false;
+  $: if ((comboActive || advancedOpen || proxLive) && kbdOpen) kbdOpen = false;
   let phoneQuery: MediaQueryList | undefined;
   const onPhone = (e: MediaQueryListEvent) => { kbdSheet = e.matches; };
   async function toggleKbd() {
@@ -3802,6 +3856,14 @@
     // A phone's own keyboard stays down (inputmode none) while this is open.
     await tick();
     if (!kbdSheet) grkInput?.focus();
+    else {
+      document.querySelector<HTMLButtonElement>('#grk-keys button')?.focus({ preventScroll: true });
+      if (sideways && grkInput) {
+        const sheet = document.getElementById('grk-keys')!;
+        const field = grkInput.closest('.sq-row')!.getBoundingClientRect();
+        window.scrollBy({ top: field.bottom - (sheet.getBoundingClientRect().top - 8), behavior: 'instant' });
+      }
+    }
   }
   function closeKbd() {
     kbdOpen = false;
@@ -3825,8 +3887,8 @@
     closeKbd();
   }
 
-  function convertGreekBox(el: HTMLInputElement) {
-    if (!betaMode || lang === 'english') return;
+  function convertGreekBox(el: HTMLTextAreaElement) {
+    if (!betaMode) return;
     const raw = el.value;
     const converted = liveGreek(raw);
     if (converted === raw) return;
@@ -3845,9 +3907,8 @@
 
   // The option menus are <details>: one open at a time, closed by a click
   // elsewhere or by Escape, which hands focus back to the menu's own button.
-  // The menus open one at a time: the form's and the results' (.sopt), and
-  // the language menu a sideways screen draws.
-  const OPEN_MENUS = '.sopt .opt[open], .lang-menu[open]';
+  // The form and results share one open menu at a time.
+  const OPEN_MENUS = '.search-page .opt[open]';
   let optSheetHead = '';
   function optSheetAttrs(head: string, active: string, narrow: boolean) {
     const modal = narrow && active === head;
@@ -3903,6 +3964,7 @@
   }
   function onWindowKey(e: KeyboardEvent) {
     onKbdKey(e);
+    if (kbdOpen && kbdSheet) { onSheetKey(e, document.getElementById('grk-keys'), closeKbd); if (e.defaultPrevented) return; }
     const opt = narrowScreen ? document.querySelector<HTMLDetailsElement>('.search-form .opt[open]:has(.sheet)') : null;
     if (opt) onSheetKey(e, opt.querySelector<HTMLElement>('.sheet'), () => {
       opt.open = false;
@@ -3941,7 +4003,7 @@
           <button type="button" class="x" aria-label={`Change ${info?.heads ?? key} in ${groupLabel}`}
             on:click={() => changeComboLemma(editor.id, key)}>Change</button>
         </div>
-        {#if info?.slug && glosses[info.slug]?.length}<i class="gl">{glosses[info.slug].slice(0, 2).join('; ')}</i>{/if}
+        {#if info?.slug && glosses[info.slug]?.length}<i class="gl" use:fitGloss>{glosses[info.slug].slice(0, 2).join('; ')}</i>{/if}
       {/each}
       {#if !editor.picked.length}
         <input
@@ -4028,9 +4090,9 @@
         <legend class="opt-title">{title}</legend>
         {#each choices as c}
           <div class="opt-row" class:opt-rule={c.rule}>
-            <label class="ck"><input type="radio" {name} value={c.id} checked={current === c.id} aria-describedby={c.gloss ? `${name}-${c.id}` : undefined}
+            <label class="ck"><input type="radio" {name} value={c.id} checked={current === c.id} aria-describedby={!narrowScreen && c.gloss ? `${name}-${c.id}` : undefined}
               on:keydown={optKey} on:change={e => { choose(c.id); shutOpt(e); }} /><span>{c.label}</span></label>
-            {#if c.gloss}<small class="opt-gloss" id={`${name}-${c.id}`}>{c.gloss}</small>{/if}
+            {#if c.gloss}{#if !narrowScreen}<small class="opt-gloss" id={`${name}-${c.id}`}>{c.gloss}</small>{/if}{/if}
           </div>
         {/each}
       </fieldset>
@@ -4067,11 +4129,13 @@
        and chapter lines. -->
   {#snippet hitRuns(runs: ViewRun[])}
     {#each runs as run (run.key)}
+      <div class="run-heading" class:with-book={!!run.book}>
       {#if run.book}<h3 class="sx-book">Book {run.book.label}{' '}<span class="sx-book-n">{run.book.hits}</span></h3>{/if}
       {#if run.chapter}
         {@const name = chapterName(run.chapter)}
         <h3 class="sx-chap"><span class="sx-chap-n">{name.label}</span>{#if name.title}{' '}<span class="sx-chap-t">{name.title}</span>{/if}</h3>
       {/if}
+      </div>
       <ul class="instance-list">
         {#each run.instances as inst}
           {@const oneOf = noteOf(inst, grammarAt, facets, more.has(inst))}
@@ -4140,27 +4204,30 @@
 <svelte:window on:keydown={onWindowKey} on:click={onWindowClick} on:beforeprint={openForPrint} on:afterprint={closeAfterPrint} />
 
 <main class="search-page" class:prox-pending={comboPending && searched}>
-  <form class="search-form" on:submit={doSearch} novalidate>
+  <form class="search-form" class:fold-on={sideways && formFolded} on:submit={doSearch} novalidate>
 
-    <!-- One field and the switch for what it searches: Greek, English, or Both
-         (two fields). The box out of view is kept empty (setLang), and a URL or
-         a step back that fills it brings it into view. Keyboard and Beta Code
-         sit on the Greek field's rule, quiet tools, not buttons. -->
-    <div class="sq">
-      <div class="sq-fields">
-        <!-- Proximity searches the Greek: its terms show on every tab. -->
-        <div class="sq-row" hidden={lang === 'english' && !comboActive}>
-          <svg class="sq-glass" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-          <label class="query-label" class:sr-only={lang !== 'both'} for="grk-input">Greek</label>
-          {#if comboActive}
-            <!-- Proximity holds the box: its terms, read-only, at full ink. -->
-            <input id="grk-input" class="query-input greek-input" lang="grc" type="search" value={proxTerms} disabled />
-          {:else}
-          <input
+    <div class="d6 v-H3" class:has-join={lang === 'both'} class:no-opts={!grkQuery.trim() && !engQuery.trim()}>
+      {#if sideways && formFolded}<div class="d6-fold">
+        <p class="fq">{#if proxLive}{proxSentence}{:else}<span lang="grc">{grkQuery}</span>{#if lang === 'both'}<span class="fj">{langOp}</span>{/if}{engQuery}{#each foldedChoices as choice}<span class="fo">{choice}</span>{/each}{/if}</p>
+        <button type="button" class="fchg" on:click={() => { formFolded = false; if (proxLive) void openEditor(); }}>Change</button>
+      </div>
+      {/if}
+      {#if !comboActive && !advancedOpen && !proxLive}
+      <div class="lg lg-g">
+        <div class="sq-head h-g"><label class="query-label" for="grk-input">Greek</label>
+          <button type="button" class="sq-tool gk-toggle" aria-label="Greek keyboard" aria-expanded={kbdOpen} aria-controls={kbdOpen ? 'grk-keys' : undefined}
+            disabled={comboActive} on:click={toggleKbd}>
+            <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="0.7" y="0.7" width="20.6" height="14.6"/><path d="M4 4.5h2M8 4.5h2M12 4.5h2M16 4.5h2M4 8h2M8 8h2M12 8h2M16 8h2M6 11.5h10"/></svg>
+            <span class="sq-tool-l" aria-hidden="true">Keyboard</span>
+          </button>
+            <button type="button" class="sq-tool tog" aria-pressed={betaMode} disabled={comboActive} on:click={toggleBeta} title="Type Beta Code, see Greek: lo/gos becomes λόγος as you type"><span lang="grc">β</span> <span class="sq-tool-l">Beta Code</span></button>
+          {#if grkQuery.trim()}<button type="button" class="query-clear" aria-label="Clear Greek" on:click={clearGreek}>Clear</button>{/if}
+        </div>
+        <div class="sq-row g">
+          <textarea
             id="grk-input"
             class="query-input greek-input"
             lang="grc"
-            type="search"
             placeholder={lemmaOn ? 'a dictionary word, then pick it below' : 'e.g. τέχνη'}
             role="combobox"
             aria-autocomplete="list"
@@ -4175,31 +4242,22 @@
             on:keydown={onGreekKey}
             on:blur={closeSugg}
             autocomplete="off"
-            autocorrect="off"
             autocapitalize="none"
             spellcheck="false"
-          />
-          {/if}
-          <button type="button" class="sq-tool gk-toggle" aria-label="Greek keyboard" aria-expanded={kbdOpen} aria-controls={kbdOpen && lang !== 'english' ? 'grk-keys' : undefined}
-            disabled={comboActive} on:click={toggleKbd}>
-            <svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="0.7" y="0.7" width="20.6" height="14.6"/><path d="M4 4.5h2M8 4.5h2M12 4.5h2M16 4.5h2M4 8h2M8 8h2M12 8h2M16 8h2M6 11.5h10"/></svg>
-            <span class="sq-tool-l" aria-hidden="true">Keyboard</span>
-          </button>
-          {#if lang !== 'english'}
-            <button type="button" class="sq-tool tog" aria-pressed={betaMode} disabled={comboActive} on:click={toggleBeta} title="Type Beta Code, see Greek: lo/gos becomes λόγος as you type"><span lang="grc">β</span> <span class="sq-tool-l">Beta Code</span></button>
-          {/if}
+            rows="1" use:growQuery={grkQuery}
+          ></textarea>
           {#if sugg.length && !lemmaOn && !(kbdOpen && !kbdSheet)}{@render suggestList(sugg, suggActive, lemmaGlosses, false)}{/if}
         </div>
-        {#if kbdOpen && lang !== 'english'}
+        {#if kbdOpen}
           <!-- The marks on a row of their own above the letters, each over a
                dotted ring (the subscript under it; C2-b); then Apple's Greek
                layout, each row half a key right of the one above; space, ⌫
                and Close at the foot (ruling 6). -->
-          <div id="grk-keys" class="gk" class:gk-sheet={kbdSheet} role="group" aria-label="Greek keyboard">
+          <div id="grk-keys" class="gk" class:gk-sheet={kbdSheet} role="group" aria-label="Greek keyboard" use:keepKeyboardFocus={kbdSheet}>
             {#if sugg.length && !kbdSheet && !lemmaOn}{@render suggestList(sugg, suggActive, lemmaGlosses, false)}{/if}
             <div class="gk-keys">
               {#each GREEK_MARKS as m, j}
-                <button type="button" class="gk-key gk-mark" aria-label={m.name} title={m.name} style:grid-row={1} style:grid-column={`${4 + 2 * j} / span 2`}
+                <button type="button" class="gk-key gk-mark" aria-label={m.name} title={m.name} style:grid-row={1} style:grid-column={`${4 + 2 * j - (kbdSheet && !sideways ? 1 : 0)} / span 2`}
                   on:mousedown|preventDefault
                   on:click={() => keyEdit((v, a) => addMark(v, a, m.mark))}>
                   <span class="gk-face" class:gk-sub={m.name === 'iota subscript'} aria-hidden="true" lang="grc"><span class="gk-o"></span><span class="gk-mk">{m.face}</span></span>
@@ -4207,97 +4265,61 @@
               {/each}
               {#each KEY_ROWS as row, r}
                 {#each [...row] as k, j}
-                  <button type="button" class="gk-key" lang="grc" style:grid-row={r + 2} style:grid-column={`${r + 2 + 2 * j} / span 2`}
+                  <button type="button" class="gk-key" lang="grc" style:grid-row={r + 2} style:grid-column={`${r + 2 + 2 * j - (kbdSheet && !sideways ? 1 : 0)} / span 2`}
                     on:mousedown|preventDefault
                     on:click={() => keyEdit((v, a, b) => insertText(v, a, b, k))}>{k}</button>
                 {/each}
               {/each}
-              <button type="button" class="gk-key gk-space" style:grid-row={5} style:grid-column="2 / span 12" on:mousedown|preventDefault
+              <button type="button" class="gk-key gk-space" style:grid-row={5} style:grid-column={`${kbdSheet && !sideways ? 1 : 2} / span 12`} on:mousedown|preventDefault
                 on:click={() => keyEdit((v, a, b) => insertText(v, a, b, ' '))}>space</button>
-              <button type="button" class="gk-key gk-bs" aria-label="backspace" title="backspace" style:grid-row={5} style:grid-column="14 / span 3" on:mousedown|preventDefault
+              <button type="button" class="gk-key gk-bs" aria-label="backspace" title="backspace" style:grid-row={5} style:grid-column={`${kbdSheet && !sideways ? 13 : 14} / span 3`} on:mousedown|preventDefault
                 on:click={() => keyEdit(deleteBack)}><span aria-hidden="true">⌫</span></button>
-              <button type="button" class="gk-key gk-wide" style:grid-row={5} style:grid-column="17 / span 4" on:click={closeKbd}>Close</button>
+              <button type="button" class="gk-key gk-wide" style:grid-row={5} style:grid-column={`${kbdSheet && !sideways ? 16 : 17} / span 4`} on:click={closeKbd}>Close</button>
             </div>
           </div>
         {/if}
-        <div class="sq-row" hidden={lang === 'greek'}>
-          <svg class="sq-glass" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-          <label class="query-label" class:sr-only={lang !== 'both'} for="eng-input">English</label>
-          <input
-            id="eng-input"
-            class="query-input"
-            type="search"
-            placeholder="e.g. virtue"
-            bind:value={engQuery}
-            on:keydown={onEnter}
-            autocomplete="off"
-            disabled={comboActive}
-          />
-        </div>
-      </div>
-      <div class="lang-switch" role="group" aria-label="Search in">
-        {#each LANGS as l}
-          <button type="button" aria-pressed={lang === l.v} on:click={() => setLang(l.v)}>{l.l}</button>
-        {/each}
-      </div>
-      <!-- Sideways the switch is a menu on the field's row (s01, r34-13). -->
-      {#if sideways}
-      <details class="opt lang-menu" on:toggle={closeOtherOpts}>
-        <summary>{LANGS.find(l => l.v === lang)?.l}<span class="sr-only">{' search'}</span>{@render caret()}</summary>
-        <fieldset class="opt-panel sheet" {...optSheetAttrs('lang-menu-head', optSheetHead, narrowScreen)}>
-          <legend class="opt-title sheet-head" id="lang-menu-head">Search in</legend>
-          {#each LANGS as l}
-            <div class="opt-row">
-              <label class="ck"><input type="radio" name="lang-m" value={l.v} checked={lang === l.v} on:keydown={optKey}
-                on:change={e => { setLang(l.v); shutOpt(e); }} /><span>{l.l}</span></label>
-            </div>
-          {/each}
-          {@render sheetDone()}
-        </fieldset>
-      </details>
-      {/if}
-    </div>
-
-    <!-- The options: menus on a hairline underline, the switches alone, and
-         Proximity with Search as one block at the right (ruling 4). Under Both,
-         three rows: Greek, English, then what joins them and where. -->
-    <div class="sopt" class:sopt-both={lang === 'both'} class:prox-editing={advancedOpen} class:opts-open={optsOpen} class:works-picking={worksOpen}>
-      {#if lang !== 'english'}
-        <div class="sopt-g">
-          {#if matchMode !== 'text'}
-          <details class="opt" on:toggle={closeOtherOpts}>
-            <summary>{lang === 'both' ? 'Greek match' : 'Match'} <b>{lower1(modeLabel(grkMode))}{@render caret()}</b></summary>
+        {#if grkQuery.trim() && !comboActive}        <div class="sopt-g d6-opts d6-opts-g d6-orow">
+{#if matchMode !== 'text'}
+          <div class="seg desktop-option" role="radiogroup" tabindex="-1" aria-label="Greek match" on:keydown={segmentKey}>
+            {#each MODE_OPTS as opt}<button type="button" role="radio" aria-checked={grkMode === opt.v} tabindex={grkMode === opt.v ? 0 : -1} on:click={() => grkMode = opt.v}><span>{opt.v === 'phrase' ? 'exact' : opt.v}</span></button>{/each}
+          </div>{/if}
+<div class="seg desktop-option form-seg" role="radiogroup" tabindex="-1" aria-label="Greek form" on:keydown={segmentKey}>
+            {#each [{v: 'lemma', l: 'any form'}, {v: 'form', l: 'exact form'}, {v: 'text', l: 'running text'}] as opt}<button type="button" role="radio" aria-checked={matchMode === opt.v} tabindex={matchMode === opt.v ? 0 : -1} on:click={() => matchMode = opt.v as MatchMode | 'text'}><span>{opt.l}</span></button>{/each}
+          </div>          {#if matchMode !== 'text'}
+          <details class="opt phone-option" on:toggle={closeOtherOpts}>
+            <summary><span class="sr-only">Greek match{' '}</span><b>{lower1(modeLabel(grkMode))}{@render caret()}</b></summary>
             <fieldset class="opt-panel sheet" {...optSheetAttrs('grk-match-head', optSheetHead, narrowScreen)}>
               <legend class="opt-title sheet-head" id="grk-match-head">{lang === 'both' ? 'Greek match' : 'Match'}</legend>
               {#each MODE_OPTS as opt}
                 <div class="opt-row">
-                  <label class="ck"><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} aria-describedby={`gm-${opt.v}`} /><span>{opt.l}</span></label>
-                  <small class="opt-gloss" id={`gm-${opt.v}`}>{opt.g}</small>
+                  <label class="ck"><input type="radio" name="grkmode" value={opt.v} bind:group={grkMode} aria-describedby={narrowScreen ? undefined : `gm-${opt.v}`} /><span>{opt.l}</span></label>
+                  {#if !narrowScreen}<small class="opt-gloss" id={`gm-${opt.v}`}>{opt.g}</small>{/if}
                 </div>
               {/each}
               {@render sheetDone()}
             </fieldset>
           </details>
           {/if}
-          <details class="opt" on:toggle={closeOtherOpts}>
-            <summary>{lang === 'both' ? 'Greek form' : 'Form'} <b>{matchMode === 'text' ? 'running text' : matchMode === 'lemma' ? 'any form' : 'as typed'}{@render caret()}</b></summary>
+          <details class="opt phone-option" on:toggle={closeOtherOpts}>
+            <summary><span class="sr-only">Greek form{' '}</span><b>{matchMode === 'text' ? 'running text' : matchMode === 'lemma' ? 'any form' : 'exact form'}{@render caret()}</b></summary>
             <fieldset class="opt-panel sheet" {...optSheetAttrs('grk-form-head', optSheetHead, narrowScreen)}>
               <legend class="opt-title sheet-head" id="grk-form-head">{lang === 'both' ? 'Greek form' : 'Form'}</legend>
               <div class="opt-row">
-                <label class="ck"><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} aria-describedby="gf-lemma" /><span>Any form of this word</span></label>
-                <small class="opt-gloss" id="gf-lemma"><span lang="grc">ἀρετή</span> finds <span lang="grc">ἀρετῆς</span> and <span lang="grc">ἀρετάς</span></small>
+                <label class="ck"><input type="radio" name="matchmode" value="lemma" bind:group={matchMode} aria-describedby={narrowScreen ? undefined : "gf-lemma"} /><span>Any form of this word</span></label>
+                {#if !narrowScreen}<small class="opt-gloss" id="gf-lemma"><span lang="grc">ἀρετή</span> finds <span lang="grc">ἀρετῆς</span> and <span lang="grc">ἀρετάς</span></small>{/if}
               </div>
               <div class="opt-row">
-                <label class="ck"><input type="radio" name="matchmode" value="form" bind:group={matchMode} aria-describedby="gf-form" /><span>Only as I typed it</span></label>
-                <small class="opt-gloss" id="gf-form">this spelling and no other</small>
+                <label class="ck"><input type="radio" name="matchmode" value="form" bind:group={matchMode} aria-describedby={narrowScreen ? undefined : "gf-form"} /><span>Only as I typed it</span></label>
+                {#if !narrowScreen}<small class="opt-gloss" id="gf-form">this spelling and no other</small>{/if}
               </div>
               <div class="opt-row">
-                <label class="ck"><input type="radio" name="matchmode" value="text" bind:group={matchMode} aria-describedby="gf-text" /><span>Running text</span></label>
-                <small class="opt-gloss" id="gf-text"><span lang="grc">λογ</span> finds <span lang="grc">λόγος</span> and <span lang="grc">ἀναλογία</span></small>
+                <label class="ck"><input type="radio" name="matchmode" value="text" bind:group={matchMode} aria-describedby={narrowScreen ? undefined : "gf-text"} /><span>Running text</span></label>
+                {#if !narrowScreen}<small class="opt-gloss" id="gf-text"><span lang="grc">λογ</span> finds <span lang="grc">λόγος</span> and <span lang="grc">ἀναλογία</span></small>{/if}
               </div>
               {@render sheetDone()}
             </fieldset>
           </details>
+          <div class="greek-switches">
           <!-- One choice, so one tap: a switch, drawn alone (ruling 5). -->
           <button type="button" class="opt-btn opt-switch" aria-pressed={accentSensitive}
             title="Match diacritics exactly: λόγος and λογός become different queries. A query typed without accents then only matches unaccented tokens."
@@ -4316,25 +4338,47 @@
             title="Search one dictionary word in all its forms: type it, then pick it from the list"
             on:click={toggleLemma}>Lemma<span class="sw" aria-hidden="true"></span></button>
           {/if}
+          </div>
         </div>
-      {/if}
-      {#if lang !== 'greek'}
-        <div class="sopt-e">
-          <details class="opt" on:toggle={closeOtherOpts}>
-            <summary>{lang === 'both' ? 'English match' : 'Match'} <b>{lower1(modeLabel(engMode))}{@render caret()}</b></summary>
+{/if}
+      </div>
+      {#if lang === 'both'}          <details class="opt join" on:toggle={closeOtherOpts}>
+            <summary><span class="sr-only">Hits match </span><b>{langOp}{@render caret()}</b></summary>
+            <fieldset class="opt-panel sheet op-group" {...optSheetAttrs('hits-match-head', optSheetHead, narrowScreen)}>
+              <legend class="opt-title sheet-head" id="hits-match-head">Hits match</legend>
+              <div class="opt-row"><label class="ck" title="Only passages matching both queries"><input type="radio" name="op" value="and" bind:group={langOp} /><span>Both languages</span></label></div>
+              <div class="opt-row"><label class="ck" title="Passages matching either query"><input type="radio" name="op" value="or" bind:group={langOp} /><span>Either language</span></label></div>
+              {@render sheetDone()}
+            </fieldset>
+          </details>
+{/if}
+      <div class="lg lg-e">
+        <div class="sq-head h-e"><label class="query-label" for="eng-input">English</label>{#if engQuery.trim()}<button type="button" class="query-clear" aria-label="Clear English" on:click={clearEnglish}>Clear</button>{/if}</div>
+        <div class="sq-row e">
+          <textarea id="eng-input" class="query-input" placeholder="e.g. virtue" rows="1" bind:value={engQuery} on:keydown={onEnter} use:growQuery={engQuery} autocomplete="off"></textarea>
+        </div>
+        {#if engQuery.trim()}        <div class="sopt-e d6-opts d6-opts-e d6-orow">
+{#if true}
+          <div class="seg desktop-option" role="radiogroup" tabindex="-1" aria-label="English match" on:keydown={segmentKey}>
+            {#each MODE_OPTS as opt}<button type="button" role="radio" aria-checked={engMode === opt.v} tabindex={engMode === opt.v ? 0 : -1} on:click={() => engMode = opt.v}><span>{opt.v === 'phrase' ? 'exact' : opt.v}</span></button>{/each}
+          </div>{/if}
+<div class="seg desktop-option" role="radiogroup" tabindex="-1" aria-label="English form" on:keydown={segmentKey}>
+            {#each [true, false] as any}<button type="button" role="radio" aria-checked={engForms === any} tabindex={engForms === any ? 0 : -1} on:click={() => engForms = any}><span>{any ? 'any form' : 'exact form'}</span></button>{/each}
+          </div>          <details class="opt phone-option" on:toggle={closeOtherOpts}>
+            <summary><span class="sr-only">English match{' '}</span><b>{lower1(modeLabel(engMode))}{@render caret()}</b></summary>
             <fieldset class="opt-panel sheet" {...optSheetAttrs('eng-match-head', optSheetHead, narrowScreen)}>
               <legend class="opt-title sheet-head" id="eng-match-head">{lang === 'both' ? 'English match' : 'Match'}</legend>
               {#each MODE_OPTS as opt}
                 <div class="opt-row">
-                  <label class="ck"><input type="radio" name="engmode" value={opt.v} bind:group={engMode} aria-describedby={`em-${opt.v}`} /><span>{opt.l}</span></label>
-                  <small class="opt-gloss" id={`em-${opt.v}`}>{opt.g}</small>
+                  <label class="ck"><input type="radio" name="engmode" value={opt.v} bind:group={engMode} aria-describedby={narrowScreen ? undefined : `em-${opt.v}`} /><span>{opt.l}</span></label>
+                  {#if !narrowScreen}<small class="opt-gloss" id={`em-${opt.v}`}>{opt.g}</small>{/if}
                 </div>
               {/each}
               {@render sheetDone()}
             </fieldset>
           </details>
-          <details class="opt" on:toggle={closeOtherOpts}>
-            <summary>{lang === 'both' ? 'English form' : 'Form'} <b>{engForms ? 'any form' : 'as typed'}{@render caret()}</b></summary>
+          <details class="opt phone-option" on:toggle={closeOtherOpts}>
+            <summary><span class="sr-only">English form{' '}</span><b>{engForms ? 'any form' : 'exact form'}{@render caret()}</b></summary>
             <fieldset class="opt-panel sheet" {...optSheetAttrs('eng-form-head', optSheetHead, narrowScreen)} title="Any form: virtue also finds virtues and virtue’s, man finds men. Only as I typed it: the spelling you gave, and no other.">
               <legend class="opt-title sheet-head" id="eng-form-head">{lang === 'both' ? 'English form' : 'Form'}</legend>
               <div class="opt-row"><label class="ck"><input type="radio" name="engforms" value={true} bind:group={engForms} /><span>Any form of this word</span></label></div>
@@ -4343,48 +4387,15 @@
             </fieldset>
           </details>
         </div>
-      {/if}
-      <div class="sopt-w">
-        <!-- A picked headword is the Greek side too, with the Greek box empty. -->
-        {#if lang === 'both' || (soloLemmaActive && engQuery.trim())}
-          <details class="opt" on:toggle={closeOtherOpts}>
-            <summary>Hits match <b>{langOp === 'and' ? 'both languages' : 'either language'}{@render caret()}</b></summary>
-            <fieldset class="opt-panel sheet op-group" {...optSheetAttrs('hits-match-head', optSheetHead, narrowScreen)}>
-              <legend class="opt-title sheet-head" id="hits-match-head">Hits match</legend>
-              <div class="opt-row"><label class="ck" title="Only passages matching both queries"><input type="radio" name="op" value="and" bind:group={langOp} /><span>Both languages</span></label></div>
-              <div class="opt-row"><label class="ck" title="Passages matching either query"><input type="radio" name="op" value="or" bind:group={langOp} /><span>Either language</span></label></div>
-              {@render sheetDone()}
-            </fieldset>
-          </details>
-        {/if}
-        <!-- In: all works, the authentic ones (works.ts authenticity), or a
-             choice from the works picker, which shows In open while it is. -->
-        <details class="opt opt-in" class:picking={worksOpen} on:toggle={closeOtherOpts}>
-          <summary>In <b>{worksValue}{@render caret()}</b></summary>
-          <fieldset class="opt-panel sheet" {...optSheetAttrs('works-scope-head', optSheetHead, narrowScreen)}>
-            <legend class="opt-title sheet-head" id="works-scope-head">In</legend>
-            {#each WORKS_SCOPES as sc}
-              <div class="opt-row" class:opt-rule={sc.v === 'pick'}>
-                <label class="ck"><input type="radio" name="worksscope" value={sc.v} checked={worksScope === sc.v} on:click={(e) => setWorksScope(sc.v, e)} aria-describedby={`ws-${sc.v}`} /><span>{sc.l}</span></label>
-                <small class="opt-gloss" id={`ws-${sc.v}`}>{sc.g}</small>
-              </div>
-            {/each}
-            {@render sheetDone()}
-            </fieldset>
-        </details>
-        {#if SPEAKERS}
-        <button
-          type="button"
-          class="works-trigger opt-btn"
-          aria-expanded={speakerOpen}
-          aria-controls="speaker-panel"
-          on:click={() => { speakerOpen = !speakerOpen; if (speakerOpen) worksOpen = false; }}
-        >Spoken by <b>{lower1(speakerSummary)}{@render caret()}</b></button>
-        {/if}
+{/if}
       </div>
+      {/if}
+      <div class="d6-act">
+        {#if grkQuery.trim() || engQuery.trim() || comboActive}
+        <div class="d6-in"><span class="lbl">In</span><div class="seg" role="radiogroup" tabindex="-1" aria-label="In" on:keydown={segmentKey}>
+          {#each WORKS_SCOPES as sc}<button type="button" role="radio" aria-checked={worksScope === sc.v} tabindex={worksScope === sc.v ? 0 : -1} on:click={e => setWorksScope(sc.v, e)}><span>{sc.l.toLowerCase()}</span></button>{/each}
+        </div></div>{/if}
       <div class="sopt-act">
-        <!-- A phone's: the options folded under one link (§5.7). -->
-        <button type="button" class="opts-toggle" aria-expanded={optsOpen} on:click={toggleOpts}>Options{@render caret()}</button>
         <button
           type="button"
           class="advanced-trigger"
@@ -4394,18 +4405,14 @@
           on:click={toggleAdvanced}
         >{#if proxLive}<span class="prox-dot" aria-hidden="true"></span>{/if}Proximity<span class="sr-only"> search{proxLive ? ', on' : ''}</span>{@render caret()}</button>
         <!-- With the editor open, its own Search is the one. -->
-        {#if !advancedOpen}
+        {#if !advancedOpen && (!proxLive || grammarAlone)}
           <button type="submit" class="search-btn" disabled={loading}>
             {loading ? 'Searching…' : 'Search'}
           </button>
         {/if}
       </div>
+      </div>
     </div>
-    {#if !optsOpen && !advancedOpen && !proxLive && !worksOpen}
-      <!-- A phone's line of what the folded options are set to, and the
-           settings of the results that are not their defaults, in red. -->
-      <p class="sopt-sum">{optsLine.join(' · ')}{#each viewLine as v}{' · '}<span class="sopt-sum-v">{v}</span>{/each}</p>
-    {/if}
     {#if lemmaOn && sugg.length}
       <!-- Lemma on: the dictionary words open under the options, so the
            choice is in view, and the results step back behind them. -->
@@ -4415,26 +4422,12 @@
     {#if loading && rtProgress}
       <p class="rt-progress">Searching {rtProgress.done} of {rtProgress.total} work{rtProgress.total === 1 ? '' : 's'}…</p>
     {/if}
-    {#if !searched && !advancedOpen}
-      <p class="sx-hint">
-        {#if matchMode === 'text' && lang !== 'english'}
-        <span class="hk"><code>.</code> one letter</span>
-        <span class="hk"><code>.*</code> any run</span>
-        <span class="hk"><code>|</code> or</span>
-        {:else}
-        <span class="hk"><code>*</code> any letters</span>
-        <span class="hk"><code>?</code> one letter</span>
-        {/if}
-        <span class="hk"><code>texnh</code> → <span lang="grc">τέχνη</span>, in <button type="button" class="link-btn" on:click={openHelp} aria-haspopup="dialog" title="How to type Greek">Beta Code</button></span>
-      </p>
-    {/if}
-
     <!-- Proximity (§5.5): the search in one sentence while it is live, with
          Turn off · Close (Change when shut) · Guide; the editor under it. -->
-    {#if proxLive || advancedOpen}
+    {#if (proxLive || advancedOpen) && !(sideways && formFolded)}
       <div id="advanced-tools" class="prox">
         {#if proxLive}
-          <p class="prox-sum" class:prox-was={comboPending}>{#if comboPending}<span class="prox-last">Last search ·</span>{' '}{/if}{proxSentence}</p>
+          {#if !advancedOpen}<p class="prox-sum">{proxSentence}</p>{/if}
           <p class="prox-links">
             <button type="button" class="prox-link" on:click={turnOffProximity}>Turn off</button>
             {#if advancedOpen}
@@ -4450,9 +4443,9 @@
             {#each comboEditors as slot, i (slot.id)}
               {@const n = i + 1}
               {@const inRun = i > 0 && (slot.or || !!comboEditors[i + 1]?.or) || (i === 0 && !!comboEditors[1]?.or)}
-              <section class="combo-slot" class:prox-run={inRun} aria-labelledby={`combo-slot-${slot.id}`}>
+              <section class="combo-slot" class:prox-run={inRun} class:f-open={slot.grammarOpen} aria-labelledby={`combo-slot-${slot.id}`}>
                 {#if i === 0}
-                  <span class="prox-colh prox-c1" id={`combo-slot-${slot.id}`}>Term 1</span>
+                  <span class="prox-head"><span class="sr-only" id={`combo-slot-${slot.id}`}>Term 1</span></span>
                   <span class="prox-colh prox-c2" aria-hidden="true">Relation</span>
                   <span class="prox-colh prox-c3" aria-hidden="true">Kind</span>
                   <span class="prox-colh prox-c4" aria-hidden="true">Distance</span>
@@ -4479,7 +4472,7 @@
                   {#if slot.kind === 'lemma'}
                     {@render lemmaPicker(slot, `Term ${n}`, lemmaGlosses, TERM_EXAMPLES[i] ?? 'ἀρετή')}
                   {:else if slot.kind === 'grammatical'}
-                    <span class="prox-gram" class:prox-empty={!Object.keys(slot.grammar).length}>{Object.keys(slot.grammar).length ? grammarWords(slot.grammar) : 'any word'}</span>
+                    <span class="prox-gram" class:prox-empty={!Object.keys(slot.grammar).length}>{Object.keys(slot.grammar).length ? grammarWords(slot.grammar) : 'any word'}</span><button type="button" class="prox-link prox-gx" aria-expanded={!!slot.grammarOpen} aria-controls={`grammar-${slot.id}`} on:click={() => { slot.grammarOpen = !slot.grammarOpen; comboEditors = [...comboEditors]; }}>{slot.grammarOpen ? 'Done' : 'Change'}</button>
                   {:else}
                     <input
                       id={`combo-text-${slot.id}`}
@@ -4491,8 +4484,7 @@
                       value={slot.text}
                       on:input={(e) => setComboText(slot.id, e.currentTarget.value)}
                       autocomplete="off"
-                      autocorrect="off"
-                      autocapitalize="none"
+                                autocapitalize="none"
                       spellcheck="false"
                     />
                   {/if}
@@ -4558,16 +4550,18 @@
                 {/if}
 
                 {#if slot.kind === 'grammatical'}
-                  <!-- Every category at once, as rows of chips; one value each. -->
-                  <div class="combo-grammar-grid prox-chips">
-                    {#each GRAMMAR_CATEGORIES as cat}
-                      <span class="prox-chiph" class:prox-chiph-wide={cat.key === 'marker'} id={`g-${slot.id}-${cat.key}`}>{cat.label}</span>
-                      <div class="prox-chipset" class:prox-chipset-wide={cat.key === 'marker'} role="group" aria-labelledby={`g-${slot.id}-${cat.key}`}>
-                        {#each cat.values as v}
-                          <button type="button" class="prox-chip" aria-pressed={slot.grammar[cat.key] === v}
-                            on:click={() => setComboGrammar(slot.id, cat.key, v)}>{CHIP_NAMES[v] ?? v}</button>
-                        {/each}
-                      </div>
+                  <div id={`grammar-${slot.id}`} class="combo-grammar-grid prox-chips" hidden={!slot.grammarOpen}>
+                    <label class="g3"><span class="g3l">word class</span><span class="prox-sel"><span class="prox-selv" aria-hidden="true">{wordClass(slot)}</span></span>
+                      <select aria-label={`Word class for term ${n}`} value={wordClass(slot)} on:change={e => setWordClass(slot.id, e.currentTarget.value)}>
+                        {#each ['declined word', 'verb', ...GRAMMAR_CATEGORIES.find(cat => cat.key === 'marker')!.values] as cls}<option value={cls}>{cls}</option>{/each}
+                      </select>
+                    </label>
+                    {#each grammarCategories(slot) as cat}
+                      <label class="g3"><span class="g3l">{cat.label.toLowerCase()}</span><span class="prox-sel" class:g3on={!!slot.grammar[cat.key]}><span class="prox-selv" aria-hidden="true">{slot.grammar[cat.key] ?? 'any'}</span></span>
+                        <select aria-label={`${cat.label} for term ${n}`} value={slot.grammar[cat.key] ?? ''} on:change={e => setComboGrammar(slot.id, cat.key, e.currentTarget.value)}>
+                          <option value="">any</option>{#each cat.values as v}<option value={v}>{v}</option>{/each}
+                        </select>
+                      </label>
                     {/each}
                   </div>
                 {/if}
@@ -4575,19 +4569,14 @@
             {/each}
           </div>
 
-          <button type="button" class="prox-add" disabled={comboEditors.length >= COMBO_TERMS_MAX} on:click={addComboEditor}>Add term</button>
-          {#if comboOrderSet}
-            <p class="prox-order">Order set by before or after</p>
-          {:else}
-            <label class="prox-lock"><input type="checkbox" bind:checked={comboOrdered} /> In this order</label>
-          {/if}
-          <!-- Aristotle's own: a match may stand across a chapter break, or not
-               (cx=0). Round 34, drawn on Plato, has no chapters to keep. -->
-          <label class="prox-lock"><input type="checkbox" bind:checked={comboCrossChapter} /> Keep hits that cross a chapter</label>
-          <div class="prox-go" use:reserveProxBar>
-            <button type="submit" class="search-btn prox-search" disabled={loading} on:click={searchEditor}>{loading ? 'Searching…' : 'Search'}</button>
-            {#if pendingSentence}<p class="prox-pend">Not searched yet: {pendingSentence}</p>
-            {:else if comboAsked}<p class="prox-pend" role="status">{comboAsked}</p>{/if}
+          <div class="f-foot">
+            <button type="button" class="prox-add" disabled={comboEditors.length >= COMBO_TERMS_MAX} on:click={addComboEditor}>Add term</button>
+            <button type="button" class="g-sw" role="switch" aria-checked={comboOrdered || comboOrderSet} disabled={comboOrderSet} on:click={() => comboOrdered = !comboOrdered}>In this order<span class="sw" aria-hidden="true"></span></button>
+            <button type="button" class="g-sw" role="switch" aria-checked={comboCrossChapter} on:click={() => comboCrossChapter = !comboCrossChapter}>Keep hits that cross a chapter<span class="sw" aria-hidden="true"></span></button>
+            <div class="prox-go" use:reserveProxBar>
+              <button type="submit" class="search-btn prox-search" disabled={loading} on:click={searchEditor}>{loading ? 'Searching…' : 'Search'}</button>
+              {#if comboAsked}<p class="prox-pend" role="status">{comboAsked}</p>{/if}
+            </div>
           </div>
         {/if}
       </div>
@@ -4821,12 +4810,13 @@
       <h2 id="sx-try-h">Try</h2>
       <ul>
         {#each TRY as t}
-          <li><a href={`${BASE_URL}/search/${t.href}`}><span lang={t.grc ? 'grc' : 'en'}>{t.q}</span><small>{t.g}</small></a></li>
+          <li><a href={`${BASE_URL}/search/${t.href}`}><span lang={t.grc ? 'grc' : 'en'}>{t.q}</span></a></li>
         {/each}
       </ul>
       <p>
         <a href={`${BASE_URL}/advanced`}>How search works</a>
         <a href={`${BASE_URL}/saved`}>Saved searches</a>
+        <button type="button" class="link-btn" on:click={openHelp} aria-haspopup="dialog">Beta Code help</button>
       </p>
     </section>
   {/if}
@@ -4851,7 +4841,7 @@
              it, Save, the pager ‹ 1/28 ›, Filter, and View, each an icon over
              its 14px label; a red dot on View while it is not the default. -->
         <div class="result-bar" class:paged={pages.length > 1}>
-          <p class="result-count" style="--n: {countText.length}; --d: {String(totalInstances).length}" title={countText}>{#if totalInstances === 0}{countText}{:else}<span class="rc-n">{totalInstances}</span>{' '}<span class="rc-w">{totalInstances === 1 ? 'instance' : 'instances'}</span>{#if pages.length > 1}<span class="rc-p">{` · page ${pageIdx + 1} of ${pages.length}`}</span>{/if}{/if}</p>
+          <p class="result-count" style="--n: {countText.length}; --d: {String(mainCount).length}" title={countText}>{#if totalInstances === 0}{countText}{:else}<span class="rc-n">{mainCount}</span>{' '}<span class="rc-w">{countNoun}</span>{#if bothSearch}<span class="rc-hits">{totalInstances} hits</span>{/if}{#if pages.length > 1}<span class="rc-p">{` · page ${pageIdx + 1} of ${pages.length}`}</span>{/if}{/if}</p>
           {#if canSave}
             <!-- Not disabled once saved: that would drop the focus. -->
             <button type="button" class="sx-save" class:saved={savedNow} on:click={saveSearch}><svg class="sx-ico" width="22" height="22" viewBox="0 0 24 24" fill={savedNow ? 'currentColor' : 'none'} stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><path d="M6.5 3.5h11v17L12 16l-5.5 4.5z"/></svg><span class="sx-lab">{#if savedNow}Saved<span class="sx-save-w">{' '}✓</span>{:else if saveFailed}{FULL}{:else}Save<span class="sx-save-w">{' '}search</span>{/if}</span></button>
@@ -4923,14 +4913,14 @@
                 <button type="button" class="sx-back" bind:this={backBtn} on:click={backToMenu}>‹ Filter</button>
               {/if}
               <h2 class="sx-sheet-t">{sheetKind === 'sort' ? 'View' : SCREEN_LABELS[sheetScreen]}</h2>
-              <button type="button" class="sx-close" on:click={closeSheet}>Close</button>
+              {#if sheetKind !== 'sort'}<button type="button" class="sx-close" on:click={closeSheet}>Close</button>{/if}
             </div>
           {/if}
           {#if sheetOpen && sheetKind === 'sort'}
             <!-- How the hits are shown (p04): Group by, Sort, Context, Per page,
                  no glosses; Export; Done. A list of citations has nothing to
                  group, order or widen. -->
-            {#if pageSize !== 'c'}
+            {#if context !== 'c'}
               <fieldset class="sx-seg" class:sx-seg-2={viewChoices.length === 2}>
                 <legend class="k">Group by</legend>
                 {#each viewChoices as v}
@@ -4943,13 +4933,13 @@
                   <label class="ck"><input type="radio" name="sx-m-sort" value={so.id} checked={sort === so.id} on:change={() => setSort(so.id)} /><span>{so.short ?? so.label}</span></label>
                 {/each}
               </fieldset>
-              <fieldset class="sx-seg sx-seg-3">
+            {/if}
+              <fieldset class="sx-seg sx-seg-context">
                 <legend class="k">Context</legend>
                 {#each CONTEXTS as c}
                   <label class="ck"><input type="radio" name="sx-m-context" value={c.id} checked={context === c.id} on:change={() => setContext(c.id)} /><span>{c.label}</span></label>
                 {/each}
               </fieldset>
-            {/if}
             <fieldset class="sx-seg sx-seg-3">
               <legend class="k">Per page</legend>
               {#each PAGE_CHOICES as ps}
@@ -5139,11 +5129,11 @@
              2026-11-10: set B). -->
         {#if totalInstances > 0}
           <div class="sopt sx-display">
-            {#if pageSize !== 'c'}
+            {#if context !== 'c'}
               {@render displayMenu('Group by', 'sx-view', viewChoices, view, (id) => setView(id as ResultView))}
               {@render displayMenu('Sort', 'sx-sort', SORTS, sort, (id) => setSort(id as ResultSort))}
-              {@render displayMenu('Context', 'sx-context', CONTEXTS, context, (id) => setContext(id as ResultContext))}
             {/if}
+              {@render displayMenu('Context', 'sx-context', CONTEXTS, context, (id) => setContext(id as ResultContext))}
             {@render displayMenu('Per page', 'sx-pagesize', PAGE_CHOICES, pageSize, (id) => setPageSize(id as PageSize))}
             {#if pages.length > 1}{@render pager('')}{/if}
           </div>
@@ -5192,13 +5182,6 @@
                 <button type="button" class="a" on:click={doSearch}>Try again</button>
               </div>
             {/if}
-            {#if approximateChapters.length}
-              <div class="sx-note">
-                <span class="k">Note</span>
-                <span>Chapter starts in {approximateChapters.map((w) => getWork(w)?.title ?? w).join(', ')} are recorded to the Bekker line, not the word, so a hit within the first line of a chapter may belong to the one before it.</span>
-                <span></span>
-              </div>
-            {/if}
             {#if approximateTurns.length}
               <div class="sx-note">
                 <span class="k">Note</span>
@@ -5237,7 +5220,7 @@
           </p>
         {/if}
 
-        {#if pageSize === 'c'}
+        {#if context === 'c'}
           <!-- Places only (d17): a work's name once, then its books. -->
           <div class="sx-results sx-cites">
             {#each citeList as cg, i (cg.key)}
@@ -5270,7 +5253,7 @@
                   {:else}
                     <span class="group-label" class:grc={g.greek} lang={g.greek ? 'grc' : undefined}>{g.label}</span>
                   {/if}
-                  <span class="group-count">{n} {n === 1 ? 'instance' : 'instances'}</span>
+                  {#if n !== undefined}<span class="group-count">{n} {n === 1 ? 'instance' : 'instances'}</span>{/if}
                   <span class="caret" aria-hidden="true"></span>
                 </button>
               </h2>
@@ -5290,7 +5273,7 @@
                           {:else}
                             <span class="group-label grc" lang="grc">{row.spelling}</span>
                           {/if}
-                          <span class="group-count">{rn} {rn === 1 ? 'instance' : 'instances'}</span>
+                          {#if rn !== undefined}<span class="group-count">{rn} {rn === 1 ? 'instance' : 'instances'}</span>{/if}
                           <span class="caret" aria-hidden="true"></span>
                         </button>
                       </h3>

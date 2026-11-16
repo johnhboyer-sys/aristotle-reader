@@ -84,9 +84,7 @@ describe('a lone grammar term', () => {
     await vi.waitFor(() => expect(searchCombo).toHaveBeenCalled());
     // In is a menu (ruling 1): its value names the one work; Choose works…
     // opens the picker.
-    const inMenu = document.querySelector('details.opt-in')!;
-    expect(inMenu.querySelector('summary')).toHaveTextContent(/^In 1 of \d+$/);
-    await fireEvent.click(within(inMenu as HTMLElement).getByLabelText('Choose works…'));
+    await fireEvent.click(screen.getByRole('radio', { name: 'choose works…' }));
     await fireEvent.click(await screen.findByRole('button', { name: 'Select all' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await vi.waitFor(() => expect(prompt()).not.toBeNull());

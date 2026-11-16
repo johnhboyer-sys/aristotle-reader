@@ -38,9 +38,8 @@ afterEach(() => {
 
 async function filledEditor() {
   const page = render(Search);
-  await fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+  await fireEvent.input(page.container.querySelector('#grk-input')!, { target: { value: 'ἀρετή' } });
   await fireEvent.click(screen.getByRole('radio', { name: 'Only as I typed it' }));
-  await fireEvent.click(screen.getByRole('button', { name: 'Options' }));
   await fireEvent.input(page.container.querySelector('#grk-input')!, { target: { value: 'ἀρετή' } });
   await fireEvent.click(screen.getByRole('button', { name: 'Proximity search' }));
   await fireEvent.change(screen.getByRole('combobox', { name: 'Kind for term 2' }), { target: { value: 'form' } });
@@ -50,17 +49,16 @@ async function filledEditor() {
 
 it('searches the filled editor after Options closes it, keeps its terms, and turns it off', async () => {
   const { container } = await filledEditor();
-  await fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-  expect(screen.queryByRole('group', { name: 'Proximity search' })).toBeNull();
-  await fireEvent.click(screen.getByRole('radio', { name: 'Authentic works' }));
-  await fireEvent.submit(container.querySelector('form')!);
+  expect(screen.getByRole('group', { name: 'Proximity search' })).toBeInTheDocument();
+  await fireEvent.click(screen.getByRole('radio', { name: 'authentic works' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
   await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(1));
   expect(search).not.toHaveBeenCalled();
   expect(vi.mocked(searchCombo).mock.calls[0][0]).toMatchObject([
     { kind: 'form', terms: ['ἀρετή'] }, { kind: 'form', terms: ['ἕξις'] },
   ]);
   expect(vi.mocked(searchCombo).mock.calls[0][2]).toEqual(AUTHENTIC_IDS);
-  await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+  await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
   expect(screen.getByRole('textbox', { name: 'Term 1: the word as written' })).toHaveValue('ἀρετή');
   expect(screen.getByRole('textbox', { name: 'Term 2: the word as written' })).toHaveValue('ἕξις');
   await fireEvent.click(screen.getByRole('button', { name: 'Turn off' }));
@@ -71,9 +69,8 @@ it('closes Options when Change opens the live proximity editor', async () => {
   window.history.replaceState(null, '', '/search?c=f:ἀρετή&c=f:ἕξις');
   render(Search);
   await vi.waitFor(() => expect(searchCombo).toHaveBeenCalled());
-  await fireEvent.click(screen.getByRole('button', { name: 'Options' }));
   await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
-  expect(screen.getByRole('button', { name: 'Options' })).toHaveAttribute('aria-expanded', 'false');
+  expect(screen.queryByRole('button', { name: 'Options' })).toBeNull();
   expect(screen.getByRole('group', { name: 'Proximity search' })).toBeInTheDocument();
 });
 
@@ -84,16 +81,15 @@ it('keeps the default lemma editor as the search when Options closes it before i
   await vi.waitFor(() => expect(container.querySelector('.lpsel .hw')).toHaveTextContent('ἀρετή'));
   await fireEvent.input(screen.getByRole('searchbox', { name: 'Term 2: a dictionary word' }), { target: { value: 'ἕξις' } });
   await fireEvent.click(await screen.findByRole('button', { name: /ἕξις 547/ }));
-  await fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-  await fireEvent.click(screen.getByRole('radio', { name: 'Authentic works' }));
-  await fireEvent.submit(container.querySelector('form')!);
+  await fireEvent.click(screen.getByRole('radio', { name: 'authentic works' }));
+  await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
   await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(1));
   expect(search).not.toHaveBeenCalled();
   expect(vi.mocked(searchCombo).mock.calls[0][0]).toMatchObject([
     { kind: 'lemma', terms: ['areth'] }, { kind: 'lemma', terms: ['ecis'] },
   ]);
   expect(vi.mocked(searchCombo).mock.calls[0][2]).toEqual(AUTHENTIC_IDS);
-  await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
+  await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
   expect([...container.querySelectorAll('.lpsel .hw')].map(el => el.textContent)).toEqual(['ἀρετή', 'ἕξις']);
 });
 
@@ -102,17 +98,16 @@ it('describes the all-forms search for a picked lemma despite Form being as type
   const { container } = render(Search);
   await vi.waitFor(() => expect(search).toHaveBeenCalled());
   expect(vi.mocked(search).mock.calls[0][6]).toBe('headword');
-  expect(container.querySelector('.sopt-sum')).toHaveTextContent('any form');
-  expect(container.querySelector('.sopt-sum')).toHaveTextContent('by lemma');
-  expect(container.querySelector('.sopt-sum')).not.toHaveTextContent('as typed');
+  expect(screen.getByRole('button', { name: 'Lemma' })).toHaveAttribute('aria-pressed', 'true');
+  expect(container.querySelector('.sopt-sum')).toBeNull();
 });
 
-it.each(['Greek match', 'Greek form', 'English match', 'English form', 'Hits match', 'In'])(
+it.each(['Greek match', 'Greek form', 'English match', 'English form', 'Hits match'])(
   'makes the phone %s sheet a named modal with trapped focus and a return to its opener', async name => {
     const { container } = render(Search);
-    await fireEvent.click(screen.getByRole('button', { name: 'Both' }));
-    await fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-    const menu = [...container.querySelectorAll<HTMLDetailsElement>('.search-form details.opt')]
+    await fireEvent.input(container.querySelector('#grk-input')!, { target: { value: 'λόγος' } });
+    await fireEvent.input(container.querySelector('#eng-input')!, { target: { value: 'word' } });
+      const menu = [...container.querySelectorAll<HTMLDetailsElement>('.search-form details.opt')]
       .find(el => el.querySelector('legend')?.textContent === name)!;
     const opener = menu.querySelector('summary')!;
     opener.focus();
@@ -140,7 +135,7 @@ it.each(['Greek match', 'Greek form', 'English match', 'English form', 'Hits mat
     expect(opener).toHaveFocus();
     menu.open = true;
     await fireEvent(menu, new Event('toggle'));
-    await fireEvent.click(container.querySelector('.sq')!);
+    await fireEvent.click(container.querySelector('.sq-head')!);
     expect(menu.open).toBe(false);
     expect(opener).toHaveFocus();
   },

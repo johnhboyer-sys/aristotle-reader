@@ -329,7 +329,7 @@ describe('search URL: context, sort and page size', () => {
   });
 
   it('round-trips every other value', () => {
-    for (const context of ['1', 's'] as const) {
+    for (const context of ['1', 's', 'c'] as const) {
       const s = base({ grk: 'λόγος', context });
       expect(encodeSearchUrl(s, ALL)).toBe(`${g}&ctx=${context}`);
       expect(roundTrip(s)).toEqual(s);
@@ -339,12 +339,12 @@ describe('search URL: context, sort and page size', () => {
       expect(encodeSearchUrl(s, ALL)).toBe(`${g}&so=${sort}`);
       expect(roundTrip(s)).toEqual(s);
     }
-    for (const pageSize of ['20', '100', 'c'] as const) {
+    for (const pageSize of ['20', '100'] as const) {
       const s = base({ grk: 'λόγος', pageSize });
       expect(encodeSearchUrl(s, ALL)).toBe(`${g}&ps=${pageSize}`);
       expect(roundTrip(s)).toEqual(s);
     }
-    const all = base({ eng: 'virtue', context: 's', sort: 'freq', pageSize: 'c' });
+    const all = base({ eng: 'virtue', context: 'c', sort: 'freq', pageSize: '100' });
     expect(roundTrip(all)).toEqual(all);
     const combo = decodeSearchUrl('?c=f:logos&c=f:areth&ctx=1&so=work&ps=20', ALL);
     expect(combo).toMatchObject({ context: '1', sort: 'work', pageSize: '20' });
@@ -352,7 +352,11 @@ describe('search URL: context, sort and page size', () => {
   });
 
   it('writes none of them without a search', () => {
-    expect(encodeSearchUrl(base({ context: 's', sort: 'form', pageSize: 'c' }), ALL)).toBe('');
+    expect(encodeSearchUrl(base({ context: 'c', sort: 'form', pageSize: '100' }), ALL)).toBe('');
+  });
+
+  it('reads old citations URLs, including a saved text context', () => {
+    expect(decodeSearchUrl(`?${g}&ps=c&ctx=s`, ALL)).toMatchObject({ context: 'c', pageSize: '40' });
   });
 
   it('falls back to the defaults for unknown values', () => {

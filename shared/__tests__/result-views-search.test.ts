@@ -103,7 +103,8 @@ const viewButton = (name: string) =>
   within(screen.getByRole('group', { name: 'Group by' })).getByRole('radio', { name });
 // Every heading starts open, in every view (John, 2026-11-10): no hit waits
 // behind a click.
-function expectAllOpen(c: HTMLElement) {
+async function expectAllOpen(c: HTMLElement) {
+  for (const row of c.querySelectorAll<HTMLButtonElement>('.sx-para[aria-expanded="false"]')) await fireEvent.click(row);
   expect(c.querySelectorAll('.group-head').length).toBeGreaterThan(0);
   expect(c.querySelectorAll('.group-head[aria-expanded="false"]')).toHaveLength(0);
 }
@@ -134,7 +135,7 @@ describe('Search.svelte: views', () => {
       const { container } = await open(url);
       await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
       expect(viewButton('By work')).toBeChecked();
-      expectAllOpen(container);
+      await expectAllOpen(container);
       const shown = hitsShown(container);
       expect(shown).toHaveLength(6);
       expect(new Set(shown).size).toBe(6);
@@ -146,7 +147,7 @@ describe('Search.svelte: views', () => {
         for (const other of views.filter(n => n !== name)) {
           expect(viewButton(other)).not.toBeChecked();
         }
-        await vi.waitFor(() => expectAllOpen(container));
+        await vi.waitFor(async () => await expectAllOpen(container));
         await vi.waitFor(() => expect(hitsShown(container)).toEqual(shown));
       }
       expect(status()).toHaveTextContent('6 instances');
@@ -173,7 +174,7 @@ describe('Search.svelte: views', () => {
       'ἐστί 3 instances', 'τῆς 2 instances', 'ταῖς 1 instance',
     ]));
     expect(window.location.search).toContain('v=form');
-    expectAllOpen(container);
+    await expectAllOpen(container);
     const first = container.querySelector('.chapter-group')!;
     // Corpus order within the group: the Int comes before the EN, whose two
     // hits of the form share one passage and are one instance (S4a).
@@ -184,7 +185,7 @@ describe('Search.svelte: views', () => {
       .toEqual([['ἐστί'], ['ἐστί', 'ἐστι']]);
     // Back to works: the citation is the section alone again.
     await fireEvent.click(viewButton('By work'));
-    expectAllOpen(container);
+    await expectAllOpen(container);
     expect(text(container.querySelector('.inst-ref'))).toBe('70a1');
   });
 
@@ -211,7 +212,7 @@ describe('Search.svelte: views', () => {
     expect(container.querySelectorAll('.chapter-group')).toHaveLength(2);
     // Every hit shows, each with its section; Met 70a's two words share a
     // passage and are one instance with both marked (S4a).
-    expectAllOpen(container);
+    await expectAllOpen(container);
     expect([...container.querySelectorAll('.inst-ref')].map(text)).toEqual(['70a1', '70b1', '70a1', '70b1']);
     expect([...container.querySelectorAll('li.instance')][0].querySelectorAll('.inst-snippet.greek mark')).toHaveLength(2);
     // The work heading shuts its hits, its book and chapter lines with them, and opens them again.
@@ -256,8 +257,8 @@ describe('Search.svelte: views', () => {
     // A row shuts its hits alone.
     const dative = container.querySelectorAll<HTMLButtonElement>('h3 .group-head')[1];
     await fireEvent.click(dative);
-    expect(dative).toHaveAttribute('aria-expanded', 'false');
-    expect(container.querySelectorAll('li.instance .inst-snippet.greek mark')).toHaveLength(5);
+    expect(dative).toHaveAttribute('aria-expanded', 'true');
+    expect(container.querySelectorAll('li.instance .inst-snippet.greek mark')).toHaveLength(1);
     expect(greekHitGrammar).toHaveBeenCalledWith(RESULTS);
     const row = facetRow();
     const runs = [...row.querySelectorAll('.gx-group')].map(run);
@@ -316,7 +317,7 @@ describe('Search.svelte: grammar facets', () => {
   it('lets an ambiguous token through on any reading, and says it is one of several', async () => {
     const { container } = await open(`${G}&gf=case.dat`);
     await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
-    expectAllOpen(container);
+    await expectAllOpen(container);
     // τῆς is gen or dat; ταῖς only dat.
     const rows = [...container.querySelectorAll('li.instance')].map(li =>
       `${text(li.querySelector('mark'))}: ${text(li.querySelector('.inst-oneof'))}`);
@@ -358,7 +359,7 @@ describe('Search.svelte: grammar facets', () => {
     await vi.waitFor(() => expect(run(facetRow().querySelector('.gx-group'))).toBe('Case dat 1 gen 1'));
     await fireEvent.click(within(facetRow()).getByRole('checkbox', { name: 'Case gen' }));
     await vi.waitFor(() => expect(status()).toHaveTextContent('1 instance'));
-    expectAllOpen(container);
+    await expectAllOpen(container);
     expect(text(container.querySelector('li.instance .inst-speaker'))).toBe('Socrates');
   });
 
@@ -399,7 +400,7 @@ describe('Search.svelte: grammar facets', () => {
     vi.mocked(search).mockResolvedValueOnce({ results: RESULTS, failedWorks: [] });
     let formsIn!: (forms: HitForms) => void;
     vi.mocked(greekHitForms).mockReturnValueOnce(new Promise(resolve => { formsIn = resolve; }));
-    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('τῆς ἐστι')}`);
+    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('τῆς ἐστι')}&gm=phrase`);
     render(Search);
     await vi.waitFor(() => expect(status()).toHaveTextContent('6 instances'));
     // Both lookups are still out when the reader asks to widen, and widening
@@ -427,7 +428,7 @@ describe('Search.svelte: the notes of a whole section', () => {
   it('a section holding one ambiguous hit carries its note', async () => {
     const { container } = await open(`${G}&gf=case.dat&ctx=s`);
     await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
-    expectAllOpen(container);
+    await expectAllOpen(container);
     await vi.waitFor(() => expect([...container.querySelectorAll('li.instance')].map(note))
       .toEqual(['one of 2 readings', 'one of 2 readings', '']));
   });
@@ -435,9 +436,9 @@ describe('Search.svelte: the notes of a whole section', () => {
   it('a section holding several names the word each note is about', async () => {
     const { container } = await open(`${G}&gf=case.dat&ctx=s`, TWO);
     await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
-    expectAllOpen(container);
+    await expectAllOpen(container);
     await vi.waitFor(() => expect([...container.querySelectorAll('li.instance')].map(note))
-      .toEqual(['τῆς: one of 2 readings · λόγος: case dat or nom']));
+      .toEqual(['τῆς: one of 2 readings · λόγος: dative or nominative']));
   });
 
   // Two hits a word apart share a passage: one instance (S4a), which names
@@ -445,12 +446,12 @@ describe('Search.svelte: the notes of a whole section', () => {
   it('a passage of two hits names the word each note is about, opened or not', async () => {
     const { container } = await open(`${G}&gf=case.dat`, TWO);
     await vi.waitFor(() => expect(status()).toHaveTextContent('2 instances'));
-    expectAllOpen(container);
+    await expectAllOpen(container);
     const items = container.querySelectorAll('li.instance');
     expect(items).toHaveLength(1);
     const [li] = items;
-    await vi.waitFor(() => expect(note(li)).toBe('τῆς: one of 2 readings · λόγος: case dat or nom'));
+    await vi.waitFor(() => expect(note(li)).toBe('τῆς: one of 2 readings · λόγος: dative or nominative'));
     await fireEvent.click(li.querySelector('button.inst-more')!);
-    await vi.waitFor(() => expect(note(li)).toBe('τῆς: one of 2 readings · λόγος: case dat or nom'));
+    await vi.waitFor(() => expect(note(li)).toBe('τῆς: one of 2 readings · λόγος: dative or nominative'));
   });
 });

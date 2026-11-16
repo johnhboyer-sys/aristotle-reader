@@ -76,7 +76,8 @@ async function arrive(qs: string) {
   const { searchCombo } = await import('../lib/search');
   await vi.waitFor(() => expect(searchCombo).toHaveBeenCalledTimes(1));
   await vi.waitFor(() => expect(summary()).not.toBeNull());
-  await screen.findByRole('button', { name: 'Search' });
+  await screen.findByRole('button', { name: 'Change' });
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/instance|passage|hits/));
 }
 async function searched(n: number) {
   const { searchCombo } = await import('../lib/search');
@@ -160,7 +161,7 @@ describe("the editor's Search", () => {
     await vi.waitFor(() => expect(editor()).toBeNull());
     expect(document.querySelector('.prox-go')).toBeNull();
     expect(document.querySelector<HTMLElement>('.search-page')!.style.getPropertyValue('--prox-bar-height')).toBe('');
-    expect(screen.getByRole('button', { name: /^Options/ })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('button', { name: /^Options/ })).toBeNull();
     expect(links()).toEqual(['Turn off', 'Change', 'Guide']);
   });
 });

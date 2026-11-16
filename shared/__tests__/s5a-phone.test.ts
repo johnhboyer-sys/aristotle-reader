@@ -103,77 +103,27 @@ describe('the sentence of a proximity search', () => {
   });
 });
 
-describe('Options, folded', () => {
-  it('opens and shuts the options, and says what they are set to while shut', async () => {
+describe('phone field options', () => {
+  it('shows each row only when its field holds text, without an Options fold or summary', async () => {
     render(Search);
-    expect(opts()).toHaveAttribute('aria-expanded', 'false');
-    expect(document.querySelector('.sopt')).not.toHaveClass('opts-open');
-    expect(line()).toBe('all words · any form · accents ignored · in all works');
-    await fireEvent.click(opts());
-    expect(opts()).toHaveAttribute('aria-expanded', 'true');
-    expect(document.querySelector('.sopt')).toHaveClass('opts-open');
+    expect(screen.queryByRole('button', { name: /^Options/ })).toBeNull();
+    expect(document.querySelector('.d6-opts')).toBeNull();
+    await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue' } });
+    expect(document.querySelector('.d6-opts-e')).not.toBeNull();
+    expect(document.querySelector('.d6-opts-g')).toBeNull();
+    await fireEvent.input(document.getElementById('grk-input')!, { target: { value: 'ἀρετή' } });
+    expect(document.querySelector('.d6-opts-g')).not.toBeNull();
     expect(line()).toBeNull();
-    // A changed option reads in the line once they are shut.
-    await fireEvent.click(screen.getByRole('button', { name: 'Accents' }));
-    await fireEvent.click(screen.getByRole('button', { name: 'Lemma' }));
-    await fireEvent.click(opts());
-    expect(line()).toBe('all words · as typed · accents observed · by lemma · in all works');
-  });
-
-  it('shuts a menu left open when the options are folded', async () => {
-    render(Search);
-    await fireEvent.click(opts());
-    const m = menu(/^Match/);
-    m.open = true;
-    await fireEvent.click(opts());
-    expect(m.open).toBe(false);
-  });
-
-  it('is open with the proximity editor one at a time', async () => {
-    render(Search);
-    await fireEvent.click(opts());
-    await fireEvent.click(prox());
-    expect(prox()).toHaveAttribute('aria-expanded', 'true');
-    expect(opts()).toHaveAttribute('aria-expanded', 'false');
-    expect(line()).toBeNull();
-    await fireEvent.click(opts());
-    expect(opts()).toHaveAttribute('aria-expanded', 'true');
-    expect(prox()).toHaveAttribute('aria-expanded', 'false');
-  });
-
-  it('says what English and Both search, each value once where the two agree', async () => {
-    render(Search);
-    await fireEvent.click(screen.getByRole('button', { name: 'English' }));
-    expect(line()).toBe('all words · any form · in all works');
-    await fireEvent.click(screen.getByRole('button', { name: 'Both' }));
-    expect(line()).toBe('all words · any form · accents ignored · both languages · in all works');
-    await fireEvent.click(opts());
-    await fireEvent.click(within(menu(/^English match/)).getByRole('radio', { name: 'Any word', hidden: true }));
-    await fireEvent.click(opts());
-    expect(line()).toBe('Greek all words · English any word · any form · accents ignored · both languages · in all works');
-  });
-
-  it('names the settings of the results that are not their defaults, in red', async () => {
-    // By form: one word as spelled is not offered By grammar (John, 13 Nov),
-    // and its v=grammar would give way to By work once the search ran.
-    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('ἀρετή')}&v=form&ps=c`);
-    render(Search);
-    await vi.waitFor(() => expect(document.querySelectorAll('.sopt-sum-v')).toHaveLength(2));
-    expect([...document.querySelectorAll('.sopt-sum-v')].map((x) => x.textContent)).toEqual(['grouped by form', 'citations only']);
-    expect(line()).toBe('all words · any form · accents ignored · in all works · grouped by form · citations only');
-  });
-
-  it('gives way to the sentence of a live proximity search', async () => {
-    window.history.replaceState(null, '', '/search?c=l:areth&c=l:ecis&cw=10');
-    render(Search);
-    await vi.waitFor(() => expect(sentence()).not.toBeNull());
-    expect(line()).toBeNull();
+    await fireEvent.click(screen.getByRole('button', { name: 'Clear Greek' }));
+    expect(document.querySelector('.d6-opts-g')).toBeNull();
+    expect(screen.getByLabelText('English')).toHaveValue('virtue');
   });
 });
 
 describe('the form\'s menus as sheets', () => {
   it('gives each a head and a Done band that shuts it, focus back on its button', async () => {
     render(Search);
+    await fireEvent.input(document.getElementById('grk-input')!, { target: { value: 'λόγος' } });
     const sheets = [...document.querySelectorAll('.search-form fieldset.opt-panel')];
     expect(sheets.length).toBeGreaterThan(0);
     for (const s of sheets) {
@@ -181,8 +131,7 @@ describe('the form\'s menus as sheets', () => {
       expect(s.querySelector(':scope > legend')).toHaveClass('sheet-head');
       expect(s.querySelector(':scope > .sheet-foot > button.sheet-done')).toHaveTextContent('Done');
     }
-    await fireEvent.click(opts());
-    const m = menu(/^Form/);
+    const m = menu(/^Greek form/);
     await fireEvent.click(m.querySelector('summary')!);
     m.open = true;
     await fireEvent.click(m.querySelector('.sheet-done')!);
@@ -198,7 +147,7 @@ describe('the proximity editor on a phone', () => {
     render(Search);
     await vi.waitFor(() => expect(sentence()).toBe('ἕξις near ἀρετή, ἡδονή before ἀρετή, within 10 words'));
     await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
-    expect(sentence()).toBe('within 10 words: ἕξις near ἀρετή, ἡδονή before ἀρετή');
+    expect(sentence()).toBeNull();
     const slots = [...document.querySelectorAll('#advanced-tools .combo-slot')];
     expect(slots).toHaveLength(3);
     const names = (s: Element) => [...s.querySelectorAll('.prox-ml')].map((x) => x.textContent);

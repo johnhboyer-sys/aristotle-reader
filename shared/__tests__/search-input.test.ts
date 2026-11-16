@@ -467,6 +467,7 @@ describe('Search: capitals and accents', () => {
   it('has no Capitals or Case control; a Lemma switch stands beside Accents in its place', async () => {
     const { search } = await import('../lib/search');
     render(Search);
+    await type('λόγος');
     expect(screen.queryByRole('button', { name: /^(Case|Capitals)\b/ })).toBeNull();
     expect(screen.queryByText(/^(Case|Capitals)\b/)).toBeNull();
     const sw = screen.getByRole('button', { name: 'Lemma' });
@@ -483,6 +484,7 @@ describe('Search: capitals and accents', () => {
   it('Accents is a one-tap switch too, drawn alone, read from the address and written back (John, 2026-11-11; ruling 5)', async () => {
     const { search } = await import('../lib/search');
     render(Search);
+    await type('λόγος');
     const sw = screen.getByRole('button', { name: 'Accents' });
     expect(sw.closest('details')).toBeNull();
     // The switch alone: no state word beside it.
@@ -503,4 +505,55 @@ describe('Search: capitals and accents', () => {
     expect(sw).toHaveAttribute('aria-pressed', 'false');
   });
 
+});
+
+describe('search review: query fields', () => {
+  it('grows both fields after fonts settle and load again, and removes listeners on destroy', async () => {
+    const before = Object.getOwnPropertyDescriptor(document, 'fonts');
+    const fonts = new EventTarget();
+    let ready!: () => void;
+    Object.assign(fonts, { ready: new Promise<void>(resolve => { ready = resolve; }) });
+    Object.defineProperty(document, 'fonts', { configurable: true, value: fonts });
+    const remove = vi.spyOn(fonts, 'removeEventListener');
+    const page = render(Search);
+    const greek = greekBox() as unknown as HTMLTextAreaElement;
+    const english = screen.getByLabelText('English') as HTMLTextAreaElement;
+    let height = 64;
+    for (const box of [greek, english]) Object.defineProperty(box, 'scrollHeight', { configurable: true, get: () => height });
+    try {
+      ready();
+      await vi.waitFor(() => expect(greek.style.height).toBe('64px'));
+      expect(english.style.height).toBe('64px');
+      height = 112;
+      fonts.dispatchEvent(new Event('loadingdone'));
+      expect(greek.style.height).toBe('112px');
+      expect(english.style.height).toBe('112px');
+      page.unmount();
+      expect(remove).toHaveBeenCalledTimes(2);
+      height = 180;
+      fonts.dispatchEvent(new Event('loadingdone'));
+      expect(greek.style.height).toBe('112px');
+    } finally {
+      page.unmount();
+      if (before) Object.defineProperty(document, 'fonts', before);
+      else Reflect.deleteProperty(document, 'fonts');
+    }
+  });
+
+  it('puts each clear control in its label line and clears only that field', async () => {
+    render(Search);
+    await type('ἀρετή');
+    const english = screen.getByLabelText('English');
+    await fireEvent.input(english, { target: { value: 'virtue' } });
+    const greekClear = screen.getByRole('button', { name: 'Clear Greek' });
+    const englishClear = screen.getByRole('button', { name: 'Clear English' });
+    expect(greekClear.closest('.sq-head')).not.toBeNull();
+    expect(englishClear.closest('.sq-head')).not.toBeNull();
+    expect(document.querySelector('.sq-row .query-clear')).toBeNull();
+    await fireEvent.click(greekClear);
+    expect(greekBox()).toHaveValue('');
+    expect(english).toHaveValue('virtue');
+    await fireEvent.click(englishClear);
+    expect(english).toHaveValue('');
+  });
 });

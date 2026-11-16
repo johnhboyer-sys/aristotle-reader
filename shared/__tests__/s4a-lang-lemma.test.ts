@@ -52,7 +52,6 @@ afterEach(() => {
   window.history.replaceState(null, '', '/');
 });
 
-const tab = (name: string) => screen.getByRole('group', { name: 'Search in' }).querySelector(`button:nth-child(${['Greek', 'English', 'Both'].indexOf(name) + 1})`) as HTMLButtonElement;
 const engBox = () => document.querySelector('#eng-input') as HTMLInputElement;
 const greekBox = () => document.querySelector('#grk-input') as HTMLInputElement | null;
 
@@ -69,8 +68,7 @@ async function openLogos() {
 describe('a picked dictionary word and the language tabs', () => {
   it('English drops the pick and the Lemma switch: virtue searches virtue alone', async () => {
     const search = await openLogos();
-    await fireEvent.click(tab('English'));
-    expect(tab('English')).toHaveAttribute('aria-pressed', 'true');
+    await fireEvent.click(screen.getByRole('button', { name: 'Clear Greek' }));
     await fireEvent.input(engBox(), { target: { value: 'virtue' } });
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await vi.waitFor(() => expect(search).toHaveBeenCalled());
@@ -80,14 +78,12 @@ describe('a picked dictionary word and the language tabs', () => {
     expect(call[6]).not.toBe('headword');
     expect(window.location.search).toBe('?e=virtue');
     // Back to Greek: the switch is off, the box empty.
-    await fireEvent.click(tab('Greek'));
-    expect(screen.getByRole('button', { name: 'Lemma' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByRole('button', { name: 'Lemma' })).toBeNull();
     expect(greekBox()!.value).toBe('');
   });
 
   it('Both keeps the pick and the switch: λόγος and virtue together', async () => {
     const search = await openLogos();
-    await fireEvent.click(tab('Both'));
     expect(screen.getByRole('button', { name: 'Lemma' })).toHaveAttribute('aria-pressed', 'true');
     await fireEvent.input(engBox(), { target: { value: 'virtue' } });
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
@@ -101,7 +97,6 @@ describe('a picked dictionary word and the language tabs', () => {
 
   it('Greek keeps the pick and the switch', async () => {
     const search = await openLogos();
-    await fireEvent.click(tab('Greek'));
     expect(screen.getByRole('button', { name: 'Lemma' })).toHaveAttribute('aria-pressed', 'true');
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await vi.waitFor(() => expect(search).toHaveBeenCalled());
@@ -109,4 +104,34 @@ describe('a picked dictionary word and the language tabs', () => {
     expect(search.mock.calls[0][6]).toBe('headword');
     expect(window.location.search).toBe('?l=logos');
   });
+});
+
+it('derives Greek, Both, and English searches from the fields, and clears each field alone', async () => {
+  const { search } = await import('../lib/search');
+  render(Search);
+  expect(screen.queryByRole('button', { name: 'Clear Greek' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Clear English' })).toBeNull();
+  await fireEvent.input(greekBox()!, { target: { value: 'λόγος' } });
+  await fireEvent.submit(document.querySelector('form')!);
+  await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
+  expect(vi.mocked(search).mock.calls[0].slice(0, 2)).toEqual(['λόγος', '']);
+  await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).not.toBeDisabled());
+  await fireEvent.input(engBox(), { target: { value: 'word' } });
+  expect(document.querySelector('.join summary')).toHaveTextContent('and');
+  await fireEvent.submit(document.querySelector('form')!);
+  await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(2));
+  expect(vi.mocked(search).mock.calls[1].slice(0, 2)).toEqual(['λόγος', 'word']);
+  await vi.waitFor(() => expect(screen.getByRole('button', { name: 'Search' })).not.toBeDisabled());
+  await fireEvent.click(screen.getByRole('button', { name: 'Clear English' }));
+  expect(greekBox()).toHaveValue('λόγος');
+  expect(engBox()).toHaveValue('');
+  expect(engBox()).toHaveFocus();
+  await fireEvent.input(engBox(), { target: { value: 'word' } });
+  await fireEvent.click(screen.getByRole('button', { name: 'Clear Greek' }));
+  expect(engBox()).toHaveValue('word');
+  expect(greekBox()).toHaveFocus();
+  expect(document.querySelector('.join')).toBeNull();
+  await fireEvent.submit(document.querySelector('form')!);
+  await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(3));
+  expect(vi.mocked(search).mock.calls[2].slice(0, 2)).toEqual(['', 'word']);
 });

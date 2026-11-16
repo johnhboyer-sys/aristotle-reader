@@ -82,16 +82,13 @@ describe('β Beta Code toggle', () => {
     expect(el.value).toBe('λο/');
   });
 
-  it('is absent on the English tab; on Both it converts the Greek box, never the English one', async () => {
+  it('stays beside Greek when English has text and converts Greek alone', async () => {
     const page = render(Search);
     await fireEvent.click(toggle(page)!);
     expect(toggle(page)?.getAttribute('aria-pressed')).toBe('true');
 
-    await fireEvent.click(screen.getByRole('button', { name: 'English' }));
-    expect(toggle(page)).toBeNull();
-    expect(screen.queryByRole('button', { name: 'β Beta Code' })).toBeNull();
-
-    await fireEvent.click(screen.getByRole('button', { name: 'Both' }));
+    await type(englishBox(page), 'virtue');
+    expect(toggle(page)).not.toBeNull();
     expect(toggle(page)?.getAttribute('aria-pressed')).toBe('true');
     await type(greekBox(page), 'lo/gos');
     expect(greekBox(page).value).toBe('λόγος');

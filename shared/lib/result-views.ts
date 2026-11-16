@@ -35,15 +35,15 @@ export function viewsOffered(kind: SearchKind): ResultView[] {
   return ['page'];
 }
 
-/** How much text a hit shows: a line's worth, three, or its whole section. */
-export type ResultContext = '1' | '3' | 's';
-export const RESULT_CONTEXTS: readonly ResultContext[] = ['1', '3', 's'];
+/** One line, three, a whole section, or citations without text. */
+export type ResultContext = '1' | '3' | 's' | 'c';
+export const RESULT_CONTEXTS: readonly ResultContext[] = ['1', '3', 's', 'c'];
 /** How the hits of one results page are ordered. */
 export type ResultSort = 'page' | 'work' | 'form' | 'freq';
 export const RESULT_SORTS: readonly ResultSort[] = ['page', 'work', 'form', 'freq'];
-/** Hits per results page, or a list of citations alone. */
-export type PageSize = '20' | '40' | '100' | 'c';
-export const PAGE_SIZES: readonly PageSize[] = ['20', '40', '100', 'c'];
+/** Hits per results page. */
+export type PageSize = '20' | '40' | '100';
+export const PAGE_SIZES: readonly PageSize[] = ['20', '40', '100'];
 
 /** Category → the values ticked. A category with none ticked does not filter. */
 export type Facets = Record<string, string[]>;

@@ -53,6 +53,7 @@ const summary = () => form('form').closest('details')!.querySelector('summary b'
 async function open(url = '/search') {
   window.history.replaceState(null, '', url);
   render(Search);
+  if (!url.includes('?')) await fireEvent.input(document.querySelector('#grk-input')!, { target: { value: 'λόγος' } });
   if (url.includes('?')) {
     const { search } = await import('../lib/search');
     await vi.waitFor(() => expect(search).toHaveBeenCalled());
@@ -65,7 +66,7 @@ describe('Accents and Form', () => {
     expect(form('lemma')).toBeChecked();
     await fireEvent.click(screen.getByRole('button', { name: 'Accents' }));
     expect(form('form')).toBeChecked();
-    expect(summary()).toHaveTextContent('as typed');
+    expect(summary()).toHaveTextContent('exact form');
   });
 
   it('leaves Running text selected when Accents turns on', async () => {
@@ -80,7 +81,7 @@ describe('Accents and Form', () => {
     await open('/search?g=ἀρετή&acc=1&m=form');
     await fireEvent.click(screen.getByRole('button', { name: 'Accents' }));
     expect(form('form')).toBeChecked();
-    expect(summary()).toHaveTextContent('as typed');
+    expect(summary()).toHaveTextContent('exact form');
     await fireEvent.click(screen.getByRole('button', { name: 'Accents' }));
     await fireEvent.click(form('lemma'));
     await fireEvent.click(screen.getByRole('button', { name: 'Accents' }));

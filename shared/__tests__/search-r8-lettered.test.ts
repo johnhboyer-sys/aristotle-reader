@@ -97,7 +97,7 @@ it('links the 6b citation to the same lettered reader target as its snippet', as
   snippets.unmount();
   vi.mocked((await import('../lib/data')).fetchBook).mockClear();
   const citations = await open([3], '&ps=c');
-  expect(citations.container.querySelector('.cite')).toHaveTextContent('2b6b');
+  expect(citations.container.querySelector('.cite')).toHaveTextContent('2b');
   expect(citations.container.querySelector('.cite')).toHaveAttribute('href', href);
   expect((await import('../lib/data')).fetchBook).not.toHaveBeenCalled();
 });

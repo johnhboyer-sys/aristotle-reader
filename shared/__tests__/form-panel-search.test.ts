@@ -238,7 +238,7 @@ describe('Search.svelte: the form panel', () => {
       byResult: new Map([['EN:1:70a', ['esti', 'hn']], ['EN:1:70b', ['einai']]]), headwords: new Map(), failedWorks: [],
     };
     const { panel } = await open(`${G}&e=one&t=rackham`, forms, results);
-    await vi.waitFor(() => expect(status()).toHaveTextContent('3 instances'));
+    await vi.waitFor(() => expect(status()).toHaveTextContent(/3 (?:instances?|hits)/));
     expect(rows(panel)).toEqual(['εστι 1 ✓', 'ην 1 ✓']);
   });
 
@@ -278,7 +278,7 @@ describe('Search.svelte: the form panel', () => {
     const { search, greekHitForms, searchPhraseVariants } = await import('../lib/search');
     vi.mocked(search).mockResolvedValueOnce({ results: RESULTS, failedWorks: [] });
     vi.mocked(greekHitForms).mockRejectedValueOnce(new Error('HTTP 500 for lemma-map/e.json'));
-    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('τὸ ὄν')}`);
+    window.history.replaceState(null, '', `/search?g=${encodeURIComponent('τὸ ὄν')}&gm=phrase`);
     const { container } = render(Search);
     const again = await screen.findByRole('button', { name: 'Try again' });
     await vi.waitFor(() => expect(status()).toHaveTextContent('5 instances'));

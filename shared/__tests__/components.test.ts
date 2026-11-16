@@ -119,7 +119,7 @@ describe('Search.svelte', () => {
     await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue test' } });
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
-    await vi.waitFor(() => expect(status).toHaveTextContent('5 instances'));
+    await vi.waitFor(() => expect(status).toHaveTextContent(/5 (?:instances?|hits)/));
     const works = screen.getByRole('group', { name: 'Show hits from one work' });
     const en = within(works).getByRole('button', { name: /^Nicomachean Ethics/ });
     expect(en).toHaveTextContent('Nicomachean Ethics3');
@@ -127,7 +127,7 @@ describe('Search.svelte', () => {
     await vi.waitFor(() => expect(screen.getByText('3 instances', { selector: '.group-count' })).toBeInTheDocument());
 
     await fireEvent.click(en);
-    await vi.waitFor(() => expect(status).toHaveTextContent('3 instances'));
+    await vi.waitFor(() => expect(status).toHaveTextContent(/3 (?:instances?|hits)/));
     expect(en).toHaveAttribute('aria-pressed', 'true');
   });
 });
@@ -340,7 +340,7 @@ describe('Search.svelte in the address bar', () => {
     const { search, searchPhraseVariants } = await import('../lib/search');
     let finish!: (v: Awaited<ReturnType<typeof searchPhraseVariants>>) => void;
     vi.mocked(searchPhraseVariants).mockReturnValue(new Promise(r => { finish = r; }));
-    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}&gm=phrase`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
     await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
@@ -402,7 +402,7 @@ describe('Search.svelte in the address bar', () => {
   it('frees the inflection lookup when a new search retires it', async () => {
     const { search, searchPhraseVariants } = await import('../lib/search');
     vi.mocked(searchPhraseVariants).mockReturnValue(new Promise(() => {}));
-    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}&gm=phrase`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
     await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));
@@ -423,7 +423,7 @@ describe('Search.svelte in the address bar', () => {
     } as Awaited<ReturnType<typeof searchPhraseVariants>>);
     const offsetsV = held<Awaited<ReturnType<typeof loadOffsets>>>();
     vi.mocked(loadOffsets).mockRejectedValueOnce(noOffsets).mockReturnValueOnce(offsetsV.promise);
-    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}`);
+    at(`/search?g=${encodeURIComponent('λόγος ἀρετή')}&gm=phrase`);
     render(Search);
     await vi.waitFor(() => expect(search).toHaveBeenCalledTimes(1));
     await fireEvent.click(await screen.findByRole('button', { name: 'Find this phrase in any inflection' }));

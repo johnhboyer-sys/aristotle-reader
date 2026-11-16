@@ -143,7 +143,7 @@ describe('Search.svelte: the display bar', () => {
     { legend: 'Group by', label: 'By form', b: 'form', param: 'v=form', entry: 'By form', back: 'By work', backB: 'work' },
     { legend: 'Sort', label: 'Commonest form first', b: 'Commonest form first', param: 'so=freq', entry: 'Commonest form first', back: 'Bekker order', backB: 'Bekker order' },
     { legend: 'Context', label: '1 line', b: '1 line', param: 'ctx=1', entry: '1 line', back: '3 lines', backB: '3 lines' },
-    { legend: 'Per page', label: 'Citations only', b: 'citations only', param: 'ps=c', entry: 'Citations only', back: '40', backB: '40' },
+    { legend: 'Context', label: 'Citations only', b: 'citations only', param: 'ctx=c', entry: 'Citations only', back: '3 lines', backB: '3 lines' },
   ];
   for (const c of cases) {
     it(`"${c.legend}": a radio applies at once, without a new search, and the menu sets it back`, async () => {
@@ -222,8 +222,8 @@ describe('Search.svelte: the display bar', () => {
   it('under citations only holds just the Per page menu', async () => {
     const { container } = await open(`${G}&ps=c`);
     const bar = container.querySelector('.sx-main > .sx-display')!;
-    expect([...bar.querySelectorAll('legend')].map(text)).toEqual(['Per page']);
-    expect(value('Per page')).toBe('citations only');
+    expect([...bar.querySelectorAll('legend')].map(text)).toEqual(['Context', 'Per page']);
+    expect(value('Context')).toBe('citations only');
   });
 
   it('is not drawn when nothing is found', async () => {

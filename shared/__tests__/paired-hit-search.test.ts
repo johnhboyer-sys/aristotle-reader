@@ -88,7 +88,7 @@ async function instances(url: string, results: SearchResult[], total: number) {
   vi.mocked(search).mockResolvedValueOnce({ results, failedWorks: [] });
   window.history.replaceState(null, '', url);
   const { container } = render(Search);
-  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(`${total} instance`));
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(new RegExp(`${total} (?:instance|hits)`)));
   await vi.waitFor(() => expect(fetchBook).toHaveBeenCalled());
   await vi.waitFor(() => expect(container.querySelector('.chapter-group')).not.toBeNull());
   expect(container.querySelectorAll('button.group-head[aria-expanded="false"]')).toHaveLength(0);
@@ -204,7 +204,10 @@ describe('Search.svelte: Greek and English hits in one unit', () => {
   const url = `/search?g=${encodeURIComponent('θ')}&e=nine`;
 
   it('become one instance, each side with its marks', async () => {
-    const { list } = await instances(url, results, 3);
+    const { container, list } = await instances(url, results, 3);
+    expect(container.querySelector('.rc-n')).toHaveTextContent(/^1$/);
+    expect(container.querySelector('.rc-w')).toHaveTextContent(/^passage$/);
+    expect(container.querySelector('.rc-hits')).toHaveTextContent(/^3 hits$/);
     expect(list).toHaveLength(2);
     // ζ has no English partner: Greek, then its turn's English, unmarked.
     expect(marks(list[0])).toEqual(['ζ']);
@@ -220,7 +223,9 @@ describe('Search.svelte: Greek and English hits in one unit', () => {
   it('count what the two separate instances counted', async () => {
     const crito = { ...at('70a', { grkMatch: true, grkPositions: [0] }), work: 'Int' };
     const { container } = await instances(url, [...results, crito], 4);
-    expect(screen.getByRole('status')).toHaveTextContent('4 instances');
+    expect(screen.getByRole('status')).toHaveTextContent('2 passages · 4 hits');
+    expect(container.querySelector('.rc-n')).toHaveTextContent(/^2$/);
+    expect(container.querySelector('.rc-w')).toHaveTextContent(/^passages$/);
     // Int sorts first; EN's page holds one Greek hit and the merged pair.
     expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['1 instance', '3 instances']);
     const works = screen.getByRole('group', { name: 'Show hits from one work' });

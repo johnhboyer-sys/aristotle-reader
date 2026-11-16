@@ -38,7 +38,7 @@ vi.mock('../lib/search', async (importOriginal) => {
 vi.mock('../lib/data', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../lib/data')>();
   const sections = [{ column: '70a', chapter: '70', line: '1' }, { column: '70b', chapter: '70', line: '1' }];
-  return { ...actual, fetchBook: vi.fn(async (_w: string, n: number) => book(n)), fetchChapters: vi.fn(async () => ({ '1': sections })) };
+  return { ...actual, fetchBook: vi.fn(async (_w: string, n: number) => book(n)), fetchChapters: vi.fn(async () => Object.fromEntries(Array.from({ length: 9 }, (_, i) => [String(i + 1), sections]))) };
 });
 
 afterEach(async () => {
@@ -137,6 +137,25 @@ describe('By form, keyed as ruled', () => {
 });
 
 describe('By grammar: the headword over its paradigm', () => {
+  it('counts the shown page without fetching books from later pages, then recounts filtered hits', async () => {
+    const results = Array.from({ length: 9 }, (_, i) => at('70a', [0, 1, 2], { meta: { id: `${i + 1}:70a`, book: i + 1, column: '70a' } }));
+    const forms: HitForms = { ...FORMS, byResult: new Map(results.map(r => [`EN:${r.meta.id}`, ['areth', 'areth', 'areth']])) };
+    const grammar: HitGrammar = { failedWorks: [], byResult: new Map(results.map(r => [`EN:${r.meta.id}`, [[NOM_SG], [DAT_SG], [NOM_SG]]])) };
+    const { container } = await open('/search?l=areth&v=grammar&ps=20', { results, forms, grammar });
+    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('page 1 of 2'));
+    await vi.waitFor(() => expect(heads(container)).toEqual([
+      'αρετη 18 instances', 'Nominative or vocative singular ἀρετή 12 instances', 'Dative singular ἀρετῇ 6 instances',
+    ]));
+    const { fetchBook } = await import('../lib/data');
+    expect([...new Set(vi.mocked(fetchBook).mock.calls.map(([, n]) => n))]).toEqual([1, 2, 3, 4, 5, 6]);
+    await fireEvent.click(screen.getAllByRole('button', { name: 'Next page' })[0]);
+    await vi.waitFor(() => expect(heads(container)).toEqual([
+      'αρετη 9 instances', 'Nominative or vocative singular ἀρετή 6 instances', 'Dative singular ἀρετῇ 3 instances',
+    ]));
+    await fireEvent.click(within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case dat' }));
+    await vi.waitFor(() => expect(heads(container)).toEqual(['αρετη 9 instances', 'Dative singular ἀρετῇ 9 instances']));
+  });
+
   it('new data: the verb’s parses are gone from the rows and the facets', async () => {
     const { container } = await open('/search?l=areth&v=grammar');
     await vi.waitFor(() => expect(heads(container)).toEqual([
@@ -157,15 +176,17 @@ describe('By grammar: the headword over its paradigm', () => {
     ]));
   });
 
-  it('prints every row of the paradigm open, its hits with it (Codex R14)', async () => {
+  it('starts paradigm rows shut, opens them for print, and restores them after', async () => {
     const { container } = await open('/search?l=areth&v=grammar');
     await vi.waitFor(() => expect(heads(container)).toHaveLength(3));
     const shown = container.querySelectorAll('li.instance').length;
-    expect(shown).toBeGreaterThan(0);
+    expect(shown).toBe(0);
     window.dispatchEvent(new Event('beforeprint'));
     await new Promise(r => setTimeout(r, 0));
-    expect(container.querySelectorAll('li.instance').length).toBe(shown);
+    expect(container.querySelectorAll('li.instance').length).toBeGreaterThan(0);
     window.dispatchEvent(new Event('afterprint'));
+    await new Promise(r => setTimeout(r, 0));
+    expect(container.querySelectorAll('li.instance')).toHaveLength(0);
   });
 
   it('old data: every reading of a spelling, as before', async () => {
@@ -178,6 +199,8 @@ describe('By grammar: the headword over its paradigm', () => {
     await vi.waitFor(() => expect(facetHeads()).toEqual(['Case', 'Number', 'Gender', 'Tense', 'Mood', 'Voice', 'Person']));
     await fireEvent.click(within(screen.getByRole('group', { name: 'Narrow by grammar' })).getByRole('checkbox', { name: 'Case dat' }));
     await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('1 instance'));
+    await vi.waitFor(() => expect(container.querySelectorAll('.sx-para')).toHaveLength(1));
+    await fireEvent.click(container.querySelector<HTMLButtonElement>('.sx-para')!);
     expect(text(container.querySelector('.inst-oneof'))).toBe('one of 3 readings');
   });
 

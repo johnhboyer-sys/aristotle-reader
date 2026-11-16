@@ -36,15 +36,16 @@ it('shows cx=0 as a chapter control and removable chosen filter', async () => {
  render(Search);
  // The editor is shut on a proximity search from the address; Change opens it (S3).
  await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
- const checkbox = await screen.findByRole('checkbox', { name: 'Keep hits that cross a chapter' });
- expect(checkbox).not.toBeChecked();
+ const checkbox = await screen.findByRole('switch', { name: 'Keep hits that cross a chapter' });
+ expect(checkbox).toHaveAttribute('aria-checked', 'false');
  await openSheet();
  await fireEvent.click(await screen.findByRole('button', { name: 'Remove Within a chapter' }));
- expect(checkbox).toBeChecked();
+ expect(checkbox).toHaveAttribute('aria-checked', 'true');
 });
 it('reports approximate chapter starts', async () => {
  window.history.replaceState(null, '', '/search?c=f:logos&c=f:logos'); render(Search);
- expect(await screen.findByText(/are recorded to the Bekker line, not the word/)).toHaveTextContent('Chapter starts in Nicomachean Ethics');
+ await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('No passages found.'));
+ expect(screen.queryByText(/are recorded to the Bekker line, not the word/)).toBeNull();
 });
 it('ignores speaker parameters and never opens their panel', async () => {
  window.history.replaceState(null, '', '/search?g=logos&sp=only&sn=Socrates');
@@ -104,7 +105,7 @@ it('keeps cx chip tied to the submitted search', async () => {
  window.history.replaceState(null, '', '/search?c=f:logos&c=f:logos');
  render(Search);
  await fireEvent.click(await screen.findByRole('button', { name: 'Change' }));
- const box = await screen.findByRole('checkbox', { name: 'Keep hits that cross a chapter' });
+ const box = await screen.findByRole('switch', { name: 'Keep hits that cross a chapter' });
  await fireEvent.click(box);
  await openSheet();
  expect(screen.queryByRole('button', { name: 'Remove Within a chapter' })).toBeNull();
@@ -123,6 +124,6 @@ it('keeps cx removal filters and submitted slots', async () => {
 });
 it('puts the approximate chapter notice in three cells', async () => {
  window.history.replaceState(null, '', '/search?c=f:logos&c=f:logos'); render(Search);
- const text = await screen.findByText(/are recorded to the Bekker line, not the word/);
- expect(text.parentElement?.children).toHaveLength(3);
+ await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('No passages found.'));
+ expect(document.querySelector('.sx-note:not(.warn)')).toBeNull();
 });

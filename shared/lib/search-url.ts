@@ -108,7 +108,7 @@ export interface UrlSearch {
   facets: Facets;          // the grammar facets ticked
   context: ResultContext;  // how much text a hit shows
   sort: ResultSort;        // the order of a results page
-  pageSize: PageSize;      // hits per results page, or citations only
+  pageSize: PageSize;      // hits per results page
 }
 
 export const emptyUrlSearch = (allWorks: string[]): UrlSearch => ({
@@ -339,6 +339,8 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
   s.context = pick(p.get('ctx'), RESULT_CONTEXTS, '3');
   s.sort = pick(p.get('so'), RESULT_SORTS, 'page');
   s.pageSize = pick(p.get('ps'), PAGE_SIZES, '40');
+  // Old citations URLs used Per page; keep those searches readable.
+  if (p.get('ps') === 'c') s.context = 'c';
   for (const pair of list(p.get('gf'))) {
     const [k, v, extra] = pair.split('.');
     // A name every object has ("constructor", "__proto__") is not a category,

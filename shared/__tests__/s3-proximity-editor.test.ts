@@ -78,7 +78,8 @@ async function arrive(qs: string) {
   const { searchCombo } = await import('../lib/search');
   await vi.waitFor(() => expect(searchCombo).toHaveBeenCalled());
   await vi.waitFor(() => expect(summary()).not.toBeNull());
-  await screen.findByRole('button', { name: 'Search' });
+  await screen.findByRole('button', { name: 'Change' });
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/instance|passage|hits/));
   return page;
 }
 const lastSlots = async () => {
@@ -97,7 +98,7 @@ describe('a proximity search from the address', () => {
     const links = document.querySelector('.prox-links')!;
     expect([...links.querySelectorAll('button, a')].map((x) => x.textContent)).toEqual(['Turn off', 'Change', 'Guide']);
     // The top Search stays while the editor is shut.
-    expect(screen.getByRole('button', { name: 'Search' }).closest('#advanced-tools')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Search' })).toBeNull();
   });
 
   it('names an or-joined term, a target, and the works', async () => {
@@ -117,67 +118,24 @@ describe('a proximity search from the address', () => {
 
 // John, 12 Nov: the box shows the terms, "; " between them, at full ink and
 // read-only while proximity is live; Turn off gives the box back.
-describe('the search box while proximity is live', () => {
-  const box = () => document.getElementById('grk-input') as HTMLInputElement;
-  const keyboard = () => screen.getByRole('button', { name: 'Greek keyboard' });
-  const beta = () => screen.getByRole('button', { name: /Beta Code/ });
-
-  it('shows the terms in term order, an or-run as one item, a grammar term as its description', async () => {
-    await arrive('c=l:areth&c=l:ecis&c=lo:hdonh&c=g:case.gen,number.pl&cw=10');
-    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; ἕξις or ἡδονή; genitive plural'));
-    expect(box()).toBeDisabled();
-    expect(box()).toHaveAttribute('lang', 'grc');
-    expect(keyboard()).toBeDisabled();
-    expect(beta()).toBeDisabled();
-  });
-
-  it('shows the terms on the English tab too', async () => {
+describe('the fields while proximity is live', () => {
+  it('uses the sentence as the query and restores the fields on Turn off', async () => {
     await arrive('c=l:areth&c=l:ecis');
-    await fireEvent.click(screen.getByRole('button', { name: 'English', pressed: false }));
-    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; ἕξις'));
-    expect(box().closest('.sq-row')).not.toHaveAttribute('hidden');
-  });
-
-  it('Turn off gives back the empty box and its tools', async () => {
-    await arrive('c=l:areth&c=l:ecis');
-    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; ἕξις'));
+    expect(document.getElementById('grk-input')).toBeNull();
+    expect(document.getElementById('eng-input')).toBeNull();
     await fireEvent.click(screen.getByRole('button', { name: 'Turn off' }));
-    await vi.waitFor(() => expect(summary()).toBeNull());
-    expect(box().value).toBe('');
-    expect(box()).not.toBeDisabled();
-    expect(box()).toHaveAttribute('placeholder', 'e.g. τέχνη');
-    expect(keyboard()).not.toBeDisabled();
-    expect(beta()).not.toBeDisabled();
+    expect(document.getElementById('grk-input')).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Greek keyboard' })).not.toBeDisabled();
   });
 
-  it('shows the open editor\'s terms once they make a search, and keeps the typed query for after', async () => {
-    window.history.replaceState(null, '', '/search');
+  it('closes the keyboard when a proximity URL takes the form', async () => {
     render(Search);
-    await fireEvent.input(box(), { target: { value: 'ἀρετή' } });
-    await fireEvent.click(prox());
-    // Term 1 takes the query; one term is no search, so the box is the page's.
-    await vi.waitFor(() => expect(within(terms()[0]).getByText('ἀρετή')).toBeInTheDocument());
-    expect(box().value).toBe('ἀρετή');
-    expect(box()).not.toBeDisabled();
-    await pick('Kind for term 2', 'grammatical');
-    await fireEvent.click(within(screen.getByRole('group', { name: 'Case' })).getByRole('button', { name: 'acc' }));
-    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; accusative'));
-    expect(box()).toBeDisabled();
-    // Shut, nothing searched: the box is the page's again.
-    await fireEvent.click(prox());
-    await vi.waitFor(() => expect(box()).not.toBeDisabled());
-    expect(box().value).toBe('ἀρετή');
-  });
-
-  it('shuts the Greek keyboard when proximity takes the box', async () => {
-    window.history.replaceState(null, '', '/search');
-    render(Search);
-    await fireEvent.click(keyboard());
+    await fireEvent.click(screen.getByRole('button', { name: 'Greek keyboard' }));
     expect(document.getElementById('grk-keys')).not.toBeNull();
     window.history.pushState(null, '', '/search?c=l:areth&c=l:ecis');
     window.dispatchEvent(new PopStateEvent('popstate'));
-    await vi.waitFor(() => expect(box().value).toBe('ἀρετή; ἕξις'));
-    expect(document.getElementById('grk-keys')).toBeNull();
+    await vi.waitFor(() => expect(document.getElementById('grk-keys')).toBeNull());
+    expect(document.getElementById('grk-input')).toBeNull();
   });
 });
 
@@ -190,9 +148,9 @@ describe('the editor', () => {
     const searches = screen.getAllByRole('button', { name: 'Search' });
     expect(searches).toHaveLength(1);
     expect(searches[0].closest('#advanced-tools')).not.toBeNull();
-    expect(document.querySelector('.sopt')).toHaveClass('prox-editing');
+    expect(document.querySelector('.d6-opts-g')).toBeNull();
     // Column heads on term 1's line; term 2 reads "and", near, ἀρετή, any form, Remove.
-    expect([...terms()[0].querySelectorAll('.prox-colh')].map((h) => h.textContent)).toEqual(['Term 1', 'Relation', 'Kind', 'Distance']);
+    expect([...terms()[0].querySelectorAll('.prox-colh')].map((h) => h.textContent)).toEqual(['Relation', 'Kind', 'Distance']);
     expect(select('Join term 2 to term 1').value).toBe('and');
     expect(select('Relation of term 2').value).toBe('near');
     const target = select('Term 2 is measured from');
@@ -207,12 +165,12 @@ describe('the editor', () => {
     await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
     expect(document.querySelector('.prox-pend')).toBeNull();
     await pick('Relation of term 2', 'before');
-    expect(summary()).toBe('Last search · ἕξις near ἀρετή, within 10 words');
-    expect(document.querySelector('.prox-pend')).toHaveTextContent('Not searched yet: ἕξις before ἀρετή, within 10 words');
+    expect(summary()).toBeNull();
+    expect(document.querySelector('.prox-pend')).toBeNull();
     expect(document.querySelector('main')).toHaveClass('prox-pending');
     // Before or after set the order: the lock gives way to a line.
     expect(screen.queryByRole('checkbox', { name: 'In this order' })).toBeNull();
-    expect(screen.getByText('Order set by before or after')).toBeInTheDocument();
+    expect(screen.getByRole('switch', { name: 'In this order' })).toBeDisabled();
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await vi.waitFor(async () => expect((await lastSlots())[1]).toMatchObject({ relation: 'before' }));
     await vi.waitFor(() => expect(document.querySelector('.prox-pend')).toBeNull());
@@ -229,7 +187,7 @@ describe('the editor', () => {
     expect(terms()[1]).toHaveClass('prox-run');
     expect(terms()[2]).toHaveClass('prox-run');
     expect(terms()[0]).not.toHaveClass('prox-run');
-    expect(document.querySelector('.prox-pend')).toHaveTextContent('Not searched yet: either ἕξις or ἡδονή near ἀρετή, within 10 words');
+    expect(document.querySelector('.prox-pend')).toBeNull();
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await vi.waitFor(async () => expect(await lastSlots()).toEqual([
       { kind: 'lemma', terms: ['areth'], relation: 'near' },
@@ -245,7 +203,7 @@ describe('the editor', () => {
     const target = select('Term 3 is measured from');
     expect([...target.options].map((o) => o.textContent)).toEqual(['ἀρετή', 'ἕξις']);
     await fireEvent.change(target, { target: { value: target.options[1].value } });
-    expect(document.querySelector('.prox-pend')).toHaveTextContent('ἕξις near ἀρετή, ἡδονή near ἕξις, within 5 words');
+    expect(document.querySelector('.prox-pend')).toBeNull();
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
     await vi.waitFor(async () => expect((await lastSlots())[2]).toEqual({ kind: 'lemma', terms: ['hdonh'], relation: 'near', target: 1 }));
     expect(new URLSearchParams(location.search).getAll('c')).toEqual(['l:areth', 'l:ecis', 'l2:hdonh']);
@@ -256,17 +214,27 @@ describe('the editor', () => {
     expect([...select('Term 3 is measured from').options].map((o) => o.textContent)).toEqual(['ἀρετή']);
   });
 
-  it('a grammar term shows every category as chips, one value each', async () => {
+  it('opens grammar menus behind Change, derives class, and prunes fields when mood changes', async () => {
     await arrive('c=l:areth&c=g:case.gen,number.pl&cw=3');
     await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
-    expect(within(terms()[1]).getByText('genitive plural')).toBeInTheDocument();
-    const caseRow = screen.getByRole('group', { name: 'Case' });
-    expect(within(caseRow).getAllByRole('button').map((b) => b.textContent)).toEqual(['nom', 'gen', 'dat', 'acc', 'voc']);
-    expect(within(caseRow).getByRole('button', { name: 'gen' })).toHaveAttribute('aria-pressed', 'true');
-    await fireEvent.click(within(caseRow).getByRole('button', { name: 'dat' }));
-    expect(within(caseRow).getByRole('button', { name: 'gen' })).toHaveAttribute('aria-pressed', 'false');
+    expect(within(terms()[1]).queryByRole('combobox', { name: 'Case for term 2' })).toBeNull();
+    await fireEvent.click(within(terms()[1]).getByRole('button', { name: 'Change' }));
+    expect(select('Word class for term 2')).toHaveValue('declined word');
+    await pick('Case for term 2', 'dat');
     expect(within(terms()[1]).getByText('dative plural')).toBeInTheDocument();
-    expect(screen.queryByRole('group', { name: /part of speech/i })).toBeNull();
+    await pick('Word class for term 2', 'verb');
+    await pick('Person for term 2', '3rd');
+    await pick('Mood for term 2', 'part');
+    expect(screen.queryByRole('combobox', { name: 'Person for term 2' })).toBeNull();
+    expect(select('Number for term 2')).toHaveValue('pl');
+    await pick('Case for term 2', 'gen');
+    await pick('Mood for term 2', 'inf');
+    expect(screen.queryByRole('combobox', { name: 'Case for term 2' })).toBeNull();
+    expect(screen.queryByRole('combobox', { name: 'Number for term 2' })).toBeNull();
+    await fireEvent.click(within(terms()[1]).getByRole('button', { name: 'Done' }));
+    expect(within(terms()[1]).queryByRole('combobox', { name: 'Mood for term 2' })).toBeNull();
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    await vi.waitFor(async () => expect((await lastSlots())[1]).toMatchObject({ query: { mood: 'inf' } }));
   });
 
   it('Add term adds a fresh empty term; it copies nothing', async () => {
@@ -315,7 +283,7 @@ describe('term 1 and the page query', () => {
 
   it('leaves a filled editor alone', async () => {
     await arrive('c=l:ecis&c=l:hdonh');
-    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'ἀρετή' } });
+    expect(screen.queryByLabelText('Greek')).toBeNull();
     await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
     await new Promise((r) => setTimeout(r, 20));
     expect(terms()[0].querySelector('.lpsel .hw')).toHaveTextContent('ἕξις');
@@ -341,7 +309,7 @@ describe('editing after review', () => {
     const calls = vi.mocked(searchCombo).mock.calls.length;
     await fireEvent.click(screen.getByRole('button', { name: 'Change' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Remove term 2' }));
-    expect(summary()).toBe('Last search · ἕξις near ἀρετή, within 5 words');
+    expect(summary()).toBeNull();
     expect(document.querySelector('main')).toHaveClass('prox-pending');
     expect(document.querySelector('.prox-pend')).toBeNull();
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));

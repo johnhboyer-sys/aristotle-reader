@@ -156,126 +156,93 @@ async function openMenu(d: HTMLDetailsElement) {
   await fireEvent(d, new Event('toggle'));
 }
 
-describe('the menus', () => {
-  it('each has its name as a title and a gloss under every choice', () => {
+describe('the 13 Nov form controls', () => {
+  it('shows both fields and quiet tools above Greek, and waits for text before showing options', async () => {
     render(Search);
-    const glosses = (d: HTMLDetailsElement) => [...d.querySelectorAll('.opt-gloss')].map((g) => g.textContent?.trim());
-    expect(menu('Match').querySelector('legend')).toHaveTextContent('Match');
-    expect(glosses(menu('Match'))).toEqual(['every word, anywhere in the passage', 'at least one of them', 'these words, in this order']);
-    expect(menu('Form').querySelector('legend')).toHaveTextContent('Form');
-    expect(glosses(menu('Form'))).toEqual(['ἀρετή finds ἀρετῆς and ἀρετάς', 'this spelling and no other', 'λογ finds λόγος and ἀναλογία']);
-    expect(inMenu().querySelector('legend')).toHaveTextContent('In');
-    expect(glosses(inMenu())).toEqual(['dubious and spurious included', `the ${AUTHENTIC_IDS.length} authentic works only`, 'pick works from the list']);
-    // A gloss describes its radio; it is not part of the radio's name.
-    const any = screen.getByLabelText('Any word') as HTMLInputElement;
-    expect(document.getElementById(any.getAttribute('aria-describedby')!)).toHaveTextContent('at least one of them');
+    expect(screen.getByLabelText('English')).toHaveValue('');
+    expect(screen.queryByRole('group', { name: 'Search in' })).toBeNull();
+    expect(document.querySelector('.d6-opts')).toBeNull();
+    expect(screen.queryByRole('radiogroup', { name: 'In' })).toBeNull();
+    await type('log');
+    expect(document.querySelector('.d6-opts-g')).not.toBeNull();
+    expect(document.querySelector('.d6-opts-e')).toBeNull();
+    expect(screen.getByRole('radiogroup', { name: 'In' })).toBeInTheDocument();
   });
 
-  it('Esc shuts the open menu and gives the focus back to its trigger', async () => {
+  it('keeps the match and form menu names and values, and shuts them with Escape or Done', async () => {
     render(Search);
-    const m = menu('Match');
-    await openMenu(m);
-    (screen.getByLabelText('Any word') as HTMLInputElement).focus();
-    await fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
-    expect(m.open).toBe(false);
-    expect(document.activeElement).toBe(m.querySelector('summary'));
+    await type('log');
+    const menus = [...document.querySelectorAll<HTMLDetailsElement>('.phone-option')];
+    expect(menus.map(d => d.querySelector('summary')!.textContent!.trim())).toEqual(['Greek match all words', 'Greek form any form']);
+    for (const m of menus) {
+      expect(m.querySelector('legend')).not.toBeNull();
+      await openMenu(m);
+      await fireEvent.keyDown(m.querySelector('input')!, { key: 'Escape' });
+      expect(m.open).toBe(false);
+      expect(m.querySelector('summary')).toHaveFocus();
+      await openMenu(m);
+      await fireEvent.click(m.querySelector('.sheet-done')!);
+      expect(m.open).toBe(false);
+    }
   });
 
-  it('a click outside shuts it; one menu is open at a time', async () => {
-    render(Search);
-    const match = menu('Match');
-    const form = menu('Form');
-    await openMenu(match);
-    await openMenu(form);
-    expect(match.open).toBe(false);
-    expect(form.open).toBe(true);
-    await fireEvent.click(document.querySelector('.sx-hint')!);
+  it('keeps one menu open, and a click outside shuts it', async () => {
+    render(Search); await type('log');
+    const [match, form] = [...document.querySelectorAll<HTMLDetailsElement>('.phone-option')];
+    await openMenu(match); await openMenu(form);
+    expect(match.open).toBe(false); expect(form.open).toBe(true);
+    await fireEvent.click(document.querySelector('.sq-head')!);
     expect(form.open).toBe(false);
   });
 
-  it('holds its choices as one radio group, which the arrow keys walk', () => {
-    // The arrow keys are the browser's own over a radio group: one name, one
-    // fieldset, nothing in the way of the keys.
-    render(Search);
-    for (const d of [menu('Match'), menu('Form'), inMenu()]) {
-      const radios = [...d.querySelectorAll<HTMLInputElement>('input[type=radio]')];
-      expect(radios.length).toBe(3);
-      expect(new Set(radios.map((r) => r.name)).size).toBe(1);
-      expect(new Set(radios.map((r) => r.closest('fieldset'))).size).toBe(1);
-      const ev = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
-      radios[0].dispatchEvent(ev);
-      expect(ev.defaultPrevented).toBe(false);
-    }
-  });
-});
-
-describe('In: all works, authentic works, or a choice', () => {
-  it('Authentic works selects the authentic works and searches them as w=auth', async () => {
+  it('selects authentic works and searches them as w=auth', async () => {
     const { search } = await import('../lib/search');
-    render(Search);
-    expect(inMenu().querySelector('summary')).toHaveTextContent(/^In all works$/);
-    await fireEvent.click(within(inMenu()).getByLabelText('Authentic works'));
-    expect(inMenu().querySelector('summary')).toHaveTextContent(/^In authentic works$/);
-    expect((within(inMenu()).getByLabelText('Authentic works') as HTMLInputElement).checked).toBe(true);
-    await type('λόγος');
-    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    render(Search); await type('λόγος');
+    await fireEvent.click(screen.getByRole('radio', { name: 'authentic works' }));
+    await fireEvent.submit(document.querySelector('form')!);
     await vi.waitFor(() => expect(search).toHaveBeenCalled());
-    expect(vi.mocked(search).mock.calls[0][5]).toEqual(ALL.filter((id) => AUTHENTIC_IDS.includes(id)));
-    expect(new URLSearchParams(window.location.search).get('w')).toBe('auth');
-    await fireEvent.click(within(inMenu()).getByLabelText('All works'));
-    expect(inMenu().querySelector('summary')).toHaveTextContent(/^In all works$/);
+    expect(vi.mocked(search).mock.calls[0][5]).toEqual(ALL.filter(id => AUTHENTIC_IDS.includes(id)));
+    expect(new URLSearchParams(location.search).get('w')).toBe('auth');
+    await fireEvent.click(screen.getByRole('radio', { name: 'all works' }));
+    expect(screen.getByRole('radio', { name: 'all works' })).toHaveAttribute('aria-checked', 'true');
   });
 
-  it('opens w=auth as authentic works', async () => {
+  it('reads w=auth and the old exclusion list as their own scopes', async () => {
     window.history.replaceState(null, '', '/search?g=logos&w=auth');
-    const { search } = await import('../lib/search');
-    render(Search);
-    await vi.waitFor(() => expect(search).toHaveBeenCalled());
-    expect(inMenu().querySelector('summary')).toHaveTextContent(/^In authentic works$/);
-    expect((within(inMenu()).getByLabelText('Authentic works') as HTMLInputElement).checked).toBe(true);
-  });
-
-  it('reads the mock-up’s old exclusion list as the pick it is, the Isagoge kept', async () => {
+    const page = render(Search);
+    await vi.waitFor(() => expect(screen.getByRole('radio', { name: 'authentic works' })).toHaveAttribute('aria-checked', 'true'));
+    page.unmount();
     window.history.replaceState(null, '', `/search?g=logos&w=-${MOCK_NOT.join(',')}`);
-    const { search } = await import('../lib/search');
     render(Search);
-    await vi.waitFor(() => expect(search).toHaveBeenCalled());
-    expect(inMenu().querySelector('summary')).toHaveTextContent(`In ${ALL.length - MOCK_NOT.length} of ${ALL.length}`);
-    expect((within(inMenu()).getByLabelText('Authentic works') as HTMLInputElement).checked).toBe(false);
+    await vi.waitFor(() => expect(screen.getByRole('radio', { name: 'choose works…' })).toHaveAttribute('aria-checked', 'true'));
   });
 
-  it('Choose works… opens the picker, In showing open while it is; Done shuts it and returns to In', async () => {
-    const { container } = render(Search);
-    const m = inMenu();
-    await openMenu(m);
-    await fireEvent.click(within(m).getByLabelText('Choose works…'));
-    expect(m.open).toBe(false);
-    expect(m).toHaveClass('picking');
-    const panel = container.querySelector('#works-panel') as HTMLElement;
+  it('opens and filters the works picker, and Done returns focus to its word', async () => {
+    render(Search); await type('log');
+    await fireEvent.click(screen.getByRole('radio', { name: 'choose works…' }));
+    const panel = document.querySelector<HTMLElement>('#works-panel')!;
     expect(panel.hidden).toBe(false);
-    // The radios still say what is selected: all of them.
-    expect((within(m).getByLabelText('All works') as HTMLInputElement).checked).toBe(true);
-    expect(within(panel).getByText(`${WORKS.length} of ${WORKS.length} works`)).toBeInTheDocument();
-    const tabs = within(panel).getByRole('group', { name: 'Filter works by authorship status' });
-    expect(within(tabs).getAllByRole('button').map((b) => b.textContent)).toEqual(['All', `Authentic${AUTHENTIC_IDS.length}`, 'Dubious3', 'Spurious13']);
-    await fireEvent.click(within(tabs).getByRole('button', { name: /^Authentic/ }));
-    expect(inMenu().querySelector('summary')).toHaveTextContent(/^In authentic works$/);
-    expect(within(panel).getByText(`${AUTHENTIC_IDS.length} of ${WORKS.length} works`)).toBeInTheDocument();
-    await fireEvent.click(within(panel).getAllByRole('button', { name: 'Only these 6' })[0]);
-    expect(inMenu().querySelector('summary')).toHaveTextContent(/^In 6 of \d+$/);
+    await fireEvent.input(within(panel).getByRole('searchbox', { name: 'Find a work' }), { target: { value: 'ethic' } });
+    expect([...panel.querySelectorAll('.work-chip')].map(b => b.textContent)).toEqual(['Nicomachean Ethics', 'Eudemian Ethics']);
     await fireEvent.click(within(panel).getByRole('button', { name: 'Done' }));
     expect(panel.hidden).toBe(true);
-    expect(m).not.toHaveClass('picking');
-    expect(document.activeElement).toBe(m.querySelector('summary'));
+    expect(screen.getByRole('radio', { name: 'choose works…' })).toHaveFocus();
   });
 
-  it('Find a work narrows the list by title', async () => {
-    const { container } = render(Search);
-    await fireEvent.click(within(inMenu()).getByLabelText('Choose works…'));
-    const panel = container.querySelector('#works-panel') as HTMLElement;
-    await fireEvent.input(within(panel).getByRole('searchbox', { name: 'Find a work' }), { target: { value: 'ethic' } });
-    expect([...panel.querySelectorAll('.work-chip')].map((b) => b.textContent))
-      .toEqual(['Nicomachean Ethics', 'Eudemian Ethics']);
+  it('gives each desktop segment one tab stop, and arrows select and focus with wrapping', async () => {
+    vi.spyOn(window, 'matchMedia').mockImplementation(media => ({ matches: media === '(min-width: 961px)', media, addEventListener() {}, removeEventListener() {} }) as unknown as MediaQueryList);
+    render(Search); await type('log');
+    const group = screen.getByRole('radiogroup', { name: 'Greek match' });
+    const radios = within(group).getAllByRole('radio');
+    expect(radios.map(r => r.getAttribute('tabindex'))).toEqual(['0', '-1', '-1']);
+    radios[0].focus();
+    await fireEvent.keyDown(radios[0], { key: 'ArrowLeft' });
+    expect(radios[2]).toHaveFocus(); expect(radios[2]).toHaveAttribute('aria-checked', 'true');
+    expect(radios.map(r => r.getAttribute('tabindex'))).toEqual(['-1', '-1', '0']);
+    await fireEvent.keyDown(radios[2], { key: 'ArrowRight' });
+    expect(radios[0]).toHaveFocus();
+    await fireEvent.keyDown(radios[0], { key: 'End' }); expect(radios[2]).toHaveFocus();
+    await fireEvent.keyDown(radios[2], { key: 'Home' }); expect(radios[0]).toHaveFocus();
   });
 });
 
@@ -297,8 +264,8 @@ describe('Lemma (ruling 5)', () => {
   it('a pick is the search: every form of that word, as ?l=', async () => {
     const { search } = await import('../lib/search');
     render(Search);
-    await fireEvent.click(screen.getByRole('button', { name: 'Lemma' }));
     await type('log');
+    await fireEvent.click(screen.getByRole('button', { name: 'Lemma' }));
     const lb = await screen.findByRole('listbox', { name: 'Dictionary words' });
     await fireEvent.click(within(lb).getAllByRole('option')[0]);
     await vi.waitFor(() => expect(greekBox().value).toBe('λόγος'));
@@ -312,8 +279,8 @@ describe('Lemma (ruling 5)', () => {
   it('with no word picked, Search shows the list instead of searching', async () => {
     const { search } = await import('../lib/search');
     render(Search);
-    await fireEvent.click(screen.getByRole('button', { name: 'Lemma' }));
     await type('log');
+    await fireEvent.click(screen.getByRole('button', { name: 'Lemma' }));
     await screen.findByRole('listbox', { name: 'Dictionary words' });
     await fireEvent.keyDown(greekBox(), { key: 'Escape' });
     expect(screen.queryByRole('listbox')).toBeNull();
@@ -354,8 +321,18 @@ describe('the form', () => {
 
   it('Keyboard and Beta Code sit on the Greek field’s line', () => {
     render(Search);
-    const row = greekBox().closest('.sq-row')!;
+    const row = document.querySelector('.sq-head.h-g')!;
     expect(within(row as HTMLElement).getByRole('button', { name: 'Greek keyboard' })).toHaveTextContent('Keyboard');
     expect(within(row as HTMLElement).getByRole('button', { name: 'β Beta Code' })).toBeInTheDocument();
   });
+});
+
+it('offers phrase widening for an exact phrase, without offering it for all words in any form', async () => {
+  render(Search);
+  await type('λόγος ἀρετή');
+  expect(screen.queryByRole('button', { name: 'Find this phrase in any inflection' })).toBeNull();
+  const match = document.querySelector<HTMLDetailsElement>('details:has(input[name=grkmode])')!;
+  await fireEvent.click(within(match).getByRole('radio', { name: 'Exact phrase', hidden: true }));
+  await fireEvent.submit(document.querySelector('form')!);
+  expect(await screen.findByRole('button', { name: 'Find this phrase in any inflection' })).toBeInTheDocument();
 });

@@ -98,7 +98,7 @@ async function draw(url: string, results: SearchResult[], total: number, props: 
   vi.mocked(search).mockResolvedValueOnce({ results, failedWorks: [] });
   window.history.replaceState(null, '', url);
   const { container } = render(Search, { props });
-  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(`${total} instance`));
+  await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(new RegExp(`${total} (?:instance|hits)`)));
   await vi.waitFor(() => expect(container.querySelector('li.instance')).not.toBeNull());
   return { container, list: () => [...container.querySelectorAll('li.instance')] };
 }
