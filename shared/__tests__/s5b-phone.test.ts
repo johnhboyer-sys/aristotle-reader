@@ -245,6 +245,15 @@ describe('the sideways form', () => {
     expect(screen.getByLabelText('English')).toHaveValue('virtue');
   });
 
+  it('names no form in the folded line of a lemma search', async () => {
+    sized(844, 390);
+    window.history.replaceState(null, '', '/search?l=areth&m=form');
+    render(Search);
+    await vi.waitFor(() => expect(document.querySelector('.search-form')).toHaveClass('fold-on'));
+    expect(document.querySelector('.d6-fold')).toHaveTextContent('by lemma');
+    expect(document.querySelector('.d6-fold')).not.toHaveTextContent('exact form');
+  });
+
   it('unfolds when Back returns to a blank search (Codex review, 16 Nov)', async () => {
     sized(844, 390); render(Search);
     await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue' } });
