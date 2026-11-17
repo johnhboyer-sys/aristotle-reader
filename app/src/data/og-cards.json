@@ -1,0 +1,290 @@
+{
+ "APo": {
+  "title": "Posterior Analytics",
+  "greek": "Ἀναλυτικὰ ὕστερα",
+  "line": "Greek and English · Mure",
+  "sha256": "07806a2ccc39793da5e040c5b7669a27ac621d0aca435a5e6b103af320b09713"
+ },
+ "APr": {
+  "title": "Prior Analytics",
+  "greek": "Ἀναλυτικὰ πρότερα",
+  "line": "Greek and English · Jenkinson",
+  "sha256": "b117a743beb60ca6b94ec13af89ff03c081dd4d6b403b36d1d96a537c347ee24"
+ },
+ "AthPol": {
+  "title": "Athenian Constitution",
+  "greek": "Ἀθηναίων πολιτεία",
+  "line": "Greek and English · Kenyon",
+  "sha256": "8e428fa8054cc61b6139f8a6be813ae6f85b77516378b08cd2b0c38d140c1087"
+ },
+ "Aud": {
+  "title": "De Audibilibus",
+  "greek": "Περὶ ἀκουστῶν",
+  "line": "Greek and English · Loveday & Forster",
+  "sha256": "8a7e6c708427c085dd6db4f73c8144a09956b926442b199fb602f61957938c20"
+ },
+ "Cael": {
+  "title": "On the Heavens",
+  "greek": "Περὶ οὐρανοῦ",
+  "line": "Greek and English · Stocks",
+  "sha256": "dbddee45a14200aa33c062b4143e03768de3364ba7153000969049a6176a0647"
+ },
+ "Cat": {
+  "title": "Categories",
+  "greek": "Κατηγορίαι",
+  "line": "Greek and English · Edghill",
+  "sha256": "ac6ea81eda4478900f980b542b40d2005eeba0d97fed21809b50063982d0094a"
+ },
+ "Col": {
+  "title": "De Coloribus",
+  "greek": "Περὶ χρωμάτων",
+  "line": "Greek and English · Loveday & Forster",
+  "sha256": "c4e32a6ebbf345e17961d5e0884ea181f8dd26b5f5cf5b10dedc01bdabc3466d"
+ },
+ "DA": {
+  "title": "De Anima",
+  "greek": "Περὶ ψυχῆς",
+  "line": "Greek and English · Smith",
+  "sha256": "c77b07f9379f2222591b2108837a14fdc6ed71db225ba99d20e693d4d817afe4"
+ },
+ "DM": {
+  "title": "De Mundo",
+  "greek": "Περὶ κόσμου",
+  "line": "Greek and English · Forster",
+  "sha256": "aae37c0341e33e5a07bbfa1c0ab99495391c4ae98584801b7e8ef21799fc378f"
+ },
+ "DivSomn": {
+  "title": "On Divination in Sleep",
+  "greek": "Περὶ τῆς καθ᾽ ὕπνον μαντικῆς",
+  "line": "Greek and English · Beare",
+  "sha256": "922e74812c3a432921b7a1e71eb608f68fc5a95b8c4e52bda685080c428ecc0d"
+ },
+ "EE": {
+  "title": "Eudemian Ethics",
+  "greek": "Ἠθικὰ Εὐδήμεια",
+  "line": "Greek and English · Solomon",
+  "sha256": "ee95aedf158211369fef5f8c2e527b46245585e7c95b0f2861208e08beb78f09"
+ },
+ "EN": {
+  "title": "Nicomachean Ethics",
+  "greek": "Ἠθικὰ Νικομάχεια",
+  "line": "Greek and English · Ostwald",
+  "sha256": "6ee58030576ce0cdcfc2d941646ae7b28f900b75903adc243e5b1f0a395440a2"
+ },
+ "GA": {
+  "title": "Generation of Animals",
+  "greek": "Περὶ ζῴων γενέσεως",
+  "line": "Greek and English · Platt",
+  "sha256": "bad9ad15f8ea31a725f87d2e0cd84b0c74dd6be5b88b20d550335e061af029e1"
+ },
+ "GC": {
+  "title": "On Generation and Corruption",
+  "greek": "Περὶ γενέσεως καὶ φθορᾶς",
+  "line": "Greek and English · Joachim",
+  "sha256": "914d0411c72de6b1197afe8a41260ad9a0ac2d2e29986452d177ebd97b5ade46"
+ },
+ "HA": {
+  "title": "History of Animals",
+  "greek": "Περὶ τὰ ζῷα ἱστορίαι",
+  "line": "Greek and English · Thompson",
+  "sha256": "c3854ab80515b31a9b08aa68f0eb45749c0dd83e35d40b9ee9f066f033570531"
+ },
+ "IA": {
+  "title": "Progression of Animals",
+  "greek": "Περὶ πορείας ζῴων",
+  "line": "Greek and English · Farquharson",
+  "sha256": "c85ccc1071b7266f137bf13e2d79f5b231a804ea0ffce754af12f882f8782fab"
+ },
+ "Insomn": {
+  "title": "On Dreams",
+  "greek": "Περὶ ἐνυπνίων",
+  "line": "Greek and English · Beare",
+  "sha256": "b129122933a01736289ba7c44e88f5269e9d9a63d4752ead5711838768975ed2"
+ },
+ "Int": {
+  "title": "De Interpretatione",
+  "greek": "Περὶ ἑρμηνείας",
+  "line": "Greek and English · Edghill",
+  "sha256": "2ce51b77aed6b312d98ed0202dec47d74d826e33b0031b26fab75bd378e31352"
+ },
+ "Isa": {
+  "title": "Isagoge",
+  "greek": "Εἰσαγωγή",
+  "line": "Greek and English · Owen",
+  "sha256": "13028f9c1134acbb8593a46b1df1f0e4a06dbc44fd1590e554a543fa532e4433"
+ },
+ "Juv": {
+  "title": "On Youth, Old Age, Life and Death, and Respiration",
+  "greek": "Περὶ νεότητος καὶ γήρως καὶ ζωῆς καὶ θανάτου καὶ περὶ ἀναπνοῆς",
+  "line": "Greek and English · Ross",
+  "sha256": "dac8fb723848376c4bdbf3685cc9edb49725547ba31dbefcabc4d01984ccf327"
+ },
+ "Lin": {
+  "title": "De Lineis Insecabilibus",
+  "greek": "Περὶ ἀτόμων γραμμῶν",
+  "line": "Greek and English · Joachim",
+  "sha256": "ab07e85e298e663821b98af451bec8e885fb4ba4fe2d749496f29a440b24456e"
+ },
+ "Long": {
+  "title": "On Length and Shortness of Life",
+  "greek": "Περὶ μακροβιότητος καὶ βραχυβιότητος",
+  "line": "Greek and English · Ross",
+  "sha256": "bb1868b56a4f9be9d7e99b5f5098c334009fd129a32f64e5963fa7f1ab6f9fc5"
+ },
+ "MA": {
+  "title": "Movement of Animals",
+  "greek": "Περὶ ζῴων κινήσεως",
+  "line": "Greek and English · Farquharson",
+  "sha256": "f3cd770f2765583707a6bc07d06803fbed7b0839217b009be4122bd5d3c8ec16"
+ },
+ "MM": {
+  "title": "Magna Moralia",
+  "greek": "Ἠθικὰ μεγάλα",
+  "line": "Greek and English · Stock",
+  "sha256": "2d22a921284d2f41a93e909a7c8529a483819ad67b0bafb45b1368e1251d08c7"
+ },
+ "MXG": {
+  "title": "De Melisso Xenophane Gorgia",
+  "greek": "Περὶ Μελίσσου Ξενοφάνους Γοργίου",
+  "line": "Greek and English · Loveday & Forster",
+  "sha256": "9c35fd6440896ee7920a49a6bd9e88a9b787f7017931e921707efb0875e71796"
+ },
+ "Mech": {
+  "title": "Mechanica",
+  "greek": "Μηχανικά",
+  "line": "Greek and English · Forster",
+  "sha256": "c9dd7ba25d049b7ff3bcace2b64bc43aed706071cb6c6031f13f4b99c44bd905"
+ },
+ "Mem": {
+  "title": "On Memory",
+  "greek": "Περὶ μνήμης καὶ ἀναμνήσεως",
+  "line": "Greek and English · Beare",
+  "sha256": "033e50a8cc8b418faf51c28da1e1d3f98cbae57051c8e6997d6e2b29f48b56a8"
+ },
+ "Meta": {
+  "title": "Metaphysics",
+  "greek": "Τὰ μετὰ τὰ φυσικά",
+  "line": "Greek and English · Ross",
+  "sha256": "cbda7bd31fc7972bc44f509633308122f5559a996bf418a1ab2cbea6e79d8244"
+ },
+ "Mete": {
+  "title": "Meteorology",
+  "greek": "Μετεωρολογικά",
+  "line": "Greek and English · Webster",
+  "sha256": "537ae57e63b197dae9b4fb4604f14f135238ddaf5eb66f4b1992fb6735ceea41"
+ },
+ "Mirab": {
+  "title": "De Mirabilibus Auscultationibus",
+  "greek": "Περὶ θαυμασίων ἀκουσμάτων",
+  "line": "Greek and English · Dowdall",
+  "sha256": "3a3fff83520c8811079535459c8cc474ab19a3a16081c12d94b260a16965e198"
+ },
+ "Oec": {
+  "title": "Oeconomica",
+  "greek": "Οἰκονομικά",
+  "line": "Greek and English · Forster",
+  "sha256": "b9f55d3f6150920ec01805a278a0020d4d7bf8aea36fc0a6e73cd11860f8621a"
+ },
+ "PA": {
+  "title": "Parts of Animals",
+  "greek": "Περὶ ζῴων μορίων",
+  "line": "Greek and English · Ogle",
+  "sha256": "ccd0308ec677b756e4a0884d2ac75f2a07a8265729d5421dcd5fa6e685b16044"
+ },
+ "Phgn": {
+  "title": "Physiognomonica",
+  "greek": "Φυσιογνωμονικά",
+  "line": "Greek and English · Loveday & Forster",
+  "sha256": "372ceacf20237d78cbd5ef55d45ed5e3c5380ab6538722cf4a1faa67a528946c"
+ },
+ "Phys": {
+  "title": "Physics",
+  "greek": "Φυσικὴ ἀκρόασις",
+  "line": "Greek and English · Hardie & Gaye",
+  "sha256": "368a158c9aa64eca910695e19c4e8303dc86a1fe1d67cb40dede6a253a6e3bc5"
+ },
+ "Plant": {
+  "title": "De Plantis",
+  "greek": "Περὶ φυτῶν",
+  "line": "Greek and English · Forster",
+  "sha256": "3d244f9b99807e3c0ccba8a120aa352707b5739548c06aa49455b3fe7604bfbd"
+ },
+ "Poet": {
+  "title": "Poetics",
+  "greek": "Περὶ ποιητικῆς",
+  "line": "Greek and English · Fyfe",
+  "sha256": "78bc5cf302f9d601b93f1ab48c08dbdd86944955ca3874c88e173ca72da19a72"
+ },
+ "Pol": {
+  "title": "Politics",
+  "greek": "Πολιτικά",
+  "line": "Greek and English · Jowett",
+  "sha256": "54a39f6d5a80559f2991171334909e7af8810b07abb7014b5619df337d5f4110"
+ },
+ "Prob": {
+  "title": "Problemata",
+  "greek": "Προβλήματα",
+  "line": "Greek and English · Forster",
+  "sha256": "9ed600ba7c3474895445f4013adfefbb018abf77ab4aee82498efa5fb2139d6a"
+ },
+ "Rhet": {
+  "title": "Rhetoric",
+  "greek": "Τέχνη ῥητορική",
+  "line": "Greek and English · Freese",
+  "sha256": "f37a03c70dc0151856c7c7a6397efa8bf131b6d6f6194531b1f07beb0105a48c"
+ },
+ "RhetAl": {
+  "title": "Rhetorica ad Alexandrum",
+  "greek": "Ῥητορικὴ πρὸς Ἀλέξανδρον",
+  "line": "Greek and English · Forster",
+  "sha256": "fa8f4a492a1e22f533a8d4260ff795efbb1e11bffefc704e639b48b8f6f1fc63"
+ },
+ "SE": {
+  "title": "Sophistical Refutations",
+  "greek": "Περὶ σοφιστικῶν ἐλέγχων",
+  "line": "Greek and English · Pickard-Cambridge",
+  "sha256": "f8fa6cacc63bfa2f8656d0e142d469809732315e13b7dbe2004132fc1abac2c0"
+ },
+ "Sens": {
+  "title": "Sense and Sensibilia",
+  "greek": "Περὶ αἰσθήσεως καὶ αἰσθητῶν",
+  "line": "Greek and English · Beare",
+  "sha256": "d3288d265e5f3243f0d4ddcdc1c1cb2227668f90faf5fee4d94a091f2d99e3ab"
+ },
+ "Somn": {
+  "title": "On Sleep",
+  "greek": "Περὶ ὕπνου καὶ ἐγρηγόρσεως",
+  "line": "Greek and English · Beare",
+  "sha256": "e263b19449083cb7813581100390fec8b4224cf1b71c7e5edf0d3726fa698458"
+ },
+ "Spir": {
+  "title": "De Spiritu",
+  "greek": "Περὶ πνεύματος",
+  "line": "Greek and English · Dobson",
+  "sha256": "d50abb9bd083771c01302aedd6f822b104dc6bd7a8d211a41276e6dd4c7678d4"
+ },
+ "Top": {
+  "title": "Topics",
+  "greek": "Τοπικά",
+  "line": "Greek and English · Pickard-Cambridge",
+  "sha256": "5a6dda886b629a19fff0bdb8e4857dd5d97bdcbad232362e96c8d48d1e089882"
+ },
+ "VV": {
+  "title": "De Virtutibus et Vitiis",
+  "greek": "Περὶ ἀρετῶν καὶ κακιῶν",
+  "line": "Greek and English · Solomon",
+  "sha256": "5693332303ff89962dc0759ac2fb9df9f392356e454d8cc2c54e35ac39d2a945"
+ },
+ "Vent": {
+  "title": "Ventorum Situs",
+  "greek": "Ἀνέμων θέσεις καὶ προσηγορίαι",
+  "line": "Greek and English · Forster",
+  "sha256": "7ae5b2f07162996ab4a631392a7b8606ab68e6c9329bf4e210476f1fe6dd567a"
+ },
+ "home": {
+  "title": "The complete works of Aristotle",
+  "greek": "Ἀριστοτέλους ἅπαντα τὰ σῳζόμενα",
+  "line": "Read and search every work in Greek & English.",
+  "sha256": "7686a2dfd2100549abcba162dad4997cff0397be94a9714f580e3395f2bd49a1"
+ }
+}

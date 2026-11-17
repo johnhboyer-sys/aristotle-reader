@@ -3,9 +3,12 @@
 //   public/og/<Work>.jpg    each work: its plate, title, Greek title, and its page's reading line
 // The words come from the built work pages, so a card says what its page says:
 //   node scripts/make-og-cards.mjs [--base http://127.0.0.1:4321] [--only Cat,EN]
+// src/data/og-cards.json records each card's words and sha256, so og-cards.test.ts can tell a
+// swapped or stale card from the right one.
 // Fonts load from Google Fonts, as on the site; the run needs the network.
 import { chromium } from 'playwright';
-import { readFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const app = fileURLToPath(new URL('..', import.meta.url));
@@ -63,6 +66,8 @@ for (const id of ids) {
 }
 
 mkdirSync(`${app}public/og`, { recursive: true });
+const recordFile = `${app}src/data/og-cards.json`;
+const record = existsSync(recordFile) ? JSON.parse(readFileSync(recordFile, 'utf8')) : {};
 for (const c of cards) {
   await page.setContent(card(c), { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
@@ -87,7 +92,10 @@ for (const c of cards) {
   if (fit.over) throw Error(`${c.id}: the words do not fit the card`);
   const path = c.id === 'home' ? `${app}public/og-default.png` : `${app}public/og/${c.id}.jpg`;
   await page.screenshot(c.id === 'home' ? { path } : { path, type: 'jpeg', quality: 88 });
+  record[c.id] = { title: c.title, greek: c.greek, line: c.line, sha256: createHash('sha256').update(readFileSync(path)).digest('hex') };
   console.log(`${c.id}  title ${fit.fs}px  ${c.title} · ${c.greek} · ${c.line}`);
 }
 await browser.close();
+const sorted = Object.fromEntries(Object.keys(record).sort().map(k => [k, record[k]]));
+writeFileSync(recordFile, JSON.stringify(sorted, null, 1) + '\n');
 console.log(`${cards.length} cards`);
