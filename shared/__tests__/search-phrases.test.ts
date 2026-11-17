@@ -70,7 +70,8 @@ it('sets a phrase aside at a tick: its hits leave every count, the rows that ove
     'acts in virtue 0', 'in virtue of 6 x', 'moral virtue is 6', 'virtue is the 6', 'virtue of the 0',
   ]);
   expect(new URLSearchParams(window.location.search).get('xp')).toBe('in virtue of');
-  expect([...c.querySelectorAll('li.instance .inst-en')].map(text).every(t => /Moral virtue/.test(t))).toBe(true);
+  // The rows are drawn again once the count has moved.
+  await vi.waitFor(() => expect([...c.querySelectorAll('li.instance .inst-en')].map(text).every(t => /Moral virtue/.test(t))).toBe(true));
   // Named among the filters chosen, with the way back.
   const chosen = screen.queryByRole('group', { name: 'This search' }) ?? (await fireEvent.click(screen.getByRole('button', { name: /^Filter/ })), await screen.findByRole('group', { name: 'This search' }));
   expect(within(chosen).getByRole('button', { name: 'Remove 1 phrase set aside' })).toBeInTheDocument();
