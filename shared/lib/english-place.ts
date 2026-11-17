@@ -86,6 +86,22 @@ export function englishPlace(
   };
 }
 
+/** The line englishPlace gives each word of a translation's text for a
+ * segment, placed alone as the word it is: one pass for every word, where
+ * englishPlace takes one call each (the row table, lib/row-table). Undefined
+ * where englishPlace answers null. */
+export function englishWordLines(seg: Segment, t: Pick<TranslationRef, 'id' | 'slot'>): (number | undefined)[] {
+  const pieces = piecesOf(seg, t);
+  if (!pieces.some(p => p.text)) return [];
+  const words: (EnglishWord & { piece: number })[] = [];
+  pieces.forEach((p, i) => { for (const w of englishWords(p.text)) words.push({ ...w, piece: i }); });
+  const self = new Map<string, boolean>();
+  const matches = (word: string) => self.get(word) ?? self.set(word, englishTermMatcher([word], false)(word)).get(word)!;
+  return words.map((w, i) => matches(w.word)
+    ? lineFor(seg, pieces[w.piece], w.start).line
+    : englishPlace(seg, t, [i], [w.word], false)?.line);
+}
+
 /** A translation's matched word positions in a segment, split by the chapter
  * each word stands in, in text order, so each chapter is credited with its
  * own hits. Positions that do not fit the text (an index from another build)

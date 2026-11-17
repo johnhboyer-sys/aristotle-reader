@@ -617,7 +617,7 @@ describe('Search.svelte: page size', () => {
     await vi.waitFor(() => expect(items(container)).toHaveLength(7));
     await press('Per page', '100');
     await vi.waitFor(() => expect(container.querySelector('.pager')).toBeNull());
-    expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(27);
+    await vi.waitFor(() => expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(27));
     expect(status()).toHaveTextContent('81 hits');
     await press('Per page', '40');
     await vi.waitFor(() => expect(container.querySelectorAll('li.instance.cmp')).toHaveLength(0));

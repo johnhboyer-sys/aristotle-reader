@@ -63,6 +63,39 @@ Changed in `shared/` between old main (`6941109fb7`) and the merge (`de57f687c6`
   search indexes, and the outline (chapters) per book. Check every fetch against that reader's build: a
   missing file may fail quietly rather than loudly (not tested).
 
+### The row table: page 1 reads only its own books (17 Nov)
+
+Pages by rows (#201) and the phrase list (#202) made page 1 read every book a search reaches: a row's
+edges turn on the book (aligned units, passages that share lines), and the phrases on its words. Found in
+the Homer port: θάλασσα + sea read 47 books there. Here ἀρετή + virtue read all 98 books, 13.5 MB gzip
+(59 MB unzipped), where page 1 draws from 7. John chose the fix on 17 Nov, and every reader that ports the
+rows needs it:
+
+- **`data/<work>/rows.json`, made at site build** by an Astro endpoint
+  (`app/src/pages/data/[work]/rows.json.ts`) from the built books, by the page's own functions
+  (`shared/lib/row-table.ts`, `encodeRowBook`): per book, each section's Greek lines (number, suffix,
+  words a line), the aligned unit of each Greek word and of each translation's words (run-length), and
+  whether its English carries Bekker ticks. The build checks the English answers against
+  `unitAtEnglish` on a sample and fails on the first that differs. Here: 1.25 MB, 338 KB gzip, about
+  55 seconds of build; EN's is 27 KB gzip.
+- **`countRows`** counts a book's rows from it as `buildGroups` lays them out (the same windows, joins and
+  merges; `greek-lines.ts` holds the line helpers both use). The page counts every book from the table,
+  shows the page total at once, and reads only the books its page draws (`countKnown`, `pageRows`).
+- **The page checks the table:** each book it reads, it compares with the table's count; a book that
+  differs (an index built apart from the books, whose word places miss) retires the table for the visit,
+  and every book is read as before. A work with no table (the desktop app's corpus) or a search with the
+  accent or case filter (which reads its books anyway) is read as before.
+- **The phrase list's words are read when the list is opened** ("Show" on the desktop, the Phrases screen
+  on the phone), or at once when the address sets a phrase aside.
+- **Proof here:** `app/scripts/search-counts.mjs --pages` records every page's rows;
+  `search-counts-compare.mjs` compares two runs (18 searches, 13,759 rows: identical; a one-row shift
+  and a table count one row high both fail it). Gate R-S8 bounds page 1 of ἀρετή + virtue at its 7 books
+  and 10 MB unzipped, and fails on the site before the table (98 books). `row-table-search.test.ts`
+  renders the page over a turn-aligned and a tick-aligned book in each context and compares.
+- **For a port:** each reader's units differ (Homer's turns, Plato's speeches), but the table holds what
+  that reader's `buildGroups` reads, so port `row-table.ts` with the reader's own `paired-hit.ts`, and
+  check `countRows` against the reader's `buildGroups` hunk by hunk before trusting it.
+
 ## 4. How to prove a port
 
 - **Write each reader's own baseline before touching it:** a `search-counts.mjs`-style list of 10 to 15

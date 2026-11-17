@@ -52,9 +52,11 @@
   import { engHitCount, hitCount } from '../lib/search-pages';
   import { chapterJoin, chapterOnly, chapterPlaces, measure, type ChapterAt, type ChapterPlaces, type Measure } from '../lib/chapter-pages';
   import { phraseRows, phraseText, setAside, type PhraseHit, type PhraseText } from '../lib/phrase-list';
+  import { countRows as tableRows, type RowBook as TableBook, type RowTable } from '../lib/row-table';
   import {
     fetchBook,
     fetchChapters,
+    loadRowTable,
     fetchSections,
     fetchLemmaPickerShard,
     fetchLemmaGlosses,
@@ -73,6 +75,7 @@
   import { FULL, addSaved, findSaved, savedAvailable, summarizeSearch } from '../lib/saved-searches';
   import { betaQueryToGreek, betaToGreek, liveGreek } from '../lib/betacode';
   import { addMark, deleteBack, GREEK_MARKS, insertText, KEY_ROWS, type KeyEdit } from '../lib/greek-keys';
+  import { lineOfPosition, lineTokens, sectionsAfter, segTokens, subOfPosition } from '../lib/greek-lines';
   import { formGroups } from '../lib/form-panel';
   import { lineRenderParts } from '../lib/speakers';
   import WordPopup from './WordPopup.svelte';
@@ -488,10 +491,14 @@
   // ── English phrases (C) ────────────────────────────────────────────────────
   // The three-word runs around the English hits (lib/phrase-list), five hits
   // or more, to set aside (John, 16 Nov). Their words are the books', read
-  // once after the search; setting one aside then filters the results in
-  // hand, as setting a form aside does, and every count follows.
+  // when the list is first opened (John, 17 Nov: every book the search
+  // reaches, so not for page 1), or at once when the address sets some
+  // aside; setting one aside then filters the results in hand, as setting a
+  // form aside does, and every count follows.
   let phraseTexts: Map<string, PhraseText> | null = null;   // work:section:translation
   let phrasesFailed = false;
+  let phrasesOpen = false;                                   // the list asked for
+  let phrasesAsked: SearchResult[] | null = null;            // the results it was read for
   let asidePhrases = new Set<string>();                      // ?xp=
   let phrasesMore = false;
   const PHRASES_SHOWN = 10;
@@ -534,7 +541,12 @@
   $: phraseList = phraseTexts && phrasesOffered
     ? phraseRows(phraseHitsOf(joined(narrowWork(narrow(refinedResults, transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), phraseTexts), asidePhrases)
     : [];
-  $: phraseChoice = phraseList.length > 0 || (phrasesOffered && asidePhrases.size > 0);
+  $: phraseChoice = phrasesOffered && (!phraseTexts || phraseList.length > 0 || asidePhrases.size > 0);
+  // Opened (the button, or the phone's Phrases screen): read once per search.
+  $: if (phrasesOffered && (phrasesOpen || (sheetOpen && sheetScreen === 'phrases')) && phrasesAsked !== allResults) {
+    phrasesAsked = allResults;
+    void loadPhrases(allResults);
+  }
   $: phrasesShown = phrasesMore ? phraseList : phraseList.slice(0, PHRASES_SHOWN);
   // The words of every passage an English hit stands in, as the index counts
   // them (the pieces buildGroups cuts), read once for the results on screen.
@@ -1040,9 +1052,16 @@
   // aligned unit), so the books are laid out in corpus order as they load: a
   // page draws once the books through its last row have, and the page count
   // shows when every book has (John, 16 Nov: "fill as books load").
+  // The row table (lib/row-table, John, 17 Nov) counts each book's rows
+  // without reading it (`known`), so the page count shows at once and a page
+  // reads only its own books. A book the table cannot count is read, as
+  // before; a book read whose rows differ from the table's count retires the
+  // table for the rest of the visit, and every book is read.
   type Built = Awaited<ReturnType<typeof buildGroups>>;
-  interface RowBook { results: SearchResult[]; built?: Promise<Built>; rows?: number; failed?: boolean }
+  interface RowBook { results: SearchResult[]; built?: Promise<Built>; rows?: number; known?: number; failed?: boolean }
   let rowBooks: RowBook[] = [];
+  let rowsReady: Promise<void> = Promise.resolve();
+  let tableOff = false;
   let pageTotal: number | null = 0;   // null while books are still being laid out
   let rowsRun = 0;                    // a new layout of the rows retires the old
   let moreRows = false;               // a page after the one in view, while pageTotal is unknown
@@ -1051,7 +1070,7 @@
   $: pageOf = pageTotal === null ? '…' : String(pageTotal);
   $: lastPage = pageTotal === null ? !moreRows : pageIdx >= pageTotal - 1;
   const rowsOf = (b: Built) => b.groups.reduce((n, g) => n + g.instances.length, 0);
-  const pagesFor = (books: RowBook[]) => Math.ceil(books.reduce((n, b) => n + (b.rows ?? 0), 0) / pageTarget(pageSize));
+  const pagesFor = (books: RowBook[]) => Math.ceil(books.reduce((n, b) => n + (b.known ?? b.rows ?? 0), 0) / pageTarget(pageSize));
   function layOutRows(shown: SearchResult[]) {
     const by = new Map<string, SearchResult[]>();
     for (const r of shown) {
@@ -1068,14 +1087,42 @@
     pageTotal = rowBooks.length ? null : 0;
     moreRows = false;
     rowsFailed = 0;
-    countRows(run);
+    rowsReady = countKnown(run)
+      .catch(err => console.warn('search: no row table —', err))
+      .then(() => countRows(run));
   }
-  // Every book laid out, the next few at a time behind the page in view;
-  // then the page count, and the books that did not load. A layout retired
-  // meanwhile starts no more books.
+  // Each book's rows from its work's table, where the table can count them.
+  async function countKnown(run: number) {
+    if (tableOff || !rowBooks.length || searchCtx.grkAccentTerms.length || searchCtx.grkCaseTerms.length) return;
+    const works = [...new Set(rowBooks.map(b => b.results[0].work))];
+    const tables = new Map<string, RowTable | null>();
+    const outlines = new Map<string, Record<string, OutlineRef[]> | null>();
+    await Promise.all(works.map(async w => {
+      const [t, o] = await Promise.allSettled([loadRowTable(w), fetchOutline(w)]);
+      tables.set(w, t.status === 'fulfilled' ? t.value : null);
+      outlines.set(w, o.status === 'fulfilled' ? o.value : null);
+    }));
+    if (run !== rowsRun) return;
+    for (const b of rowBooks) {
+      const { work, meta } = b.results[0];
+      const book: TableBook | undefined = tables.get(work)?.books[String(meta.book)];
+      const chapters = outlines.get(work)?.[String(meta.book)];
+      if (!book) continue;
+      const known = tableRows(b.results, book, {
+        context, places, translations: translationsOf(work), chapterSection: isChapterSection(getWork(work)),
+        lookup: chapters ? chapterLookup({ segments: book.s.map(x => ({ column: x.c })) as Segment[] }, chapters) : null,
+        engUnits: searchCtx.engUnits, engPhrase: searchCtx.engPhrase,
+      });
+      if (known !== null) b.known = known;
+    }
+  }
+  // Every book the table could not count laid out, the next few at a time
+  // behind the page in view; then the page count, and the books that did not
+  // load. A layout retired meanwhile starts no more books.
   function countRows(run: number) {
-    if (!rowBooks.length) return;
-    void pool(rowBooks, 4, async b => { if (run === rowsRun) await bookRows(b, run); }).then(() => {
+    if (!rowBooks.length || run !== rowsRun) return;
+    const unknown = rowBooks.filter(b => b.known === undefined);
+    void pool(unknown, 4, async b => { if (run === rowsRun) await bookRows(b, run); }).then(() => {
       if (run !== rowsRun) return;
       pageTotal = pagesFor(rowBooks);
       rowsFailed = rowBooks.filter(b => b.failed).length;
@@ -1086,6 +1133,14 @@
       if (run === rowsRun) {
         b.rows = rowsOf(x);
         b.failed = x.failed.length > 0;
+        if (b.known !== undefined && !b.failed && b.rows !== b.known && !tableOff) {
+          console.warn(`search: the row table counts ${b.known} rows in ${b.results[0].work} ${b.results[0].meta.book}, the book ${b.rows}; reading every book`);
+          tableOff = true;
+          rowBooks = rowBooks.map(r => ({ results: r.results }));
+          startRows();
+          void renderPage(pageIdx);
+          return x;
+        }
         if (pageTotal !== null) {
           pageTotal = pagesFor(rowBooks);
           rowsFailed = rowBooks.filter(r => r.failed).length;
@@ -1099,24 +1154,43 @@
   }
   function retryPage() {
     renderPage(pageIdx);
-    if (rowsFailed) { rowsFailed = 0; countRows(rowsRun); }
+    if (rowsFailed) {
+      rowsFailed = 0;
+      // A book the table counted is read again wherever its rows fall.
+      for (const b of rowBooks) if (b.failed && b.known !== undefined) void bookRows(b, rowsRun);
+      countRows(rowsRun);
+    }
   }
   // Page i's rows, under their chapters: the books through its last row,
   // then the slice. Null when a newer layout has retired this one.
-  async function pageRows(i: number, run: number): Promise<(Built & { more: boolean; total: number | null }) | null> {
+  async function pageRows(i: number, run: number, live: () => boolean = () => true): Promise<(Built & { more: boolean; total: number | null }) | null> {
     const n = pageTarget(pageSize);
     const from = i * n;
     const to = from + n;
     const picked: { g: ChapterGroup; inst: Instance }[] = [];
     const failed: string[] = [];
     const segs = new Map<string, Segment>();
+    await rowsReady;
+    // A render retired meanwhile (a page size, a newer page) starts no book.
+    if (run !== rowsRun || !live()) return null;
+    // The page's own books, where the table counts the books before them:
+    // all asked for at once, and no other.
+    for (let k = 0, s = 0; k < rowBooks.length && s < to && rowBooks[k].known !== undefined; k++) {
+      if (s + rowBooks[k].known! > from) void bookRows(rowBooks[k], run);
+      s += rowBooks[k].known!;
+    }
     let seen = 0;
     let k = 0;
     for (; k < rowBooks.length && seen < to; k++) {
-      for (const ahead of rowBooks.slice(k + 1, k + 4)) void bookRows(ahead, run);
+      const known = rowBooks[k].known;
+      if (known !== undefined && seen + known <= from) { seen += known; continue; }
+      if (known === undefined) for (const ahead of rowBooks.slice(k + 1, k + 4)) if (ahead.known === undefined) void bookRows(ahead, run);
       const b = await bookRows(rowBooks[k], run);
       if (run !== rowsRun) return null;
-      if (seen >= from || seen + rowsOf(b) > from) {
+      // A book the table counted keeps its rows' places though it failed to
+      // load: the pages after it are where the table put them.
+      const start = seen;
+      if (seen >= from || seen + (known ?? rowsOf(b)) > from) {
         failed.push(...b.failed);
         for (const [key, seg] of b.segs) segs.set(key, seg);
       }
@@ -1124,6 +1198,7 @@
         if (seen >= from && seen < to) picked.push({ g, inst });
         seen++;
       }
+      if (known !== undefined) seen = start + known;
     }
     // A chapter whose rows run across two pages heads its part on each.
     const groups: ChapterGroup[] = [];
@@ -2690,18 +2765,6 @@
       : fetchChapters(work);
   }
 
-  // The Greek line of the token at index `pos` within a segment. A proximity
-  // measure only: the citation is formatted through the work's scheme, which
-  // for Stephanus prints the section alone.
-  function lineOfPosition(seg: Segment, pos: number): number {
-    let count = 0;
-    for (const line of seg.greek) {
-      if (pos < count + line.tokens.length) return line.n;
-      count += line.tokens.length;
-    }
-    return seg.greek[seg.greek.length - 1]?.n ?? 1;
-  }
-
   // What an instance counts for: each Greek hit it holds (a word, a match of
   // several words, or a section's); an English one, each word or phrase its
   // translations matched (see hitCount in lib/search-pages, which counts the
@@ -2892,9 +2955,7 @@
         for (const own of hits) {
           const pos = own[0];
           const line = lineOfPosition(seg, pos);
-          let left = pos;
-          let sub: string | undefined;
-          for (const l of seg.greek) { if (left < l.tokens.length) { sub = l.sub; break; } left -= l.tokens.length; }
+          const sub = subOfPosition(seg, pos);
           // Every word of the hit, a window's later terms as much as its first.
           // r.grammar runs parallel to grkPositions on a grammatical search.
           // Where the parse doesn't settle the reading, say so on the hit
@@ -3299,13 +3360,14 @@
     const layout = layoutRun;
     const stale = () => seq !== renderSeq || run !== rowsRun || layout !== layoutRun;
     try {
-      let got = await pageRows(i, run);
+      let got = await pageRows(i, run, () => !stale());
       if (stale() || !got) return;
       // Past the last row (a context that joined rows, a page size): the last page.
-      if (!got.groups.length && i > 0 && got.total !== null) {
+      // Not a page whose book failed to load: its rows are counted still.
+      if (i > 0 && got.total !== null && i * pageTarget(pageSize) >= got.total) {
         i = Math.max(0, Math.ceil(got.total / pageTarget(pageSize)) - 1);
         pageIdx = i;
-        got = await pageRows(i, run);
+        got = await pageRows(i, run, () => !stale());
         if (stale() || !got) return;
       }
       const { groups: g, failed, segs } = got;
@@ -3596,6 +3658,7 @@
     phraseTexts = null;
     phrasesFailed = false;
     phrasesMore = false;
+    phrasesOpen = false;
     asidePhrases = new Set(opts.xphrases ?? []);
     lastSearch.xphrases = [...asidePhrases];
     // Likewise no facet is ticked, in whatever view the reader is in.
@@ -3712,11 +3775,11 @@
         if (excludedForms.size) await forms;
         if (run !== searchRun) return;
       }
-      // The phrases' words likewise: the first page waits only for phrases
-      // the address sets aside.
-      if (phrasesOffered) {
-        const phrases = loadPhrases(results);
-        if (asidePhrases.size) await phrases;
+      // The phrases' words likewise, and only for phrases the address sets
+      // aside; otherwise when the list is opened.
+      if (phrasesOffered && asidePhrases.size) {
+        phrasesAsked = results;
+        await loadPhrases(results);
         if (run !== searchRun) return;
       }
       if (grammar && hasFacets(facets)) {
@@ -3755,28 +3818,6 @@
     if (!positions.length) return greekWords(work, words, 0, Math.min(n, 2 * reach + 1), new Set());
     const [first, last] = (span ?? [positions[0], positions[0]]).map(p => Math.min(p, n - 1));
     return greekWords(work, words, Math.max(0, first - reach), Math.min(n, last + reach + 1), new Set(positions), span && [first, last]);
-  }
-
-  // A segment's Greek tokens in the order the index counts them.
-  const segTokens = (seg: Segment): Token[] => seg.greek.flatMap(line => line.tokens);
-  // Each line's tokens in that order: number and suffix → [first, past last).
-  function lineTokens(seg: Segment): Map<string, [number, number]> {
-    const out = new Map<string, [number, number]>();
-    let at = 0;
-    for (const line of seg.greek) { out.set(`${line.n}${line.sub ?? ''}`, [at, at + line.tokens.length]); at += line.tokens.length; }
-    return out;
-  }
-
-  // The sections after `seg` in its book that a match `last` words on from
-  // its first reaches into, `reach` words more: none for a match inside it.
-  function sectionsAfter(segments: Segment[], seg: Segment, last: number, reach: number): Segment[] {
-    let n = segTokens(seg).length;
-    const out: Segment[] = [];
-    for (let k = segments.indexOf(seg) + 1; k > 0 && k < segments.length && n <= last + reach; k++) {
-      out.push(segments[k]);
-      n += segTokens(segments[k]).length;
-    }
-    return last < segTokens(seg).length ? [] : out;
   }
 
   // Every Greek word of a hit is a button that opens its card (WordPopup),
@@ -5479,6 +5520,11 @@
           {#if phraseChoice && (!sheetOpen || sheetScreen === 'phrases')}
             <div class="sx-row sx-forms sx-phr" role="group" aria-label="English phrases">
               <span class="k">Phrases</span>
+              {#if !phraseTexts}
+                {#if !sheetOpen && !phrasesOpen}
+                  <div class="sx-foot fx-foot"><button type="button" class="more" aria-expanded="false" on:click={() => (phrasesOpen = true)}>Show</button></div>
+                {/if}
+              {:else}
               <div class="ph-head" aria-hidden="true"><span>Exclude</span></div>
               <div class="fx-list">
                 {#each phrasesShown as row (row.phrase)}
@@ -5497,6 +5543,7 @@
                     <button type="button" class="more" on:click={restorePhrases}>Clear</button>
                   {/if}
                 </div>
+              {/if}
               {/if}
             </div>
           {/if}
