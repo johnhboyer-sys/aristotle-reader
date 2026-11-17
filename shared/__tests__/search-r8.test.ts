@@ -17,6 +17,8 @@ vi.mock('../lib/search', async original => ({
 vi.mock('../lib/data', async original => ({
   ...await original<typeof import('../lib/data')>(),
   fetchBook: vi.fn(), fetchChapters: vi.fn(),
+  // No row table: every book is read, as before it (lib/row-table).
+  loadRowTable: vi.fn(async () => { throw new Error('no table'); }),
 }));
 afterEach(() => { vi.resetAllMocks(); window.history.replaceState(null, '', '/'); });
 const line = (n: number, text: string): GreekLine => ({ n, text,
@@ -119,6 +121,8 @@ it('lets only the latest render of the page write', async () => {
     await fireEvent.click(radio);
   };
   await choose('Whole section');   // slow: its book is held back
+  // In flight: its book asked for (after the row table's answer).
+  await vi.waitFor(() => expect(typeof release).toBe('function'));
   await choose('1 line');          // fast
   await vi.waitFor(() => expect(text(c.querySelector('li.instance .greek'))).toContain('α'));
   release(bookOf(line(1, 'ω ψ')));

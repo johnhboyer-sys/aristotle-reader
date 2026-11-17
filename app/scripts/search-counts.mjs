@@ -18,7 +18,12 @@ if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
 }
 const args = process.argv.slice(2);
 const flag = name => args[args.indexOf(name) + 1];
-if (!args.includes('--base') || !args.includes('--out')) throw new Error('Usage: --base URL --out FILE.json');
+if (!args.includes('--base') || !args.includes('--out')) throw new Error('Usage: --base URL --out FILE.json [--pages] [--extra "ctx=1&ps=20"]');
+// --pages: walk every page and record its rows (each row's reference and
+// link), so two builds can be compared row for row. --extra: settings added
+// to every search (context, rows a page).
+const walk = args.includes('--pages');
+const extra = args.includes('--extra') ? new URLSearchParams(flag('--extra')) : null;
 const queries = [
   ['Greek any form', { g: 'ἀρετή' }],
   ['English virtue', { e: 'virtue' }],
@@ -44,13 +49,40 @@ const queries = [
   ['Not near: pleasure before virtue, no pain (EN, EE; 6)', [['c', 'l:areth'], ['c', 'lb:hdonh'], ['c', 'ln:luph'], ['cw', '10'], ['w', 'EN,EE']]],
   ['Before: habit before virtue (EN, EE; 11)', [['c', 'l:areth'], ['c', 'lb:ecis'], ['w', 'EN,EE']]],
 ];
-const browser = await resolvePlaywright().chromium.launch({ headless: true });
+// Every page's rows, from the first to the last, by the pager's Next.
+async function pageRows(page) {
+  const rows = [];
+  for (let i = 1; ; i++) {
+    await page.waitForFunction(n => {
+      const status = document.querySelector('.pager-status')?.textContent ?? '';
+      return document.querySelectorAll('li.instance').length > 0 && !/Loading/.test(status)
+        && (n === 1 || status.startsWith(`Page ${n} `));
+    }, i, { timeout: 120000 });
+    rows.push(await page.$$eval('li.instance', lis => lis.map(li => {
+      const a = li.querySelector('a.inst-ref, a.cmp-ref, .cmp-ref');
+      return `${a?.textContent?.trim()} ${a?.getAttribute?.('href') ?? ''}`;
+    })));
+    const next = page.locator('button.pager-next').first();
+    if (!(await next.count()) || await next.isDisabled()) break;
+    await next.click();
+  }
+  return rows;
+}
+// Installed Chrome where the npm cache's Playwright wants a browser build the
+// cache does not hold.
+const launch = pw => pw.chromium.launch({ headless: true }).catch(e => {
+  if (!/Executable doesn't exist/.test(e.message)) throw e;
+  return pw.chromium.launch({ headless: true, channel: 'chrome' });
+});
+const browser = await launch(resolvePlaywright());
 const results = [];
 try {
   const page = await browser.newPage();
   for (const [name, params] of queries) {
     try {
-      let url = new URL(params.typed ? '/search' : `/search?${new URLSearchParams(params)}`, flag('--base')).href;
+      const query = new URLSearchParams(params.typed ? {} : params);
+      if (extra && !params.typed) for (const [k, v] of extra) query.set(k, v);
+      let url = new URL(params.typed ? '/search' : `/search?${query}`, flag('--base')).href;
       await page.goto(url);
       if (params.typed) {
         await page.fill('#grk-input', params.typed.g);
@@ -79,6 +111,7 @@ try {
         }
         return { total: match ? Number(match[1].replaceAll(',', '')) : 0, hits: hits ? Number(hits[1].replaceAll(',', '')) : null, pages: pages ? Number(pages[1]) : match ? 1 : 0, ...separate, shown: status };
       });
+      if (walk) counts.rows = await pageRows(page);
       results.push({ name, url, ...counts });
       console.log(name, counts);
     } catch (error) { throw new Error(`${name}: ${error.message}`, { cause: error }); }

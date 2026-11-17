@@ -34,7 +34,7 @@ const RESULTS: SearchResult[] = COLUMNS.map((column, i) => ({
   engHits: [{ translation: 'rackham', positions: [i < 6 ? 3 : 1] }],
 }));
 
-async function open(query: string, book = BOOK, results = RESULTS, eng = 'virtue') {
+async function open(query: string, book = BOOK, results = RESULTS, eng = 'virtue', show = true) {
   const { fetchBook, fetchChapters } = await import('../lib/data');
   const { search } = await import('../lib/search');
   vi.mocked(fetchBook).mockResolvedValue(book);
@@ -43,6 +43,9 @@ async function open(query: string, book = BOOK, results = RESULTS, eng = 'virtue
   window.history.replaceState(null, '', `/search?e=${encodeURIComponent(eng)}&t=rackham${query}`);
   const page = render(Search);
   await vi.waitFor(() => expect(page.container.querySelector('li.instance')).not.toBeNull());
+  // The list's words are read when it is opened (John, 17 Nov).
+  const opener = [...page.container.querySelectorAll('.sx-phr button')].find(b => b.textContent === 'Show');
+  if (show && opener) await fireEvent.click(opener);
   return page.container;
 }
 const list = () => screen.getByRole('group', { name: 'English phrases' });
@@ -75,6 +78,18 @@ it('sets a phrase aside at a tick: its hits leave every count, the rows that ove
   await fireEvent.click(within(list()).getByRole('button', { name: 'Clear' }));
   await vi.waitFor(() => expect(status()).toContain('12 hits'));
   expect(new URLSearchParams(window.location.search).get('xp')).toBeNull();
+});
+
+it('reads no phrase until the list is opened', async () => {
+  const { fetchBook } = await import('../lib/data');
+  const c = await open('', BOOK, RESULTS, 'virtue', false);
+  await new Promise(r => setTimeout(r, 50));
+  const reads = vi.mocked(fetchBook).mock.calls.length;
+  expect(c.querySelectorAll('.sx-phr label.fx')).toHaveLength(0);
+  await fireEvent.click(within(list()).getByRole('button', { name: 'Show' }));
+  await vi.waitFor(() => expect(rows()).toHaveLength(5));
+  expect(vi.mocked(fetchBook).mock.calls.length).toBeGreaterThan(reads);
+  expect(within(list()).queryByRole('button', { name: 'Show' })).toBeNull();
 });
 
 it('reads what the address sets aside before the first page is drawn', async () => {

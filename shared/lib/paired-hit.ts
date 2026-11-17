@@ -320,6 +320,19 @@ export function unitPieces(index: PairIndex, seg: Segment, t: Ref): UnitPiece[] 
   return pieces ?? undefined;
 }
 
+/** The unit of a section whose Greek holds line `line`, in a book with no
+ * turn flow; the whole section where none does. */
+export function unitAtLine(index: PairIndex, seg: Segment, line: number | undefined): PairUnit {
+  const units = index.bySection.get(seg.column) ?? [];
+  return units.find(u => u.greek.some(l => l.n === line)) ?? wholeSection(index, seg);
+}
+
+/** The whole section as one unit (unitAtGreek's answer where no unit holds
+ * the token). */
+export function sectionUnit(index: PairIndex, seg: Segment): PairUnit {
+  return wholeSection(index, seg);
+}
+
 /** The unit holding an English word: `wordPos` is the index's word position,
  * counted through the translation's texts for `seg` (translationTexts). The
  * whole section when the word cannot be placed in a turn. */
@@ -327,8 +340,7 @@ export function unitAtEnglish(index: PairIndex, seg: Segment, t: Ref, wordPos: n
   if (!index.book.turnFlow) {
     const words = translationTexts(seg,t).flatMap(text => englishWords(text));
     const place = englishPlace(seg,t,[wordPos],[words[wordPos]?.word ?? '*'],false);
-    const units = index.bySection.get(seg.column) ?? [];
-    return units.find(u => u.greek.some(l => l.n === place?.line)) ?? wholeSection(index,seg);
+    return unitAtLine(index, seg, place?.line);
   }
   let n = wordPos;
   for (const piece of unitPieces(index, seg, t) ?? []) {

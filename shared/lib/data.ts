@@ -185,6 +185,19 @@ export function fetchChapters(work: string): Promise<Record<string, ChapterRef[]
   return _chapters(work);
 }
 
+// A work's row table (lib/row-table): how many rows each book's hits make,
+// counted before any book is fetched. Built with the site
+// (app/src/pages/data/[work]/rows.json.ts).
+const _rows = memoAsyncBy<string, import('./row-table').RowTable>(work =>
+  fetch(`${workBase(work)}/rows.json`).then(r => {
+    if (!r.ok) throw new Error(`${work} rows: ${r.status}`);
+    return r.json();
+  }));
+
+export function loadRowTable(work: string): Promise<import('./row-table').RowTable> {
+  return _rows(work);
+}
+
 // Translator footnotes for a work: { footnote number -> pre-rendered HTML }.
 // Present only for works whose translation carries notes (NE Ostwald). Loaded
 // lazily the first time a `[^N]` marker is clicked, then cached for the session.

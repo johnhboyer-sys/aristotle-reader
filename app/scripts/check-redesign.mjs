@@ -110,10 +110,16 @@ const sizes = { D1440: [1440, 900], D1920: [1920, 1080], G1440: [1440, 1400], D1
     // D26: the two windows the home and work designs were drawn at, and the widths spec §8.10 names for the grid.
     D1525: [1525, 896], D1152: [1152, 663], D1024: [1024, 700], D1366: [1366, 768] };
 let browser;
+// Installed Chrome where the npm cache's Playwright wants a browser build the
+// cache does not hold.
+const launchBrowser = () => resolvePlaywright().chromium.launch().catch(e => {
+    if (!/Executable doesn't exist/.test(e.message)) throw e;
+    return resolvePlaywright().chromium.launch({ channel: 'chrome' });
+});
 async function open(size = 'D1440', theme = 'light', path = '/', seed = false, fresh = false, stubPosterResize = false, block = null) {
     gateContext = {path, size, theme};
     gatePage = null;
-    browser ||= await resolvePlaywright().chromium.launch();
+    browser ||= await launchBrowser();
     const [width, height] = sizes[size];
     const touch = /^[SP]/.test(size);
     const context = await browser.newContext({ viewport: { width, height }, hasTouch: touch, isMobile: touch, colorScheme: theme });
@@ -4188,6 +4194,8 @@ if(stage>=4) Object.assign(gates, {
                         await p.locator('.sx-filter').click();
                         await p.locator('.sx-panel.open .sx-nav:has-text("Phrases")').click({timeout:60000});
                     }
+                    // The list's words are read when it is opened (John, 17 Nov): Show on the desktop.
+                    else await p.locator('main.search-page .sx-phr button.more:has-text("Show") >> visible=true').click({timeout:60000});
                     await p.waitForFunction(()=>[...document.querySelectorAll('main.search-page .sx-phr label.fx')].some(el=>el.checkVisibility()),null,{timeout:120000});
                     if(prove&&proofCase==='phrase-count'&&size==='D1440')await p.evaluate(()=>{document.querySelectorAll('main.search-page .sx-phr label.fx small')[1].textContent='107';});
                     if(prove&&proofCase==='phrase-order'&&size==='P390')await p.evaluate(()=>{const r=[...document.querySelectorAll('main.search-page .sx-phr label.fx')].filter(el=>el.checkVisibility());r[2].before(r[3]);});
@@ -4249,6 +4257,50 @@ if(stage>=4) Object.assign(gates, {
             } finally {await close(p);}
         }
         return n;
+    },
+    'R-S8': async()=>{
+        // Page 1 reads only its own books (John, 17 Nov): the row table (shared/lib/row-table)
+        // counts the rows and pages, and the phrase list's words wait until the list is opened.
+        // Measured on the built site, ἀρετή + virtue: page 1's 40 rows stand in 7 books (Cat 1,
+        // APr 2, APo 1, Top 1–4), and page 1 reads those 7 books and 9.4 MB of data unzipped
+        // (4.8 MB of it the books, 0.8 MB the row tables); the site before the table read all 98
+        // books the search reaches, 59 MB. The bound leaves the indexes room to grow by a little
+        // over half a megabyte; a book more is caught by the count.
+        const MAX_BOOKS=7, MAX_BYTES=10_000_000;
+        browser ||= await launchBrowser();
+        const context=await browser.newContext({viewport:{width:1440,height:900},serviceWorkers:'block'});
+        const path='/search?g=ἀρετή&e=virtue';
+        gateContext={path,size:'D1440',theme:'light'};
+        const p=await context.newPage();
+        gatePage=p;
+        const books=new Set();
+        const reads=[];
+        let bytes=0;
+        p.on('response',r=>{
+            const at=new URL(r.url()).pathname;
+            if(!at.includes('/data/'))return;
+            if(/\/book-\d+\.json$/.test(at))books.add(at.replace(/^.*\/data\//,''));
+            reads.push(r.body().then(b=>{bytes+=b.length;}).catch(()=>{}));
+        });
+        try {
+            await p.goto(BASE+path);
+            await p.waitForFunction(()=>document.querySelectorAll('main.search-page li.instance').length>0&&/of \d+/.test([...document.querySelectorAll('main.search-page .result-count')].find(el=>el.checkVisibility())?.textContent??''),null,{timeout:120000});
+            if(prove&&proofCase==='stray-book')await p.evaluate(base=>fetch(`${base}/data/EN/book-02.json`),new URL(BASE).pathname.replace(/\/$/,''));
+            if(prove&&proofCase==='heavy')await p.evaluate(base=>Promise.all(['Pol','Meta'].map(w=>fetch(`${base}/data/${w}/search/english.json`))),new URL(BASE).pathname.replace(/\/$/,''));
+            await p.waitForLoadState('networkidle');
+            await p.waitForTimeout(2000);
+            await p.waitForLoadState('networkidle');
+            await Promise.all(reads);
+            const own=new Set(await p.evaluate(()=>[...document.querySelectorAll('main.search-page li.instance a.inst-ref')]
+                .map(a=>{const m=new URL(a.href).pathname.match(/\/([^/]+)\/book\/(\d+)/);return m?`${m[1]}/book-${m[2].padStart(2,'0')}.json`:'';})));
+            const rows=await p.locator('main.search-page li.instance').count();
+            assert(rows===40&&own.size,`D1440 page 1 examined=0: ${rows} rows from ${own.size} books`);
+            const stray=[...books].filter(b=>!own.has(b));
+            assert(!stray.length&&books.size<=MAX_BOOKS,`D1440 page 1 of ἀρετή + virtue read ${books.size} books, at most ${MAX_BOOKS}; ${stray.length} it does not draw: ${stray.slice(0,6).join(', ')}`);
+            assert(bytes<=MAX_BYTES,`D1440 page 1 of ἀρετή + virtue read ${(bytes/1e6).toFixed(2)} MB of data, at most ${MAX_BYTES/1e6} MB`);
+            console.log(`R-S8 D1440 page 1 read ${books.size} books (${[...books].join(', ')}), ${(bytes/1e6).toFixed(2)} MB of data`);
+            return 2;
+        } finally {await context.close();}
     },
 });
 if (stage >= 5) Object.assign(gates, {
@@ -5305,6 +5357,7 @@ const stageFourProofs = {
     'R-S5': {'english-low':/D1152 English options row top=[\d.]+ is not level with Greek options row 1/},
     'R-S6': {'fixed-field':/S844 Greek field row is position: fixed/,'over-header':/S844 Greek field [-\d.]+–[-\d.]+ lies over the site header/,'gap':/S844 Greek field sits 2[89](\.\d)?px above the key sheet, expected 8±2/,'live-under':/S844 \d+ of \d+ controls under the key sheet are not inert/,'inert-clear':/S844 Clear Greek shown=true inert=true/},
     'R-S7': {'hits-as-count':/D1440 Both count reads 940 chapters and 940 hits, expected 229 and 940/,'off-by-one':/S844 Both count reads 228 chapters and 940 hits, expected 229 and 940/,'passages':/D1440 Both count reads ".*": the big number is not counted in chapters/,'unlabelled':/D1440 Both count shows no hit total labelled as hits/,'foot-passages':/P390 Filter sheet foot reads "Show 229 passages", expected "Show 229 chapters"/,'or-counts-english':/D1440 Either count reads 438 chapters and 3361 hits, expected 438 and 967/,'english-hits':/D1440 English count shows a hit total, "2394 hits"/,'short-page':/D1440 Both search page 2 of \d+ draws 39 rows, expected 40/,'twice':/D1440 Both search draws .* twice on page 2/,'phrase-count':/D1440 phrase list reads \["in virtue of 335","virtue of the 107".*, expected/,'phrase-order':/P390 phrase list reads .*"the virtue of 97","virtue of a 68".*"virtue of the 108".*|P390 phrase list reads \["in virtue of 335","virtue of the 108","virtue of a 68","the virtue of 97".*, expected/,'phrase-after':/D1440 phrase list with "in virtue of" excluded reads \["in virtue of 335 x","virtue of the 108".*, expected/,'phrase-badge':/P390 Filter with a phrase excluded reads "Filter, 1 chosen" badge="", expected/,'cmp-unmarked':/D1440 the 100 page draws 100 rows with no hit marked in the summary/,'cmp-nolink':/D1440 the 100 page's first row opens with reader link href="" /,'split-number':/P390 Both split reads .*"Greek only 22 off".*, expected/,'split-lit':/D1440 Both split reads .*"English only 186"\].*, expected/,'xor-inclusive':/D1440 One language count reads 438 chapters and 27 hits, expected 209 and 27/,'xor-label':/D1440 One language switch reads "and\/or", expected "or"/,'default-and':/D1440 New search count reads 229 chapters and 940 hits, expected 438 and 967/,'nest-order':/D1440 English nested list opens .*"  Ostwald 298","  Rackham 315".*, expected/,'nest-hits':/P390 English nested list opens \["Nicomachean Ethics 1171",.*, expected/,'nest-click':/D1440 Ross in the Nicomachean Ethics count reads 81 chapters and 385 hits, expected 81 and 294/,'works-bounce':/P390 w=EN Works screen falls back to the menu/,'cross-on':/P390 w=EN&t=ostwald marks \[\] on, expected \["Ostwald"\]/},
+    'R-S8': {'stray-book':/D1440 page 1 of ἀρετή \+ virtue read 8 books, at most 7; 1 it does not draw: EN\/book-02\.json/,'heavy':/D1440 page 1 of ἀρετή \+ virtue read \d+\.\d+ MB of data, at most 10 MB/},
     'R-A2': {...stageThreeProofs['R-A2'],'search-query':/focus missing <textarea[^>]*id="grk-input"/},
     'R-A3': {...stageThreeProofs['R-A3'],'search-small-red':/light BUTTON\.advanced-trigger.*"Proximity" ratio=.*color=rgb\(226, 56, 46\)/,'separator-word':/SPAN\.tr-dot "Owen" ratio=/},
     'R-E1': {...stageThreeProofs['R-E1'],'search-copy':/search\?q=ἀρετή D1440 closed explainer text: In this mockup/},
