@@ -4134,7 +4134,7 @@
   $: foldedChoices = [
     ...(grkQuery.trim() ? [
       ...(grkMode !== 'all' && matchMode !== 'text' ? [lower1(modeLabel(grkMode))] : []),
-      ...(matchMode !== 'lemma' ? [matchMode === 'form' ? 'exact form' : 'running text'] : []),
+      ...(matchMode !== 'lemma' && !lemmaOn ? [matchMode === 'form' ? 'exact form' : 'running text'] : []),
       ...(accentSensitive ? ['accents observed'] : []),
       ...(lemmaOn ? ['by lemma'] : []),
       ...(punctuation && matchMode === 'text' ? ['punctuation observed'] : []),
@@ -4723,9 +4723,11 @@
           <div class="seg desktop-option" role="radiogroup" tabindex="-1" aria-label="Greek match" on:keydown={segmentKey}>
             {#each MODE_OPTS as opt}<button type="button" role="radio" aria-checked={grkMode === opt.v} tabindex={grkMode === opt.v ? 0 : -1} on:click={() => grkMode = opt.v}><span>{opt.v === 'phrase' ? 'exact' : opt.v}</span></button>{/each}
           </div>{/if}
-<div class="seg desktop-option form-seg" role="radiogroup" tabindex="-1" aria-label="Greek form" on:keydown={segmentKey}>
+<!-- Lemma on searches every form of the dictionary word: no Form choice
+     to say otherwise (ported from homer-reader 900f42cf5, John 17 Nov). -->
+{#if !lemmaOn}<div class="seg desktop-option form-seg" role="radiogroup" tabindex="-1" aria-label="Greek form" on:keydown={segmentKey}>
             {#each [{v: 'lemma', l: 'any form'}, {v: 'form', l: 'exact form'}, {v: 'text', l: 'running text'}] as opt}<button type="button" role="radio" aria-checked={matchMode === opt.v} tabindex={matchMode === opt.v ? 0 : -1} on:click={() => matchMode = opt.v as MatchMode | 'text'}><span>{opt.l}</span></button>{/each}
-          </div>          {#if matchMode !== 'text'}
+          </div>{/if}          {#if matchMode !== 'text'}
           <details class="opt phone-option" on:toggle={closeOtherOpts}>
             <summary><span class="sr-only">Greek match{' '}</span><b>{lower1(modeLabel(grkMode))}{@render caret()}</b></summary>
             <fieldset class="opt-panel sheet" {...optSheetAttrs('grk-match-head', optSheetHead, narrowScreen)}>
@@ -4740,6 +4742,7 @@
             </fieldset>
           </details>
           {/if}
+          {#if !lemmaOn}
           <details class="opt phone-option" on:toggle={closeOtherOpts}>
             <summary><span class="sr-only">Greek form{' '}</span><b>{matchMode === 'text' ? 'running text' : matchMode === 'lemma' ? 'any form' : 'exact form'}{@render caret()}</b></summary>
             <fieldset class="opt-panel sheet" {...optSheetAttrs('grk-form-head', optSheetHead, narrowScreen)}>
@@ -4759,6 +4762,7 @@
               {@render sheetDone()}
             </fieldset>
           </details>
+          {/if}
           <div class="greek-switches">
           <!-- One choice, so one tap: a switch, drawn alone (ruling 5). -->
           <button type="button" class="opt-btn opt-switch" aria-pressed={accentSensitive}
