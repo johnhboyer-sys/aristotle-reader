@@ -38,7 +38,10 @@ describe('share cards', () => {
       const work = getWork(id)!;
       expect(cards[id].title, id).toBe(work.title);
       expect(cards[id].greek, id).toBe(work.greekTitle);
-      expect(cards[id].line, id).toMatch(/^Greek and English · \S/);
+      // The translator the work page opens with (Landing.astro's `primary`), as the public site shows it.
+      const editions = work.translations.filter(t => !t.private);
+      const primary = editions.find(t => t.id === work.defaultTranslation) ?? editions.find(t => t.slot === 'english') ?? editions[0];
+      expect(cards[id].line, id).toBe(`Greek and English · ${primary.short}`);
       // A card swapped with another, or redrawn without its record, has another hash.
       expect(sha(`public/og/${id}.jpg`), id).toBe(cards[id].sha256);
     }
