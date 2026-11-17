@@ -8,6 +8,18 @@
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 ---
 <link rel="manifest" href={`${base}/manifest.webmanifest`} />
+<!-- Browser and installed-app bar colour: the page background (b.css --bg),
+     following the site's own theme, not the OS one. -->
+<meta name="theme-color" content="#ebeae4" />
+<script is:inline>
+  (function () {
+    var root = document.documentElement;
+    var meta = document.querySelector('meta[name="theme-color"]');
+    function sync() { meta.content = root.dataset.theme === 'dark' ? '#121211' : '#ebeae4'; }
+    sync();
+    new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  })();
+</script>
 <script is:inline define:vars={{ swUrl: `${base}/sw.js`, swScope: `${base}/` }}>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
