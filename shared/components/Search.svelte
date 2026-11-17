@@ -1154,7 +1154,12 @@
   }
   function retryPage() {
     renderPage(pageIdx);
-    if (rowsFailed) { rowsFailed = 0; countRows(rowsRun); }
+    if (rowsFailed) {
+      rowsFailed = 0;
+      // A book the table counted is read again wherever its rows fall.
+      for (const b of rowBooks) if (b.failed && b.known !== undefined) void bookRows(b, rowsRun);
+      countRows(rowsRun);
+    }
   }
   // Page i's rows, under their chapters: the books through its last row,
   // then the slice. Null when a newer layout has retired this one.
@@ -3358,7 +3363,8 @@
       let got = await pageRows(i, run, () => !stale());
       if (stale() || !got) return;
       // Past the last row (a context that joined rows, a page size): the last page.
-      if (!got.groups.length && i > 0 && got.total !== null) {
+      // Not a page whose book failed to load: its rows are counted still.
+      if (i > 0 && got.total !== null && i * pageTarget(pageSize) >= got.total) {
         i = Math.max(0, Math.ceil(got.total / pageTarget(pageSize)) - 1);
         pageIdx = i;
         got = await pageRows(i, run, () => !stale());

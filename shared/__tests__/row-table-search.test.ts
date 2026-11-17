@@ -3,7 +3,7 @@
 // compares every book it reads with the table's count of it (bookRows), and
 // says so on the console where they differ. Two books: one aligned by turns
 // (paired-hit.test.ts's), one by Bekker ticks.
-import { render, screen } from '@testing-library/svelte';
+import { fireEvent, render, screen, within } from '@testing-library/svelte';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Search from '../components/Search.svelte';
 import type { BookData, FlowTurn, GreekLine, Segment } from '../lib/data';
@@ -195,6 +195,28 @@ describe('the row table counts the rows the page draws', () => {
     // Page 1 is book 1's rows, which did not load: book 2's row is not drawn there.
     expect(container.querySelectorAll('li.instance')).toHaveLength(0);
     expect(vi.mocked(fetchBook).mock.calls.some(c => c[1] === 2)).toBe(false);
+    vi.mocked(fetchBook).mockImplementation(async () => books.bekker);
+  });
+
+  it('stays on a later page whose book failed to load', async () => {
+    const { search } = await import('../lib/search');
+    const { fetchBook } = await import('../lib/data');
+    state.book = books.bekker;
+    state.table = tableOf(books.bekker);
+    vi.mocked(fetchBook).mockImplementation(async (_w, n) => {
+      if (n === 1) throw new Error('book 1: 503');
+      return books.bekker;
+    });
+    // Book 1 alone, the last book: its 48 rows are pages 1 to 3.
+    vi.mocked(search).mockResolvedValueOnce({ results: two.slice(0, 2), failedWorks: [] });
+    window.history.replaceState(null, '', url);
+    const { container } = render(Search);
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of 3'));
+    await fireEvent.click(within(container.querySelector('.pager')! as HTMLElement).getByRole('button', { name: /Next/ }));
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 2 of 3'));
+    await new Promise(r => setTimeout(r, 50));
+    expect(text(container.querySelector('.pager-status'))).toBe('Page 2 of 3');
+    expect(container.querySelectorAll('li.instance')).toHaveLength(0);
     vi.mocked(fetchBook).mockImplementation(async () => books.bekker);
   });
 
