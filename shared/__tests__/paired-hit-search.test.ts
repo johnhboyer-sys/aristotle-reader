@@ -226,17 +226,19 @@ describe('Search.svelte: Greek and English hits in one unit', () => {
   });
 
   // A guard: the merge changes no count. Chapters (each work's book is one
-  // here) and Greek hits only.
+  // here), and under "and/or" with Rackham chosen the Greek hits and
+  // Rackham's (John, 17 Nov): the merged instance counts its two Greek words
+  // and its one English word, as the two instances did apart.
   it('count what the two separate instances counted', async () => {
     // "Either language": under "both" the Int chapter, Greek only, would now
     // drop out (a Both "and" joins by chapter, John, 15 Nov).
     const crito = { ...at('70a', { grkMatch: true, grkPositions: [0] }), work: 'Int' };
-    const { container } = await instances(`${url}&op=or`, [...results, crito], 3);
-    expect(screen.getByRole('status')).toHaveTextContent('2 chapters · 3 hits');
+    const { container } = await instances(`${url}&op=or&t=rackham`, [...results, crito], 4);
+    expect(screen.getByRole('status')).toHaveTextContent('2 chapters · 4 hits');
     expect(container.querySelector('.rc-n')).toHaveTextContent(/^2$/);
     expect(container.querySelector('.rc-w')).toHaveTextContent(/^chapters$/);
-    // Int sorts first; EN's page holds the pair's two Greek hits.
-    expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['1 hit', '2 hits']);
+    // Int sorts first; EN's page holds the pair's two Greek hits and "nine".
+    expect([...container.querySelectorAll('.group-count')].map(text)).toEqual(['1 hit', '3 hits']);
     const works = screen.getByRole('group', { name: 'Show hits from one work or one translation' });
     // Each work its chapters, each translation its English hits (John, 16 Nov).
     expect(text(works)).toContain('Nicomachean Ethics1 chap. Rackham1');

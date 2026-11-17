@@ -49,7 +49,7 @@
   import { AUTHENTIC_IDS, HAS_SPEAKERS } from '../lib/works';
   import { isChapterSection } from '../lib/data';
   import { loadEngChapters, loadOffsets, offsetRef, type EngChapters, type Offsets } from '../lib/search';
-  import { engHitCount, hitCount } from '../lib/search-pages';
+  import { engHitCount, hitCount, hitsInFor, type HitsIn } from '../lib/search-pages';
   import { chapterJoin, chapterOnly, chapterPlaces, measure, type ChapterAt, type ChapterPlaces, type Measure } from '../lib/chapter-pages';
   import { phraseRows, phraseText, setAside, type PhraseHit, type PhraseText } from '../lib/phrase-list';
   import { countRows as tableRows, type RowBook as TableBook, type RowTable } from '../lib/row-table';
@@ -218,10 +218,16 @@
   const joinsBoth = (s: UrlSearch | null, ctx: SearchCtx) => isBoth(s) && !!ctx.engQuery;
   $: joinBoth = joinsBoth(lastSearch, searchCtx);
   // The count is of chapters (John, 15 Nov: Bekker columns are not thematic
-  // units), and of hits where a hit is one thing: a Greek word in a Greek or
-  // a Both search (the English decides only which chapters count), an English
-  // word where no work answers in more than one translation, since otherwise
-  // the total counts translators.
+  // units), and of hits where a hit is one thing: a Greek word in a Greek
+  // search or a Both search joined by "and" (every chapter it shows holds a
+  // Greek hit; the English decides only which count); an English word where
+  // no work answers in more than one translation, since otherwise the total
+  // counts translators. "and/or" and "or" show chapters with English hits
+  // alone, so their figure counts the Greek and the English, and only where
+  // one translation answers (chosen, or a work's only one); otherwise no
+  // figure, and never "0 hits" of a work that matched (John, 17 Nov; see
+  // hitsInFor in lib/search-pages).
+  $: hitsMode = hitsInFor(lastSearch, searchCtx.engQuery, searchCtx.langOp);
   let counted = { chapters: 0, hits: null as number | null };
   // A Both search's chapters by language, before the join: the rows under
   // the count (John, 16 Nov), each lit when the switch lists it.
@@ -921,10 +927,10 @@
   $: workCounts = (() => {
     // In the bar's measure: its hits where it counts hits, else chapters.
     const shown = joined(narrow(formResults, transFilter, searchCtx), places, joinBoth, searchCtx.langOp);
-    const unit = countOf(shown, places, engSearch, transFilter).hits === null ? 'chapters' : 'hits';
+    const unit = countOf(shown, places, hitsMode, transFilter).hits === null ? 'chapters' : 'hits';
     const by = new Map<string, number>();
     for (const work of new Set(shown.map(r => r.work))) {
-      const c = countOf(shown.filter(r => r.work === work), places, engSearch, transFilter);
+      const c = countOf(shown.filter(r => r.work === work), places, hitsMode, transFilter);
       const n = unit === 'hits' ? c.hits ?? 0 : c.chapters;
       if (n) by.set(work, n);
     }
@@ -1036,10 +1042,10 @@
   // A Both search's results, joined by chapter: not the widened ones
   // ("any inflection"), which are a Greek search's.
   // What the bar counts (see `counted`).
-  function countOf(results: SearchResult[], P: ChapterPlaces, english: boolean, trans: string | null) {
+  function countOf(results: SearchResult[], P: ChapterPlaces, hitsIn: HitsIn, trans: string | null) {
     const m = measure(results, P);
     const oneEach = trans !== null || results.every(r => translationsOf(r.work).length <= 1);
-    return { chapters: m.chapters, hits: !english ? m.grkHits : oneEach ? m.engHits : null };
+    return { chapters: m.chapters, hits: hitsIn === 'grk' ? m.grkHits : !oneEach ? null : hitsIn === 'eng' ? m.engHits : m.grkHits + m.engHits };
   }
 
   let layoutRun = 0;
@@ -1230,7 +1236,7 @@
     split = both ? measure(unjoined, places) : null;
     const shown = joined(unjoined, places, both, searchCtx.langOp);
     totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
-    counted = countOf(shown, places, !!lastSearch?.eng.trim() && !isBoth(lastSearch), transFilter);
+    counted = countOf(shown, places, hitsInFor(lastSearch, searchCtx.engQuery, searchCtx.langOp), transFilter);
     shownResults = shown;
     layOutRows(shown);
     openRows = new Set();
@@ -1429,14 +1435,14 @@
   // The hits with every form back in, for "of 967 · restore all forms" under
   // the count while some are set aside (d21).
   $: allFormsTotal = excludedForms.size
-    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set(), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), places, engSearch, transFilter).chapters
+    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set(), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), places, hitsMode, transFilter).chapters
     : mainCount;
   const chaptersLabel = (n: number) => `Show ${n} chapter${n === 1 ? '' : 's'}`;
   $: hitsLabel = `Show ${mainCount} ${countNoun}`;
   // What the forms ticked on the sheet would leave (q08), and its button:
   // the ticks applied, then the hits.
   $: formsPreview = formsDirty
-    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set([...[...excludedForms].filter(f => !formKeys.includes(f)), ...formKeys.filter(f => !formTicks.has(f))]), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), places, engSearch, transFilter).chapters
+    ? countOf(joined(narrowWork(narrow(refine(allResults, { forms: hitForms ?? undefined, excluded: new Set([...[...excludedForms].filter(f => !formKeys.includes(f)), ...formKeys.filter(f => !formTicks.has(f))]), grammar: ownG ?? undefined, facets }, keepOp(searchCtx)), transFilter, searchCtx), workFilter), places, joinBoth, searchCtx.langOp), places, hitsMode, transFilter).chapters
     : mainCount;
   function showForms() {
     if (formsDirty) applyForms();
@@ -2771,11 +2777,10 @@
   // total from the index alone).
   const hitsIn = (inst: Instance) => (inst.rows?.reduce((n, row) => n + row.hits, 0) ?? 0)
     + (inst.lang === 'grk' ? inst.grkHits ?? 0 : inst.rows ? 0 : 1);
-  // A heading counts what the bar counts: Greek words in a Greek or Both
-  // search, English words in an English one where no work answers in two
-  // translations; otherwise no count.
+  // A heading counts what the bar counts (see `counted`): Greek words alone,
+  // or every word drawn, or nothing.
   $: groupHits = (g: { instances: Instance[] }): number | undefined => counted.hits === null ? undefined
-    : g.instances.reduce((n, inst) => n + (engSearch ? hitsIn(inst) : inst.lang === 'grk' ? inst.grkHits ?? 0 : 0), 0);
+    : g.instances.reduce((n, inst) => n + (hitsMode !== 'grk' ? hitsIn(inst) : inst.lang === 'grk' ? inst.grkHits ?? 0 : 0), 0);
 
   // The reader's address for a hit. Carry the SUBMITTED queries so the reader
   // can highlight them; loc scrolls to the section. Use the snapshot (ctx),

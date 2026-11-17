@@ -121,8 +121,8 @@ describe.skipIf(!!process.env.PAIR_TIMING)('Greek-only paired translations', () 
   });
 
   it('defaults to the narrowed translation', async () => {
-    // A Both search counts Greek words only (John, 15-16 Nov): one Greek hit, though two results.
-    const { list } = await draw(`${G('α')}&e=plain&op=or&t=ross`, [...hit, at('71a', { engMatch: true, engHits: [{ translation: 'ross', positions: [0] }] })], 1);
+    // "and/or" with Ross chosen counts the Greek word and Ross's (John, 17 Nov).
+    const { list } = await draw(`${G('α')}&e=plain&op=or&t=ross`, [...hit, at('71a', { engMatch: true, engHits: [{ translation: 'ross', positions: [0] }] })], 2);
     const pair = list()[0].querySelector('.inst-pair')!;
     expect(pair.querySelector('.inst-pair-text')).toHaveTextContent('Uno dos.');
     expect(pair.querySelector('button[aria-pressed="true"]')).toHaveTextContent('Ross');

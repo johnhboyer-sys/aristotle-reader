@@ -281,6 +281,28 @@ describe('term 1 and the page query', () => {
     expect(terms()[0].querySelector('.lpsel .hw')).toHaveTextContent('ἀρετή');
   });
 
+  // Codex review of the "and/or" count (17 Nov): proximity terms are Greek,
+  // so its hits are Greek words, whatever the English box still holds.
+  // The Greek box empty, English left in its box, the terms picked in the
+  // editor: the old count read an English search, and showed no hit figure
+  // (EN answers in four translations; over one, "0 hits"). Round 2 of that
+  // review: with Greek in its box too, the old count was already right.
+  it('counts a proximity search in Greek hits with words in the English box', async () => {
+    render(Search);
+    await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue' } });
+    await fireEvent.click(prox());
+    for (const [i, word] of [[1, 'ἀρετή'], [2, 'ἕξις']] as const) {
+      await fireEvent.input(screen.getByRole('searchbox', { name: `Term ${i}: a dictionary word` }), { target: { value: word } });
+      const list = await screen.findByRole('list', { name: `Dictionary words for Term ${i}` });
+      await fireEvent.click(within(list).getAllByRole('button')[0]);
+    }
+    await vi.waitFor(() => expect(terms()[1].querySelector('.lpsel .hw')).toHaveTextContent('ἕξις'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    const { searchCombo } = await import('../lib/search');
+    await vi.waitFor(() => expect(searchCombo).toHaveBeenCalled());
+    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/^1 chapter · 1 hit$/));
+  });
+
   it('leaves a filled editor alone', async () => {
     await arrive('c=l:ecis&c=l:hdonh');
     expect(screen.queryByLabelText('Greek')).toBeNull();

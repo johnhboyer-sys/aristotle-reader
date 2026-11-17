@@ -827,12 +827,13 @@ describe('Search.svelte: no setting changes a count', () => {
   // Each search in the views it is offered (John, 13 Nov): one word typed,
   // By form; a dictionary word, By grammar, whose rows add up to their headword.
   for (const [url, views] of [
-    [`${G('α')}&e=one+two+three+seis&em=any&op=or`, ['By work', 'By form']],
-    ['/search?l=a&e=one+two+three+seis&em=any&op=or', ['By work', 'By grammar']],
+    [`${G('α')}&e=one+two+three+seis&em=any&op=or&t=rackham`, ['By work', 'By form']],
+    ['/search?l=a&e=one+two+three+seis&em=any&op=or&t=rackham', ['By work', 'By grammar']],
   ] as const) it(`the total, the side counts and the sum of the group counts, in every view, context and sort (${views[1]})`, async () => {
     const { greekHitForms } = await import('../lib/search');
     // 70a: α and δ, Rackham's three words, and Ross's "seis", which falls in
-    // 70b; 70b: η; 98a: ω β ω. Six Greek hits; a Both search counts no English word.
+    // 70b; 70b: η; 98a: ω β ω. Six Greek hits, and with Rackham chosen his
+    // three words: "and/or" counts both languages (John, 17 Nov), nine hits.
     // "Either language": chapter 98 holds no English, and "both" (now joined by
     // chapter, John, 15 Nov) would drop it and its three hits.
     const results = [
@@ -847,7 +848,7 @@ describe('Search.svelte: no setting changes a count', () => {
       byResult: new Map([['EN:1:70a', ['a', 'd']], ['EN:1:70b', ['h']], ['EN:1:98a', ['w', 'b', 'w']]]),
       headwords: new Map(), failedWorks: [],
     });
-    const { container } = await open(url, results, 6);
+    const { container } = await open(url, results, 9);
     const side = () => ['Show hits from one work', 'Show English hits from one translation', 'Greek forms found']
       .map(name => text(screen.queryByRole('group', { name })));
     await vi.waitFor(() => expect(side()[2]).not.toBe(''));
@@ -871,8 +872,8 @@ describe('Search.svelte: no setting changes a count', () => {
         await pick('Group by', v);
         for (const so of ['Bekker order', 'Works A–Z', 'Forms A–Z', 'Commonest form first']) {
           await pick('Sort', so);
-          await vi.waitFor(() => expect(`${cx} ${v} ${so}: ${sum()}`).toBe(`${cx} ${v} ${so}: 6`));
-          expect(status()).toHaveTextContent('2 chapters · 6 hits');
+          await vi.waitFor(() => expect(`${cx} ${v} ${so}: ${sum()}`).toBe(`${cx} ${v} ${so}: 9`));
+          expect(status()).toHaveTextContent('2 chapters · 9 hits');
           expect(side()).toEqual(before);
         }
       }

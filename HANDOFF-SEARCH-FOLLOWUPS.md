@@ -186,6 +186,27 @@ on them.
   of" excluded); the rows keep their order after an Exclude; on the phone the Filter button carries
   a badge while a phrase is excluded.
 
+### Ruled 17 Nov (raised by the Homer port)
+
+- **The hits of "and/or" and "or" (John, 17 Nov: "agree on the or count", then "Both or and
+  and/or").** These searches show chapters with English hits alone, and the bar counted Greek words
+  only, so live read "ἀρετή and/or virtue: 438 chapters · 967 hits" with De Interpretatione and
+  Posterior Analytics at "0 hits". Now: with one translation answering (chosen with `t=`, or a work's
+  only one), the figure counts the Greek words and that translation's English; with several, the bar
+  shows chapters and no hit figure, and the headings none; never "0 hits" of a work that matched.
+  "and" keeps its Greek count (every chapter it shows holds a Greek hit), and so does a proximity
+  search (its terms are Greek). The Works list keeps ruling B: a work its chapters, a translator its
+  hits there. Built in `lib/search-pages.ts` (`hitsInFor`) and `Search.svelte` (`countOf`,
+  `groupHits`); tests in `search-pages.test.ts` (`hitsInFor`), in
+  `search-chapter-draw.test.ts` (11a–e), and the counting tests that encoded the Greek-only rule
+  (components, paired-hit-search, greek-pair-switch, reading-results-search) now choose a
+  translation and count both languages.
+- **By form pages stay by passage (John, 17 Nov: "A for by form").** Pages count passages in every
+  view, so switching views keeps the page. By form files a passage once under each form it holds, so
+  its pages may draw more than N (live, ἀρετή at 40 a page: 51 drawn, 57 with Whole section); By
+  grammar likewise. Not built: counting by form there, which would make those views read every book
+  again (Homer's dbcfb2909 did; the Homer session was told).
+
 ### Measured chapter counts, ἀρετή + virtue, every translation
 
 | Chapters with | Count |
