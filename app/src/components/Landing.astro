@@ -105,8 +105,10 @@ const metaDescription =
 const canonical = Astro.site
   ? new URL(`${base}${workPath(workId, 1).replace(/\/book\/1$/, '')}/`, Astro.site).href
   : undefined;
+// The work's own share card (scripts/make-og-cards.mjs), else the site's.
+const ogCard = existsSync(fileURLToPath(new URL(`og/${workId}.jpg`, publicDir))) ? `og/${workId}.jpg` : 'og-default.png';
 const ogImage = Astro.site
-  ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+  ? new URL(`${base}/${ogCard}`, Astro.site).href : undefined;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'Book',
