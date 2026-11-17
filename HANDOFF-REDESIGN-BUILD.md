@@ -6,7 +6,8 @@ you hand off. The version before this one is at
 
 ## 0. Start here
 
-**Merged: PR #195, 16 Nov, as `de57f687c6` (all CI green). Not deployed: the deploy waits for John.**
+**Merged: PR #195, 16 Nov, as `de57f687c6` (all CI green). Deployed 16 Nov with the search PRs (gh-pages
+`6d05a6d4`; DEPLOY-STATUS.md).**
 At deploy: retake the homepage card (`~/personal-website`, deploy only on his yes) and raise the Daily
 Nous pitch. Search follow-ups moved to `HANDOFF-SEARCH-FOLLOWUPS.md`, the port to the other readers to
 `HANDOFF-SEARCH-PORT.md`. Still open from this track: the site speed session, and the duplicate

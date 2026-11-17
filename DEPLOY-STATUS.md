@@ -13,6 +13,54 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-16 — DEPLOYED: the redesign and the new search (PRs #194–#203)
+
+`gh-pages 1d3c1859 → 6d05a6d4`, source `47444b1f5c` (`origin/main`, the #203 merge). John said "Let's
+build and deploy" after the search PRs merged. Run from the search-counting worktree with
+`npm run build:public`, `npm run deploy:dry`, then `npm run deploy -- --verify`, on Node 22.23.1.
+
+**What shipped:**
+- The site redesign, direction B (#195; brief #193). `HANDOFF-REDESIGN-BUILD.md` has the record.
+- Search: the accent filter fixes (#194), counting by chapters and the empty page 67 (#197),
+  **and | and/or | or** with chapters split by language (#198), Back to a blank search unfolds the
+  form (#199), works with their translations nested under them (#200), exactly N rows a page that
+  fill as books load and the 100 page as citations and summaries (#201), and the English phrase list,
+  Exclude only (#202). `HANDOFF-SEARCH-FOLLOWUPS.md` has the record.
+- A new per-work index file, `data/<Work>/search/eng-chapters.json` (47 works), so English hits find
+  their chapter.
+
+**Build:** `npm run build:public` at `47444b1f5c`:
+- 47 works, stage 2 PASS for all; preflight ok; shared LSJ 15,538 entries, 76,345 referenced keys
+  across 47 works, all resolved;
+- stage 9: lemma 1,220,013 / form 995,731 / English 2,166,935 postings (as on 7 Nov);
+- lemma pages 7,339, 0 new slugs; 7,560 pages.
+
+**Gates:**
+- Link integrity: **0 broken** (7,563 pages / 414,408 links / 65,656 anchors; fewer links than on
+  7 Nov because the redesign's pages carry fewer).
+- Before the deploy, on the same code: check-redesign stage 5, 79 gates, none failed (R-H8 failed
+  under parallel load and passed alone); `--prove R-S7` caught 25 of 25 cases; CI green on every PR.
+- Leak check at baseline: Rackham 2, `EN/footnotes.json` and `EN/manifest.json`; Ackrill, Tredennick
+  and Irwin 0; positive control 1,633 files.
+- Held works: none. Shards against indexes: 157 indexes, 4,382,679 postings.
+- Dangling references to removed bundles: 0, with 28/28 positive controls.
+
+**Deploy diff:** 8,391 files, 316 A / 8049 M / 24 D / 2 R. rsync staged 48 deletions: 26 rotated
+`_astro` bundles and the 22 stale `data/search-shards/english` files, which were restored from live as
+on 7 Nov (`--allow-data-deletions=data/search-shards/english` still awaits John). Additions: 26
+`_astro` bundles and each work's `search/eng-chapters.json` with its data.
+
+**Live-verified:**
+- the script's URL set, after GitHub Pages caught up (the old bundles answered 200 for a few polls);
+- `/`, `/search/`, `/EN/book/1/`, `/lemma/chorion/`, and `/data/EN/search/eng-chapters.json` answer
+  200; `/bonitz/` is 404;
+- gate R-S7 run against the live site passes (examined 54): ἀρετή + virtue reads 229 chapters ·
+  940 hits, 23 pages of 40 rows, the 100 page 9 pages; English virtue's nested list and phrase list
+  read as built ("in virtue of" 335; with it excluded, "virtue of the" 60).
+
+**Left for John:** the homepage card retake on `~/personal-website` (its deploy only on his yes) and
+the Daily Nous pitch, both noted in `HANDOFF-REDESIGN-BUILD.md`.
+
 ## 2026-11-07 — DEPLOYED: the new works, stable lemma addresses (PR #191)
 
 `gh-pages 669a81af → 1d3c1859`, source `5d06d2a32d` (the PR #191 branch tip; `origin/main` `5d4bc1089e`, the #191 merge, has the same tree). John said "Yes, merge and deploy". The orchestrator session merged #191 and ran `npm run deploy -- --verify` on the integration worktree's build.

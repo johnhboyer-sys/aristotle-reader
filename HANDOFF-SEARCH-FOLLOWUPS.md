@@ -1,8 +1,8 @@
 # Search follow-ups — handoff
 
 The search page shipped with the redesign: PR #195, merged 16 Nov as `de57f687c6`. This file covers the
-search PRs that came after it (#197–#202, all merged 16 Nov). **None of it is deployed**: the deploy
-waits for John's word. The build's spec and record stay in `HANDOFF-SEARCH-BUILD.md` (closed), and the
+search PRs that came after it (#197–#202, all merged 16 Nov). **Deployed 16 Nov** (gh-pages `6d05a6d4`;
+DEPLOY-STATUS.md). The build's spec and record stay in `HANDOFF-SEARCH-BUILD.md` (closed), and the
 redesign's in `HANDOFF-REDESIGN-BUILD.md`.
 
 Porting the search to the other readers has its own handoff, `HANDOFF-SEARCH-PORT.md`. It can start now:
@@ -10,8 +10,8 @@ the counting, rows, and phrases it waited for are on main.
 
 ## 0. Start here
 
-State on 16 Nov, evening: **every part John ruled is built and merged. Nothing is deployed** (John,
-16 Nov: "Merge only, no deploy"). The next track is the port to the other readers,
+State on 16 Nov, evening: **every part John ruled is built, merged, and deployed** (gh-pages
+`6d05a6d4`, 16 Nov; gate R-S7 passes against the live site). The next track is the port to the other readers,
 `HANDOFF-SEARCH-PORT.md`.
 
 The PRs, all merged 16 Nov:
