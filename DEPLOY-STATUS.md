@@ -13,6 +13,31 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-16 (later) — DEPLOYED: share cards, one per work (PR #205)
+
+`gh-pages 6d05a6d4 → 02d10eba`, source `9135a8804b` (`origin/main`, the #205 merge), on John's "Cards now"
+after he saw the drafts ("Those look great"). App-only build (`PUBLIC_SHOW_PRIVATE=0 npm run build`; the
+corpus data is unchanged from the deploy below), `npm run deploy:dry`, then `npm run deploy -- --verify`.
+
+**What shipped:** `og/<Work>.jpg` for all 47 works (the work's plate, title, Greek title, and reading line),
+named by each work's landing and book pages (209 pages); `og-default.png` redrawn to match the home as
+built (black title, red Greek line). Drawn by `app/scripts/make-og-cards.mjs`; `og-cards.test.ts` checks
+each card against its record (`app/src/data/og-cards.json`), its work's titles, and its page's translator.
+Two Codex reviews (gpt-6.1-sol, medium); all findings fixed.
+
+**Gates:** link integrity 0 broken (7,563 pages); leak check at baseline (Rackham 2, the known EN files);
+held works none. Deploy diff 257 files: 47 A (`og/`), 210 M (the 209 pages and `og-default.png`), 0 D;
+the 22 stale English shards restored from live as before.
+
+**Live-verified** once Pages caught up (a few minutes after the push): all 47 `og/<Work>.jpg` and
+`og-default.png` match the repo byte for byte; `/EN/` names `og/EN.jpg`, `/Phys/book/1/` names
+`og/Phys.jpg`, the home names `og-default.png`.
+
+**Also on 16 Nov, outside this repo:** the johnhboyer.com homepage card was retaken from the live home
+(`~/personal-website/assets/aristotle-shot.png`, 1280×860; the old one in `backup-2026-11-16/`) and
+deployed with the staged card colour (`--stock-aristotle: #b42419`) by `npx wrangler deploy`, on John's
+"Cards now".
+
 ## 2026-11-16 — DEPLOYED: the redesign and the new search (PRs #194–#203)
 
 `gh-pages 1d3c1859 → 6d05a6d4`, source `47444b1f5c` (`origin/main`, the #203 merge). John said "Let's
