@@ -91,5 +91,8 @@ console.log(JSON.stringify({
   'virtue: EN chapters by slot': Object.fromEntries([...chBySlot].filter(([k]) => k.startsWith('EN|')).map(([k, v]) => [k.slice(3), v.size])),
   'virtue: phrases, top 12': Object.fromEntries([...phrases].filter(([, n]) => n >= 5).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 12)),
   'virtue: phrases, top 12, "in virtue of" set aside': Object.fromEntries([...phrases].filter(([, n]) => n >= 5).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).slice(0, 12).map(([p]) => [p, aside.get(p) || 0])),
+  // "and/or" over a work with one translation counts both languages (John, 17 Nov): Physics, Hardie.
+  'Phys and/or: chapters, Greek hits, English hits': [new Set([...G, ...E].filter(k => k.startsWith('Phys:'))).size,
+    sum(grk, [...G].filter(k => k.startsWith('Phys:'))), sum(eng, [...E].filter(k => k.startsWith('Phys:')))],
   'virtue: EN hits by slot': Object.fromEntries([...bySlot].filter(([k]) => k.startsWith('EN|')).map(([k, n]) => [k.slice(3), n])), 'virtue: chapters with more than one translation': [...slots.values()].filter(s => s.size > 1).length,
 }, null, 1));
