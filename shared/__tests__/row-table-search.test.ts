@@ -70,9 +70,8 @@ vi.mock('../lib/data', async (importOriginal) => {
   return {
     ...actual,
     fetchBook: vi.fn(async () => state.book),
-    fetchChapters: vi.fn(async () => ({
-      '1': state.book.segments.map(s => ({ column: s.column, chapter: '1', line: '1' })),
-    })),
+    fetchChapters: vi.fn(async () => Object.fromEntries(['1', '2'].map(n =>
+      [n, state.book.segments.map(s => ({ column: s.column, chapter: '1', line: '1' }))]))),
     loadRowTable: vi.fn(async () => {
       if (!state.table) throw new Error('no table');
       return state.table;
@@ -80,7 +79,11 @@ vi.mock('../lib/data', async (importOriginal) => {
   };
 });
 
-const tableOf = (book: BookData): RowTable => ({ v: 1, books: { '1': encodeRowBook(book, searchableTranslations(getWork('EN')!)) } });
+// Books 1 and 2 of EN, both this book.
+const tableOf = (book: BookData): RowTable => {
+  const one = () => encodeRowBook(book, searchableTranslations(getWork('EN')!));
+  return { v: 1, books: { '1': one(), '2': one() } };
+};
 let warn: ReturnType<typeof vi.spyOn>;
 beforeEach(() => { warn = vi.spyOn(console, 'warn').mockImplementation(() => {}); });
 afterEach(() => {
@@ -93,6 +96,7 @@ const at = (column: string, r: Partial<SearchResult>): SearchResult => ({
   work: 'EN', meta: { id: `1:${column}`, book: 1, column },
   grkMatch: false, engMatch: false, grkPositions: [], ...r,
 });
+const text = (el: Element | null) => (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
 const mismatches = () => warn.mock.calls.filter((c: unknown[]) => /the row table counts/.test(String(c[0])));
 
 // Runs the search with the table in force; the rows drawn, once the page has
@@ -151,19 +155,60 @@ describe('the row table counts the rows the page draws', () => {
     }
   }
 
-  it('reads every book, and draws the same rows, where the table disagrees with the book', async () => {
-    const results = [at('1103a', { grkMatch: true, engMatch: true, grkPositions: [1], engHits: [{ translation: 'rackham', positions: [0] }] })];
-    const right = await rows(books.bekker, `/search?${greekWord}&e=virtue`, results);
+  // Book 1: every Greek word of two sections a match of its own (a row
+  // each, 48), and an English word in the unit of the first, which joins it;
+  // book 2: one row more. At 20 a page, page 1 is book 1's.
+  const words = (column: string, book: number, english = false): SearchResult => ({
+    work: 'EN', meta: { id: `1:${column}`, book, column }, grkMatch: true, engMatch: english, grkPositions: Array.from({ length: 24 }, (_, i) => i),
+    windows: Array.from({ length: 24 }, (_, i) => [i]), ...(english ? { engHits: [{ translation: 'rackham', positions: [0] }] } : {}),
+  });
+  const two = [words('1103a', 1, true), words('1103b', 1), { ...words('1103a', 2), grkPositions: [0], windows: [[0]] }];
+  const url = `/search?${greekWord}&e=virtue&op=or&ps=20`;
+  const booksRead = async () => {
+    const { fetchBook } = await import('../lib/data');
+    return [...new Set(vi.mocked(fetchBook).mock.calls.map(c => c[1]))].sort();
+  };
+
+  it('reads only the books its page draws, the page count from the table', async () => {
+    await rows(books.bekker, url, two);
+    await vi.waitFor(() => expect(text(document.querySelector('.pager-status'))).toBe('Page 1 of 3'));
+    expect(document.querySelectorAll('li.instance')).toHaveLength(20);
+    expect(await booksRead()).toEqual([1]);
     expect(mismatches()).toEqual([]);
-    document.body.innerHTML = '';
-    // Every English word in a unit of its own: the English no longer joins the Greek.
+  });
+
+  it('keeps the next book on its own page where a book the table counted fails to load', async () => {
+    const { search } = await import('../lib/search');
+    const { fetchBook } = await import('../lib/data');
+    state.book = books.bekker;
+    state.table = tableOf(books.bekker);
+    vi.mocked(fetchBook).mockImplementation(async (_w, n) => {
+      if (n === 1) throw new Error('book 1: 503');
+      return books.bekker;
+    });
+    vi.mocked(search).mockResolvedValueOnce({ results: two, failedWorks: [] });
+    window.history.replaceState(null, '', url);
+    const { container } = render(Search);
+    await vi.waitFor(() => expect(text(container.querySelector('.pager-status'))).toBe('Page 1 of 3'));
+    await vi.waitFor(() => expect(vi.mocked(fetchBook).mock.calls.some(c => c[1] === 1)).toBe(true));
+    await new Promise(r => setTimeout(r, 50));
+    // Page 1 is book 1's rows, which did not load: book 2's row is not drawn there.
+    expect(container.querySelectorAll('li.instance')).toHaveLength(0);
+    expect(vi.mocked(fetchBook).mock.calls.some(c => c[1] === 2)).toBe(false);
+    vi.mocked(fetchBook).mockImplementation(async () => books.bekker);
+  });
+
+  it('reads every book, and draws the same rows, where the table disagrees with a book', async () => {
+    // Every English word in a unit of its own: it no longer joins the Greek,
+    // so the table counts a row more in book 1 than the book draws.
     const wrong = tableOf(books.bekker);
     const seg = wrong.books['1'].s[0];
     seg.e = { ...seg.e, rackham: [999, 1000, 999] };
     wrong.books['1'].u[999] = 0;
-    const drawn = await rows(books.bekker, `/search?${greekWord}&e=virtue`, results, wrong);
+    await rows(books.bekker, url, two, wrong);
     await vi.waitFor(() => expect(mismatches()).toHaveLength(1));
-    await vi.waitFor(() => expect(document.querySelectorAll('li.instance')).toHaveLength(right));
-    expect(drawn).toBeGreaterThan(0);
+    await vi.waitFor(async () => expect(await booksRead()).toEqual([1, 2]));
+    await vi.waitFor(() => expect(text(document.querySelector('.pager-status'))).toBe('Page 1 of 3'));
+    expect(document.querySelectorAll('li.instance')).toHaveLength(20);
   });
 });

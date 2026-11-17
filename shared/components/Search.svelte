@@ -543,7 +543,7 @@
     : [];
   $: phraseChoice = phrasesOffered && (!phraseTexts || phraseList.length > 0 || asidePhrases.size > 0);
   // Opened (the button, or the phone's Phrases screen): read once per search.
-  $: if (phrasesOffered && (phrasesOpen || sheetScreen === 'phrases') && phrasesAsked !== allResults) {
+  $: if (phrasesOffered && (phrasesOpen || (sheetOpen && sheetScreen === 'phrases')) && phrasesAsked !== allResults) {
     phrasesAsked = allResults;
     void loadPhrases(allResults);
   }
@@ -1158,7 +1158,7 @@
   }
   // Page i's rows, under their chapters: the books through its last row,
   // then the slice. Null when a newer layout has retired this one.
-  async function pageRows(i: number, run: number): Promise<(Built & { more: boolean; total: number | null }) | null> {
+  async function pageRows(i: number, run: number, live: () => boolean = () => true): Promise<(Built & { more: boolean; total: number | null }) | null> {
     const n = pageTarget(pageSize);
     const from = i * n;
     const to = from + n;
@@ -1166,7 +1166,8 @@
     const failed: string[] = [];
     const segs = new Map<string, Segment>();
     await rowsReady;
-    if (run !== rowsRun) return null;
+    // A render retired meanwhile (a page size, a newer page) starts no book.
+    if (run !== rowsRun || !live()) return null;
     // The page's own books, where the table counts the books before them:
     // all asked for at once, and no other.
     for (let k = 0, s = 0; k < rowBooks.length && s < to && rowBooks[k].known !== undefined; k++) {
@@ -1181,7 +1182,10 @@
       if (known === undefined) for (const ahead of rowBooks.slice(k + 1, k + 4)) if (ahead.known === undefined) void bookRows(ahead, run);
       const b = await bookRows(rowBooks[k], run);
       if (run !== rowsRun) return null;
-      if (seen >= from || seen + rowsOf(b) > from) {
+      // A book the table counted keeps its rows' places though it failed to
+      // load: the pages after it are where the table put them.
+      const start = seen;
+      if (seen >= from || seen + (known ?? rowsOf(b)) > from) {
         failed.push(...b.failed);
         for (const [key, seg] of b.segs) segs.set(key, seg);
       }
@@ -1189,6 +1193,7 @@
         if (seen >= from && seen < to) picked.push({ g, inst });
         seen++;
       }
+      if (known !== undefined) seen = start + known;
     }
     // A chapter whose rows run across two pages heads its part on each.
     const groups: ChapterGroup[] = [];
@@ -3350,13 +3355,13 @@
     const layout = layoutRun;
     const stale = () => seq !== renderSeq || run !== rowsRun || layout !== layoutRun;
     try {
-      let got = await pageRows(i, run);
+      let got = await pageRows(i, run, () => !stale());
       if (stale() || !got) return;
       // Past the last row (a context that joined rows, a page size): the last page.
       if (!got.groups.length && i > 0 && got.total !== null) {
         i = Math.max(0, Math.ceil(got.total / pageTarget(pageSize)) - 1);
         pageIdx = i;
-        got = await pageRows(i, run);
+        got = await pageRows(i, run, () => !stale());
         if (stale() || !got) return;
       }
       const { groups: g, failed, segs } = got;
