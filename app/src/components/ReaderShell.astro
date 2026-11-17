@@ -5,7 +5,7 @@
 // `bookless` works (Categories, Poetics) are a single treatise of chapters with
 // no book level, so all book-level chrome (the "· Book N" title, the book nav
 // row, the per-book TOC grouping) is dropped.
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import Reader from '@shared/components/Reader.svelte';
 import BekkerJump from '@shared/components/BekkerJump.svelte';
 import CommandPalette from '@shared/components/CommandPalette.svelte';
@@ -115,10 +115,12 @@ const translatorName = translatorPerson(primaryTrans?.name);
 const canonical = Astro.site
   ? new URL(`${base}${workPath(workId, n)}/`, Astro.site).href
   : undefined;
-// Social share card: a branded render of a bilingual page (public/og-default.png).
-// Crawlers require an absolute URL, so it's built off Astro.site + base.
+// Social share card: the work's own (public/og/<Work>.jpg, from scripts/make-og-cards.mjs),
+// else the site's (public/og-default.png). Crawlers require an absolute URL, so it's built
+// off Astro.site + base.
+const ogCard = existsSync(`public/og/${workId}.jpg`) ? `og/${workId}.jpg` : 'og-default.png';
 const ogImage = Astro.site
-  ? new URL(`${base}/og-default.png`, Astro.site).href
+  ? new URL(`${base}/${ogCard}`, Astro.site).href
   : undefined;
 const metaDescription =
   `Read ${author}'s ${work.title}${bookSuffix} — the original Greek` +
