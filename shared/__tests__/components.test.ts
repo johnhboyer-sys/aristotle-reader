@@ -99,14 +99,15 @@ describe('Search.svelte', () => {
     expect(screen.getByLabelText('Greek')).toBeInTheDocument();
   });
 
-  it('counts the Greek words of a Both search, shows hits by work, and says so in a live region', async () => {
+  it('counts an "and/or" search in chapters, its hits once a translation is chosen, in a live region', async () => {
     const { search } = await import('../lib/search');
     const primary = searchableTranslations(getWork('EN')!)[0].id;
     const meta = { id: 'seg1', book: 1, column: '1094a', greek_head: 'λόγος', english_head: 'Virtue (test)' };
     vi.mocked(search).mockResolvedValueOnce({
       results: [
-        // One Greek word and two English ones: in a Both search the hits are the
-        // Greek words only (John, 15-16 Nov), so EN has one.
+        // One Greek word and two English ones. "and/or" counts both languages,
+        // and only where one translation answers (John, 17 Nov): EN has four,
+        // so no hit figure until one is chosen, then three.
         { work: 'EN', meta, grkMatch: true, engMatch: true, grkPositions: [0], engHits: [{ translation: primary, positions: [0, 1] }] },
         { work: 'Meta', meta, grkMatch: true, engMatch: false, grkPositions: [0, 1] },
       ],
@@ -123,7 +124,7 @@ describe('Search.svelte', () => {
     await fireEvent.click(screen.getByRole('radio', { name: 'Either or both' }));
     await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
 
-    await vi.waitFor(() => expect(status).toHaveTextContent('2 chapters · 3 hits'));
+    await vi.waitFor(() => expect(status).toHaveTextContent(/^2 chapters$/));
     // One list where English was searched (John, 16 Nov): a work counts its
     // chapters, a translation its English hits there.
     const works = screen.getByRole('group', { name: 'Show hits from one work or one translation' });
@@ -132,11 +133,15 @@ describe('Search.svelte', () => {
     expect(within(works).getByRole('button', { name: /^Metaphysics/ })).toHaveTextContent('Metaphysics1 chap.');
     expect(en.nextElementSibling).toHaveClass('sub');
     expect(en.nextElementSibling).toHaveTextContent(/2$/);
-    await vi.waitFor(() => expect(screen.getByText('1 hit', { selector: '.group-count' })).toBeInTheDocument());
+    expect(document.querySelector('.group-count')).toBeNull();
 
     await fireEvent.click(en);
-    await vi.waitFor(() => expect(status).toHaveTextContent('1 chapter · 1 hit'));
+    await vi.waitFor(() => expect(status).toHaveTextContent(/^1 chapter$/));
     expect(en).toHaveAttribute('aria-pressed', 'true');
+
+    await fireEvent.click(en.nextElementSibling!);
+    await vi.waitFor(() => expect(status).toHaveTextContent('1 chapter · 3 hits'));
+    await vi.waitFor(() => expect(screen.getByText('3 hits', { selector: '.group-count' })).toBeInTheDocument());
   });
 });
 

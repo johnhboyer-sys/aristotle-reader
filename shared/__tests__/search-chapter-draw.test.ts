@@ -192,15 +192,65 @@ it('"and" counts the chapters with both, and lights only that row', async () => 
 it('"and/or" (op=or) counts every chapter with a hit', async () => {
   const c = await openSplit('&op=or');
   await vi.waitFor(() => expect(splitOf(c)).toEqual(['Greek and English 1', 'Greek only 1', 'English only 0']));
-  expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters\s*2 hits\b/);
+  // EN answers in four translations and none is chosen: chapters, no hit
+  // figure (John, 17 Nov).
+  expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters$/);
   expect(text(c.querySelector('details.opt.join summary b'))).toBe('and/or');
 });
 it('"or" (op=xor) counts the chapters with one language, not both', async () => {
   const c = await openSplit('&op=xor');
   await vi.waitFor(() => expect(splitOf(c)).toEqual(['Greek and English 1 off', 'Greek only 1', 'English only 0']));
-  expect(text(c.querySelector('.result-count'))).toMatch(/^1 chapter\s*1 hit\b/);
+  expect(text(c.querySelector('.result-count'))).toMatch(/^1 chapter$/);
   expect(text(c.querySelector('details.opt.join summary b'))).toBe('or');
   expect(headings(c)).toEqual(['Chapter 2']);
+});
+
+// 11a–e. The hits of "and/or" and "or" (John, 17 Nov): these searches show
+// chapters with English hits alone, so a Greek-only hit figure says "0 hits"
+// of a work that matched. With one translation (chosen, or the only one a
+// work has) the figure counts the Greek and that translation's English; with
+// several, it shows chapters alone. "and" keeps its Greek count (11 above).
+async function openLangs(op: string, grkPositions: number[], engPositions: number[], work = 'EN', translation = 'rackham') {
+  const { loadOffsets, loadEngChapters } = await import('../lib/search');
+  vi.mocked(loadOffsets).mockResolvedValue(offsetsOf(10));
+  vi.mocked(loadEngChapters).mockResolvedValue({ english: { '0': [[0, '1'], [2, '2']] } });
+  const r: SearchResult = { ...base, work, grkMatch: grkPositions.length > 0, engMatch: true, grkPositions,
+    engHits: [{ translation, positions: engPositions }] };
+  return open(book(Array.from({ length: 22 }, (_, i) => line(i + 1, 'α')), 'Virtue one. Two.'), [r], `g=α&e=virtue${op}`);
+}
+// The work's heading, then its book's (EN and Phys have several books).
+const counts = (c: Element) => [...c.querySelectorAll('.group-count, .sx-book-n')].map(text);
+it('"and/or" with a translation chosen counts its English hits with the Greek', async () => {
+  const c = await openLangs('&op=or&t=rackham', [3, 15], [0]);
+  await vi.waitFor(() => expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters\s*3 hits$/));
+  expect(counts(c)).toEqual(['3 hits', '3']);
+});
+it('"or" with a translation chosen counts the English-only chapter\'s hit', async () => {
+  // Chapter 1 holds the English alone (word 0), chapter 2 the Greek alone
+  // (token 15).
+  const c = await openLangs('&op=xor&t=rackham', [15], [0]);
+  await vi.waitFor(() => expect(headings(c)).toEqual(['Chapter 1', 'Chapter 2']));
+  expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters\s*2 hits$/);
+  expect(counts(c)).toEqual(['2 hits', '2']);
+});
+it('"or" over a work with one translation counts both languages unasked', async () => {
+  const c = await openLangs('&op=xor', [15], [0], 'Phys', 'hardie');
+  await vi.waitFor(() => expect(headings(c)).toEqual(['Chapter 1', 'Chapter 2']));
+  expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters\s*2 hits$/);
+  expect(counts(c)).toEqual(['2 hits', '2']);
+});
+it('"or" over several translations says no hit figure, and never "0 hits"', async () => {
+  // English alone matched: the old count read "1 chapter · 0 hits".
+  const c = await openLangs('&op=xor', [], [0]);
+  await vi.waitFor(() => expect(headings(c)).toEqual(['Chapter 1']));
+  expect(text(c.querySelector('.result-count'))).toMatch(/^1 chapter$/);
+  expect(counts(c)).toEqual([]);
+  expect(c.textContent).not.toMatch(/\b0 hits\b/);
+});
+it('"and" keeps the Greek hit count under several translations', async () => {
+  const c = await openLangs('&op=and', [3, 15], [0]);
+  await vi.waitFor(() => expect(text(c.querySelector('.result-count'))).toMatch(/^1 chapter\s*1 hit$/));
+  expect(counts(c)).toEqual(['1 hit', '1']);
 });
 
 // 12. A new search opens on "and/or" (John, 16 Nov): typed into a blank page
@@ -221,7 +271,7 @@ it('runs a new Greek and English search as "and/or" by default', async () => {
   await fireEvent.input(c.querySelector('#eng-input')!, { target: { value: 'virtue' } });
   await vi.waitFor(() => expect(text(c.querySelector('details.opt.join summary b'))).toBe('and/or'));
   await fireEvent.click(c.querySelector('button.search-btn')!);
-  await vi.waitFor(() => expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters\s*2 hits\b/));
+  await vi.waitFor(() => expect(text(c.querySelector('.result-count'))).toMatch(/^2 chapters$/));
   expect(new URLSearchParams(window.location.search).get('op')).toBe('or');
 });
 
