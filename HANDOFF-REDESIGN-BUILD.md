@@ -8,8 +8,9 @@ you hand off. The version before this one is at
 
 **Merged: PR #195, 16 Nov, as `de57f687c6` (all CI green). Deployed 16 Nov with the search PRs (gh-pages
 `6d05a6d4`; DEPLOY-STATUS.md).**
-At deploy: retake the homepage card (`~/personal-website`, deploy only on his yes) and raise the Daily
-Nous pitch. Search follow-ups moved to `HANDOFF-SEARCH-FOLLOWUPS.md`, the port to the other readers to
+Done at deploy (16 Nov): the johnhboyer.com homepage card retaken and deployed, and a share card per work
+(PR #205). The Daily Nous pitch is drafted, not sent (`~/Library/Application Support/Claude/side-session-notes/local_0901b8a6-cfa4-4119-bf4f-249bed02d77a/daily-nous-pitch-draft.md`;
+kept out of this public repo); John decides when, and whether to wait for the Plato redesign. Search follow-ups moved to `HANDOFF-SEARCH-FOLLOWUPS.md`, the port to the other readers to
 `HANDOFF-SEARCH-PORT.md`. Still open from this track: the site speed session, and the duplicate
 secondary chapter (`pieceCont`, its own PR). §1 to §4 below stay as the record.
 
@@ -28,8 +29,8 @@ secondary chapter (`pieceCont`, its own PR). §1 to §4 below stay as the record
   chapters; Both + and = anywhere in the chapter; English hits only for one translation per work;
   phrase Include and Exclude; the empty page 67). Explainer:
   https://claude.ai/artifact/6MCS6YT13myEw7K2CVvGVx. The Plato search port waits for that PR.
-- **Next:** the site speed session; at deploy, the homepage card retake (`~/personal-website`) and
-  the Daily Nous pitch; then the search counting PR.
+- **Next:** the site speed session. The homepage card, the share cards, and the search PRs are done;
+  the Daily Nous pitch waits on John.
 - **Review page for John:** https://claude.ai/artifact/4MoW4SyZrTn5KQxby8hena.
 - **Load the `delegate` skill before the first spawn.** Pass `model:` on every Agent spawn; a Claude
   edit gets a Codex review.
@@ -194,12 +195,9 @@ about 40 uncommitted files from other tracks. They are not this build's work: le
 4. Start the speed session. John: "After the build is fully done, have a new
    session measure the site's speed and figure out how to optimize it." It
    reports to you.
-5. Homepage card: staged in `~/personal-website/` (`assets/`, `dist/`;
-   backups in `~/personal-website/backup-2026-11-09/`). **Not deployed.**
-   Retake the shot (1280×860 at 1x) once the home page is final; deploy
-   (`npx wrangler deploy` there) only on John's yes. The card shows only the
-   left 71% of its picture.
-6. At deploy, raise the Daily Nous pitch with John.
+5. Homepage card: **deployed 16 Nov** (shot retaken from the live home, 1280×860 at 1x; the old one
+   in `~/personal-website/backup-2026-11-16/`; `npx wrangler deploy` there).
+6. Daily Nous pitch: drafted 16 Nov, not sent (path in §0).
 7. Then port the search design to plato-reader (memory
    `port-search-fixes-to-plato`), per hunk.
 8. Rewrite this file (done 15 Nov; again at the next handoff).
