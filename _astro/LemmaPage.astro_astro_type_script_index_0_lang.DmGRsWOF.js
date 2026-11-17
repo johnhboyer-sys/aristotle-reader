@@ -1,1 +1,0 @@
-import{t as e}from"./preload-helper.B3nfOi5I.js";var t=`https://grammata.pages.dev/t8/lookup.js`,n=document.querySelector(`.grammata-mount`),r=n?.dataset.key;n&&r&&e(()=>import(t).then(e=>e.lookup(``,n,{lang:`grc`,key:r})),[]).catch(e=>{n.textContent=`The dictionary entry is not available here.`,console.error(`[grammata] lookup failed`,e)});
