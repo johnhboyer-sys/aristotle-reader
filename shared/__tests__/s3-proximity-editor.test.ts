@@ -281,6 +281,20 @@ describe('term 1 and the page query', () => {
     expect(terms()[0].querySelector('.lpsel .hw')).toHaveTextContent('ἀρετή');
   });
 
+  // Codex review of the "and/or" count (17 Nov): proximity terms are Greek,
+  // so its hits are Greek words, whatever the English box still holds.
+  it('counts a proximity search in Greek hits with words in the English box', async () => {
+    render(Search);
+    await fireEvent.input(screen.getByLabelText('Greek'), { target: { value: 'ἀρετήν ἕξις' } });
+    await fireEvent.input(screen.getByLabelText('English'), { target: { value: 'virtue' } });
+    await fireEvent.click(prox());
+    await vi.waitFor(() => expect(terms()[1].querySelector('.lpsel .hw')).toHaveTextContent('ἕξις'));
+    await fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    const { searchCombo } = await import('../lib/search');
+    await vi.waitFor(() => expect(searchCombo).toHaveBeenCalled());
+    await vi.waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(/^1 chapter · 1 hit$/));
+  });
+
   it('leaves a filled editor alone', async () => {
     await arrive('c=l:ecis&c=l:hdonh');
     expect(screen.queryByLabelText('Greek')).toBeNull();

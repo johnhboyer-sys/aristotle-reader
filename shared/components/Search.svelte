@@ -49,7 +49,7 @@
   import { AUTHENTIC_IDS, HAS_SPEAKERS } from '../lib/works';
   import { isChapterSection } from '../lib/data';
   import { loadEngChapters, loadOffsets, offsetRef, type EngChapters, type Offsets } from '../lib/search';
-  import { engHitCount, hitCount } from '../lib/search-pages';
+  import { engHitCount, hitCount, hitsInFor, type HitsIn } from '../lib/search-pages';
   import { chapterJoin, chapterOnly, chapterPlaces, measure, type ChapterAt, type ChapterPlaces, type Measure } from '../lib/chapter-pages';
   import { phraseRows, phraseText, setAside, type PhraseHit, type PhraseText } from '../lib/phrase-list';
   import { countRows as tableRows, type RowBook as TableBook, type RowTable } from '../lib/row-table';
@@ -225,11 +225,9 @@
   // counts translators. "and/or" and "or" show chapters with English hits
   // alone, so their figure counts the Greek and the English, and only where
   // one translation answers (chosen, or a work's only one); otherwise no
-  // figure, and never "0 hits" of a work that matched (John, 17 Nov).
-  type HitsIn = 'grk' | 'eng' | 'both';
-  const hitsInFor = (s: UrlSearch | null, ctx: SearchCtx): HitsIn =>
-    !s?.eng.trim() ? 'grk' : !isBoth(s) ? 'eng' : joinsBoth(s, ctx) && ctx.langOp !== 'and' ? 'both' : 'grk';
-  $: hitsMode = hitsInFor(lastSearch, searchCtx);
+  // figure, and never "0 hits" of a work that matched (John, 17 Nov; see
+  // hitsInFor in lib/search-pages).
+  $: hitsMode = hitsInFor(lastSearch, searchCtx.engQuery, searchCtx.langOp);
   let counted = { chapters: 0, hits: null as number | null };
   // A Both search's chapters by language, before the join: the rows under
   // the count (John, 16 Nov), each lit when the switch lists it.
@@ -1238,7 +1236,7 @@
     split = both ? measure(unjoined, places) : null;
     const shown = joined(unjoined, places, both, searchCtx.langOp);
     totalInstances = shown.reduce((n, r) => n + hitCount(r), 0);
-    counted = countOf(shown, places, hitsInFor(lastSearch, searchCtx), transFilter);
+    counted = countOf(shown, places, hitsInFor(lastSearch, searchCtx.engQuery, searchCtx.langOp), transFilter);
     shownResults = shown;
     layOutRows(shown);
     openRows = new Set();

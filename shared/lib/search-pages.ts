@@ -1,13 +1,30 @@
 import { paginate as chapterPaginate } from './chapter-pages';
 // Count matches as the header does. Aristotle pages load chapter offsets and
 // break between chapters; the legacy two-argument overload groups Stephanus pages.
-import type { EngHit, SearchResult } from './search';
+import type { EngHit, LangOp, SearchResult } from './search';
+import type { UrlSearch } from './search-url';
 import { WORK_ORDER } from './works';
 
 /** What one translation's match counts for: each word the query matched
  * there, as Greek counts each matching word, or each run of a phrase once
  * (`matches`). A bare * matches no word in particular and counts as one. */
 export const engHitCount = (h: EngHit): number => h.matches ? h.matches.length : Math.max(1, h.positions.length);
+
+/** What a search's hit figure counts (John, 17 Nov). Greek words in a Greek
+ * search, a proximity search (its terms are Greek, whatever the English box
+ * still holds), and a Both search joined by "and" (every chapter it shows
+ * holds a Greek hit). English words in an English search. Both languages'
+ * words in a Both search joined by "and/or" or "or", which show chapters
+ * with English hits alone. `engQuery` is the English the results answer:
+ * empty for a Both phrase widened to any inflection, whose results are
+ * Greek alone. Whether a figure shows at all (one translation answering) is
+ * the page's to settle. */
+export type HitsIn = 'grk' | 'eng' | 'both';
+export function hitsInFor(s: Pick<UrlSearch, 'grk' | 'eng' | 'lemmas' | 'combo'> | null, engQuery: string, langOp: LangOp): HitsIn {
+  if (!s || s.combo || !s.eng.trim()) return 'grk';
+  if (!s.grk.trim() && !s.lemmas.length) return 'eng';
+  return engQuery && langOp !== 'and' ? 'both' : 'grk';
+}
 
 /** What a result counts for: every Greek word matched (a match of several
  * words once, however many it touches: its window), and every English word

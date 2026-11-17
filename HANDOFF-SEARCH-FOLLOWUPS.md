@@ -194,8 +194,10 @@ on them.
   Posterior Analytics at "0 hits". Now: with one translation answering (chosen with `t=`, or a work's
   only one), the figure counts the Greek words and that translation's English; with several, the bar
   shows chapters and no hit figure, and the headings none; never "0 hits" of a work that matched.
-  "and" keeps its Greek count (every chapter it shows holds a Greek hit). The Works list's numbers
-  follow the bar. Built in `Search.svelte` (`hitsInFor`, `countOf`, `groupHits`); tests in
+  "and" keeps its Greek count (every chapter it shows holds a Greek hit), and so does a proximity
+  search (its terms are Greek). The Works list keeps ruling B: a work its chapters, a translator its
+  hits there. Built in `lib/search-pages.ts` (`hitsInFor`) and `Search.svelte` (`countOf`,
+  `groupHits`); tests in `search-pages.test.ts` (`hitsInFor`), in
   `search-chapter-draw.test.ts` (11a–e), and the counting tests that encoded the Greek-only rule
   (components, paired-hit-search, greek-pair-switch, reading-results-search) now choose a
   translation and count both languages.
