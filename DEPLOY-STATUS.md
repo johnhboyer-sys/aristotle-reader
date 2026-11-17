@@ -13,6 +13,32 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-17 — DEPLOYED: search page 1 reads only its own books (PR #208)
+
+`gh-pages 02d10eba → 538a60f2`, source `c61eee5b40` (`origin/main`, the #208 merge), on John's "Yes, deploy".
+App-only build (`PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22; corpus data unchanged), `npm run deploy:dry`,
+then `npm run deploy -- --verify`.
+
+**What shipped:** `data/<Work>/rows.json` for all 47 works, made at site build
+(`app/src/pages/data/[work]/rows.json.ts`, 338 KB gzip in all), and the search code that counts each book's
+rows from it, so page 1 and the page total come from the table and only the page's own books load. The phrase
+list's words load when the list is opened. Design and proof: `HANDOFF-SEARCH-PORT.md`, "The row table".
+
+**Gates:** link integrity 0 broken (7,563 pages); leak check at baseline (Rackham 2, the known EN files);
+dangling bundle references 0. Deploy diff 271 files: 48 A (47 `rows.json`, one bundle), 213 M (pages naming
+the new bundles), 1 D and 9 R (bundles); the 22 stale English shards restored from live as before. rsync's
+"change 17559" counts timestamps only; git saw the 271.
+
+**Live-verified** (Chrome, cache off, service workers blocked), page 1 against the deploy before:
+
+| Search | Books | Data (gzip) | Pages |
+|---|---|---|---|
+| ἀρετή + virtue | 98 → 7 | 14.1 MB → 2.1 MB | 23 |
+| ἀρετή | → 11 | → 2.4 MB | 17 |
+| virtue | → 5 | → 1.8 MB | 27 |
+
+Page counts and the status lines match the local build.
+
 ## 2026-11-16 (later) — DEPLOYED: share cards, one per work (PR #205)
 
 `gh-pages 6d05a6d4 → 02d10eba`, source `9135a8804b` (`origin/main`, the #205 merge), on John's "Cards now"
