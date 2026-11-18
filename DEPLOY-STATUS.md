@@ -13,6 +13,29 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-18 — DEPLOYED: search lemma fixes (#214), LSJ Greek in Gentium (#215)
+
+`gh-pages 85ec93f0 → 2b7c15a0`, source `61cd5630af` (`origin/main`, the #215 merge), on John's "Deploy all
+four" (and, for #215, "this will deploy aristotle reader PR 215 as well, right? I want that"). App-only build
+(`PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22) in the `search-lemma-fixes` worktree, with `build/dist`
+pointing at a copy of live's `data/` (gh-pages `85ec93f0`; corpus unchanged since); `npm run deploy:dry`,
+then `npm run deploy -- --verify`.
+
+**What shipped:**
+- **#214:** a lemma key in a URL that is a fold, not a headword key (`l=nous`), resolves to its headwords;
+  a typed accented headword narrows a lemma phrase (τί μήν no longer pulls in μείς and μής); a URL load
+  overtaken by a newer search drops its result. Same patch on Plato, Homer, and the plays.
+- **#215:** LSJ entries draw Greek in the web Gentium, not an installed Cardo (R-R27).
+
+**Gates:** link integrity 0 broken (7,563 pages); leak check at baseline (Rackham 2, the known EN files);
+held works none; dangling bundle references 0. Deploy diff 7,591 files: 12 A / 7,560 M / 14 D / 5 R, all
+`_astro` bundles and the pages naming them; no data changes, nothing under `data/` to restore (the live
+`data/` was the build's corpus, so the 22 stale English shards did not arise). `--verify`: all live URLs
+as expected.
+
+**Live-verified** (Playwright, service workers blocked): `/search/?l=nous` reads "119 chapters · 270 hits"
+(it found nothing before #214).
+
 ## 2026-11-17 (later) — DEPLOYED: the "and/or" and "or" counts (#212), Lemma's form choice (#210), the icons (#211)
 
 `gh-pages 538a60f2 → 85ec93f0`, source `a2c5545d6a` (`origin/main`, the #212 merge), on John's "Yes, deploy"
