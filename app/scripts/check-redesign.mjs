@@ -5328,6 +5328,56 @@ if (stage >= 5) Object.assign(gates, {
   assert(!issues.length, issuesOf(issues, 'English cap and opening fragment'));
   return n;
  },
+ 'R-R27': async () => {
+  // LSJ entry face (John, 18 Nov: πρόειμι's bold headword drawn at uneven weights).
+  // --grammata-greek named global.css's old Cardo chain, which the redesign never
+  // loads, so each machine drew the entry in whatever it had installed: an
+  // installed Cardo Bold 1.0011 holds bold outlines for μ, ο and π only, and the
+  // rest of its Greek is the regular glyph. Ask Chrome which font file drew each
+  // run: every one must be the loaded web Gentium Book Plus, the headword in its
+  // Bold. Computed styles cannot see this; the platform fonts can.
+  let n = 0;
+  const issues = [];
+  for (const [path, label] of [[READER, 'word panel'], [LEMMA, 'lemma page']]) {
+   const p = path === READER ? await openReader('D1440') : await open('D1440', 'light', path);
+   try {
+    if (path === READER) {
+     await openWord(p, '.b-gc .tok:text-is("πρόεισι")');
+     await p.locator('.b-card .b-card-f button').first().click();
+    }
+    const head = p.locator('.grammata-mount .t8-head h3').first();
+    await head.waitFor({timeout: 15000});
+    if (prove && proofCase === 'old-chain') await style(p, '.grammata-mount{--grammata-greek:"Cardo","Gentium Plus","Noto Serif",Georgia,serif!important}');
+    if (prove && proofCase === 'faux-bold') await style(p, '.grammata-mount .t8-head h3{font-weight:400!important}');
+    await p.evaluate(() => document.fonts.load('700 26px "Gentium Book Plus"', 'πρόειμι'));
+    await settleFonts(p);
+    const cdp = await p.context().newCDPSession(p);
+    await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
+    const {root} = await cdp.send('DOM.getDocument', {depth: -1});
+    const {nodeIds} = await cdp.send('DOM.querySelectorAll', {nodeId: root.nodeId, selector: '.grammata-mount .t8-head h3, .grammata-mount [lang="grc"]'});
+    const heads = (await cdp.send('DOM.querySelectorAll', {nodeId: root.nodeId, selector: '.grammata-mount .t8-head h3'})).nodeIds;
+    let runs = 0;
+    for (const id of nodeIds) {
+     const {fonts} = await cdp.send('CSS.getPlatformFontsForNode', {nodeId: id});
+     if (!fonts.length) continue;
+     const {outerHTML} = await cdp.send('DOM.getOuterHTML', {nodeId: id});
+     const text = outerHTML.replace(/<[^>]+>/g, '').slice(0, 24);
+     const isHead = heads.includes(id);
+     const want = isHead ? /^GentiumBookPlus-Bold$/ : /^GentiumBookPlus(-Regular|-Bold|-Italic)?$/; // Google names its regular subset GentiumBookPlus
+     const bad = fonts.filter(f => !f.isCustomFont || f.familyName !== 'Gentium Book Plus' || !want.test(f.postScriptName));
+     if (bad.length) issues.push(`${label} ${isHead ? 'headword' : 'Greek'} "${text}" drawn in ${fonts.map(f => `${f.postScriptName || f.familyName}${f.isCustomFont ? '' : ' (installed)'} ×${f.glyphCount}`).join(' + ')}, expected ${isHead ? 'GentiumBookPlus-Bold' : 'Gentium Book Plus'} (web) alone`);
+     runs++;
+    }
+    if (!heads.length) issues.push(`${label} examined=0 LSJ headwords`);
+    if (runs < 2) issues.push(`${label} examined=${runs} LSJ Greek runs`);
+    console.log(`R-R27 ${label}: ${runs} Greek runs, ${heads.length} headword(s)`);
+    n += runs;
+   } finally { await close(p); }
+  }
+  logIssues('R-R27', issues);
+  assert(!issues.length, issuesOf(issues, 'LSJ entry face'));
+  return n;
+ },
 });
 const assetProofs = {'no-css': /R-C2 missing built assets: CSS files=0 JS files=\d+/, 'no-js': /R-C2 missing built assets: CSS files=\d+ JS files=0/, 'legacy': /legacy width token:/};
 const stageThreeProofs = {
@@ -5391,7 +5441,8 @@ const stageFiveProofs = {
     'R-R23': {'no-hide': /S844 after a 400px scroll down: bar away=false/, 'no-tap': /S844 after a tap in the top 44px: bar away=true/, 'hides-over-menu': /S844 scrolled down with the Aa panel open: bar away=true/},
     'R-R24': {'dropped-single': /EN D1152 Both \(ostwald\) 0 curly single quotes drawn for the data's \d+ straight ones/, 'straight': /EN D1152 Both \(ostwald\) 1 straight quotes in the English/, 'greek-apostrophe': /EN D1152 Both \(ostwald\) 1 U\+0027 elision marks in the Greek/, 'dash-space': /EN P390 Both \(ostwald\) 1 em dashes after a space/},
     'R-R25': {'phone-switch': /P390 greek Aa shows "Full Greek lines" where full lines cannot fit/, 'no-widen': /D1152 Both on(, text 90%)? Greek column \d+px, expected the longest line/},
-    'R-R26': {'uncapped': /D1440 english \d+ of \d+ rows wider than 664px/, 'outdent': /P390 both opening fragment L[\w-]+ turns over at [\d.]+px, expected the fragment indent \+ 8 = 24/},
+    'R-R27': {'old-chain': /word panel headword "πρόειμι" drawn in (?!GentiumBookPlus-Bold ×\d+,)/, 'faux-bold': /word panel headword "πρόειμι" drawn in GentiumBookPlus ×7, expected GentiumBookPlus-Bold/},
+    'R-R26': {'uncapped':/D1440 english \d+ of \d+ rows wider than 664px/, 'outdent': /P390 both opening fragment L[\w-]+ turns over at [\d.]+px, expected the fragment indent \+ 8 = 24/},
 };
 // --list prints the stage's gate ids, one a line, for check-redesign-shards.mjs.
 if (args.includes('--list')) { console.log(Object.keys(gates).join('\n')); process.exit(0); }
