@@ -375,3 +375,27 @@ export function decodeSearchUrl(search: string | URLSearchParams, allWorks: stri
 
 /** Whether the decoded state asks for a search at all. */
 export const hasSearch = (s: UrlSearch) => !!(s.grk || s.eng || s.lemmas.length || s.combo);
+
+async function mappedLemmaKeys(keys: string[], resolve: (key: string) => Promise<string[]>): Promise<string[]> {
+  const mapped = await Promise.all(keys.map(async key => {
+    const next = await resolve(key);
+    return next.length ? next : [key];
+  }));
+  return mapped.flat();
+}
+
+/** Replace the single-lemma keys and each lemma slot's keys with what
+ * `resolve` returns. An empty resolution keeps the key that was written.
+ * Relations, joiners, targets and the window are left as decoded. */
+export async function resolveDecodedLemmaKeys(
+  s: UrlSearch,
+  resolve: (key: string) => Promise<string[]>,
+): Promise<UrlSearch> {
+  s.lemmas = await mappedLemmaKeys(s.lemmas, resolve);
+  if (s.combo) {
+    for (const slot of s.combo.slots) {
+      if (slot.kind === 'lemma') slot.picked = await mappedLemmaKeys(slot.picked, resolve);
+    }
+  }
+  return s;
+}
