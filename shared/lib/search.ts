@@ -10,7 +10,9 @@
 //   one translator's prose — and reported per translation.
 // Phrase search: after intersection, verify token adjacency in segment data.
 // Cross-language: AND (intersection) or OR (union) the two result sets.
+import { betaQueryToGreek } from './betacode';
 import { formatCite } from './citation';
+import { fetchLemmaPickerShard } from './data';
 import { memoAsyncBy } from './memo';
 import { getWork, searchableTranslations, WORKS, type TranslationRef } from './works';
 
@@ -1627,6 +1629,50 @@ export interface VariantOutcome extends SearchOutcome {
   cappedFrom: number;          // 0 unless the fan-out was truncated
 }
 
+const shardLetter = (key: string) => (/^[a-z]/.test(key) ? key[0] : '_');
+
+export interface HeadwordKeyDeps {
+  /** lemma-picker shard for one letter (`a`–`z`, or `_`). Rejects if it will not load. */
+  pickerShard: (letter: string) => Promise<Record<string, unknown>>;
+  /** lemma-map shard for one letter. `fold` is the spelling being resolved. Rejects if it will not load. */
+  lemmaMap: (letter: string, fold: string) => Promise<Record<string, string[]>>;
+}
+
+/** The picker's keys for a typed word.
+ *
+ * The fold itself when that fold is a dictionary key — the lemma map is not
+ * read. Otherwise the dictionary keys among the map's readings of the fold.
+ * An unknown word, or a shard that does not load, is an empty list.
+ */
+export async function resolveHeadwordKeys(word: string, deps: HeadwordKeyDeps): Promise<string[]> {
+  const fold = greekFold(word);
+  if (!fold) return [];
+  const has = async (key: string): Promise<boolean> => {
+    try {
+      return Object.hasOwn(await deps.pickerShard(shardLetter(key)), key);
+    } catch {
+      return false;
+    }
+  };
+  if (await has(fold)) return [fold];
+  let heads: string[] = [];
+  try {
+    const shard = await deps.lemmaMap(shardLetter(fold), fold);
+    heads = Object.hasOwn(shard, fold) ? shard[fold] : [];
+  } catch {
+    heads = [];
+  }
+  const found: string[] = [];
+  for (const head of heads) if (await has(head)) found.push(head);
+  return found;
+}
+
+/** The loaders the page's lemma picker and the corpus map already use. */
+export const corpusHeadwordDeps: HeadwordKeyDeps = {
+  pickerShard: async (letter) => fetchLemmaPickerShard(letter) as unknown as Record<string, unknown>,
+  lemmaMap: (letter) => loadShared<Record<string, string[]>>(`lemma-map/${letter}.json`),
+};
+
 /** The headwords each folded word can belong to, one list per word.
  *
  * `null` means the corpus map itself could not be loaded: there is nothing to
@@ -1667,6 +1713,56 @@ export function lemmaReadings(perTerm: string[][], cap: number): { readings: str
   return { readings, total };
 }
 
+// Accented spelling of a typed word, for comparison with a picker's `h`.
+// Beta Code is read as the search box reads it. A leading * is the capital
+// marker there and a wildcard in Greek, and either way it is not part of the
+// spelling. Lowercased before it is composed, as a capital with two marks
+// has no composed form and its small letter does.
+function typedHeadwordSurface(word: string): string {
+  const stripped = word.replace(/^\*+/, '');
+  const greek = greekScript(stripped) ? stripped : betaQueryToGreek(stripped);
+  return greek.toLowerCase().normalize('NFC');
+}
+
+const headwordSurface = (h: string) => h.toLowerCase().normalize('NFC');
+
+// The accented headwords (`h`) one picker key is filed under. A shard that
+// does not load rejects; a key the shard does not hold is an empty list.
+async function pickerHeadwords(key: string): Promise<string[]> {
+  const shard = await fetchLemmaPickerShard(shardLetter(key));
+  const choice = shard[key];
+  if (!choice || !Array.isArray(choice.c)) return [];
+  return choice.c.map(c => c.h).filter(h => h.length > 0);
+}
+
+/** Where a typed word is itself one headword, keep only that key.
+ *
+ * μήν is the headword μήν, so a phrase must not also be read as μείς
+ * ("month"), which shares its folded letters. A spelling that is not exactly
+ * one of the option keys' headwords — εἶ, an unaccented μην — keeps every
+ * option, and so does a word whose picker shard did not load.
+ */
+export async function narrowToTypedHeadwords(
+  typed: string[],
+  perTerm: string[][],
+  headsOf: (key: string) => Promise<string[]>,
+): Promise<string[][]> {
+  const out: string[][] = [];
+  for (let i = 0; i < perTerm.length; i++) {
+    const options = perTerm[i] ?? [];
+    const surface = typedHeadwordSurface(typed[i] ?? '');
+    if (!surface || !options.length) { out.push(options); continue; }
+    try {
+      const named = await Promise.all(options.map(async key => ({ key, names: await headsOf(key) })));
+      const matched = named.filter(row => row.names.some(name => headwordSurface(name) === surface)).map(row => row.key);
+      out.push(matched.length ? matched : options);
+    } catch {
+      out.push(options);
+    }
+  }
+  return out;
+}
+
 // Every place the phrase stands under ANY reading of its words.
 export async function searchPhraseVariants(
   grkQuery: string,
@@ -1686,8 +1782,11 @@ export async function searchPhraseVariants(
   const perTerm = await lemmaOptions(folds);
   if (!perTerm) return empty;              // without the map there is nothing to widen with
   if (perTerm.some(options => !options.length)) return empty;
+  // A word typed as its own headword is that headword, not every homograph
+  // that folds the same way. A shard that does not load leaves the word wide.
+  const narrowed = await narrowToTypedHeadwords(terms, perTerm, pickerHeadwords);
 
-  const { readings, total } = lemmaReadings(perTerm, VARIANT_READING_CAP);
+  const { readings, total } = lemmaReadings(narrowed, VARIANT_READING_CAP);
   const cappedFrom = total > readings.length ? total : 0;
 
   const failedWorks: string[] = [];
@@ -2752,9 +2851,15 @@ export async function search(
   if (speaker && !speaker.names.length) speaker = undefined;
 
   const typedGrk = grkQuery.trim().split(/\s+/).filter(Boolean);
-  const { terms: grkTerms, unresolved: unresolvedTerms } = matchMode === 'lemma'
+  let { terms: grkTerms, unresolved: unresolvedTerms } = matchMode === 'lemma'
     ? await resolveHeadwords(typedGrk)
-    : { terms: typedGrk.map(t => [t]), unresolved: [] };
+    : { terms: typedGrk.map(t => [t]), unresolved: [] as string[] };
+  // A phrase, and only a phrase: one typed word still means every headword
+  // that spelling can belong to, and form mode and running text never come
+  // through here as a phrase of dictionary words. μήν in a phrase is μήν.
+  if (matchMode === 'lemma' && grkMode === 'phrase' && typedGrk.length > 1) {
+    grkTerms = await narrowToTypedHeadwords(typedGrk, grkTerms, pickerHeadwords);
+  }
   const engUnits = englishQueryUnits(engQuery);
   // "Any form" looks each word's forms up in the index it is handed, which on
   // the shard path holds only the keys cut for these terms: so the forms are
