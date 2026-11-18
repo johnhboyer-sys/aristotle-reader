@@ -13,6 +13,36 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-17 (later) — DEPLOYED: the "and/or" and "or" counts (#212), Lemma's form choice (#210), the icons (#211)
+
+`gh-pages 538a60f2 → 85ec93f0`, source `a2c5545d6a` (`origin/main`, the #212 merge), on John's "Yes, deploy"
+(18:12), in the order the redesign session set (Aristotle first, then the plays). App-only build
+(`PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22; corpus data unchanged), `npm run deploy:dry`, then
+`npm run deploy -- --verify`.
+
+**What shipped:**
+- **#212:** "and/or" and "or" count Greek plus English hits where one translation answers (chosen, or a
+  work's only one), and chapters alone over several, never "0 hits" (John, 17 Nov). "and" and proximity
+  keep the Greek count.
+- **#210:** with Lemma on, the Greek form choice is hidden.
+- **#211** (favicon-alpha, another session's): new `favicon.svg`, `icon-192/512.png`, and
+  `manifest.webmanifest`, plus `Pwa.astro` in every page's head.
+
+**Gates:** link integrity 0 broken (7,563 pages); leak check at baseline (Rackham 2, the known EN files);
+dangling bundle references 0. Deploy diff 7,566 files: 1 A and 1 D (the Search bundle), 7,564 M (every page,
+through `Pwa.astro`, and the four icon files); no data changes. The 22 stale English shards were restored
+from live as before.
+
+**Live-verified** (Chrome, cache off):
+
+| Search | Result |
+|---|---|
+| ἀρετή + virtue (page 1) | 7 books, 2.2 MB gzip; "229 chapters · 940 hits", 23 pages, 40 rows |
+| ἀρετή or virtue | "209 chapters", no hit figure, no "0 hits" heading |
+| ἀρετή and/or virtue | "438 chapters", no hit figure |
+| and/or over the Physics | "31 chapters · 67 hits"; its heading reads 55 on page 1 and 12 on page 2 |
+| or, with Ross chosen | "242 chapters · 796 hits" |
+
 ## 2026-11-17 — DEPLOYED: search page 1 reads only its own books (PR #208)
 
 `gh-pages 02d10eba → 538a60f2`, source `c61eee5b40` (`origin/main`, the #208 merge), on John's "Yes, deploy".
