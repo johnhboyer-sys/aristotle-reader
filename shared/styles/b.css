@@ -16,6 +16,9 @@
   --po-op: .82;
   --sans: "Sofia Sans", system-ui, sans-serif; --read: "Literata", Georgia, serif;
   --tface: Oswald, sans-serif; --tw: 700;
+  /* global.css's --font-greek names Cardo, which B never loads: the LSJ entry
+     drew in whatever Greek face a machine had installed (R-R27). */
+  --font-greek: "Gentium Book Plus", serif;
   background: var(--bg); color: var(--ink); font-family: var(--read);
 }
 :root[data-theme="dark"] .frame.dir-b {

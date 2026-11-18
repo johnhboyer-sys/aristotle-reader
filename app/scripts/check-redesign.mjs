@@ -150,6 +150,9 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
     page.fontFileRequests = [];
     page.fontSheetReads = [];
     page.fontFailures = [];
+    page.grammataFailures = [];
+    page.on('requestfailed', r => { if (/grammata/.test(r.url())) page.grammataFailures.push(`${r.url()}: ${r.failure()?.errorText}`); });
+    page.on('response', r => { if (/grammata/.test(r.url()) && r.status() >= 400) page.grammataFailures.push(`${r.url()}: HTTP ${r.status()}`); });
     page.imageRequests = [];
     page.on('requestfailed', request => {
         if (['font','stylesheet'].includes(request.resourceType())) page.fontFailures.push(`${request.url()}: ${request.failure()?.errorText}`);
@@ -5328,6 +5331,108 @@ if (stage >= 5) Object.assign(gates, {
   assert(!issues.length, issuesOf(issues, 'English cap and opening fragment'));
   return n;
  },
+ 'R-R27': async () => {
+  // LSJ entry face (John, 18 Nov: πρόειμι's bold headword drawn at uneven weights).
+  // --grammata-greek named global.css's old Cardo chain, which the redesign never
+  // loads, so each machine drew the entry in whatever it had installed: an
+  // installed Cardo Bold 1.0011 holds bold outlines for μ, ο and π only, and the
+  // rest of its Greek is the regular glyph. Ask Chrome which font file drew each
+  // run: every one must be the loaded web Gentium Book Plus, the headword in its
+  // Bold. Computed styles cannot see this; the platform fonts can.
+  // Runs are elements whose own text is Greek with no Latin letters (a mixed run
+  // would rightly draw its Latin in the English face), found by walking text
+  // nodes, so Greek that inherits the mount's lang="grc" is examined too.
+  let n = 0;
+  const issues = [];
+  for (const [path, label, lemma] of [[READER, 'word panel', 'πρόειμι'], [LEMMA, 'lemma page', 'ἀρετή']]) {
+   const p = path === READER ? await openReader('D1440') : await open('D1440', 'light', path);
+   const grammataFailed = p.grammataFailures;
+   try {
+    if (path === READER) {
+     await openWord(p, '.b-gc .tok:text-is("πρόεισι")');
+     // The εἶμι (ibo) card: John's entry, the one whose sense list reads "go forward".
+     await p.locator('.b-card', {has: p.locator('.b-lem', {hasText: lemma})}).first().locator('.b-card-f button').click();
+    }
+    const head = p.locator('.grammata-mount .t8-head h3').first();
+    const shown = await head.waitFor({timeout: 15000}).then(() => true, () => false);
+    if (!shown) { issues.push(`${label} grammata entry never rendered${grammataFailed.length ? `: grammata unreachable (${grammataFailed.join('; ')})` : ''}`); continue; }
+    const headText = (await head.textContent()).trim();
+    if (headText !== lemma) issues.push(`${label} headword "${headText}", expected "${lemma}"`);
+    // Open every sense's examples: their bold Greek forms (b.hw) drew in the same
+    // faulty Cardo Bold as the headword (προϊών: π and ο heavy, ρ ϊ ω ν light).
+    let opened = 0;
+    for (let round = 0; round < 5; round++) {
+     const clicked = await p.evaluate(() => { const ts = [...document.querySelectorAll('.grammata-mount .t8-ex-toggle[aria-expanded="false"]')]; ts.forEach(t => t.click()); return ts.length; });
+     if (!clicked) break;
+     opened += clicked;
+     await p.waitForFunction(() => [...document.querySelectorAll('.grammata-mount .t8-ex-toggle')].every(t => {
+      const ex = document.getElementById(t.getAttribute('aria-controls'));
+      return t.getAttribute('aria-expanded') === 'true' && ex && ex.getClientRects().length && ex.textContent.trim();
+     }), null, {timeout: 5000}).catch(() => {});
+    }
+    const shut = await p.locator('.grammata-mount .t8-ex-toggle:not([aria-expanded="true"])').count();
+    if (!opened) issues.push(`${label} examined=0 example toggles`);
+    if (shut) issues.push(`${label} ${shut} example toggles still closed or empty after opening`);
+    if (prove && proofCase === 'old-chain') await style(p, '.grammata-mount{--grammata-greek:"Cardo","Gentium Plus","Noto Serif",Georgia,serif!important}');
+    if (prove && proofCase === 'faux-bold') await style(p, '.grammata-mount .t8-head h3{font-weight:400!important}');
+    if (prove && proofCase === 'faux-bold-example') await style(p, '.grammata-mount .t8-ex b.hw{font-weight:500!important}');
+    if (prove && proofCase === 'old-chain') assert(/^"?Cardo/.test(await head.evaluate(el => getComputedStyle(el).fontFamily)), 'old-chain proof did not change the headword chain');
+    await p.evaluate(() => document.fonts.load('700 26px "Gentium Book Plus"', 'πρόειμι'));
+    await settleFonts(p);
+    if (p.fontFailures.length) issues.push(`${label} font files unavailable, so the faces below prove nothing: ${p.fontFailures.slice(0, 3).join('; ')}`);
+    // Every Greek stretch of every drawn text node is wrapped in its own measuring
+    // span (inheriting the face), so Greek beside Latin in one element is examined
+    // apart from the Latin, which rightly draws in the English face.
+    const marked = await p.evaluate(() => {
+     const stretch = /[\u0370-\u03FF\u1F00-\u1FFF][\u0300-\u036F\u0370-\u03FF\u1F00-\u1FFF\u2019'\s.,·;]*/g, nodes = [];
+     for (const m of document.querySelectorAll('.grammata-mount')) {
+      const w = document.createTreeWalker(m, NodeFilter.SHOW_TEXT);
+      for (let t; (t = w.nextNode());) if (t.parentElement.getClientRects().length && /[\u0370-\u03FF\u1F00-\u1FFF]/.test(t.textContent)) nodes.push(t);
+     }
+     let i = 0;
+     for (const t of nodes) {
+      const kind = t.parentElement.closest('.t8-head h3') ? 'head' : t.parentElement.closest('b, strong') ? 'bold' : 'body';
+      const frag = document.createDocumentFragment(), s = t.textContent;
+      let last = 0;
+      for (const m of s.matchAll(stretch)) {
+       if (m.index > last) frag.append(s.slice(last, m.index));
+       const span = document.createElement('span');
+       span.dataset.rr27 = kind; span.textContent = m[0];
+       frag.append(span); last = m.index + m[0].length; i++;
+      }
+      if (last < s.length) frag.append(s.slice(last));
+      t.replaceWith(frag);
+     }
+     return i;
+    });
+    const cdp = await p.context().newCDPSession(p);
+    await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
+    const {root} = await cdp.send('DOM.getDocument', {depth: -1});
+    const {nodeIds} = await cdp.send('DOM.querySelectorAll', {nodeId: root.nodeId, selector: '[data-rr27]'});
+    let heads = 0, bold = 0, body = 0;
+    for (const id of nodeIds) {
+     const {fonts} = await cdp.send('CSS.getPlatformFontsForNode', {nodeId: id});
+     const {outerHTML} = await cdp.send('DOM.getOuterHTML', {nodeId: id});
+     const isHead = /^<[^>]*data-rr27="head"/.test(outerHTML), isBold = /^<[^>]*data-rr27="bold"/.test(outerHTML);
+     const text = outerHTML.replace(/<[^>]+>/g, '').slice(0, 24);
+     if (!fonts.length) { issues.push(`${label} ${isHead ? 'headword' : 'Greek'} "${text}": Chrome reports no font for a drawn run`); continue; }
+     const want = isHead || isBold ? /^GentiumBookPlus-Bold$/ : /^GentiumBookPlus(-Regular|-Italic)?$/; // Google names its regular subset GentiumBookPlus
+     const name = f => `${f.postScriptName || f.familyName}${f.isCustomFont ? '' : ' (installed)'}`;
+     const bad = fonts.filter(f => !f.isCustomFont || f.familyName !== 'Gentium Book Plus' || !want.test(f.postScriptName));
+     if (bad.length) issues.push(`${label} ${isHead ? 'headword' : isBold ? 'bold Greek' : 'Greek'} "${text}" drawn in ${fonts.map(f => `${name(f)} ×${f.glyphCount}`).join(' + ')}; not ${isHead || isBold ? 'GentiumBookPlus-Bold' : 'Gentium Book Plus'} (web): ${bad.map(name).join(', ')}`);
+     if (isHead) heads++; else if (isBold) bold++; else body++;
+    }
+    if (!heads) issues.push(`${label} examined=0 LSJ headword runs (marked ${marked})`);
+    if (body < 2) issues.push(`${label} examined=${body} regular LSJ Greek runs`);
+    if (!bold) issues.push(`${label} examined=0 bold Greek runs in the opened examples`);
+    console.log(`R-R27 ${label}: headword "${headText}", ${heads} headword run(s), ${bold} bold and ${body} regular Greek runs`);
+    n += heads + bold + body;
+   } finally { await close(p); }
+  }
+  logIssues('R-R27', issues);
+  assert(!issues.length, issuesOf(issues, 'LSJ entry face'));
+  return n;
+ },
 });
 const assetProofs = {'no-css': /R-C2 missing built assets: CSS files=0 JS files=\d+/, 'no-js': /R-C2 missing built assets: CSS files=\d+ JS files=0/, 'legacy': /legacy width token:/};
 const stageThreeProofs = {
@@ -5391,7 +5496,8 @@ const stageFiveProofs = {
     'R-R23': {'no-hide': /S844 after a 400px scroll down: bar away=false/, 'no-tap': /S844 after a tap in the top 44px: bar away=true/, 'hides-over-menu': /S844 scrolled down with the Aa panel open: bar away=true/},
     'R-R24': {'dropped-single': /EN D1152 Both \(ostwald\) 0 curly single quotes drawn for the data's \d+ straight ones/, 'straight': /EN D1152 Both \(ostwald\) 1 straight quotes in the English/, 'greek-apostrophe': /EN D1152 Both \(ostwald\) 1 U\+0027 elision marks in the Greek/, 'dash-space': /EN P390 Both \(ostwald\) 1 em dashes after a space/},
     'R-R25': {'phone-switch': /P390 greek Aa shows "Full Greek lines" where full lines cannot fit/, 'no-widen': /D1152 Both on(, text 90%)? Greek column \d+px, expected the longest line/},
-    'R-R26': {'uncapped': /D1440 english \d+ of \d+ rows wider than 664px/, 'outdent': /P390 both opening fragment L[\w-]+ turns over at [\d.]+px, expected the fragment indent \+ 8 = 24/},
+    'R-R27': {'old-chain': /word panel headword "πρόειμι" drawn in [^;]*; not GentiumBookPlus-Bold \(web\): (?!GentiumBookPlus)\S/, 'faux-bold': /word panel headword "πρόειμι" drawn in GentiumBookPlus ×7; not GentiumBookPlus-Bold \(web\): GentiumBookPlus(?![\w-])/, 'faux-bold-example': /word panel bold Greek "[^"]+" drawn in GentiumBookPlus ×\d+; not GentiumBookPlus-Bold \(web\): GentiumBookPlus(?![\w-])/},
+    'R-R26': {'uncapped':/D1440 english \d+ of \d+ rows wider than 664px/, 'outdent': /P390 both opening fragment L[\w-]+ turns over at [\d.]+px, expected the fragment indent \+ 8 = 24/},
 };
 // --list prints the stage's gate ids, one a line, for check-redesign-shards.mjs.
 if (args.includes('--list')) { console.log(Object.keys(gates).join('\n')); process.exit(0); }
