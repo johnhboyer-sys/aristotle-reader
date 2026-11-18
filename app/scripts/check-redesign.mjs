@@ -150,6 +150,9 @@ async function open(size = 'D1440', theme = 'light', path = '/', seed = false, f
     page.fontFileRequests = [];
     page.fontSheetReads = [];
     page.fontFailures = [];
+    page.grammataFailures = [];
+    page.on('requestfailed', r => { if (/grammata/.test(r.url())) page.grammataFailures.push(`${r.url()}: ${r.failure()?.errorText}`); });
+    page.on('response', r => { if (/grammata/.test(r.url()) && r.status() >= 400) page.grammataFailures.push(`${r.url()}: HTTP ${r.status()}`); });
     page.imageRequests = [];
     page.on('requestfailed', request => {
         if (['font','stylesheet'].includes(request.resourceType())) page.fontFailures.push(`${request.url()}: ${request.failure()?.errorText}`);
@@ -5343,9 +5346,7 @@ if (stage >= 5) Object.assign(gates, {
   const issues = [];
   for (const [path, label, lemma] of [[READER, 'word panel', 'πρόειμι'], [LEMMA, 'lemma page', 'ἀρετή']]) {
    const p = path === READER ? await openReader('D1440') : await open('D1440', 'light', path);
-   const grammataFailed = [];
-   p.on('requestfailed', r => { if (/grammata/.test(r.url())) grammataFailed.push(`${r.url()}: ${r.failure()?.errorText}`); });
-   p.on('response', r => { if (/grammata/.test(r.url()) && r.status() >= 400) grammataFailed.push(`${r.url()}: HTTP ${r.status()}`); });
+   const grammataFailed = p.grammataFailures;
    try {
     if (path === READER) {
      await openWord(p, '.b-gc .tok:text-is("πρόεισι")');
@@ -5359,9 +5360,19 @@ if (stage >= 5) Object.assign(gates, {
     if (headText !== lemma) issues.push(`${label} headword "${headText}", expected "${lemma}"`);
     // Open every sense's examples: their bold Greek forms (b.hw) drew in the same
     // faulty Cardo Bold as the headword (προϊών: π and ο heavy, ρ ϊ ω ν light).
-    const opened = await p.evaluate(() => { const ts = [...document.querySelectorAll('.grammata-mount .t8-ex-toggle[aria-expanded="false"]')]; ts.forEach(t => t.click()); return ts.length; });
+    let opened = 0;
+    for (let round = 0; round < 5; round++) {
+     const clicked = await p.evaluate(() => { const ts = [...document.querySelectorAll('.grammata-mount .t8-ex-toggle[aria-expanded="false"]')]; ts.forEach(t => t.click()); return ts.length; });
+     if (!clicked) break;
+     opened += clicked;
+     await p.waitForFunction(() => [...document.querySelectorAll('.grammata-mount .t8-ex-toggle')].every(t => {
+      const ex = document.getElementById(t.getAttribute('aria-controls'));
+      return t.getAttribute('aria-expanded') === 'true' && ex && ex.getClientRects().length && ex.textContent.trim();
+     }), null, {timeout: 5000}).catch(() => {});
+    }
+    const shut = await p.locator('.grammata-mount .t8-ex-toggle:not([aria-expanded="true"])').count();
     if (!opened) issues.push(`${label} examined=0 example toggles`);
-    await p.waitForTimeout(300);
+    if (shut) issues.push(`${label} ${shut} example toggles still closed or empty after opening`);
     if (prove && proofCase === 'old-chain') await style(p, '.grammata-mount{--grammata-greek:"Cardo","Gentium Plus","Noto Serif",Georgia,serif!important}');
     if (prove && proofCase === 'faux-bold') await style(p, '.grammata-mount .t8-head h3{font-weight:400!important}');
     if (prove && proofCase === 'faux-bold-example') await style(p, '.grammata-mount .t8-ex b.hw{font-weight:500!important}');
@@ -5369,18 +5380,28 @@ if (stage >= 5) Object.assign(gates, {
     await p.evaluate(() => document.fonts.load('700 26px "Gentium Book Plus"', 'πρόειμι'));
     await settleFonts(p);
     if (p.fontFailures.length) issues.push(`${label} font files unavailable, so the faces below prove nothing: ${p.fontFailures.slice(0, 3).join('; ')}`);
+    // Every Greek stretch of every drawn text node is wrapped in its own measuring
+    // span (inheriting the face), so Greek beside Latin in one element is examined
+    // apart from the Latin, which rightly draws in the English face.
     const marked = await p.evaluate(() => {
-     const greek = /[Ͱ-Ͽἀ-῿]/, latin = /[A-Za-z]/, els = new Set();
+     const stretch = /[\u0370-\u03FF\u1F00-\u1FFF][\u0300-\u036F\u0370-\u03FF\u1F00-\u1FFF\u2019'\s.,·;]*/g, nodes = [];
      for (const m of document.querySelectorAll('.grammata-mount')) {
       const w = document.createTreeWalker(m, NodeFilter.SHOW_TEXT);
-      for (let t; (t = w.nextNode());) if (greek.test(t.textContent)) els.add(t.parentElement);
+      for (let t; (t = w.nextNode());) if (t.parentElement.getClientRects().length && /[\u0370-\u03FF\u1F00-\u1FFF]/.test(t.textContent)) nodes.push(t);
      }
      let i = 0;
-     for (const el of els) {
-      const own = [...el.childNodes].filter(c => c.nodeType === 3).map(c => c.textContent).join('');
-      if (!el.getClientRects().length || latin.test(own)) continue;
-      el.dataset.rr27 = el.closest('.t8-head h3') ? 'head' : el.closest('b, strong') ? 'bold' : 'body';
-      i++;
+     for (const t of nodes) {
+      const kind = t.parentElement.closest('.t8-head h3') ? 'head' : t.parentElement.closest('b, strong') ? 'bold' : 'body';
+      const frag = document.createDocumentFragment(), s = t.textContent;
+      let last = 0;
+      for (const m of s.matchAll(stretch)) {
+       if (m.index > last) frag.append(s.slice(last, m.index));
+       const span = document.createElement('span');
+       span.dataset.rr27 = kind; span.textContent = m[0];
+       frag.append(span); last = m.index + m[0].length; i++;
+      }
+      if (last < s.length) frag.append(s.slice(last));
+      t.replaceWith(frag);
      }
      return i;
     });
