@@ -5357,8 +5357,14 @@ if (stage >= 5) Object.assign(gates, {
     if (!shown) { issues.push(`${label} grammata entry never rendered${grammataFailed.length ? `: grammata unreachable (${grammataFailed.join('; ')})` : ''}`); continue; }
     const headText = (await head.textContent()).trim();
     if (headText !== lemma) issues.push(`${label} headword "${headText}", expected "${lemma}"`);
+    // Open every sense's examples: their bold Greek forms (b.hw) drew in the same
+    // faulty Cardo Bold as the headword (προϊών: π and ο heavy, ρ ϊ ω ν light).
+    const opened = await p.evaluate(() => { const ts = [...document.querySelectorAll('.grammata-mount .t8-ex-toggle[aria-expanded="false"]')]; ts.forEach(t => t.click()); return ts.length; });
+    if (!opened) issues.push(`${label} examined=0 example toggles`);
+    await p.waitForTimeout(300);
     if (prove && proofCase === 'old-chain') await style(p, '.grammata-mount{--grammata-greek:"Cardo","Gentium Plus","Noto Serif",Georgia,serif!important}');
     if (prove && proofCase === 'faux-bold') await style(p, '.grammata-mount .t8-head h3{font-weight:400!important}');
+    if (prove && proofCase === 'faux-bold-example') await style(p, '.grammata-mount .t8-ex b.hw{font-weight:500!important}');
     if (prove && proofCase === 'old-chain') assert(/^"?Cardo/.test(await head.evaluate(el => getComputedStyle(el).fontFamily)), 'old-chain proof did not change the headword chain');
     await p.evaluate(() => document.fonts.load('700 26px "Gentium Book Plus"', 'πρόειμι'));
     await settleFonts(p);
@@ -5373,7 +5379,7 @@ if (stage >= 5) Object.assign(gates, {
      for (const el of els) {
       const own = [...el.childNodes].filter(c => c.nodeType === 3).map(c => c.textContent).join('');
       if (!el.getClientRects().length || latin.test(own)) continue;
-      el.dataset.rr27 = el.closest('.t8-head h3') ? 'head' : 'body';
+      el.dataset.rr27 = el.closest('.t8-head h3') ? 'head' : el.closest('b, strong') ? 'bold' : 'body';
       i++;
      }
      return i;
@@ -5382,23 +5388,24 @@ if (stage >= 5) Object.assign(gates, {
     await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
     const {root} = await cdp.send('DOM.getDocument', {depth: -1});
     const {nodeIds} = await cdp.send('DOM.querySelectorAll', {nodeId: root.nodeId, selector: '[data-rr27]'});
-    let heads = 0, body = 0;
+    let heads = 0, bold = 0, body = 0;
     for (const id of nodeIds) {
      const {fonts} = await cdp.send('CSS.getPlatformFontsForNode', {nodeId: id});
      const {outerHTML} = await cdp.send('DOM.getOuterHTML', {nodeId: id});
-     const isHead = /^<[^>]*data-rr27="head"/.test(outerHTML);
+     const isHead = /^<[^>]*data-rr27="head"/.test(outerHTML), isBold = /^<[^>]*data-rr27="bold"/.test(outerHTML);
      const text = outerHTML.replace(/<[^>]+>/g, '').slice(0, 24);
      if (!fonts.length) { issues.push(`${label} ${isHead ? 'headword' : 'Greek'} "${text}": Chrome reports no font for a drawn run`); continue; }
-     const want = isHead ? /^GentiumBookPlus-Bold$/ : /^GentiumBookPlus(-Regular|-Bold|-Italic)?$/; // Google names its regular subset GentiumBookPlus
+     const want = isHead || isBold ? /^GentiumBookPlus-Bold$/ : /^GentiumBookPlus(-Regular|-Italic)?$/; // Google names its regular subset GentiumBookPlus
      const name = f => `${f.postScriptName || f.familyName}${f.isCustomFont ? '' : ' (installed)'}`;
      const bad = fonts.filter(f => !f.isCustomFont || f.familyName !== 'Gentium Book Plus' || !want.test(f.postScriptName));
-     if (bad.length) issues.push(`${label} ${isHead ? 'headword' : 'Greek'} "${text}" drawn in ${fonts.map(f => `${name(f)} ×${f.glyphCount}`).join(' + ')}; not ${isHead ? 'GentiumBookPlus-Bold' : 'Gentium Book Plus'} (web): ${bad.map(name).join(', ')}`);
-     if (isHead) heads++; else body++;
+     if (bad.length) issues.push(`${label} ${isHead ? 'headword' : isBold ? 'bold Greek' : 'Greek'} "${text}" drawn in ${fonts.map(f => `${name(f)} ×${f.glyphCount}`).join(' + ')}; not ${isHead || isBold ? 'GentiumBookPlus-Bold' : 'Gentium Book Plus'} (web): ${bad.map(name).join(', ')}`);
+     if (isHead) heads++; else if (isBold) bold++; else body++;
     }
     if (!heads) issues.push(`${label} examined=0 LSJ headword runs (marked ${marked})`);
-    if (body < 2) issues.push(`${label} examined=${body} LSJ Greek runs besides the headword`);
-    console.log(`R-R27 ${label}: headword "${headText}", ${heads} headword run(s), ${body} other Greek runs`);
-    n += heads + body;
+    if (body < 2) issues.push(`${label} examined=${body} regular LSJ Greek runs`);
+    if (!bold) issues.push(`${label} examined=0 bold Greek runs in the opened examples`);
+    console.log(`R-R27 ${label}: headword "${headText}", ${heads} headword run(s), ${bold} bold and ${body} regular Greek runs`);
+    n += heads + bold + body;
    } finally { await close(p); }
   }
   logIssues('R-R27', issues);
@@ -5468,7 +5475,7 @@ const stageFiveProofs = {
     'R-R23': {'no-hide': /S844 after a 400px scroll down: bar away=false/, 'no-tap': /S844 after a tap in the top 44px: bar away=true/, 'hides-over-menu': /S844 scrolled down with the Aa panel open: bar away=true/},
     'R-R24': {'dropped-single': /EN D1152 Both \(ostwald\) 0 curly single quotes drawn for the data's \d+ straight ones/, 'straight': /EN D1152 Both \(ostwald\) 1 straight quotes in the English/, 'greek-apostrophe': /EN D1152 Both \(ostwald\) 1 U\+0027 elision marks in the Greek/, 'dash-space': /EN P390 Both \(ostwald\) 1 em dashes after a space/},
     'R-R25': {'phone-switch': /P390 greek Aa shows "Full Greek lines" where full lines cannot fit/, 'no-widen': /D1152 Both on(, text 90%)? Greek column \d+px, expected the longest line/},
-    'R-R27': {'old-chain': /word panel headword "πρόειμι" drawn in [^;]*; not GentiumBookPlus-Bold \(web\): (?!GentiumBookPlus)\S/, 'faux-bold': /word panel headword "πρόειμι" drawn in GentiumBookPlus ×7; not GentiumBookPlus-Bold \(web\): GentiumBookPlus(?![\w-])/},
+    'R-R27': {'old-chain': /word panel headword "πρόειμι" drawn in [^;]*; not GentiumBookPlus-Bold \(web\): (?!GentiumBookPlus)\S/, 'faux-bold': /word panel headword "πρόειμι" drawn in GentiumBookPlus ×7; not GentiumBookPlus-Bold \(web\): GentiumBookPlus(?![\w-])/, 'faux-bold-example': /word panel bold Greek "[^"]+" drawn in GentiumBookPlus ×\d+; not GentiumBookPlus-Bold \(web\): GentiumBookPlus(?![\w-])/},
     'R-R26': {'uncapped':/D1440 english \d+ of \d+ rows wider than 664px/, 'outdent': /P390 both opening fragment L[\w-]+ turns over at [\d.]+px, expected the fragment indent \+ 8 = 24/},
 };
 // --list prints the stage's gate ids, one a line, for check-redesign-shards.mjs.
