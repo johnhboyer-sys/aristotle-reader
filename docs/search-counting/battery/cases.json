@@ -1,0 +1,275 @@
+{
+  "sites": {
+    "aristotle": "https://aristotle.johnhboyer.com",
+    "plato": "https://plato.johnhboyer.com",
+    "homer": "https://homer.johnhboyer.com",
+    "plays": "https://greekdrama.johnhboyer.com"
+  },
+  "cases": [
+    {
+      "id": "dittenberger-laws",
+      "site": "plato",
+      "path": "/search/?g=τί μήν&gm=phrase&w=Laws",
+      "expect": {
+        "hits": 48
+      },
+      "source": "Dittenberger, Hermes 16 (1881), p. 326: Laws 48"
+    },
+    {
+      "id": "dittenberger-statesman",
+      "site": "plato",
+      "path": "/search/?g=τί μήν&gm=phrase&w=Statesman",
+      "expect": {
+        "hits": 20
+      },
+      "source": "Dittenberger p. 326: Statesman 20"
+    },
+    {
+      "id": "dittenberger-phaedrus",
+      "site": "plato",
+      "path": "/search/?g=τί μήν&gm=phrase&w=Phaedrus",
+      "expect": {
+        "hits": 11
+      },
+      "source": "Dittenberger p. 326: Phaedrus 11"
+    },
+    {
+      "id": "ti-men-phrase-forms",
+      "site": "plato",
+      "path": "/search/?g=τί μήν&gm=phrase&v=form",
+      "expect": {
+        "units": 202,
+        "hits": 202
+      },
+      "source": "PR #124 (typed headword narrows); count live 18 Nov"
+    },
+    {
+      "id": "phrase-forms-list-meis",
+      "site": "plato",
+      "path": "/search/?g=τί μήν&gm=phrase&v=form",
+      "status": "known-bug",
+      "expect": {
+        "headsHas": [
+          "μήν"
+        ],
+        "headsLack": [
+          "μείς"
+        ]
+      },
+      "source": "18 Nov: the phrase finds μήν only, but the Forms list still names μείς (greekHitForms did not narrow a phrase); fixed on branch claude/lemma-accents"
+    },
+    {
+      "id": "lemma-fold-key-nous",
+      "site": "aristotle",
+      "path": "/search/?l=nous",
+      "expect": {
+        "units": 119,
+        "hits": 270,
+        "url": "l=nous"
+      },
+      "source": "PR #214 (fold keys in URLs resolve); live 18 Nov, empty before"
+    },
+    {
+      "id": "arete-and-virtue",
+      "note": "no op= is \"and\"; op=or is the page's and/or; op=xor is its or",
+      "site": "aristotle",
+      "path": "/search/?g=ἀρετή&e=virtue",
+      "expect": {
+        "units": 229,
+        "hits": 940
+      },
+      "source": "DEPLOY-STATUS 2026-11-17 (later)"
+    },
+    {
+      "id": "arete-or-virtue",
+      "site": "aristotle",
+      "path": "/search/?g=ἀρετή&e=virtue&op=xor",
+      "expect": {
+        "units": 209,
+        "lacks": [
+          "0 hits"
+        ],
+        "has": [
+          "ἀρετ"
+        ]
+      },
+      "source": "DEPLOY-STATUS 2026-11-17 (later), #212"
+    },
+    {
+      "id": "katharsis-noun",
+      "site": "aristotle",
+      "path": "/search/?g=κάθαρσις",
+      "expect": {
+        "hits": 63
+      },
+      "source": "debates.md case 6, live 18 Nov (noun alone, all works)"
+    },
+    {
+      "id": "thalassa-sea-andor",
+      "site": "homer",
+      "path": "/search/?g=θάλασσα&e=sea&op=or",
+      "expect": {
+        "units": 298
+      },
+      "source": "homer DEPLOY-STATUS 2026-11-17 (second), #68"
+    },
+    {
+      "id": "thalassa-sea-or",
+      "site": "homer",
+      "path": "/search/?g=θάλασσα&e=sea&op=xor",
+      "expect": {
+        "units": 204
+      },
+      "source": "homer DEPLOY-STATUS 2026-11-17 (second), #68"
+    },
+    {
+      "id": "speaker-link-to-speech",
+      "site": "homer",
+      "path": "/search/?g=κλέος&sp=only&sn=Achilles",
+      "expect": {
+        "units": 4,
+        "hits": 5,
+        "url": "spk=achilles"
+      },
+      "source": "homer PR #70; live 18 Nov"
+    },
+    {
+      "id": "plays-lemma-fold-key-nous",
+      "site": "plays",
+      "path": "/search/?l=nous",
+      "expect": {
+        "units": 138,
+        "hits": 149
+      },
+      "source": "greek-plays PR #12; live 18 Nov"
+    },
+    {
+      "id": "plays-ti-men-phrase-forms",
+      "site": "plays",
+      "path": "/search/?g=τί μήν&gm=phrase&v=form&m=lemma",
+      "expect": {
+        "units": 11,
+        "hits": 11
+      },
+      "source": "greek-plays PR #12; live 18 Nov with m=lemma (the 10 recorded at deploy was the exact-form search)",
+      "note": "the plays read a Greek link without m as an old exact-form link; m=lemma is any form"
+    },
+    {
+      "id": "plays-phrase-forms-list-meis",
+      "site": "plays",
+      "path": "/search/?g=τί μήν&gm=phrase&v=form&m=lemma",
+      "status": "known-bug",
+      "expect": {
+        "headsHas": [
+          "μήν"
+        ],
+        "headsLack": [
+          "μείς"
+        ]
+      },
+      "source": "18 Nov: the phrase finds μήν only, but the Forms list still names μείς (greekHitForms did not narrow a phrase); fixed on branch claude/lemma-accents"
+    },
+    {
+      "id": "bug-auth-pulls-houtos",
+      "site": "plato",
+      "path": "/search/?g=αὐτή&v=form",
+      "status": "known-bug",
+      "expect": {
+        "headsHas": [
+          "αὐτός"
+        ],
+        "headsLack": [
+          "οὗτος"
+        ]
+      },
+      "source": "audit 18 Nov: αὐτή and αὕτη fold alike, so every οὗτος form comes in (21,140 hits live); accent-aware lookup decides it"
+    },
+    {
+      "id": "bug-men-single-pulls-month",
+      "site": "plato",
+      "path": "/search/?g=μήν&v=form",
+      "status": "known-bug",
+      "expect": {
+        "headsHas": [
+          "μήν"
+        ],
+        "headsLack": [
+          "μείς"
+        ]
+      },
+      "source": "audit 18 Nov: μήν is analysed as μείς, μήν, and μής (Attic 'month' is μήν), so accents cannot decide; needs per-token tagging, or a ruling that a typed headword means that headword"
+    },
+    {
+      "id": "bug-dei-pulls-bind",
+      "site": "plato",
+      "path": "/search/?g=δεῖ&v=form",
+      "status": "known-bug",
+      "expect": {
+        "headsHas": [
+          "δεῖ"
+        ],
+        "headsLack": [
+          "δέω"
+        ]
+      },
+      "source": "audit 18 Nov: δεῖ is analysed as δεῖ and δέω; accents cannot decide; needs per-token tagging"
+    },
+    {
+      "id": "accent-he-article",
+      "site": "aristotle",
+      "path": "/search/?g=ἡ",
+      "status": "known-bug",
+      "expect": {
+        "headsHas": [
+          "ὁ"
+        ],
+        "headsLack": [
+          "ἤ"
+        ]
+      },
+      "source": "audit 18 Nov: ἡ, ἤ, ἦ fold alike; live ἡ takes six headwords (210,128 hits); accent-aware lookup (branch claude/lemma-accents) gives ὁ only, 156,304"
+    },
+    {
+      "id": "accent-e-or",
+      "site": "aristotle",
+      "path": "/search/?g=ἤ",
+      "status": "known-bug",
+      "expect": {
+        "headsHas": [
+          "ἤ"
+        ],
+        "headsLack": [
+          "ὁ"
+        ]
+      },
+      "source": "audit 18 Nov: live ἤ takes the article too; accent-aware lookup gives ἤ only, 12,860"
+    },
+    {
+      "id": "accent-aute-autos",
+      "site": "aristotle",
+      "path": "/search/?g=αὐτή",
+      "status": "known-bug",
+      "expect": {
+        "headsHas": [
+          "αὐτός"
+        ],
+        "headsLack": [
+          "οὗτος"
+        ]
+      },
+      "source": "audit 18 Nov: live αὐτή takes οὗτος and ἑαυτοῦ (28,498 hits); accent-aware lookup gives αὐτός only, 10,194"
+    },
+    {
+      "id": "unaccented-stays-wide",
+      "site": "aristotle",
+      "path": "/search/?g=αυτη",
+      "expect": {
+        "headsHas": [
+          "οὗτος",
+          "αὐτός"
+        ]
+      },
+      "source": "an unaccented word keeps every headword of its spelling, before and after accent-aware lookup"
+    }
+  ]
+}
