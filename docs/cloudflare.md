@@ -112,3 +112,25 @@ from live's own data, which passed those gates on 2026-11-18.
 Visitors' service workers update themselves: the origin stays the same, and the
 new `sw.js` caches R2 data. Their old cached `/data/` copies stay in the cache unused
 until the cache version is next bumped.
+
+## Preview verified (2026-11-19)
+
+Worker version `a6f31ba8`, branch `claude/cloudflare-move` at the commit that added this
+section, built from 61cd5630af (the commit live serves) with live's own `data/`.
+
+- `compare-live.mjs`, all 17,634 files of gh-pages 2b7c15a0 (less CNAME and `.nojekyll`),
+  4 in flight: 17,403 byte-identical; 214 pages equal once bundle names, Svelte class
+  hashes and island ids are masked; 16 bundles renamed; `sw.js` differs by design;
+  0 missing, 0 errors, 0 other differences. All 40 files sampled from live matched the tree.
+- What the renames carry: against a clean build of 61cd5630af, only `data.js` and
+  `search.js` differ in content (the R2 root), plus the home page's script
+  (`fetchChapters`/`fetchColumns`). A clean build of 61cd5630af itself differs from live
+  on 213 pages and in 5 bundles, so hashes depend on where the build runs.
+- Browser (built-in pane): `/EN/book/1/` renders and fetches only from R2; the word popup
+  (`ἀγαθοῦ`) and its LSJ entry load; the home page resumes at "Book II, chapter 2 · 1104a12"
+  from R2; `/search/?l=nous` reads "119 chapters · 270 hits" as on live (142 R2 requests,
+  none same-origin); the service worker cached 147 R2 files; no console errors.
+- Gates: shared vitest 1,993 passed (9 skipped); app vitest 255; `npm run test:scripts` 99;
+  svelte-check 0 errors; link integrity 0 broken (7,563 pages). Pipeline untouched, pytest not run.
+- Routing: `/bonitz/` and unknown pages 404 as on live; a missing trailing slash redirects 307
+  (live: 301); `/data/...` on the Worker is 404 (the data is on R2).
