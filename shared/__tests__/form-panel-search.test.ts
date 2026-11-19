@@ -91,7 +91,7 @@ describe('Search.svelte: the form panel', () => {
     await vi.waitFor(() => expect(status()).toHaveTextContent('5 hits'));
     expect(rows(panel)).toEqual(['εστι 3 ✓', 'ειναι 1 ✓', 'ην 1 ✓']);
     const { greekHitForms } = await import('../lib/search');
-    expect(greekHitForms).toHaveBeenCalledWith(RESULTS, 'εἰμί', 'lemma');
+    expect(greekHitForms).toHaveBeenCalledWith(RESULTS, 'εἰμί', 'lemma', false);
   });
 
   it('drops an unticked form from the hits and every count, once applied, without a new search', async () => {
