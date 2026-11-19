@@ -1,6 +1,6 @@
 # CLAUDE.md — aristotle-reader
 
-Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to GitHub Pages under the custom domain aristotle.johnhboyer.com (DNS on Cloudflare; the old johnhboyer-sys.github.io/aristotle-reader address redirects there). Deploy state and the full deploy recipe live in DEPLOY-STATUS.md — read it before any deploy.
+Bilingual Greek/English Aristotle reading site (Astro + Svelte) at aristotle.johnhboyer.com. Since 2026-11-19 it runs on Cloudflare: the app on the Worker `aristotle-reader`, the corpus data on the R2 bucket `aristotle-reader-data` at aristotle-data.johnhboyer.com (`docs/cloudflare.md`). GitHub Pages is unpublished and the old github.io address is gone. Deploy state lives in DEPLOY-STATUS.md — read it before any deploy.
 
 ## Layout
 
@@ -16,7 +16,7 @@ Bilingual Greek/English Aristotle reading site (Astro + Svelte), deployed to Git
 - App-only build: `PUBLIC_SHOW_PRIVATE=0 npm run build` in `app/`, Node 22. The env var is `PUBLIC_SHOW_PRIVATE` (unset/0 = hidden); `PUBLIC_HIDE_PRIVATE` is a stale name from old notes.
 - Full corpus rebuild: `npm run build:public` at repo root (runs all gates: preflight, shared-LSJ verify, link integrity).
 - `/bonitz` is 404 on live and must stay so. The page was removed from `app/` on 2026-09-03 (it built empty and carried an unfixed XSS); no move-aside is needed at build time any more. A future Index Aristotelicus reader is built against bonitz-text's output, not resurrected from git.
-- Deploy = `npm run deploy` at the root (`scripts/deploy-gh-pages.mjs`: fresh shallow gh-pages clone, rsync with deletions reported by category, live-only files restored, leak check, commit, push; `npm run deploy:dry` rehearses). Never `rm -rf .git && git init` — times out at this repo size.
+- Deploy = build with `PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com`, then `npm run deploy:cloudflare` at the root (`scripts/deploy-cloudflare.mjs`: link check, the data gates, changed data to R2, then `wrangler deploy`; `npm run deploy:cloudflare:dry` rehearses). Recipe in `docs/cloudflare.md`. `npm run deploy` (gh-pages) is retired: pushing to gh-pages no longer reaches readers.
 - Pre-deploy leak check: no gated-translation prose (Ackrill, Tredennick, Irwin, Rackham) in data JSON. The deploy script runs it with a positive control; known benign hits are its `KNOWN_BENIGN` list and DEPLOY-STATUS.md.
 - Link-integrity gate must report 0 broken before pushing.
 
