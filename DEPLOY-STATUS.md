@@ -1,7 +1,9 @@
 # Deploy Status
 
-Live site: https://aristotle.johnhboyer.com/ (since 2026-10-21; DNS on Cloudflare, CNAME `aristotle` → `johnhboyer-sys.github.io`, proxy off). The old https://johnhboyer-sys.github.io/aristotle-reader/ redirects there, path and query kept, for as long as the custom domain stays set in Settings → Pages.
-Deploy recipe: build `app/dist` (`PUBLIC_SHOW_PRIVATE=0 npm run build`, Node 22), then commit incrementally onto a fresh `gh-pages` clone (rsync + commit + push) — never `rm -rf .git && git init` at this size, it times out.
+Live site: https://aristotle.johnhboyer.com/, on Cloudflare since 2026-11-19: the app on the Worker `aristotle-reader`, the corpus data on the R2 bucket `aristotle-reader-data` at https://aristotle-data.johnhboyer.com. GitHub Pages is unpublished; https://johnhboyer-sys.github.io/aristotle-reader/ answers 404. The `gh-pages` branch stays as the record of the last GitHub deploy.
+Deploy recipe: `cd app && PUBLIC_SHOW_PRIVATE=0 PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com npm run build`, then `npm run deploy:cloudflare:dry` and `npm run deploy:cloudflare` at the root. Details, costs and the open question on in-place data uploads: `docs/cloudflare.md`.
+
+**Retired 2026-11-19:** the GitHub Pages recipe below (`npm run deploy`, `scripts/deploy-gh-pages.mjs`). Pushing to `gh-pages` no longer reaches readers. It stays here as history.
 
 **The recipe is now `npm run deploy` (`scripts/deploy-gh-pages.mjs`); rehearse with `npm run deploy:dry`.**
 It refuses a missing dist or a `dist/bonitz`, runs the link gate, shallow-clones `gh-pages`, reports rsync's deletions BY CATEGORY, and restores every deletion under `data/` that is a file at the live HEAD — a live-only file until proven otherwise — unless `--allow-data-deletions=<prefix>[,<prefix>]` names it (bare `--allow-data-deletions` means all of `data/`).
@@ -12,6 +14,25 @@ Flags: `--dry-run --remote=<url> --dist=<path> --allow-data-deletions[=<prefix>,
 The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden); `PUBLIC_HIDE_PRIVATE` is a stale name that appears in older entries below and sets nothing. `app/src/pages/bonitz.astro` was removed on 2026-09-03, so the build no longer emits `app/dist/bonitz` or `_astro/bonitz.*.css`; entries below that say "bonitz.astro moved aside" describe the old ritual. `/bonitz/` stays a 404 on live and the post-deploy check still asserts it.
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
+
+## 2026-11-19 — MOVED TO CLOUDFLARE (PR #222; cutover by John)
+
+The site moved off GitHub Pages, where `gh-pages` had reached 17,636 files and 889 MB, near GitHub's 1 GB limit. John's go ("go"), PR #222 merged as `9f793ca205`.
+
+**What runs:**
+- the app: the Worker `aristotle-reader`, static assets only, 7,845 files;
+- the data: the R2 bucket `aristotle-reader-data`, 9,791 objects, 458 MB, uploaded from gh-pages `2b7c15a0`'s own `data/`;
+- the build: `61cd5630af` (the source live served) plus the data-root change, with `PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com`, Worker version `0dd8700f`. So readers see the same content as before; #216–#219 are merged but not yet deployed.
+
+**Cutover (John, in the dashboards):** R2 custom domain `aristotle-data.johnhboyer.com`; deleted the DNS-only CNAME `aristotle → johnhboyer-sys.github.io`; attached `aristotle.johnhboyer.com` to the Worker; removed the custom domain in GitHub Settings → Pages and unpublished.
+
+**Verified:**
+- before the switch, `scripts/compare-live.mjs` over all 17,634 gh-pages files: 17,403 byte-identical, 214 pages equal with build hashes masked, 16 renamed bundles all served, `sw.js` by design; 0 missing, 0 errors; 40/40 live samples matched;
+- after it, on aristotle.johnhboyer.com (`server: cloudflare`): `/`, a book page, a lemma page and `/search/` answer 200; `/bonitz/` and unknown pages 404; `sw.js` names the data address; CORS allows the site; in a browser, the word popup and LSJ load, `/search/?l=nous` reads "119 chapters · 270 hits", all data from the data address, no console errors.
+
+**Gates:** shared vitest 1,993; app vitest 255; scripts 106; svelte-check 0 errors; link integrity 0 broken (7,563 pages); `deploy:cloudflare:dry` passed every data gate with 0 files to upload. Codex (gpt-6.1-sol, medium) reviewed the branch; findings 2–7 fixed, finding 1 (no atomic data swap) left open in `docs/cloudflare.md`.
+
+**Cost:** free. R2 holds about 1.1 GB of the 10 GB allowance.
 
 ## 2026-11-18 — DEPLOYED: search lemma fixes (#214), LSJ Greek in Gentium (#215)
 

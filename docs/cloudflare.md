@@ -1,4 +1,4 @@
-# Cloudflare hosting (preview built 2026-11-19; cutover is John's)
+# Cloudflare hosting (live since 2026-11-19)
 
 The plan (John, 2026-11-19): move the site off GitHub Pages, where the
 gh-pages branch is at 17,636 files and 889 MB, close to GitHub's 1 GB limit.
@@ -94,7 +94,7 @@ deploys and small data fixes the in-place upload is safe.
    `PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com`, deploy to the
    Worker, and rerun `compare-live.mjs` with `--data=` that hostname. The preview
    then reads from the production data address.
-3. **Switch the site's DNS.** Delete the DNS-only CNAME
+3. **Switch the site's DNS.** DONE 2026-11-19 (John, in the dashboard; the route is now in `app/wrangler.jsonc`). Delete the DNS-only CNAME
    `aristotle → johnhboyer-sys.github.io`, then attach
    `aristotle.johnhboyer.com` to the Worker (Workers → `aristotle-reader` →
    Settings → Domains, or add
@@ -111,7 +111,7 @@ deploys and small data fixes the in-place upload is safe.
 4. **Check live.** `/`, a work page, `/search/`, a lemma page, and a word
    lookup, all with the network panel showing data from the data hostname;
    `/bonitz/` still 404.
-5. **GitHub Pages.** Once Cloudflare serves the domain, remove the custom
+5. **GitHub Pages.** DONE 2026-11-19 (John): custom domain removed and the site unpublished; the github.io address answers 404. Once Cloudflare serves the domain, remove the custom
    domain in the repo's Settings → Pages, then unpublish. Decide first
    whether the old `johnhboyer-sys.github.io/aristotle-reader/` address matters:
    its redirect to the custom domain stops when the custom domain is removed.
