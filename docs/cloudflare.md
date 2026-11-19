@@ -11,8 +11,9 @@ build-time data root.
 |---|---|---|
 | App (pages, `_astro`, plates, og cards, icons, `sw.js`) | Worker `aristotle-reader`, static assets only, no script (`app/wrangler.jsonc`) | 7,845 files |
 | Corpus data (`data/`) | R2 bucket `aristotle-reader-data`, keys without the `data/` prefix | 9,791 objects, 458 MB |
+| Data address | `https://aristotle-data.johnhboyer.com` (R2 custom domain, attached by John 2026-11-19) | |
 | Preview | `https://aristotle-reader.johnhboyer.workers.dev` | |
-| Preview data root | `https://pub-1893afca177845708191e7dc77c78e9f.r2.dev` (r2.dev: rate-limited, for testing only) | |
+| Test data address | `https://pub-1893afca177845708191e7dc77c78e9f.r2.dev` (r2.dev: rate-limited; turn off after cutover) | |
 
 This is how greekdrama runs, with one difference: greekdrama is a Worker
 with static assets too, but it ships its data inside the Worker (9,739 files
@@ -39,44 +40,57 @@ limits would be billed, not refused. Workers static-asset requests are free
 and unlimited. The Worker runs no script, so the 100,000-requests-a-day
 limit on Workers does not apply.
 
-## Build and deploy (preview)
+## Build and deploy
 
 From the repo root, on Node 22 (`nvm use 22`), with `build/dist` holding the
 corpus (for an app-only rebuild, a copy of live's `data/`):
 
-1. Build:
-   `cd app && PUBLIC_SHOW_PRIVATE=0 PUBLIC_DATA_ROOT=<data root> npm run build`.
-   The last line should read `postbuild-data-root: sw.js and .assetsignore written for <data root>`.
-2. Upload the data: `npx wrangler@4 r2 bulk put aristotle-reader-data --remote --filename <list.json> --ct "application/json; charset=utf-8" --cc max-age=600 --concurrency 8`,
-   once per content type (`.json`, `.md` as `text/markdown; charset=utf-8`,
-   `.bin` as `application/octet-stream`). Each list is a JSON array of
-   `{"key": "EN/chapters.json", "file": "/abs/path/build/dist/EN/chapters.json"}`.
-   `max-age=600` matches what GitHub Pages sends. The rclone `r2:` key
-   reaches only the Lyceum bucket, so the upload uses wrangler's login.
-3. Deploy the app: `cd app && CLOUDFLARE_ACCOUNT_ID=6ff75c6d6c06d1092df2c7efd42077ba npx wrangler@4 deploy`.
-   It should upload about 7,845 files. A count near 17,600 means
-   `.assetsignore` is missing and the data went into the Worker.
-4. Check: `node scripts/compare-live.mjs --app=<worker url> --data=<data root>`
+1. Build: `cd app && PUBLIC_SHOW_PRIVATE=0 PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com npm run build`.
+   The last line should read `postbuild-data-root: sw.js and .assetsignore written for …`.
+2. Rehearse: `npm run deploy:cloudflare:dry`. It refuses a build without the
+   data address, checks the page count against the live sitemap (90% floor),
+   runs the link check and the data gates `npm run deploy` runs (leak check,
+   gated translation slots, held works, search indexes, search shards), then
+   reads every data file's ETag from R2 and lists what would upload.
+3. Deploy: `npm run deploy:cloudflare`. It uploads only the data files whose
+   MD5 differs from R2's ETag (wrangler `r2 bulk put`, `max-age=600` as
+   GitHub Pages sent), reads them back, then runs `wrangler deploy` from `app/`.
+   It never deletes from R2: a file the build lacks stays, as `npm run deploy`
+   restored live-only data files, and it is fetched and run through the same
+   data gates. Wrangler cannot list a bucket, so the bucket keeps a record of
+   every key the script has uploaded, `_deploy/keys.json` (seeded 2026-11-19
+   with the 9,791 keys of the first upload); upload data only through the
+   script, or the record goes stale. Cloudflare's API limit holds uploads to
+   about 1,100 files per 5 minutes, so a full corpus upload takes about 40
+   minutes.
+4. Check (optional, while gh-pages is still the record of live):
+   `node scripts/compare-live.mjs --app=<worker url> --data=<data address>`
    fetches every file in the gh-pages tree from Cloudflare (4 at a time) and
-   compares its hash with the tree's. It also fetches a sample of 40 from live itself.
+   compares its hash with the tree's, plus a sample of 40 from live itself.
 
-Bucket CORS is in `deploy/r2-cors.json`: GET and HEAD from
+The rclone `r2:` key reaches only the Lyceum bucket, so uploads use
+wrangler's login. Bucket CORS is in `deploy/r2-cors.json`: GET and HEAD from
 `https://aristotle.johnhboyer.com` and the preview origin. Apply it with
 `npx wrangler@4 r2 bucket cors set aristotle-reader-data --file deploy/r2-cors.json`.
 
-Still missing: a Cloudflare deploy script with the gates `npm run deploy`
-runs (link check, leak check, live-only data restore). The preview was built
-from live's own data, which passed those gates on 2026-11-18.
+Open question for John: the data is overwritten in place, not swapped in one
+step. Between the upload and the Worker deploy, or for good if the Worker
+deploy fails, the old app reads the new data. GitHub Pages had a milder form
+of this (browsers keep JSON for 10 minutes). Codex's review (2026-11-19)
+suggests a folder per release (`releases/<version>/`), with the app pointed
+at its own folder; the cost is a full upload, about 40 minutes, on every
+deploy that changes data, plus deleting old folders by hand. For app-only
+deploys and small data fixes the in-place upload is safe.
 
-## Cutover checklist (John's to do or approve; nothing here is done)
+## Cutover checklist (John's to do or approve)
 
-1. **Data hostname.** Attach a custom domain to the bucket, e.g.
+1. **Data hostname.** DONE 2026-11-19 (John): `aristotle-data.johnhboyer.com`. Attach a custom domain to the bucket, e.g.
    `aristotle-data.johnhboyer.com` (R2 → `aristotle-reader-data` → Settings →
    Custom Domains). Cloudflare creates the DNS record. Use one level under
    johnhboyer.com: the free Universal SSL certificate covers
    `*.johnhboyer.com` but not `*.aristotle.johnhboyer.com`. The bucket CORS
    already allows `https://aristotle.johnhboyer.com`, so it needs no change.
-2. **Rebuild against it.** Build with
+2. **Rebuild against it.** DONE 2026-11-19 (Worker version `0dd8700f`; compare and browser checks below). Build with
    `PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com`, deploy to the
    Worker, and rerun `compare-live.mjs` with `--data=` that hostname. The preview
    then reads from the production data address.
@@ -134,3 +148,13 @@ section, built from 61cd5630af (the commit live serves) with live's own `data/`.
   svelte-check 0 errors; link integrity 0 broken (7,563 pages). Pipeline untouched, pytest not run.
 - Routing: `/bonitz/` and unknown pages 404 as on live; a missing trailing slash redirects 307
   (live: 301); `/data/...` on the Worker is 404 (the data is on R2).
+
+## Production data address verified (2026-11-19)
+
+Worker version `0dd8700f`, built with `PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com`.
+The data address serves the same bytes, `max-age=600`, and CORS for both origins.
+`compare-live.mjs --data=https://aristotle-data.johnhboyer.com`: the same result as above
+(17,403 identical, 214 hash-only pages, 16 renamed bundles, `sw.js`; 0 missing, 0 errors,
+0 other; 40/40 live samples matched). Browser: the word popup and LSJ load; `/search/?l=nous`
+reads "119 chapters · 270 hits" with all 142 requests to the data address; the service worker
+cached 145 files from it; no console errors. Link integrity 0 broken.

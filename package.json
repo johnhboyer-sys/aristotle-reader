@@ -6,6 +6,8 @@
     "build:public": "node scripts/build-public.mjs",
     "deploy": "node scripts/deploy-gh-pages.mjs",
     "deploy:dry": "node scripts/deploy-gh-pages.mjs --dry-run",
-    "test:scripts": "node --test \"scripts/__tests__/**/*.test.mjs\""
+    "test:scripts": "node --test \"scripts/__tests__/**/*.test.mjs\"",
+    "deploy:cloudflare": "node scripts/deploy-cloudflare.mjs",
+    "deploy:cloudflare:dry": "node scripts/deploy-cloudflare.mjs --dry-run"
   }
 }

@@ -22,7 +22,7 @@
 // Exit 1 on any missing file, fetch error, or "other" difference.
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 const args = Object.fromEntries(process.argv.slice(2).map(a => {
   const m = a.match(/^--([^=]+)(?:=(.*))?$/);
@@ -33,9 +33,11 @@ const APP = args.app?.replace(/\/+$/, '');
 const DATA = args.data?.replace(/\/+$/, '');
 if (!APP || !DATA) throw new Error('--app and --data are required');
 const REF = args.ref ?? 'origin/gh-pages';
-const CONCURRENCY = Math.min(Number(args.concurrency ?? 4), 4);
+const CONCURRENCY = Number(args.concurrency ?? 4);
+if (!Number.isInteger(CONCURRENCY) || CONCURRENCY < 1 || CONCURRENCY > 4) throw new Error('--concurrency must be 1 to 4');
 const LIVE = (args.live ?? 'https://aristotle.johnhboyer.com').replace(/\/+$/, '');
 const LIVE_SAMPLE = Number(args['live-sample'] ?? 40);
+if (!Number.isInteger(LIVE_SAMPLE) || LIVE_SAMPLE < 1) throw new Error('--live-sample must be a positive integer');
 
 const blobSha = (buf) => createHash('sha1')
   .update(`blob ${buf.length}\0`).update(buf).digest('hex');
@@ -105,11 +107,27 @@ await pool(files, CONCURRENCY, async (f) => {
   result.differ.other.push(f.path);
 });
 
+// Every file must have landed in exactly one bucket, or a pass examined less
+// than it claims.
+const counted = result.same + result.missing.length + result.errors.length
+  + Object.values(result.differ).reduce((n, v) => n + v.length, 0);
+if (counted !== files.length) throw new Error(`examined ${counted} of ${files.length} files`);
+
 // A bundle missing under its old name is expected when its hash changed; it
-// is "astro" only if a bundle with the same stem exists in the new build.
+// is "astro" only if the new build has a bundle with the same stem AND the
+// Worker serves that bundle byte for byte.
 const newAstro = execFileSync('find', ['app/dist/_astro', '-type', 'f']).toString().trim().split('\n')
   .map(p => p.replace(/^app\/dist\//, ''));
-for (const p of newAstro) servedAstro.add(stem(p));
+const liveAstro = new Set(files.filter(f => f.path.startsWith('_astro/')).map(f => f.path));
+const renamedTo = newAstro.filter(p => !liveAstro.has(p));
+const badRenames = [];
+await pool(renamedTo, CONCURRENCY, async (p) => {
+  const r = await get(`${APP}/${p}`);
+  if (r.status === 200 && r.body.equals(readFileSync(`app/dist/${p}`))) servedAstro.add(stem(p));
+  else badRenames.push({ path: p, status: r.status });
+});
+result.renamedTo = renamedTo.length;
+result.badRenames = badRenames;
 result.missing = result.missing.filter(p => {
   if (p.startsWith('_astro/') && servedAstro.has(stem(p))) { result.differ.astro.push(p); return false; }
   return true;
@@ -118,21 +136,26 @@ result.missing = result.missing.filter(p => {
 // Live sample: confirm the gh-pages tree is what live serves.
 const sample = [...files].sort(() => Math.random() - 0.5).slice(0, LIVE_SAMPLE);
 const liveBad = [];
+let liveChecked = 0;
 await pool(sample, Math.min(CONCURRENCY, 2), async (f) => {
+  liveChecked++;
   const r = await get(`${LIVE}/${urlPath(f.path)}`);
   if (r.status !== 200 || blobSha(r.body) !== f.sha) liveBad.push({ path: f.path, status: r.status });
 });
+if (liveChecked !== sample.length) throw new Error(`live sample checked ${liveChecked} of ${sample.length}`);
 result.live = { sampled: sample.length, mismatched: liveBad };
 
 const counts = Object.fromEntries(Object.entries(result.differ).map(([k, v]) => [k, v.length]));
 console.log(JSON.stringify({ files: result.files, same: result.same, missing: result.missing.length,
-  errors: result.errors.length, differ: counts, live: { sampled: sample.length, mismatched: liveBad.length } }, null, 2));
+  errors: result.errors.length, differ: counts, renamedBundlesServed: renamedTo.length - badRenames.length,
+  renamedBundlesBad: badRenames.length, live: { sampled: sample.length, mismatched: liveBad.length } }, null, 2));
 if (args.out) writeFileSync(args.out, JSON.stringify(result, null, 2));
-const bad = result.missing.length + result.errors.length + result.differ.other.length + liveBad.length;
+const bad = result.missing.length + result.errors.length + result.differ.other.length + liveBad.length + badRenames.length;
 if (bad) {
   for (const p of result.missing.slice(0, 20)) console.log(`missing ${p}`);
   for (const e of result.errors.slice(0, 20)) console.log(`error ${JSON.stringify(e)}`);
   for (const p of result.differ.other.slice(0, 20)) console.log(`differs ${p}`);
   for (const e of liveBad.slice(0, 20)) console.log(`live ${JSON.stringify(e)}`);
+  for (const e of badRenames.slice(0, 20)) console.log(`renamed bundle not served ${JSON.stringify(e)}`);
 }
 process.exit(bad ? 1 : 0);

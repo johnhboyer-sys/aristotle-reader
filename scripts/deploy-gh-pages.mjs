@@ -713,7 +713,7 @@ function hasCommand(name) {
   return !result.error;
 }
 
-function* walk(dir, filter, base = dir) {
+export function* walk(dir, filter, base = dir) {
   let entries;
   try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return; }
   for (const entry of entries) {
@@ -726,7 +726,7 @@ function* walk(dir, filter, base = dir) {
   }
 }
 
-function* readAll(entries) {
+export function* readAll(entries) {
   for (const { path: relPath, file } of entries) {
     yield { path: relPath, text: readFileSync(file, 'utf8') };
   }
