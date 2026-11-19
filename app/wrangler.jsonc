@@ -1,0 +1,19 @@
+{
+  // The site as a Cloudflare Worker serving the built files as static assets,
+  // the way greek-plays runs greekdrama.johnhboyer.com (Cloudflare now runs
+  // Pages as Workers static assets). No Worker script. The corpus data is not
+  // here: it lives in the R2 bucket `aristotle-reader-data`, and the build
+  // bakes its address in through PUBLIC_DATA_ROOT; the post-build step writes
+  // dist/.assetsignore so dist/data stays out of the upload. Recipe and
+  // cutover: docs/cloudflare.md.
+  // Preview: aristotle-reader.johnhboyer.workers.dev. The custom domain is
+  // attached at cutover (John's call), never from this file before then.
+  "name": "aristotle-reader",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}

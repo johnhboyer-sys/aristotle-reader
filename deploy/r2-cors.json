@@ -1,0 +1,15 @@
+{
+  "rules": [
+    {
+      "allowed": {
+        "origins": [
+          "https://aristotle.johnhboyer.com",
+          "https://aristotle-reader.johnhboyer.workers.dev"
+        ],
+        "methods": ["GET", "HEAD"]
+      },
+      "exposeHeaders": ["ETag", "Content-Length"],
+      "maxAgeSeconds": 86400
+    }
+  ]
+}

@@ -20,8 +20,11 @@ import { getWork, searchableTranslations, WORKS, type TranslationRef } from './w
 // Honour Astro's base path. BASE_URL may lack a trailing slash, so strip + join.
 // Same host override as data.ts: the desktop app points the whole data layer
 // at an on-disk corpus via globalThis.__ARISTOTLE_DATA_ROOT__ (read lazily so
-// module-import order doesn't matter); the site never sets it.
-const DEFAULT_ROOT = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
+// module-import order doesn't matter); the site never sets it. The site's
+// build-time PUBLIC_DATA_ROOT applies here as in data.ts.
+const DEFAULT_ROOT = import.meta.env.PUBLIC_DATA_ROOT
+  ? import.meta.env.PUBLIC_DATA_ROOT.replace(/\/+$/, '')
+  : `${import.meta.env.BASE_URL.replace(/\/$/, '')}/data`;
 const ROOT = () =>
   (globalThis as { __ARISTOTLE_DATA_ROOT__?: string }).__ARISTOTLE_DATA_ROOT__ ?? DEFAULT_ROOT;
 const searchBase = (work: string) => `${ROOT()}/${work}/search`;

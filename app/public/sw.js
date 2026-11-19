@@ -7,10 +7,11 @@
 //    falling back to the cached copy offline, then to the offline page.
 //  - Hashed build assets (/_astro/): cache-first — content-addressed names
 //    make them immutable, and a deploy's new HTML references new names.
-//  - Corpus data (/data/) and other same-scope files: network-first, cache
-//    fallback. Fresh HTML must never pair with a prior deploy's cached JSON
-//    (schema drift), so data is only served from cache when actually offline
-//    — where it pairs with equally-old cached HTML, which is consistent.
+//  - Corpus data (/data/, or the off-origin DATA_ROOT) and other same-scope
+//    files: network-first, cache fallback. Fresh HTML must never pair with a
+//    prior deploy's cached JSON (schema drift), so data is only served from
+//    cache when actually offline — where it pairs with equally-old cached
+//    HTML, which is consistent.
 //  - Fonts: cache-first (immutable binaries).
 //
 // Versioned cache: bump VERSION to invalidate everything after a breaking
@@ -22,6 +23,15 @@ const CACHE_PREFIX = 'aristotle-reader-';
 const VERSION = CACHE_PREFIX + 'v1';
 const SCOPE_PATH = new URL(self.registration.scope).pathname; // '/' at the custom domain
 const OFFLINE_URL = SCOPE_PATH + 'offline.html';
+
+// The corpus data can live on another origin (a Cloudflare R2 bucket). This
+// file is copied verbatim into dist, so app/scripts/postbuild-data-root.mjs writes
+// the build's PUBLIC_DATA_ROOT into the literal below. Empty = same-origin data
+// under SCOPE_PATH, which the scope branch in the fetch handler covers.
+const DATA_ROOT = '';
+const DATA_BASE = DATA_ROOT ? new URL(DATA_ROOT, location.href).href.replace(/\/+$/, '') : '';
+const isDataRequest = (url) => DATA_BASE !== ''
+  && (url.href === DATA_BASE || url.href.startsWith(DATA_BASE + '/'));
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -74,6 +84,13 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(networkFirst(event, { offlineFallback: true }));
+    return;
+  }
+
+  // Off-origin corpus data: the same network-first policy as same-origin
+  // /data/ below. The responses are CORS-enabled, so they cache normally.
+  if (isDataRequest(url)) {
+    event.respondWith(networkFirst(event));
     return;
   }
 
