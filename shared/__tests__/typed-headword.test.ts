@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { narrowToTypedHeadwords, search, searchPhraseVariants } from '../lib/search';
+import { greekHitForms, narrowToTypedHeadwords, search, searchPhraseVariants } from '../lib/search';
 
 const HEADS: Record<string, string[]> = {
   mhn: ['μήν'],
@@ -69,6 +69,7 @@ const lemmaIndex = {
   meis: [[0, 3]],
   mhs: [[0, 5]],
 };
+const formIndex = { ti: [[0, 0], [0, 2]], mhn: [[0, 1]], meis: [[0, 3]], mhs: [[0, 5]] };
 const lemmaMap: Record<string, Record<string, string[]>> = {
   t: { ti: ['tis'] },
   m: { mhn: ['meis', 'mhn', 'mhs'] },
@@ -103,6 +104,7 @@ describe('a lemma phrase does not fan a typed headword out to its homographs', (
       if (pick) return json(picker[pick[1]] ?? {});
       if (path.endsWith('/meta.json')) return json(meta);
       if (path.endsWith('/greek_lemma.json')) return json(lemmaIndex);
+      if (path.endsWith('/greek_form.json')) return json(formIndex);
       return Promise.resolve({ ok: false, status: 404, json: async () => ({}) } as Response);
     });
   }
@@ -123,5 +125,16 @@ describe('a lemma phrase does not fan a typed headword out to its homographs', (
     mockFetch();
     const one = await search('μήν', '', 'all', 'all', 'and', ['W'], 'lemma');
     expect(one.results.map((r) => r.grkPositions)).toEqual([[1, 3, 5]]);
+  });
+
+  it('the form list of a lemma phrase names only the headwords the phrase took', async () => {
+    mockFetch();
+    const phrase = await search('τί μήν', '', 'phrase', 'all', 'and', ['W'], 'lemma');
+    const asPhrase = await greekHitForms(phrase.results, 'τί μήν', 'lemma', true);
+    expect(asPhrase.headwords.get('mhn')).toEqual(['mhn']);
+    // Read as separate words, the same spelling belongs to all three: the check
+    // above is not passing because the list never names μείς.
+    const asWords = await greekHitForms(phrase.results, 'τί μήν', 'lemma', false);
+    expect(asWords.headwords.get('mhn')).toEqual(['meis', 'mhn', 'mhs']);
   });
 });
