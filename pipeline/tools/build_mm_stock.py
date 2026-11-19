@@ -36,6 +36,7 @@ testing every anchor against them.
 
 from __future__ import annotations
 
+import argparse
 import collections
 import difflib
 import json
@@ -1225,7 +1226,13 @@ def check_loaded(entries: list[tuple[str, str]]) -> dict:
 
 
 def main(argv: list[str]) -> None:
-    if "--fetch-images" in argv:
+    # Read the arguments before anything is built: --help, or a flag the build
+    # does not know, must stop here, not after sources/mm-stock is rewritten.
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--fetch-images", action="store_true",
+                        help="download the page images the reads tables cite into build/mm-ocr/img/ first")
+    args = parser.parse_args(argv)
+    if args.fetch_images:
         fetch_images()
     bk = Book()
     log = resolve(bk)
