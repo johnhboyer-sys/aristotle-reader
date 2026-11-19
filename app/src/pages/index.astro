@@ -153,7 +153,7 @@ const structuredData = Astro.site
   <script>
     import { fitPoster, initPosters } from '../lib/poster-fit';
     import { lastRead, resumeFor } from '@shared/lib/resume';
-    import { fetchBook } from '@shared/lib/data';
+    import { fetchBook, fetchChapters, fetchColumns } from '@shared/lib/data';
     import { initReturningLayout, updateTouchVerb, resolveHomePlace } from '../lib/home-resume';
 
     const base = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -175,12 +175,8 @@ const structuredData = Astro.site
       let chapter: string | undefined;
       if (cite) {
         try {
-          const [chaptersResponse, columnsResponse] = await Promise.all([
-            fetch(`${base}/data/${last.work}/chapters.json`),
-            fetch(`${base}/data/${last.work}/columns.json`),
-          ]);
-          if (!chaptersResponse.ok || !columnsResponse.ok) throw new Error('Missing saved-place data');
-          const place = resolveHomePlace(book, cite, await chaptersResponse.json(), await columnsResponse.json());
+          const [chapters, columns] = await Promise.all([fetchChapters(last.work), fetchColumns(last.work)]);
+          const place = resolveHomePlace(book, cite, chapters, columns);
           ({ book, cite, chapter } = place);
         } catch { cite = null; }
       }
