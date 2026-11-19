@@ -47,13 +47,14 @@ Track: Greek ↔ English word hover for the reader and search pages, and the wor
 
 - **Don't republish a review page mid-review without a snapshot.** The database survives a republish, but a page bug could write bad rows.
 - **Model runs cost money.** Each priced run needs John's yes. The env `ANTHROPIC_API_KEY` is invalid, so use `env -u ANTHROPIC_API_KEY`. Haiku hit max_tokens on v2 and is out of the benchmark.
-- **The repo is public.** Built pages and plain copies of corpus text are gitignored and regenerate from the live `book-01.json` (`PROCESS.md`, Rebuild).
+- **The repo is public.** Built pages and plain copies of corpus text are gitignored. The chapter cuts can't safely be re-cut, so they live in `~/Developer/word-hover-cuts/`.
 - **Greek stops are U+0387 and U+037E.** Escape them in any regex.
 - **A token's `o` offset includes a leading bracket.** Find a word by text search from `o`.
 
 ## Where things are
 
-- **Branch** `claude/word-hover`, unpushed, in worktree `.claude/worktrees/word-hover/`. The folder moved there from the main checkout on 2026-11-19.
+- **On main**, since PR #220 (2026-11-19).
+- **The chapter cuts every saved alignment counts against are off git**, in `~/Developer/word-hover-cuts/` (John's call: the repo is public). Copy them back before rebuilding or scoring (`PROCESS.md`, Rebuild). Never re-cut an existing chapter from the live site.
 - **Pages, all private artifacts:**
   - I.3 review: https://claude.ai/artifact/B9zXqmvkpRQF6QAnEBMSKE
   - Ostwald I.2 review: https://claude.ai/artifact/Km7zXfNjveQRR5cmgQtbna

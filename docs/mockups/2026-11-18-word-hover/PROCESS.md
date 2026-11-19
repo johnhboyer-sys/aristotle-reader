@@ -84,14 +84,18 @@ John likes this page and uses it as it is. **Do not redesign it, restyle it, or 
 
 ## Rebuild
 
-All built pages and plain copies of corpus text are gitignored (see `.gitignore`). They regenerate from the live book file:
+Built pages and plain copies of corpus text are gitignored (see `.gitignore`), because the repo is public. That includes the chapter cuts (`test-i2/i2.json`, `test-i3/i3.json`, `test-i3/i2o.json`, and `compare/*-four.json`). Every saved alignment, and John's gold, points at their word numbers. **The cuts in use are kept outside the repo, in `~/Developer/word-hover-cuts/`**, along with the book file they were cut from and the exact Codex prompts. Copy them back into place before rebuilding or scoring:
+
+```bash
+rsync -a --exclude README.md --exclude 'book-01-*.json' ~/Developer/word-hover-cuts/ docs/mockups/2026-11-18-word-hover/
+```
+
+**Never re-run a prep script over an existing chapter.** A change in the live English would shift the word numbers and quietly break the gold. Run prep only to cut a new chapter, then add the new cut to that folder too.
+
+To rebuild the pages, after copying the cuts back, fetch the live book file. Only the old I.2 benchmark page reads it.
 
 ```bash
 curl -s https://aristotle.johnhboyer.com/data/EN/book-01.json -o book-01.json
-```
-
-```bash
-(cd test-i2 && python3 -I prep.py ../book-01.json) && (cd test-i3 && python3 -I prep.py ../book-01.json && python3 -I prep_i2o.py ../book-01.json)
 ```
 
 ```bash
@@ -99,8 +103,10 @@ python3 -I build.py book-01.json
 ```
 
 ```bash
-cd compare && python3 -I prep.py ../book-01.json && python3 -I prep.py ../book-01.json 3 && python3 -I build_page.py && python3 -I build_page.py 3
+cd compare && python3 -I build_page.py && python3 -I build_page.py 3
 ```
+
+`build.py` uses the book file only for the I.2 page, and it builds the review pages from the tracked cuts. To cut a new chapter, copy `test-i3/prep.py`, which runs from its own folder: `cd test-i3 && python3 -I prep.py ../book-01.json`. Save the new cut in `~/Developer/word-hover-cuts/` as well.
 
 In the book file, `english` is Rackham, `ross` is Ross, `third` is Ostwald, and `overlays.peters` is Peters. Model runs need John's yes, priced first. Batch runs use `env -u ANTHROPIC_API_KEY uv run --with anthropic python run2.py …`. Codex runs go through the codex companion with `--model gpt-6.1-sol --effort medium`.
 
