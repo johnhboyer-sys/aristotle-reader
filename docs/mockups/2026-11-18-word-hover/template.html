@@ -1,0 +1,664 @@
+<title>Word Hover, NE I.1</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&family=Sofia+Sans:wght@400;500;600;700&family=Oswald:wght@700&display=swap">
+<style>
+/* Layout: the live reader's Both view (Greek lines left, English prose right, Bekker gutters), plus a flip bar. */
+:root {
+  --bg: #ebeae4; --paper: #f1f0eb; --ink: #141413; --mid: #5d5c57; --faint: #6a6964;
+  --line: #d9d8d2; --soft: #dcdbd4; --red-ink: #b42419; --hl: #f3e2a4; --hl-soft: #f1ead0; --grp: #c9a227; --sel-ink: #fff;
+  --dim: #14141340;
+  --sans: "Sofia Sans", system-ui, sans-serif;
+  --text: "Gentium Book Plus", Georgia, serif;
+  --display: Oswald, "Sofia Sans", sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121211; --paper: #171716; --ink: #e0dfd9; --mid: #a7a59e; --faint: #8d8b85;
+  --line: #2d2c29; --soft: #2c2b27; --red-ink: #ff7b70; --hl: #5a4917; --hl-soft: #2f2a1a; --grp: #b38a1e; --sel-ink: #121211;
+  --dim: #e0dfd940; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #121211; --paper: #171716; --ink: #e0dfd9; --mid: #a7a59e; --faint: #8d8b85;
+  --line: #2d2c29; --soft: #2c2b27; --red-ink: #ff7b70; --hl: #5a4917; --hl-soft: #2f2a1a; --grp: #b38a1e; --sel-ink: #121211;
+  --dim: #e0dfd940; color-scheme: dark; }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--text); }
+.wrap { max-width: 1120px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 72px; }
+
+/* top bar */
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px;
+  padding-block: 14px; border-bottom: 1px solid var(--line); font-family: var(--sans); }
+.bar .work { font-weight: 600; letter-spacing: .04em; text-transform: uppercase; font-size: 14px; }
+.bar .where { color: var(--mid); font-size: 14px; }
+.flips { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-left: auto; }
+.group { display: flex; align-items: center; gap: 2px; font-size: 13px; }
+.group span { color: var(--faint); margin-right: 6px; letter-spacing: .06em; text-transform: uppercase; font-size: 11px; }
+.group button { font: inherit; color: var(--mid); background: none; border: 0; padding: 6px 9px;
+  min-height: 32px; cursor: pointer; border-bottom: 2px solid transparent; }
+.group button[aria-pressed="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.group button:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 1px; }
+
+/* chapter head */
+.head { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: baseline;
+  padding-block: 36px 22px; }
+.head .num { font-family: var(--display); color: var(--red-ink); font-size: 44px; line-height: 1; grid-row: span 2; }
+.head h1 { margin: 0; font-weight: 400; font-size: clamp(22px, 3vw, 28px); text-wrap: balance; }
+.head .sub { font-family: var(--sans); color: var(--mid); font-size: 13px; }
+.head .sub b { font-weight: 500; }
+
+/* the two columns */
+.text { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 56px;
+  font-size: 19.5px; }
+.col { position: relative; padding-left: 52px; min-width: 0; }
+.gut { position: absolute; left: 0; width: 44px; text-align: right;
+  font-family: var(--sans); font-size: 13px; color: var(--faint); line-height: 1; }
+.gut.col-start { color: var(--red-ink); }
+.gut.est { font-style: italic; }
+.greek .ln { display: block; line-height: 1.4; padding-block: 4px; padding-left: 1em; text-indent: -1em; }
+.eng p { margin: 0; line-height: 1.72; }
+.eng p + p { text-indent: 1.1em; }
+.lang { font-family: var(--sans); font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--faint); margin-bottom: 10px; }
+
+/* words */
+.tok, .w { cursor: pointer; transition: background-color .12s, color .12s, box-shadow .12s; }
+.tok { white-space: pre-wrap; }
+.tok:hover { background: var(--soft); }
+.tok:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 1px; }
+
+/* a phrase the translator rendered as a whole: the rest of it, beyond the word's own partners */
+.text.on .grp { background: none; box-shadow: inset 0 -3px 0 var(--grp); color: var(--ink); }
+
+/* flip A: fill */
+.m-fill .lit { background: var(--hl); }
+.m-fill .src { background: var(--red-ink); color: var(--sel-ink); }
+/* flip B: underline */
+.m-under .lit { box-shadow: inset 0 -2px 0 var(--red-ink); background: none; }
+.m-under .src { box-shadow: inset 0 -2px 0 var(--red-ink); color: var(--red-ink); }
+/* flip D: your word underlined, its partners filled */
+.m-mix .lit { background: var(--hl); }
+.m-mix .src { background: none; box-shadow: inset 0 -2px 0 var(--red-ink); color: var(--red-ink); }
+/* flip E: underline on a faint fill, both sides */
+.m-soft .lit { background: var(--hl-soft); box-shadow: inset 0 -2px 0 var(--red-ink); }
+.m-soft .src { background: var(--hl-soft); box-shadow: inset 0 -2px 0 var(--red-ink); color: var(--red-ink); }
+/* flip F: line underlined in the other language, its word filled, the rest dimmed */
+/* flip G (m-sent): the same, by Greek sentence instead of Bekker line */
+:is(.m-line, .m-sent).on :where(.tok, .w, .sp, .greek .ln, .eng p) { color: var(--dim); }
+:is(.m-line, .m-sent).on .ctx, .m-line.on .ln.ctx * { color: var(--ink); }
+.m-line[data-src="eng"] .ln.ctx { text-decoration: underline 1px var(--ink); text-underline-offset: 6px; }
+.m-sent[data-src="eng"] .greek .ctx { text-decoration: underline 1px var(--ink); text-underline-offset: 6px; }
+:is(.m-line, .m-sent)[data-src="greek"] .eng .ctx { text-decoration: underline 1px var(--ink); text-underline-offset: 5px; }
+:is(.m-line, .m-sent).on .lit { background: var(--hl); color: var(--ink); }
+:is(.m-line, .m-sent).on .src { background: none; box-shadow: inset 0 -2px 0 var(--red-ink); color: var(--red-ink); }
+/* flip C: dim the rest */
+.m-dim.on .tok, .m-dim.on .w, .m-dim.on .eng p, .m-dim.on .greek .ln { color: var(--dim); }
+.m-dim.on .lit { color: var(--ink); background: var(--hl); }
+.m-dim.on .src { color: var(--ink); background: var(--hl); box-shadow: inset 0 -2px 0 var(--red-ink); }
+
+/* unmatched words, when asked for */
+.show-gaps .gap { text-decoration: underline dotted var(--faint); text-underline-offset: 4px; }
+
+@media (max-width: 640px) {
+  .text { grid-template-columns: minmax(0, 1fr); row-gap: 36px; font-size: 18px; }
+  .col { padding-left: 40px; }
+  .gut { width: 34px; font-size: 12px; }
+  .flips { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .tok, .w { transition: none; } }
+
+/* Correct mode: words still to check are dotted, words you have corrected are underlined in red */
+.correcting .tok.todo { text-decoration: underline dotted var(--faint); text-underline-offset: 5px; }
+.correcting .tok.fixed { text-decoration: underline solid var(--red-ink) 1.5px; text-underline-offset: 5px; }
+.correcting .w { cursor: cell; }
+.text.correcting .eng .ctx { text-decoration: none; }
+.panel { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; background: var(--paper); border-top: 1px solid var(--line);
+  font-family: var(--sans); font-size: 14px;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.panel .row { max-width: 1120px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.panel .word { font-family: var(--text); font-size: 22px; color: var(--red-ink); min-width: 4ch; }
+.panel .word .ref { font-family: var(--sans); font-size: 12px; color: var(--faint); margin-left: 6px; }
+.panel button { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 4px;
+  padding: 7px 12px; min-height: 36px; cursor: pointer; }
+.panel button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.panel button:focus-visible { outline: 2px solid var(--red-ink); outline-offset: 1px; }
+.panel .brush .lit-k { background: var(--hl); padding: 0 3px; }
+.panel .brush .loose-k { box-shadow: inset 0 -3px 0 var(--grp); }
+.panel .brush .sup-k { text-decoration: underline dashed var(--grp) 2px; text-underline-offset: 4px; }
+/* Supplied: the translator's own words, hung on the unit they serve */
+.text.on .w.grp.sup { box-shadow: none; text-decoration: underline dashed var(--grp) 2px; text-underline-offset: 4px; }
+.panel .alts { display: flex; flex-wrap: wrap; gap: 6px; }
+.panel .alts button { font-family: var(--text); font-size: 16px; }
+.panel .alts .ext { box-shadow: inset 0 -3px 0 var(--grp); }
+.panel .alts .core { background: var(--hl); }
+.panel .status { color: var(--faint); margin-left: auto; }
+.panel .status.bad { color: var(--red-ink); }
+.correcting-pad { height: 150px; }
+</style>
+
+<div class="wrap">
+  <div class="bar">
+    <div class="work">Nicomachean Ethics</div>
+    <div class="where" id="where"></div>
+    <div class="flips">
+      <div class="group" role="group" aria-label="Mark">
+        <span>Mark</span>
+        <button id="m-fill" data-mode="m-fill" aria-pressed="false">Fill</button>
+        <button id="m-under" data-mode="m-under" aria-pressed="false">Underline</button>
+        <button id="m-mix" data-mode="m-mix" aria-pressed="false">Mixed</button>
+        <button id="m-soft" data-mode="m-soft" aria-pressed="false">Soft</button>
+        <button id="m-sent" data-mode="m-sent" aria-pressed="true">Sentence</button>
+        <button id="m-dim" data-mode="m-dim" aria-pressed="false">Dim the rest</button>
+      </div>
+      <div class="group" role="group" aria-label="Unmatched words">
+        <span>Unmatched</span>
+        <button id="g-off" data-gaps="0" aria-pressed="true">Hide</button>
+        <button id="g-on" data-gaps="1" aria-pressed="false">Show</button>
+      </div>
+      <div class="group" role="group" aria-label="Alignment" id="aligns" hidden><span>Alignment</span></div>
+      <div class="group" role="group" aria-label="Correct" id="correct" hidden>
+        <span>Correct</span>
+        <button id="c-off" data-correct="0" aria-pressed="true">Off</button>
+        <button id="c-on" data-correct="1" aria-pressed="false">On</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="head">
+    <div class="num" id="hnum"></div>
+    <h1 id="htitle"></h1>
+    <div class="sub" id="hsub"></div>
+  </div>
+
+  <div class="text m-sent" id="text">
+    <div class="col greek" id="greek"></div>
+    <div class="col eng" id="eng"></div>
+  </div>
+  <div class="correcting-pad" id="pad" hidden></div>
+</div>
+
+<div class="panel" id="panel" hidden>
+  <div class="row">
+    <div class="word" id="p-word"></div>
+    <div class="brush" role="group" aria-label="Mark English words as">
+      <button id="b-lit" aria-pressed="true"><span class="lit-k">Literal</span></button>
+      <button id="b-loose" aria-pressed="false"><span class="loose-k">Loose</span></button>
+      <button id="b-sup" aria-pressed="false"><span class="sup-k">Supplied</span></button>
+    </div>
+    <button id="p-join" aria-pressed="false">Join</button>
+    <button id="p-split" hidden>Split</button>
+    <button id="p-none">No English</button>
+    <button id="p-reset">Back to original</button>
+    <button id="p-next">Next to check</button>
+    <span class="status" id="p-status"></span>
+  </div>
+  <div class="row alts" id="p-alts" style="margin-top:8px"></div>
+</div>
+
+<script>
+const D = __DATA__;
+const text = document.getElementById('text');
+const gEl = document.getElementById('greek');
+const eEl = document.getElementById('eng');
+document.getElementById('where').textContent = D.head.where;
+document.getElementById('hnum').textContent = D.head.num;
+document.getElementById('htitle').textContent = D.head.title;
+document.getElementById('hsub').innerHTML = `<b>${D.head.bekker}</b> · English: ${D.head.translator}`;
+
+// Greek: one block per Bekker line, tokens as spans at their offsets.
+const tokEls = {};
+for (const l of D.greek) {
+  const row = document.createElement('span');
+  row.className = 'ln';
+  row.dataset.n = l.id;
+  row.dataset.label = l.label || '';
+  let at = 0;
+  l.toks.forEach(([t, o, idx]) => {
+    if (o > at) row.append(l.text.slice(at, o));
+    const s = document.createElement('span');
+    const k = l.id + '.' + idx;
+    s.className = 'tok'; s.textContent = t; s.dataset.k = k; s.tabIndex = 0;
+    tokEls[k] = s; row.append(s); at = o + t.length;
+  });
+  if (at < l.text.length) row.append(l.text.slice(at));
+  gEl.append(row);
+}
+
+// English: words as spans; paragraphs at the stored offsets; tick anchors.
+let A = {}, e2g = {}, GR = [], SUP = {};
+const wordEls = [];
+const breaks = new Set(D.paras);
+const ticks = new Map(D.ticks.map(t => [t[1], t]));
+let p = document.createElement('p');
+const re = /[A-Za-z’'-]+/g;
+let m, at = 0, wi = 0;
+const flushText = (a, b) => {
+  // plain text between words, honouring paragraph breaks and tick anchors inside it
+  let s = a;
+  for (let c = a; c <= b; c++) {
+    if (c < b && breaks.has(c) && c > 0) { p.append(D.english.slice(s, c)); eEl.append(p); p = document.createElement('p'); s = c; }
+    if (c < b && ticks.has(c)) { p.append(D.english.slice(s, c)); p.append(anchor(ticks.get(c))); s = c; }
+  }
+  p.append(D.english.slice(s, b));
+};
+function anchor(t) { const a = document.createElement('span'); a.className = 'tick'; a.dataset.n = t[0]; a.dataset.real = t[2]; return a; }
+while ((m = re.exec(D.english))) {
+  flushText(at, m.index);
+  if (breaks.has(m.index) && m.index > 0) { eEl.append(p); p = document.createElement('p'); }
+  if (ticks.has(m.index)) p.append(anchor(ticks.get(m.index)));
+  const s = document.createElement('span');
+  s.className = 'w'; s.textContent = m[0]; s.dataset.i = wi;
+  s._o = m.index; s._e = m.index + m[0].length;
+  wordEls.push(s); p.append(s);
+  at = m.index + m[0].length; wi++;
+}
+flushText(at, D.english.length);
+eEl.append(p);
+
+// Bekker gutters: Greek every fifth line; English at the tick anchors.
+function gutter() {
+  document.querySelectorAll('.gut').forEach(g => g.remove());
+  const put = (col, top, label, cls) => {
+    const g = document.createElement('div');
+    g.className = 'gut ' + cls; g.textContent = label; g.style.top = top + 'px'; col.append(g);
+  };
+  const lh = parseFloat(getComputedStyle(gEl).fontSize);
+  for (const row of gEl.querySelectorAll('.ln')) {
+    const label = row.dataset.label;
+    if (label) put(gEl, row.offsetTop + lh * .45, label, /[ab]$/.test(label) ? 'col-start' : '');
+  }
+  const eTop = eEl.getBoundingClientRect().top;
+  for (const a of eEl.querySelectorAll('.tick')) {
+    const label = a.dataset.n, r = a.getBoundingClientRect();
+    const top = r.top - eTop + lh * .45;
+    put(eEl, top, label, /[ab]$/.test(label) ? 'col-start' : (a.dataset.real === 'true' ? '' : 'est'));
+  }
+}
+
+// Text between two words (spaces, punctuation) becomes a span, so a lit
+// phrase or an underlined line reads as one mark.
+const isWord = x => x && x.classList && (x.classList.contains('tok') || x.classList.contains('w'));
+const skip = x => x && x.classList && ['tick', 'sp', 'pu'].some(c => x.classList.contains(c));
+function nb(el, dir) { let x = el[dir]; while (skip(x)) x = x[dir]; return x; }
+// Punctuation belongs to its word: a closing mark (, · . : ) —) to the word
+// before it, an opening one (( “) to the word after. The space between is .sp.
+const spaces = [], puncts = [];
+for (const col of [gEl, eEl]) {
+  const walk = document.createTreeWalker(col, NodeFilter.SHOW_TEXT);
+  const nodes = []; while (walk.nextNode()) nodes.push(walk.currentNode);
+  for (const n of nodes) {
+    let prev = n.previousSibling, next = n.nextSibling;
+    while (prev && prev.classList && prev.classList.contains('tick')) prev = prev.previousSibling;
+    while (next && next.classList && next.classList.contains('tick')) next = next.nextSibling;
+    if (!isWord(prev) && !isWord(next)) continue;
+    let s = n.data, pre = '', suf = '';
+    if (isWord(prev)) { const m = s.match(/^\S+/); if (m) { pre = m[0]; s = s.slice(pre.length); } }
+    if (isWord(next)) { const m = s.match(/\S+$/); if (m) { suf = m[0]; s = s.slice(0, -suf.length); } }
+    const parts = [];
+    if (pre) { const p = document.createElement('span'); p.className = 'pu'; p.textContent = pre; p._w = prev; parts.push(p); puncts.push(p); }
+    if (s) {
+      if (isWord(prev) && isWord(next)) { const sp = document.createElement('span'); sp.className = 'sp'; sp.textContent = s; parts.push(sp); spaces.push(sp); }
+      else parts.push(document.createTextNode(s));
+    }
+    if (suf) { const p = document.createElement('span'); p.className = 'pu'; p.textContent = suf; p._w = next; parts.push(p); puncts.push(p); }
+    n.replaceWith(...parts);
+  }
+}
+const lineOf = k => k.split('.')[0];
+
+// Greek sentences: a token closes one when the text after it holds . · or ;
+const sentOf = {}, sentKeys = [[]];
+for (const l of D.greek) l.toks.forEach(([t, o, idx], i) => {
+  const k = l.id + '.' + idx;
+  sentOf[k] = sentKeys.length - 1; sentKeys[sentKeys.length - 1].push(k);
+  const end = i + 1 < l.toks.length ? l.toks[i + 1][1] : l.text.length;
+  if (/[.\u00b7\u0387;\u037e]/.test(l.text.slice(o + t.length, end))) sentKeys.push([]);
+});
+
+// Lighting: a Greek word lights its English; an English word lights the
+// Greek it renders and every English word that Greek carries. Alongside,
+// `ctx` marks the Greek line(s) involved and their English rendering.
+let pinned = null;
+function clear() {
+  document.querySelectorAll('.lit,.src,.ctx,.grp,.sup').forEach(x => x.classList.remove('lit', 'src', 'ctx', 'grp', 'sup'));
+  text.classList.remove('on');
+}
+function lightFromGreek(keys, srcEl, lines) {
+  clear();
+  for (const k of keys) {
+    tokEls[k].classList.add('lit');
+    for (const i of A[k] || []) wordEls[i].classList.add('lit');
+  }
+  srcEl.classList.add('src');
+  text.dataset.src = srcEl.classList.contains('tok') ? 'greek' : 'eng';
+  // a phrase the word belongs to: "this became that", the whole of both sides
+  const wi = srcEl.classList.contains('w') ? +srcEl.dataset.i : -1;
+  const hits = GR.filter(([g, e]) => keys.some(k => g.includes(k)) || e.includes(wi));
+  for (const [g, e] of hits) {
+    for (const k of g) tokEls[k].classList.add('grp', 'ctx');
+    for (const i of e) wordEls[i].classList.add('grp', 'ctx');
+  }
+  document.querySelectorAll('.grp.lit,.grp.src').forEach(x => x.classList.remove('grp'));
+  for (const k of keys) for (const i of SUP[k] || []) if (wordEls[i].classList.contains('grp')) wordEls[i].classList.add('sup');
+  const allKeys = [...new Set([...keys, ...hits.flatMap(h => h[0])])];
+  // context: the Greek sentence(s) or line(s), and every English word they render
+  let ctxKeys;
+  if (text.classList.contains('m-sent')) {
+    ctxKeys = [...new Set(allKeys.flatMap(k => sentKeys[sentOf[k]]))];
+    for (const k of ctxKeys) tokEls[k].classList.add('ctx');
+  } else {
+    ctxKeys = Object.keys(tokEls).filter(k => lines.includes(lineOf(k)));
+    for (const n of lines) gEl.querySelector(`.ln[data-n="${n}"]`).classList.add('ctx');
+  }
+  for (const k of ctxKeys) for (const i of A[k] || []) wordEls[i].classList.add('ctx');
+  // an unmatched English word sitting inside the rendering joins it
+  const matched = wordEls.map((w, i) => !w.classList.contains('gap') ? i : -1).filter(i => i >= 0);
+  for (const w of wordEls) {
+    if (!w.classList.contains('gap')) continue;
+    const i = +w.dataset.i;
+    const before = matched.filter(j => j < i).pop(), after = matched.find(j => j > i);
+    if (before != null && after != null && wordEls[before].classList.contains('ctx') && wordEls[after].classList.contains('ctx'))
+      w.classList.add('ctx');
+  }
+  // the translator's own words at either edge (no Greek behind them) belong
+  // to the sentence too, out to the nearest stop in the English
+  const stop = /[.:;?!()]/;
+  for (let grew = true; grew;) {
+    grew = false;
+    for (let i = 0; i < wordEls.length; i++) {
+      if (!wordEls[i].classList.contains('ctx')) continue;
+      for (const j of [i - 1, i + 1]) {
+        const w = wordEls[j];
+        if (!w || !w.classList.contains('gap') || w.classList.contains('ctx')) continue;
+        const [a, b] = j < i ? [w, wordEls[i]] : [wordEls[i], w];
+        if (stop.test(D.english.slice(a._e, b._o))) continue;
+        w.classList.add('ctx'); grew = true;
+      }
+    }
+  }
+  // join marks across the text between two marked words
+  for (const sp of spaces) {
+    const a = nb(sp, 'previousSibling'), b = nb(sp, 'nextSibling');
+    if (!isWord(a) || !isWord(b)) continue;
+    for (const c of ['lit', 'src', 'ctx'])
+      if (a.classList.contains(c) && b.classList.contains(c)) sp.classList.add(c);
+    const hot = x => ['lit', 'src', 'grp'].some(c => x.classList.contains(c));
+    if (hot(a) && hot(b) && (a.classList.contains('grp') || b.classList.contains('grp'))) sp.classList.add('grp');
+  }
+  // a marked sentence keeps its punctuation, ending stop included
+  for (const p of puncts) if (p._w.classList.contains('ctx')) p.classList.add('ctx');
+  text.classList.add('on');
+}
+// Article units: an article and its noun or adjective light, and are corrected, as one.
+const UNIT = {}, UOV = {};             // UOV: John's joins and splits, token -> unit
+function rebuildUnits() {
+  for (const k of Object.keys(UNIT)) delete UNIT[k];
+  for (const u of D.units || []) for (const k of u) UNIT[k] = u;
+  for (const [k, u] of Object.entries(UOV)) UNIT[k] = u;
+}
+rebuildUnits();
+const unitOf = k => UNIT[k] || [k];
+const units = keys => [...new Set(keys.flatMap(unitOf))];
+function lightEl(el) {
+  if (el.classList.contains('tok')) { const u = unitOf(el.dataset.k); lightFromGreek(u, el, [...new Set(u.map(lineOf))]); }
+  else if (el.classList.contains('w')) {
+    const keys = units(e2g[el.dataset.i] || []);
+    const gk = GR.filter(([, e]) => e.includes(+el.dataset.i)).flatMap(([g]) => g);
+    lightFromGreek(keys, el, [...new Set([...keys, ...gk].map(lineOf))]);
+  }
+}
+function target(ev) { return ev.target.closest && ev.target.closest('.tok,.w'); }
+
+text.addEventListener('pointerover', ev => {
+  if (ev.pointerType !== 'mouse' || pinned) return;
+  const el = target(ev); if (el) lightEl(el); else clear();
+});
+text.addEventListener('pointerleave', ev => { if (ev.pointerType === 'mouse' && !pinned) clear(); });
+text.addEventListener('click', ev => {
+  const el = target(ev);
+  if (!el || el === pinned) { pinned = null; clear(); return; }
+  pinned = el; lightEl(el);
+});
+text.addEventListener('focusin', ev => { const el = target(ev); if (el && !pinned) lightEl(el); });
+document.addEventListener('keydown', ev => { if (ev.key === 'Escape') { pinned = null; clear(); } });
+
+// Flip bar
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-mode]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  text.classList.remove('m-fill', 'm-under', 'm-mix', 'm-soft', 'm-line', 'm-sent', 'm-dim'); text.classList.add(b.dataset.mode);
+}));
+document.querySelectorAll('[data-gaps]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-gaps]').forEach(x => x.setAttribute('aria-pressed', x === b));
+  text.classList.toggle('show-gaps', b.dataset.gaps === '1');
+}));
+
+// Corrections: John's own rulings, one per Greek token, laid over the reference
+// as the alignment "Yours". lit = the literal partners; loose = the rest of the
+// translator's phrase for that word. Kept in the page's store when it has one.
+const FIX = {};                       // token -> {lit:[], loose:[], sup:[]}
+let store = null, current = null;
+function yours() {
+  const BASE = D.base || 'Reference';
+  const A2 = {}, base = D.aligns[BASE] || {};
+  for (const [k, v] of Object.entries(base)) A2[k] = v;
+  let G2 = ((D.groups || {})[BASE] || []).filter(([g]) => !(g.length === 1 && FIX[g[0]]));
+  for (const [k, f] of Object.entries(FIX)) {
+    if (f.lit.length) A2[k] = f.lit; else delete A2[k];
+    if (f.loose.length || f.sup.length) G2 = G2.concat([[[k], [...f.lit, ...f.loose, ...f.sup].sort((a, b) => a - b)]]);
+  }
+  return [A2, G2];
+}
+function loosesOf(k) {               // a token's loose words in the shown alignment
+  return GR.filter(([g]) => g.length === 1 && g[0] === k).flatMap(([, e]) => e).filter(i => !(A[k] || []).includes(i) && !(SUP[k] || []).includes(i));
+}
+
+// Alignment switch: each named alignment is a Greek-token -> English-words map.
+function setAlign(name, keep) {
+  current = name;
+  [A, GR] = name === 'Yours' ? yours() : [D.aligns[name], (D.groups || {})[name] || []];
+  SUP = {};
+  if (name === 'Yours') for (const [k, f] of Object.entries(FIX)) if (f.sup.length) SUP[k] = f.sup;
+  e2g = {};
+  for (const [k, ws] of Object.entries(A)) for (const i of ws) (e2g[i] ||= []).push(k);
+  const inG = new Set(GR.flatMap(([g]) => g)), inE = new Set(GR.flatMap(([, e]) => e));
+  for (const [k, el] of Object.entries(tokEls)) el.classList.toggle('gap', !A[k] && !inG.has(k));
+  wordEls.forEach((w, i) => w.classList.toggle('gap', !e2g[i] && !inE.has(i)));
+  for (const [k, el] of Object.entries(tokEls)) el.classList.toggle('fixed', !!FIX[k]);
+  if (!keep) { pinned = null; clear(); }
+  document.querySelectorAll('[data-align]').forEach(x => x.setAttribute('aria-pressed', x.dataset.align === name));
+}
+const names = Object.keys(D.aligns);
+if (D.correct) names.unshift('Yours');
+if (names.length > 1) {
+  const g = document.getElementById('aligns'); g.hidden = false;
+  names.forEach((n, i) => {
+    const b = document.createElement('button'); b.dataset.align = n; b.textContent = n; b.id = 'al-' + i;
+    b.addEventListener('click', () => setAlign(n)); g.append(b);
+  });
+}
+setAlign(D.correct ? (D.base || 'Reference') : names[0]);
+
+// ---- Correct mode -------------------------------------------------------
+let correcting = false, selK = null, brush = 'lit', joining = false;
+const panel = document.getElementById('panel'), pStatus = document.getElementById('p-status');
+const TODO = new Set((D.correct || {}).todo || []);
+function markTodo() {
+  for (const el of Object.values(tokEls)) el.classList.remove('todo');
+  for (const k of TODO) for (const m of unitOf(k)) tokEls[m] && tokEls[m].classList.add('todo');
+}
+markTodo();
+const say = (t, bad) => { pStatus.textContent = t; pStatus.classList.toggle('bad', !!bad); };
+
+function phraseEl(core, ext) {
+  const s = document.createElement('span'), ws = [...core, ...ext].sort((a, b) => a - b);
+  if (!ws.length) { s.textContent = 'No English'; return s; }
+  ws.forEach((i, n) => {
+    if (n) s.append(i === ws[n - 1] + 1 ? ' ' : ' … ');
+    const w = document.createElement('span'); w.textContent = wordEls[i].textContent;
+    w.className = ext.includes(i) ? 'ext' : 'core'; s.append(w);
+  });
+  return s;
+}
+function alts(U) {                    // every aligner's reading of the unit, once each, unlabelled
+  const seen = new Set(), out = [];
+  for (const n of Object.keys(D.aligns)) {
+    const core = [...new Set(U.flatMap(k => D.aligns[n][k] || []))].sort((a, b) => a - b);
+    const ext = [...new Set(((D.groups || {})[n] || []).filter(([g]) => g.length === 1 && U.includes(g[0])).flatMap(([, e]) => e))]
+      .filter(i => !core.includes(i)).sort((a, b) => a - b);
+    const key = core + '|' + ext;
+    if (seen.has(key) || (!core.length && !ext.length)) continue;
+    seen.add(key); out.push([core, ext]);
+  }
+  return out;
+}
+const selU = () => selK ? unitOf(selK) : [];
+function bek(k) {
+  const l = k.split('.')[0], cols = D.head.cols || ['1094a', '1094b'];
+  return (cols.find(c => c.endsWith(l[0])) || '') + l.replace(/^[ab]/, '');
+}
+function showSel() {
+  if (!selK) { panel.hidden = true; clear(); return; }
+  panel.hidden = false;
+  const U = selU();
+  const w = document.getElementById('p-word');
+  w.textContent = U.map(k => tokEls[k].textContent).join(' ');
+  const r = document.createElement('span'); r.className = 'ref';
+  r.textContent = bek(U[0]) + (U.some(k => FIX[k]) ? ' · corrected' : U.some(k => TODO.has(k)) ? ' · to check' : '');
+  w.append(r);
+  document.getElementById('p-split').hidden = U.length < 2;
+  document.getElementById('p-join').setAttribute('aria-pressed', joining);
+  const box = document.getElementById('p-alts'); box.replaceChildren();
+  alts(U).forEach(([c, e]) => {
+    const b = document.createElement('button'); b.append(phraseEl(c, e));
+    b.addEventListener('click', () => commit(U, c, e)); box.append(b);
+  });
+  lightFromGreek(U, tokEls[selK], [...new Set(U.map(lineOf))]);
+}
+const queue = {};
+function write(k, fn, ok) {
+  queue[k] = (queue[k] || Promise.resolve()).then(fn).then(() => say(ok), err => say('Not saved: ' + (err && err.code || 'error'), true));
+}
+function commit(U, lit, loose, sup = []) {          // a unit's members share one ruling
+  const num = a => [...a].sort((x, y) => x - y);
+  const f = {lit: num(lit), loose: num(loose), sup: num(sup)};
+  for (const k of U) FIX[k] = f;
+  setAlign('Yours', true); showSel();
+  if (!store) { say('Not saved in this view', true); return; }
+  say('Saving…');
+  const at = new Date().toISOString(), unit = U.join('+');
+  for (const k of U) write(k, () => store.collection('corrections').doc(k).set({lit: f.lit, loose: f.loose, sup: f.sup, word: tokEls[k].textContent, unit, at}), 'Saved');
+}
+function revert(U) {
+  for (const k of U) delete FIX[k];
+  setAlign('Yours', true); showSel();
+  if (!store) return;
+  for (const k of U) write(k, () => store.collection('corrections').doc(k).delete(), 'Back to original');
+}
+function setBrush(b) {
+  brush = b;
+  for (const x of ['lit', 'loose', 'sup']) document.getElementById('b-' + x).setAttribute('aria-pressed', b === x);
+}
+for (const x of ['lit', 'loose', 'sup']) document.getElementById('b-' + x).addEventListener('click', () => setBrush(x));
+// Units: Join, then click another Greek word, makes one unit of the two (and
+// pools their English); Split breaks a unit back into single words.
+const ORDER = Object.keys(tokEls);
+function ruling(U) {
+  const lit = new Set(U.flatMap(k => A[k] || [])), sup = new Set(U.flatMap(k => SUP[k] || []).filter(x => !lit.has(x)));
+  const loose = new Set(U.flatMap(loosesOf).filter(x => !lit.has(x) && !sup.has(x)));
+  return [lit, loose, sup];
+}
+function setUnits(groups) {          // groups: arrays of tokens, each becomes a unit
+  const at = new Date().toISOString();
+  for (const u of groups) for (const k of u) UOV[k] = u;
+  rebuildUnits(); markTodo();
+  if (!store) { say('Not saved in this view', true); return; }
+  for (const u of groups) for (const k of u) write('u:' + k, () => store.collection('units').doc(k).set({u, at}), 'Saved');
+}
+document.getElementById('p-join').addEventListener('click', () => {
+  if (!selK) return;
+  joining = !joining; showSel();
+  say(joining ? 'Click the Greek word to join' : '');
+});
+document.getElementById('p-split').addEventListener('click', () => {
+  const U = selU(); if (U.length < 2) return;
+  joining = false;
+  setUnits(U.map(k => [k])); showSel();
+});
+document.getElementById('p-none').addEventListener('click', () => selK && commit(selU(), [], []));
+document.getElementById('p-reset').addEventListener('click', () => selK && revert(selU()));
+document.getElementById('p-next').addEventListener('click', () => {
+  const keys = Object.keys(tokEls), from = selK ? keys.indexOf(selK) : -1;
+  const next = keys.slice(from + 1).concat(keys.slice(0, from + 1)).find(k => unitOf(k).some(m => TODO.has(m)) && !unitOf(k).some(m => FIX[m]) && !selU().includes(k));
+  if (next) { selK = next; showSel(); tokEls[next].scrollIntoView({block: 'center', behavior: 'smooth'}); }
+  else say('Nothing left to check');
+});
+
+function setCorrect(on) {
+  correcting = on; selK = null;
+  text.classList.toggle('correcting', on);
+  document.getElementById('pad').hidden = !on;
+  document.querySelectorAll('[data-correct]').forEach(x => x.setAttribute('aria-pressed', (x.dataset.correct === '1') === on));
+  if (on) { document.getElementById('m-sent').click(); setAlign('Yours'); }
+  showSel();
+}
+if (D.correct) {
+  document.getElementById('correct').hidden = false;
+  document.querySelectorAll('[data-correct]').forEach(b => b.addEventListener('click', () => setCorrect(b.dataset.correct === '1')));
+  // In correct mode a click on Greek picks the word; a click on English marks it.
+  text.addEventListener('click', ev => {
+    if (!correcting) return;
+    ev.stopImmediatePropagation();
+    const el = target(ev); if (!el) return;
+    if (el.classList.contains('tok')) {
+      const k = el.dataset.k;
+      if (joining && selK && !selU().includes(k)) {
+        const U = [...new Set([...selU(), ...unitOf(k)])].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+        const [lit, loose, sup] = ruling(U);
+        joining = false;
+        setUnits([U]); commit(U, lit, loose, sup);
+        return;
+      }
+      joining = false;
+      selK = selU().includes(k) ? null : k; showSel(); return;
+    }
+    const i = +el.dataset.i;
+    if (!selK) {                       // no Greek picked yet: pick the Greek this word renders
+      const k = (e2g[i] || [])[0] || (GR.find(([, e]) => e.includes(i)) || [[]])[0][0];
+      if (k) { selK = k; showSel(); }
+      return;
+    }
+    const U = selU();
+    const [lit, loose, sup] = ruling(U), sets = {lit, loose, sup};
+    if (sets[brush].has(i)) sets[brush].delete(i);
+    else { for (const s of Object.values(sets)) s.delete(i); sets[brush].add(i); }
+    commit(U, lit, loose, sup);
+  }, true);
+  text.addEventListener('pointerover', ev => { if (correcting) ev.stopImmediatePropagation(); }, true);
+  text.addEventListener('pointerleave', ev => { if (correcting) ev.stopImmediatePropagation(); }, true);
+  document.addEventListener('keydown', ev => { if (correcting && ev.key === 'Escape') { if (joining) joining = false; else selK = null; showSel(); } });
+
+  (async () => {
+    store = window.claude && window.claude.use ? await window.claude.use('db') : null;
+    if (!store) return;
+    const timer = setTimeout(() => say('Saved corrections cannot be reached yet', true), 10000);
+    store.collection('corrections').onSnapshot(snap => {
+      if (!snap.metadata.fromCache) clearTimeout(timer);
+      for (const k of Object.keys(FIX)) delete FIX[k];
+      for (const d of snap.docs) { const v = d.data(); if (tokEls[d.id]) FIX[d.id] = {lit: v.lit || [], loose: v.loose || [], sup: v.sup || []}; }
+      if (current === 'Yours') { setAlign('Yours', true); if (correcting) showSel(); }
+      else for (const [k, el] of Object.entries(tokEls)) el.classList.toggle('fixed', !!FIX[k]);
+    }, err => { clearTimeout(timer); say('Saved corrections cannot be read: ' + err.code, true); });
+    store.collection('units').onSnapshot(snap => {
+      for (const k of Object.keys(UOV)) delete UOV[k];
+      for (const d of snap.docs) { const u = (d.data().u || []).filter(k => tokEls[k]); if (tokEls[d.id] && u.includes(d.id)) UOV[d.id] = u; }
+      rebuildUnits(); markTodo();
+      if (current === 'Yours') setAlign('Yours', true);
+      if (correcting) showSel();
+    }, err => say('Saved units cannot be read: ' + err.code, true));
+  })();
+}
+
+gutter();
+addEventListener('resize', gutter);
+document.fonts && document.fonts.ready.then(gutter);
+</script>

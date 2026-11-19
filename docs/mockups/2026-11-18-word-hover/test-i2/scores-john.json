@@ -1,0 +1,87 @@
+{
+ "rows_whole_chapter": [
+  {
+   "aligner": "My reference",
+   "precision": 0.9942028985507246,
+   "recall": 0.9220430107526881,
+   "f1": 0.9567642956764295,
+   "literal_recall": 0.9930795847750865,
+   "exact_units": 0.9050279329608939
+  },
+  {
+   "aligner": "Opus 5.5",
+   "precision": 0.9641693811074918,
+   "recall": 0.7956989247311828,
+   "f1": 0.8718703976435935,
+   "literal_recall": 0.8823529411764706,
+   "exact_units": 0.7094972067039106
+  },
+  {
+   "aligner": "GPT-6.1 Sol",
+   "precision": 0.9523809523809523,
+   "recall": 0.8602150537634409,
+   "f1": 0.903954802259887,
+   "literal_recall": 0.9584775086505191,
+   "exact_units": 0.7821229050279329
+  },
+  {
+   "aligner": "Haiku 5.5",
+   "precision": 0.9638009049773756,
+   "recall": 0.5725806451612904,
+   "f1": 0.718381112984823,
+   "literal_recall": 0.698961937716263,
+   "exact_units": 0.5195530726256983
+  },
+  {
+   "aligner": "Sonnet 5.5 (stopped early)",
+   "precision": 0.9347826086956522,
+   "recall": 0.11559139784946236,
+   "f1": 0.20574162679425836,
+   "literal_recall": 0.14878892733564014,
+   "exact_units": 0.1564245810055866
+  }
+ ],
+ "rows_john_ruled": [
+  {
+   "aligner": "My reference",
+   "precision": 0.9838709677419355,
+   "recall": 0.8079470198675497,
+   "f1": 0.8872727272727272,
+   "literal_recall": 0.975,
+   "exact_units": 0.6382978723404256
+  },
+  {
+   "aligner": "Opus 5.5",
+   "precision": 0.963963963963964,
+   "recall": 0.7086092715231788,
+   "f1": 0.816793893129771,
+   "literal_recall": 0.9125,
+   "exact_units": 0.5106382978723404
+  },
+  {
+   "aligner": "GPT-6.1 Sol",
+   "precision": 0.9482758620689655,
+   "recall": 0.7284768211920529,
+   "f1": 0.8239700374531834,
+   "literal_recall": 0.9375,
+   "exact_units": 0.5106382978723404
+  },
+  {
+   "aligner": "Haiku 5.5",
+   "precision": 0.9104477611940298,
+   "recall": 0.40397350993377484,
+   "f1": 0.5596330275229358,
+   "literal_recall": 0.6875,
+   "exact_units": 0.14893617021276595
+  }
+ ],
+ "corrected_tokens": 57,
+ "units": 179,
+ "todo_units": 80,
+ "todo_ruled": 26,
+ "ruled_outside": 21,
+ "ref_changed": 17,
+ "checks": 20,
+ "checks_ruled": 5,
+ "checks_changed": 0
+}

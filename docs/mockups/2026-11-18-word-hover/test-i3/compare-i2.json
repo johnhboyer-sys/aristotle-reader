@@ -1,0 +1,68 @@
+[
+ {
+  "model": "Opus 5.5",
+  "translator": "Rackham",
+  "words": 391,
+  "lit": 0.6342710997442456,
+  "loose": 0.3554987212276215,
+  "none": 0.010230179028132946,
+  "units": 179,
+  "units_with_loose": 0.3240223463687151,
+  "units_empty": 0.055865921787709494
+ },
+ {
+  "model": "Opus 5.5",
+  "translator": "Ostwald",
+  "words": 339,
+  "lit": 0.6607669616519174,
+  "loose": 0.3333333333333333,
+  "none": 0.005899705014749235,
+  "units": 180,
+  "units_with_loose": 0.29444444444444445,
+  "units_empty": 0.10555555555555556
+ },
+ {
+  "model": "GPT-6.1 Sol",
+  "translator": "Rackham",
+  "words": 391,
+  "lit": 0.6061381074168798,
+  "loose": 0.37595907928388744,
+  "none": 0.01790281329923271,
+  "units": 179,
+  "units_with_loose": 0.2737430167597765,
+  "units_empty": 0.061452513966480445
+ },
+ {
+  "model": "GPT-6.1 Sol",
+  "translator": "Ostwald",
+  "words": 339,
+  "lit": 0.6371681415929203,
+  "loose": 0.35103244837758113,
+  "none": 0.01179941002949858,
+  "units": 179,
+  "units_with_loose": 0.3687150837988827,
+  "units_empty": 0.10614525139664804
+ },
+ {
+  "model": "Sonnet 5.5",
+  "translator": "Rackham",
+  "words": 391,
+  "lit": 0.6751918158567775,
+  "loose": 0.23529411764705882,
+  "none": 0.08951406649616367,
+  "units": 173,
+  "units_with_loose": 0.28901734104046245,
+  "units_empty": 0.10404624277456648
+ },
+ {
+  "model": "Sonnet 5.5",
+  "translator": "Ostwald",
+  "words": 339,
+  "lit": 0.7463126843657817,
+  "loose": 0.18289085545722714,
+  "none": 0.07079646017699115,
+  "units": 176,
+  "units_with_loose": 0.17045454545454544,
+  "units_empty": 0.13636363636363635
+ }
+]

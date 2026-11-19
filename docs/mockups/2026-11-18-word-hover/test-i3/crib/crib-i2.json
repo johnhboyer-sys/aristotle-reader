@@ -1,0 +1,1595 @@
+{
+ "tokens": {
+  "a18.4": {
+   "gloss": [
+    "if"
+   ],
+   "pair": null
+  },
+  "a18.5": {
+   "gloss": [
+    "then",
+    "now",
+    "so",
+    "indeed"
+   ],
+   "pair": null
+  },
+  "a18.6": {
+   "gloss": [
+    "some",
+    "any",
+    "a"
+   ],
+   "pair": null
+  },
+  "a18.7": {
+   "gloss": [
+    "end",
+    "goal",
+    "aim",
+    "purpose"
+   ],
+   "pair": null
+  },
+  "a18.8": {
+   "gloss": [
+    "is",
+    "there is",
+    "exists"
+   ],
+   "pair": null
+  },
+  "a18.9": {
+   "gloss": [
+    "the",
+    "of the"
+   ],
+   "pair": null
+  },
+  "a19.0": {
+   "gloss": [
+    "of things done",
+    "things to be done",
+    "things we do",
+    "actions"
+   ],
+   "pair": null
+  },
+  "a19.1": {
+   "gloss": [
+    "which",
+    "that"
+   ],
+   "pair": null
+  },
+  "a19.2": {
+   "gloss": [
+    "for the sake of",
+    "on account of",
+    "because of",
+    "for"
+   ],
+   "pair": null
+  },
+  "a19.3": {
+   "gloss": [
+    "itself",
+    "its own sake"
+   ],
+   "pair": null
+  },
+  "a19.4": {
+   "gloss": [
+    "we wish",
+    "we want",
+    "we desire",
+    "we will"
+   ],
+   "pair": null
+  },
+  "a19.5": {
+   "gloss": [
+    "the other things",
+    "the others",
+    "everything else",
+    "the rest"
+   ],
+   "pair": null
+  },
+  "a19.6": {
+   "gloss": [
+    "and",
+    "but"
+   ],
+   "pair": null
+  },
+  "a19.7": {
+   "gloss": [
+    "for the sake of",
+    "on account of",
+    "because of",
+    "for"
+   ],
+   "pair": null
+  },
+  "a19.8": {
+   "gloss": [
+    "this",
+    "it",
+    "that"
+   ],
+   "pair": null
+  },
+  "a19.9": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "a19.10": {
+   "gloss": [
+    "not"
+   ],
+   "pair": null
+  },
+  "a20.0": {
+   "gloss": [
+    "all things",
+    "everything",
+    "all"
+   ],
+   "pair": null
+  },
+  "a20.1": {
+   "gloss": [
+    "for the sake of",
+    "on account of",
+    "because of",
+    "for"
+   ],
+   "pair": null
+  },
+  "a20.2": {
+   "gloss": [
+    "another",
+    "something else",
+    "other"
+   ],
+   "pair": null
+  },
+  "a20.3": {
+   "gloss": [
+    "we choose",
+    "we take",
+    "we prefer"
+   ],
+   "pair": null
+  },
+  "a20.4": {
+   "gloss": [
+    "it will go on",
+    "it will proceed",
+    "it goes on",
+    "it will advance"
+   ],
+   "pair": null
+  },
+  "a20.5": {
+   "gloss": [
+    "for"
+   ],
+   "pair": null
+  },
+  "a20.6": {
+   "gloss": [
+    "thus",
+    "so",
+    "in this way"
+   ],
+   "pair": null
+  },
+  "a20.7": {
+   "gloss": [
+    "at any rate",
+    "at least",
+    "indeed"
+   ],
+   "pair": null
+  },
+  "a20.8": {
+   "gloss": [
+    "to",
+    "into",
+    "on to"
+   ],
+   "pair": null
+  },
+  "a20.9": {
+   "gloss": [
+    "infinity",
+    "the infinite",
+    "the unlimited",
+    "infinite"
+   ],
+   "pair": null
+  },
+  "a21.0": {
+   "gloss": [
+    "so that",
+    "so as",
+    "with the result that",
+    "so"
+   ],
+   "pair": null
+  },
+  "a21.1": {
+   "gloss": [
+    "to be",
+    "is",
+    "be"
+   ],
+   "pair": null
+  },
+  "a21.2": {
+   "gloss": [
+    "empty",
+    "void",
+    "idle",
+    "hollow"
+   ],
+   "pair": null
+  },
+  "a21.3": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "a21.4": {
+   "gloss": [
+    "vain",
+    "futile",
+    "pointless",
+    "useless"
+   ],
+   "pair": null
+  },
+  "a21.5": {
+   "gloss": [
+    "the",
+    "our"
+   ],
+   "pair": null
+  },
+  "a21.6": {
+   "gloss": [
+    "desire",
+    "appetite",
+    "longing",
+    "striving"
+   ],
+   "pair": null
+  },
+  "a21.7": {
+   "gloss": [
+    "clear",
+    "evident",
+    "plain",
+    "manifest"
+   ],
+   "pair": null
+  },
+  "a21.8": {
+   "gloss": [
+    "that"
+   ],
+   "pair": null
+  },
+  "a21.9": {
+   "gloss": [
+    "this",
+    "it",
+    "that"
+   ],
+   "pair": null
+  },
+  "a21.10": {
+   "gloss": [
+    "would be",
+    "will be",
+    "be",
+    "is"
+   ],
+   "pair": "a22.0"
+  },
+  "a22.0": {
+   "gloss": [
+    "would be",
+    "will be",
+    "be",
+    "is"
+   ],
+   "pair": "a21.10"
+  },
+  "a22.1": {
+   "gloss": [
+    "the good",
+    "the Good"
+   ],
+   "pair": null
+  },
+  "a22.2": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "a22.3": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "a22.4": {
+   "gloss": [
+    "best",
+    "chief good",
+    "supreme good",
+    "highest good"
+   ],
+   "pair": null
+  },
+  "a22.5": {
+   "gloss": [],
+   "pair": null
+  },
+  "a22.6": {
+   "gloss": [
+    "then",
+    "therefore",
+    "so"
+   ],
+   "pair": null
+  },
+  "a22.7": {
+   "gloss": [
+    "also",
+    "even",
+    "and"
+   ],
+   "pair": null
+  },
+  "a22.8": {
+   "gloss": [
+    "for",
+    "with regard to",
+    "in relation to",
+    "toward"
+   ],
+   "pair": null
+  },
+  "a22.9": {
+   "gloss": [
+    "the",
+    "our"
+   ],
+   "pair": null
+  },
+  "a22.10": {
+   "gloss": [
+    "life",
+    "way of life",
+    "conduct of life"
+   ],
+   "pair": null
+  },
+  "a22.11": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "a23.0": {
+   "gloss": [
+    "knowledge",
+    "recognition",
+    "cognizance",
+    "knowing"
+   ],
+   "pair": null
+  },
+  "a23.1": {
+   "gloss": [
+    "of it",
+    "its"
+   ],
+   "pair": null
+  },
+  "a23.2": {
+   "gloss": [
+    "great",
+    "large",
+    "big",
+    "important"
+   ],
+   "pair": null
+  },
+  "a23.3": {
+   "gloss": [
+    "has",
+    "holds",
+    "carries"
+   ],
+   "pair": null
+  },
+  "a23.4": {
+   "gloss": [
+    "weight",
+    "influence",
+    "importance",
+    "bearing"
+   ],
+   "pair": null
+  },
+  "a23.5": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "a23.6": {
+   "gloss": [
+    "just as",
+    "like",
+    "as"
+   ],
+   "pair": null
+  },
+  "a23.7": {
+   "gloss": [
+    "archers",
+    "bowmen"
+   ],
+   "pair": null
+  },
+  "a24.0": {
+   "gloss": [
+    "target",
+    "mark",
+    "goal",
+    "aim"
+   ],
+   "pair": null
+  },
+  "a24.1": {
+   "gloss": [
+    "having",
+    "who have",
+    "with"
+   ],
+   "pair": null
+  },
+  "a24.2": {
+   "gloss": [
+    "more",
+    "rather",
+    "better",
+    "more likely"
+   ],
+   "pair": null
+  },
+  "a24.3": {
+   "gloss": [
+    "we would hit",
+    "we would attain",
+    "we would hit upon",
+    "we would reach"
+   ],
+   "pair": "a24.4"
+  },
+  "a24.4": {
+   "gloss": [
+    "we would hit",
+    "we would attain",
+    "we would hit upon",
+    "we would reach"
+   ],
+   "pair": "a24.3"
+  },
+  "a24.5": {
+   "gloss": [
+    "the",
+    "what"
+   ],
+   "pair": null
+  },
+  "a24.6": {
+   "gloss": [
+    "what is needed",
+    "needful",
+    "what is right",
+    "what is fitting"
+   ],
+   "pair": null
+  },
+  "a24.7": {
+   "gloss": [
+    "if"
+   ],
+   "pair": null
+  },
+  "a24.8": {
+   "gloss": [
+    "and",
+    "but"
+   ],
+   "pair": null
+  },
+  "a25.0": {
+   "gloss": [
+    "so",
+    "thus"
+   ],
+   "pair": null
+  },
+  "a25.1": {
+   "gloss": [
+    "one must try",
+    "we must try",
+    "we must attempt",
+    "it is necessary to try"
+   ],
+   "pair": null
+  },
+  "a25.2": {
+   "gloss": [
+    "in outline",
+    "in rough outline",
+    "in sketch",
+    "roughly"
+   ],
+   "pair": null
+  },
+  "a25.3": {
+   "gloss": [
+    "at least",
+    "at any rate"
+   ],
+   "pair": null
+  },
+  "a25.4": {
+   "gloss": [
+    "to grasp",
+    "to encompass",
+    "to comprehend",
+    "to determine"
+   ],
+   "pair": null
+  },
+  "a25.5": {
+   "gloss": [
+    "it"
+   ],
+   "pair": null
+  },
+  "a25.6": {
+   "gloss": [
+    "what"
+   ],
+   "pair": null
+  },
+  "a25.7": {
+   "gloss": [
+    "ever",
+    "exactly",
+    "in the world",
+    "at all"
+   ],
+   "pair": null
+  },
+  "a25.8": {
+   "gloss": [
+    "is"
+   ],
+   "pair": null
+  },
+  "a25.9": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "a26.0": {
+   "gloss": [
+    "of which",
+    "which",
+    "whose",
+    "of what"
+   ],
+   "pair": null
+  },
+  "a26.1": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "a26.2": {
+   "gloss": [
+    "sciences",
+    "of the sciences",
+    "branches of knowledge",
+    "disciplines"
+   ],
+   "pair": null
+  },
+  "a26.3": {
+   "gloss": [
+    "or"
+   ],
+   "pair": null
+  },
+  "a26.4": {
+   "gloss": [
+    "capacities",
+    "faculties",
+    "powers",
+    "abilities"
+   ],
+   "pair": null
+  },
+  "a26.5": {
+   "gloss": [
+    "it would seem",
+    "it would appear",
+    "it would be thought",
+    "would seem"
+   ],
+   "pair": "a26.7"
+  },
+  "a26.6": {
+   "gloss": [
+    "and",
+    "but",
+    "now"
+   ],
+   "pair": null
+  },
+  "a26.7": {
+   "gloss": [
+    "it would seem",
+    "it would appear",
+    "it would be thought",
+    "would seem"
+   ],
+   "pair": "a26.5"
+  },
+  "a26.8": {
+   "gloss": [
+    "the",
+    "of the"
+   ],
+   "pair": null
+  },
+  "a26.9": {
+   "gloss": [
+    "most authoritative",
+    "most sovereign",
+    "most controlling",
+    "supreme"
+   ],
+   "pair": null
+  },
+  "a27.0": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "a27.1": {
+   "gloss": [
+    "most",
+    "most of all",
+    "especially",
+    "pre-eminently"
+   ],
+   "pair": null
+  },
+  "a27.2": {
+   "gloss": [
+    "architectonic",
+    "master",
+    "master-craft",
+    "directive"
+   ],
+   "pair": null
+  },
+  "a27.3": {
+   "gloss": [
+    "such",
+    "of this kind",
+    "such a one",
+    "this kind"
+   ],
+   "pair": null
+  },
+  "a27.4": {
+   "gloss": [
+    "and",
+    "but",
+    "now"
+   ],
+   "pair": null
+  },
+  "a27.5": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "a27.6": {
+   "gloss": [
+    "political science",
+    "politics",
+    "political",
+    "statesmanship"
+   ],
+   "pair": null
+  },
+  "a28.0": {
+   "gloss": [
+    "appears",
+    "seems",
+    "is evidently",
+    "is plainly"
+   ],
+   "pair": null
+  },
+  "a28.1": {
+   "gloss": [
+    "which",
+    "what"
+   ],
+   "pair": null
+  },
+  "a28.2": {
+   "gloss": [
+    "for"
+   ],
+   "pair": null
+  },
+  "a28.3": {
+   "gloss": [
+    "to be",
+    "to exist",
+    "be",
+    "exist"
+   ],
+   "pair": null
+  },
+  "a28.4": {
+   "gloss": [
+    "it is necessary",
+    "ought",
+    "should",
+    "needful"
+   ],
+   "pair": null
+  },
+  "a28.5": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "a28.6": {
+   "gloss": [
+    "sciences",
+    "of the sciences",
+    "branches of knowledge",
+    "disciplines"
+   ],
+   "pair": null
+  },
+  "a28.7": {
+   "gloss": [
+    "in"
+   ],
+   "pair": null
+  },
+  "a28.8": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "a28.9": {
+   "gloss": [
+    "cities",
+    "states",
+    "city-states"
+   ],
+   "pair": null
+  },
+  "b1.0": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "b1.1": {
+   "gloss": [
+    "which",
+    "what sort of",
+    "what kind of",
+    "what"
+   ],
+   "pair": null
+  },
+  "b1.2": {
+   "gloss": [
+    "each",
+    "each class",
+    "each group",
+    "each person"
+   ],
+   "pair": null
+  },
+  "b1.3": {
+   "gloss": [
+    "to learn",
+    "to study",
+    "learn",
+    "study"
+   ],
+   "pair": null
+  },
+  "b1.4": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "b1.5": {
+   "gloss": [
+    "up to",
+    "as far as",
+    "to",
+    "until"
+   ],
+   "pair": null
+  },
+  "b1.6": {
+   "gloss": [
+    "what point",
+    "what",
+    "what extent",
+    "which"
+   ],
+   "pair": null
+  },
+  "b1.7": {
+   "gloss": [
+    "this",
+    "it",
+    "this one"
+   ],
+   "pair": null
+  },
+  "b2.0": {
+   "gloss": [
+    "arranges",
+    "orders",
+    "ordains",
+    "prescribes"
+   ],
+   "pair": null
+  },
+  "b2.1": {
+   "gloss": [
+    "we see",
+    "we observe",
+    "we perceive"
+   ],
+   "pair": null
+  },
+  "b2.2": {
+   "gloss": [
+    "and",
+    "but"
+   ],
+   "pair": null
+  },
+  "b2.3": {
+   "gloss": [
+    "also",
+    "even"
+   ],
+   "pair": null
+  },
+  "b2.4": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "b2.5": {
+   "gloss": [
+    "most honoured",
+    "most esteemed",
+    "most prized",
+    "most highly regarded"
+   ],
+   "pair": null
+  },
+  "b2.6": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "b2.7": {
+   "gloss": [
+    "capacities",
+    "faculties",
+    "powers",
+    "abilities"
+   ],
+   "pair": null
+  },
+  "b3.0": {
+   "gloss": [
+    "under",
+    "subordinate to",
+    "beneath",
+    "below"
+   ],
+   "pair": null
+  },
+  "b3.1": {
+   "gloss": [
+    "this",
+    "it",
+    "this one"
+   ],
+   "pair": null
+  },
+  "b3.2": {
+   "gloss": [
+    "being",
+    "are",
+    "falling",
+    "fall"
+   ],
+   "pair": null
+  },
+  "b3.3": {
+   "gloss": [
+    "such as",
+    "for example",
+    "e.g.",
+    "as"
+   ],
+   "pair": null
+  },
+  "b3.4": {
+   "gloss": [
+    "strategy",
+    "generalship",
+    "military science",
+    "the art of war"
+   ],
+   "pair": null
+  },
+  "b3.5": {
+   "gloss": [
+    "economics",
+    "household management",
+    "domestic economy",
+    "estate management"
+   ],
+   "pair": null
+  },
+  "b3.6": {
+   "gloss": [
+    "rhetoric",
+    "oratory"
+   ],
+   "pair": null
+  },
+  "b4.0": {
+   "gloss": [
+    "using",
+    "since it uses",
+    "making use of",
+    "employing"
+   ],
+   "pair": null
+  },
+  "b4.1": {
+   "gloss": [
+    "and",
+    "but",
+    "now"
+   ],
+   "pair": null
+  },
+  "b4.2": {
+   "gloss": [
+    "this",
+    "it",
+    "this one"
+   ],
+   "pair": null
+  },
+  "b4.3": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "b4.4": {
+   "gloss": [
+    "remaining",
+    "rest",
+    "other",
+    "rest of the"
+   ],
+   "pair": null
+  },
+  "b4.5": {
+   "gloss": [
+    "practical",
+    "concerned with action"
+   ],
+   "pair": null
+  },
+  "b4.6": {
+   "gloss": [
+    "the"
+   ],
+   "pair": null
+  },
+  "b4.7": {
+   "gloss": [
+    "sciences",
+    "of the sciences",
+    "branches of knowledge",
+    "disciplines"
+   ],
+   "pair": null
+  },
+  "b5.0": {
+   "gloss": [
+    "further",
+    "moreover",
+    "also",
+    "besides"
+   ],
+   "pair": null
+  },
+  "b5.1": {
+   "gloss": [
+    "and",
+    "but"
+   ],
+   "pair": null
+  },
+  "b5.2": {
+   "gloss": [
+    "legislating",
+    "since it legislates",
+    "laying down by law",
+    "enacting"
+   ],
+   "pair": null
+  },
+  "b5.3": {
+   "gloss": [
+    "what"
+   ],
+   "pair": null
+  },
+  "b5.4": {
+   "gloss": [
+    "one must",
+    "we must",
+    "it is necessary",
+    "ought"
+   ],
+   "pair": null
+  },
+  "b5.5": {
+   "gloss": [
+    "to do",
+    "do",
+    "to act",
+    "to practise"
+   ],
+   "pair": null
+  },
+  "b5.6": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "b5.7": {
+   "gloss": [
+    "what",
+    "from what",
+    "which things",
+    "what things"
+   ],
+   "pair": null
+  },
+  "b5.8": {
+   "gloss": [
+    "to abstain from",
+    "to refrain from",
+    "to keep away from",
+    "abstain"
+   ],
+   "pair": null
+  },
+  "b6.0": {
+   "gloss": [
+    "the end",
+    "the goal",
+    "the aim",
+    "end"
+   ],
+   "pair": "b6.2"
+  },
+  "b6.1": {
+   "gloss": [
+    "of this",
+    "its",
+    "of it",
+    "this"
+   ],
+   "pair": null
+  },
+  "b6.2": {
+   "gloss": [
+    "the end",
+    "the goal",
+    "the aim",
+    "end"
+   ],
+   "pair": "b6.0"
+  },
+  "b6.3": {
+   "gloss": [
+    "would include",
+    "would embrace",
+    "would encompass",
+    "would contain"
+   ],
+   "pair": "b6.4"
+  },
+  "b6.4": {
+   "gloss": [
+    "would include",
+    "would embrace",
+    "would encompass",
+    "would contain"
+   ],
+   "pair": "b6.3"
+  },
+  "b6.5": {
+   "gloss": [
+    "those",
+    "the",
+    "the ends"
+   ],
+   "pair": null
+  },
+  "b6.6": {
+   "gloss": [
+    "the",
+    "of the"
+   ],
+   "pair": null
+  },
+  "b6.7": {
+   "gloss": [
+    "others",
+    "other",
+    "of the others",
+    "rest"
+   ],
+   "pair": null
+  },
+  "b6.8": {
+   "gloss": [
+    "so that",
+    "so",
+    "therefore",
+    "hence"
+   ],
+   "pair": null
+  },
+  "b6.9": {
+   "gloss": [
+    "this",
+    "it",
+    "that"
+   ],
+   "pair": null
+  },
+  "b7.0": {
+   "gloss": [
+    "would be",
+    "will be",
+    "be",
+    "is"
+   ],
+   "pair": "b7.1"
+  },
+  "b7.1": {
+   "gloss": [
+    "would be",
+    "will be",
+    "be",
+    "is"
+   ],
+   "pair": "b7.0"
+  },
+  "b7.2": {
+   "gloss": [
+    "the human",
+    "human",
+    "man's",
+    "for man"
+   ],
+   "pair": null
+  },
+  "b7.3": {
+   "gloss": [
+    "good",
+    "the good"
+   ],
+   "pair": null
+  },
+  "b7.4": {
+   "gloss": [
+    "even if",
+    "although",
+    "though",
+    "even though"
+   ],
+   "pair": "b7.6"
+  },
+  "b7.5": {
+   "gloss": [
+    "for"
+   ],
+   "pair": null
+  },
+  "b7.6": {
+   "gloss": [
+    "even if",
+    "although",
+    "though",
+    "even though"
+   ],
+   "pair": "b7.4"
+  },
+  "b7.7": {
+   "gloss": [
+    "the same",
+    "same",
+    "identical"
+   ],
+   "pair": null
+  },
+  "b7.8": {
+   "gloss": [
+    "is"
+   ],
+   "pair": null
+  },
+  "b7.9": {
+   "gloss": [
+    "for one",
+    "for an individual",
+    "for one man",
+    "for the individual"
+   ],
+   "pair": null
+  },
+  "b8.0": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "b8.1": {
+   "gloss": [
+    "for a city",
+    "for the state",
+    "city",
+    "state"
+   ],
+   "pair": null
+  },
+  "b8.2": {
+   "gloss": [
+    "greater",
+    "larger",
+    "bigger",
+    "grander"
+   ],
+   "pair": null
+  },
+  "b8.3": {
+   "gloss": [
+    "at any rate",
+    "at least",
+    "certainly",
+    "indeed"
+   ],
+   "pair": null
+  },
+  "b8.4": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "b8.5": {
+   "gloss": [
+    "more complete",
+    "more perfect",
+    "more final",
+    "more finished"
+   ],
+   "pair": null
+  },
+  "b8.6": {
+   "gloss": [
+    "the",
+    "that",
+    "the good"
+   ],
+   "pair": null
+  },
+  "b8.7": {
+   "gloss": [
+    "the",
+    "of the"
+   ],
+   "pair": null
+  },
+  "b8.8": {
+   "gloss": [
+    "of the city",
+    "of the state",
+    "city",
+    "state"
+   ],
+   "pair": null
+  },
+  "b8.9": {
+   "gloss": [
+    "appears",
+    "seems",
+    "is seen",
+    "is evidently"
+   ],
+   "pair": null
+  },
+  "b9.0": {
+   "gloss": [
+    "both",
+    "and",
+    "alike"
+   ],
+   "pair": null
+  },
+  "b9.1": {
+   "gloss": [
+    "to take",
+    "to attain",
+    "to secure",
+    "to get"
+   ],
+   "pair": null
+  },
+  "b9.2": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "b9.3": {
+   "gloss": [
+    "to preserve",
+    "to keep",
+    "to save",
+    "to maintain"
+   ],
+   "pair": null
+  },
+  "b9.4": {
+   "gloss": [
+    "welcome",
+    "worth having",
+    "satisfactory",
+    "desirable"
+   ],
+   "pair": null
+  },
+  "b9.5": {
+   "gloss": [],
+   "pair": null
+  },
+  "b9.6": {
+   "gloss": [
+    "for"
+   ],
+   "pair": null
+  },
+  "b9.7": {
+   "gloss": [
+    "even",
+    "also",
+    "and"
+   ],
+   "pair": null
+  },
+  "b9.8": {
+   "gloss": [
+    "for one",
+    "for an individual",
+    "for one man"
+   ],
+   "pair": null
+  },
+  "b10.0": {
+   "gloss": [
+    "alone",
+    "only",
+    "single",
+    "by himself"
+   ],
+   "pair": null
+  },
+  "b10.1": {
+   "gloss": [
+    "finer",
+    "nobler",
+    "more beautiful",
+    "better"
+   ],
+   "pair": null
+  },
+  "b10.2": {
+   "gloss": [
+    "but",
+    "and"
+   ],
+   "pair": null
+  },
+  "b10.3": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "b10.4": {
+   "gloss": [
+    "more divine",
+    "more godlike"
+   ],
+   "pair": null
+  },
+  "b10.5": {
+   "gloss": [
+    "for a nation",
+    "for a people",
+    "for a race",
+    "nation"
+   ],
+   "pair": null
+  },
+  "b10.6": {
+   "gloss": [
+    "and"
+   ],
+   "pair": null
+  },
+  "b10.7": {
+   "gloss": [
+    "for cities",
+    "for city-states",
+    "cities",
+    "states"
+   ],
+   "pair": null
+  },
+  "b10.8": {
+   "gloss": [
+    "the inquiry",
+    "our inquiry",
+    "the investigation",
+    "the method"
+   ],
+   "pair": "b11.1"
+  },
+  "b10.9": {
+   "gloss": [
+    "so",
+    "then",
+    "therefore",
+    "accordingly"
+   ],
+   "pair": "b11.0"
+  },
+  "b11.0": {
+   "gloss": [
+    "so",
+    "then",
+    "therefore",
+    "accordingly"
+   ],
+   "pair": "b10.9"
+  },
+  "b11.1": {
+   "gloss": [
+    "the inquiry",
+    "our inquiry",
+    "the investigation",
+    "the method"
+   ],
+   "pair": "b10.8"
+  },
+  "b11.2": {
+   "gloss": [
+    "these",
+    "these things",
+    "these ends",
+    "this"
+   ],
+   "pair": null
+  },
+  "b11.3": {
+   "gloss": [
+    "aims at",
+    "seeks",
+    "aims",
+    "strives for"
+   ],
+   "pair": null
+  },
+  "b11.4": {
+   "gloss": [
+    "political",
+    "political science",
+    "politics",
+    "statesmanship"
+   ],
+   "pair": null
+  },
+  "b11.5": {
+   "gloss": [
+    "a kind of",
+    "a sort of",
+    "some",
+    "a certain"
+   ],
+   "pair": null
+  },
+  "b11.6": {
+   "gloss": [
+    "being",
+    "since it is",
+    "as it is"
+   ],
+   "pair": null
+  }
+ },
+ "literal": "If then [there] is some end of things done which for its own sake we wish, and the other things for the sake of this, and not all things for the sake of another we choose (for it will go on thus at any rate to infinity, so that empty and vain [is] the desire), [it is] clear that this would be the good and the best. Then also for the life the knowledge of it great has weight, and just as archers a target having, more would we hit the needful? And if so, [we] must try in outline at least to grasp it, what ever [it] is, and of which of the sciences or capacities [it is]. And [it] would seem [to be] of the most authoritative and most architectonic. And such the political [science] appears; for which [it is] necessary to be of the sciences in the cities, and what sort each [class is] to learn and up to what [point], this arranges; and we see also the most honoured of the capacities under this being, such as strategy, economics, rhetoric; and this using the remaining [practical] of the sciences, and further legislating what one must do and from what to abstain, the of-this end would include those of the others, so that this would be the human good. For even if the same [it] is for one and for a city, greater at any rate and more complete that of the city appears both to take and to preserve; for [it is] welcome even for one alone, but finer and more divine for a nation and for cities. So the inquiry aims at these, being a sort of political [science]."
+}
