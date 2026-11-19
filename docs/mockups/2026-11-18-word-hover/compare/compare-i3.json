@@ -1,0 +1,3548 @@
+{
+ "sentences": [
+  {
+   "n": 1,
+   "renderings": {
+    "Rackham": "Now our treatment of this science will be adequate, if it achieves that amount of precision which belongs to its subject matter.",
+    "Ross": "Our discussion will be adequate if it has as much clearness as the subject-matter admits of,",
+    "Ostwald": "Our discussion will be adequate if it achieves clarity within the limits of the subject matter.",
+    "Peters": "We must be content if we can attain to so much precision in our statement as the subject before us admits of;"
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "Λέγοιτο",
+     "ids": [
+      "b11.7"
+     ],
+     "by": {
+      "Rackham": "treatment",
+      "Ross": "discussion",
+      "Ostwald": "discussion",
+      "Peters": "statement"
+     },
+     "comment": "The verb 'be spoken of' becomes a noun: 'treatment', 'discussion', or 'statement'."
+    },
+    {
+     "kind": "construction",
+     "greek": "Λέγοιτο … ἂν",
+     "ids": [
+      "b11.7",
+      "b11.9"
+     ],
+     "by": {
+      "Rackham": "our treatment of this science will be",
+      "Ross": "Our discussion will be",
+      "Ostwald": "Our discussion will be",
+      "Peters": "We must be content if we can"
+     },
+     "comment": "The impersonal passive optative becomes 'our discussion will be' in three versions; Peters makes it 'we must be content if we can'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(object of Λέγοιτο)",
+     "ids": [
+      "b11.7"
+     ],
+     "by": {
+      "Rackham": "this science",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Only Rackham names what is being discussed."
+    },
+    {
+     "kind": "omitted",
+     "greek": "δ'",
+     "ids": [
+      "b11.8"
+     ],
+     "by": {
+      "Rackham": "Now",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Only Rackham gives the particle a word."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἱκανῶς",
+     "ids": [
+      "b12.0"
+     ],
+     "by": {
+      "Rackham": "adequate",
+      "Ross": "adequate",
+      "Ostwald": "adequate",
+      "Peters": "content"
+     },
+     "comment": "Three write 'adequate'; Peters folds the adverb into 'be content'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "διασαφηθείη",
+     "ids": [
+      "b12.6"
+     ],
+     "by": {
+      "Rackham": "achieves that amount of precision",
+      "Ross": "has as much clearness",
+      "Ostwald": "achieves clarity",
+      "Peters": "attain to so much precision"
+     },
+     "comment": "'Be made clear' is clarity for Ross and Ostwald but precision for Rackham and Peters."
+    },
+    {
+     "kind": "construction",
+     "greek": "διασαφηθείη",
+     "ids": [
+      "b12.6"
+     ],
+     "by": {
+      "Rackham": "it achieves",
+      "Ross": "it has",
+      "Ostwald": "it achieves",
+      "Peters": "we can attain"
+     },
+     "comment": "The passive verb turns active, with the discussion, or Peters's 'we', as subject."
+    },
+    {
+     "kind": "supplied",
+     "greek": "κατὰ",
+     "ids": [
+      "b12.2"
+     ],
+     "by": {
+      "Rackham": "that amount of … which belongs to",
+      "Ross": "as much … as … admits of",
+      "Ostwald": "within the limits of",
+      "Peters": "so much … as … admits of"
+     },
+     "comment": "The bare 'according to' grows into a measure: an amount, limits, or a verb 'admits of' that the Greek has only in 1094b25."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὴν ὑποκειμένην ὕλην",
+     "ids": [
+      "b12.3",
+      "b12.4",
+      "b12.5"
+     ],
+     "by": {
+      "Rackham": "its subject matter",
+      "Ross": "the subject-matter",
+      "Ostwald": "the subject matter",
+      "Peters": "the subject before us"
+     },
+     "comment": "Peters alone keeps 'lying before' as 'before us'; the others give 'subject matter'."
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "renderings": {
+    "Rackham": "The same exactness must not be expected in all departments of philosophy alike, any more than in all the products of the arts and crafts.",
+    "Ross": "for precision is not to be sought for alike in all discussions, any more than in all the products of the crafts.",
+    "Ostwald": "For precision cannot be expected in the treatment of all subjects alike, any more than it can be expected in all manufactured articles.",
+    "Peters": "for the same degree of accuracy is no more to be expected in all kinds of reasoning than in all kinds of handicraft."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "γὰρ",
+     "ids": [
+      "b12.8"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "for",
+      "Ostwald": "For",
+      "Peters": "for"
+     },
+     "comment": "Rackham drops the 'for' that ties this sentence to the last."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὸ ἀκριβὲς",
+     "ids": [
+      "b12.7",
+      "b13.0"
+     ],
+     "by": {
+      "Rackham": "exactness",
+      "Ross": "precision",
+      "Ostwald": "precision",
+      "Peters": "accuracy"
+     },
+     "comment": "Three different nouns for the same adjective."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τὸ ἀκριβὲς",
+     "ids": [
+      "b12.7",
+      "b13.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "degree of"
+     },
+     "comment": "Peters adds a noun of measure to the neuter adjective."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ὁμοίως",
+     "ids": [
+      "b13.2"
+     ],
+     "by": {
+      "Rackham": "The same … alike",
+      "Ross": "alike",
+      "Ostwald": "alike",
+      "Peters": "the same"
+     },
+     "comment": "Rackham renders the adverb twice; Peters turns it into an adjective on the noun."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐπιζητητέον",
+     "ids": [
+      "b13.7"
+     ],
+     "by": {
+      "Rackham": "expected",
+      "Ross": "sought for",
+      "Ostwald": "expected",
+      "Peters": "expected"
+     },
+     "comment": "Ross keeps 'seek'; the others write 'expect'."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἐπιζητητέον",
+     "ids": [
+      "b13.7"
+     ],
+     "by": {
+      "Rackham": "must not be expected",
+      "Ross": "is not to be sought for",
+      "Ostwald": "cannot be expected",
+      "Peters": "is no more to be expected"
+     },
+     "comment": "The verbal adjective comes out as 'must', 'is to be', or 'cannot'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "λόγοις",
+     "ids": [
+      "b13.6"
+     ],
+     "by": {
+      "Rackham": "departments of philosophy",
+      "Ross": "discussions",
+      "Ostwald": "the treatment of all subjects",
+      "Peters": "kinds of reasoning"
+     },
+     "comment": "Each reads 'λόγοι' differently: fields of study, discussions, subjects, or reasoning."
+    },
+    {
+     "kind": "supplied",
+     "greek": "λόγοις",
+     "ids": [
+      "b13.6"
+     ],
+     "by": {
+      "Rackham": "departments",
+      "Ross": "",
+      "Ostwald": "treatment",
+      "Peters": "kinds of"
+     },
+     "comment": "Rackham, Ostwald, and Peters add a framing noun; Ross does not."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ὥσπερ οὐδ'",
+     "ids": [
+      "b13.8",
+      "b14.0"
+     ],
+     "by": {
+      "Rackham": "any more than",
+      "Ross": "any more than",
+      "Ostwald": "any more than",
+      "Peters": "no more … than"
+     },
+     "comment": "Peters moves the negative into the main clause."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(ellipsis after ὥσπερ οὐδ')",
+     "ids": [
+      "b13.8",
+      "b14.0"
+     ],
+     "by": {
+      "Rackham": "all",
+      "Ross": "all",
+      "Ostwald": "it can be expected in all",
+      "Peters": "all kinds of"
+     },
+     "comment": "All repeat 'all' from the first clause; Ostwald also repeats the verb, and Peters 'kinds of'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοῖς δημιουργουμένοις",
+     "ids": [
+      "b14.2",
+      "b14.3"
+     ],
+     "by": {
+      "Rackham": "the products of the arts and crafts",
+      "Ross": "the products of the crafts",
+      "Ostwald": "manufactured articles",
+      "Peters": "handicraft"
+     },
+     "comment": "Rackham and Ross name the crafts, Ostwald the goods, Peters the activity."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοῖς δημιουργουμένοις",
+     "ids": [
+      "b14.2",
+      "b14.3"
+     ],
+     "by": {
+      "Rackham": "products",
+      "Ross": "products",
+      "Ostwald": "articles",
+      "Peters": ""
+     },
+     "comment": "A noun is added to the neuter participle 'things being made', except by Peters."
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "renderings": {
+    "Rackham": "The subjects studied by political science are Moral Nobility and Justice; but these conceptions involve much difference of opinion and uncertainty, so that they are sometimes believed to be mere conventions and to have no real existence in the nature of things.",
+    "Ross": "Now fine and just actions, which political science investigates, admit of much variety and fluctuation of opinion, so that they may be thought to exist only by convention, and not by nature.",
+    "Ostwald": "Problems of what is noble and just, which politics examines, present so much variety and irregularity that some people believe that they exist only by convention and not by nature.",
+    "Peters": "Now the things that are noble and just (with which Politics deals) are so various and so uncertain, that some think these are merely conventional and not natural distinctions."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "δὲ",
+     "ids": [
+      "b14.5"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "Now",
+      "Ostwald": "",
+      "Peters": "Now"
+     },
+     "comment": "Rackham and Ostwald leave the particle without a word."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὰ καλὰ",
+     "ids": [
+      "b14.4",
+      "b14.6"
+     ],
+     "by": {
+      "Rackham": "Moral Nobility",
+      "Ross": "fine",
+      "Ostwald": "noble",
+      "Peters": "noble"
+     },
+     "comment": "Ross alone writes 'fine'; Rackham makes it an abstract noun."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὰ δίκαια",
+     "ids": [
+      "b14.8",
+      "b14.9"
+     ],
+     "by": {
+      "Rackham": "Justice",
+      "Ross": "just",
+      "Ostwald": "just",
+      "Peters": "just"
+     },
+     "comment": "Rackham turns the neuter adjective into an abstract noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τὰ καλὰ καὶ τὰ δίκαια",
+     "ids": [
+      "b14.4",
+      "b14.6",
+      "b14.8",
+      "b14.9"
+     ],
+     "by": {
+      "Rackham": "The subjects",
+      "Ross": "actions",
+      "Ostwald": "Problems",
+      "Peters": "things"
+     },
+     "comment": "Each adds a different noun to the neuter plural adjectives."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τὰ καλὰ",
+     "ids": [
+      "b14.4",
+      "b14.6"
+     ],
+     "by": {
+      "Rackham": "Moral",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham narrows the word with 'Moral'."
+    },
+    {
+     "kind": "construction",
+     "greek": "περὶ ὧν … σκοπεῖται",
+     "ids": [
+      "b15.0",
+      "b15.1",
+      "b15.4"
+     ],
+     "by": {
+      "Rackham": "The subjects studied by political science are",
+      "Ross": "which political science investigates",
+      "Ostwald": "which politics examines",
+      "Peters": "with which Politics deals"
+     },
+     "comment": "Rackham makes the relative clause the main statement and puts the verb in the passive."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(resumed subject of ἔχει)",
+     "ids": [
+      "b15.6"
+     ],
+     "by": {
+      "Rackham": "these conceptions",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham must restate the subject after recasting the relative clause."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἡ πολιτικὴ",
+     "ids": [
+      "b15.2",
+      "b15.3"
+     ],
+     "by": {
+      "Rackham": "political science",
+      "Ross": "political science",
+      "Ostwald": "politics",
+      "Peters": "Politics"
+     },
+     "comment": "Rackham and Ross add 'science'; Ostwald and Peters do not."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πολιτικὴ",
+     "ids": [
+      "b15.3"
+     ],
+     "by": {
+      "Rackham": "science",
+      "Ross": "science",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "The noun implied by the adjective πολιτική."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "σκοπεῖται",
+     "ids": [
+      "b15.4"
+     ],
+     "by": {
+      "Rackham": "studied",
+      "Ross": "investigates",
+      "Ostwald": "examines",
+      "Peters": "deals"
+     },
+     "comment": "Four different verbs."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἔχει",
+     "ids": [
+      "b15.6"
+     ],
+     "by": {
+      "Rackham": "involve",
+      "Ross": "admit of",
+      "Ostwald": "present",
+      "Peters": "are"
+     },
+     "comment": "Four verbs; Peters reduces 'has' to 'are'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "διαφορὰν",
+     "ids": [
+      "b15.7"
+     ],
+     "by": {
+      "Rackham": "difference of opinion",
+      "Ross": "variety",
+      "Ostwald": "variety",
+      "Peters": "various"
+     },
+     "comment": "Rackham reads disagreement; the others read variety."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πλάνην",
+     "ids": [
+      "b16.0"
+     ],
+     "by": {
+      "Rackham": "uncertainty",
+      "Ross": "fluctuation of opinion",
+      "Ostwald": "irregularity",
+      "Peters": "uncertain"
+     },
+     "comment": "Three different nouns for 'wandering'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "διαφορὰν … πλάνην",
+     "ids": [
+      "b15.7",
+      "b16.0"
+     ],
+     "by": {
+      "Rackham": "of opinion",
+      "Ross": "of opinion",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ross both add 'of opinion', but to different nouns."
+    },
+    {
+     "kind": "construction",
+     "greek": "πολλὴν ἔχει διαφορὰν καὶ πλάνην",
+     "ids": [
+      "b15.5",
+      "b15.6",
+      "b15.7",
+      "b15.8",
+      "b16.0"
+     ],
+     "by": {
+      "Rackham": "involve much difference of opinion and uncertainty",
+      "Ross": "admit of much variety and fluctuation of opinion",
+      "Ostwald": "present so much variety and irregularity",
+      "Peters": "are so various and so uncertain"
+     },
+     "comment": "Peters turns the two nouns into adjectives."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πολλὴν … ὥστε",
+     "ids": [
+      "b15.5",
+      "b16.1"
+     ],
+     "by": {
+      "Rackham": "much … so that",
+      "Ross": "much … so that",
+      "Ostwald": "so much … that",
+      "Peters": "so … that"
+     },
+     "comment": "Ostwald and Peters tie 'much' to the result clause as 'so … that'."
+    },
+    {
+     "kind": "construction",
+     "greek": "δοκεῖν",
+     "ids": [
+      "b16.2"
+     ],
+     "by": {
+      "Rackham": "they are sometimes believed",
+      "Ross": "they may be thought",
+      "Ostwald": "some people believe",
+      "Peters": "some think"
+     },
+     "comment": "The impersonal 'seem' becomes passive in Rackham and Ross and active with a named subject in Ostwald and Peters."
+    },
+    {
+     "kind": "supplied",
+     "greek": "δοκεῖν",
+     "ids": [
+      "b16.2"
+     ],
+     "by": {
+      "Rackham": "sometimes",
+      "Ross": "",
+      "Ostwald": "some people",
+      "Peters": "some"
+     },
+     "comment": "Ostwald and Peters supply the people who think it; Rackham supplies 'sometimes'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "νόμῳ μόνον εἶναι",
+     "ids": [
+      "b16.3",
+      "b16.4",
+      "b16.5"
+     ],
+     "by": {
+      "Rackham": "to be mere conventions",
+      "Ross": "exist only by convention",
+      "Ostwald": "exist only by convention",
+      "Peters": "are merely conventional"
+     },
+     "comment": "Ross and Ostwald agree word for word; Rackham and Peters recast the dative."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "φύσει",
+     "ids": [
+      "b16.6"
+     ],
+     "by": {
+      "Rackham": "in the nature of things",
+      "Ross": "by nature",
+      "Ostwald": "by nature",
+      "Peters": "natural"
+     },
+     "comment": "Rackham expands, Peters makes an adjective."
+    },
+    {
+     "kind": "supplied",
+     "greek": "φύσει δὲ μή",
+     "ids": [
+      "b16.6",
+      "b16.7",
+      "b16.8"
+     ],
+     "by": {
+      "Rackham": "to have no real existence … of things",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "distinctions"
+     },
+     "comment": "Rackham adds 'real existence' and 'things'; Peters adds 'distinctions'."
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "renderings": {
+    "Rackham": "And a similar uncertainty surrounds the conception of the Good, because it frequently occurs that good things have harmful consequences:",
+    "Ross": "And goods also give rise to a similar fluctuation because they bring harm to many people;",
+    "Ostwald": "The problem of the good, too, presents a similar kind of irregularity, because in many cases good things bring harmful results.",
+    "Peters": "There is a similar uncertainty also about what is good, because good things often do people harm:"
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "δέ",
+     "ids": [
+      "b17.0"
+     ],
+     "by": {
+      "Rackham": "And",
+      "Ross": "And",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Ostwald and Peters leave the particle without a word."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοιαύτην … τινα",
+     "ids": [
+      "b16.9",
+      "b17.1"
+     ],
+     "by": {
+      "Rackham": "a similar",
+      "Ross": "a similar",
+      "Ostwald": "a similar kind of",
+      "Peters": "a similar"
+     },
+     "comment": "Ostwald adds 'kind of'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοιαύτην … τινα",
+     "ids": [
+      "b16.9",
+      "b17.1"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "kind of",
+      "Peters": ""
+     },
+     "comment": "A noun of class added by Ostwald."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πλάνην",
+     "ids": [
+      "b17.2"
+     ],
+     "by": {
+      "Rackham": "uncertainty",
+      "Ross": "fluctuation",
+      "Ostwald": "irregularity",
+      "Peters": "uncertainty"
+     },
+     "comment": "Each keeps the word chosen in the previous sentence."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἔχει",
+     "ids": [
+      "b17.3"
+     ],
+     "by": {
+      "Rackham": "surrounds",
+      "Ross": "give rise to",
+      "Ostwald": "presents",
+      "Peters": "There is … about"
+     },
+     "comment": "Four different verbs for 'has'."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἔχει … τἀγαθὰ",
+     "ids": [
+      "b17.3",
+      "b17.5"
+     ],
+     "by": {
+      "Rackham": "a similar uncertainty surrounds",
+      "Ross": "goods also give rise to",
+      "Ostwald": "The problem of the good, too, presents",
+      "Peters": "There is a similar uncertainty"
+     },
+     "comment": "The Greek subject is 'the goods'; Rackham and Peters make the uncertainty the subject."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "b17.4"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "also",
+      "Ostwald": "too",
+      "Peters": "also"
+     },
+     "comment": "Rackham drops 'also'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τἀγαθὰ",
+     "ids": [
+      "b17.5"
+     ],
+     "by": {
+      "Rackham": "the conception of the Good",
+      "Ross": "goods",
+      "Ostwald": "The problem of the good",
+      "Peters": "what is good"
+     },
+     "comment": "Ross alone keeps the plural."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τἀγαθὰ",
+     "ids": [
+      "b17.5"
+     ],
+     "by": {
+      "Rackham": "conception",
+      "Ross": "",
+      "Ostwald": "problem",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald add a framing noun."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πολλοῖς",
+     "ids": [
+      "b17.8"
+     ],
+     "by": {
+      "Rackham": "frequently",
+      "Ross": "many people",
+      "Ostwald": "in many cases",
+      "Peters": "often … people"
+     },
+     "comment": "Ross reads 'to many people'; Rackham and Peters read 'often'; Ostwald 'in many cases'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πολλοῖς",
+     "ids": [
+      "b17.8"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "people",
+      "Ostwald": "cases",
+      "Peters": "people"
+     },
+     "comment": "Ross and Peters spell out the persons; Ostwald adds 'cases'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "συμβαίνειν",
+     "ids": [
+      "b17.9"
+     ],
+     "by": {
+      "Rackham": "occurs",
+      "Ross": "bring",
+      "Ostwald": "bring",
+      "Peters": "do"
+     },
+     "comment": "Only Rackham keeps 'happen'."
+    },
+    {
+     "kind": "construction",
+     "greek": "συμβαίνειν βλάβας ἀπ' αὐτῶν",
+     "ids": [
+      "b17.9",
+      "b18.0",
+      "b18.1",
+      "b18.2"
+     ],
+     "by": {
+      "Rackham": "it frequently occurs that good things have harmful consequences",
+      "Ross": "they bring harm",
+      "Ostwald": "good things bring harmful results",
+      "Peters": "good things often do people harm"
+     },
+     "comment": "'Harms happen from them' is recast with 'them' as the subject in all four."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "βλάβας",
+     "ids": [
+      "b18.0"
+     ],
+     "by": {
+      "Rackham": "harmful consequences",
+      "Ross": "harm",
+      "Ostwald": "harmful results",
+      "Peters": "harm"
+     },
+     "comment": "Rackham and Ostwald turn the noun into an adjective on a new noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "βλάβας",
+     "ids": [
+      "b18.0"
+     ],
+     "by": {
+      "Rackham": "consequences",
+      "Ross": "",
+      "Ostwald": "results",
+      "Peters": ""
+     },
+     "comment": "The noun that carries 'harmful' is added."
+    },
+    {
+     "kind": "supplied",
+     "greek": "αὐτῶν",
+     "ids": [
+      "b18.2"
+     ],
+     "by": {
+      "Rackham": "good things",
+      "Ross": "",
+      "Ostwald": "good things",
+      "Peters": "good things"
+     },
+     "comment": "Ross uses the pronoun 'they'; the others repeat 'good things'."
+    }
+   ]
+  },
+  {
+   "n": 5,
+   "renderings": {
+    "Rackham": "people have before now been ruined by wealth, and in other cases courage has cost men their lives.",
+    "Ross": "for before now men have been undone by reason of their wealth, and others by reason of their courage.",
+    "Ostwald": "There are instances of men ruined by wealth, and others by courage.",
+    "Peters": "men have before now been ruined by wealth, and have lost their lives through courage."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "γάρ",
+     "ids": [
+      "b18.4"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "for",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Only Ross renders 'for'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἤδη",
+     "ids": [
+      "b18.3"
+     ],
+     "by": {
+      "Rackham": "before now",
+      "Ross": "before now",
+      "Ostwald": "There are instances of",
+      "Peters": "before now"
+     },
+     "comment": "Ostwald turns 'already' into 'there are instances'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἤδη",
+     "ids": [
+      "b18.3"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "instances",
+      "Peters": ""
+     },
+     "comment": "Ostwald adds a noun."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τινες",
+     "ids": [
+      "b18.5"
+     ],
+     "by": {
+      "Rackham": "people",
+      "Ross": "men",
+      "Ostwald": "men",
+      "Peters": "men"
+     },
+     "comment": "Rackham alone writes 'people'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀπώλοντο",
+     "ids": [
+      "b18.6"
+     ],
+     "by": {
+      "Rackham": "been ruined",
+      "Ross": "been undone",
+      "Ostwald": "ruined",
+      "Peters": "been ruined"
+     },
+     "comment": "Ross writes 'undone'; the others 'ruined'."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἀπώλοντο",
+     "ids": [
+      "b18.6"
+     ],
+     "by": {
+      "Rackham": "have … been ruined",
+      "Ross": "have been undone",
+      "Ostwald": "men ruined",
+      "Peters": "have before now been ruined"
+     },
+     "comment": "The middle 'perished' becomes passive in all four; Ostwald makes it a participle."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "διὰ … δι'",
+     "ids": [
+      "b18.7",
+      "b19.3"
+     ],
+     "by": {
+      "Rackham": "by",
+      "Ross": "by reason of … by reason of",
+      "Ostwald": "by",
+      "Peters": "by … through"
+     },
+     "comment": "Ross writes 'by reason of' twice."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πλοῦτον … ἀνδρείαν",
+     "ids": [
+      "b19.0",
+      "b19.4"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "their … their",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Ross adds 'their' to wealth and courage."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἕτεροι",
+     "ids": [
+      "b19.1"
+     ],
+     "by": {
+      "Rackham": "in other cases",
+      "Ross": "others",
+      "Ostwald": "others",
+      "Peters": ""
+     },
+     "comment": "Peters keeps the first subject and drops 'others'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἕτεροι",
+     "ids": [
+      "b19.1"
+     ],
+     "by": {
+      "Rackham": "cases",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'cases'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(verb understood with ἕτεροι)",
+     "ids": [
+      "b19.1"
+     ],
+     "by": {
+      "Rackham": "has cost men their lives",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "have lost their lives"
+     },
+     "comment": "Rackham and Peters supply 'lose their lives', reading the verb as 'perished'; Ross and Ostwald let 'ruined' carry over."
+    },
+    {
+     "kind": "construction",
+     "greek": "δι' ἀνδρείαν",
+     "ids": [
+      "b19.3",
+      "b19.4"
+     ],
+     "by": {
+      "Rackham": "courage has cost",
+      "Ross": "by reason of their courage",
+      "Ostwald": "by courage",
+      "Peters": "through courage"
+     },
+     "comment": "Rackham makes the cause the subject."
+    }
+   ]
+  },
+  {
+   "n": 6,
+   "renderings": {
+    "Rackham": "We must therefore be content if, in dealing with subjects and starting from premises thus uncertain, we succeed in presenting a broad outline of the truth: when our subjects and our premises are merely generalities, it is enough if we arrive at generally valid conclusions.",
+    "Ross": "We must be content, then, in speaking of such subjects and with such premisses to indicate the truth roughly and in outline, and in speaking about things which are only for the most part true and with premisses of the same kind to reach conclusions that are no better.",
+    "Ostwald": "Therefore, in a discussion of such subjects, which has to start from a basis of this kind, we must be satisfied to indicate the truth with a rough and general sketch: when the subject and the basis of a discussion consist of matters that hold good only as a general rule, but not always, the conclusions reached must be of the same order.",
+    "Peters": "Our subject, then, and our data being of this nature, we must be content if we can indicate the truth roughly and in outline, and if, in dealing with matters that are not amenable to immutable laws, and reasoning from premises that are but probable, we can arrive at probable conclusions."
+   },
+   "notes": [
+    {
+     "kind": "construction",
+     "greek": "ἀγαπητὸν",
+     "ids": [
+      "b19.5"
+     ],
+     "by": {
+      "Rackham": "We must therefore be content if",
+      "Ross": "We must be content",
+      "Ostwald": "we must be satisfied",
+      "Peters": "we must be content if"
+     },
+     "comment": "The impersonal 'it is welcome' becomes 'we must be content'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀγαπητὸν",
+     "ids": [
+      "b19.5"
+     ],
+     "by": {
+      "Rackham": "content",
+      "Ross": "content",
+      "Ostwald": "satisfied",
+      "Peters": "content"
+     },
+     "comment": "Ostwald alone writes 'satisfied'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "οὖν",
+     "ids": [
+      "b19.6"
+     ],
+     "by": {
+      "Rackham": "therefore",
+      "Ross": "then",
+      "Ostwald": "Therefore",
+      "Peters": "then"
+     },
+     "comment": "Two words for the particle."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἀγαπητὸν (repeated in the second half)",
+     "ids": [
+      "b19.5"
+     ],
+     "by": {
+      "Rackham": "it is enough if",
+      "Ross": "",
+      "Ostwald": "must",
+      "Peters": "if … we can"
+     },
+     "comment": "Rackham, Ostwald, and Peters restate the main verb for the second half; Ross lets it carry over."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "λέγοντας",
+     "ids": [
+      "b20.3"
+     ],
+     "by": {
+      "Rackham": "dealing with",
+      "Ross": "speaking of",
+      "Ostwald": "discussion",
+      "Peters": ""
+     },
+     "comment": "Peters drops the participle and recasts the clause."
+    },
+    {
+     "kind": "construction",
+     "greek": "περὶ τοιούτων … λέγοντας",
+     "ids": [
+      "b19.7",
+      "b19.8",
+      "b20.3"
+     ],
+     "by": {
+      "Rackham": "in dealing with subjects",
+      "Ross": "in speaking of such subjects",
+      "Ostwald": "in a discussion of such subjects",
+      "Peters": "Our subject, then, and our data being of this nature"
+     },
+     "comment": "Ostwald turns the participle into a noun; Peters builds an absolute clause."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοιούτων",
+     "ids": [
+      "b19.8"
+     ],
+     "by": {
+      "Rackham": "subjects",
+      "Ross": "subjects",
+      "Ostwald": "subjects",
+      "Peters": "subject"
+     },
+     "comment": "All four add a noun to the neuter pronoun."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοιούτων … τοιούτων",
+     "ids": [
+      "b19.8",
+      "b20.2"
+     ],
+     "by": {
+      "Rackham": "thus uncertain",
+      "Ross": "such … such",
+      "Ostwald": "such … of this kind",
+      "Peters": "of this nature"
+     },
+     "comment": "Rackham interprets 'such' as 'uncertain'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοιούτων",
+     "ids": [
+      "b20.2"
+     ],
+     "by": {
+      "Rackham": "uncertain",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham reads 'such' as 'uncertain'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἐκ τοιούτων",
+     "ids": [
+      "b20.1",
+      "b20.2"
+     ],
+     "by": {
+      "Rackham": "premises",
+      "Ross": "premisses",
+      "Ostwald": "basis",
+      "Peters": "data"
+     },
+     "comment": "All four add a noun for the starting points."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐκ",
+     "ids": [
+      "b20.1"
+     ],
+     "by": {
+      "Rackham": "starting from",
+      "Ross": "with",
+      "Ostwald": "which has to start from",
+      "Peters": ""
+     },
+     "comment": "Ostwald adds 'has to'; Peters folds it into the absolute clause."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "παχυλῶς καὶ τύπῳ",
+     "ids": [
+      "b20.4",
+      "b20.5",
+      "b20.6"
+     ],
+     "by": {
+      "Rackham": "a broad outline",
+      "Ross": "roughly and in outline",
+      "Ostwald": "with a rough and general sketch",
+      "Peters": "roughly and in outline"
+     },
+     "comment": "Ross and Peters agree; Rackham and Ostwald make a noun phrase."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐνδείκνυσθαι",
+     "ids": [
+      "b20.8"
+     ],
+     "by": {
+      "Rackham": "presenting",
+      "Ross": "indicate",
+      "Ostwald": "indicate",
+      "Peters": "indicate"
+     },
+     "comment": "Rackham alone writes 'presenting'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἐνδείκνυσθαι",
+     "ids": [
+      "b20.8"
+     ],
+     "by": {
+      "Rackham": "succeed",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'succeed in'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ὡς ἐπὶ τὸ πολὺ",
+     "ids": [
+      "b21.3",
+      "b21.4",
+      "b21.5",
+      "b21.6"
+     ],
+     "by": {
+      "Rackham": "merely generalities",
+      "Ross": "only for the most part true",
+      "Ostwald": "hold good only as a general rule, but not always",
+      "Peters": "not amenable to immutable laws"
+     },
+     "comment": "Four quite different glosses of 'for the most part'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ὡς ἐπὶ τὸ πολὺ",
+     "ids": [
+      "b21.3",
+      "b21.4",
+      "b21.5",
+      "b21.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "true",
+      "Ostwald": "but not always",
+      "Peters": "immutable laws"
+     },
+     "comment": "Ross adds 'true', Ostwald 'but not always', Peters 'immutable laws'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τῶν",
+     "ids": [
+      "b21.2"
+     ],
+     "by": {
+      "Rackham": "our subjects",
+      "Ross": "things",
+      "Ostwald": "the subject … matters",
+      "Peters": "matters"
+     },
+     "comment": "All four add a noun to the article."
+    },
+    {
+     "kind": "construction",
+     "greek": "περὶ τῶν … λέγοντας",
+     "ids": [
+      "b21.1",
+      "b21.2",
+      "b22.0"
+     ],
+     "by": {
+      "Rackham": "when our subjects and our premises are merely generalities",
+      "Ross": "in speaking about things which are only for the most part true",
+      "Ostwald": "when the subject and the basis of a discussion consist of matters",
+      "Peters": "in dealing with matters that are not amenable"
+     },
+     "comment": "Rackham and Ostwald turn the participle into a 'when' clause; Ross and Peters keep 'speaking' or 'dealing'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "λέγοντας",
+     "ids": [
+      "b22.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "speaking about",
+      "Ostwald": "of a discussion",
+      "Peters": "dealing with … reasoning from"
+     },
+     "comment": "Peters renders the participle twice; Rackham leaves it out."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἐκ τοιούτων",
+     "ids": [
+      "b21.8",
+      "b21.9"
+     ],
+     "by": {
+      "Rackham": "premises",
+      "Ross": "premisses",
+      "Ostwald": "basis",
+      "Peters": "premises"
+     },
+     "comment": "All four again supply a noun for the starting points."
+    },
+    {
+     "kind": "omitted",
+     "greek": "τοιούτων",
+     "ids": [
+      "b21.9"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "of the same kind",
+      "Ostwald": "",
+      "Peters": "that are but probable"
+     },
+     "comment": "Rackham and Ostwald give the second 'such' no word."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοιαῦτα",
+     "ids": [
+      "b22.1"
+     ],
+     "by": {
+      "Rackham": "generally valid",
+      "Ross": "that are no better",
+      "Ostwald": "of the same order",
+      "Peters": "probable"
+     },
+     "comment": "Four different ways to say 'of the same sort'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "b22.2"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "No one renders the 'also' before 'conclude'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "συμπεραίνεσθαι",
+     "ids": [
+      "b22.3"
+     ],
+     "by": {
+      "Rackham": "arrive at … conclusions",
+      "Ross": "reach conclusions",
+      "Ostwald": "the conclusions reached",
+      "Peters": "arrive at probable conclusions"
+     },
+     "comment": "Ostwald makes the verb a passive participle with a noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(possessive)",
+     "ids": [
+      "b20.1",
+      "b21.8"
+     ],
+     "by": {
+      "Rackham": "our",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "Our"
+     },
+     "comment": "Rackham and Peters add 'our' to subjects and premises."
+    }
+   ]
+  },
+  {
+   "n": 7,
+   "renderings": {
+    "Rackham": "Accordingly we may ask the student also to accept the various views we put forward in the same spirit;",
+    "Ross": "In the same spirit, therefore, should each type of statement be received;",
+    "Ostwald": "The various points that are made must be received in the same spirit.",
+    "Peters": "The reader, on his part, should take each of my statements in the same spirit;"
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "δὴ",
+     "ids": [
+      "b22.6"
+     ],
+     "by": {
+      "Rackham": "Accordingly",
+      "Ross": "therefore",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Ostwald and Peters leave the particle without a word."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "b23.0"
+     ],
+     "by": {
+      "Rackham": "also",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "on his part"
+     },
+     "comment": "Ross and Ostwald drop 'also'; Peters makes it 'on his part'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀποδέχεσθαι",
+     "ids": [
+      "b23.1"
+     ],
+     "by": {
+      "Rackham": "accept",
+      "Ross": "received",
+      "Ostwald": "received",
+      "Peters": "take"
+     },
+     "comment": "Two verbs each."
+    },
+    {
+     "kind": "construction",
+     "greek": "χρεὼν",
+     "ids": [
+      "b23.2"
+     ],
+     "by": {
+      "Rackham": "we may ask … to",
+      "Ross": "should",
+      "Ostwald": "must",
+      "Peters": "should"
+     },
+     "comment": "Rackham turns 'it is right' into a request."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἀποδέχεσθαι χρεὼν",
+     "ids": [
+      "b23.1",
+      "b23.2"
+     ],
+     "by": {
+      "Rackham": "we may ask the student also to accept",
+      "Ross": "should each type of statement be received",
+      "Ostwald": "must be received",
+      "Peters": "The reader, on his part, should take"
+     },
+     "comment": "Ross and Ostwald make it passive; Rackham and Peters name the one who accepts."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(subject of ἀποδέχεσθαι)",
+     "ids": [
+      "b23.1"
+     ],
+     "by": {
+      "Rackham": "the student",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "The reader"
+     },
+     "comment": "Rackham and Peters name the hearer."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἕκαστα",
+     "ids": [
+      "b23.3"
+     ],
+     "by": {
+      "Rackham": "the various",
+      "Ross": "each type of",
+      "Ostwald": "The various",
+      "Peters": "each of"
+     },
+     "comment": "'Each' becomes 'various' in Rackham and Ostwald."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἕκαστα",
+     "ids": [
+      "b23.3"
+     ],
+     "by": {
+      "Rackham": "views",
+      "Ross": "type",
+      "Ostwald": "points",
+      "Peters": ""
+     },
+     "comment": "A noun is added to the neuter plural, except by Peters."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "λεγομένων",
+     "ids": [
+      "b23.5"
+     ],
+     "by": {
+      "Rackham": "we put forward",
+      "Ross": "statement",
+      "Ostwald": "that are made",
+      "Peters": "my statements"
+     },
+     "comment": "Rackham and Peters add the speaker ('we', 'my'); Ostwald keeps the passive."
+    }
+   ]
+  },
+  {
+   "n": 8,
+   "renderings": {
+    "Rackham": "for it is the mark of an educated mind to expect that amount of exactness in each kind which the nature of the particular subject admits.",
+    "Ross": "for it is the mark of an educated man to look for precision in each class of things just so far as the nature of the subject admits;",
+    "Ostwald": "For a well-schooled man is one who searches for that degree of precision in each kind of study which the nature of the subject at hand admits:",
+    "Peters": "for it is the mark of an educated man to require, in each kind of inquiry, just so much exactness as the subject admits of:"
+   },
+   "notes": [
+    {
+     "kind": "supplied",
+     "greek": "πεπαιδευμένου … ἐστιν",
+     "ids": [
+      "b23.6",
+      "b24.1"
+     ],
+     "by": {
+      "Rackham": "the mark of",
+      "Ross": "the mark of",
+      "Ostwald": "",
+      "Peters": "the mark of"
+     },
+     "comment": "The genitive of characteristic gets the noun 'mark', except in Ostwald."
+    },
+    {
+     "kind": "construction",
+     "greek": "πεπαιδευμένου … ἐστιν",
+     "ids": [
+      "b23.6",
+      "b24.1"
+     ],
+     "by": {
+      "Rackham": "it is the mark of an educated mind to",
+      "Ross": "it is the mark of an educated man to",
+      "Ostwald": "a well-schooled man is one who searches for",
+      "Peters": "it is the mark of an educated man to"
+     },
+     "comment": "Ostwald makes the educated man the subject and the infinitive a relative clause."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πεπαιδευμένου",
+     "ids": [
+      "b23.6"
+     ],
+     "by": {
+      "Rackham": "educated",
+      "Ross": "educated",
+      "Ostwald": "well-schooled",
+      "Peters": "educated"
+     },
+     "comment": "Ostwald alone writes 'well-schooled'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πεπαιδευμένου",
+     "ids": [
+      "b23.6"
+     ],
+     "by": {
+      "Rackham": "mind",
+      "Ross": "man",
+      "Ostwald": "man",
+      "Peters": "man"
+     },
+     "comment": "A noun is added to the participle; Rackham's is 'mind'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐπὶ τοσοῦτον … ἐφ' ὅσον",
+     "ids": [
+      "b24.2",
+      "b24.3",
+      "b25.1",
+      "b25.2"
+     ],
+     "by": {
+      "Rackham": "that amount of … which",
+      "Ross": "just so far as",
+      "Ostwald": "that degree of … which",
+      "Peters": "just so much … as"
+     },
+     "comment": "Rackham and Ostwald turn the measure into a noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἐπὶ τοσοῦτον",
+     "ids": [
+      "b24.2",
+      "b24.3"
+     ],
+     "by": {
+      "Rackham": "amount",
+      "Ross": "",
+      "Ostwald": "degree",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald add a noun of measure."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τἀκριβὲς",
+     "ids": [
+      "b24.4"
+     ],
+     "by": {
+      "Rackham": "exactness",
+      "Ross": "precision",
+      "Ostwald": "precision",
+      "Peters": "exactness"
+     },
+     "comment": "Peters changes word again (precision, accuracy, now exactness)."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐπιζητεῖν",
+     "ids": [
+      "b24.5"
+     ],
+     "by": {
+      "Rackham": "expect",
+      "Ross": "look for",
+      "Ostwald": "searches for",
+      "Peters": "require"
+     },
+     "comment": "Four different verbs for the same 'seek' used in 1094b13."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "γένος",
+     "ids": [
+      "b25.0"
+     ],
+     "by": {
+      "Rackham": "kind",
+      "Ross": "class of things",
+      "Ostwald": "kind of study",
+      "Peters": "kind of inquiry"
+     },
+     "comment": "Ross, Ostwald, and Peters add a noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "γένος",
+     "ids": [
+      "b25.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "things",
+      "Ostwald": "study",
+      "Peters": "inquiry"
+     },
+     "comment": "The kind of what is spelled out, except by Rackham."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἡ τοῦ πράγματος φύσις",
+     "ids": [
+      "b25.3",
+      "b25.4",
+      "b25.5",
+      "b25.6"
+     ],
+     "by": {
+      "Rackham": "the nature of the particular subject",
+      "Ross": "the nature of the subject",
+      "Ostwald": "the nature of the subject at hand",
+      "Peters": "the subject"
+     },
+     "comment": "Peters drops 'nature'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "φύσις",
+     "ids": [
+      "b25.6"
+     ],
+     "by": {
+      "Rackham": "nature",
+      "Ross": "nature",
+      "Ostwald": "nature",
+      "Peters": ""
+     },
+     "comment": "Peters leaves 'nature' without a word."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πράγματος",
+     "ids": [
+      "b25.5"
+     ],
+     "by": {
+      "Rackham": "particular",
+      "Ross": "",
+      "Ostwald": "at hand",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald qualify 'subject'."
+    }
+   ]
+  },
+  {
+   "n": 9,
+   "renderings": {
+    "Rackham": "It is equally unreasonable to accept merely probable conclusions from a mathematician and to demand strict demonstration from an orator.",
+    "Ross": "it is evidently equally foolish to accept probable reasoning from a mathematician and to demand from a rhetorician scientific proofs.",
+    "Ostwald": "it is obviously just as foolish to accept arguments of probability from a mathematician as to demand strict demonstrations from an orator.",
+    "Peters": "it is equally absurd to accept probable reasoning from a mathematician, and to demand scientific proof from an orator."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "γὰρ",
+     "ids": [
+      "b26.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "No one renders 'for'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "παραπλήσιον",
+     "ids": [
+      "b25.8"
+     ],
+     "by": {
+      "Rackham": "equally",
+      "Ross": "equally",
+      "Ostwald": "just as … as",
+      "Peters": "equally"
+     },
+     "comment": "Ostwald turns 'comparable' into a 'just as … as' frame."
+    },
+    {
+     "kind": "supplied",
+     "greek": "παραπλήσιον",
+     "ids": [
+      "b25.8"
+     ],
+     "by": {
+      "Rackham": "unreasonable",
+      "Ross": "foolish",
+      "Ostwald": "foolish",
+      "Peters": "absurd"
+     },
+     "comment": "The Greek says only 'comparable'; all four add a word of blame."
+    },
+    {
+     "kind": "omitted",
+     "greek": "φαίνεται",
+     "ids": [
+      "b26.1"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "evidently",
+      "Ostwald": "obviously",
+      "Peters": ""
+     },
+     "comment": "Rackham and Peters leave 'appears' without a word; Ross and Ostwald strengthen it."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πιθανολογοῦντος",
+     "ids": [
+      "b26.4"
+     ],
+     "by": {
+      "Rackham": "merely probable conclusions",
+      "Ross": "probable reasoning",
+      "Ostwald": "arguments of probability",
+      "Peters": "probable reasoning"
+     },
+     "comment": "Ross and Peters agree; Rackham writes 'conclusions'."
+    },
+    {
+     "kind": "construction",
+     "greek": "πιθανολογοῦντος",
+     "ids": [
+      "b26.4"
+     ],
+     "by": {
+      "Rackham": "accept merely probable conclusions from a mathematician",
+      "Ross": "accept probable reasoning from a mathematician",
+      "Ostwald": "accept arguments of probability from a mathematician",
+      "Peters": "accept probable reasoning from a mathematician"
+     },
+     "comment": "The participle 'one reasoning plausibly' becomes the noun object accepted."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πιθανολογοῦντος",
+     "ids": [
+      "b26.4"
+     ],
+     "by": {
+      "Rackham": "merely",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'merely'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ῥητορικὸν",
+     "ids": [
+      "b27.1"
+     ],
+     "by": {
+      "Rackham": "an orator",
+      "Ross": "a rhetorician",
+      "Ostwald": "an orator",
+      "Peters": "an orator"
+     },
+     "comment": "Ross alone writes 'rhetorician'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀποδείξεις",
+     "ids": [
+      "b27.2"
+     ],
+     "by": {
+      "Rackham": "strict demonstration",
+      "Ross": "scientific proofs",
+      "Ostwald": "strict demonstrations",
+      "Peters": "scientific proof"
+     },
+     "comment": "Two noun choices; Rackham and Peters make it singular."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἀποδείξεις",
+     "ids": [
+      "b27.2"
+     ],
+     "by": {
+      "Rackham": "strict",
+      "Ross": "scientific",
+      "Ostwald": "strict",
+      "Peters": "scientific"
+     },
+     "comment": "All four add an adjective to 'proofs'."
+    }
+   ]
+  },
+  {
+   "n": 10,
+   "renderings": {
+    "Rackham": "Again, each man judges correctly those matters with which he is acquainted; it is of these that he is a competent critic.",
+    "Ross": "Now each man judges well the things he knows, and of these he is a good judge.",
+    "Ostwald": "Each man can judge competently the things he knows, and of these he is a good judge.",
+    "Peters": "But each man can form a judgment about what he knows, and is called “a good judge” of that⁠—"
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "δὲ",
+     "ids": [
+      "b27.5"
+     ],
+     "by": {
+      "Rackham": "Again",
+      "Ross": "Now",
+      "Ostwald": "",
+      "Peters": "But"
+     },
+     "comment": "Ostwald leaves the particle without a word."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἕκαστος",
+     "ids": [
+      "b27.4"
+     ],
+     "by": {
+      "Rackham": "man",
+      "Ross": "man",
+      "Ostwald": "man",
+      "Peters": "man"
+     },
+     "comment": "All four add 'man' to 'each'."
+    },
+    {
+     "kind": "construction",
+     "greek": "κρίνει",
+     "ids": [
+      "b27.6"
+     ],
+     "by": {
+      "Rackham": "judges",
+      "Ross": "judges",
+      "Ostwald": "can judge",
+      "Peters": "can form a judgment"
+     },
+     "comment": "Ostwald and Peters add 'can'; Peters turns the verb into a noun phrase."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "καλῶς",
+     "ids": [
+      "b28.0"
+     ],
+     "by": {
+      "Rackham": "correctly",
+      "Ross": "well",
+      "Ostwald": "competently",
+      "Peters": ""
+     },
+     "comment": "Three different adverbs; Peters leaves it out."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἃ γινώσκει",
+     "ids": [
+      "b28.1",
+      "b28.2"
+     ],
+     "by": {
+      "Rackham": "those matters with which he is acquainted",
+      "Ross": "the things he knows",
+      "Ostwald": "the things he knows",
+      "Peters": "what he knows"
+     },
+     "comment": "Rackham writes 'is acquainted'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἃ",
+     "ids": [
+      "b28.1"
+     ],
+     "by": {
+      "Rackham": "matters",
+      "Ross": "things",
+      "Ostwald": "things",
+      "Peters": ""
+     },
+     "comment": "A noun is added to the relative, except by Peters."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "b28.3"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "and",
+      "Ostwald": "and",
+      "Peters": "and"
+     },
+     "comment": "Rackham drops 'and' and uses a semicolon."
+    },
+    {
+     "kind": "construction",
+     "greek": "τούτων ἐστὶν",
+     "ids": [
+      "b28.4",
+      "b28.5"
+     ],
+     "by": {
+      "Rackham": "it is of these that he is",
+      "Ross": "of these he is",
+      "Ostwald": "of these he is",
+      "Peters": "is called … of that"
+     },
+     "comment": "Rackham uses a cleft sentence; Peters adds 'is called'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἐστὶν",
+     "ids": [
+      "b28.5"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "called"
+     },
+     "comment": "Peters adds 'called'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀγαθὸς κριτής",
+     "ids": [
+      "b28.6",
+      "b28.7"
+     ],
+     "by": {
+      "Rackham": "competent critic",
+      "Ross": "good judge",
+      "Ostwald": "good judge",
+      "Peters": "“a good judge”"
+     },
+     "comment": "Rackham writes 'competent critic'; Peters puts the phrase in quotation marks."
+    }
+   ]
+  },
+  {
+   "n": 11,
+   "renderings": {
+    "Rackham": "To criticize a particular subject, therefore, a man must have been trained in that subject: to be a good critic generally, he must have had an all-round education.",
+    "Ross": "And so the man who has been educated in a subject is a good judge of that subject, and the man who has received an all-round education is a good judge in general.",
+    "Ostwald": "Accordingly, a good judge in each particular field is one who has been trained in it, and a good judge in general, a man who has received an all-round schooling.",
+    "Peters": "of any special matter when he has received a special education therein, “a good judge” (without any qualifying epithet) when he has received a universal education."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "ἄρα",
+     "ids": [
+      "a1.2"
+     ],
+     "by": {
+      "Rackham": "therefore",
+      "Ross": "And so",
+      "Ostwald": "Accordingly",
+      "Peters": ""
+     },
+     "comment": "Peters leaves 'so' without a word."
+    },
+    {
+     "kind": "omitted",
+     "greek": "μὲν … δ'",
+     "ids": [
+      "a1.1",
+      "a1.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "and",
+      "Ostwald": "and",
+      "Peters": ""
+     },
+     "comment": "Ross and Ostwald give 'and'; Rackham and Peters use punctuation."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(predicate understood from S10)",
+     "ids": [
+      "a1.4",
+      "a1.10"
+     ],
+     "by": {
+      "Rackham": "To criticize … to be a good critic",
+      "Ross": "is a good judge … is a good judge",
+      "Ostwald": "a good judge … a good judge",
+      "Peters": "“a good judge”"
+     },
+     "comment": "The Greek has no verb or predicate; all four bring 'good judge' over from the last sentence."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "καθ' ἕκαστον",
+     "ids": [
+      "b28.8",
+      "a1.0"
+     ],
+     "by": {
+      "Rackham": "a particular subject",
+      "Ross": "in a subject",
+      "Ostwald": "in each particular field",
+      "Peters": "of any special matter"
+     },
+     "comment": "Four phrasings of 'in each'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἕκαστον",
+     "ids": [
+      "a1.0"
+     ],
+     "by": {
+      "Rackham": "subject",
+      "Ross": "subject",
+      "Ostwald": "field",
+      "Peters": "matter"
+     },
+     "comment": "All four add a noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(field repeated after πεπαιδευμένος)",
+     "ids": [
+      "a1.4"
+     ],
+     "by": {
+      "Rackham": "in that subject",
+      "Ross": "of that subject",
+      "Ostwald": "in it",
+      "Peters": "therein"
+     },
+     "comment": "All four restate the field after the participle."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ὁ πεπαιδευμένος",
+     "ids": [
+      "a1.3",
+      "a1.4"
+     ],
+     "by": {
+      "Rackham": "trained",
+      "Ross": "educated",
+      "Ostwald": "trained",
+      "Peters": "received a special education"
+     },
+     "comment": "Rackham and Ostwald write 'trained'; Peters adds 'special'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ὁ",
+     "ids": [
+      "a1.3",
+      "a1.7"
+     ],
+     "by": {
+      "Rackham": "a man",
+      "Ross": "the man … the man",
+      "Ostwald": "one … a man",
+      "Peters": ""
+     },
+     "comment": "A noun is added to the article, except by Peters, who uses 'he'."
+    },
+    {
+     "kind": "construction",
+     "greek": "ὁ πεπαιδευμένος",
+     "ids": [
+      "a1.3",
+      "a1.4"
+     ],
+     "by": {
+      "Rackham": "a man must have been trained",
+      "Ross": "the man who has been educated",
+      "Ostwald": "one who has been trained",
+      "Peters": "when he has received"
+     },
+     "comment": "Rackham makes it a requirement with 'must', Peters a 'when' clause, Ross and Ostwald a relative clause."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἁπλῶς",
+     "ids": [
+      "a1.5"
+     ],
+     "by": {
+      "Rackham": "generally",
+      "Ross": "in general",
+      "Ostwald": "in general",
+      "Peters": "(without any qualifying epithet)"
+     },
+     "comment": "Peters reads 'absolutely' as 'without qualification'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "περὶ πᾶν πεπαιδευμένος",
+     "ids": [
+      "a1.8",
+      "a1.9",
+      "a1.10"
+     ],
+     "by": {
+      "Rackham": "must have had an all-round education",
+      "Ross": "has received an all-round education",
+      "Ostwald": "has received an all-round schooling",
+      "Peters": "has received a universal education"
+     },
+     "comment": "Peters writes 'universal'; Ostwald 'schooling'."
+    }
+   ]
+  },
+  {
+   "n": 12,
+   "renderings": {
+    "Rackham": "Hence the young are not fit to be students of Political Science.",
+    "Ross": "Hence a young man is not a proper hearer of lectures on political science;",
+    "Ostwald": "For that reason, a young man is not equipped to be a student of politics;",
+    "Peters": "And hence a young man is not qualified to be a student of Politics;"
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "διὸ",
+     "ids": [
+      "a2.0"
+     ],
+     "by": {
+      "Rackham": "Hence",
+      "Ross": "Hence",
+      "Ostwald": "For that reason",
+      "Peters": "And hence"
+     },
+     "comment": "Ostwald expands; Peters adds 'And'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ὁ νέος",
+     "ids": [
+      "a2.7",
+      "a3.0"
+     ],
+     "by": {
+      "Rackham": "the young",
+      "Ross": "a young man",
+      "Ostwald": "a young man",
+      "Peters": "a young man"
+     },
+     "comment": "Rackham makes it plural and general."
+    },
+    {
+     "kind": "supplied",
+     "greek": "νέος",
+     "ids": [
+      "a3.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "man",
+      "Ostwald": "man",
+      "Peters": "man"
+     },
+     "comment": "A noun is added to the adjective, except by Rackham."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "οἰκεῖος",
+     "ids": [
+      "a2.5"
+     ],
+     "by": {
+      "Rackham": "fit",
+      "Ross": "proper",
+      "Ostwald": "equipped",
+      "Peters": "qualified"
+     },
+     "comment": "Four different words."
+    },
+    {
+     "kind": "construction",
+     "greek": "οἰκεῖος ἀκροατὴς",
+     "ids": [
+      "a2.5",
+      "a2.6"
+     ],
+     "by": {
+      "Rackham": "fit to be students",
+      "Ross": "a proper hearer",
+      "Ostwald": "equipped to be a student",
+      "Peters": "qualified to be a student"
+     },
+     "comment": "Rackham, Ostwald, and Peters turn the adjective into a predicate with 'to be'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀκροατὴς",
+     "ids": [
+      "a2.6"
+     ],
+     "by": {
+      "Rackham": "students",
+      "Ross": "hearer",
+      "Ostwald": "student",
+      "Peters": "student"
+     },
+     "comment": "Ross alone keeps 'hearer'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἀκροατὴς",
+     "ids": [
+      "a2.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "lectures",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Ross adds 'lectures'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τῆς πολιτικῆς",
+     "ids": [
+      "a2.1",
+      "a2.2"
+     ],
+     "by": {
+      "Rackham": "Political Science",
+      "Ross": "political science",
+      "Ostwald": "politics",
+      "Peters": "Politics"
+     },
+     "comment": "As before, Rackham and Ross add 'science'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πολιτικῆς",
+     "ids": [
+      "a2.2"
+     ],
+     "by": {
+      "Rackham": "Science",
+      "Ross": "science",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "The noun implied by πολιτική."
+    }
+   ]
+  },
+  {
+   "n": 13,
+   "renderings": {
+    "Rackham": "For they have no experience of life and conduct, and it is these that supply the premises and subject matter of this branch of philosophy.",
+    "Ross": "for he is inexperienced in the actions that occur in life, but its discussions start from these and are about these;",
+    "Ostwald": "for he has no experience in the actions which life demands of him, and these actions form the basis and subject matter of the discussion.",
+    "Peters": "for he lacks experience of the affairs of life, which form the data and the subject-matter of Politics."
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "ἄπειρος",
+     "ids": [
+      "a3.1"
+     ],
+     "by": {
+      "Rackham": "have no experience",
+      "Ross": "is inexperienced",
+      "Ostwald": "has no experience",
+      "Peters": "lacks experience"
+     },
+     "comment": "Three phrasings of 'inexperienced'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τῶν κατὰ τὸν βίον πράξεων",
+     "ids": [
+      "a3.3",
+      "a3.4",
+      "a3.5",
+      "a3.6",
+      "a3.7"
+     ],
+     "by": {
+      "Rackham": "life and conduct",
+      "Ross": "the actions that occur in life",
+      "Ostwald": "the actions which life demands of him",
+      "Peters": "the affairs of life"
+     },
+     "comment": "Rackham coordinates 'life and conduct'; Peters writes 'affairs'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "κατὰ τὸν βίον",
+     "ids": [
+      "a3.4",
+      "a3.5",
+      "a3.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "occur",
+      "Ostwald": "demands of him",
+      "Peters": ""
+     },
+     "comment": "Ross and Ostwald add a verb to the prepositional phrase."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "οἱ λόγοι",
+     "ids": [
+      "a3.8",
+      "a3.9"
+     ],
+     "by": {
+      "Rackham": "this branch of philosophy",
+      "Ross": "its discussions",
+      "Ostwald": "the discussion",
+      "Peters": "Politics"
+     },
+     "comment": "Rackham and Peters name the subject instead of 'the arguments'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "δ'",
+     "ids": [
+      "a3.10"
+     ],
+     "by": {
+      "Rackham": "and",
+      "Ross": "but",
+      "Ostwald": "and",
+      "Peters": "which"
+     },
+     "comment": "Ross reads contrast; Peters makes a relative clause."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(no verb in οἱ λόγοι δ' ἐκ τούτων)",
+     "ids": [
+      "a3.8",
+      "a3.9",
+      "a3.10"
+     ],
+     "by": {
+      "Rackham": "supply",
+      "Ross": "start",
+      "Ostwald": "form",
+      "Peters": "form"
+     },
+     "comment": "The Greek clause has no verb; each supplies one."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἐκ τούτων καὶ περὶ τούτων",
+     "ids": [
+      "a3.11",
+      "a4.0",
+      "a4.1",
+      "a4.2",
+      "a4.3"
+     ],
+     "by": {
+      "Rackham": "it is these that supply the premises and subject matter",
+      "Ross": "start from these and are about these",
+      "Ostwald": "these actions form the basis and subject matter",
+      "Peters": "which form the data and the subject-matter"
+     },
+     "comment": "Ross keeps the two prepositions; the others turn them into nouns."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἐκ τούτων",
+     "ids": [
+      "a3.11",
+      "a4.0"
+     ],
+     "by": {
+      "Rackham": "premises",
+      "Ross": "",
+      "Ostwald": "basis",
+      "Peters": "data"
+     },
+     "comment": "A noun stands in for 'from these'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τούτων",
+     "ids": [
+      "a4.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "these actions",
+      "Peters": ""
+     },
+     "comment": "Ostwald repeats 'actions'."
+    }
+   ]
+  },
+  {
+   "n": 14,
+   "renderings": {
+    "Rackham": "And moreover they are led by their feelings; so that they will study the subject to no purpose or advantage, since the end of this science is not knowledge but action.",
+    "Ross": "and, further, since he tends to follow his passions, his study will be vain and unprofitable, because the end aimed at is not knowledge but action.",
+    "Ostwald": "Moreover, since he follows his emotions, his study will be pointless and unprofitable, for the end of this kind of study is not knowledge but action.",
+    "Peters": "Further, since he is apt to be swayed by his feelings, he will derive no benefit from a study whose aim is not speculative but practical."
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "ἔτι δὲ",
+     "ids": [
+      "a4.4",
+      "a4.5"
+     ],
+     "by": {
+      "Rackham": "And moreover",
+      "Ross": "and, further,",
+      "Ostwald": "Moreover",
+      "Peters": "Further"
+     },
+     "comment": "Rackham and Ross render δέ as 'and'; Ostwald and Peters drop it."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀκολουθητικὸς",
+     "ids": [
+      "a4.8"
+     ],
+     "by": {
+      "Rackham": "led by",
+      "Ross": "tends to follow",
+      "Ostwald": "follows",
+      "Peters": "is apt to be swayed by"
+     },
+     "comment": "Ross and Peters keep the sense of tendency; Rackham and Peters make it passive."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἀκολουθητικὸς ὢν",
+     "ids": [
+      "a4.8",
+      "a4.9"
+     ],
+     "by": {
+      "Rackham": "they are led by their feelings; so that",
+      "Ross": "since he tends to follow",
+      "Ostwald": "since he follows",
+      "Peters": "since he is apt to be swayed by"
+     },
+     "comment": "Rackham makes the participle a main clause; the others a 'since' clause."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοῖς πάθεσιν",
+     "ids": [
+      "a4.6",
+      "a4.7"
+     ],
+     "by": {
+      "Rackham": "their feelings",
+      "Ross": "his passions",
+      "Ostwald": "his emotions",
+      "Peters": "his feelings"
+     },
+     "comment": "Three nouns for πάθη."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἀκούσεται",
+     "ids": [
+      "a5.1"
+     ],
+     "by": {
+      "Rackham": "they will study the subject",
+      "Ross": "his study will be",
+      "Ostwald": "his study will be",
+      "Peters": "he will derive no benefit from a study"
+     },
+     "comment": "No one keeps 'hear'; Ross and Ostwald make 'his study' the subject."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἀκούσεται",
+     "ids": [
+      "a5.1"
+     ],
+     "by": {
+      "Rackham": "the subject",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham gives the verb an object."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ματαίως καὶ ἀνωφελῶς",
+     "ids": [
+      "a5.0",
+      "a5.2",
+      "a5.3"
+     ],
+     "by": {
+      "Rackham": "to no purpose or advantage",
+      "Ross": "vain and unprofitable",
+      "Ostwald": "pointless and unprofitable",
+      "Peters": "no benefit"
+     },
+     "comment": "Peters merges the two adverbs into one phrase."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐπειδὴ",
+     "ids": [
+      "a5.4"
+     ],
+     "by": {
+      "Rackham": "since",
+      "Ross": "because",
+      "Ostwald": "for",
+      "Peters": "whose"
+     },
+     "comment": "Peters turns the causal clause into a relative."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὸ τέλος",
+     "ids": [
+      "a5.5",
+      "a5.6"
+     ],
+     "by": {
+      "Rackham": "the end",
+      "Ross": "the end",
+      "Ostwald": "the end",
+      "Peters": "aim"
+     },
+     "comment": "Peters writes 'aim'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τὸ τέλος",
+     "ids": [
+      "a5.5",
+      "a5.6"
+     ],
+     "by": {
+      "Rackham": "of this science",
+      "Ross": "aimed at",
+      "Ostwald": "of this kind of study",
+      "Peters": ""
+     },
+     "comment": "Rackham, Ross, and Ostwald say whose end it is."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "οὐ γνῶσις ἀλλὰ πρᾶξις",
+     "ids": [
+      "a5.8",
+      "a6.0",
+      "a6.1",
+      "a6.2"
+     ],
+     "by": {
+      "Rackham": "not knowledge but action",
+      "Ross": "not knowledge but action",
+      "Ostwald": "not knowledge but action",
+      "Peters": "not speculative but practical"
+     },
+     "comment": "Peters turns the nouns into adjectives."
+    }
+   ]
+  },
+  {
+   "n": 15,
+   "renderings": {
+    "Rackham": "And it makes no difference whether they are young in years or immature in character:",
+    "Ross": "And it makes no difference whether he is young in years or youthful in character;",
+    "Ostwald": "Whether he is young in years or immature in character makes no difference;",
+    "Peters": "But in this respect young in character counts the same as young in years;"
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "δ'",
+     "ids": [
+      "a6.4"
+     ],
+     "by": {
+      "Rackham": "And",
+      "Ross": "And",
+      "Ostwald": "",
+      "Peters": "But"
+     },
+     "comment": "Ostwald leaves the particle without a word."
+    },
+    {
+     "kind": "construction",
+     "greek": "διαφέρει … οὐδὲν",
+     "ids": [
+      "a6.3",
+      "a6.5"
+     ],
+     "by": {
+      "Rackham": "it makes no difference",
+      "Ross": "it makes no difference",
+      "Ostwald": "makes no difference",
+      "Peters": "counts the same as"
+     },
+     "comment": "Peters turns the negative into a positive and puts character before years."
+    },
+    {
+     "kind": "construction",
+     "greek": "νέος … νεαρός",
+     "ids": [
+      "a6.6",
+      "a7.2"
+     ],
+     "by": {
+      "Rackham": "whether they are",
+      "Ross": "whether he is",
+      "Ostwald": "Whether he is",
+      "Peters": ""
+     },
+     "comment": "The Greek is verbless; three add a 'whether' clause with a subject."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "νεαρός",
+     "ids": [
+      "a7.2"
+     ],
+     "by": {
+      "Rackham": "immature",
+      "Ross": "youthful",
+      "Ostwald": "immature",
+      "Peters": "young"
+     },
+     "comment": "Peters uses 'young' for both words."
+    },
+    {
+     "kind": "supplied",
+     "greek": "(none)",
+     "ids": [
+      "a6.3"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "in this respect"
+     },
+     "comment": "Peters adds 'in this respect'."
+    }
+   ]
+  },
+  {
+   "n": 16,
+   "renderings": {
+    "Rackham": "the defect is not a question of time, it is because their life and its various aims are guided by feeling;",
+    "Ross": "the defect does not depend on time, but on his living, and pursuing each successive object, as passion directs.",
+    "Ostwald": "for his deficiency is not a matter of time but of living and of pursuing all his interests under the influence of his emotions.",
+    "Peters": "for the young man’s disqualification is not a matter of time, but is due to the fact that feeling rules his life and directs all his desires."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "γὰρ",
+     "ids": [
+      "a7.4"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "for",
+      "Peters": "for"
+     },
+     "comment": "Rackham and Ross drop 'for'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἡ ἔλλειψις",
+     "ids": [
+      "a7.8",
+      "a7.9"
+     ],
+     "by": {
+      "Rackham": "the defect",
+      "Ross": "the defect",
+      "Ostwald": "his deficiency",
+      "Peters": "disqualification"
+     },
+     "comment": "Peters writes 'disqualification'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἡ ἔλλειψις",
+     "ids": [
+      "a7.8",
+      "a7.9"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "the young man’s"
+     },
+     "comment": "Peters names whose lack it is."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "παρὰ τὸν χρόνον",
+     "ids": [
+      "a7.5",
+      "a7.6",
+      "a7.7"
+     ],
+     "by": {
+      "Rackham": "a question of time",
+      "Ross": "depend on time",
+      "Ostwald": "a matter of time",
+      "Peters": "a matter of time"
+     },
+     "comment": "Ross adds a verb; the others a noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "παρὰ",
+     "ids": [
+      "a7.5"
+     ],
+     "by": {
+      "Rackham": "question",
+      "Ross": "depend",
+      "Ostwald": "matter",
+      "Peters": "matter"
+     },
+     "comment": "The verbless clause gets a noun or verb."
+    },
+    {
+     "kind": "omitted",
+     "greek": "ἀλλὰ",
+     "ids": [
+      "a7.10"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "but",
+      "Ostwald": "but",
+      "Peters": "but"
+     },
+     "comment": "Rackham drops 'but'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "διὰ",
+     "ids": [
+      "a8.0"
+     ],
+     "by": {
+      "Rackham": "because",
+      "Ross": "on",
+      "Ostwald": "of",
+      "Peters": "is due to the fact that"
+     },
+     "comment": "Four ways to say 'because of'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πάθος",
+     "ids": [
+      "a8.3"
+     ],
+     "by": {
+      "Rackham": "feeling",
+      "Ross": "passion",
+      "Ostwald": "his emotions",
+      "Peters": "feeling"
+     },
+     "comment": "Each keeps its earlier word."
+    },
+    {
+     "kind": "supplied",
+     "greek": "κατὰ πάθος",
+     "ids": [
+      "a8.2",
+      "a8.3"
+     ],
+     "by": {
+      "Rackham": "guided by",
+      "Ross": "directs",
+      "Ostwald": "under the influence of",
+      "Peters": "rules"
+     },
+     "comment": "'According to feeling' gets a verb or phrase of control."
+    },
+    {
+     "kind": "construction",
+     "greek": "κατὰ πάθος ζῆν καὶ διώκειν ἕκαστα",
+     "ids": [
+      "a8.2",
+      "a8.3",
+      "a8.4",
+      "a8.5",
+      "a8.6",
+      "a8.7"
+     ],
+     "by": {
+      "Rackham": "their life and its various aims are guided by feeling",
+      "Ross": "his living, and pursuing each successive object, as passion directs",
+      "Ostwald": "living and of pursuing all his interests under the influence of his emotions",
+      "Peters": "feeling rules his life and directs all his desires"
+     },
+     "comment": "Rackham and Peters make 'feeling' or 'life' a subject; Ross and Ostwald keep the infinitives as '-ing' forms."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ζῆν",
+     "ids": [
+      "a8.4"
+     ],
+     "by": {
+      "Rackham": "life",
+      "Ross": "living",
+      "Ostwald": "living",
+      "Peters": "life"
+     },
+     "comment": "Rackham and Peters use the noun."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "διώκειν",
+     "ids": [
+      "a8.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "pursuing",
+      "Ostwald": "pursuing",
+      "Peters": "directs"
+     },
+     "comment": "Rackham drops 'pursue'; Peters writes 'directs'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἕκαστα",
+     "ids": [
+      "a8.7"
+     ],
+     "by": {
+      "Rackham": "various",
+      "Ross": "each successive",
+      "Ostwald": "all",
+      "Peters": "all"
+     },
+     "comment": "Ross adds 'successive'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἕκαστα",
+     "ids": [
+      "a8.7"
+     ],
+     "by": {
+      "Rackham": "aims",
+      "Ross": "object",
+      "Ostwald": "interests",
+      "Peters": "desires"
+     },
+     "comment": "A different noun in each version."
+    }
+   ]
+  },
+  {
+   "n": 17,
+   "renderings": {
+    "Rackham": "for to such persons their knowledge is of no use, any more than it is to persons of defective self-restraint.",
+    "Ross": "For to such persons, as to the incontinent, knowledge brings no profit;",
+    "Ostwald": "Knowledge brings no benefit to this kind of person, just as it brings none to the morally weak.",
+    "Peters": "Men of this character turn the knowledge they get to no account in practice, as we see with those we call incontinent;"
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "γὰρ",
+     "ids": [
+      "a8.9"
+     ],
+     "by": {
+      "Rackham": "for",
+      "Ross": "For",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Ostwald and Peters drop 'for'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοῖς τοιούτοις",
+     "ids": [
+      "a8.8",
+      "a8.10"
+     ],
+     "by": {
+      "Rackham": "such persons",
+      "Ross": "such persons",
+      "Ostwald": "this kind of person",
+      "Peters": "Men of this character"
+     },
+     "comment": "Ostwald and Peters expand 'such'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοιούτοις",
+     "ids": [
+      "a8.10"
+     ],
+     "by": {
+      "Rackham": "persons",
+      "Ross": "persons",
+      "Ostwald": "kind of person",
+      "Peters": "Men … character"
+     },
+     "comment": "A noun is added to the pronoun."
+    },
+    {
+     "kind": "construction",
+     "greek": "τοῖς τοιούτοις … γίνεται",
+     "ids": [
+      "a8.8",
+      "a8.10",
+      "a9.3"
+     ],
+     "by": {
+      "Rackham": "to such persons their knowledge is",
+      "Ross": "to such persons … knowledge brings",
+      "Ostwald": "Knowledge brings … to this kind of person",
+      "Peters": "Men of this character turn the knowledge"
+     },
+     "comment": "Peters makes the persons the subject."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀνόνητος … γίνεται",
+     "ids": [
+      "a9.0",
+      "a9.3"
+     ],
+     "by": {
+      "Rackham": "is of no use",
+      "Ross": "brings no profit",
+      "Ostwald": "brings no benefit",
+      "Peters": "turn … to no account"
+     },
+     "comment": "Four phrasings of 'becomes unprofitable'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἡ γνῶσις",
+     "ids": [
+      "a9.1",
+      "a9.2"
+     ],
+     "by": {
+      "Rackham": "their knowledge",
+      "Ross": "knowledge",
+      "Ostwald": "Knowledge",
+      "Peters": "the knowledge they get"
+     },
+     "comment": "Rackham and Peters qualify 'knowledge'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἡ γνῶσις",
+     "ids": [
+      "a9.1",
+      "a9.2"
+     ],
+     "by": {
+      "Rackham": "their",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "they get … in practice"
+     },
+     "comment": "Peters adds 'they get' and 'in practice'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "καθάπερ",
+     "ids": [
+      "a9.4"
+     ],
+     "by": {
+      "Rackham": "any more than",
+      "Ross": "as",
+      "Ostwald": "just as",
+      "Peters": "as we see with"
+     },
+     "comment": "Rackham uses a negative comparison."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοῖς ἀκρατέσιν",
+     "ids": [
+      "a9.5",
+      "a9.6"
+     ],
+     "by": {
+      "Rackham": "persons of defective self-restraint",
+      "Ross": "the incontinent",
+      "Ostwald": "the morally weak",
+      "Peters": "those we call incontinent"
+     },
+     "comment": "Ross and Peters keep 'incontinent'; Rackham explains it."
+    },
+    {
+     "kind": "supplied",
+     "greek": "καθάπερ τοῖς ἀκρατέσιν",
+     "ids": [
+      "a9.4",
+      "a9.5",
+      "a9.6"
+     ],
+     "by": {
+      "Rackham": "it is",
+      "Ross": "",
+      "Ostwald": "it brings none",
+      "Peters": "we see … we call"
+     },
+     "comment": "Rackham and Ostwald repeat the verb; Peters adds 'we see' and 'we call'."
+    }
+   ]
+  },
+  {
+   "n": 18,
+   "renderings": {
+    "Rackham": "But Moral Science may be of great value to those who guide their desires and actions by principle.",
+    "Ross": "but to those who desire and act in accordance with a rational principle knowledge about such matters will be of great benefit.",
+    "Ostwald": "But those who regulate their desires and actions by a rational principle will greatly benefit from a knowledge of this subject.",
+    "Peters": "but those who direct their desires and actions by reason will gain much profit from the knowledge of these matters."
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "κατὰ λόγον",
+     "ids": [
+      "a10.2",
+      "a10.3"
+     ],
+     "by": {
+      "Rackham": "by principle",
+      "Ross": "in accordance with a rational principle",
+      "Ostwald": "by a rational principle",
+      "Peters": "by reason"
+     },
+     "comment": "Ross and Ostwald write 'rational principle'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὰς ὀρέξεις ποιουμένοις",
+     "ids": [
+      "a10.4",
+      "a10.5",
+      "a10.6"
+     ],
+     "by": {
+      "Rackham": "guide their desires",
+      "Ross": "desire",
+      "Ostwald": "regulate their desires",
+      "Peters": "direct their desires"
+     },
+     "comment": "Ross makes it one verb; the others add a verb of control."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ποιουμένοις",
+     "ids": [
+      "a10.6"
+     ],
+     "by": {
+      "Rackham": "guide",
+      "Ross": "",
+      "Ostwald": "regulate",
+      "Peters": "direct"
+     },
+     "comment": "The Greek says only 'make'; three add a verb of control."
+    },
+    {
+     "kind": "construction",
+     "greek": "πράττουσι",
+     "ids": [
+      "a10.8"
+     ],
+     "by": {
+      "Rackham": "actions",
+      "Ross": "act",
+      "Ostwald": "actions",
+      "Peters": "actions"
+     },
+     "comment": "Rackham, Ostwald, and Peters turn the participle into a noun."
+    },
+    {
+     "kind": "construction",
+     "greek": "πολυωφελὲς ἂν εἴη",
+     "ids": [
+      "a11.0",
+      "a11.1",
+      "a11.2"
+     ],
+     "by": {
+      "Rackham": "may be of great value",
+      "Ross": "will be of great benefit",
+      "Ostwald": "will greatly benefit",
+      "Peters": "will gain much profit"
+     },
+     "comment": "The potential optative becomes 'may' or 'will'; Ostwald and Peters make the persons the subject."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πολυωφελὲς",
+     "ids": [
+      "a11.0"
+     ],
+     "by": {
+      "Rackham": "great value",
+      "Ross": "great benefit",
+      "Ostwald": "greatly benefit",
+      "Peters": "much profit"
+     },
+     "comment": "Three different nouns."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὸ περὶ τούτων εἰδέναι",
+     "ids": [
+      "a11.3",
+      "a11.4",
+      "a11.5",
+      "a11.6"
+     ],
+     "by": {
+      "Rackham": "Moral Science",
+      "Ross": "knowledge about such matters",
+      "Ostwald": "a knowledge of this subject",
+      "Peters": "the knowledge of these matters"
+     },
+     "comment": "Rackham names a discipline instead of 'knowing about these'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τούτων",
+     "ids": [
+      "a11.5"
+     ],
+     "by": {
+      "Rackham": "Moral Science",
+      "Ross": "matters",
+      "Ostwald": "subject",
+      "Peters": "matters"
+     },
+     "comment": "A noun is added to the pronoun; Rackham replaces the whole phrase."
+    }
+   ]
+  },
+  {
+   "n": 19,
+   "renderings": {
+    "Rackham": "Let so much suffice by way of introduction as to the student of the subject, the spirit in which our conclusions are to be received, and the object that we set before us.",
+    "Ross": "These remarks about the student, the sort of treatment to be expected, and the purpose of the inquiry, may be taken as our preface.",
+    "Ostwald": "So much by way of a preface about the student, the limitations which have to be accepted, and the objective before us.",
+    "Peters": "So much then by way of preface as to the student, and the spirit in which he must accept what we say, and the object which we propose to ourselves."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "καὶ … μὲν",
+     "ids": [
+      "a11.7",
+      "a11.9"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "then"
+     },
+     "comment": "Only Peters gives the particles a word."
+    },
+    {
+     "kind": "construction",
+     "greek": "πεφροιμιάσθω",
+     "ids": [
+      "a12.7"
+     ],
+     "by": {
+      "Rackham": "Let so much suffice by way of introduction",
+      "Ross": "may be taken as our preface",
+      "Ostwald": "So much by way of a preface",
+      "Peters": "So much then by way of preface"
+     },
+     "comment": "Rackham keeps an imperative; Ross uses 'may'; Ostwald and Peters drop the verb."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πεφροιμιάσθω",
+     "ids": [
+      "a12.7"
+     ],
+     "by": {
+      "Rackham": "introduction",
+      "Ross": "preface",
+      "Ostwald": "preface",
+      "Peters": "preface"
+     },
+     "comment": "Rackham alone writes 'introduction'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πεφροιμιάσθω",
+     "ids": [
+      "a12.7"
+     ],
+     "by": {
+      "Rackham": "suffice",
+      "Ross": "taken",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ross add a verb."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ταῦτα",
+     "ids": [
+      "a13.0"
+     ],
+     "by": {
+      "Rackham": "so much",
+      "Ross": "These remarks",
+      "Ostwald": "So much",
+      "Peters": "So much"
+     },
+     "comment": "Ross makes it the subject with a noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ταῦτα",
+     "ids": [
+      "a13.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "remarks",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Ross adds 'remarks'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἀκροατοῦ",
+     "ids": [
+      "a12.0"
+     ],
+     "by": {
+      "Rackham": "of the subject",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'of the subject'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πῶς ἀποδεκτέον",
+     "ids": [
+      "a12.2",
+      "a12.3"
+     ],
+     "by": {
+      "Rackham": "the spirit in which our conclusions are to be received",
+      "Ross": "the sort of treatment to be expected",
+      "Ostwald": "the limitations which have to be accepted",
+      "Peters": "the spirit in which he must accept what we say"
+     },
+     "comment": "The indirect question becomes a noun phrase with very different nouns."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πῶς ἀποδεκτέον",
+     "ids": [
+      "a12.2",
+      "a12.3"
+     ],
+     "by": {
+      "Rackham": "spirit … our conclusions",
+      "Ross": "sort of treatment",
+      "Ostwald": "limitations",
+      "Peters": "spirit … he … what we say"
+     },
+     "comment": "Each supplies a head noun; Rackham and Peters also name what is accepted."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἀποδεκτέον",
+     "ids": [
+      "a12.3"
+     ],
+     "by": {
+      "Rackham": "are to be received",
+      "Ross": "to be expected",
+      "Ostwald": "have to be accepted",
+      "Peters": "must accept"
+     },
+     "comment": "The verbal adjective comes out as 'are to be', 'have to be', or 'must'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τί προτιθέμεθα",
+     "ids": [
+      "a12.5",
+      "a12.6"
+     ],
+     "by": {
+      "Rackham": "the object that we set before us",
+      "Ross": "the purpose of the inquiry",
+      "Ostwald": "the objective before us",
+      "Peters": "the object which we propose to ourselves"
+     },
+     "comment": "Ross drops 'we' and the verb."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τί",
+     "ids": [
+      "a12.5"
+     ],
+     "by": {
+      "Rackham": "object",
+      "Ross": "purpose of the inquiry",
+      "Ostwald": "objective",
+      "Peters": "object"
+     },
+     "comment": "A noun is added to the pronoun; Ross also adds 'inquiry'."
+    }
+   ]
+  }
+ ],
+ "patterns": [
+  {
+   "kind": "supplied",
+   "summary": "All four add a noun wherever the Greek uses a neuter adjective, pronoun, or article: 'subjects', 'premises', 'things', 'matters', 'points'. They agree that a noun is needed but rarely on which one.",
+   "translators": "All four; Ostwald and Rackham add the most such nouns, Peters the fewest."
+  },
+  {
+   "kind": "supplied",
+   "summary": "Rackham adds whole phrases the Greek does not state: 'this science', 'Moral', 'real existence', 'these conceptions', 'Moral Science' for 'knowing about these'. These are the hardest to link to any Greek word.",
+   "translators": "Rackham most; Ross least."
+  },
+  {
+   "kind": "omitted",
+   "summary": "Connecting particles (δέ, γάρ, δή, καί, μέν) often get no English. Ross keeps them most often as 'now', 'for', 'and'; no one renders γάρ in 1094b26 or the 'also' before 'conclude'.",
+   "translators": "Ostwald and Peters omit most; Ross least."
+  },
+  {
+   "kind": "construction",
+   "summary": "Impersonal and passive Greek turns personal: 'it is welcome' becomes 'we must be content', 'it seems' becomes 'some people believe', and datives of the person become the subject.",
+   "translators": "Peters and Ostwald most; Ross least."
+  },
+  {
+   "kind": "phrasing",
+   "summary": "Key terms get a fixed word per translator: πλάνη is uncertainty, fluctuation, or irregularity; πάθος is feeling, passion, or emotion; πολιτική is 'political science' (Rackham, Ross) or 'politics' (Ostwald, Peters). Only ἀκριβές drifts within one version (Peters: precision, accuracy, exactness).",
+   "translators": "All four; Peters least consistent."
+  },
+  {
+   "kind": "supplied",
+   "summary": "Where the Greek leaves out a verb or predicate already stated, all four repeat it: 'a good judge' in 1095a1, 'any more than it can be expected' in 1094b14, 'it is enough if' in 1094b21.",
+   "translators": "All four in 1095a1; elsewhere Ostwald and Rackham most, Ross least."
+  },
+  {
+   "kind": "construction",
+   "summary": "Rackham and Peters move the sentence frame: Rackham turns a relative clause into a main clause and makes causes into subjects; Peters splits a sentence mid-clause (1094b28) and reverses the order of 'young in years' and 'young in character'.",
+   "translators": "Peters and Rackham most; Ross and Ostwald least."
+  }
+ ]
+}

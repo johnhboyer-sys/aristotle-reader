@@ -1,0 +1,20 @@
+# Built pages and plain copies of the live corpus text (Rackham, Ross, Ostwald,
+# Peters). All regenerate from the live book-01.json; see PROCESS.md, "Rebuild".
+__pycache__/
+book-01.json
+index.html
+test-i2/index.html
+test-i2/review/index.html
+test-i2/i2.json
+test-i2/codex-prompt.txt
+test-i3/i2o.json
+test-i3/i3.json
+test-i3/codex-prompt*.txt
+test-i3/page/
+test-i3/page-i2o/
+test-i3/repeat-errors.json
+test-i3/triage-i3.json
+compare/*-four.json
+compare/input*.txt
+compare/page/
+compare/page-i3/

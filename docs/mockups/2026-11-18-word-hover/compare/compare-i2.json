@@ -1,0 +1,2972 @@
+{
+ "sentences": [
+  {
+   "n": 1,
+   "renderings": {
+    "Rackham": "If therefore among the ends at which our actions aim there be one which we will for its own sake, while we will the others only for the sake of this, and if we do not choose everything for the sake of something else (which would obviously result in a process ad infinitum, so that all desire would be futile and vain), it is clear that this one ultimate End must be the Good, and indeed the Supreme Good.",
+    "Ross": "If, then, there is some end of the things we do, which we desire for its own sake (everything else being desired for the sake of this), and if we do not choose everything for the sake of something else (for at that rate the process would go on to infinity, so that our desire would be empty and vain), clearly this must be the good and the chief good.",
+    "Ostwald": "Now, if there exists an end in the realm of action which we desire for its own sake, an end which determines all our other desires; if, in other words, we do not make all our choices for the sake of something else—for in this way the process will go on infinitely so that our desire would be futile and pointless—then obviously this end will be the good, that is, the highest good.",
+    "Peters": "If then in what we do there be some end which we wish for on its own account, choosing all the others as means to this, but not every end without exception as a means to something else (for so we should go on ad infinitum, and desire would be left void and objectless)⁠—this evidently will be the good or the best of all things."
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "δή",
+     "ids": [
+      "a18.5"
+     ],
+     "by": {
+      "Rackham": "therefore",
+      "Ross": "then",
+      "Ostwald": "Now",
+      "Peters": "then"
+     },
+     "comment": "The inferential particle comes out as 'therefore', 'then', or 'Now'."
+    },
+    {
+     "kind": "construction",
+     "greek": "τι τέλος ἐστὶ τῶν πρακτῶν",
+     "ids": [
+      "a18.6",
+      "a18.7",
+      "a18.8",
+      "a18.9",
+      "a19.0"
+     ],
+     "by": {
+      "Rackham": "among the ends at which our actions aim there be one",
+      "Ross": "there is some end of the things we do",
+      "Ostwald": "there exists an end in the realm of action",
+      "Peters": "in what we do there be some end"
+     },
+     "comment": "Rackham turns 'some end of things done' into 'one among the ends', and Peters moves the genitive to the front."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τέλος",
+     "ids": [
+      "a18.7"
+     ],
+     "by": {
+      "Rackham": "ends … one",
+      "Ross": "end",
+      "Ostwald": "end",
+      "Peters": "end"
+     },
+     "comment": "Rackham splits the noun into a plural 'ends' and a pronoun 'one'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐστὶ",
+     "ids": [
+      "a18.8"
+     ],
+     "by": {
+      "Rackham": "there be",
+      "Ross": "there is",
+      "Ostwald": "there exists",
+      "Peters": "there be"
+     },
+     "comment": "Rackham and Peters put the plain indicative into the subjunctive 'there be'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τῶν πρακτῶν",
+     "ids": [
+      "a18.9",
+      "a19.0"
+     ],
+     "by": {
+      "Rackham": "our actions",
+      "Ross": "the things we do",
+      "Ostwald": "the realm of action",
+      "Peters": "what we do"
+     },
+     "comment": "The verbal adjective 'things done' takes four different English forms."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τῶν πρακτῶν",
+     "ids": [
+      "a18.9",
+      "a19.0"
+     ],
+     "by": {
+      "Rackham": "our",
+      "Ross": "we",
+      "Ostwald": "",
+      "Peters": "we"
+     },
+     "comment": "The Greek names no person; Rackham, Ross, and Peters add 'our' or 'we'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τῶν πρακτῶν",
+     "ids": [
+      "a18.9",
+      "a19.0"
+     ],
+     "by": {
+      "Rackham": "at which … aim",
+      "Ross": "",
+      "Ostwald": "in the realm of",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'at which … aim' and Ostwald 'in the realm of'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "βουλόμεθα",
+     "ids": [
+      "a19.4"
+     ],
+     "by": {
+      "Rackham": "will",
+      "Ross": "desire",
+      "Ostwald": "desire",
+      "Peters": "wish for"
+     },
+     "comment": "The verb of wanting is 'will', 'desire', or 'wish for'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "δι' αὑτὸ",
+     "ids": [
+      "a19.2",
+      "a19.3"
+     ],
+     "by": {
+      "Rackham": "for its own sake",
+      "Ross": "for its own sake",
+      "Ostwald": "for its own sake",
+      "Peters": "on its own account"
+     },
+     "comment": "Peters alone says 'on its own account'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "δὲ",
+     "ids": [
+      "a19.6"
+     ],
+     "by": {
+      "Rackham": "while",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Only Rackham gives the contrastive particle a word."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τἆλλα δὲ διὰ τοῦτο",
+     "ids": [
+      "a19.5",
+      "a19.6",
+      "a19.7",
+      "a19.8"
+     ],
+     "by": {
+      "Rackham": "we will",
+      "Ross": "being desired",
+      "Ostwald": "determines",
+      "Peters": "choosing"
+     },
+     "comment": "The Greek leaves βουλόμεθα understood here; each adds a verb, and Ostwald's 'determines' is a new verb, not a repeat."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τἆλλα δὲ διὰ τοῦτο",
+     "ids": [
+      "a19.5",
+      "a19.6",
+      "a19.7",
+      "a19.8"
+     ],
+     "by": {
+      "Rackham": "only",
+      "Ross": "",
+      "Ostwald": "an end which",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'only', and Ostwald repeats 'an end which' to open the clause."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τἆλλα",
+     "ids": [
+      "a19.5"
+     ],
+     "by": {
+      "Rackham": "the others",
+      "Ross": "everything else",
+      "Ostwald": "all our other desires",
+      "Peters": "all the others"
+     },
+     "comment": "Ostwald turns 'the other things' into 'our other desires'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "διὰ τοῦτο",
+     "ids": [
+      "a19.7",
+      "a19.8"
+     ],
+     "by": {
+      "Rackham": "for the sake of this",
+      "Ross": "for the sake of this",
+      "Ostwald": "",
+      "Peters": "as means to this"
+     },
+     "comment": "Ostwald drops the phrase and makes the end the subject; Peters says 'as means to'."
+    },
+    {
+     "kind": "construction",
+     "greek": "τἆλλα δὲ διὰ τοῦτο",
+     "ids": [
+      "a19.5",
+      "a19.6",
+      "a19.7",
+      "a19.8"
+     ],
+     "by": {
+      "Rackham": "while we will the others only for the sake of this",
+      "Ross": "(everything else being desired for the sake of this)",
+      "Ostwald": "an end which determines all our other desires",
+      "Peters": "choosing all the others as means to this"
+     },
+     "comment": "Ross makes the clause a parenthesis with a participle, Ostwald gives it the end as active subject, and Peters a participle."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "καὶ",
+     "ids": [
+      "a19.9"
+     ],
+     "by": {
+      "Rackham": "and if",
+      "Ross": "and if",
+      "Ostwald": "if, in other words,",
+      "Peters": "but"
+     },
+     "comment": "Rackham and Ross repeat 'if'; Ostwald glosses with 'in other words', and Peters makes it 'but'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "καὶ μὴ",
+     "ids": [
+      "a19.9",
+      "a19.10"
+     ],
+     "by": {
+      "Rackham": "if",
+      "Ross": "if",
+      "Ostwald": "if … in other words",
+      "Peters": ""
+     },
+     "comment": "The 'if' is carried over from Εἰ, and Ostwald adds 'in other words'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πάντα",
+     "ids": [
+      "a20.0"
+     ],
+     "by": {
+      "Rackham": "everything",
+      "Ross": "everything",
+      "Ostwald": "all our choices",
+      "Peters": "every end without exception"
+     },
+     "comment": "Ostwald folds 'all' into the verb's object, and Peters expands it."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πάντα",
+     "ids": [
+      "a20.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "our",
+      "Peters": "end without exception"
+     },
+     "comment": "Peters adds 'end' and 'without exception'; Ostwald adds 'our'."
+    },
+    {
+     "kind": "construction",
+     "greek": "μὴ … αἱρούμεθα",
+     "ids": [
+      "a19.10",
+      "a20.3"
+     ],
+     "by": {
+      "Rackham": "we do not choose",
+      "Ross": "we do not choose",
+      "Ostwald": "we do not make all our choices",
+      "Peters": ""
+     },
+     "comment": "Ostwald turns the verb into 'make … choices'; Peters lets 'choosing' cover both clauses and has no verb here."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "δι' ἕτερον",
+     "ids": [
+      "a20.1",
+      "a20.2"
+     ],
+     "by": {
+      "Rackham": "for the sake of something else",
+      "Ross": "for the sake of something else",
+      "Ostwald": "for the sake of something else",
+      "Peters": "as a means to something else"
+     },
+     "comment": "Peters again says 'as a means to'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "γὰρ",
+     "ids": [
+      "a20.5"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "for",
+      "Ostwald": "for",
+      "Peters": "for"
+     },
+     "comment": "Rackham replaces the particle with a relative 'which'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "οὕτω γ'",
+     "ids": [
+      "a20.6",
+      "a20.7"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "at that rate",
+      "Ostwald": "in this way",
+      "Peters": "so"
+     },
+     "comment": "No one renders γε, and Rackham leaves out οὕτω as well."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πρόεισι",
+     "ids": [
+      "a20.4"
+     ],
+     "by": {
+      "Rackham": "a process",
+      "Ross": "the process",
+      "Ostwald": "the process",
+      "Peters": "we"
+     },
+     "comment": "The verb has no stated subject; three add 'process' and Peters adds 'we'."
+    },
+    {
+     "kind": "construction",
+     "greek": "πρόεισι",
+     "ids": [
+      "a20.4"
+     ],
+     "by": {
+      "Rackham": "would … result in",
+      "Ross": "would go on",
+      "Ostwald": "will go on",
+      "Peters": "should go on"
+     },
+     "comment": "The present indicative becomes 'would' or 'should' in all but Ostwald, and Rackham recasts it as 'result in a process'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πρόεισι γὰρ",
+     "ids": [
+      "a20.4",
+      "a20.5"
+     ],
+     "by": {
+      "Rackham": "obviously",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'obviously'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "εἰς ἄπειρον",
+     "ids": [
+      "a20.8",
+      "a20.9"
+     ],
+     "by": {
+      "Rackham": "ad infinitum",
+      "Ross": "to infinity",
+      "Ostwald": "infinitely",
+      "Peters": "ad infinitum"
+     },
+     "comment": "Rackham and Peters keep the Latin phrase."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ὥστ'",
+     "ids": [
+      "a21.0"
+     ],
+     "by": {
+      "Rackham": "so that",
+      "Ross": "so that",
+      "Ostwald": "so that",
+      "Peters": "and"
+     },
+     "comment": "Peters turns the result clause into a plain 'and'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τὴν ὄρεξιν",
+     "ids": [
+      "a21.5",
+      "a21.6"
+     ],
+     "by": {
+      "Rackham": "all",
+      "Ross": "our",
+      "Ostwald": "our",
+      "Peters": ""
+     },
+     "comment": "The article becomes 'all' in Rackham and 'our' in Ross and Ostwald."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "κενὴν",
+     "ids": [
+      "a21.2"
+     ],
+     "by": {
+      "Rackham": "futile",
+      "Ross": "empty",
+      "Ostwald": "futile",
+      "Peters": "void"
+     },
+     "comment": "Four words for 'empty'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ματαίαν",
+     "ids": [
+      "a21.4"
+     ],
+     "by": {
+      "Rackham": "vain",
+      "Ross": "vain",
+      "Ostwald": "pointless",
+      "Peters": "objectless"
+     },
+     "comment": "Ostwald and Peters move away from 'vain'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "εἶναι",
+     "ids": [
+      "a21.1"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "left"
+     },
+     "comment": "Peters adds 'left' to the plain 'be'."
+    },
+    {
+     "kind": "construction",
+     "greek": "δῆλον ὡς",
+     "ids": [
+      "a21.7",
+      "a21.8"
+     ],
+     "by": {
+      "Rackham": "it is clear that",
+      "Ross": "clearly",
+      "Ostwald": "obviously",
+      "Peters": "evidently"
+     },
+     "comment": "Only Rackham keeps the impersonal 'it is clear that'; the others use an adverb."
+    },
+    {
+     "kind": "supplied",
+     "greek": "δῆλον ὡς",
+     "ids": [
+      "a21.7",
+      "a21.8"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "then",
+      "Peters": ""
+     },
+     "comment": "Ostwald adds 'then' to mark the main clause."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοῦτ'",
+     "ids": [
+      "a21.9"
+     ],
+     "by": {
+      "Rackham": "one ultimate End",
+      "Ross": "",
+      "Ostwald": "end",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald add a noun to the bare pronoun."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἂν εἴη",
+     "ids": [
+      "a21.10",
+      "a22.0"
+     ],
+     "by": {
+      "Rackham": "must be",
+      "Ross": "must be",
+      "Ostwald": "will be",
+      "Peters": "will be"
+     },
+     "comment": "The potential optative becomes 'must' in Rackham and Ross and a plain future in Ostwald and Peters."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "καὶ",
+     "ids": [
+      "a22.2"
+     ],
+     "by": {
+      "Rackham": "and indeed",
+      "Ross": "and",
+      "Ostwald": "that is,",
+      "Peters": "or"
+     },
+     "comment": "Ostwald and Peters make the second term a restatement, not an addition."
+    },
+    {
+     "kind": "supplied",
+     "greek": "καὶ",
+     "ids": [
+      "a22.2"
+     ],
+     "by": {
+      "Rackham": "indeed",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'indeed'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὸ ἄριστον",
+     "ids": [
+      "a22.3",
+      "a22.4"
+     ],
+     "by": {
+      "Rackham": "the Supreme Good",
+      "Ross": "the chief good",
+      "Ostwald": "the highest good",
+      "Peters": "the best of all things"
+     },
+     "comment": "The superlative is 'Supreme', 'chief', 'highest', or 'best'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τὸ ἄριστον",
+     "ids": [
+      "a22.3",
+      "a22.4"
+     ],
+     "by": {
+      "Rackham": "Good",
+      "Ross": "good",
+      "Ostwald": "good",
+      "Peters": "of all things"
+     },
+     "comment": "Every version adds a noun to the neuter adjective."
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "renderings": {
+    "Rackham": "Will not then a knowledge of this Supreme Good be also of great practical importance for the conduct of life? Will it not better enable us to attain our proper object, like archers having a target to aim at?",
+    "Ross": "Will not the knowledge of it, then, have a great influence on life? Shall we not, like archers who have a mark to aim at, be more likely to hit upon what is right?",
+    "Ostwald": "Will not the knowledge of this good, consequently, be very important to our lives? Would it not better equip us, like archers who have a target to aim at, to hit the proper mark?",
+    "Peters": "And surely from a practical point of view it much concerns us to know this good; for then, like archers shooting at a definite mark, we shall be more likely to attain what we want."
+   },
+   "notes": [
+    {
+     "kind": "construction",
+     "greek": "ἆρ'",
+     "ids": [
+      "a22.5"
+     ],
+     "by": {
+      "Rackham": "Will not",
+      "Ross": "Will not",
+      "Ostwald": "Will not",
+      "Peters": "And surely"
+     },
+     "comment": "Peters turns the question into a statement."
+    },
+    {
+     "kind": "construction",
+     "greek": "καὶ … τυγχάνοιμεν",
+     "ids": [
+      "a23.5",
+      "a24.4"
+     ],
+     "by": {
+      "Rackham": "Will it not",
+      "Ross": "Shall we not",
+      "Ostwald": "Would it not",
+      "Peters": "for then"
+     },
+     "comment": "Three split the one question in two; Peters joins the halves with a causal 'for then'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "οὖν",
+     "ids": [
+      "a22.6"
+     ],
+     "by": {
+      "Rackham": "then",
+      "Ross": "then",
+      "Ostwald": "consequently",
+      "Peters": "And"
+     },
+     "comment": "Ostwald uses 'consequently'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "a22.7"
+     ],
+     "by": {
+      "Rackham": "also",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Only Rackham renders 'also'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πρὸς τὸν βίον",
+     "ids": [
+      "a22.8",
+      "a22.9",
+      "a22.10"
+     ],
+     "by": {
+      "Rackham": "for the conduct of life",
+      "Ross": "on life",
+      "Ostwald": "to our lives",
+      "Peters": "from a practical point of view"
+     },
+     "comment": "Peters turns 'for life' into 'from a practical point of view'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πρὸς τὸν βίον",
+     "ids": [
+      "a22.8",
+      "a22.9",
+      "a22.10"
+     ],
+     "by": {
+      "Rackham": "practical … the conduct of",
+      "Ross": "",
+      "Ostwald": "our",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'practical' and 'the conduct of'; Ostwald adds 'our'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἡ γνῶσις αὐτοῦ",
+     "ids": [
+      "a22.11",
+      "a23.0",
+      "a23.1"
+     ],
+     "by": {
+      "Rackham": "a knowledge of this Supreme Good",
+      "Ross": "the knowledge of it",
+      "Ostwald": "the knowledge of this good",
+      "Peters": "to know this good"
+     },
+     "comment": "Peters turns the noun into a verb."
+    },
+    {
+     "kind": "supplied",
+     "greek": "αὐτοῦ",
+     "ids": [
+      "a23.1"
+     ],
+     "by": {
+      "Rackham": "Supreme Good",
+      "Ross": "",
+      "Ostwald": "good",
+      "Peters": "good"
+     },
+     "comment": "The pronoun gets a noun in all but Ross."
+    },
+    {
+     "kind": "construction",
+     "greek": "μεγάλην ἔχει ῥοπήν",
+     "ids": [
+      "a23.2",
+      "a23.3",
+      "a23.4"
+     ],
+     "by": {
+      "Rackham": "be also of great practical importance",
+      "Ross": "have a great influence",
+      "Ostwald": "be very important",
+      "Peters": "it much concerns us"
+     },
+     "comment": "Only Ross keeps 'have'; Rackham and Ostwald use 'be important', and Peters an impersonal 'it concerns us'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ῥοπήν",
+     "ids": [
+      "a23.4"
+     ],
+     "by": {
+      "Rackham": "importance",
+      "Ross": "influence",
+      "Ostwald": "important",
+      "Peters": "concerns"
+     },
+     "comment": "The noun 'weight' is never rendered literally."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "σκοπὸν",
+     "ids": [
+      "a24.0"
+     ],
+     "by": {
+      "Rackham": "target",
+      "Ross": "mark",
+      "Ostwald": "target",
+      "Peters": "mark"
+     },
+     "comment": "'target' or 'mark'."
+    },
+    {
+     "kind": "construction",
+     "greek": "σκοπὸν ἔχοντες",
+     "ids": [
+      "a24.0",
+      "a24.1"
+     ],
+     "by": {
+      "Rackham": "having a target",
+      "Ross": "who have a mark",
+      "Ostwald": "who have a target",
+      "Peters": "shooting at a definite mark"
+     },
+     "comment": "Ross and Ostwald make the participle a relative clause; Peters changes 'having' to 'shooting at'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "σκοπὸν ἔχοντες",
+     "ids": [
+      "a24.0",
+      "a24.1"
+     ],
+     "by": {
+      "Rackham": "to aim at",
+      "Ross": "to aim at",
+      "Ostwald": "to aim at",
+      "Peters": "definite"
+     },
+     "comment": "Three add 'to aim at'; Peters adds 'definite'."
+    },
+    {
+     "kind": "construction",
+     "greek": "μᾶλλον ἂν τυγχάνοιμεν",
+     "ids": [
+      "a24.2",
+      "a24.3",
+      "a24.4"
+     ],
+     "by": {
+      "Rackham": "Will it not better enable us to attain",
+      "Ross": "Shall we not … be more likely to hit upon",
+      "Ostwald": "Would it not better equip us … to hit",
+      "Peters": "we shall be more likely to attain"
+     },
+     "comment": "Rackham and Ostwald make the knowledge the subject that helps 'us'; Ross and Peters keep 'we', as the Greek does."
+    },
+    {
+     "kind": "supplied",
+     "greek": "μᾶλλον ἂν τυγχάνοιμεν",
+     "ids": [
+      "a24.2",
+      "a24.3",
+      "a24.4"
+     ],
+     "by": {
+      "Rackham": "enable",
+      "Ross": "",
+      "Ostwald": "equip",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald add a verb with no Greek word behind it."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "μᾶλλον",
+     "ids": [
+      "a24.2"
+     ],
+     "by": {
+      "Rackham": "better",
+      "Ross": "more likely",
+      "Ostwald": "better",
+      "Peters": "more likely"
+     },
+     "comment": "'better' or 'more likely'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τυγχάνοιμεν",
+     "ids": [
+      "a24.4"
+     ],
+     "by": {
+      "Rackham": "attain",
+      "Ross": "hit upon",
+      "Ostwald": "hit",
+      "Peters": "attain"
+     },
+     "comment": "'attain' or 'hit'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοῦ δέοντος",
+     "ids": [
+      "a24.5",
+      "a24.6"
+     ],
+     "by": {
+      "Rackham": "our proper object",
+      "Ross": "what is right",
+      "Ostwald": "the proper mark",
+      "Peters": "what we want"
+     },
+     "comment": "Peters' 'what we want' strays furthest from 'what is needed'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοῦ δέοντος",
+     "ids": [
+      "a24.5",
+      "a24.6"
+     ],
+     "by": {
+      "Rackham": "our … object",
+      "Ross": "",
+      "Ostwald": "mark",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald add a noun to the neuter participle; Rackham also adds 'our'."
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "renderings": {
+    "Rackham": "If this be so, we ought to make an attempt to determine at all events in outline what exactly this Supreme Good is, and of which of the sciences or faculties it is the object.",
+    "Ross": "If so, we must try, in outline at least, to determine what it is, and of which of the sciences or capacities it is the object.",
+    "Ostwald": "If so, we must try to comprehend in outline at least what this good is and to which branch of knowledge or to which capacity it belongs.",
+    "Peters": "If this be so, we must try to indicate roughly what it is, and first of all to which of the arts or sciences it belongs."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "δ'",
+     "ids": [
+      "a24.8"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "No one renders the particle."
+    },
+    {
+     "kind": "supplied",
+     "greek": "εἰ δ' οὕτω",
+     "ids": [
+      "a24.7",
+      "a24.8",
+      "a25.0"
+     ],
+     "by": {
+      "Rackham": "this be",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "this be"
+     },
+     "comment": "The Greek has no verb; Rackham and Peters supply 'this be'."
+    },
+    {
+     "kind": "construction",
+     "greek": "πειρατέον",
+     "ids": [
+      "a25.1"
+     ],
+     "by": {
+      "Rackham": "we ought to make an attempt",
+      "Ross": "we must try",
+      "Ostwald": "we must try",
+      "Peters": "we must try"
+     },
+     "comment": "All turn the impersonal verbal adjective into 'we must' or 'we ought'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πειρατέον",
+     "ids": [
+      "a25.1"
+     ],
+     "by": {
+      "Rackham": "we",
+      "Ross": "we",
+      "Ostwald": "we",
+      "Peters": "we"
+     },
+     "comment": "The subject 'we' has no Greek word."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πειρατέον",
+     "ids": [
+      "a25.1"
+     ],
+     "by": {
+      "Rackham": "ought to make an attempt",
+      "Ross": "must try",
+      "Ostwald": "must try",
+      "Peters": "must try"
+     },
+     "comment": "Rackham alone uses 'ought' and a noun 'attempt'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τύπῳ",
+     "ids": [
+      "a25.2"
+     ],
+     "by": {
+      "Rackham": "in outline",
+      "Ross": "in outline",
+      "Ostwald": "in outline",
+      "Peters": "roughly"
+     },
+     "comment": "Peters says 'roughly'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "γε",
+     "ids": [
+      "a25.3"
+     ],
+     "by": {
+      "Rackham": "at all events",
+      "Ross": "at least",
+      "Ostwald": "at least",
+      "Peters": ""
+     },
+     "comment": "Peters leaves the particle out."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "περιλαβεῖν",
+     "ids": [
+      "a25.4"
+     ],
+     "by": {
+      "Rackham": "determine",
+      "Ross": "determine",
+      "Ostwald": "comprehend",
+      "Peters": "indicate"
+     },
+     "comment": "'grasp' becomes 'determine', 'comprehend', or 'indicate'."
+    },
+    {
+     "kind": "construction",
+     "greek": "αὐτὸ τί ποτ' ἐστὶ",
+     "ids": [
+      "a25.5",
+      "a25.6",
+      "a25.7",
+      "a25.8"
+     ],
+     "by": {
+      "Rackham": "what exactly this Supreme Good is",
+      "Ross": "what it is",
+      "Ostwald": "what this good is",
+      "Peters": "what it is"
+     },
+     "comment": "All move αὐτὸ, the object of 'grasp', into the 'what' clause as its subject."
+    },
+    {
+     "kind": "supplied",
+     "greek": "αὐτὸ",
+     "ids": [
+      "a25.5"
+     ],
+     "by": {
+      "Rackham": "Supreme Good",
+      "Ross": "",
+      "Ostwald": "good",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald put a noun in place of the pronoun."
+    },
+    {
+     "kind": "omitted",
+     "greek": "ποτ'",
+     "ids": [
+      "a25.7"
+     ],
+     "by": {
+      "Rackham": "exactly",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Only Rackham renders the particle."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τίνος τῶν ἐπιστημῶν ἢ δυνάμεων",
+     "ids": [
+      "a26.0",
+      "a26.1",
+      "a26.2",
+      "a26.3",
+      "a26.4"
+     ],
+     "by": {
+      "Rackham": "it is the object",
+      "Ross": "it is the object",
+      "Ostwald": "it belongs",
+      "Peters": "it belongs"
+     },
+     "comment": "The genitive needs no verb in Greek; each adds one."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐπιστημῶν",
+     "ids": [
+      "a26.2"
+     ],
+     "by": {
+      "Rackham": "sciences",
+      "Ross": "sciences",
+      "Ostwald": "branch of knowledge",
+      "Peters": "sciences"
+     },
+     "comment": "Ostwald says 'branch of knowledge'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "δυνάμεων",
+     "ids": [
+      "a26.4"
+     ],
+     "by": {
+      "Rackham": "faculties",
+      "Ross": "capacities",
+      "Ostwald": "capacity",
+      "Peters": "arts"
+     },
+     "comment": "'faculties', 'capacities', or 'arts'."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἐπιστημῶν ἢ δυνάμεων",
+     "ids": [
+      "a26.2",
+      "a26.3",
+      "a26.4"
+     ],
+     "by": {
+      "Rackham": "sciences or faculties",
+      "Ross": "sciences or capacities",
+      "Ostwald": "branch of knowledge or to which capacity",
+      "Peters": "arts or sciences"
+     },
+     "comment": "Ostwald makes both plurals singular; Peters reverses the order."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἢ",
+     "ids": [
+      "a26.3"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "to which",
+      "Peters": ""
+     },
+     "comment": "Ostwald repeats 'to which' before the second noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "καὶ",
+     "ids": [
+      "a25.9"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "first of all"
+     },
+     "comment": "Peters adds 'first of all'."
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "renderings": {
+    "Rackham": "Now it would seem that this supreme End must be the object of the most authoritative of the sciences—some science which is pre-eminently a master-craft.",
+    "Ross": "It would seem to belong to the most authoritative art and that which is most truly the master art.",
+    "Ostwald": "This good, one should think, belongs to the most sovereign and most comprehensive master science,",
+    "Peters": "It would seem to belong to the supreme art or science, that one which most of all deserves the name of master-art or master-science."
+   },
+   "notes": [
+    {
+     "kind": "construction",
+     "greek": "δόξειε … ἂν",
+     "ids": [
+      "a26.5",
+      "a26.7"
+     ],
+     "by": {
+      "Rackham": "it would seem that",
+      "Ross": "It would seem",
+      "Ostwald": "one should think",
+      "Peters": "It would seem"
+     },
+     "comment": "Ostwald turns the impersonal 'it would seem' into a parenthetic 'one should think'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "δ'",
+     "ids": [
+      "a26.6"
+     ],
+     "by": {
+      "Rackham": "Now",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Only Rackham gives the particle a word."
+    },
+    {
+     "kind": "supplied",
+     "greek": "δόξειε",
+     "ids": [
+      "a26.5"
+     ],
+     "by": {
+      "Rackham": "this supreme End",
+      "Ross": "It",
+      "Ostwald": "This good",
+      "Peters": "It"
+     },
+     "comment": "The Greek leaves the subject unstated; Rackham and Ostwald name it."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τῆς κυριωτάτης",
+     "ids": [
+      "a26.8",
+      "a26.9"
+     ],
+     "by": {
+      "Rackham": "must be the object of",
+      "Ross": "to belong to",
+      "Ostwald": "belongs to",
+      "Peters": "to belong to"
+     },
+     "comment": "The genitive of belonging gets a verb in every version."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τῆς κυριωτάτης … ἀρχιτεκτονικῆς",
+     "ids": [
+      "a26.8",
+      "a26.9",
+      "a27.2"
+     ],
+     "by": {
+      "Rackham": "of the sciences … some science",
+      "Ross": "art … art",
+      "Ostwald": "science",
+      "Peters": "art or science … master-science"
+     },
+     "comment": "The feminine adjectives imply a noun; Rackham and Ostwald supply 'science', Ross 'art', and Peters both."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "κυριωτάτης",
+     "ids": [
+      "a26.9"
+     ],
+     "by": {
+      "Rackham": "most authoritative",
+      "Ross": "most authoritative",
+      "Ostwald": "most sovereign",
+      "Peters": "supreme"
+     },
+     "comment": "'most authoritative', 'most sovereign', or 'supreme'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "a27.0"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "and",
+      "Ostwald": "and",
+      "Peters": ""
+     },
+     "comment": "Rackham uses a dash and Peters a comma in place of 'and'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "μάλιστα",
+     "ids": [
+      "a27.1"
+     ],
+     "by": {
+      "Rackham": "pre-eminently",
+      "Ross": "most truly",
+      "Ostwald": "most",
+      "Peters": "most of all"
+     },
+     "comment": "Ross adds 'truly' to 'most'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀρχιτεκτονικῆς",
+     "ids": [
+      "a27.2"
+     ],
+     "by": {
+      "Rackham": "master-craft",
+      "Ross": "master art",
+      "Ostwald": "master science",
+      "Peters": "master-art or master-science"
+     },
+     "comment": "The noun built into 'master-' varies: craft, art, science."
+    },
+    {
+     "kind": "construction",
+     "greek": "καὶ μάλιστα ἀρχιτεκτονικῆς",
+     "ids": [
+      "a27.0",
+      "a27.1",
+      "a27.2"
+     ],
+     "by": {
+      "Rackham": "some science which is pre-eminently a master-craft",
+      "Ross": "that which is most truly the master art",
+      "Ostwald": "most comprehensive master science",
+      "Peters": "that one which most of all deserves the name of master-art or master-science"
+     },
+     "comment": "Rackham, Ross, and Peters turn the second adjective into a relative clause; only Ostwald keeps two adjectives on one noun."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἀρχιτεκτονικῆς",
+     "ids": [
+      "a27.2"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "comprehensive",
+      "Peters": "deserves the name of"
+     },
+     "comment": "Ostwald adds 'comprehensive' and Peters 'deserves the name of'."
+    }
+   ]
+  },
+  {
+   "n": 5,
+   "renderings": {
+    "Rackham": "But such is manifestly the science of Politics;",
+    "Ross": "And politics appears to be of this nature;",
+    "Ostwald": "and politics clearly fits this description.",
+    "Peters": "Now Politics seems to answer to this description."
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "δ'",
+     "ids": [
+      "a27.4"
+     ],
+     "by": {
+      "Rackham": "But",
+      "Ross": "And",
+      "Ostwald": "and",
+      "Peters": "Now"
+     },
+     "comment": "The particle is 'But', 'And', or 'Now'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πολιτικὴ",
+     "ids": [
+      "a27.6"
+     ],
+     "by": {
+      "Rackham": "the science of",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'the science of'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "φαίνεται",
+     "ids": [
+      "a28.0"
+     ],
+     "by": {
+      "Rackham": "is manifestly",
+      "Ross": "appears to be",
+      "Ostwald": "clearly",
+      "Peters": "seems"
+     },
+     "comment": "Rackham and Ostwald read φαίνεται as 'clearly is'; Ross and Peters as 'seems'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τοιαύτη",
+     "ids": [
+      "a27.3"
+     ],
+     "by": {
+      "Rackham": "such",
+      "Ross": "of this nature",
+      "Ostwald": "fits this description",
+      "Peters": "to answer to this description"
+     },
+     "comment": "Only Rackham keeps the bare 'such'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοιαύτη",
+     "ids": [
+      "a27.3"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "nature",
+      "Ostwald": "fits … description",
+      "Peters": "answer to … description"
+     },
+     "comment": "Three expand 'such' into a phrase with a noun."
+    },
+    {
+     "kind": "construction",
+     "greek": "τοιαύτη … ἡ πολιτικὴ φαίνεται",
+     "ids": [
+      "a27.3",
+      "a27.5",
+      "a27.6",
+      "a28.0"
+     ],
+     "by": {
+      "Rackham": "such is manifestly the science of Politics",
+      "Ross": "politics appears to be of this nature",
+      "Ostwald": "politics clearly fits this description",
+      "Peters": "Politics seems to answer to this description"
+     },
+     "comment": "Only Rackham keeps the Greek order with 'such' first."
+    }
+   ]
+  },
+  {
+   "n": 6,
+   "renderings": {
+    "Rackham": "for it is this that ordains which of the sciences are to exist in states, and what branches of knowledge the different classes of the citizens are to learn, and up to what point;",
+    "Ross": "for it is this that ordains which of the sciences should be studied in a state, and which each class of citizens should learn and up to what point they should learn them;",
+    "Ostwald": "For it determines which sciences ought to exist in states, what kind of sciences each group of citizens must learn, and what degree of proficiency each must attain.",
+    "Peters": "For it prescribes which of the sciences a state needs, and which each man shall study, and up to what point;"
+   },
+   "notes": [
+    {
+     "kind": "construction",
+     "greek": "αὕτη … διατάσσει",
+     "ids": [
+      "b1.7",
+      "b2.0"
+     ],
+     "by": {
+      "Rackham": "it is this that ordains",
+      "Ross": "it is this that ordains",
+      "Ostwald": "it determines",
+      "Peters": "it prescribes"
+     },
+     "comment": "All bring the sentence-final subject and verb to the front; Rackham and Ross keep its stress with 'it is this that'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "διατάσσει",
+     "ids": [
+      "b2.0"
+     ],
+     "by": {
+      "Rackham": "ordains",
+      "Ross": "ordains",
+      "Ostwald": "determines",
+      "Peters": "prescribes"
+     },
+     "comment": "'ordains', 'determines', or 'prescribes'."
+    },
+    {
+     "kind": "construction",
+     "greek": "τίνας … εἶναι χρεὼν … ἐν ταῖς πόλεσι",
+     "ids": [
+      "a28.1",
+      "a28.3",
+      "a28.4",
+      "a28.7",
+      "a28.8",
+      "a28.9"
+     ],
+     "by": {
+      "Rackham": "which of the sciences are to exist in states",
+      "Ross": "which of the sciences should be studied in a state",
+      "Ostwald": "which sciences ought to exist in states",
+      "Peters": "which of the sciences a state needs"
+     },
+     "comment": "Peters makes the state the subject of 'needs'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "χρεὼν",
+     "ids": [
+      "a28.4"
+     ],
+     "by": {
+      "Rackham": "are to",
+      "Ross": "should",
+      "Ostwald": "ought to",
+      "Peters": "needs"
+     },
+     "comment": "Four ways of saying 'must'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "εἶναι",
+     "ids": [
+      "a28.3"
+     ],
+     "by": {
+      "Rackham": "exist",
+      "Ross": "be studied",
+      "Ostwald": "exist",
+      "Peters": ""
+     },
+     "comment": "Ross reads 'be' as 'be studied'; Peters folds it into 'needs'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "εἶναι",
+     "ids": [
+      "a28.3"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "studied",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Ross adds 'studied'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐν ταῖς πόλεσι",
+     "ids": [
+      "a28.7",
+      "a28.8",
+      "a28.9"
+     ],
+     "by": {
+      "Rackham": "in states",
+      "Ross": "in a state",
+      "Ostwald": "in states",
+      "Peters": "a state"
+     },
+     "comment": "Ross and Peters make the plural singular."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "b1.0"
+     ],
+     "by": {
+      "Rackham": "and",
+      "Ross": "and",
+      "Ostwald": "",
+      "Peters": "and"
+     },
+     "comment": "Ostwald uses a comma for the first 'and'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ποίας",
+     "ids": [
+      "b1.1"
+     ],
+     "by": {
+      "Rackham": "what branches of knowledge",
+      "Ross": "which",
+      "Ostwald": "what kind of sciences",
+      "Peters": "which"
+     },
+     "comment": "Ostwald's 'what kind of' keeps the sense of ποίας best."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ποίας",
+     "ids": [
+      "b1.1"
+     ],
+     "by": {
+      "Rackham": "branches of knowledge",
+      "Ross": "",
+      "Ostwald": "sciences",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald add a noun; Ross and Peters leave 'which' bare."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἑκάστους",
+     "ids": [
+      "b1.2"
+     ],
+     "by": {
+      "Rackham": "the different classes of the citizens",
+      "Ross": "each class of citizens",
+      "Ostwald": "each group of citizens",
+      "Peters": "each man"
+     },
+     "comment": "Only Peters keeps the bare 'each'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἑκάστους",
+     "ids": [
+      "b1.2"
+     ],
+     "by": {
+      "Rackham": "different classes of the citizens",
+      "Ross": "class of citizens",
+      "Ostwald": "group of citizens",
+      "Peters": "man"
+     },
+     "comment": "The Greek has only 'each (people)'; all add a noun, three of them 'citizens'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "μανθάνειν",
+     "ids": [
+      "b1.3"
+     ],
+     "by": {
+      "Rackham": "learn",
+      "Ross": "learn",
+      "Ostwald": "learn",
+      "Peters": "study"
+     },
+     "comment": "Peters says 'study'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "μανθάνειν",
+     "ids": [
+      "b1.3"
+     ],
+     "by": {
+      "Rackham": "are to",
+      "Ross": "should",
+      "Ostwald": "must",
+      "Peters": "shall"
+     },
+     "comment": "The modal is carried over from χρεὼν."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "μέχρι τίνος",
+     "ids": [
+      "b1.5",
+      "b1.6"
+     ],
+     "by": {
+      "Rackham": "up to what point",
+      "Ross": "up to what point",
+      "Ostwald": "what degree of proficiency",
+      "Peters": "up to what point"
+     },
+     "comment": "Ostwald rewrites 'up to what point'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "μέχρι τίνος",
+     "ids": [
+      "b1.5",
+      "b1.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "they should learn them",
+      "Ostwald": "each must attain",
+      "Peters": ""
+     },
+     "comment": "Ross repeats the verb; Ostwald adds a new one."
+    }
+   ]
+  },
+  {
+   "n": 7,
+   "renderings": {
+    "Rackham": "and we observe that even the most highly esteemed of the faculties, such as strategy, domestic economy, oratory, are subordinate to the political science.",
+    "Ross": "and we see even the most highly esteemed of capacities to fall under this, e.g. strategy, economics, rhetoric;",
+    "Ostwald": "We observe further that the most honored capacities, such as strategy, household management, and oratory, are contained in politics.",
+    "Peters": "and to it we see subordinated even the highest arts, such as economy, rhetoric, and the art of war."
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "ὁρῶμεν",
+     "ids": [
+      "b2.1"
+     ],
+     "by": {
+      "Rackham": "observe",
+      "Ross": "see",
+      "Ostwald": "observe",
+      "Peters": "see"
+     },
+     "comment": "'observe' or 'see'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "δὲ",
+     "ids": [
+      "b2.2"
+     ],
+     "by": {
+      "Rackham": "and",
+      "Ross": "and",
+      "Ostwald": "further",
+      "Peters": "and"
+     },
+     "comment": "Ostwald says 'further'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "b2.3"
+     ],
+     "by": {
+      "Rackham": "even",
+      "Ross": "even",
+      "Ostwald": "",
+      "Peters": "even"
+     },
+     "comment": "Ostwald leaves out 'even'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἐντιμοτάτας",
+     "ids": [
+      "b2.5"
+     ],
+     "by": {
+      "Rackham": "most highly esteemed",
+      "Ross": "most highly esteemed",
+      "Ostwald": "most honored",
+      "Peters": "highest"
+     },
+     "comment": "Peters' 'highest' loses the idea of honour."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "δυνάμεων",
+     "ids": [
+      "b2.7"
+     ],
+     "by": {
+      "Rackham": "faculties",
+      "Ross": "capacities",
+      "Ostwald": "capacities",
+      "Peters": "arts"
+     },
+     "comment": "Each keeps the word he used for δυνάμεων in sentence 3."
+    },
+    {
+     "kind": "construction",
+     "greek": "ὑπὸ ταύτην οὔσας",
+     "ids": [
+      "b3.0",
+      "b3.1",
+      "b3.2"
+     ],
+     "by": {
+      "Rackham": "are subordinate to the political science",
+      "Ross": "to fall under this",
+      "Ostwald": "are contained in politics",
+      "Peters": "to it … subordinated"
+     },
+     "comment": "Rackham and Ostwald turn the participle into a 'that' clause, Ross into an infinitive; Peters moves 'to it' to the front."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ὑπὸ … οὔσας",
+     "ids": [
+      "b3.0",
+      "b3.2"
+     ],
+     "by": {
+      "Rackham": "are subordinate to",
+      "Ross": "to fall under",
+      "Ostwald": "are contained in",
+      "Peters": "subordinated"
+     },
+     "comment": "'under' becomes 'subordinate to', 'fall under', or 'contained in'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ταύτην",
+     "ids": [
+      "b3.1"
+     ],
+     "by": {
+      "Rackham": "the political science",
+      "Ross": "",
+      "Ostwald": "politics",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ostwald name the science in place of the pronoun."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "οἷον",
+     "ids": [
+      "b3.3"
+     ],
+     "by": {
+      "Rackham": "such as",
+      "Ross": "e.g.",
+      "Ostwald": "such as",
+      "Peters": "such as"
+     },
+     "comment": "Ross uses 'e.g.'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "στρατηγικὴν",
+     "ids": [
+      "b3.4"
+     ],
+     "by": {
+      "Rackham": "strategy",
+      "Ross": "strategy",
+      "Ostwald": "strategy",
+      "Peters": "the art of war"
+     },
+     "comment": "Peters says 'the art of war'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "οἰκονομικὴν",
+     "ids": [
+      "b3.5"
+     ],
+     "by": {
+      "Rackham": "domestic economy",
+      "Ross": "economics",
+      "Ostwald": "household management",
+      "Peters": "economy"
+     },
+     "comment": "Four renderings of household management."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ῥητορικήν",
+     "ids": [
+      "b3.6"
+     ],
+     "by": {
+      "Rackham": "oratory",
+      "Ross": "rhetoric",
+      "Ostwald": "oratory",
+      "Peters": "rhetoric"
+     },
+     "comment": "'oratory' or 'rhetoric'."
+    },
+    {
+     "kind": "construction",
+     "greek": "στρατηγικὴν οἰκονομικὴν ῥητορικήν",
+     "ids": [
+      "b3.4",
+      "b3.5",
+      "b3.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "economy, rhetoric, and the art of war"
+     },
+     "comment": "Peters puts strategy last."
+    },
+    {
+     "kind": "supplied",
+     "greek": "στρατηγικὴν οἰκονομικὴν ῥητορικήν",
+     "ids": [
+      "b3.4",
+      "b3.5",
+      "b3.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "and",
+      "Peters": "and"
+     },
+     "comment": "Ostwald and Peters add 'and' before the last item."
+    }
+   ]
+  },
+  {
+   "n": 8,
+   "renderings": {
+    "Rackham": "Inasmuch then as the rest of the sciences are employed by this one, and as it moreover lays down laws as to what people shall do and what things they shall refrain from doing, the end of this science must include the ends of all the others. Therefore, the Good of man must be the end of the science of Politics.",
+    "Ross": "now, since politics uses the rest of the sciences, and since, again, it legislates as to what we are to do and what we are to abstain from, the end of this science must include those of the others, so that this end must be the good for man.",
+    "Ostwald": "Since this science uses the rest of the sciences, and since, moreover, it legislates what people are to do and what they are not to do, its end seems to embrace the ends of the other sciences. Thus it follows that the end of politics is the good for man.",
+    "Peters": "Since then it makes use of the other practical sciences, and since it further ordains what men are to do and from what to refrain, its end must include the ends of the others, and must be the proper good of man."
+   },
+   "notes": [
+    {
+     "kind": "construction",
+     "greek": "χρωμένης δὲ ταύτης",
+     "ids": [
+      "b4.0",
+      "b4.1",
+      "b4.2"
+     ],
+     "by": {
+      "Rackham": "Inasmuch then as the rest of the sciences are employed by this one",
+      "Ross": "since politics uses",
+      "Ostwald": "Since this science uses",
+      "Peters": "Since then it makes use of"
+     },
+     "comment": "All turn the genitive absolute into a 'since' clause; Rackham also makes it passive."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "δὲ",
+     "ids": [
+      "b4.1"
+     ],
+     "by": {
+      "Rackham": "then",
+      "Ross": "now,",
+      "Ostwald": "",
+      "Peters": "then"
+     },
+     "comment": "Ostwald leaves the particle out."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ταύτης",
+     "ids": [
+      "b4.2"
+     ],
+     "by": {
+      "Rackham": "this one",
+      "Ross": "politics",
+      "Ostwald": "this science",
+      "Peters": "it"
+     },
+     "comment": "The pronoun is kept only by Peters."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ταύτης",
+     "ids": [
+      "b4.2"
+     ],
+     "by": {
+      "Rackham": "one",
+      "Ross": "politics",
+      "Ostwald": "science",
+      "Peters": ""
+     },
+     "comment": "Rackham, Ross, and Ostwald add a noun to the pronoun or replace it with one."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "χρωμένης",
+     "ids": [
+      "b4.0"
+     ],
+     "by": {
+      "Rackham": "are employed by",
+      "Ross": "uses",
+      "Ostwald": "uses",
+      "Peters": "makes use of"
+     },
+     "comment": "Rackham's passive reverses who acts."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "λοιπαῖς",
+     "ids": [
+      "b4.4"
+     ],
+     "by": {
+      "Rackham": "the rest of",
+      "Ross": "the rest of",
+      "Ostwald": "the rest of",
+      "Peters": "the other"
+     },
+     "comment": "Peters says 'the other'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "πρακτικαῖς",
+     "ids": [
+      "b4.5"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "practical"
+     },
+     "comment": "Only Peters renders 'practical'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἔτι δὲ",
+     "ids": [
+      "b5.0",
+      "b5.1"
+     ],
+     "by": {
+      "Rackham": "moreover",
+      "Ross": "again",
+      "Ostwald": "moreover",
+      "Peters": "further"
+     },
+     "comment": "'moreover', 'again', or 'further'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἔτι δὲ",
+     "ids": [
+      "b5.0",
+      "b5.1"
+     ],
+     "by": {
+      "Rackham": "and as",
+      "Ross": "and since",
+      "Ostwald": "and since",
+      "Peters": "and since"
+     },
+     "comment": "Each repeats the causal conjunction from the first clause."
+    },
+    {
+     "kind": "construction",
+     "greek": "νομοθετούσης",
+     "ids": [
+      "b5.2"
+     ],
+     "by": {
+      "Rackham": "as it moreover lays down laws",
+      "Ross": "since, again, it legislates",
+      "Ostwald": "since, moreover, it legislates",
+      "Peters": "since it further ordains"
+     },
+     "comment": "The second participle also becomes a causal clause."
+    },
+    {
+     "kind": "supplied",
+     "greek": "νομοθετούσης",
+     "ids": [
+      "b5.2"
+     ],
+     "by": {
+      "Rackham": "it",
+      "Ross": "it",
+      "Ostwald": "it",
+      "Peters": "it"
+     },
+     "comment": "The subject 'it' is supplied in each."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "νομοθετούσης",
+     "ids": [
+      "b5.2"
+     ],
+     "by": {
+      "Rackham": "lays down laws",
+      "Ross": "legislates",
+      "Ostwald": "legislates",
+      "Peters": "ordains"
+     },
+     "comment": "Peters' 'ordains' loses the idea of law."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τί δεῖ πράττειν",
+     "ids": [
+      "b5.3",
+      "b5.4",
+      "b5.5"
+     ],
+     "by": {
+      "Rackham": "people",
+      "Ross": "we",
+      "Ostwald": "people",
+      "Peters": "men"
+     },
+     "comment": "The infinitive has no subject in Greek; each adds one."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "δεῖ",
+     "ids": [
+      "b5.4"
+     ],
+     "by": {
+      "Rackham": "shall",
+      "Ross": "are to",
+      "Ostwald": "are to",
+      "Peters": "are to"
+     },
+     "comment": "Rackham says 'shall'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀπέχεσθαι",
+     "ids": [
+      "b5.8"
+     ],
+     "by": {
+      "Rackham": "refrain from doing",
+      "Ross": "abstain from",
+      "Ostwald": "are not to do",
+      "Peters": "refrain"
+     },
+     "comment": "'refrain', 'abstain', or 'not to do'."
+    },
+    {
+     "kind": "construction",
+     "greek": "τίνων ἀπέχεσθαι",
+     "ids": [
+      "b5.7",
+      "b5.8"
+     ],
+     "by": {
+      "Rackham": "what things they shall refrain from doing",
+      "Ross": "what we are to abstain from",
+      "Ostwald": "what they are not to do",
+      "Peters": "from what to refrain"
+     },
+     "comment": "Ostwald turns 'abstain from' into 'not to do'; only Peters keeps the bare infinitive."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τίνων ἀπέχεσθαι",
+     "ids": [
+      "b5.7",
+      "b5.8"
+     ],
+     "by": {
+      "Rackham": "things … they … doing",
+      "Ross": "",
+      "Ostwald": "they",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'things', 'they', and 'doing'; Ostwald adds 'they'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὸ ταύτης τέλος",
+     "ids": [
+      "b6.0",
+      "b6.1",
+      "b6.2"
+     ],
+     "by": {
+      "Rackham": "the end of this science",
+      "Ross": "the end of this science",
+      "Ostwald": "its end",
+      "Peters": "its end"
+     },
+     "comment": "Ostwald and Peters shorten to 'its end'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ταύτης",
+     "ids": [
+      "b6.1"
+     ],
+     "by": {
+      "Rackham": "science",
+      "Ross": "science",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham and Ross add 'science' to the pronoun."
+    },
+    {
+     "kind": "construction",
+     "greek": "περιέχοι ἂν",
+     "ids": [
+      "b6.3",
+      "b6.4"
+     ],
+     "by": {
+      "Rackham": "must include",
+      "Ross": "must include",
+      "Ostwald": "seems to embrace",
+      "Peters": "must include"
+     },
+     "comment": "Three render the optative as 'must'; Ostwald as 'seems to'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "περιέχοι",
+     "ids": [
+      "b6.3"
+     ],
+     "by": {
+      "Rackham": "include",
+      "Ross": "include",
+      "Ostwald": "embrace",
+      "Peters": "include"
+     },
+     "comment": "Ostwald says 'embrace'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὰ τῶν ἄλλων",
+     "ids": [
+      "b6.5",
+      "b6.6",
+      "b6.7"
+     ],
+     "by": {
+      "Rackham": "the ends of all the others",
+      "Ross": "those of the others",
+      "Ostwald": "the ends of the other sciences",
+      "Peters": "the ends of the others"
+     },
+     "comment": "Ross keeps a pronoun for the article."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τὰ τῶν ἄλλων",
+     "ids": [
+      "b6.5",
+      "b6.6",
+      "b6.7"
+     ],
+     "by": {
+      "Rackham": "ends … all",
+      "Ross": "",
+      "Ostwald": "ends … sciences",
+      "Peters": "ends"
+     },
+     "comment": "Three spell out 'ends'; Rackham adds 'all' and Ostwald 'sciences'."
+    },
+    {
+     "kind": "construction",
+     "greek": "ὥστε",
+     "ids": [
+      "b6.8"
+     ],
+     "by": {
+      "Rackham": "Therefore,",
+      "Ross": "so that",
+      "Ostwald": "Thus it follows that",
+      "Peters": "and"
+     },
+     "comment": "Rackham and Ostwald start a new sentence; Peters joins with a plain 'and'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ὥστε",
+     "ids": [
+      "b6.8"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "it follows",
+      "Peters": ""
+     },
+     "comment": "Ostwald adds 'it follows'."
+    },
+    {
+     "kind": "construction",
+     "greek": "τοῦτ' ἂν εἴη τἀνθρώπινον ἀγαθόν",
+     "ids": [
+      "b6.9",
+      "b7.0",
+      "b7.1",
+      "b7.2",
+      "b7.3"
+     ],
+     "by": {
+      "Rackham": "the Good of man must be the end of the science of Politics",
+      "Ross": "this end must be the good for man",
+      "Ostwald": "the end of politics is the good for man",
+      "Peters": "must be the proper good of man"
+     },
+     "comment": "Rackham reverses subject and predicate; Peters drops 'this' and lets 'its end' serve as subject."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τοῦτ'",
+     "ids": [
+      "b6.9"
+     ],
+     "by": {
+      "Rackham": "end of the science of Politics",
+      "Ross": "end",
+      "Ostwald": "end of politics",
+      "Peters": ""
+     },
+     "comment": "The pronoun becomes a noun phrase in three versions."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἂν εἴη",
+     "ids": [
+      "b7.0",
+      "b7.1"
+     ],
+     "by": {
+      "Rackham": "must be",
+      "Ross": "must be",
+      "Ostwald": "is",
+      "Peters": "must be"
+     },
+     "comment": "Ostwald gives a plain 'is' for the optative."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τἀνθρώπινον",
+     "ids": [
+      "b7.2"
+     ],
+     "by": {
+      "Rackham": "of man",
+      "Ross": "for man",
+      "Ostwald": "for man",
+      "Peters": "of man"
+     },
+     "comment": "'of man' or 'for man'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τἀνθρώπινον ἀγαθόν",
+     "ids": [
+      "b7.2",
+      "b7.3"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "proper"
+     },
+     "comment": "Peters adds 'proper'."
+    }
+   ]
+  },
+  {
+   "n": 9,
+   "renderings": {
+    "Rackham": "For even though it be the case that the Good is the same for the individual and for the state, nevertheless, the good of the state is manifestly a greater and more perfect good, both to attain and to preserve.",
+    "Ross": "For even if the end is the same for a single man and for a state, that of the state seems at all events something greater and more complete whether to attain or to preserve;",
+    "Ostwald": "For even if the good is the same for the individual and the state, the good of the state clearly is the greater and more perfect thing to attain and to safeguard.",
+    "Peters": "For though this good is the same for the individual and the state, yet the good of the state seems a grander and more perfect thing both to attain and to secure;"
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "εἰ … καὶ",
+     "ids": [
+      "b7.4",
+      "b7.6"
+     ],
+     "by": {
+      "Rackham": "even though it be the case that",
+      "Ross": "even if",
+      "Ostwald": "even if",
+      "Peters": "though"
+     },
+     "comment": "Rackham stretches 'even if' into a clause."
+    },
+    {
+     "kind": "supplied",
+     "greek": "εἰ … καὶ",
+     "ids": [
+      "b7.4",
+      "b7.6"
+     ],
+     "by": {
+      "Rackham": "it be the case that",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'it be the case that'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ταὐτόν ἐστιν",
+     "ids": [
+      "b7.7",
+      "b7.8"
+     ],
+     "by": {
+      "Rackham": "the Good",
+      "Ross": "the end",
+      "Ostwald": "the good",
+      "Peters": "this good"
+     },
+     "comment": "The Greek has no stated subject; Ross supplies 'the end', the others 'the good'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἑνὶ",
+     "ids": [
+      "b7.9"
+     ],
+     "by": {
+      "Rackham": "the individual",
+      "Ross": "a single man",
+      "Ostwald": "the individual",
+      "Peters": "the individual"
+     },
+     "comment": "Ross says 'a single man'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "καὶ πόλει",
+     "ids": [
+      "b8.0",
+      "b8.1"
+     ],
+     "by": {
+      "Rackham": "and for the state",
+      "Ross": "and for a state",
+      "Ostwald": "and the state",
+      "Peters": "and the state"
+     },
+     "comment": "Rackham and Ross repeat 'for'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "μεῖζόν",
+     "ids": [
+      "b8.2"
+     ],
+     "by": {
+      "Rackham": "nevertheless,",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": "yet"
+     },
+     "comment": "Rackham and Peters mark the main clause with a word the Greek lacks."
+    },
+    {
+     "kind": "omitted",
+     "greek": "γε",
+     "ids": [
+      "b8.3"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "at all events",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Only Ross renders the particle."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "μεῖζόν",
+     "ids": [
+      "b8.2"
+     ],
+     "by": {
+      "Rackham": "greater",
+      "Ross": "greater",
+      "Ostwald": "greater",
+      "Peters": "grander"
+     },
+     "comment": "Peters says 'grander'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τελειότερον",
+     "ids": [
+      "b8.5"
+     ],
+     "by": {
+      "Rackham": "more perfect",
+      "Ross": "more complete",
+      "Ostwald": "more perfect",
+      "Peters": "more perfect"
+     },
+     "comment": "Ross says 'more complete'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τὸ τῆς πόλεως",
+     "ids": [
+      "b8.6",
+      "b8.7",
+      "b8.8"
+     ],
+     "by": {
+      "Rackham": "the good of the state",
+      "Ross": "that of the state",
+      "Ostwald": "the good of the state",
+      "Peters": "the good of the state"
+     },
+     "comment": "Ross keeps a pronoun for the article."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τὸ",
+     "ids": [
+      "b8.6"
+     ],
+     "by": {
+      "Rackham": "good",
+      "Ross": "",
+      "Ostwald": "good",
+      "Peters": "good"
+     },
+     "comment": "Three add 'good' for the article; Ross has 'that'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "μεῖζόν … τελειότερον",
+     "ids": [
+      "b8.2",
+      "b8.5"
+     ],
+     "by": {
+      "Rackham": "good",
+      "Ross": "something",
+      "Ostwald": "thing",
+      "Peters": "thing"
+     },
+     "comment": "Each adds a noun or pronoun to the neuter adjectives."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "φαίνεται",
+     "ids": [
+      "b8.9"
+     ],
+     "by": {
+      "Rackham": "is manifestly",
+      "Ross": "seems",
+      "Ostwald": "clearly is",
+      "Peters": "seems"
+     },
+     "comment": "As in sentence 5, Rackham and Ostwald read it as 'clearly is'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "καὶ … καὶ",
+     "ids": [
+      "b9.0",
+      "b9.2"
+     ],
+     "by": {
+      "Rackham": "both … and",
+      "Ross": "whether … or",
+      "Ostwald": "and",
+      "Peters": "both … and"
+     },
+     "comment": "Ross says 'whether … or', and Ostwald drops 'both'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "σῴζειν",
+     "ids": [
+      "b9.3"
+     ],
+     "by": {
+      "Rackham": "preserve",
+      "Ross": "preserve",
+      "Ostwald": "safeguard",
+      "Peters": "secure"
+     },
+     "comment": "'preserve', 'safeguard', or 'secure'."
+    }
+   ]
+  },
+  {
+   "n": 10,
+   "renderings": {
+    "Rackham": "To secure the good of one person only is better than nothing; but to secure the good of a nation or a state is a nobler and more divine achievement.",
+    "Ross": "though it is worth while to attain the end merely for one man, it is finer and more godlike to attain it for a nation or for city-states.",
+    "Ostwald": "The attainment of the good for one man alone is, to be sure, a source of satisfaction; yet to secure it for a nation and for states is nobler and more divine.",
+    "Peters": "and glad as one would be to do this service for a single individual, to do it for a people and for a number of states is nobler and more divine."
+   },
+   "notes": [
+    {
+     "kind": "omitted",
+     "greek": "γὰρ",
+     "ids": [
+      "b9.6"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "No one renders 'for'."
+    },
+    {
+     "kind": "omitted",
+     "greek": "καὶ",
+     "ids": [
+      "b9.7"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "No one renders 'even'."
+    },
+    {
+     "kind": "construction",
+     "greek": "μὲν … δὲ",
+     "ids": [
+      "b9.5",
+      "b10.2"
+     ],
+     "by": {
+      "Rackham": "but",
+      "Ross": "though",
+      "Ostwald": "to be sure … yet",
+      "Peters": "glad as"
+     },
+     "comment": "Rackham and Ostwald keep two main clauses; Ross and Peters make the first half concessive."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἀγαπητὸν",
+     "ids": [
+      "b9.4"
+     ],
+     "by": {
+      "Rackham": "is better than nothing",
+      "Ross": "it is worth while",
+      "Ostwald": "is, to be sure, a source of satisfaction",
+      "Peters": "glad as one would be"
+     },
+     "comment": "Peters makes it personal with 'one would be glad'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἀγαπητὸν",
+     "ids": [
+      "b9.4"
+     ],
+     "by": {
+      "Rackham": "better than nothing",
+      "Ross": "worth while",
+      "Ostwald": "a source of satisfaction",
+      "Peters": "glad"
+     },
+     "comment": "Four renderings of 'welcome'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἀγαπητὸν … κάλλιον",
+     "ids": [
+      "b9.4",
+      "b10.1"
+     ],
+     "by": {
+      "Rackham": "To secure the good of … to secure the good of",
+      "Ross": "to attain the end … to attain it",
+      "Ostwald": "The attainment of the good … to secure it",
+      "Peters": "to do this service … to do it"
+     },
+     "comment": "The Greek carries 'to get' over from the last sentence; all supply a verb and an object."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἀγαπητὸν … κάλλιον",
+     "ids": [
+      "b9.4",
+      "b10.1"
+     ],
+     "by": {
+      "Rackham": "is … is",
+      "Ross": "it is … it is",
+      "Ostwald": "is … is",
+      "Peters": "one would be … is"
+     },
+     "comment": "Each adds a copula; Ross also adds 'it'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἑνὶ μόνῳ",
+     "ids": [
+      "b9.8",
+      "b10.0"
+     ],
+     "by": {
+      "Rackham": "one person only",
+      "Ross": "merely for one man",
+      "Ostwald": "for one man alone",
+      "Peters": "for a single individual"
+     },
+     "comment": "'only' is 'only', 'merely', or 'alone'; Peters folds it into 'single'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "κάλλιον",
+     "ids": [
+      "b10.1"
+     ],
+     "by": {
+      "Rackham": "nobler",
+      "Ross": "finer",
+      "Ostwald": "nobler",
+      "Peters": "nobler"
+     },
+     "comment": "Ross says 'finer'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "θειότερον",
+     "ids": [
+      "b10.4"
+     ],
+     "by": {
+      "Rackham": "more divine",
+      "Ross": "more godlike",
+      "Ostwald": "more divine",
+      "Peters": "more divine"
+     },
+     "comment": "Ross says 'more godlike'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "κάλλιον … θειότερον",
+     "ids": [
+      "b10.1",
+      "b10.4"
+     ],
+     "by": {
+      "Rackham": "achievement",
+      "Ross": "",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds a noun to the neuter adjectives."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "ἔθνει",
+     "ids": [
+      "b10.5"
+     ],
+     "by": {
+      "Rackham": "a nation",
+      "Ross": "a nation",
+      "Ostwald": "a nation",
+      "Peters": "a people"
+     },
+     "comment": "Peters says 'a people'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "καὶ",
+     "ids": [
+      "b10.6"
+     ],
+     "by": {
+      "Rackham": "or",
+      "Ross": "or for",
+      "Ostwald": "and for",
+      "Peters": "and for"
+     },
+     "comment": "Rackham and Ross make it 'or'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "πόλεσιν",
+     "ids": [
+      "b10.7"
+     ],
+     "by": {
+      "Rackham": "a state",
+      "Ross": "city-states",
+      "Ostwald": "states",
+      "Peters": "a number of states"
+     },
+     "comment": "Rackham makes the plural singular; Peters adds 'a number of'."
+    }
+   ]
+  },
+  {
+   "n": 11,
+   "renderings": {
+    "Rackham": "This then being its aim, our investigation is in a sense the study of Politics.",
+    "Ross": "These, then, are the ends at which our inquiry aims, since it is political science, in one sense of that term.",
+    "Ostwald": "In short, these are the aims of our investigation, which is in a sense an investigation of social and political matters.",
+    "Peters": "This then is the aim of the present inquiry, which is a sort of political inquiry."
+   },
+   "notes": [
+    {
+     "kind": "phrasing",
+     "greek": "μὲν οὖν",
+     "ids": [
+      "b10.9",
+      "b11.0"
+     ],
+     "by": {
+      "Rackham": "then",
+      "Ross": "then",
+      "Ostwald": "In short",
+      "Peters": "then"
+     },
+     "comment": "Ostwald says 'In short'."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "μέθοδος",
+     "ids": [
+      "b11.1"
+     ],
+     "by": {
+      "Rackham": "investigation",
+      "Ross": "inquiry",
+      "Ostwald": "investigation",
+      "Peters": "inquiry"
+     },
+     "comment": "'investigation' or 'inquiry'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἡ μέθοδος",
+     "ids": [
+      "b10.8",
+      "b11.1"
+     ],
+     "by": {
+      "Rackham": "our",
+      "Ross": "our",
+      "Ostwald": "our",
+      "Peters": "the present"
+     },
+     "comment": "The article becomes 'our' in three versions and 'the present' in Peters."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τούτων",
+     "ids": [
+      "b11.2"
+     ],
+     "by": {
+      "Rackham": "This",
+      "Ross": "These",
+      "Ostwald": "these",
+      "Peters": "This"
+     },
+     "comment": "Rackham and Peters make the plural singular."
+    },
+    {
+     "kind": "construction",
+     "greek": "ἐφίεται",
+     "ids": [
+      "b11.3"
+     ],
+     "by": {
+      "Rackham": "being its aim",
+      "Ross": "are the ends at which … aims",
+      "Ostwald": "are the aims of",
+      "Peters": "is the aim of"
+     },
+     "comment": "Rackham, Ostwald, and Peters turn the verb into the noun 'aim'; Rackham makes it a participle phrase."
+    },
+    {
+     "kind": "supplied",
+     "greek": "ἐφίεται",
+     "ids": [
+      "b11.3"
+     ],
+     "by": {
+      "Rackham": "its",
+      "Ross": "the ends at which",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Rackham adds 'its' and Ross adds 'the ends at which'."
+    },
+    {
+     "kind": "construction",
+     "greek": "πολιτική τις οὖσα",
+     "ids": [
+      "b11.4",
+      "b11.5",
+      "b11.6"
+     ],
+     "by": {
+      "Rackham": "our investigation is in a sense the study of Politics",
+      "Ross": "since it is political science",
+      "Ostwald": "which is in a sense an investigation of social and political matters",
+      "Peters": "which is a sort of political inquiry"
+     },
+     "comment": "Rackham makes the participle the main verb, Ross a 'since' clause, and Ostwald and Peters a relative clause."
+    },
+    {
+     "kind": "phrasing",
+     "greek": "τις",
+     "ids": [
+      "b11.5"
+     ],
+     "by": {
+      "Rackham": "in a sense",
+      "Ross": "in one sense of that term",
+      "Ostwald": "in a sense",
+      "Peters": "a sort of"
+     },
+     "comment": "Ross adds 'of that term'; Peters says 'a sort of'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "πολιτική",
+     "ids": [
+      "b11.4"
+     ],
+     "by": {
+      "Rackham": "the study of",
+      "Ross": "science",
+      "Ostwald": "an investigation of … social and … matters",
+      "Peters": "inquiry"
+     },
+     "comment": "The adjective gets a noun in all four; Ostwald also adds 'social'."
+    },
+    {
+     "kind": "supplied",
+     "greek": "τις",
+     "ids": [
+      "b11.5"
+     ],
+     "by": {
+      "Rackham": "",
+      "Ross": "of that term",
+      "Ostwald": "",
+      "Peters": ""
+     },
+     "comment": "Ross adds 'of that term'."
+    }
+   ]
+  }
+ ],
+ "patterns": [
+  {
+   "kind": "supplied",
+   "summary": "Neuter adjectives, articles, and pronouns get a noun the Greek does not have: 'Good', 'end', 'science', 'thing', 'achievement'.",
+   "translators": "Rackham most (e.g. 'this one ultimate End', 'this Supreme Good'); Ross least, who often keeps 'it' or 'that'."
+  },
+  {
+   "kind": "supplied",
+   "summary": "Words left understood in Greek are carried over from an earlier clause: the verb of wanting in sentence 1, the modal in sentence 6, 'to get' in sentence 10.",
+   "translators": "All four do it; Ross and Ostwald also repeat verbs the Greek gives only once ('they should learn them', 'each must attain')."
+  },
+  {
+   "kind": "construction",
+   "summary": "Impersonal forms become personal ('we must try' for πειρατέον), genitives of belonging get a verb ('belongs to', 'is the object of'), and participles become 'since', 'that', or relative clauses.",
+   "translators": "All four; Peters goes furthest, turning a question into a statement and 'it is welcome' into 'glad as one would be'."
+  },
+  {
+   "kind": "construction",
+   "summary": "The potential optative with ἄν is usually 'must be', and φαίνεται with a predicate is either 'seems' or 'is clearly'.",
+   "translators": "Rackham and Ross use 'must' most; Ostwald gives 'will be', 'is', or 'seems to'; Rackham and Ostwald read φαίνεται as 'clearly is'."
+  },
+  {
+   "kind": "omitted",
+   "summary": "Small particles (δέ, γε, γάρ, ποτε, and καί meaning 'even' or 'also') often have no English at all.",
+   "translators": "Rackham renders the most ('while', 'also', 'exactly', 'Now'); Ostwald and Peters the fewest."
+  },
+  {
+   "kind": "phrasing",
+   "summary": "Key terms shift between versions: δύναμις is 'faculty', 'capacity', or 'art'; ἐπιστήμη 'science' or 'branch of knowledge'; ἀρχιτεκτονική 'master-craft', 'master art', or 'master science'.",
+   "translators": "Each translator is consistent with himself; Peters departs most from the others, and Ross and Rackham agree most."
+  },
+  {
+   "kind": "construction",
+   "summary": "English sentence breaks do not match the Greek: Rackham and Ostwald split sentence 8 in two, while Ross joins 5 to 8 and 9 to 10, Rackham 5 to 7, Ostwald 4 to 5, and Peters 9 to 10.",
+   "translators": "Ross joins the most; Ostwald splits and joins about equally; Peters keeps closest to the Greek breaks."
+  }
+ ]
+}
