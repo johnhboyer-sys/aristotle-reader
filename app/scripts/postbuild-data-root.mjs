@@ -4,7 +4,11 @@
 //    and cannot read import.meta.env; without this the worker never caches
 //    corpus data and offline reading silently stops working;
 //  - writes dist/.assetsignore so `wrangler deploy` leaves dist/data out of
-//    the Worker (the data goes to R2; see docs/cloudflare.md).
+//    the Worker (the data goes to R2; see docs/cloudflare.md);
+//  - writes dist/_redirects sending /data/* to the root, so a tab or service
+//    worker still running a pre-cutover bundle (which fetches same-origin
+//    /data/) and outside links to data files keep working. 302, not 301:
+//    browsers keep a 301 for good, and the root may move.
 // Ported from greek-plays app/scripts/postbuild-sw.mjs.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -31,5 +35,6 @@ if (root) {
   }
   writeFileSync(SW, source.replace(PLACEHOLDER, `const DATA_ROOT = ${JSON.stringify(root)};`));
   writeFileSync(`${dist}/.assetsignore`, 'data\n');
-  console.log(`postbuild-data-root: sw.js and .assetsignore written for ${root}`);
+  writeFileSync(`${dist}/_redirects`, `/data/* ${root.replace(/\/+$/, '')}/:splat 302\n`);
+  console.log(`postbuild-data-root: sw.js, .assetsignore and _redirects written for ${root}`);
 }

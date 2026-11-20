@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 import {
-  CACHE_CONTROL, DATA_ROOT, builtDataRoot, contentTypeFor, countSitemapPages, groupByContentType,
+  CACHE_CONTROL, DATA_ROOT, builtDataRoot, headUrl, contentTypeFor, countSitemapPages, groupByContentType,
   parseArgs, planUploads, remoteOnlyKeys,
 } from '../deploy-cloudflare.mjs';
 
@@ -24,6 +24,11 @@ test('builtDataRoot reads what postbuild-data-root.mjs writes, and the unbuilt s
   assert.equal(builtDataRoot(`x\nconst DATA_ROOT = "${DATA_ROOT}";\ny`), DATA_ROOT);
   assert.equal(builtDataRoot(readFileSync(new URL('../../app/public/sw.js', import.meta.url), 'utf8')), '');
   assert.equal(builtDataRoot('no root here'), null);
+  assert.equal(builtDataRoot(`const DATA_ROOT = "${DATA_ROOT}/";`), DATA_ROOT);
+});
+
+test('headUrl adds a query the data hostname has not cached', () => {
+  assert.equal(headUrl(DATA_ROOT, 'EN/book-01.json', 'abc'), `${DATA_ROOT}/EN/book-01.json?readback=abc`);
 });
 
 test('contentTypeFor knows the three data types and nothing else', () => {

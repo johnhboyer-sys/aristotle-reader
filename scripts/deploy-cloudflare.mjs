@@ -65,7 +65,7 @@ export function parseArgs(argv) {
 export function builtDataRoot(swSource) {
   const m = swSource.match(/^const DATA_ROOT = (".*"|'');$/m);
   if (!m) return null;
-  return m[1] === "''" ? '' : JSON.parse(m[1]);
+  return m[1] === "''" ? '' : JSON.parse(m[1]).replace(/\/+$/, '');
 }
 
 export function contentTypeFor(key) {
@@ -118,15 +118,23 @@ function run(command, args, { cwd = ROOT, capture = false, env = {} } = {}) {
   return capture ? result.stdout : '';
 }
 
+// The data hostname is a Cloudflare custom domain, whose cache holds R2
+// responses for max-age. A query string the cache has not seen goes through
+// to R2 (which ignores it), so the headers are R2's own, not a cached copy.
+export function headUrl(dataRoot, key, nonce) {
+  return `${dataRoot}/${key}?readback=${nonce}`;
+}
+
 async function headObjects(keys, dataRoot) {
   const objects = new Map();
+  const nonce = Date.now().toString(36);
   let i = 0, done = 0;
   const worker = async () => {
     while (i < keys.length) {
       const key = keys[i++];
       for (let attempt = 1; ; attempt++) {
         try {
-          const r = await fetch(`${dataRoot}/${key}`, { method: 'HEAD', signal: AbortSignal.timeout(30_000) });
+          const r = await fetch(headUrl(dataRoot, key, nonce), { method: 'HEAD', signal: AbortSignal.timeout(30_000) });
           if (r.status === 200) {
             objects.set(key, {
               etag: (r.headers.get('etag') ?? '').replace(/^W\//, '').replace(/"/g, ''),
@@ -255,6 +263,20 @@ async function main() {
     return;
   }
 
+  // The record is written before the upload, so a key that reaches R2 is on
+  // record even if the upload stops partway.
+  const record = [...new Set([...recorded, ...local.map((f) => f.key)])].sort();
+  if (record.length !== recorded.length) {
+    const tmp = mkdtempSync(path.join(tmpdir(), 'aristotle-r2-'));
+    try {
+      const file = path.join(tmp, 'keys.json');
+      writeFileSync(file, JSON.stringify(record));
+      run('npx', ['-y', 'wrangler@4', 'r2', 'object', 'put', `${BUCKET}/${KEY_RECORD}`, '--remote', '--file', file,
+        '--ct', CONTENT_TYPES.json, '--cc', 'no-cache'], { env: wranglerEnv });
+    } finally { rmSync(tmp, { recursive: true, force: true }); }
+    console.log(`  bucket record: ${record.length} keys`);
+  }
+
   if (uploads.length) {
     heading('Uploading data to R2');
     const tmp = mkdtempSync(path.join(tmpdir(), 'aristotle-r2-'));
@@ -271,18 +293,6 @@ async function main() {
     if (still.length) fail(`${still.length} file(s) did not reach R2, e.g. ${still[0].key}; rerun to retry`);
     console.log(`  ${uploads.length} file(s) uploaded and read back`);
   }
-  const record = [...new Set([...recorded, ...local.map((f) => f.key)])].sort();
-  if (record.length !== recorded.length) {
-    const tmp = mkdtempSync(path.join(tmpdir(), 'aristotle-r2-'));
-    try {
-      const file = path.join(tmp, 'keys.json');
-      writeFileSync(file, JSON.stringify(record));
-      run('npx', ['-y', 'wrangler@4', 'r2', 'object', 'put', `${BUCKET}/${KEY_RECORD}`, '--remote', '--file', file,
-        '--ct', CONTENT_TYPES.json, '--cc', 'no-cache'], { env: wranglerEnv });
-    } finally { rmSync(tmp, { recursive: true, force: true }); }
-    console.log(`  bucket record: ${record.length} keys`);
-  }
-
   heading('Deploying the app to the Worker');
   run('npx', ['-y', 'wrangler@4', 'deploy'], { cwd: path.join(ROOT, 'app'), env: wranglerEnv });
   console.log(`\n  Deployed ${source}. Check ${options.site}/ and a book page; data comes from ${dataRoot}.`);
