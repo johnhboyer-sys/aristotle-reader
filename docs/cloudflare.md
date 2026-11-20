@@ -12,8 +12,7 @@ build-time data root.
 | App (pages, `_astro`, plates, og cards, icons, `sw.js`) | Worker `aristotle-reader`, static assets only, no script (`app/wrangler.jsonc`) | 7,845 files |
 | Corpus data (`data/`) | R2 bucket `aristotle-reader-data`, keys without the `data/` prefix | 9,791 objects, 458 MB |
 | Data address | `https://aristotle-data.johnhboyer.com` (R2 custom domain, attached by John 2026-11-19) | |
-| Preview | `https://aristotle-reader.johnhboyer.workers.dev` | |
-| Test data address | `https://pub-1893afca177845708191e7dc77c78e9f.r2.dev` (r2.dev: rate-limited; turn off after cutover) | |
+| Preview and test data address | Off since 2026-11-19 (John): the workers.dev preview (`"workers_dev": false`) and the bucket's r2.dev address | |
 
 This is how greekdrama runs, with one difference: greekdrama is a Worker
 with static assets too, but it ships its data inside the Worker (9,739 files
@@ -117,7 +116,7 @@ deploys and small data fixes the in-place upload is safe.
    its redirect to the custom domain stops when the custom domain is removed.
    Leave the gh-pages branch in place as the record until you choose to
    delete it.
-6. **After.** Turn off the r2.dev address
+6. **After.** DONE 2026-11-19 (John): both turned off, and the workers.dev origin dropped from `deploy/r2-cors.json`. Turn off the r2.dev address
    (`npx wrangler@4 r2 bucket dev-url disable aristotle-reader-data`) and,
    if wanted, the workers.dev preview (`"workers_dev": false`). Update
    CLAUDE.md and DEPLOY-STATUS.md: `npm run deploy` (gh-pages) is retired,
