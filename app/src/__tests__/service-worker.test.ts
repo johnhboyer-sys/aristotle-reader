@@ -134,9 +134,10 @@ describe('service worker with off-origin data (PUBLIC_DATA_ROOT)', () => {
   });
   const src = readFileSync(path.join(dist, 'sw.js'), 'utf8');
 
-  it('names the root in sw.js and keeps data out of the Worker upload', () => {
+  it('names the root in sw.js, keeps data out of the Worker upload, and redirects /data/ there', () => {
     expect(src).toContain(`const DATA_ROOT = "${DATA}/";`);
     expect(readFileSync(path.join(dist, '.assetsignore'), 'utf8')).toBe('data\n');
+    expect(readFileSync(path.join(dist, '_redirects'), 'utf8')).toBe(`/data/* ${DATA}/:splat 302\n`);
   });
 
   it('caches data from the root, network-first', async () => {
