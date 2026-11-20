@@ -3,8 +3,7 @@
     {
       "allowed": {
         "origins": [
-          "https://aristotle.johnhboyer.com",
-          "https://aristotle-reader.johnhboyer.workers.dev"
+          "https://aristotle.johnhboyer.com"
         ],
         "methods": ["GET", "HEAD"]
       },
