@@ -15,6 +15,25 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-19 (later) — DEPLOYED to Cloudflare: main at a7fd28e90b (#216–#223)
+
+The first deploy through `npm run deploy:cloudflare`, on John's "i want everything deployed". App-only build
+(`PUBLIC_SHOW_PRIVATE=0 PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com npm run build`, Node 22) in a
+fresh worktree, with `build/dist` from gh-pages `2b7c15a0`'s `data/` (the same corpus R2 holds).
+
+**What shipped:** #218 (a typed word's accents choose its headword: new `data/lemma-accents.json`, made at
+site build) and the search code from #217; #219 changes only a pipeline tool; #216, #220, #221 and #223 are
+docs; #222 is the Cloudflare move itself.
+
+**Gates (the script's):** link integrity 0 broken (7,563 pages); leak check, gated slots, held works, search
+indexes and search shards all ok; bucket record 9,791 keys, none kept outside the build. Data: 1 file
+uploaded (`lemma-accents.json`, new) and read back; the record is now 9,792 keys. App: 225 changed assets,
+Worker version `61735d14`.
+
+**Live-verified:** `/`, `/EN/book/1/`, `/search/`, `/lemma/chorion/` 200 and `/bonitz/` 404 from
+`server: cloudflare`; the live home bundle is byte-identical to the build; `/search/?l=nous` reads
+"119 chapters · 270 hits" with all data from aristotle-data.johnhboyer.com; no console errors.
+
 ## 2026-11-19 — MOVED TO CLOUDFLARE (PR #222; cutover by John)
 
 The site moved off GitHub Pages, where `gh-pages` had reached 17,636 files and 889 MB, near GitHub's 1 GB limit. John's go ("go"), PR #222 merged as `9f793ca205`.
