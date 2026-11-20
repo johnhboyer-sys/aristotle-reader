@@ -17,7 +17,8 @@
 //   html-hash-only  page HTML equal once bundle names, Svelte class hashes and
 //                   island ids are masked (see maskAstro);
 //   astro           a bundle whose name is not in the new build (renamed);
-//   sw              sw.js (carries the data root by design);
+//   sw              sw.js (carries the data root by design; must equal the
+//                   build's own app/dist/sw.js byte for byte);
 //   other           anything else: a real difference.
 // Exit 1 on any missing file, fetch error, or "other" difference.
 import { execFileSync } from 'node:child_process';
@@ -89,7 +90,14 @@ const maskAstro = (s) => s
 const stem = (p) => p.replace(/\.[A-Za-z0-9_-]{8}\.(js|css)$/, '.$1');
 
 const result = { ref: REF, app: APP, data: DATA, files: files.length, same: 0,
-  missing: [], errors: [], differ: { 'html-hash-only': [], astro: [], sw: [], other: [] }, live: {} };
+  missing: [], errors: [], differ: { 'html-hash-only': [], astro: [], sw: [], other: [] }, live: {},
+  unbuiltBundles: [] };
+// Masking hides bundle names, so every bundle a served page names must be
+// one the build has (and the Worker serves: the renamed-bundle pass below
+// fetches the new ones, the same-name ones count among "same").
+const builtAstro = new Set(execFileSync('find', ['app/dist/_astro', '-type', 'f']).toString().trim().split('\n')
+  .map(p => p.replace(/^app\/dist\//, '')));
+const bundleRefs = (html) => [...html.matchAll(/\/(_astro\/[A-Za-z0-9_.@-]+\.(?:js|css))/g)].map(m => m[1]);
 const servedAstro = new Set();
 
 console.error(`Comparing ${files.length} files at ${CONCURRENCY} in flight`);
@@ -99,10 +107,14 @@ await pool(files, CONCURRENCY, async (f) => {
   if (r.status === 404) return result.missing.push(f.path);
   if (r.status !== 200) return result.errors.push({ path: f.path, status: r.status });
   if (blobSha(r.body) === f.sha) return void result.same++;
-  if (f.path === 'sw.js') return result.differ.sw.push(f.path);
+  if (f.path === 'sw.js') {
+    return result.differ[r.body.equals(readFileSync('app/dist/sw.js')) ? 'sw' : 'other'].push(f.path);
+  }
   if (f.path.endsWith('.html')) {
     const live = git('cat-file', 'blob', f.sha).toString();
-    return result.differ[maskAstro(live) === maskAstro(r.body.toString()) ? 'html-hash-only' : 'other'].push(f.path);
+    const served = r.body.toString();
+    for (const ref of bundleRefs(served)) if (!builtAstro.has(ref)) result.unbuiltBundles.push({ path: f.path, ref });
+    return result.differ[maskAstro(live) === maskAstro(served) ? 'html-hash-only' : 'other'].push(f.path);
   }
   result.differ.other.push(f.path);
 });
@@ -116,8 +128,7 @@ if (counted !== files.length) throw new Error(`examined ${counted} of ${files.le
 // A bundle missing under its old name is expected when its hash changed; it
 // is "astro" only if the new build has a bundle with the same stem AND the
 // Worker serves that bundle byte for byte.
-const newAstro = execFileSync('find', ['app/dist/_astro', '-type', 'f']).toString().trim().split('\n')
-  .map(p => p.replace(/^app\/dist\//, ''));
+const newAstro = [...builtAstro];
 const liveAstro = new Set(files.filter(f => f.path.startsWith('_astro/')).map(f => f.path));
 const renamedTo = newAstro.filter(p => !liveAstro.has(p));
 const badRenames = [];
@@ -148,14 +159,17 @@ result.live = { sampled: sample.length, mismatched: liveBad };
 const counts = Object.fromEntries(Object.entries(result.differ).map(([k, v]) => [k, v.length]));
 console.log(JSON.stringify({ files: result.files, same: result.same, missing: result.missing.length,
   errors: result.errors.length, differ: counts, renamedBundlesServed: renamedTo.length - badRenames.length,
-  renamedBundlesBad: badRenames.length, live: { sampled: sample.length, mismatched: liveBad.length } }, null, 2));
+  renamedBundlesBad: badRenames.length, live: { sampled: sample.length, mismatched: liveBad.length },
+  unbuiltBundles: result.unbuiltBundles.length }, null, 2));
 if (args.out) writeFileSync(args.out, JSON.stringify(result, null, 2));
-const bad = result.missing.length + result.errors.length + result.differ.other.length + liveBad.length + badRenames.length;
+const bad = result.missing.length + result.errors.length + result.differ.other.length + liveBad.length + badRenames.length
+  + result.unbuiltBundles.length;
 if (bad) {
   for (const p of result.missing.slice(0, 20)) console.log(`missing ${p}`);
   for (const e of result.errors.slice(0, 20)) console.log(`error ${JSON.stringify(e)}`);
   for (const p of result.differ.other.slice(0, 20)) console.log(`differs ${p}`);
   for (const e of liveBad.slice(0, 20)) console.log(`live ${JSON.stringify(e)}`);
   for (const e of badRenames.slice(0, 20)) console.log(`renamed bundle not served ${JSON.stringify(e)}`);
+  for (const e of result.unbuiltBundles.slice(0, 20)) console.log(`page names an unbuilt bundle ${JSON.stringify(e)}`);
 }
 process.exit(bad ? 1 : 0);

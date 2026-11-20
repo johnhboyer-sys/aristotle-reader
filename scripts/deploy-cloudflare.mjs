@@ -156,8 +156,10 @@ async function headObjects(keys, dataRoot) {
   return objects;
 }
 
-async function getText(url) {
+// `allow404`: answer null for a missing object instead of refusing.
+async function getText(url, { allow404 = false } = {}) {
   const r = await fetch(url, { signal: AbortSignal.timeout(60_000) });
+  if (allow404 && r.status === 404) return null;
   if (!r.ok) fail(`GET ${url} answered ${r.status}`);
   return r.text();
 }
@@ -223,8 +225,14 @@ async function main() {
   const remoteOnly = remoteOnlyKeys(recorded, local.map((f) => f.key));
   console.log(`  bucket record: ${recorded.length} keys; in the bucket but not the build: ${remoteOnly.length}`);
   for (const key of remoteOnly.slice(0, 20)) console.log(`    kept: ${key}`);
+  // The record is written before an upload, so it can name a key whose
+  // upload then failed; such a key is not in R2 and has nothing to gate.
   const kept = [];
-  for (const key of remoteOnly) kept.push({ path: `data/${key}`, text: await getText(`${dataRoot}/${key}`) });
+  for (const key of remoteOnly) {
+    const text = await getText(`${dataRoot}/${key}`, { allow404: true });
+    if (text !== null) kept.push({ path: `data/${key}`, text });
+    else console.log(`    recorded but not in the bucket: ${key}`);
+  }
 
   heading('Data gates (as npm run deploy)');
   // What R2 will serve: the build's files plus the ones kept from before.
