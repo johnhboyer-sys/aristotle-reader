@@ -30,7 +30,8 @@ async function pending(p: Promise<unknown>): Promise<boolean> {
 }
 
 function loadSw(
-  { responseOk = true, type = 'basic', src = SW_SRC }: { responseOk?: boolean; type?: string; src?: string } = {},
+  { responseOk = true, type = 'basic', src = SW_SRC, offline = false, cached = [] }:
+    { responseOk?: boolean; type?: string; src?: string; offline?: boolean; cached?: string[] } = {},
 ) {
   const listeners = new Map<string, (event: unknown) => void>();
   let finishPut!: () => void;
@@ -39,7 +40,10 @@ function loadSw(
 
   const cache = {
     addAll: async () => {},
-    match: async () => undefined,
+    match: async (request: { url: string } | string) => {
+      const url = typeof request === 'string' ? request : request.url;
+      return cached.includes(url) ? { marker: 'cache' } : undefined;
+    },
     put: (request: { url: string }) => {
       puts.push(request.url);
       return putDone;
@@ -53,7 +57,11 @@ function loadSw(
     addEventListener: (name: string, fn: (event: unknown) => void) => { listeners.set(name, fn); },
   };
   const caches = { open: async () => cache, keys: async () => [], delete: async () => true };
-  const fetchImpl = async () => ({
+  const fetchImpl = async () => {
+    if (offline) throw new TypeError('Failed to fetch');
+    return fetchResponse();
+  };
+  const fetchResponse = () => ({
     ok: responseOk,
     type,
     marker: 'network',
@@ -141,10 +149,19 @@ describe('service worker with off-origin data (PUBLIC_DATA_ROOT)', () => {
   });
 
   it('caches data from the root, network-first', async () => {
-    const sw = loadSw({ src });
-    const event = sw.fetchEvent(DATA + '/EN/book-01.json', 'cors');
+    const url = DATA + '/EN/book-01.json';
+    // Online with a cached copy: network-first answers from the network (a
+    // cache-first policy would answer 'cache' here) and refreshes the cache.
+    const sw = loadSw({ src, cached: [url] });
+    const event = sw.fetchEvent(url, 'cors');
     await expect(event.response).resolves.toMatchObject({ marker: 'network' });
-    expect(sw.puts).toEqual([DATA + '/EN/book-01.json']);
+    expect(sw.puts).toEqual([url]);
+  });
+
+  it('serves data from the root out of the cache when offline', async () => {
+    const url = DATA + '/EN/book-01.json';
+    const sw = loadSw({ src, offline: true, cached: [url] });
+    await expect(sw.fetchEvent(url, 'cors').response).resolves.toMatchObject({ marker: 'cache' });
   });
 
   it('leaves other origins alone', () => {

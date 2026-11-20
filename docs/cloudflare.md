@@ -61,7 +61,11 @@ corpus (for an app-only rebuild, a copy of live's `data/`):
    with the 9,791 keys of the first upload); upload data only through the
    script, or the record goes stale. Cloudflare's API limit holds uploads to
    about 1,100 files per 5 minutes, so a full corpus upload takes about 40
-   minutes.
+   minutes. `wrangler r2 bulk put` stops on a 429 after about 1,000 files
+   (the Homer upload, 2026-11-19), and `wrangler deploy`'s asset upload
+   shares the limit: wait a few minutes and rerun, which uploads only what
+   is still missing. The record is written before the upload, so a key it
+   names may be absent from R2; the script skips such a key.
 4. Check (optional, while gh-pages is still the record of live):
    `node scripts/compare-live.mjs --app=<worker url> --data=<data address>`
    fetches every file in the gh-pages tree from Cloudflare (4 at a time) and
