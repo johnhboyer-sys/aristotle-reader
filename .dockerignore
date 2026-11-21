@@ -1,0 +1,12 @@
+# What a build makes or installs for itself, and the history. The rest of the
+# checkout is the build's input.
+.git
+build
+app/dist
+app/.astro
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+.claude
+.remember

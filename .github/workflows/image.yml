@@ -1,0 +1,59 @@
+name: Image
+
+# The Dockerfile: build the site in a container, serve it with Caddy, and ask
+# the running container for every file. On a pull request it runs only when
+# the files it tests change; the full build of every pull request is CI's
+# `site` job.
+on:
+  pull_request:
+    paths:
+      - Dockerfile
+      - Caddyfile
+      - .dockerignore
+      - .github/workflows/image.yml
+      - scripts/check-served.mjs
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    name: image
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build the image
+        run: docker build -t aristotle-reader .
+
+      # The list is the one the bundle step wrote inside the image, so this
+      # proves that Caddy serves the folder as it is: every file with its
+      # bytes, a folder's address with its index, a missing page with 404.
+      - name: Serve it and ask for every file
+        run: |
+          docker run -d --name site -p 8080:80 aristotle-reader
+          docker cp site:/srv/SHA256SUMS "$RUNNER_TEMP/SHA256SUMS"
+          for i in $(seq 1 30); do
+            curl -fsS -o /dev/null http://127.0.0.1:8080/ && break
+            sleep 1
+          done
+          node scripts/check-served.mjs --origin=http://127.0.0.1:8080 --sums="$RUNNER_TEMP/SHA256SUMS"
+
+      - name: Server log
+        if: failure()
+        run: docker logs site || true
