@@ -429,7 +429,9 @@
   let gfont: GFont = 'gentium';
   let efont: EFont = 'gentium';
   function loadReaderFace(face: 'cardo' | 'garamond') {
-    if (document.querySelector(`link[data-reader-font="${face}"]`)) return;
+    // A host that serves the faces itself names them on its own stylesheet
+    // link (data-reader-font="cardo garamond"); then nothing is fetched here.
+    if (document.querySelector(`link[data-reader-font~="${face}"]`)) return;
     const l = document.createElement('link');
     l.rel = 'stylesheet';
     l.href = face === 'cardo'

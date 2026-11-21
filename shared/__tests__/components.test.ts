@@ -1245,6 +1245,21 @@ describe('B reader fonts', () => {
     expect(document.querySelectorAll('link[data-reader-font]')).toHaveLength(2);
   });
 
+  it('adds no link for a face a stylesheet on the page already provides', async () => {
+    const own = document.createElement('link');
+    own.rel = 'stylesheet';
+    own.href = '/fonts/fonts.css';
+    own.dataset.readerFont = 'cardo garamond';
+    document.head.append(own);
+    localStorage.setItem('reader-gfont', 'cardo');
+    const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-gfont', 'cardo');
+    await fireEvent(window, new CustomEvent('toggle-settings'));
+    await fireEvent.click(screen.getByRole('button', { name: 'EB Garamond Abc' }));
+    expect(container.querySelector('.reader-body')).toHaveAttribute('data-efont', 'garamond');
+    expect([...document.querySelectorAll('link[data-reader-font]')]).toEqual([own]);
+  });
+
   it('removes the retired didot preference when restoring Gentium', () => {
     localStorage.setItem('reader-gfont', 'didot');
     const { container } = render(Reader, { props: { work: 'EN', bookData: fixtureBook, b: true } });
