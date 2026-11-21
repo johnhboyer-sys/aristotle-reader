@@ -9,6 +9,7 @@ import '@shared/styles/b.css';
 import { WORKS, greekSourcesByLicence } from '@shared/lib/works';
 import { jsonLdSafe } from '../lib/jsonld';
 import { sanitizeHtml } from '../lib/html';
+import { shareCard } from '../lib/og';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // True only in the local/full build (PUBLIC_SHOW_PRIVATE=1), where copyright-
 // encumbered overlays are carried; every production/public build drops them
@@ -19,7 +20,7 @@ const pageTitle = 'Texts & Licences — Aristotle Reader';
 const metaDescription =
   'Source and licence information for the Aristotle Reader: Greek texts, English translations, LSJ lexicon data, Bekker line numbers, and open-source code.';
 const canonical = Astro.site ? new URL(`${base}/attribution/`, Astro.site).href : undefined;
-const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/${shareCard()}`, Astro.site).href : undefined;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebPage',

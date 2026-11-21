@@ -12,6 +12,7 @@ import { greekNumeral } from '@shared/lib/numerals';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
 import '@shared/styles/b-guide.css';
+import { shareCard } from '../lib/og';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -234,7 +235,7 @@ const description =
   ' grammar, proximity, and the phrase index, with worked examples and what' +
   ' each tool cannot tell you.';
 const canonical = Astro.site ? new URL(`${base}/advanced/`, Astro.site).href : undefined;
-const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/${shareCard()}`, Astro.site).href : undefined;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
