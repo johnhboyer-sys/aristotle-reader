@@ -258,7 +258,7 @@ test('tar and gzip do not take options from the caller’s environment', () => {
   const s = site();
   const bin = path.join(s.root, 'bin');
   mkdirSync(bin);
-  writeFileSync(path.join(bin, 'tar'), `#!/bin/sh\ncase "$1" in -cf|-rf|-xzOf) if [ -n "$TAR_OPTIONS" ]; then echo TAR_OPTIONS reached tar >&2; exit 9; fi;; esac\nexec ${real.tar} "$@"\n`, { mode: 0o755 });
+  writeFileSync(path.join(bin, 'tar'), `#!/bin/sh\ncase "$1" in -cf|-rf|-xzOf|-xzf) if [ -n "$TAR_OPTIONS" ]; then echo TAR_OPTIONS reached tar >&2; exit 9; fi;; esac\nexec ${real.tar} "$@"\n`, { mode: 0o755 });
   writeFileSync(path.join(bin, 'gzip'), `#!/bin/sh\nif [ -n "$GZIP" ]; then echo GZIP reached gzip >&2; exit 9; fi\nexec ${real.gzip} "$@"\n`, { mode: 0o755 });
   const before = { PATH: process.env.PATH, TAR_OPTIONS: process.env.TAR_OPTIONS, GZIP: process.env.GZIP };
   process.env.PATH = `${bin}${path.delimiter}${before.PATH}`;

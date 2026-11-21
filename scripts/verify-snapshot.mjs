@@ -91,7 +91,9 @@ export function verifyTarget(target) {
   if (statSync(target).isDirectory()) return verifyTree(target);
   const tmp = mkdtempSync(path.join(tmpdir(), 'verify-snapshot-'));
   try {
-    const r = spawnSync('tar', ['-xzf', target, '-C', tmp], { encoding: 'utf8' });
+    // A bare environment: GNU tar takes options from TAR_OPTIONS, and one
+    // that renames files as they unpack would make this check read other bytes.
+    const r = spawnSync('tar', ['-xzf', target, '-C', tmp], { encoding: 'utf8', env: { PATH: process.env.PATH } });
     if (r.status !== 0) return { dir: target, listed: 0, read: 0, bytes: 0, missing: [], mismatched: [], extra: [], problems: [`tar could not unpack ${target}: ${r.stderr.trim()}`], ok: false };
     return { ...verifyTree(tmp), dir: target };
   } finally {
