@@ -111,5 +111,3 @@ sources:
   tlg_dir_default: "../TLG Files/TLG"
   diogenes_server: "/Applications/Diogenes.app/Contents/server"
   diogenes_data: "/Applications/Diogenes.app/Contents/dependencies/data"
-  perseus_eng: "/tmp/perseus-ne/tlg0086.tlg010.perseus-eng2.xml"
-  perseus_eng_fallback_url: "https://raw.githubusercontent.com/PerseusDL/canonical-greekLit/master/data/tlg0086/tlg010/tlg0086.tlg010.perseus-eng2.xml"

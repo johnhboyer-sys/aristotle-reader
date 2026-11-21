@@ -43,13 +43,18 @@ The registry is `shared/lib/works.ts`; the divisions below are its `CATEGORIES`.
 
 ## Requirements
 
-### Data (not included in this repo)
+### Data
 
-| What | Where to get it | Notes |
+| What | Where it is | Notes |
 |---|---|---|
-| **Diogenes 4.7+** | [d.iogen.es](https://d.iogen.es) | Free. Provides both the `xml-export.pl` script and the Morpheus data files (`greek-analyses.txt`, `grc.lsj.xml`). |
-| **TLG corpus** | Licensed from the [TLG](https://stephanus.tlg.uci.edu) | Required for the Greek text. The corpus files live at `TLG Files/TLG/` one level above this repo and are never committed. |
-| **English translations** | Vendored in `sources/` or downloaded automatically on first pipeline run (see `manifests/`) | All public domain. |
+| **Greek text** | In this repo: `corpus/greek/`, one line-level file per work (see its README); De Plantis and the Rhetoric to Alexander under `sources/` | The build reads these files. It does not run Diogenes and needs no TLG disc. |
+| **Morpheus table and LSJ** | Not in this repo: `greek-analyses.txt` and `grc.lsj.xml`, shipped with [Diogenes 4.7.2](https://d.iogen.es) (free) | Read from the folder `DIOGENES_DATA` names; without it, from each manifest's `sources.diogenes_data`. `python -m aristotle_pipeline.inputs check` (in `pipeline/`) confirms both files by checksum. |
+| **English translations** | Vendored in `sources/` | Public domain, or as each manifest's licence line says. |
+
+Making the Greek files afresh (`python -m aristotle_pipeline.extract --all`, in
+`pipeline/`) is a separate, local step. It needs Diogenes and a licensed copy
+of the [TLG](https://stephanus.tlg.uci.edu), whose own files are never
+committed.
 
 ### Tools
 
@@ -101,7 +106,7 @@ To run a single stage: `uv run python -m aristotle_pipeline stage2 --work EN`
 
 | Stage | What it does |
 |---|---|
-| 1 | Exports Greek from TLG via Diogenes; chunks English translation at Bekker milestones; builds standoff alignment |
+| 1 | Reads the work's Greek lines (`corpus/greek/`) into a spine; chunks English translation at Bekker milestones; builds standoff alignment |
 | 2 | Validates column completeness, line gaps, alignment coverage, length ratios |
 | 3 | Tokenizes Greek text; converts surface forms to Beta Code lookup keys |
 | 4 | Single targeted pass over `greek-analyses.txt`; matches 99.9% of tokens |
@@ -148,7 +153,8 @@ aristotle-reader/
 ├── sources/                     # vendored public-domain English translations (TEI XML)
 ├── pipeline/                    # uv Python project
 │   └── aristotle_pipeline/
-│       ├── stage1_greek.py      # TLG export + spine parser
+│       ├── extract.py           # local only: Diogenes export → corpus/greek/ line files
+│       ├── stage1_greek.py      # spine parser (reads corpus/greek/)
 │       ├── stage1_english.py    # Perseus TEI chunker + alignment
 │       ├── align/               # translation aligner (see its README.md)
 │       ├── stage2_validate.py   # validation suite

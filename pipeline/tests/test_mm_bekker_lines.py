@@ -4,8 +4,7 @@ TLG's Magna Moralia has no Bekker numbers; sources/mm-bekker/bekker-lines.yaml
 names the TLG word that opens each line of Bekker's 1831 page, read from the
 scan by tools/mm_bekker_lines.py. These tests hold the map to its shape (every
 column, consecutive lines, no word lost) and the manifest's chapter list to the
-map. The relineation tests need the cached TLG export; without it they skip,
-and say so.
+map. The relineation tests read the committed line file, corpus/greek/MM.tsv.
 """
 
 from __future__ import annotations
@@ -24,10 +23,8 @@ from aristotle_pipeline.refs import column_range, ref_key
 
 ROOT = Path(__file__).resolve().parents[2]
 MAP = ROOT / "sources" / "mm-bekker" / "bekker-lines.yaml"
-XML = ROOT / "build" / "export" / "Diogenes-Resources" / "xml" / "tlg" / "tlg0086022.xml"
+XML = ROOT / "corpus" / "greek" / "MM.tsv"
 MANIFEST = yaml.safe_load((ROOT / "manifests" / "MM.yaml").read_text(encoding="utf-8"))
-
-needs_export = pytest.mark.skipif(not XML.exists(), reason=f"TLG export not cached: {XML}")
 
 
 def _entries():
@@ -96,7 +93,6 @@ def test_openings_read_on_the_page():
     assert {r: at.get(r) for r in READ_ON_THE_PAGE} == {r: _nfc(w) for r, w in READ_ON_THE_PAGE.items()}
 
 
-@needs_export
 def test_openings_read_on_the_page_are_where_the_map_says():
     # `at` is checked against the export by relineate(); this guards the
     # golden list itself against an `at` that names the word at another place
@@ -109,16 +105,19 @@ def test_refs_strictly_increase():
     assert refs == sorted(refs) and len(set(refs)) == len(refs)
 
 
-@needs_export
 def test_spine_keeps_every_word_once():
     tokens = rl.tlg_tokens(XML)
+    # Counted without tlg_tokens, from the file's own rows: a word split
+    # across two lines by a hyphen is one word, and the title is not text.
+    rows = [line.split("\t") for line in XML.read_text(encoding="utf-8").split("\n")[3:] if line]
+    body = [r[-1] for r in rows if r[0] != "t"]
+    assert len(tokens) == sum(len(t.split()) for t in body) - sum(t.endswith("-") for t in body) > 20_000
     flat = rl.relineate(XML, MAP)
     assert len(flat) == len(_entries())
     assert " ".join(l["text"] for l in flat).split() == [t["text"] for t in tokens]
     assert all(l["text"] for l in flat)
 
 
-@needs_export
 def test_books_meet_at_the_map():
     tokens = rl.tlg_tokens(XML)
     index = {(t["loc"], t["w"]): i for i, t in enumerate(tokens)}
@@ -127,7 +126,6 @@ def test_books_meet_at_the_map():
     assert opener[book2] == MANIFEST["books"][1]["start"]
 
 
-@needs_export
 def test_manifest_chapters_follow_the_map():
     sys.path.insert(0, str(ROOT / "pipeline" / "tools"))
     import mm_bekker_lines as tool
@@ -142,7 +140,6 @@ def test_manifest_chapters_follow_the_map():
     assert [c["n"] for c in got if c["book"] == 2] == list(range(1, 18))
 
 
-@needs_export
 @pytest.mark.parametrize("defect", ["wrong word", "moved word", "out of order", "late start"])
 def test_a_map_that_no_longer_fits_stops_the_build(tmp_path, defect):
     entries = copy.deepcopy(_entries())

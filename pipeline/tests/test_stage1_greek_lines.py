@@ -1,18 +1,19 @@
-"""A work whose Greek is not in the TLG export reads a vendored verse-mode file.
+"""A work whose Greek is vendored reads its file under sources/.
 
-De Plantis (Bekker 815a-830b) is a Byzantine retranslation that the TLG
-Aristotle export does not carry. Its spine is `work.greek_lines`, a file under
-sources/ in the same <div type="Bekker-page"><l n=...> shape as a Diogenes
-export, so parse_spine reads it unchanged and Diogenes is never run.
+De Plantis (Bekker 815a-830b) is a Byzantine retranslation that none of the
+corpus's editions carries. Its spine is `work.greek_lines`, a file under
+sources/ in the <div type="Bekker-page"><l n=...> shape. Every other work reads
+its committed line file (corpus/greek/); nothing here runs a program.
 """
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pytest
 
-from aristotle_pipeline import stage1_greek
+from aristotle_pipeline import greek_lines, stage1_greek
 from aristotle_pipeline.config import Manifest
 
 XML = """<TEI xmlns="http://www.tei-c.org/ns/1.0"><text><body>
@@ -32,10 +33,9 @@ def test_vendored_lines_are_the_spine(tmp_path, monkeypatch):
     (tmp_path / "tst").mkdir()
     (tmp_path / "tst" / "lines.xml").write_text(XML, encoding="utf-8")
     monkeypatch.setattr(stage1_greek, "SOURCES_DIR", tmp_path)
-    monkeypatch.setattr(stage1_greek, "run_export",
-                        lambda m: pytest.fail("Diogenes export must not run"))
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: pytest.fail("no program may run"))
     m = _manifest(tmp_path, "tst/lines.xml")
-    path = stage1_greek.spine_xml(m)
+    path = stage1_greek.spine_source(m)
     assert path == tmp_path / "tst" / "lines.xml"
     spine = stage1_greek.parse_spine(path, m)
     assert [l["text"] for l in spine["segments"][0]["lines"]] == ["ἀρχὴ λόγου", "τέλος"]
@@ -43,12 +43,18 @@ def test_vendored_lines_are_the_spine(tmp_path, monkeypatch):
 
 def test_a_missing_vendored_file_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(stage1_greek, "SOURCES_DIR", tmp_path)
-    with pytest.raises(FileNotFoundError):
-        stage1_greek.spine_xml(_manifest(tmp_path, "tst/absent.xml"))
+    with pytest.raises(FileNotFoundError, match="greek_lines"):
+        stage1_greek.spine_source(_manifest(tmp_path, "tst/absent.xml"))
 
 
-def test_without_the_key_the_export_runs(tmp_path, monkeypatch):
-    called = []
-    monkeypatch.setattr(stage1_greek, "run_export", lambda m: called.append(m) or tmp_path / "x.xml")
-    stage1_greek.spine_xml(_manifest(tmp_path, None))
-    assert called
+def test_without_the_key_the_committed_line_file_is_the_spine(tmp_path, monkeypatch):
+    monkeypatch.setattr(greek_lines, "CORPUS_DIR", tmp_path)
+    m = _manifest(tmp_path, None)
+    with pytest.raises(FileNotFoundError, match="extract --work TST"):
+        stage1_greek.spine_source(m)
+    rows = [greek_lines.Row(("1a",), "1", "ἀρχὴ λόγου"), greek_lines.Row(("1a",), "2", "τέλος")]
+    (tmp_path / "TST.tsv").write_text(greek_lines.format_tsv(rows, ("Bekker-page",), "TST", "test"), encoding="utf-8")
+    path = stage1_greek.spine_source(m)
+    assert path == tmp_path / "TST.tsv"
+    spine = stage1_greek.parse_spine(path, m)
+    assert [l["text"] for l in spine["segments"][0]["lines"]] == ["ἀρχὴ λόγου", "τέλος"]

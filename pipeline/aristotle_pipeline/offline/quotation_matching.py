@@ -8,7 +8,7 @@ Aristotle side: build/<work>/lemma_stream.json if present, else
 build/dist/<work>/book-*.json tokens joined to analyses.json (token key →
 first lemma). Each item keeps (work, column, line, position).
 
-External side: the same Diogenes export as stage1_greek.run_export (via
+External side: the same Diogenes export as extract.run_export (via
 word_distinctiveness.export_author), tokenized with stage3, elision
 normalized first, lemmatized by a single streaming pass over
 greek-analyses.txt.

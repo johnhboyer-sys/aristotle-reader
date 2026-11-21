@@ -17,7 +17,7 @@ for mp in sorted(Path('manifests').glob('*.yaml')):
     if not re.search(r'anchor_cuts:\s*true', text):
         continue
     m = Manifest.load(mp)
-    xml = g.spine_xml(m)
+    xml = g.spine_source(m)
     lin = (m.data.get('greek') or {}).get('lineation')
     if lin:
         from aristotle_pipeline.stage1_relineate import relineate
