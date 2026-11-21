@@ -63,8 +63,8 @@ sibling repo has changed.
 | Push a repo to a second git host | Done: `scripts/mirror-git.mjs`, run for real against GitLab for all seven repos |
 | The deploy tags its commit | Done: `npm run deploy:cloudflare` tags `deploy/<date>` and pushes the tag. Not yet run in a real deploy |
 | A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action, which passed on its first run in #233), then a check of the bundle's data against the primary's data host. The release step itself runs first at the next deploy after it merges |
-| `mirror.yml`: git on every push, the site on a release | The git half is written, with the weekly check as its second job. Its deploy key is on the GitLab project (write access, and allowed to push to `main`, which GitLab protects), the secret `MIRROR_GIT_SSH_KEY` holds the key, and the variable `MIRROR_GIT_URL` holds the address (all 2026-11-21). The site half waits on decision 6 |
-| Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure; that job has not run |
+| `mirror.yml`: git on every push, the site on a release | The git half is written, with the weekly check as its second job. Its deploy key is on the GitLab project (write access, and allowed to push to `main`, which GitLab protects), the secret `MIRROR_GIT_SSH_KEY` holds the key, and the variable `MIRROR_GIT_URL` holds the address (all 2026-11-21). First run, on the push of `b27f08b244`: `33 of 33 refs match the source after the push`. The site half waits on decision 6 |
+| Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
 Next: John's yes to merge #234. Then his two candidate hosts for the bundle
@@ -129,8 +129,16 @@ to `main`'s "allowed to push and merge" list; force push to `main` stays off.
 The private half is in the GitHub secret and nowhere else. Tried from this
 Mac with the workflow's own ssh options and host-key file before the first
 run: it reads `aristotle-reader` (32 refs) and GitLab refuses it on
-`plato-reader`. A sibling's port makes its own key the same way: GitLab's
-deploy-key settings need John's login, so he pastes the public half.
+`plato-reader`. The copy on this Mac was deleted once the first run passed.
+A sibling's port makes its own key the same way: GitLab's deploy-key settings
+need John's login, so he pastes the public half.
+
+The first runs (2026-11-21, on `b27f08b244`, both green): the `git` job
+pushed and found 33 of 33 refs matching, `gh-pages` left out; the `check`
+job, started by hand, cloned the mirror and found 33 of 33 refs and 1,612
+commits, whole. Not yet seen: a push to `main` through the deploy key (the
+first is the merge of #234), a tag push, and the check's failure path on
+GitHub (the issue).
 
 **Git mirror.** `node scripts/mirror-git.mjs --source=<remote>
 --mirror=<remote>` fetches the source whole into a temp folder (never from
