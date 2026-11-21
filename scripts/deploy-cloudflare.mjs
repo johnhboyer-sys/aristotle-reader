@@ -8,7 +8,7 @@
 //   npm run deploy:cloudflare:dry    — gates and the upload plan; nothing is sent
 //
 // Flags: --dry-run  --data-root=<url>  --site=<url>
-//        --min-pages-ratio=<0..1>  --skip-link-check  --help
+//        --min-pages-ratio=<0..1>  --skip-link-check  --no-tag  --help
 //
 // It never deletes from R2. A file in the bucket that the build lacks stays
 // there, as `npm run deploy` restored live-only data files on gh-pages, and
@@ -45,12 +45,13 @@ const HEAD_CONCURRENCY = 4;
 export function parseArgs(argv) {
   const options = {
     dryRun: false, dataRoot: DATA_ROOT, site: SITE,
-    minPagesRatio: 0.9, skipLinkCheck: false, help: false,
+    minPagesRatio: 0.9, skipLinkCheck: false, noTag: false, help: false,
   };
   for (const arg of argv) {
     const [flag, value] = arg.split(/=(.*)/s);
     if (flag === '--dry-run') options.dryRun = true;
     else if (flag === '--skip-link-check') options.skipLinkCheck = true;
+    else if (flag === '--no-tag') options.noTag = true;
     else if (flag === '--help') options.help = true;
     else if (flag === '--data-root' && value) options.dataRoot = value.replace(/\/+$/, '');
     else if (flag === '--site' && value) options.site = value.replace(/\/+$/, '');
@@ -118,6 +119,34 @@ export function groupByContentType(files) {
   return groups;
 }
 
+// A deploy is marked by a tag at the commit it was built from, deploy/<date>;
+// releases and mirrors follow the tag (HANDOFF-PORTABILITY.md, phase 3).
+// `tags` maps every tag name to its commit. Returns { tag } or { skip: why }.
+// A second deploy on one day is <date>.2, then .3; a number is never used twice.
+export function tagPlan({ dirty, noTag, head, tags, date }) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`not a date: ${JSON.stringify(date)}`);
+  if (noTag) return { skip: '--no-tag' };
+  if (dirty) return { skip: 'the working tree had uncommitted changes, so no commit is what was deployed' };
+  const deploys = [...tags].filter(([name]) => name.startsWith('deploy/'));
+  const already = deploys.find(([, commit]) => commit === head);
+  if (already) return { skip: `this commit is already tagged ${already[0]}` };
+  const base = `deploy/${date}`;
+  const today = deploys.map(([name]) => name).filter((name) => name === base || name.startsWith(`${base}.`));
+  if (!today.length) return { tag: base };
+  const last = Math.max(1, ...today.map((name) => Number(name.slice(base.length + 1)) || 1));
+  return { tag: `${base}.${last + 1}` };
+}
+
+// `git for-each-ref --format=TAG_FORMAT refs/tags` to a Map of tag -> commit.
+// An annotated tag is its own object; the commit it names is the third field.
+export const TAG_FORMAT = '%(refname:strip=2) %(objectname) %(*objectname)';
+export function parseTagList(text) {
+  return new Map(text.split('\n').filter(Boolean).map((line) => {
+    const [name, object, peeled] = line.split(' ');
+    return [name, peeled || object];
+  }));
+}
+
 // ---------------------------------------------------------------------------
 
 class Refusal extends Error {}
@@ -132,6 +161,19 @@ function run(command, args, { cwd = ROOT, capture = false, env = {} } = {}) {
   if (result.error) throw new Error(`${command} ${args.join(' ')}: ${result.error.message}`);
   if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed with status ${result.status}${capture ? `\n${result.stderr}` : ''}`);
   return capture ? result.stdout : '';
+}
+
+// Tag `head` as tagPlan says and push the tag to origin. origin's tags are
+// fetched first, so a name another machine used today is not used again.
+export function tagDeploy({ cwd = ROOT, head, dirty, noTag, date }) {
+  run('git', ['fetch', '--quiet', '--tags', 'origin'], { cwd, capture: true });
+  const tags = parseTagList(run('git', ['for-each-ref', `--format=${TAG_FORMAT}`, 'refs/tags'], { cwd, capture: true }));
+  const plan = tagPlan({ dirty, noTag, head, tags, date });
+  if (plan.tag) {
+    run('git', ['tag', plan.tag, head], { cwd, capture: true });
+    run('git', ['push', '--quiet', 'origin', `refs/tags/${plan.tag}`], { cwd, capture: true });
+  }
+  return plan;
 }
 
 // The data hostname is a Cloudflare custom domain, whose cache holds R2
@@ -210,7 +252,8 @@ async function main() {
   if (run('git', ['status', '--porcelain', '--', 'sources/lemma-slugs.json'], { capture: true }).trim()) {
     fail('sources/lemma-slugs.json has uncommitted changes. Commit the record first; its slugs are live addresses.');
   }
-  const source = run('git', ['rev-parse', '--short=10', 'HEAD'], { capture: true }).trim();
+  const head = run('git', ['rev-parse', 'HEAD'], { capture: true }).trim();
+  const source = head.slice(0, 10);
   const dirty = run('git', ['status', '--porcelain', '--untracked-files=no'], { capture: true }).trim();
   console.log(`  source ${source}${dirty ? ' (WORKING TREE HAS UNCOMMITTED CHANGES)' : ''}; data root ${dataRoot}`);
 
@@ -310,6 +353,17 @@ async function main() {
   heading('Deploying the app to the Worker');
   run('npx', ['-y', 'wrangler@4', 'deploy'], { cwd: path.join(ROOT, 'app'), env: wranglerEnv });
   console.log(`\n  Deployed ${source}. Check ${options.site}/ and a book page; data comes from ${dataRoot}.`);
+
+  // The deploy is done; a tag that fails must not read as a deploy that failed.
+  heading('Tagging the deploy');
+  try {
+    const date = new Date().toLocaleDateString('sv-SE');   // YYYY-MM-DD, this machine's day
+    const plan = tagDeploy({ head, dirty: Boolean(dirty), noTag: options.noTag, date });
+    if (plan.skip) console.log(`  NOT TAGGED: ${plan.skip}. Releases and mirrors do not follow this deploy.`);
+    else console.log(`  ${plan.tag} at ${source}, pushed to origin`);
+  } catch (error) {
+    console.log(`  NOT TAGGED: ${error.message}\n  The deploy itself succeeded. Releases and mirrors do not follow it until ${source} has a deploy/<date> tag on origin.`);
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

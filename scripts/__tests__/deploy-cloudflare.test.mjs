@@ -3,11 +3,14 @@
 // importing the script does not run its main().
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 import {
   CACHE_CONTROL, DATA_ROOT, builtDataRoot, headUrl, contentTypeFor, countSitemapPages, groupByContentType,
-  parseArgs, planUploads, remoteOnlyKeys,
+  parseArgs, parseTagList, planUploads, remoteOnlyKeys, tagDeploy, tagPlan, TAG_FORMAT,
 } from '../deploy-cloudflare.mjs';
 
 test('parseArgs: defaults, flags, trailing slashes, and refusals', () => {
@@ -72,4 +75,111 @@ test('remoteOnlyKeys: what the bucket record has and the build lacks', () => {
 test('groupByContentType splits by type', () => {
   const groups = groupByContentType([{ key: 'a.json' }, { key: 'b.md' }, { key: 'c.json' }]);
   assert.deepEqual([...groups.values()].map((g) => g.map((f) => f.key)), [['a.json', 'c.json'], ['b.md']]);
+});
+
+// The deploy's tag (HANDOFF-PORTABILITY.md, phase 3). The cases that must not tag come first.
+const HEAD = 'a'.repeat(40), OTHER = 'b'.repeat(40);
+test('tagPlan: a deploy from a tree with uncommitted changes is not tagged', () => {
+  const plan = tagPlan({ dirty: true, noTag: false, head: HEAD, tags: new Map(), date: '2026-11-21' });
+  assert.equal(plan.tag, undefined);
+  assert.match(plan.skip, /uncommitted/);
+});
+
+test('tagPlan: --no-tag is not tagged, and says so', () => {
+  const plan = tagPlan({ dirty: false, noTag: true, head: HEAD, tags: new Map(), date: '2026-11-21' });
+  assert.equal(plan.tag, undefined);
+  assert.match(plan.skip, /--no-tag/);
+  assert.equal(parseArgs(['--no-tag']).noTag, true);
+  assert.equal(parseArgs([]).noTag, false);
+});
+
+test('tagPlan: a commit that already has a deploy tag gets no second one', () => {
+  const plan = tagPlan({ dirty: false, noTag: false, head: HEAD, tags: new Map([['deploy/2026-11-20', HEAD]]), date: '2026-11-21' });
+  assert.equal(plan.tag, undefined);
+  assert.match(plan.skip, /deploy\/2026-11-20/);
+});
+
+test('tagPlan: a date that is not a date is refused', () => {
+  for (const date of ['', '21 Nov', '2026-11-21 ', '2026-11-21\nx']) {
+    assert.throws(() => tagPlan({ dirty: false, noTag: false, head: HEAD, tags: new Map(), date }), /date/, JSON.stringify(date));
+  }
+});
+
+test('tagPlan: the first deploy of a day is deploy/<date>; later ones count up and never reuse a name', () => {
+  const plan = (tags) => tagPlan({ dirty: false, noTag: false, head: HEAD, tags: new Map(tags), date: '2026-11-21' });
+  assert.deepEqual(plan([]), { tag: 'deploy/2026-11-21' });
+  assert.deepEqual(plan([['deploy/2026-11-20', OTHER], ['v1', HEAD]]), { tag: 'deploy/2026-11-21' });
+  assert.deepEqual(plan([['deploy/2026-11-21', OTHER]]), { tag: 'deploy/2026-11-21.2' });
+  assert.deepEqual(plan([['deploy/2026-11-21', OTHER], ['deploy/2026-11-21.2', OTHER]]), { tag: 'deploy/2026-11-21.3' });
+  // A gap is not filled: .2 was deleted, .3 exists, the next is .4.
+  assert.deepEqual(plan([['deploy/2026-11-21', OTHER], ['deploy/2026-11-21.3', OTHER]]), { tag: 'deploy/2026-11-21.4' });
+});
+
+test('parseTagList: a plain tag and an annotated one both give the commit, from real git output', () => {
+  const dir = mkdtempSync(path.join(tmpdir(), 'deploy-tags-'));
+  const git = (...args) => execFileSync('git', args, { cwd: dir, encoding: 'utf8', env: { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' } }).trim();
+  try {
+    git('init', '-q', '-b', 'main');
+    git('-c', 'user.email=t@example.invalid', '-c', 'user.name=t', 'commit', '-q', '--allow-empty', '-m', 'a');
+    const commit = git('rev-parse', 'HEAD');
+    git('tag', 'deploy/2026-11-20');
+    git('-c', 'user.email=t@example.invalid', '-c', 'user.name=t', 'tag', '-a', 'deploy/2026-11-21', '-m', 'annotated');
+    const tags = parseTagList(git('for-each-ref', `--format=${TAG_FORMAT}`, 'refs/tags'));
+    assert.deepEqual([...tags], [['deploy/2026-11-20', commit], ['deploy/2026-11-21', commit]]);
+    assert.match(tagPlan({ dirty: false, noTag: false, head: commit, tags, date: '2026-11-22' }).skip, /already tagged/);
+  } finally { rmSync(dir, { recursive: true, force: true }); }
+  assert.equal(parseTagList('').size, 0);
+});
+
+// tagDeploy against a real checkout with a bare origin beside it.
+function checkout() {
+  const dir = mkdtempSync(path.join(tmpdir(), 'deploy-tag-'));
+  const env = { ...process.env, GIT_CONFIG_GLOBAL: '/dev/null', GIT_CONFIG_SYSTEM: '/dev/null' };
+  const git = (cwd, ...args) => execFileSync('git', args, { cwd, encoding: 'utf8', env }).trim();
+  const origin = path.join(dir, 'origin.git'), work = path.join(dir, 'work');
+  git(dir, 'init', '-q', '--bare', origin);
+  git(dir, 'init', '-q', '-b', 'main', work);
+  git(work, 'config', 'user.email', 't@example.invalid');
+  git(work, 'config', 'user.name', 't');
+  git(work, 'remote', 'add', 'origin', origin);
+  const commit = () => { git(work, 'commit', '-q', '--allow-empty', '-m', 'c'); git(work, 'push', '-q', 'origin', 'main'); return git(work, 'rev-parse', 'HEAD'); };
+  return { git, origin, work, commit, done: () => rmSync(dir, { recursive: true, force: true }) };
+}
+
+test('tagDeploy: no origin to push to throws, and leaves no tag behind that says it was pushed', () => {
+  const c = checkout();
+  try {
+    const head = c.commit();
+    c.git(c.work, 'remote', 'set-url', 'origin', path.join(c.work, 'nowhere.git'));
+    assert.throws(() => tagDeploy({ cwd: c.work, head, dirty: false, noTag: false, date: '2026-11-21' }), /git fetch/);
+    assert.equal(c.git(c.work, 'tag', '--list'), '');
+  } finally { c.done(); }
+});
+
+test('tagDeploy: a dirty tree tags nothing, here or on origin', () => {
+  const c = checkout();
+  try {
+    const head = c.commit();
+    assert.match(tagDeploy({ cwd: c.work, head, dirty: true, noTag: false, date: '2026-11-21' }).skip, /uncommitted/);
+    assert.equal(c.git(c.work, 'tag', '--list'), '');
+    assert.equal(c.git(c.origin, 'tag', '--list'), '');
+  } finally { c.done(); }
+});
+
+test('tagDeploy: the tag lands on origin at the deployed commit; a name used on origin alone is not used again', () => {
+  const c = checkout();
+  try {
+    const first = c.commit();
+    assert.deepEqual(tagDeploy({ cwd: c.work, head: first, dirty: false, noTag: false, date: '2026-11-21' }), { tag: 'deploy/2026-11-21' });
+    assert.equal(c.git(c.origin, 'rev-parse', 'refs/tags/deploy/2026-11-21'), first);
+    // The same commit deployed again: no second tag.
+    assert.match(tagDeploy({ cwd: c.work, head: first, dirty: false, noTag: false, date: '2026-11-21' }).skip, /already tagged deploy\/2026-11-21/);
+    // Another machine tagged .2 on origin; this checkout has never seen it.
+    const second = c.commit();
+    c.git(c.origin, 'tag', 'deploy/2026-11-21.2', first);
+    const third = c.commit();
+    assert.deepEqual(tagDeploy({ cwd: c.work, head: third, dirty: false, noTag: false, date: '2026-11-21' }), { tag: 'deploy/2026-11-21.3' });
+    assert.equal(c.git(c.origin, 'rev-parse', 'refs/tags/deploy/2026-11-21.3'), third);
+    assert.notEqual(second, third);
+  } finally { c.done(); }
 });
