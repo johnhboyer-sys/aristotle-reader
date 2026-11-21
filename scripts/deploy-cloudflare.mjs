@@ -8,7 +8,7 @@
 //   npm run deploy:cloudflare:dry    — gates and the upload plan; nothing is sent
 //
 // Flags: --dry-run  --data-root=<url>  --site=<url>
-//        --min-pages-ratio=<0..1>  --skip-link-check  --help
+//        --min-pages-ratio=<0..1>  --skip-link-check  --no-tag  --help
 //
 // It never deletes from R2. A file in the bucket that the build lacks stays
 // there, as `npm run deploy` restored live-only data files on gh-pages, and
@@ -23,6 +23,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
+import { parseLsRemote } from './mirror-check.mjs';
 import {
   auditDistScale, readAll, scanForLeaks, scanGatedSlots, scanHeldWorks,
   scanSearchShards, scanTranslationIndexes, walk,
@@ -45,12 +46,13 @@ const HEAD_CONCURRENCY = 4;
 export function parseArgs(argv) {
   const options = {
     dryRun: false, dataRoot: DATA_ROOT, site: SITE,
-    minPagesRatio: 0.9, skipLinkCheck: false, help: false,
+    minPagesRatio: 0.9, skipLinkCheck: false, noTag: false, help: false,
   };
   for (const arg of argv) {
     const [flag, value] = arg.split(/=(.*)/s);
     if (flag === '--dry-run') options.dryRun = true;
     else if (flag === '--skip-link-check') options.skipLinkCheck = true;
+    else if (flag === '--no-tag') options.noTag = true;
     else if (flag === '--help') options.help = true;
     else if (flag === '--data-root' && value) options.dataRoot = value.replace(/\/+$/, '');
     else if (flag === '--site' && value) options.site = value.replace(/\/+$/, '');
@@ -118,6 +120,41 @@ export function groupByContentType(files) {
   return groups;
 }
 
+// A deploy is marked by a tag at the commit it ran from, deploy/<date>;
+// releases and mirrors follow the tag (HANDOFF-PORTABILITY.md, phase 3).
+// `tags` maps origin's tags to their commits; `local` names this checkout's.
+// Returns { tag } or { skip: why }. A second deploy on one day is <date>.2,
+// then .3: one past the highest number either side holds.
+// What it cannot know: that app/dist was built from `head`. A build made at
+// one commit and deployed after a checkout of another is tagged at the other.
+export function tagPlan({ unclean, noTag, head, tags, local = [], date }) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Error(`not a date: ${JSON.stringify(date)}`);
+  if (noTag) return { skip: '--no-tag' };
+  if (unclean.length) {
+    return { skip: `the working tree had files git does not hold as committed (${unclean.slice(0, 3).join(', ')}${unclean.length > 3 ? `, and ${unclean.length - 3} more` : ''}), so no commit is known to be what was deployed` };
+  }
+  const already = [...tags].find(([name, commit]) => name.startsWith('deploy/') && commit === head);
+  if (already) return { skip: `this commit is already tagged ${already[0]}` };
+  const base = `deploy/${date}`;
+  const today = [...tags.keys(), ...local].filter((name) => name === base || name.startsWith(`${base}.`));
+  if (!today.length) return { tag: base };
+  const last = Math.max(1, ...today.map((name) => Number(name.slice(base.length + 1)) || 1));
+  return { tag: `${base}.${last + 1}` };
+}
+
+// `git ls-remote --tags` output to a Map of tag -> commit. An annotated tag
+// has two lines, its own object and "<commit>\trefs/tags/<name>^{}"; the
+// second is the commit.
+export function tagCommits(lsRemote) {
+  const tags = new Map();
+  for (const [ref, object] of parseLsRemote(lsRemote)) {
+    const peeled = ref.endsWith('^{}');
+    const name = (peeled ? ref.slice(0, -3) : ref).replace(/^refs\/tags\//, '');
+    if (peeled || !tags.has(name)) tags.set(name, object);
+  }
+  return tags;
+}
+
 // ---------------------------------------------------------------------------
 
 class Refusal extends Error {}
@@ -132,6 +169,29 @@ function run(command, args, { cwd = ROOT, capture = false, env = {} } = {}) {
   if (result.error) throw new Error(`${command} ${args.join(' ')}: ${result.error.message}`);
   if (result.status !== 0) throw new Error(`${command} ${args.join(' ')} failed with status ${result.status}${capture ? `\n${result.stderr}` : ''}`);
   return capture ? result.stdout : '';
+}
+
+// Tag `head` as tagPlan says and push the tag to origin. origin's tags are
+// read with ls-remote, which writes nothing here, so a name another machine
+// used today is not used again and no local tag can stand in the way of the
+// read. A tag whose push fails is removed here, so the next deploy tries
+// again; the error is thrown on.
+export function tagDeploy({ cwd = ROOT, head, unclean, noTag, date }) {
+  const none = tagPlan({ unclean, noTag, head, tags: new Map(), date });
+  if (none.skip) return none;   // nothing to ask origin
+  const tags = tagCommits(run('git', ['ls-remote', '--tags', 'origin', 'refs/tags/deploy/*'], { cwd, capture: true }));
+  const local = run('git', ['tag', '--list', 'deploy/*'], { cwd, capture: true }).split('\n').filter(Boolean);
+  const plan = tagPlan({ unclean, noTag, head, tags, local, date });
+  if (plan.tag) {
+    run('git', ['tag', plan.tag, head], { cwd, capture: true });
+    try {
+      run('git', ['push', '--quiet', 'origin', `refs/tags/${plan.tag}`], { cwd, capture: true });
+    } catch (error) {
+      run('git', ['tag', '--delete', plan.tag], { cwd, capture: true });
+      throw error;
+    }
+  }
+  return plan;
 }
 
 // The data hostname is a Cloudflare custom domain, whose cache holds R2
@@ -210,8 +270,11 @@ async function main() {
   if (run('git', ['status', '--porcelain', '--', 'sources/lemma-slugs.json'], { capture: true }).trim()) {
     fail('sources/lemma-slugs.json has uncommitted changes. Commit the record first; its slugs are live addresses.');
   }
-  const source = run('git', ['rev-parse', '--short=10', 'HEAD'], { capture: true }).trim();
+  const head = run('git', ['rev-parse', 'HEAD'], { capture: true }).trim();
+  const source = head.slice(0, 10);
   const dirty = run('git', ['status', '--porcelain', '--untracked-files=no'], { capture: true }).trim();
+  // For the tag: tracked changes and untracked files alike (an untracked page is built and deployed).
+  const unclean = run('git', ['status', '--porcelain'], { capture: true }).split('\n').filter(Boolean).map((line) => line.slice(3));
   console.log(`  source ${source}${dirty ? ' (WORKING TREE HAS UNCOMMITTED CHANGES)' : ''}; data root ${dataRoot}`);
 
   heading(`Scale: the build against ${options.site}`);
@@ -310,6 +373,17 @@ async function main() {
   heading('Deploying the app to the Worker');
   run('npx', ['-y', 'wrangler@4', 'deploy'], { cwd: path.join(ROOT, 'app'), env: wranglerEnv });
   console.log(`\n  Deployed ${source}. Check ${options.site}/ and a book page; data comes from ${dataRoot}.`);
+
+  // The deploy is done; a tag that fails must not read as a deploy that failed.
+  heading('Tagging the deploy');
+  try {
+    const date = new Date().toLocaleDateString('sv-SE');   // YYYY-MM-DD, this machine's day
+    const plan = tagDeploy({ head, unclean, noTag: options.noTag, date });
+    if (plan.skip) console.log(`  NOT TAGGED: ${plan.skip}. Releases and mirrors do not follow this deploy.`);
+    else console.log(`  ${plan.tag} at ${source}, pushed to origin`);
+  } catch (error) {
+    console.log(`  NOT TAGGED: ${error.message}\n  The deploy itself succeeded. Releases and mirrors do not follow it until ${source} has a deploy/<date> tag on origin:\n    git tag deploy/<date> ${head} && git push origin refs/tags/deploy/<date>`);
+  }
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

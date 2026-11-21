@@ -188,49 +188,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      # The steps are an action of this repo, so the Release workflow builds
+      # a release the same way.
+      - name: Build the site and pack the bundle
+        uses: ./.github/actions/site-bundle
         with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: app/package-lock.json
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version-file: pipeline/.python-version
-
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v5
-
-      - name: Install dependencies
-        run: |
-          (cd pipeline && uv sync)
-          (cd app && npm ci)
-
-      # 186 MB from Diogenes's own release; the archive and each file in it
-      # are held to the sha256 pins in pipeline/aristotle_pipeline/inputs.py.
-      - name: Fetch the Morpheus table and the LSJ
-        run: |
-          echo "DIOGENES_DATA=$RUNNER_TEMP/diogenes-data" >> "$GITHUB_ENV"
-          cd pipeline && uv run python -m aristotle_pipeline.inputs fetch --dir "$RUNNER_TEMP/diogenes-data"
-
-      # Every work from its public manifest, the corpus-wide gates, the app
-      # build, and the link check.
-      - name: Build the site
-        run: npm run build:public
-
-      # Runs the deploy's data gates, the leak check among them, before it
-      # writes a byte.
-      - name: Pack the bundle
-        run: node scripts/make-bundle.mjs --out="$RUNNER_TEMP/aristotle-bundle.tar.gz"
-
-      # Playwright is this step's tool and no package of the repo; nothing of
-      # it ships. The check finds it in the npx cache this install fills.
-      - name: No outside calls
-        run: |
-          npx --yes playwright@1.65.1 install --with-deps chromium
-          node scripts/check-no-outside-calls.mjs
+          out: ${{ runner.temp }}/aristotle-bundle.tar.gz
 
       - name: Upload the bundle
         uses: actions/upload-artifact@v4

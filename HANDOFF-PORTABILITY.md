@@ -8,15 +8,17 @@ is copied between the repos, never synced as a folder).
 
 ## State (2026-11-21)
 
-Phase 0 is done but for the steps that wait on John; it is PR #228, open.
-Phase 1 is PR #231 (`claude/portability-phase1`, three commits, pushed
-2026-11-21 on John's yes, based on phase 0's branch) but for the two rows that
-need a download; those two are now done on the phase 2 branch. Phase 2 is PR
-#232 (`claude/portability-phase2`, pushed 2026-11-21 on John's yes, based on
-phase 1's branch): the site serves its own fonts, test 3 is green, and CI
-builds the whole site on Linux, with data byte for byte live's. What is left
-of phase 2 waits on John: the bundle on two hosts. Aristotle only; no sibling
-repo has changed.
+Phases 0, 1, and 2 are on `main`: John merged PRs #228, #231, and #232 on
+2026-11-21 (main at `5f2b93ad9d`). Phase 0 is done but for the steps that
+wait on John (the GitLab mirror, two of the four snapshot copies). Phase 1 is
+done. Phase 2 is done but for the bundle on two hosts, which waits on John's
+accounts: the site serves its own fonts, test 3 is green, CI builds the whole
+site on Linux with data byte for byte live's, and the Docker image builds and
+serves every file. CI and the image build passed on the merged commit, which
+was the first build of phases 0 to 2 together with main's own share-card
+changes. Phase 3 is PR #233 (`claude/portability-phase3`, pushed 2026-11-21
+on John's yes, green): the parts that need no account. Aristotle only; no
+sibling repo has changed.
 
 | Phase 0 step | State |
 |---|---|
@@ -52,9 +54,103 @@ repo has changed.
 | A check for a served copy | Done: `scripts/check-served.mjs` asks a host for every file a bundle's `SHA256SUMS` names and compares the bytes |
 | The bundle on two candidate hosts | Waits on John (accounts). The bundle and the check for a host are ready |
 
-Next: John's merge of #228, then #231, then #232. Then his accounts: two
-candidate hosts for the bundle (decision 6), and GitLab for the git mirror.
-Phase 3 starts with those.
+| Phase 3 step (Aristotle) | State |
+|---|---|
+| Push a repo to a second git host | Done: `scripts/mirror-git.mjs`. Not yet run against a host; there is none |
+| The deploy tags its commit | Done: `npm run deploy:cloudflare` tags `deploy/<date>` and pushes the tag. Not yet run in a real deploy |
+| A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action, which passed on its first run in #233), then a check of the bundle's data against the primary's data host. The release step itself runs first at the next deploy after it merges |
+| `mirror.yml`: git on every push, the site on a release | Not written. Waits on the GitLab account and on decision 6 |
+| Check for a stale or silent mirror | Done as a script: `scripts/check-mirrors.mjs`. It fails today, and says why: `mirrors.json` names no mirror. The weekly workflow that runs it and opens an issue is not written; add it with the first mirror |
+| `mirrors.json`, shown on the attribution page | The file exists, with empty lists. The page does not read it yet; there is no mirror to list |
+
+Next: John's merge of #233. Then his accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
+all seven repos), and two candidate hosts for the bundle (decision 6;
+`check-served.mjs` is the test).
+
+### Phase 3 record
+
+**Git mirror.** `node scripts/mirror-git.mjs --source=<remote>
+--mirror=<remote>` fetches the source whole into a temp folder (never from
+the checkout it runs in: a CI checkout is shallow), pushes every branch and
+tag but `gh-pages`, and compares `git ls-remote` on both with
+`mirror-check.mjs`'s comparison. A mirror is a backup, so it gives way slowly:
+`main` and every tag go without force, and a rewritten `main` or a moved tag
+is refused, left as it was on the mirror, and fails the run. Other branches
+are pushed over; a refused ref does not hold the others back. Nothing is ever
+deleted from the mirror. An address must be a folder that exists, `https://`,
+`ssh://`, `file://`, or `user@host:path`, and one with a password in it is
+refused. It does not prove the mirror's history is whole (a mirror that was
+shallow before, with the right tips, passes); `mirror-check.mjs` without
+`--tips-only` does, by cloning it. Tests use real repos in a temp folder.
+
+**Deploy tag.** After the Worker deploy succeeds, `deploy-cloudflare.mjs` tags
+the commit `deploy/<date>` (then `<date>.2`, `.3`: one past the highest number
+this checkout or origin holds) and pushes the tag. No tag, with a line that
+says why: any changed or untracked file in the tree (the first three are
+named), a commit origin already holds a deploy tag for, `--no-tag`. Origin's
+tags are read with `ls-remote`, which writes nothing locally. A tag whose push
+fails is removed locally, so the next deploy tries again. A failure here is
+printed with the two commands that tag by hand, and never fails the deploy,
+which is done by then. Tests run the step against a real checkout with a bare
+origin.
+
+**What the tag cannot know.** It names `HEAD` when the deploy ran. Nothing
+ties `app/dist` to that commit: a build made at one commit and deployed after
+a checkout of another is tagged at the other. The Release workflow holds the
+tag to its word for the data: before it publishes, `check-served.mjs
+--part=data` asks the primary's data host for every data file of the bundle
+and fails the release when one differs. Run by hand against the bundle CI
+built: a sample of 196 of 9,770 files, all the listed bytes. The pages cannot
+be held the same way (a build's page bytes vary), so a tag at a commit whose
+pages differ from the deployed ones and whose data does not is still released.
+
+**Release.** A push of a `deploy/*` tag runs `.github/workflows/release.yml`:
+the shared action `.github/actions/site-bundle` (the steps CI's `site` job
+ran: inputs by checksum, `build:public`, the bundle with its gates, the
+no-outside-calls check), then `gh release create` with the bundle and the
+`SHA256SUMS` from inside it. So the release is built with no laptop, the way
+every pull request is tested. Between the two, the data check above. A
+release that exists is never written over.
+This changes the plan's first bullet, which had the deploy script attach a
+bundle built on the laptop. After it merges, every deploy publishes a public
+release of about 187 MB; `--no-tag` holds one back.
+
+**Mirror check.** `mirrors.json` is `{ "git": [{name, url}], "site": [...] }`.
+`node scripts/check-mirrors.mjs --source=<the repo> --sums=<the latest
+release's SHA256SUMS>` holds each git mirror to the source (every branch and
+tag at the same commit, and the history whole, by cloning it) and each site
+mirror to the release: it must serve that release's own `SHA256SUMS`, or it
+is stale; then its files are asked for and compared with the release's list
+(`--every=N` for a sample). One bad mirror fails the run and does not hide
+the others. It fails when the list names no mirror, so it fails today. This
+replaces the plan's `version.json`: the bundle already carries the list, and
+a release has it as its own asset, so no new file is needed. Tests use real
+repos and a real http host.
+
+**Review.** Codex (GPT-6.1-Sol) read the three pieces and found ten things,
+none in the workflows. Fixed, each with a test first: `--no-force` could take
+`main` off the never-forced list; git's remote-helper address form
+(`https::https://user:pass@…`) passed the password check and was printed; an
+address starting with `-` reached git as an option; a tag whose push failed
+stayed local and blocked every later try; an untracked page counted as a
+clean tree; `git fetch --tags` could fail on a local tag of another name, and
+ran before the cheap skips. Left, and said in the code: a refused `main` does
+not hold other branches back (meant); a mirror that was already shallow
+passes (the other script's job); a deleted highest number can be given out
+again; the tag cannot know what `app/dist` was built from (the release's
+data check, above, catches it for the data).
+
+A second Codex read took the mirror check, `--part`, and the release's data
+step, and found eight things, none in the workflow. Seven are fixed, each
+with a test first: a `--source` with a password was printed; a throw in one
+mirror's check stopped the run and hid the results already made; a list
+behind a byte-order mark passed as the release's; a mirror could send its
+list's address to another host; a missing `--source` kept the site mirrors
+from being checked, and a missing or broken list the git ones; `--part` still
+asked for a folder's address when the part held an `index.html`, and left
+dot files out. The eighth (a mirror with one whole branch and one shallow
+one passes) did not hold when tried: the clone comes out shallow and the
+check fails.
 
 ### Phase 2 record
 
@@ -760,15 +856,18 @@ no refs; its tests start from a deleted ref.*
 
 ### Phase 3 — mirrors that follow a deploy
 
-- The deploy script, after a deploy succeeds, tags `deploy/<date>` and attaches the
-  bundle and `SHA256SUMS` to a GitHub release.
+- The deploy script, after a deploy succeeds, tags `deploy/<date>`; a workflow
+  builds that commit's bundle on a clean runner and attaches it and
+  `SHA256SUMS` to a GitHub release. (As first written, the deploy script
+  attached a bundle built on the laptop.)
 - `.github/workflows/mirror.yml`, calling repo scripts: on every push, mirror git
   (`fetch-depth: 0`; `refs/heads/*` and `refs/tags/*`, less `gh-pages`); on a
   release, verify the bundle's checksums, run the leak check with its positive
   control, then publish to the second host. Zenodo and the Internet Archive run
   only by hand.
-- A weekly job reads `version.json` from each mirror, compares it with the latest
-  release, and opens an issue when one is stale or silent.
+- A weekly job runs `check-mirrors.mjs` (each mirror's `SHA256SUMS` against the
+  latest release's; as first written, a `version.json`) and opens an issue when
+  a mirror is stale or silent.
 - `mirrors.json`, shown on the attribution page (decision 5).
 - *Check: test 4, then test 5 run once by hand.*
 
@@ -828,7 +927,7 @@ decisions.
 
 | Secret | For | Needed when |
 |---|---|---|
-| `MIRROR_GIT_SSH_KEY` (a deploy key per repo, write access) and `MIRROR_GIT_URL` | git mirror to GitLab | phase 3 |
+| `MIRROR_GIT_SSH_KEY` (a deploy key per repo, write access), and `MIRROR_GIT_URL` as a repository variable (an address is no secret, and a workflow can skip its job when a variable is unset) | git mirror to GitLab | phase 3 |
 | Second host's deploy token and site id | live mirror | after decision 6 |
 | `ZENODO_TOKEN` | archive releases | manual job only |
 

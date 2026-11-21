@@ -59,7 +59,7 @@ export function compareRefs(source, mirror, skip = DEFAULT_SKIP) {
 
 const git = (args, opts = {}) => spawnSync('git', args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, ...opts });
 
-function lsRemote(remote) {
+export function lsRemote(remote) {
   const r = git(['ls-remote', '--heads', '--tags', remote]);
   if (r.status !== 0) throw new Error(`could not read ${remote}: ${(r.stderr || String(r.error)).trim()}`);
   return parseLsRemote(r.stdout);

@@ -150,8 +150,71 @@ test('check-served: a sampled run says it read a part', async () => {
   assert.ok(r.examined < r.total - r.skipped, `${r.examined} of ${r.total}`);
 });
 
+// --part: a host that holds one folder of the list at its own root, as the
+// primary's data host holds data/.
+const dataHost = () => Object.fromEntries(Object.entries(FILES()).filter(([p]) => p.startsWith('data/')).map(([p, body]) => [p.slice('data/'.length), body]));
+const runPart = async (files, opts = {}, part = 'data/') => {
+  const h = await host(files, opts);
+  try { return await checkServed({ origin: h.origin, entries: entriesOf(FILES()), part, tries: 1 }); } finally { await h.close(); }
+};
+
+test('check-served --part: a changed file on the part\'s host fails, named as the list names it', async () => {
+  const r = await runPart({ 'Cat/book-01.json': '{"a":2}' });
+  assert.equal(r.ok, false);
+  assert.ok(r.problems.some((p) => /^data\/Cat\/book-01\.json: the bytes served are not the listed ones/.test(p)), JSON.stringify(r.problems));
+});
+
+test('check-served --part: a file the part\'s host lacks fails', async () => {
+  const r = await runPart({});
+  assert.equal(r.ok, false);
+  assert.ok(r.problems.some((p) => /^data\/Cat\/book-01\.json: answered 404/.test(p)), JSON.stringify(r.problems));
+});
+
+test('check-served --part: a part the list has nothing under examines nothing and fails', async () => {
+  const r = await runPart(dataHost(), {}, 'nothing/');
+  assert.equal(r.ok, false);
+  assert.ok(r.problems.some((p) => /examined nothing/.test(p)));
+});
+
+test('check-served --part: a host that answers a missing file with 200 fails', async () => {
+  const r = await runPart(dataHost(), { bend: (p, a) => (a.status === 404 ? { status: 200, body: '{}', type: TYPES.json } : a) });
+  assert.equal(r.ok, false);
+  assert.ok(r.problems.some((p) => /a missing data file answered 200/.test(p)), JSON.stringify(r.problems));
+});
+
+test('check-served --part: a dot file under the part is asked for like any other', async () => {
+  const listed = { ...FILES(), 'data/.hidden.json': '{"h":1}' };
+  const h = await host({ ...dataHost(), '.hidden.json': '{"h":2}' });
+  try {
+    const r = await checkServed({ origin: h.origin, entries: entriesOf(listed), part: 'data/', tries: 1 });
+    assert.equal(r.ok, false);
+    assert.ok(r.problems.some((p) => /^data\/\.hidden\.json: the bytes served/.test(p)), JSON.stringify(r.problems));
+  } finally { await h.close(); }
+});
+
+test('check-served --part: an index.html under the part is a file; its folder\'s address is not asked for', async () => {
+  const listed = { ...FILES(), 'data/Cat/index.html': '<p>a file</p>' };
+  // The host has the file and answers 404 for the folder's address, as a host of files does.
+  const h = await host({ ...dataHost(), 'Cat/index.html': '<p>a file</p>' }, { bend: (p, a) => (p === 'Cat/' ? { status: 404, body: 'no such key', type: 'text/plain' } : a) });
+  try {
+    const r = await checkServed({ origin: h.origin, entries: entriesOf(listed), part: 'data/', tries: 1 });
+    assert.deepEqual(r.problems, []);
+    assert.equal(r.folders, 0);
+  } finally { await h.close(); }
+});
+
+test('check-served --part: a faithful host of the part passes; only the part is counted, and no 404 page is asked of it', async () => {
+  const r = await runPart(dataHost());
+  assert.deepEqual(r.problems, []);
+  assert.equal(r.ok, true);
+  assert.deepEqual({ total: r.total, examined: r.examined, folders: r.folders }, { total: 1, examined: 1, folders: 0 });
+});
+
 test('check-served: arguments', () => {
-  assert.deepEqual(parseArgs(['--origin=https://m.example/', '--sums=S']), { origin: 'https://m.example', sums: 'S', base: '/', every: 1, concurrency: 8 });
+  assert.equal(parseArgs(['--origin=https://m.example', '--sums=S', '--part=data']).part, 'data/');
+  assert.equal(parseArgs(['--origin=https://m.example', '--sums=S', '--part=/data/']).part, 'data/');
+  assert.equal(parseArgs(['--origin=https://m.example', '--sums=S']).part, '');
+  assert.deepEqual(parseArgs(['--origin=https://m.example/', '--sums=S']), { origin: 'https://m.example', sums: 'S', base: '/', every: 1, concurrency: 8, part: '' });
   assert.equal(parseArgs(['--origin=https://m.example', '--sums=S', '--base=mirror']).base, '/mirror/');
   assert.throws(() => parseArgs(['--sums=S']), /--origin/);
   assert.throws(() => parseArgs(['--origin=https://m.example']), /--sums/);
