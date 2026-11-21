@@ -20,8 +20,9 @@ changes. The part of phase 3 that needs no account is on `main` too (PR #233,
 merged by John's yes on 2026-11-21, main at `1e1062a539`). John made a GitLab
 account the same day (`johnhboyer`), and all seven repos now have a private
 git mirror there, each checked whole. The workflow that keeps Aristotle's
-mirror current is on `claude/portability-phase3b` (PR #234, open), and its
-deploy key, secret, and variable are set. Aristotle only; no
+mirror current is on `main` (PR #234, merged by John's yes the same day, main
+at `b2853f1f41`), and its deploy key, secret, and variable are set. Aristotle
+only; no
 sibling repo has changed.
 
 | Phase 0 step | State |
@@ -67,7 +68,8 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: John's yes to merge #234. Then his two candidate hosts for the bundle
+Next: start the Plato port session ("Sessions", below), and John's two
+candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -136,9 +138,9 @@ need John's login, so he pastes the public half.
 The first runs (2026-11-21, on `b27f08b244`, both green): the `git` job
 pushed and found 33 of 33 refs matching, `gh-pages` left out; the `check`
 job, started by hand, cloned the mirror and found 33 of 33 refs and 1,612
-commits, whole. Not yet seen: a push to `main` through the deploy key (the
-first is the merge of #234), a tag push, and the check's failure path on
-GitHub (the issue).
+commits, whole. The merge of #234 was the first push to `main` through the
+deploy key: green, and `main` is at `b2853f1f41` on both hosts. Not yet seen:
+a tag push, and the check's failure path on GitHub (the issue).
 
 **Git mirror.** `node scripts/mirror-git.mjs --source=<remote>
 --mirror=<remote>` fetches the source whole into a temp folder (never from
@@ -977,6 +979,13 @@ session. The ports touch separate repos, so they can run side by side, each
 briefed from Aristotle's merged PRs. The lead session starts them once
 Aristotle's phase 3 is merged, checks their reports, and brings John only
 decisions.
+
+**Plato (2026-11-21).** John said to start it. The brief is
+`docs/portability/port-brief-plato.md`; the session is not started, because a
+turn that comes over Remote Control cannot start one. Start it from the
+desktop app with `start_session` (preset `plato-reader`, its own worktree,
+Opus 5.5, name `plato-port`). Its deploy key is the lead session's job, done
+with John as Aristotle's was. Homer and the plays wait for John's word.
 
 ## Rules for the session
 
