@@ -16,8 +16,9 @@ accounts: the site serves its own fonts, test 3 is green, CI builds the whole
 site on Linux with data byte for byte live's, and the Docker image builds and
 serves every file. CI and the image build passed on the merged commit, which
 was the first build of phases 0 to 2 together with main's own share-card
-changes. Phase 3 is PR #233 (`claude/portability-phase3`, pushed 2026-11-21
-on John's yes, green): the parts that need no account. Aristotle only; no
+changes. The part of phase 3 that needs no account is on `main` too (PR #233,
+merged by John's yes on 2026-11-21, main at `1e1062a539`); the rest of it
+waits on John's accounts. Aristotle only; no
 sibling repo has changed.
 
 | Phase 0 step | State |
@@ -63,7 +64,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done as a script: `scripts/check-mirrors.mjs`. It fails today, and says why: `mirrors.json` names no mirror. The weekly workflow that runs it and opens an issue is not written; add it with the first mirror |
 | `mirrors.json`, shown on the attribution page | The file exists, with empty lists. The page does not read it yet; there is no mirror to list |
 
-Next: John's merge of #233. Then his accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
+Next: John's accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
 all seven repos), and two candidate hosts for the bundle (decision 6;
 `check-served.mjs` is the test).
 
