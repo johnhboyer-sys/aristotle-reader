@@ -20,8 +20,8 @@ changes. The part of phase 3 that needs no account is on `main` too (PR #233,
 merged by John's yes on 2026-11-21, main at `1e1062a539`). John made a GitLab
 account the same day (`johnhboyer`), and all seven repos now have a private
 git mirror there, each checked whole. The workflow that keeps Aristotle's
-mirror current is written on `claude/portability-phase3b` (not pushed) and
-waits on a deploy key. Aristotle only; no
+mirror current is on `claude/portability-phase3b` (PR #234, open), and its
+deploy key, secret, and variable are set. Aristotle only; no
 sibling repo has changed.
 
 | Phase 0 step | State |
@@ -63,14 +63,14 @@ sibling repo has changed.
 | Push a repo to a second git host | Done: `scripts/mirror-git.mjs`, run for real against GitLab for all seven repos |
 | The deploy tags its commit | Done: `npm run deploy:cloudflare` tags `deploy/<date>` and pushes the tag. Not yet run in a real deploy |
 | A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action, which passed on its first run in #233), then a check of the bundle's data against the primary's data host. The release step itself runs first at the next deploy after it merges |
-| `mirror.yml`: git on every push, the site on a release | The git half is written, with the weekly check as its second job; not run. It needs a deploy key on the GitLab project (write access, and allowed to push to `main`, which GitLab protects), the secret `MIRROR_GIT_SSH_KEY`, and the variable `MIRROR_GIT_URL`. The site half waits on decision 6 |
+| `mirror.yml`: git on every push, the site on a release | The git half is written, with the weekly check as its second job. Its deploy key is on the GitLab project (write access, and allowed to push to `main`, which GitLab protects), the secret `MIRROR_GIT_SSH_KEY` holds the key, and the variable `MIRROR_GIT_URL` holds the address (all 2026-11-21). The site half waits on decision 6 |
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure; that job has not run |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: John's yes to push `claude/portability-phase3b`, and the deploy key for
-Aristotle's mirror (he adds it, or says to add it in his browser). Then his
-two candidate hosts for the bundle (decision 6; `check-served.mjs` is the
-test). The sibling repos get their own `mirror.yml` in their ports.
+Next: John's yes to merge #234. Then his two candidate hosts for the bundle
+(decision 6; `check-served.mjs` is the test). The sibling repos get their own
+`mirror.yml` and their own deploy key in their ports; until the last one has
+its key, the account key below stays.
 
 ### Phase 3 record
 
@@ -109,7 +109,7 @@ release's `SHA256SUMS` if there is a release; a failure opens an issue, or
 adds to the open one. `.github/actions/mirror-key` writes the key where only
 the job can read it and pins GitLab's host keys from
 `.github/mirror_known_hosts` (read 2026-11-21; all three fingerprints match
-the ones GitLab publishes). Not run: it needs the key. Codex read the three
+the ones GitLab publishes). Codex read the three
 files and found four things: a second Authorization header from the
 checkout's own stored token (fixed: `persist-credentials: false`); a host key
 could be trusted from the runner's global file (fixed); an empty key stopped
@@ -120,6 +120,17 @@ GitLab protects `main` on a new project: no force push, and only maintainers
 push. That is the mirror's rule too (`mirror-git.mjs` never forces `main`),
 so keep the protection and add the deploy key to the branch's "allowed to
 push" list.
+
+**Aristotle's deploy key (2026-11-21).** A key made for the workflow alone
+(ed25519, fingerprint `SHA256:Ru45E76yhk0FJB2a9MmB3n5d5TKzoDObZO0pyNRt2Is`,
+titled "aristotle-reader mirror, GitHub Actions, 2026-11-21" on GitLab). John
+added the public half to the `aristotle-reader` project with write access and
+to `main`'s "allowed to push and merge" list; force push to `main` stays off.
+The private half is in the GitHub secret and nowhere else. Tried from this
+Mac with the workflow's own ssh options and host-key file before the first
+run: it reads `aristotle-reader` (32 refs) and GitLab refuses it on
+`plato-reader`. A sibling's port makes its own key the same way: GitLab's
+deploy-key settings need John's login, so he pastes the public half.
 
 **Git mirror.** `node scripts/mirror-git.mjs --source=<remote>
 --mirror=<remote>` fetches the source whole into a temp folder (never from
