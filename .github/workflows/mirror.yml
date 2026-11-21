@@ -1,0 +1,119 @@
+name: Mirror
+
+# The second git host follows every push: all branches and tags, less
+# gh-pages (scripts/mirror-git.mjs; HANDOFF-PORTABILITY.md, phase 3). Once a
+# week, and by hand, every mirror in mirrors.json is checked whole and
+# current (scripts/check-mirrors.mjs), and a failure opens an issue.
+#
+# The mirror's address is the repository variable MIRROR_GIT_URL; its deploy
+# key is the secret MIRROR_GIT_SSH_KEY. With no address set the push job is
+# skipped, and shows as skipped.
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - '**'
+  schedule:
+    - cron: '17 11 * * 1'
+  workflow_dispatch:
+
+# One at a time. A run mirrors every ref, so a waiting run that a newer one
+# replaces has lost nothing.
+concurrency:
+  group: mirror-${{ github.event_name == 'push' && 'push' || 'check' }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  git:
+    name: git mirror
+    if: github.event_name == 'push' && vars.MIRROR_GIT_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # For the scripts only. The mirror is never pushed from this checkout,
+      # which is shallow; mirror-git.mjs fetches the source whole.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up the mirror's SSH key
+        uses: ./.github/actions/mirror-key
+        with:
+          key: ${{ secrets.MIRROR_GIT_SSH_KEY }}
+          token: ${{ github.token }}
+
+      - name: Push branches and tags to the mirror
+        env:
+          MIRROR_GIT_URL: ${{ vars.MIRROR_GIT_URL }}
+        run: node scripts/mirror-git.mjs --source="https://github.com/$GITHUB_REPOSITORY.git" --mirror="$MIRROR_GIT_URL"
+
+  check:
+    name: mirrors whole and current
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      issues: write
+    env:
+      HAS_KEY: ${{ secrets.MIRROR_GIT_SSH_KEY != '' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Without a key the check still runs: a site mirror needs none, and a
+      # private git mirror then fails as silent, which is the truth.
+      - name: Set up the mirror's SSH key
+        if: env.HAS_KEY == 'true'
+        uses: ./.github/actions/mirror-key
+        with:
+          key: ${{ secrets.MIRROR_GIT_SSH_KEY }}
+          token: ${{ github.token }}
+
+      # Site mirrors are held to the newest release's list. With no release
+      # there is no list, and check-mirrors.mjs fails any site mirror for it.
+      - name: Check every mirror
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          sums=()
+          if gh release download --pattern SHA256SUMS --dir "$RUNNER_TEMP/release" 2> "$RUNNER_TEMP/release.err"; then
+            sums=(--sums="$RUNNER_TEMP/release/SHA256SUMS")
+          else
+            echo "no release list: $(cat "$RUNNER_TEMP/release.err")"
+          fi
+          set -o pipefail
+          node scripts/check-mirrors.mjs --source="https://github.com/$GITHUB_REPOSITORY.git" "${sums[@]}" | tee "$RUNNER_TEMP/mirrors.log"
+
+      - name: Open an issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          {
+            echo "The mirror check failed: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/mirrors.log" 2>/dev/null || echo "the check did not run; see the run's log"
+            echo '```'
+          } > "$RUNNER_TEMP/issue.md"
+          open=$(gh issue list --state open --search 'in:title "Mirror check failed"' --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then gh issue comment "$open" --body-file "$RUNNER_TEMP/issue.md"
+          else gh issue create --title "Mirror check failed" --body-file "$RUNNER_TEMP/issue.md"; fi
