@@ -11,10 +11,12 @@ is copied between the repos, never synced as a folder).
 Phase 0 is done but for the steps that wait on John; it is PR #228, open.
 Phase 1 is PR #231 (`claude/portability-phase1`, three commits, pushed
 2026-11-21 on John's yes, based on phase 0's branch) but for the two rows that
-need a download; those two are now done on the phase 2 branch. Phase 2 is on
-`claude/portability-phase2`, stacked on it and not pushed: the site serves its
-own fonts, test 3 is green, and a CI job builds the whole site. Aristotle
-only; no sibling repo has changed.
+need a download; those two are now done on the phase 2 branch. Phase 2 is PR
+#232 (`claude/portability-phase2`, pushed 2026-11-21 on John's yes, based on
+phase 1's branch): the site serves its own fonts, test 3 is green, and CI
+builds the whole site on Linux, with data byte for byte live's. What is left
+of phase 2 waits on John: the bundle on two hosts. Aristotle only; no sibling
+repo has changed.
 
 | Phase 0 step | State |
 |---|---|
@@ -35,7 +37,7 @@ only; no sibling repo has changed.
 | Snapshot diff as a script | Done: `scripts/compare-snapshot.mjs`, data and pages. Not a CI step; see below |
 | Morpheus table and LSJ pinned by checksum, folder from the environment | Done. Check: `aristotle_pipeline.inputs check`, run by `build:public`. Fetch: `aristotle_pipeline.inputs fetch`, from the Diogenes 4.7.2 Mac zip (186 MB, pinned); both files in the release match the pins byte for byte. The fetch is on the phase 2 branch |
 | `/tmp/perseus-ne` and other machine paths out of the public build | Done: gone from `EN.yaml` and `config.py`. The manifests still name Diogenes.app, as the local default for `extract` and the two inputs |
-| CI runs the full build and uploads the bundle | Written: the `site` job in `ci.yml` (phase 2 branch). Its steps ran clean in a fresh clone of the branch on this Mac: the full build, the bundle with its five data gates, test 3, and 9,770 of 9,770 data files byte for byte live's. Not yet run on GitHub, so not yet on Linux: the branch is not pushed |
+| CI runs the full build and uploads the bundle | Done: the `site` job in `ci.yml`. Its first run on GitHub passed in 9 minutes (tests 1 and 3 on Linux). The bundle it uploaded verifies against its `SHA256SUMS`, and its 9,770 data files are byte for byte what live serves (test 2, data, for a build made on Linux with no laptop) |
 | Pages match live (test 2, app) | Done: built with the live data address, 7,627 of 7,845 app files are identical, and 213 pages and 5 renamed bundles are byte-equal once 11 named swaps are applied (three Svelte classes, computed from this checkout's path; the five bundles that hold them; three island ids); nothing else differs |
 
 | Phase 2 step (Aristotle) | State |
@@ -46,16 +48,60 @@ only; no sibling repo has changed.
 | Self-host the fonts | Done: `app/public/fonts/`, 94 files and 1.82 MB for the eight families, every file Google served, with each family's licence. No page names a Google font host |
 | No outside calls (test 3), as a browser test | Green with its default list, at `/` and at `/mirror/`: `scripts/check-no-outside-calls.mjs` sees one outside host asked for, Grammata. It was red on Google's two font hosts until the fonts moved into the site |
 | The mirror bundle, without the host files | Done: `scripts/make-bundle.mjs` packs a same-origin build as one `.tar.gz` with `SHA256SUMS`, leaves out `CNAME` and the Google verification page, refuses a build that holds `_redirects` or `.assetsignore`, and runs the deploy's data gates first. The real build: 17,613 files, 889 MB, 186 MB packed |
-| `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | `ARCHITECTURE.md` written. `RESTORE.md` waits for a mirror to restore from. The `Dockerfile` waits for CI: this Mac has no container tool, so it cannot be tested here |
-| The bundle on two candidate hosts | Waits on John (accounts) |
+| `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | All three written. The `Dockerfile` (the full build, then Caddy) is built and tested by `.github/workflows/image.yml`, IMAGE. `RESTORE.md` has a log of which of its steps have been run |
+| A check for a served copy | Done: `scripts/check-served.mjs` asks a host for every file a bundle's `SHA256SUMS` names and compares the bytes |
+| The bundle on two candidate hosts | Waits on John (accounts). The bundle and the check for a host are ready |
 
-Next: John's merge of #228 and then #231, and his yes to push phase 2, which
-is when the `site` job first runs on GitHub; then download its bundle and run
-`compare-snapshot.mjs` on it, which is test 2 for a build made on Linux.
-After that: `Dockerfile` and `RESTORE.md`, the bundle on two hosts (John's
-accounts), and John's GitLab account for the mirror.
+Next: John's merge of #228, then #231, then #232. Then his accounts: two
+candidate hosts for the bundle (decision 6), and GitLab for the git mirror.
+Phase 3 starts with those.
 
 ### Phase 2 record
+
+**CI built it on Linux (2026-11-21).** The `site` job's first run on GitHub
+(run 44932431816) fetched the two inputs, ran `build:public`, packed the
+bundle, and passed the no-outside-calls check, in 9 minutes. The artifact,
+downloaded and unpacked: `verify-snapshot.mjs` read 17,716 of 17,716 files
+against `SHA256SUMS`; `compare-snapshot.mjs` found 9,770 of 9,770 data files
+byte for byte what the 2026-11-20 snapshot of live holds; the no-outside-calls
+check passed on the unpacked folder. The pages were not compared with live's:
+they carry this branch's changes, and a checkout's folder still names three
+Svelte classes (the phase 1 record), so that comparison belongs to a build of
+the commit live was built from.
+
+**A check for a served copy.** `node scripts/check-served.mjs
+--origin=<host> --sums=<SHA256SUMS>` asks a running host for every file the
+list names (`--every=N` for a sample, which the output says) and fails unless
+each answers 200 with the listed bytes; each folder's address serves its
+index; pages, stylesheets, scripts, and SVGs come with a type a browser takes;
+a page address that cannot exist answers 404 with `404.html`, and a data
+address that cannot exist answers 404. An `index.html` may redirect to its own
+folder on the same host, as some hosts do. It is the check for the Docker
+image, for the two candidate hosts, for a mirror, and for a restore. Against
+the Linux-built bundle on a test file server it read 17,715 files in seven
+seconds, all matching, and failed on the one true fault: that server has no
+404 page. Failing cases first (27 tests); 23 of 24 hand-made breaks fail a
+test, and the other repeats a guard above it. Codex (GPT-6.1-Sol) read it and
+found five gaps (an index sent to another host passed; a type matched by its
+start; only a page address was probed for 404; a redirect's path compared
+undecoded; fractions taken as counts), all fixed.
+
+**Dockerfile.** One file: the build stage is `build:public` and
+`make-bundle.mjs` on `node:22.23.5-bookworm` with uv 0.13.9, the inputs
+fetched by checksum; the serve stage is `caddy:2.11.9-alpine` with the
+unpacked bundle at `/srv` and a `Caddyfile` that answers a missing page with
+`404.html`. Images are pinned by version tag, not by digest. This Mac has no
+container tool, so `.github/workflows/image.yml` is its only test: build the
+image, run it, and run `check-served.mjs` against it with the list from inside
+the image (which proves Caddy serves the folder as it is; the folder's own
+truth is the bundle step's gates). It runs on a pull request only when those
+files change, and on every push to `main`. Codex found nothing in the
+Dockerfile, the Caddyfile, or the two workflows.
+
+**RESTORE.md.** Three paths (a bundle, the source, Docker), what a restore
+does not bring back, and a log. It says plainly that GitHub is today the one
+place a stranger can restore from; mirrors are phase 3. Codex found two
+commands that would fail as written; fixed.
 
 **The parameters.** `SITE_ORIGIN` is the origin canonical links, cards,
 `robots.txt`, and the sitemap name; `SITE_BASE` is the path the site is

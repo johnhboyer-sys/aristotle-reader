@@ -4,7 +4,7 @@ How the site is made, what it needs, and what it calls. Written so that someone
 with this repository and no access to its author's machines or accounts can
 build the site and serve it. State and plans for the work that made this
 possible are in `HANDOFF-PORTABILITY.md`; how to bring the site back from a
-mirror is `RESTORE.md` (not yet written).
+bundle or from source is `RESTORE.md`.
 
 ## The site is static
 
@@ -102,6 +102,10 @@ folder is the whole site. `scripts/make-bundle.mjs` packs that folder as one
 Unpacked at a web root, the bundle is the site. Its canonical links name the
 primary, so a mirror does not compete with it in search results.
 
+The `Dockerfile` at the root is the same thing in one command: its first stage
+is the full build with its tools pinned, and its second serves the unpacked
+bundle with Caddy on port 80.
+
 ## Outside calls a visitor's browser makes
 
 | Host | For | State |
@@ -122,6 +126,7 @@ analytics and no trackers.
 | App and shared tests | `cd app && npx vitest run`; `cd shared && npm test` | The reader's code |
 | Link check | `node scripts/check-links.mjs` | No broken link or anchor in a built site, at any base path |
 | No outside calls | `node scripts/check-no-outside-calls.mjs` | In a browser whose every request passes a recorder that forwards nothing, the built site shows a work page, a word popup, a search, and a lemma page, and asks for no host off its allowed list. Needs Playwright and its Chromium |
+| A host serves the bundle | `node scripts/check-served.mjs --origin=<host> --sums=<SHA256SUMS>` | A running host answers every file the bundle's list names with the listed bytes, a folder's address with its index, and a missing page with 404 and the 404 page |
 | Same output | `node scripts/compare-snapshot.mjs` | A build matches a dated snapshot of the live site: data byte for byte, pages byte for byte once the names a checkout's folder changes are swapped |
 | Leak check | Inside `npm run deploy:cloudflare` and `scripts/make-bundle.mjs` | No gated translation's prose in served data, with a positive control |
 
