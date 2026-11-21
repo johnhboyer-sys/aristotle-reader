@@ -14,11 +14,12 @@ logged, like [ ].
 
 from __future__ import annotations
 
+import subprocess
 from pathlib import Path
 
 import pytest
 
-from aristotle_pipeline import stage1_chapters, stage1_greek, stage3_tokenize
+from aristotle_pipeline import greek_lines, stage1_chapters, stage1_greek, stage3_tokenize
 from aristotle_pipeline.config import SOURCES_DIR, Manifest
 
 
@@ -29,18 +30,19 @@ def _manifest(work: dict) -> Manifest:
 
 def test_spine_tei_is_read_from_sources():
     m = _manifest({"spine_tei": "rhetal-greek/rhetal-bekker-grc.xml"})
-    assert stage1_greek.exported_xml_path(m) == SOURCES_DIR / "rhetal-greek" / "rhetal-bekker-grc.xml"
+    assert stage1_greek.spine_source(m) == SOURCES_DIR / "rhetal-greek" / "rhetal-bekker-grc.xml"
 
 
-def test_without_spine_tei_the_export_is_used():
-    assert stage1_greek.exported_xml_path(_manifest({})).name == "tlg0547001.xml"
+def test_without_spine_tei_the_committed_line_file_is_used(tmp_path, monkeypatch):
+    monkeypatch.setattr(greek_lines, "CORPUS_DIR", tmp_path)
+    (tmp_path / "T.tsv").write_text("", encoding="utf-8")
+    assert stage1_greek.spine_source(_manifest({})) == tmp_path / "T.tsv"
 
 
 def test_a_missing_spine_tei_raises_rather_than_exporting(monkeypatch):
-    monkeypatch.setattr(stage1_greek.subprocess, "run",
-                        lambda *a, **k: pytest.fail("ran the Diogenes export"))
+    monkeypatch.setattr(subprocess, "run", lambda *a, **k: pytest.fail("ran a program"))
     with pytest.raises(FileNotFoundError, match="spine_tei"):
-        stage1_greek.run_export(_manifest({"spine_tei": "no-such-dir/none.xml"}))
+        stage1_greek.spine_source(_manifest({"spine_tei": "no-such-dir/none.xml"}))
 
 
 SPINE = {"segments": [{"id": "1:1a", "book": 1, "column": "1a",

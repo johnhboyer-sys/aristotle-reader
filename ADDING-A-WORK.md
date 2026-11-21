@@ -6,10 +6,13 @@ using *De Anima* (slug `DA`) as the worked example.
 
 ## 1. Vendor the sources (`sources/`)
 
-- **Greek**: nothing to fetch if the TLG author export is already cached — the
-  Diogenes verse-mode export emits one file per work (`tlg0086<work>.xml`) for the
-  whole author. Confirm the work's file has `type="Bekker-page"` divs with numeric
-  `<l n="…">` lines (the spine relies on this).
+- **Greek**: once the manifest exists (step 2), make the work's line file and
+  commit it: `python -m aristotle_pipeline.extract --work <SLUG>` in `pipeline/`
+  writes `corpus/greek/<SLUG>.tsv`. This is the one step that needs Diogenes and
+  the TLG (`TLG_DIR` names its folder); the build reads the committed file and
+  stops if it is missing. Confirm the file has a Bekker column and a numeric
+  line number on each row (the spine relies on this). The Diogenes export
+  itself stays under the git-ignored `build/export`.
 - **Chapter structure** (only if the work has no Bekker-milestoned English TEI):
   vendor the First1KGreek Greek TEI, e.g.
   `sources/tlg0086.tlg002.1st1K-grc1.xml`. Its `subtype="chapter"` divs are

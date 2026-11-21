@@ -16,7 +16,7 @@ from lxml import etree
 
 from ..beta import lookup_variants
 from ..config import BUILD_DIR, REPO_ROOT, Manifest
-from ..stage1_greek import _line_text
+from ..stage1_greek import _strip_bars
 from ..stage3_tokenize import tokenize
 from ..stage4_morphology import parse_analysis_line
 from ..stage5_lsj import base_key, fold_key, lemma_candidates
@@ -179,7 +179,7 @@ def count_exported_tokens(
         into = counts if direct_works is None or _work_id_of(path) in direct_works else fragment_counts
         tree = etree.parse(str(path))
         lines = [
-            {"n": number, "text": _line_text(line, strip_bars=True)}
+            {"n": number, "text": _strip_bars("".join(line.itertext()))}
             for number, line in enumerate(tree.iter("{*}l"), start=1)
         ]
         if not lines:

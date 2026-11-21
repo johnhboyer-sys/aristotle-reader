@@ -1,0 +1,30 @@
+# Files the Aristotle data bucket held on 2026-11-20 that no build makes.
+# For scripts/compare-snapshot.mjs --live-only. HANDOFF-PORTABILITY.md, phase 1.
+#
+# The deploy's own record of what it uploaded:
+_deploy/keys.json
+#
+# English search shards the index (search-shards/index.json) no longer names.
+# The bucket never deletes; whether to delete these is John's ruling:
+search-shards/english/cj.json
+search-shards/english/cp.json
+search-shards/english/dv.json
+search-shards/english/ff.json
+search-shards/english/hr.json
+search-shards/english/ji.json
+search-shards/english/kb.json
+search-shards/english/lp.json
+search-shards/english/lr.json
+search-shards/english/mc.json
+search-shards/english/ms.json
+search-shards/english/nn.json
+search-shards/english/pf.json
+search-shards/english/rj.json
+search-shards/english/tn.json
+search-shards/english/ts.json
+search-shards/english/ub.json
+search-shards/english/vs.json
+search-shards/english/wt.json
+search-shards/english/xo.json
+search-shards/english/zs.json
+search-shards/english/zv.json
