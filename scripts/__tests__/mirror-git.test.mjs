@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { refspecs } from '../mirror-git.mjs';
+import { isAddress, refspecs } from '../mirror-git.mjs';
 
 const SCRIPT = fileURLToPath(new URL('../mirror-git.mjs', import.meta.url));
 const CHECK = fileURLToPath(new URL('../mirror-check.mjs', import.meta.url));
@@ -96,11 +96,11 @@ test('mirror-git: a source with no branches or tags fails and says it examined n
 test('mirror-git: a source or a mirror that cannot be read fails', () => {
   const r = repos();
   try {
-    const noSource = run(`--source=${path.join(r.dir, 'nowhere')}`, `--mirror=${r.mirror}`);
+    const noSource = run(`--source=${pathToFileURL(path.join(r.dir, 'nowhere')).href}`, `--mirror=${r.mirror}`);
     assert.equal(noSource.status, 1);
     assert.match(noSource.stdout, /^FAIL /m);
     assert.match(noSource.stdout, /could not fetch/);
-    const noMirror = run(`--source=${r.src}`, `--mirror=${path.join(r.dir, 'nowhere.git')}`);
+    const noMirror = run(`--source=${r.src}`, `--mirror=${pathToFileURL(path.join(r.dir, 'nowhere.git')).href}`);
     assert.equal(noMirror.status, 1);
     assert.match(noMirror.stdout, /^FAIL /m);
   } finally { r.done(); }
@@ -109,12 +109,59 @@ test('mirror-git: a source or a mirror that cannot be read fails', () => {
 test('mirror-git: an address with a password in it is refused, and the password is not printed', () => {
   const r = repos();
   try {
-    for (const args of [[`--source=${r.src}`, '--mirror=https://oauth2:hunter2secret@gitlab.example/a/b.git'], ['--source=https://u:hunter2secret@github.example/a/b.git', `--mirror=${r.mirror}`]]) {
+    for (const args of [
+      [`--source=${r.src}`, '--mirror=https://oauth2:hunter2secret@gitlab.example/a/b.git'],
+      ['--source=https://u:hunter2secret@github.example/a/b.git', `--mirror=${r.mirror}`],
+      [`--source=${r.src}`, '--mirror=ssh://git:hunter2secret@gitlab.example/a/b.git'],
+      // git's remote-helper form, which hides the address from a check that reads its start
+      [`--source=${r.src}`, '--mirror=https::https://u:hunter2secret@gitlab.example/a/b.git'],
+    ]) {
       const out = run(...args);
       assert.equal(out.status, 1, out.stdout + out.stderr);
-      assert.match(out.stdout, /password/);
+      assert.match(out.stdout, /password|not an address/);
       assert.doesNotMatch(out.stdout + out.stderr, /hunter2secret/);
     }
+  } finally { r.done(); }
+});
+
+test('mirror-git: an address git would read as an option, or as a program to run, is refused before git sees it', () => {
+  const r = repos();
+  try {
+    for (const bad of ['--upload-pack=touch pwned', '-f', 'ext::sh -c "touch pwned"', 'https::https://gitlab.example/a/b.git', 'nowhere/at/all', 'ftp://gitlab.example/a/b.git']) {
+      for (const args of [[`--source=${bad}`, `--mirror=${r.mirror}`], [`--source=${r.src}`, `--mirror=${bad}`]]) {
+        const out = spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', env: ENV, cwd: r.dir });
+        assert.equal(out.status, 1, bad + out.stdout);
+        assert.match(out.stdout, /not an address/, bad);
+      }
+    }
+    // A folder that does exist, with a name git would read as an option.
+    git(r.dir, 'clone', '-q', '--bare', r.src, path.join(r.dir, '-f.git'));
+    const dashed = spawnSync(process.execPath, [SCRIPT, '--source=-f.git', `--mirror=${r.mirror}`], { encoding: 'utf8', env: ENV, cwd: r.dir });
+    assert.equal(dashed.status, 1, dashed.stdout);
+    assert.match(dashed.stdout, /not an address/);
+    assert.equal(git(r.mirror, 'for-each-ref'), '');
+    assert.equal(spawnSync('ls', [r.dir], { encoding: 'utf8' }).stdout.includes('pwned'), false);
+  } finally { r.done(); }
+});
+
+test('mirror-git: the addresses git hosts give are taken', () => {
+  for (const good of ['https://gitlab.com/a/b.git', 'ssh://git@gitlab.com/a/b.git', 'git@gitlab.com:a/b.git', 'file:///tmp/x.git']) assert.equal(isAddress(good), true, good);
+});
+
+test('mirror-git: --no-force adds branches and cannot take main off the list', () => {
+  const r = repos();
+  try {
+    assert.equal(mirrorTo(r).status, 0);
+    const before = at(r.mirror, 'refs/heads/main');
+    const featureBefore = at(r.mirror, 'refs/heads/feature');
+    git(r.src, 'reset', '-q', '--hard', 'HEAD~1');
+    r.commit('c');
+    git(r.src, 'switch', '-q', 'feature');
+    git(r.src, 'commit', '-q', '--amend', '-m', 'a, reworded');
+    const out = run(`--source=${r.src}`, `--mirror=${r.mirror}`, '--no-force=refs/heads/feature');
+    assert.equal(out.status, 1, out.stdout + out.stderr);
+    assert.equal(at(r.mirror, 'refs/heads/main'), before);
+    assert.equal(at(r.mirror, 'refs/heads/feature'), featureBefore);
   } finally { r.done(); }
 });
 
@@ -194,4 +241,6 @@ test('mirror-git: refspecs force every branch but the ones named, and no tag', (
     refspecs(['refs/heads/main', 'refs/heads/claude/x', 'refs/tags/v1'], ['refs/heads/main']),
     ['refs/heads/main:refs/heads/main', '+refs/heads/claude/x:refs/heads/claude/x', 'refs/tags/v1:refs/tags/v1'],
   );
+  // main is on the list whatever the list says.
+  assert.deepEqual(refspecs(['refs/heads/main', 'refs/heads/x'], ['refs/heads/x']), ['refs/heads/main:refs/heads/main', 'refs/heads/x:refs/heads/x']);
 });

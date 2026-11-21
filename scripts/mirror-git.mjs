@@ -4,7 +4,7 @@
 //
 //   node scripts/mirror-git.mjs --source=<url or path> --mirror=<url or path>
 //     [--skip=<ref>,<ref>]       left out; default refs/heads/gh-pages (decision 7)
-//     [--no-force=<ref>,<ref>]   never pushed over; default refs/heads/main
+//     [--no-force=<ref>,<ref>]   more branches never pushed over; refs/heads/main always is
 //
 // The source is fetched whole into a temp folder (never from the checkout it
 // runs in: a CI checkout is shallow, and a mirror pushed from one has the
@@ -15,13 +15,21 @@
 // A mirror is a backup, so it gives way slowly. A tag, and main, are pushed
 // without force: if either was rewritten at the source the push is refused,
 // the mirror keeps what it had, and this exits 1. Other branches are rebased
-// in the course of work and are pushed over. Nothing is ever deleted from the
-// mirror: a ref only it holds is printed.
+// in the course of work and are pushed over. A refused ref does not hold the
+// others back: they still go, and the run still fails. Nothing is ever deleted
+// from the mirror: a ref only it holds is printed.
+//
+// What it does not prove: that the mirror's history is whole. A mirror that
+// was shallow before this ran, with the right tips, passes here;
+// mirror-check.mjs clones the mirror and asks.
 //
 // Exit 1 when the source or the mirror cannot be read, the source is shallow
 // or has no branch or tag (examined nothing), a push is refused, or the two
-// do not match afterwards. An address with a password in it is refused: a key
-// belongs in the environment (GIT_SSH_COMMAND, a credential helper).
+// do not match afterwards. An address must be a folder that exists, or
+// https://, ssh://, file://, or user@host:path; anything else is refused
+// before git sees it (git reads "-x" as an option and "ext::cmd" as a program
+// to run). One with a password in it is refused: a key belongs in the
+// environment (GIT_SSH_COMMAND, a credential helper).
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -37,16 +45,22 @@ const said = (r) => (r.stderr || r.stdout || String(r.error || '')).trim();
 // A plain path would be fetched by reading files in place, a shallow marker
 // unseen; file:// makes git fetch it as it would from a host.
 const asUrl = (remote) => (existsSync(remote) ? pathToFileURL(path.resolve(remote)).href : remote);
-const hasPassword = (remote) => /^[a-z][a-z0-9+.-]*:\/\/[^/@]*:[^/@]*@/i.test(remote);
+const hasPassword = (remote) => /:\/\/[^/@\s]*:[^/@\s]*@/.test(remote);
+export const isAddress = (remote) => !remote.startsWith('-')
+  && (existsSync(remote) || /^(https|ssh|file):\/\/[^\s:]\S*$/.test(remote) || /^[\w.-]+@[\w.-]+:[^\s:]\S*$/.test(remote));
 
 // One refspec a ref: tags and the named branches as they are, the rest forced.
-export function refspecs(refs, noForce = DEFAULT_NO_FORCE) {
-  return refs.map((ref) => `${ref.startsWith('refs/heads/') && !noForce.includes(ref) ? '+' : ''}${ref}:${ref}`);
+export function refspecs(refs, noForce = []) {
+  const kept = [...DEFAULT_NO_FORCE, ...noForce];
+  return refs.map((ref) => `${ref.startsWith('refs/heads/') && !kept.includes(ref) ? '+' : ''}${ref}:${ref}`);
 }
 
-export function mirrorGit({ source, mirror, skip = DEFAULT_SKIP, noForce = DEFAULT_NO_FORCE }) {
+export function mirrorGit({ source, mirror, skip = DEFAULT_SKIP, noForce = [] }) {
   const fail = (problem) => ({ ok: false, problems: [problem], examined: 0, matched: 0, extra: [], skipped: [] });
   if (hasPassword(source) || hasPassword(mirror)) return fail('an address has a password in it; put the key in the environment, not in the address');
+  for (const [name, remote] of [['source', source], ['mirror', mirror]]) {
+    if (!isAddress(remote)) return fail(`the ${name} is not an address this takes: a folder that exists, https://, ssh://, file://, or user@host:path`);
+  }
   const tmp = mkdtempSync(path.join(tmpdir(), 'mirror-git-'));
   try {
     if (git(['init', '--quiet', '--bare', tmp]).status !== 0) return fail(`could not make a work folder at ${tmp}`);
@@ -91,9 +105,9 @@ function main(argv) {
   const r = mirrorGit({
     source: args.source, mirror: args.mirror,
     skip: args.skip ? args.skip.split(',') : DEFAULT_SKIP,
-    noForce: args['no-force'] ? args['no-force'].split(',') : DEFAULT_NO_FORCE,
+    noForce: args['no-force'] ? args['no-force'].split(',') : [],
   });
-  const where = hasPassword(args.mirror) ? 'the mirror' : args.mirror;
+  const where = hasPassword(args.mirror) || !isAddress(args.mirror) ? 'the mirror' : args.mirror;
   const skippedNote = r.skipped.length ? `; ${r.skipped.length} left out (${r.skipped.join(', ')})` : '';
   console.log(`${r.ok ? 'ok  ' : 'FAIL'} ${where}: ${r.matched} of ${r.examined} refs match the source after the push${skippedNote}; history not checked here (mirror-check.mjs does)`);
   for (const p of r.problems) console.log(`  ${p}`);
