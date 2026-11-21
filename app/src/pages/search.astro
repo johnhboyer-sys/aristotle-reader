@@ -11,6 +11,7 @@ import { WORKS, visibleTranslations } from '@shared/lib/works';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
 import '@shared/styles/b-search.css';
+import { shareCard } from '../lib/og';
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 // The chapter titles the search's chapter lines name (ruling 17), as the
 // reader's contents name them (ReaderShell): the work's own, else those its
@@ -37,7 +38,7 @@ const searchDescription =
   ' English translation — by word or phrase, in Greek script or Beta Code, with' +
   ' results cited by Bekker number.';
 const canonical = Astro.site ? new URL(`${base}/search/`, Astro.site).href : undefined;
-const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/${shareCard()}`, Astro.site).href : undefined;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'WebPage',

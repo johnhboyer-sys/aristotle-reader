@@ -12,6 +12,7 @@ import { jsonLdSafe } from '../../lib/jsonld';
 import { greekFold } from '@shared/lib/search';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
+import { shareCard } from '../../lib/og';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -32,7 +33,7 @@ const metaDescription =
   ` LSJ definitions, corpus-wide frequency counts, and every occurrence linked to the` +
   ` parallel Greek–English text with Bekker citation.`;
 const canonical = Astro.site ? new URL(`${base}/lemma/`, Astro.site).href : undefined;
-const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/${shareCard()}`, Astro.site).href : undefined;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'DefinedTermSet',

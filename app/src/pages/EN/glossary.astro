@@ -17,6 +17,7 @@ import { workPath } from '@shared/lib/works';
 import { jsonLdSafe } from '../../lib/jsonld';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
+import { shareCard } from '../../lib/og';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const readerHref = `${base}${workPath('EN')}`;
@@ -24,7 +25,7 @@ const pageTitle = 'Glossary of Technical Terms — Nicomachean Ethics';
 const metaDescription =
   "Martin Ostwald's glossary of technical terms for Aristotle's Nicomachean Ethics, with Greek terms, English renderings, explanatory notes, and stable entry links.";
 const canonical = Astro.site ? new URL(`${base}/EN/glossary/`, Astro.site).href : undefined;
-const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/${shareCard()}`, Astro.site).href : undefined;
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'DefinedTermSet',

@@ -14,6 +14,7 @@ import BFoot from '../components/BFoot.astro';
 import { jsonLdSafe } from '../lib/jsonld';
 import '@shared/styles/global.css';
 import '@shared/styles/b.css';
+import { shareCard } from '../lib/og';
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
@@ -23,7 +24,7 @@ const homeDescription =
   ' English translation, side by side — with click-to-parse morphology,' +
   ' dictionary lookup, Bekker citation, and full-text search across the corpus.';
 const canonical = Astro.site ? new URL(`${base}/`, Astro.site).href : undefined;
-const ogImage = Astro.site ? new URL(`${base}/og-default.png`, Astro.site).href : undefined;
+const ogImage = Astro.site ? new URL(`${base}/${shareCard()}`, Astro.site).href : undefined;
 // Resolve the corpus taxonomy into per-division view models (../lib/corpus).
 // Each card row becomes a single tappable card; the editions/translations live
 // on the work's landing page (/<work>).
