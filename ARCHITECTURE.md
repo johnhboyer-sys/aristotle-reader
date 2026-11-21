@@ -45,7 +45,10 @@ app/dist/                 the site
 - **Two outside inputs.** The Morpheus table and the LSJ XML are not in the
   repository. `python -m aristotle_pipeline.inputs check` (in `pipeline/`)
   checks the copies it finds against pinned sizes and sha256 sums; the folder
-  is named by `DIOGENES_DATA`.
+  is named by `DIOGENES_DATA`. On a machine without Diogenes,
+  `python -m aristotle_pipeline.inputs fetch --dir <folder>` downloads the
+  Diogenes 4.7.2 release (186 MB, pinned by sha256), takes the two files out
+  of it, and holds each to its pin.
 - **Full build.** `npm run build:public` at the root runs the pipeline for every
   work from its public manifest, the corpus-wide checks, the app build, and the
   link check. About five minutes on a laptop.
@@ -104,7 +107,7 @@ primary, so a mirror does not compete with it in search results.
 | Host | For | State |
 |---|---|---|
 | The data host | Corpus data, when `PUBLIC_DATA_ROOT` is set | None in a same-origin build |
-| `fonts.googleapis.com`, `fonts.gstatic.com` | Web fonts | To be replaced by files in the site (phase 2) |
+| None, for fonts | Web fonts | The site serves its own: `app/public/fonts/`, 94 files for eight families, each under the Open Font License |
 | Grammata (`PUBLIC_GRAMMATA_LOOKUP`) | The grammar lookup in the word popup and on lemma pages | Stays, by a ruling of 2026-08-29. With it refused, the popup and the lemma page still show their own headword, gloss, and parses; the full LSJ entry says "Lookup failed" |
 
 Links to the sibling readers in the footer are plain links. There are no

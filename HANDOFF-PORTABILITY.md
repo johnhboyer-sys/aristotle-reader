@@ -11,8 +11,10 @@ is copied between the repos, never synced as a folder).
 Phase 0 is done but for the steps that wait on John; it is PR #228, open.
 Phase 1 is PR #231 (`claude/portability-phase1`, three commits, pushed
 2026-11-21 on John's yes, based on phase 0's branch) but for the two rows that
-need a download. Phase 2 has begun on `claude/portability-phase2`, stacked on
-it and not pushed. Aristotle only; no sibling repo has changed.
+need a download; those two are now done on the phase 2 branch. Phase 2 is on
+`claude/portability-phase2`, stacked on it and not pushed: the site serves its
+own fonts, test 3 is green, and a CI job builds the whole site. Aristotle
+only; no sibling repo has changed.
 
 | Phase 0 step | State |
 |---|---|
@@ -31,9 +33,9 @@ it and not pushed. Aristotle only; no sibling repo has changed.
 | `merge_juv.py` folded into `extract` | Done: `extract` calls its `merge_spine()` for work 918 |
 | Same output as live (test 2, data) | Done: a full build with the Diogenes export off the machine made 9,770 data files, each byte for byte what live serves |
 | Snapshot diff as a script | Done: `scripts/compare-snapshot.mjs`, data and pages. Not a CI step; see below |
-| Morpheus table and LSJ pinned by checksum, folder from the environment | Check done (`aristotle_pipeline.inputs check`, run by `build:public`). The fetch waits on John's yes to a 190 MB download |
+| Morpheus table and LSJ pinned by checksum, folder from the environment | Done. Check: `aristotle_pipeline.inputs check`, run by `build:public`. Fetch: `aristotle_pipeline.inputs fetch`, from the Diogenes 4.7.2 Mac zip (186 MB, pinned); both files in the release match the pins byte for byte. The fetch is on the phase 2 branch |
 | `/tmp/perseus-ne` and other machine paths out of the public build | Done: gone from `EN.yaml` and `config.py`. The manifests still name Diogenes.app, as the local default for `extract` and the two inputs |
-| CI runs the full build and uploads the bundle | Not started; needs the fetch |
+| CI runs the full build and uploads the bundle | Written: the `site` job in `ci.yml` (phase 2 branch). Its steps ran clean in a fresh clone of the branch on this Mac: the full build, the bundle with its five data gates, test 3, and 9,770 of 9,770 data files byte for byte live's. Not yet run on GitHub, so not yet on Linux: the branch is not pushed |
 | Pages match live (test 2, app) | Done: built with the live data address, 7,627 of 7,845 app files are identical, and 213 pages and 5 renamed bundles are byte-equal once 11 named swaps are applied (three Svelte classes, computed from this checkout's path; the five bundles that hold them; three island ids); nothing else differs |
 
 | Phase 2 step (Aristotle) | State |
@@ -41,17 +43,17 @@ it and not pushed. Aristotle only; no sibling repo has changed.
 | Build parameters for origin, base path, and the Grammata address | Done: `SITE_ORIGIN`, `SITE_BASE` (`scripts/site-params.mjs`, read by the Astro config and the link check alike), `PUBLIC_GRAMMATA_LOOKUP`; `robots.txt` is written by the build. Unset, the build is byte for byte what it was |
 | Data root | Was already a parameter (`PUBLIC_DATA_ROOT`); unset, data is under `<base>/data` on the site's own origin, which is the mirror bundle's shape |
 | A build at a test base path passes the link check | Done: `/mirror/` at another origin, 7,563 pages, 414,408 links, 0 broken |
-| Self-host the fonts | Not started. Eight families come from Google Fonts at run time; Plato's repo already holds Gentium Book Plus. The rest are a download, which waits on John's yes |
-| No outside calls (test 3), as a browser test | Written, and red as it should be: `scripts/check-no-outside-calls.mjs` fails on `fonts.googleapis.com` and `fonts.gstatic.com` and on nothing else; with those two allowed it passes at `/` and at `/mirror/`. It goes green when the fonts are self-hosted |
+| Self-host the fonts | Done: `app/public/fonts/`, 94 files and 1.82 MB for the eight families, every file Google served, with each family's licence. No page names a Google font host |
+| No outside calls (test 3), as a browser test | Green with its default list, at `/` and at `/mirror/`: `scripts/check-no-outside-calls.mjs` sees one outside host asked for, Grammata. It was red on Google's two font hosts until the fonts moved into the site |
 | The mirror bundle, without the host files | Done: `scripts/make-bundle.mjs` packs a same-origin build as one `.tar.gz` with `SHA256SUMS`, leaves out `CNAME` and the Google verification page, refuses a build that holds `_redirects` or `.assetsignore`, and runs the deploy's data gates first. The real build: 17,613 files, 889 MB, 186 MB packed |
 | `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | `ARCHITECTURE.md` written. `RESTORE.md` waits for a mirror to restore from. The `Dockerfile` waits for CI: this Mac has no container tool, so it cannot be tested here |
 | The bundle on two candidate hosts | Waits on John (accounts) |
 
-Next: John's merge of #228 and then #231, and his yes to the two downloads (Diogenes 4.7.2,
-193 MB, for the Morpheus and LSJ fetch; the font files, at most 94 `.woff2`
-files and 1.82 MB from `fonts.gstatic.com` for the eight families, fewer if
-only the Latin and Greek subsets are kept); self-host the fonts, which turns
-test 3 green; John's GitLab account for the mirror.
+Next: John's merge of #228 and then #231, and his yes to push phase 2, which
+is when the `site` job first runs on GitHub; then download its bundle and run
+`compare-snapshot.mjs` on it, which is test 2 for a build made on Linux.
+After that: `Dockerfile` and `RESTORE.md`, the bundle on two hosts (John's
+accounts), and John's GitLab account for the mirror.
 
 ### Phase 2 record
 
@@ -121,13 +123,46 @@ an uncaught page error, a page that never goes quiet, or zero requests. The
 allowed list is exact names: `grammata.pages.dev` and the packs bucket
 (decision 4); `--allow=` replaces it.
 
-Today, on the real build: `FAIL … 2 outside hosts are not allowed:
-fonts.googleapis.com x16 …, fonts.gstatic.com x4 …; 6 of 6 visits, 251
-requests to the site (0 not found), 3 outside hosts asked for`. With the two
-font hosts allowed: `ok`, at `/` and at `/mirror/`. So fonts are the only
-gap, and the word popup works with Grammata refused (Grammata is asked for
-only by the lemma page's LSJ entry, which then says "Lookup failed", and by
-the popup's "Show the LSJ entry").
+Before the fonts moved (2026-11-20): `FAIL … 2 outside hosts are not allowed:
+fonts.googleapis.com x16 …, fonts.gstatic.com x4 …`. Since (2026-11-21), with
+the default list: `ok app/dist at /: 6 of 6 visits, 310 requests to the site
+(0 not found), 1 outside host asked for, it allowed (grammata.pages.dev x1)`,
+and the same at `/mirror/`. The word popup works with Grammata refused
+(Grammata is asked for only by the lemma page's LSJ entry, which then says
+"Lookup failed", and by the popup's "Show the LSJ entry").
+
+**Fonts.** `app/public/fonts/fonts.css` is Google's CSS for the queries the
+pages used to send, with each file's address made local: 149 rules, 94 woff2
+files, eight families (Gentium Book Plus, Literata, Sofia Sans, Oswald; Bodoni
+Moda and DM Mono for the print masthead; Cardo and EB Garamond, the reader's
+optional faces), each with its OFL text. Every subset Google served is kept.
+The first cut kept only latin and greek, as Plato's repo does; a scan of the
+built site then found U+0323 (406 underdots in the Athenian Constitution) and
+U+0301 (the Poetics' scansion), which only the vietnamese and cyrillic files
+cover, and a page of the Athenian Constitution does load the vietnamese
+file. Keeping all 94 makes the type what it was, with no ruling to make per
+face. Plato's four-subset set should get the same scan at its port.
+
+`BFonts.astro` links the stylesheet with `data-reader-font="cardo garamond"`.
+`loadReaderFace` in `shared/components/Reader.svelte` now matches that
+attribute as a word (`~=`), so on a page that declares the faces it adds no
+link; its Google addresses stay for the desktop app, which mounts the same
+component and has no font files. That is the hunk each sibling takes, with
+its own stylesheet naming the faces. `sw.js` still has its branch for
+Google's font hosts; the site can no longer reach it, and it was left alone.
+Checks: `scripts/__tests__/fonts.test.mjs` holds the stylesheet and the folder
+to each other (18 tests); of 7,563 built pages, 7,560 carry the link and none
+names a Google font host (the other three never had web fonts); in Chromium
+all 149 faces are declared, none in error, and Cardo and EB Garamond load from
+the site; taking the attribute off one built page turns test 3 red at the
+typefaces visit. Codex (GPT-6.1-Sol) read it: no path to Google and no
+missing face found; two holes in the font test, fixed.
+
+The fresh clone caught one thing no test here had: `.gitignore`'s `*.TXT`,
+the guard on raw TLG files, matches `.txt` on a Mac's disk, so the eight
+licence texts had stayed out of the commit in silence. The ignore file now
+excepts `app/public/fonts/OFL-*.txt`. On GitHub the font test would have
+failed for it; here only the clone showed it.
 
 An Opus 5.5 agent wrote it with its failing cases first (16 browser fixtures
 in `scripts/__tests__/check-no-outside-calls.browser.mjs`, run by hand with
@@ -147,9 +182,9 @@ link hint removed before its visit ends; anything a reader does that the six
 visits do not. Playwright is not a package of this repo: the script finds it
 as `app/scripts/check-redesign.mjs` does and throws if it cannot. The npx
 copy here is newer than the browsers in the cache, so the script falls back
-to the newest headless shell already there. CI will need
-`npx playwright install chromium`, which is a download and a new tool for
-CI: John's call when the workflow is written.
+to the newest headless shell already there. The CI job installs Playwright
+1.65.1 and its Chromium with `npx` for this one step; it is no package of
+the repo.
 
 **Known and left.** Saved searches keep whole paths, base included, in the
 browser's storage, so a saved search does not follow a site to another base.
@@ -275,10 +310,20 @@ it by hand at each port, as above.
 by sha256 and size in `pipeline/aristotle_pipeline/inputs.py`, hashed from
 Diogenes 4.7.2's `dependencies/data`. `DIOGENES_DATA` names their folder; each
 manifest's `sources.diogenes_data` (the path inside Diogenes.app) is the local
-default. The public source to fetch from is the Diogenes 4.7.2 release on
-GitHub (`pjheslin/diogenes`, tag `4.7.2`; `diogenes-4.7.2.pkg.tar.xz`, 193 MB,
-a plain tar). Nobody has yet downloaded it to confirm the two files inside
-match the pins, or pinned the archive's own checksum.
+default. The public source is the Diogenes 4.7.2 release on GitHub
+(`pjheslin/diogenes`, tag `4.7.2`). `python -m aristotle_pipeline.inputs fetch
+--dir FOLDER` downloads its Mac zip (`diogenes-mac-arm64-4.7.2.zip`, 186 MB,
+pinned by length and sha256) and takes the two files out; on 2026-11-21 both
+matched the pins byte for byte, in the zip and in the Linux package alike.
+The zip is used because Python's standard library reads one; the Linux
+package (`diogenes-4.7.2.pkg.tar.xz`) is Zstandard under an `.xz` name, which
+Python 3.12 cannot read. The fetch writes to `--dir` or `$DIOGENES_DATA` only,
+never to the folder a manifest names, never over a file, and leaves the
+folder as it was on a failure. 19 of 19 hand-made breaks of its guards fail a
+test. Codex found four gaps in those rules (a rename could write over a file
+that appeared meanwhile, or a dangling link; a failed second placement left
+the first; parent folders were left behind; a failed work folder left the
+folder) and one test that proved less than its name; all are fixed.
 
 ### Phase 1 baseline: a clean build already matches live
 
