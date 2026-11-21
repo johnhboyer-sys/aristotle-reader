@@ -34,6 +34,18 @@ jobs:
         with:
           out: ${{ env.BUNDLE }}
 
+      # The tag says this commit is what the primary serves, and the deploy
+      # script cannot know that app/dist was built from it. Hold the tag to
+      # its word: every data file of the bundle is asked of the primary's
+      # data host. (The pages cannot be held the same way: a build's page
+      # bytes vary.) A file changed by the deploy can be up to ten minutes
+      # stale at the host's cache; this step runs later than that, and a
+      # failed run can be run again, for no release exists yet.
+      - name: The bundle's data is what the primary serves
+        run: |
+          tar -xzf "$BUNDLE" -C "$RUNNER_TEMP" ./SHA256SUMS
+          node scripts/check-served.mjs --origin=https://aristotle-data.johnhboyer.com --sums="$RUNNER_TEMP/SHA256SUMS" --part=data
+
       # SHA256SUMS names every file in the bundle; it is attached beside the
       # bundle so a mirror can be checked against it without a download of
       # 187 MB. A release that exists is never written over: a second run for
@@ -42,7 +54,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          tar -xzf "$BUNDLE" -C "$RUNNER_TEMP" ./SHA256SUMS
           files=$(wc -l < "$RUNNER_TEMP/SHA256SUMS" | tr -d ' ')
           sum=$(sha256sum "$BUNDLE" | cut -d' ' -f1)
           printf '%s\n' \

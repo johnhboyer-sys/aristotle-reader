@@ -94,17 +94,21 @@ origin.
 
 **What the tag cannot know.** It names `HEAD` when the deploy ran. Nothing
 ties `app/dist` to that commit: a build made at one commit and deployed after
-a checkout of another is tagged at the other, and the release would then hold
-a build that is not live's. Open: a step in the Release workflow that compares
-the bundle's data with what the primary serves, and fails the release when
-they differ.
+a checkout of another is tagged at the other. The Release workflow holds the
+tag to its word for the data: before it publishes, `check-served.mjs
+--part=data` asks the primary's data host for every data file of the bundle
+and fails the release when one differs. Run by hand against the bundle CI
+built: a sample of 196 of 9,770 files, all the listed bytes. The pages cannot
+be held the same way (a build's page bytes vary), so a tag at a commit whose
+pages differ from the deployed ones and whose data does not is still released.
 
 **Release.** A push of a `deploy/*` tag runs `.github/workflows/release.yml`:
 the shared action `.github/actions/site-bundle` (the steps CI's `site` job
 ran: inputs by checksum, `build:public`, the bundle with its gates, the
 no-outside-calls check), then `gh release create` with the bundle and the
 `SHA256SUMS` from inside it. So the release is built with no laptop, the way
-every pull request is tested. A release that exists is never written over.
+every pull request is tested. Between the two, the data check above. A
+release that exists is never written over.
 This changes the plan's first bullet, which had the deploy script attach a
 bundle built on the laptop. After it merges, every deploy publishes a public
 release of about 187 MB; `--no-tag` holds one back.
@@ -126,7 +130,8 @@ clean tree; `git fetch --tags` could fail on a local tag of another name, and
 ran before the cheap skips. Left, and said in the code: a refused `main` does
 not hold other branches back (meant); a mirror that was already shallow
 passes (the other script's job); a deleted highest number can be given out
-again; the tag cannot know what `app/dist` was built from (above).
+again; the tag cannot know what `app/dist` was built from (the release's
+data check, above, catches it for the data).
 
 ### Phase 2 record
 

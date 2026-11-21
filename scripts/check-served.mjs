@@ -10,6 +10,10 @@
 //                         404.html, sw.js): a sample, for a host that should
 //                         not be asked for 17,000 files. The output says so.
 //     [--concurrency=8]
+//     [--part=data/]      the host holds only this folder of the list, at
+//                         its own root (the primary keeps data/ on a host
+//                         of its own). Only files, and one address that
+//                         cannot exist, are asked of it; no pages.
 //
 // --sums is a file, or an http(s) address. The list a host serves beside its
 // own files proves only that the host agrees with itself; a list kept apart
@@ -47,9 +51,9 @@ const INDEX = 'index.html';
 const dotFile = (p) => p.split('/').some((part) => part.startsWith('.'));
 
 export function parseArgs(argv) {
-  const args = { base: '/', every: 1, concurrency: 8 };
+  const args = { base: '/', every: 1, concurrency: 8, part: '' };
   for (const a of argv) {
-    const m = a.match(/^--(origin|sums|base|every|concurrency)=(.+)$/);
+    const m = a.match(/^--(origin|sums|base|every|concurrency|part)=(.+)$/);
     if (!m) throw new Error(`unknown argument: ${a}`);
     args[m[1]] = m[2];
   }
@@ -61,6 +65,7 @@ export function parseArgs(argv) {
   }
   args.origin = url.origin;
   args.base = `/${args.base.replace(/^\/+|\/+$/g, '')}/`.replace('//', '/');
+  if (args.part) args.part = `${args.part.replace(/^\/+|\/+$/g, '')}/`;
   for (const k of ['every', 'concurrency']) {
     args[k] = Number(args[k]);
     if (!Number.isInteger(args[k]) || args[k] < 1) throw new Error(`--${k} must be a whole number, 1 or more`);
@@ -74,9 +79,11 @@ export function pick(entries, every) {
   return sorted.filter((e, i) => i % every === 0 || MUST.includes(e.path));
 }
 
-export async function checkServed({ origin, base = '/', entries, every = 1, concurrency = 8, tries = 2 }) {
+export async function checkServed({ origin, base = '/', entries: listed, every = 1, concurrency = 8, tries = 2, part = '' }) {
+  // With a part, the list is its files alone, each asked for without the part's name.
+  const entries = part ? listed.filter((e) => e.path.startsWith(part)).map((e) => ({ ...e, path: e.path.slice(part.length) })) : listed;
   const r = { ok: false, problems: [], total: entries.length, examined: 0, skipped: 0, folders: 0, redirected: 0, typed: 0 };
-  const problem = (p) => { if (r.problems.length < 200) r.problems.push(p); else r.more = (r.more || 0) + 1; };
+  const problem = (p) => { if (r.problems.length < 200) r.problems.push(part + p); else r.more = (r.more || 0) + 1; };
   const sums = new Map(entries.map((e) => [e.path, e.sha256]));
 
   // One address, no redirect followed. A network error or a 5xx is tried again.
@@ -135,7 +142,7 @@ export async function checkServed({ origin, base = '/', entries, every = 1, conc
     r.skipped += 1;
     return false;
   });
-  if (!todo.length) problem('examined nothing: the list names no file to ask for');
+  if (!todo.length) r.problems.push(`examined nothing: the list names no file to ask for${part ? ` under ${part}` : ''}`);
   let next = 0;
   await Promise.all(Array.from({ length: Math.min(concurrency, todo.length) }, async () => {
     while (next < todo.length) await one(todo[next++]);
@@ -145,16 +152,17 @@ export async function checkServed({ origin, base = '/', entries, every = 1, conc
   // broken link, and a reader's fetch of a data file that is not there would
   // get a page and call it data.
   const nowhere = `check-served-${randomBytes(8).toString('hex')}`;
-  if (!sums.has('404.html')) problem('the list names no 404.html, so a missing page cannot be checked');
+  const whole = (p) => r.problems.push(p);
+  if (part) { /* a host of files has no pages */ } else if (!sums.has('404.html')) whole('the list names no 404.html, so a missing page cannot be checked');
   else {
     const a = await get(`${nowhere}/`);
-    if (a.error) problem(`a missing page could not be fetched (${a.error})`);
-    else if (a.status !== 404) problem(`a missing page answered ${a.status}, not 404`);
-    else if (a.sha256 !== sums.get('404.html')) problem('a missing page was not answered with 404.html');
+    if (a.error) whole(`a missing page could not be fetched (${a.error})`);
+    else if (a.status !== 404) whole(`a missing page answered ${a.status}, not 404`);
+    else if (a.sha256 !== sums.get('404.html')) whole('a missing page was not answered with 404.html');
   }
-  const d = await get(`data/${nowhere}.json`);
-  if (d.error) problem(`a missing data file could not be fetched (${d.error})`);
-  else if (d.status !== 404) problem(`a missing data file answered ${d.status}, not 404`);
+  const d = await get(part ? `${nowhere}.json` : `data/${nowhere}.json`);
+  if (d.error) whole(`a missing data file could not be fetched (${d.error})`);
+  else if (d.status !== 404) whole(`a missing data file answered ${d.status}, not 404`);
 
   r.ok = r.problems.length === 0 && r.examined > 0;
   return r;
@@ -178,7 +186,7 @@ async function main(argv) {
   const entries = parseSums(await readSums(args.sums));
   const r = await checkServed({ ...args, entries });
   const where = `${args.origin}${args.base}`;
-  const read = `${r.examined} of ${r.total} listed files asked for${args.every > 1 ? ` (a sample: every ${args.every}th)` : ''}, ${r.skipped} dot file${r.skipped === 1 ? '' : 's'} left out`;
+  const read = `${r.examined} of ${r.total} listed files${args.part ? ` under ${args.part}` : ''} asked for${args.every > 1 ? ` (a sample: every ${args.every}th)` : ''}, ${r.skipped} dot file${r.skipped === 1 ? '' : 's'} left out`;
   if (!r.ok) {
     console.log(`FAIL ${where}: ${r.problems.length + (r.more || 0)} problem${r.problems.length + (r.more || 0) === 1 ? '' : 's'}; ${read}`);
     for (const p of r.problems.slice(0, 40)) console.log(`  !! ${p}`);
@@ -187,8 +195,9 @@ async function main(argv) {
   }
   const own = /^https?:\/\//.test(args.sums) && new URL(args.sums).origin === args.origin;
   console.log(`ok   ${where}: ${read}; each answered 200 with the listed bytes${r.redirected ? ` (${r.redirected} index.html addresses sent to their folder)` : ''}; `
-    + `${r.folders} folder addresses serve their index; ${r.typed} pages, stylesheets, scripts and SVGs come with a type a browser takes; `
-    + `a missing page answers 404 with 404.html${own ? '; the list is the host\'s own, so this proves the host agrees with itself' : ''}`);
+    + (args.part ? 'a missing file answers 404' : `${r.folders} folder addresses serve their index; ${r.typed} pages, stylesheets, scripts and SVGs come with a type a browser takes; `
+    + 'a missing page answers 404 with 404.html')
+    + `${own ? '; the list is the host\'s own, so this proves the host agrees with itself' : ''}`);
   return 0;
 }
 
