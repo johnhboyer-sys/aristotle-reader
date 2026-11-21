@@ -15,6 +15,30 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-20 — DEPLOYED to Cloudflare: main at 85d51d2a89 (#224–#229)
+
+On John's "Merge deploy". App-only build (`PUBLIC_SHOW_PRIVATE=0
+PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com npm run build`, Node 22) in the `og-card-address`
+worktree, with `build/dist` cloned from the `portability` worktree. All 9,770 of its data files matched
+R2 by MD5, so the pages are built from the corpus live serves.
+
+**What shipped:** #229, share cards whose address carries the picture's hash (`og-default.png?v=7686a2df`,
+`og/<Work>.jpg?v=<hash>`; `app/src/lib/og.ts`). The site card was redrawn in #205 under its old address,
+and X, iMessage, and Slack kept the old picture. #225–#227 are the Cloudflare config and deploy-script
+fixes; no earlier entry records them. #224 is docs.
+
+**Gates (the script's):** link integrity 0 broken (7,563 pages); leak check, gated slots, held works, search
+indexes, and search shards all ok. Data: 0 files to upload; bucket record 9,792 keys, 22 of them in the
+bucket and not in this build (the 20 the script lists are English search shards), kept. App: Worker version `94a49ca7`.
+
+**Live-verified:** `/`, `/search/`, and an unknown page carry `og-default.png?v=7686a2df` in `og:image`;
+`/Cat/` carries `og/Cat.jpg?v=ac6ea81e` and `/EN/book/1/` `og/EN.jpg?v=6ee58030`; both images answer 200
+with the sha256 their address names. `/`, `/EN/book/1/`, `/search/`, `/lemma/chorion/` 200; `/bonitz/` 404.
+The Support page keeps its own card at a fixed address (`og-support.png`), outside the record.
+
+**Not checked:** how soon each app drops its cached card. A link an app already holds may show the old
+picture until that app's own cache runs out.
+
 ## 2026-11-19 (later) — DEPLOYED to Cloudflare: main at a7fd28e90b (#216–#223)
 
 The first deploy through `npm run deploy:cloudflare`, on John's "i want everything deployed". App-only build
