@@ -8,8 +8,11 @@ is copied between the repos, never synced as a folder).
 
 ## State (2026-11-20)
 
-Phase 0 is done but for the steps that wait on John. Phase 1 is under way on
-`claude/portability-phase1` (Aristotle only; no sibling repo has changed).
+Phase 0 is done but for the steps that wait on John. Phase 1 is committed on
+`claude/portability-phase1` (three commits, not pushed: the push waits on
+John's OK) but for the two rows that need a download. Phase 2 has begun on
+`claude/portability-phase2`, stacked on it. Aristotle only; no sibling repo
+has changed.
 
 | Phase 0 step | State |
 |---|---|
@@ -33,7 +36,55 @@ Phase 0 is done but for the steps that wait on John. Phase 1 is under way on
 | CI runs the full build and uploads the bundle | Not started; needs the fetch |
 | Pages match live (test 2, app) | Done: built with the live data address, 7,627 of 7,845 app files are identical, and 213 pages and 5 renamed bundles are byte-equal once 11 named swaps are applied (three Svelte classes, computed from this checkout's path; the five bundles that hold them; three island ids); nothing else differs |
 
-Next: finish phase 1's open rows; John's GitLab account for the mirror.
+| Phase 2 step (Aristotle) | State |
+|---|---|
+| Build parameters for origin, base path, and the Grammata address | Done: `SITE_ORIGIN`, `SITE_BASE` (`scripts/site-params.mjs`, read by the Astro config and the link check alike), `PUBLIC_GRAMMATA_LOOKUP`; `robots.txt` is written by the build. Unset, the build is byte for byte what it was |
+| Data root | Was already a parameter (`PUBLIC_DATA_ROOT`); unset, data is under `<base>/data` on the site's own origin, which is the mirror bundle's shape |
+| A build at a test base path passes the link check | Done: `/mirror/` at another origin, 7,563 pages, 414,408 links, 0 broken |
+| Self-host the fonts | Not started. Eight families come from Google Fonts at run time; Plato's repo already holds Gentium Book Plus. The rest are a download, which waits on John's yes |
+| No outside calls (test 3), as a browser test | Not started |
+| Host files out of the mirror bundle (`CNAME`, `_redirects`, `.assetsignore`, the Google verification page) | Not started; they ship in every build today |
+| `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | Not started |
+| The bundle on two candidate hosts | Waits on John (accounts) |
+
+Next: John's yes to push phase 1 and to the two downloads (Diogenes 4.7.2,
+193 MB, for the Morpheus and LSJ fetch; the font files); test 3 as a browser
+test; John's GitLab account for the mirror.
+
+### Phase 2 record
+
+**The parameters.** `SITE_ORIGIN` is the origin canonical links, cards,
+`robots.txt`, and the sitemap name; `SITE_BASE` is the path the site is
+served under. `scripts/site-params.mjs` checks both and refuses a value
+that is not a bare origin or a path with a slash at each end.
+`app/astro.config.mjs` and `scripts/check-links.mjs` read them there, so a
+build and its link check cannot disagree. A mirror keeps the default origin:
+its canonical links name the primary site. `PUBLIC_GRAMMATA_LOOKUP` is read
+in the word popup and the lemma page, each with the old address as its
+default. It is read in place in both: a module of its own became a bundle of
+its own and renamed a script on 7,552 pages, which `compare-snapshot.mjs`
+caught.
+
+**How it was checked.** Built with nothing set but the live data address,
+`compare-snapshot.mjs` reports what it reported before the change (7,627 of
+7,845 identical, 213 pages and 5 bundles equal under the same 11 swaps), the
+generated `robots.txt` among the identical files. Built with
+`SITE_BASE=/mirror/ SITE_ORIGIN=https://mirror.example.org` and no data
+address, `SITE_BASE=/mirror/ node scripts/check-links.mjs app/dist` finds 0
+broken of 414,408 links, and the canonical link, the card image,
+`robots.txt`, and the sitemap name the new origin and base. Eleven
+hand-made breaks of the parameter checks each fail a test. Codex
+(GPT-6.1-Sol) read the change and found one thing: `app/public/CNAME` still
+names the primary host in every build, a GitHub Pages file from before the
+move. It stays for now; the mirror bundle must leave it out, with the other
+host files.
+
+**Known and left.** Saved searches keep whole paths, base included, in the
+browser's storage, so a saved search does not follow a site to another base.
+The footer links to the sibling readers by name. One test in
+`shared/__tests__/components.test.ts` ("restores English only as I typed
+it") failed once in a full run and passed three times after: a timing
+fluke, not this change.
 
 ### Phase 1 record
 

@@ -4,9 +4,12 @@ import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-// The site base: app/astro.config.mjs `base` without its trailing slash. The
-// site is served at the root of aristotle.johnhboyer.com, so it is empty.
-export const BASE = '';
+import { siteParams } from './site-params.mjs';
+
+// The site base: app/astro.config.mjs `base` without its trailing slash, from
+// the same build parameter (SITE_BASE). The primary site is served at the
+// root of aristotle.johnhboyer.com, so by default it is empty.
+export const BASE = siteParams().base.replace(/\/$/, '');
 
 // Works cited by chapter.section (citation.scheme: chapter-section in their
 // manifests): their LSJ links get no nearest-line snap (see checkTarget).
