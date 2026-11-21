@@ -182,6 +182,27 @@ test('check-served --part: a host that answers a missing file with 200 fails', a
   assert.ok(r.problems.some((p) => /a missing data file answered 200/.test(p)), JSON.stringify(r.problems));
 });
 
+test('check-served --part: a dot file under the part is asked for like any other', async () => {
+  const listed = { ...FILES(), 'data/.hidden.json': '{"h":1}' };
+  const h = await host({ ...dataHost(), '.hidden.json': '{"h":2}' });
+  try {
+    const r = await checkServed({ origin: h.origin, entries: entriesOf(listed), part: 'data/', tries: 1 });
+    assert.equal(r.ok, false);
+    assert.ok(r.problems.some((p) => /^data\/\.hidden\.json: the bytes served/.test(p)), JSON.stringify(r.problems));
+  } finally { await h.close(); }
+});
+
+test('check-served --part: an index.html under the part is a file; its folder\'s address is not asked for', async () => {
+  const listed = { ...FILES(), 'data/Cat/index.html': '<p>a file</p>' };
+  // The host has the file and answers 404 for the folder's address, as a host of files does.
+  const h = await host({ ...dataHost(), 'Cat/index.html': '<p>a file</p>' }, { bend: (p, a) => (p === 'Cat/' ? { status: 404, body: 'no such key', type: 'text/plain' } : a) });
+  try {
+    const r = await checkServed({ origin: h.origin, entries: entriesOf(listed), part: 'data/', tries: 1 });
+    assert.deepEqual(r.problems, []);
+    assert.equal(r.folders, 0);
+  } finally { await h.close(); }
+});
+
 test('check-served --part: a faithful host of the part passes; only the part is counted, and no 404 page is asked of it', async () => {
   const r = await runPart(dataHost());
   assert.deepEqual(r.problems, []);

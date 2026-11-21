@@ -58,8 +58,8 @@ sibling repo has changed.
 | The deploy tags its commit | Done: `npm run deploy:cloudflare` tags `deploy/<date>` and pushes the tag. Not yet run in a real deploy |
 | A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action). Runs first at the next deploy after it merges |
 | `mirror.yml`: git on every push, the site on a release | Not written. Waits on the GitLab account and on decision 6 |
-| Weekly check for a stale or silent mirror | Not written |
-| `mirrors.json`, shown on the attribution page | Not written; there is no mirror to list |
+| Check for a stale or silent mirror | Done as a script: `scripts/check-mirrors.mjs`. It fails today, and says why: `mirrors.json` names no mirror. The weekly workflow that runs it and opens an issue is not written; add it with the first mirror |
+| `mirrors.json`, shown on the attribution page | The file exists, with empty lists. The page does not read it yet; there is no mirror to list |
 
 Next: John's yes to push phase 3. Then his accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
 all seven repos), and two candidate hosts for the bundle (decision 6;
@@ -113,12 +113,17 @@ This changes the plan's first bullet, which had the deploy script attach a
 bundle built on the laptop. After it merges, every deploy publishes a public
 release of about 187 MB; `--no-tag` holds one back.
 
-**A change to propose for the stale check.** The plan has a weekly job read
-`version.json` from each mirror. The bundle already carries `SHA256SUMS`, and
-a release has it as its own asset, so a mirror can be held to the release by
-its content, with no new file: fetch the mirror's `SHA256SUMS`, compare it
-with the release's, then run `check-served.mjs --every=N` with the release's
-list. Not written.
+**Mirror check.** `mirrors.json` is `{ "git": [{name, url}], "site": [...] }`.
+`node scripts/check-mirrors.mjs --source=<the repo> --sums=<the latest
+release's SHA256SUMS>` holds each git mirror to the source (every branch and
+tag at the same commit, and the history whole, by cloning it) and each site
+mirror to the release: it must serve that release's own `SHA256SUMS`, or it
+is stale; then its files are asked for and compared with the release's list
+(`--every=N` for a sample). One bad mirror fails the run and does not hide
+the others. It fails when the list names no mirror, so it fails today. This
+replaces the plan's `version.json`: the bundle already carries the list, and
+a release has it as its own asset, so no new file is needed. Tests use real
+repos and a real http host.
 
 **Review.** Codex (GPT-6.1-Sol) read the three pieces and found ten things,
 none in the workflows. Fixed, each with a test first: `--no-force` could take
@@ -132,6 +137,18 @@ not hold other branches back (meant); a mirror that was already shallow
 passes (the other script's job); a deleted highest number can be given out
 again; the tag cannot know what `app/dist` was built from (the release's
 data check, above, catches it for the data).
+
+A second Codex read took the mirror check, `--part`, and the release's data
+step, and found eight things, none in the workflow. Seven are fixed, each
+with a test first: a `--source` with a password was printed; a throw in one
+mirror's check stopped the run and hid the results already made; a list
+behind a byte-order mark passed as the release's; a mirror could send its
+list's address to another host; a missing `--source` kept the site mirrors
+from being checked, and a missing or broken list the git ones; `--part` still
+asked for a folder's address when the part held an `index.html`, and left
+dot files out. The eighth (a mirror with one whole branch and one shallow
+one passes) did not hold when tried: the clone comes out shallow and the
+check fails.
 
 ### Phase 2 record
 
@@ -846,8 +863,9 @@ no refs; its tests start from a deleted ref.*
   release, verify the bundle's checksums, run the leak check with its positive
   control, then publish to the second host. Zenodo and the Internet Archive run
   only by hand.
-- A weekly job reads `version.json` from each mirror, compares it with the latest
-  release, and opens an issue when one is stale or silent.
+- A weekly job runs `check-mirrors.mjs` (each mirror's `SHA256SUMS` against the
+  latest release's; as first written, a `version.json`) and opens an issue when
+  a mirror is stale or silent.
 - `mirrors.json`, shown on the attribution page (decision 5).
 - *Check: test 4, then test 5 run once by hand.*
 

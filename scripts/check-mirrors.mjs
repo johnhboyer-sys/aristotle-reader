@@ -61,49 +61,63 @@ export async function checkMirrors({ mirrors, source, sums, every = 1, tries = 2
   const problems = [];
   const results = [];
   if (!mirrors.git.length && !mirrors.site.length) problems.push('mirrors.json names no mirror: examined nothing');
-  if (mirrors.git.length && !source) problems.push('a git mirror is listed and there is no --source to hold it to');
-  if (mirrors.site.length && !sums) problems.push('a site mirror is listed and there is no --sums to hold it to');
-  if (problems.length) return { ok: false, problems, results };
+  // One mirror's check; whatever it throws is that mirror's problem, and the next is still checked.
+  const each = async (kind, m, check) => {
+    const r = { kind, ...m, ok: false, problems: [], note: '' };
+    results.push(r);
+    try { await check(r); } catch (e) { r.problems.push(`could not be checked: ${e.message}`); }
+    r.ok = r.problems.length === 0;
+  };
 
   let sourceRefs = null;
+  let noSource = 'not checked: the source could not be read';
   if (mirrors.git.length) {
-    try { sourceRefs = lsRemote(source); } catch (e) { problems.push(`the source: ${e.message}`); }
+    if (!source) problems.push(noSource = 'a git mirror is listed and there is no --source to hold it to');
+    else if (hasPassword(source)) problems.push(noSource = 'the --source address has a password in it');
+    else if (!isAddress(source)) problems.push(noSource = 'the --source is not a git address');
+    else try { sourceRefs = lsRemote(source); } catch (e) { problems.push(`the source: ${e.message}`); }
   }
   for (const m of mirrors.git) {
-    const r = { kind: 'git', ...m, ok: false, problems: [], note: '' };
-    results.push(r);
-    if (!sourceRefs) { r.problems.push('not checked: the source could not be read'); continue; }
-    let refs;
-    try { refs = lsRemote(m.url); } catch (e) { r.problems.push(`silent: ${e.message}`); continue; }
-    const c = compareRefs(sourceRefs, refs);
-    r.problems.push(...c.problems);
-    let historyNote = history ? 'history not checked: the refs do not match' : 'history not checked (--no-history)';
-    if (c.ok && history) {
-      const h = historyOf(m.url);
-      if (h.problem) r.problems.push(h.problem);
-      historyNote = h.problem ? 'history not whole' : `history: ${h.commits} commits, whole`;
-    }
-    r.note = `${c.matched} of ${c.examined} refs match; ${historyNote}`;
-    r.ok = r.problems.length === 0;
+    await each('git', m, (r) => {
+      if (!sourceRefs) { r.problems.push(noSource); return; }
+      let refs;
+      try { refs = lsRemote(m.url); } catch (e) { r.problems.push(`silent: ${e.message}`); return; }
+      const c = compareRefs(sourceRefs, refs);
+      r.problems.push(...c.problems);
+      let historyNote = history ? 'history not checked: the refs do not match' : 'history not checked (--no-history)';
+      if (c.ok && history) {
+        const h = historyOf(m.url);
+        if (h.problem) r.problems.push(h.problem);
+        historyNote = h.problem ? 'history not whole' : `history: ${h.commits} commits, whole`;
+      }
+      r.note = `${c.matched} of ${c.examined} refs match; ${historyNote}`;
+    });
   }
 
-  const entries = sums ? parseSums(sums) : [];
+  let entries = null;
+  let noList = 'not checked: the release\'s list could not be read';
+  if (mirrors.site.length) {
+    if (!sums) problems.push(noList = 'a site mirror is listed and there is no --sums to hold it to');
+    else try { entries = parseSums(sums); } catch (e) { problems.push(`the release's ${SUMS}: ${e.message}`); }
+  }
   for (const m of mirrors.site) {
-    const r = { kind: 'site', ...m, ok: false, problems: [], note: '' };
-    results.push(r);
-    const url = new URL(m.url);
-    const base = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
-    let own;
-    try {
-      const res = await fetch(`${url.origin}${base}${SUMS}`, { signal: AbortSignal.timeout(60000) });
-      if (!res.ok) { r.problems.push(`${SUMS} answered ${res.status}`); continue; }
-      own = await res.text();
-    } catch (e) { r.problems.push(`silent: ${e.cause?.code || e.cause?.message || e.message}`); continue; }
-    if (own !== sums) { r.problems.push(`stale: its ${SUMS} is not the release's`); continue; }
-    const c = await checkServed({ origin: url.origin, base, entries, every, tries });
-    r.problems.push(...c.problems);
-    r.note = `serves the release's ${SUMS}; ${c.examined} of ${c.total} listed files asked for${every > 1 ? ` (a sample: every ${every}th)` : ''}`;
-    r.ok = r.problems.length === 0;
+    await each('site', m, async (r) => {
+      if (!entries) { r.problems.push(noList); return; }
+      const url = new URL(m.url);
+      const base = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
+      // The mirror's own list, at its own address (a redirect would be another
+      // host's word), byte for byte the release's.
+      let own;
+      try {
+        const res = await fetch(`${url.origin}${base}${SUMS}`, { redirect: 'manual', signal: AbortSignal.timeout(60000) });
+        if (res.status !== 200) { r.problems.push(`${SUMS} answered ${res.status}`); return; }
+        own = Buffer.from(await res.arrayBuffer());
+      } catch (e) { r.problems.push(`silent: ${e.cause?.code || e.cause?.message || e.message}`); return; }
+      if (!own.equals(Buffer.from(sums))) { r.problems.push(`stale: its ${SUMS} is not the release's`); return; }
+      const c = await checkServed({ origin: url.origin, base, entries, every, tries });
+      r.problems.push(...c.problems);
+      r.note = `serves the release's ${SUMS}; ${c.examined} of ${c.total} listed files asked for${every > 1 ? ` (a sample: every ${every}th)` : ''}`;
+    });
   }
   return { ok: problems.length === 0 && results.every((r) => r.ok), problems, results };
 }
@@ -119,13 +133,18 @@ async function main(argv) {
   const every = Number(args.every);
   if (!Number.isInteger(every) || every < 1) throw new Error('--every must be a whole number, 1 or more');
   const mirrors = readMirrors(readFileSync(args.mirrors, 'utf8'));
+  // A release list that cannot be read fails the site mirrors and leaves the git ones to be checked.
   let sums;
-  if (args.sums && /^https?:\/\//.test(args.sums)) {
-    const res = await fetch(args.sums, { signal: AbortSignal.timeout(60000) });
-    if (!res.ok) throw new Error(`${args.sums} answered ${res.status}`);
-    sums = await res.text();
-  } else if (args.sums) sums = readFileSync(args.sums, 'utf8');
+  let unread = null;
+  try {
+    if (args.sums && /^https?:\/\//.test(args.sums)) {
+      const res = await fetch(args.sums, { signal: AbortSignal.timeout(60000) });
+      if (!res.ok) throw new Error(`answered ${res.status}`);
+      sums = Buffer.from(await res.arrayBuffer()).toString('utf8');
+    } else if (args.sums) sums = readFileSync(args.sums, 'utf8');
+  } catch (e) { unread = `--sums could not be read: ${e.message}`; }
   const r = await checkMirrors({ mirrors, source: args.source, sums, every, history: args.history });
+  if (unread) { r.problems.unshift(unread); r.ok = false; }
   for (const p of r.problems) console.log(`FAIL ${p}`);
   for (const m of r.results) {
     console.log(`${m.ok ? 'ok  ' : 'FAIL'} ${m.kind} mirror ${m.name} (${m.url})${m.note ? `: ${m.note}` : ''}`);

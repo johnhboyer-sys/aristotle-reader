@@ -114,7 +114,8 @@ export async function checkServed({ origin, base = '/', entries: listed, every =
 
   const one = async (e) => {
     r.examined += 1;
-    const folder = e.path.endsWith(`/${INDEX}`) ? e.path.slice(0, -INDEX.length) : e.path === INDEX ? '' : null;
+    // A host of one part is a host of files: an index.html there is a file like any other.
+    const folder = part ? null : e.path.endsWith(`/${INDEX}`) ? e.path.slice(0, -INDEX.length) : e.path === INDEX ? '' : null;
     const a = await get(e.path);
     // A host may send …/index.html to its folder; the folder is then what must serve the bytes.
     // To its own folder on this host, and nowhere else.
@@ -138,7 +139,7 @@ export async function checkServed({ origin, base = '/', entries: listed, every =
   };
 
   const todo = pick(entries, every).filter((e) => {
-    if (!dotFile(e.path)) return true;
+    if (part || !dotFile(e.path)) return true;   // a host of files serves a dot file like any other
     r.skipped += 1;
     return false;
   });

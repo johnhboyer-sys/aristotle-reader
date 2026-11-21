@@ -34,12 +34,13 @@ function repos() {
 const FILES = () => ({ 'index.html': '<h1>home</h1>', '404.html': '<h1>not here</h1>', 'sw.js': 'self.x = 1;', 'data/Cat/book-01.json': '{"a":1}' });
 const sumsOf = (files) => Object.entries(files).sort(([a], [b]) => (a < b ? -1 : 1)).map(([p, body]) => `${sha(body)}  ${p}\n`).join('');
 const TYPES = { html: 'text/html', js: 'text/javascript', json: 'application/json' };
-async function site(files, { list = sumsOf(files), base = '/' } = {}) {
+async function site(files, { list = sumsOf(files), base = '/', listRedirect = null } = {}) {
   const server = createServer((req, res) => {
     const p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     const rel = p.startsWith(base) ? p.slice(base.length) : null;
     const send = (status, body, type) => { res.writeHead(status, { 'content-type': type }); res.end(body); };
     if (rel === null) return send(404, 'off base', 'text/plain');
+    if (rel === 'SHA256SUMS' && listRedirect) { res.writeHead(302, { location: listRedirect }); return res.end(); }
     if (rel === 'SHA256SUMS' && list !== null) return send(200, list, 'text/plain');
     if (rel in files) return send(200, files[rel], TYPES[rel.split('.').pop()] || 'application/octet-stream');
     if ((rel === '' || rel.endsWith('/')) && `${rel}index.html` in files) return send(200, files[`${rel}index.html`], TYPES.html);
@@ -135,6 +136,56 @@ test('check-mirrors: a site mirror with the release\'s list and one changed file
   } finally { await s.close(); }
 });
 
+test('check-mirrors: a site mirror whose list is the release\'s behind a byte-order mark is stale', async () => {
+  const s = await site(FILES(), { list: Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(sumsOf(FILES()))]) });
+  try {
+    const out = await check({ site: [{ name: 'Marked', url: s.url }] });
+    assert.equal(out.ok, false);
+    assert.ok(said(out, /stale: its SHA256SUMS is not the release's/), JSON.stringify(out.results));
+  } finally { await s.close(); }
+});
+
+test('check-mirrors: a site mirror that sends its list\'s address elsewhere fails: the list must be its own', async () => {
+  const release = await site(FILES());
+  const s = await site(FILES(), { listRedirect: `${release.url}SHA256SUMS` });
+  try {
+    const out = await check({ site: [{ name: 'Borrowed', url: s.url }] });
+    assert.equal(out.ok, false);
+    assert.ok(said(out, /SHA256SUMS answered 302/), JSON.stringify(out.results));
+  } finally { await s.close(); await release.close(); }
+});
+
+test('check-mirrors: a source address with a password in it is refused and not printed', async () => {
+  const r = repos();
+  try {
+    const out = await check({ git: [{ name: 'Second', url: r.mirror }] }, null, { source: 'https://u:hunter2secret@github.example/a/b.git' });
+    assert.equal(out.ok, false);
+    assert.doesNotMatch(JSON.stringify(out), /hunter2secret/);
+    assert.match(out.problems.join('\n'), /password/);
+  } finally { r.done(); }
+});
+
+test('check-mirrors: a mirror whose check throws is a failed mirror, and the ones after it are still checked', async () => {
+  const r = repos();
+  const s = await site(FILES());
+  try {
+    const out = await check({ git: [{ name: 'Good', url: r.mirror }], site: [{ name: 'Broken', url: 'not an address' }, { name: 'Site', url: s.url }] }, r);
+    assert.equal(out.ok, false);
+    assert.deepEqual(out.results.map((m) => [m.name, m.ok]), [['Good', true], ['Broken', false], ['Site', true]]);
+    assert.ok(said(out, /could not be checked/), JSON.stringify(out.results));
+  } finally { await s.close(); r.done(); }
+});
+
+test('check-mirrors: a release list that is no checksum list fails every site mirror, and the git mirrors are still checked', async () => {
+  const r = repos();
+  const s = await site(FILES());
+  try {
+    const out = await check({ git: [{ name: 'Good', url: r.mirror }], site: [{ name: 'Site', url: s.url }] }, r, { sums: '<html>not found</html>' });
+    assert.equal(out.ok, false);
+    assert.deepEqual(out.results.map((m) => [m.name, m.ok]), [['Good', true], ['Site', false]]);
+  } finally { await s.close(); r.done(); }
+});
+
 test('check-mirrors: one bad mirror fails the run and does not hide a good one', async () => {
   const r = repos();
   const s = await site(FILES());
@@ -157,22 +208,26 @@ test('check-mirrors: a whole git mirror and a current site mirror pass, and each
   } finally { await s.close(); r.done(); }
 });
 
-test('check-mirrors: a git mirror with no source to hold it to fails', async () => {
+test('check-mirrors: a git mirror with no source to hold it to fails, and the site mirrors are still checked', async () => {
   const r = repos();
-  try {
-    const out = await checkMirrors({ mirrors: { git: [{ name: 'Second', url: r.mirror }], site: [] }, sums: sumsOf(FILES()) });
-    assert.equal(out.ok, false);
-    assert.match(out.problems.join('\n'), /--source/);
-  } finally { r.done(); }
-});
-
-test('check-mirrors: a site mirror with no release list to hold it to fails', async () => {
   const s = await site(FILES());
   try {
-    const out = await checkMirrors({ mirrors: { git: [], site: [{ name: 'Site', url: s.url }] } });
+    const out = await checkMirrors({ mirrors: { git: [{ name: 'Second', url: r.mirror }], site: [{ name: 'Site', url: s.url }] }, sums: sumsOf(FILES()), tries: 1 });
+    assert.equal(out.ok, false);
+    assert.match(out.problems.join('\n'), /--source/);
+    assert.deepEqual(out.results.map((m) => [m.name, m.ok]), [['Second', false], ['Site', true]]);
+  } finally { await s.close(); r.done(); }
+});
+
+test('check-mirrors: a site mirror with no release list to hold it to fails, and the git mirrors are still checked', async () => {
+  const r = repos();
+  const s = await site(FILES());
+  try {
+    const out = await checkMirrors({ mirrors: { git: [{ name: 'Second', url: r.mirror }], site: [{ name: 'Site', url: s.url }] }, source: r.src, tries: 1 });
     assert.equal(out.ok, false);
     assert.match(out.problems.join('\n'), /--sums/);
-  } finally { await s.close(); }
+    assert.deepEqual(out.results.map((m) => [m.name, m.ok]), [['Second', true], ['Site', false]]);
+  } finally { await s.close(); r.done(); }
 });
 
 test('readMirrors: the file\'s shape is held to', () => {
