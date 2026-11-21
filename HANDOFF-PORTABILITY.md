@@ -16,8 +16,12 @@ accounts: the site serves its own fonts, test 3 is green, CI builds the whole
 site on Linux with data byte for byte live's, and the Docker image builds and
 serves every file. CI and the image build passed on the merged commit, which
 was the first build of phases 0 to 2 together with main's own share-card
-changes. Phase 3 is PR #233 (`claude/portability-phase3`, pushed 2026-11-21
-on John's yes, green): the parts that need no account. Aristotle only; no
+changes. The part of phase 3 that needs no account is on `main` too (PR #233,
+merged by John's yes on 2026-11-21, main at `1e1062a539`). John made a GitLab
+account the same day (`johnhboyer`), and all seven repos now have a private
+git mirror there, each checked whole. The workflow that keeps Aristotle's
+mirror current is on `claude/portability-phase3b` (PR #234, open), and its
+deploy key, secret, and variable are set. Aristotle only; no
 sibling repo has changed.
 
 | Phase 0 step | State |
@@ -25,7 +29,7 @@ sibling repo has changed.
 | Snapshot of each live site, with checksums | Done for all five; each folder and archive verified |
 | Leak check on the snapshots | Done; Aristotle passes all five deploy data gates |
 | Copies: GitHub release, iCloud, Google Drive, external drive | iCloud and the flash drive done and verified; the other two wait on John |
-| First git mirror on GitLab (seven repos) | Waits on John's GitLab account |
+| First git mirror on GitLab (seven repos) | Done 2026-11-21: seven private projects under `gitlab.com/johnhboyer`, pushed from GitHub with `mirror-git.mjs`; `mirror-check.mjs` found every ref at the same commit and each history whole (table in the phase 3 record) |
 | List of unpushed work for John | Done; given to John, not committed |
 | Plays history check | Done; findings below, John flips visibility |
 | Diogenes version and Homer's export patch recorded | Done, below |
@@ -56,18 +60,85 @@ sibling repo has changed.
 
 | Phase 3 step (Aristotle) | State |
 |---|---|
-| Push a repo to a second git host | Done: `scripts/mirror-git.mjs`. Not yet run against a host; there is none |
+| Push a repo to a second git host | Done: `scripts/mirror-git.mjs`, run for real against GitLab for all seven repos |
 | The deploy tags its commit | Done: `npm run deploy:cloudflare` tags `deploy/<date>` and pushes the tag. Not yet run in a real deploy |
 | A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action, which passed on its first run in #233), then a check of the bundle's data against the primary's data host. The release step itself runs first at the next deploy after it merges |
-| `mirror.yml`: git on every push, the site on a release | Not written. Waits on the GitLab account and on decision 6 |
-| Check for a stale or silent mirror | Done as a script: `scripts/check-mirrors.mjs`. It fails today, and says why: `mirrors.json` names no mirror. The weekly workflow that runs it and opens an issue is not written; add it with the first mirror |
-| `mirrors.json`, shown on the attribution page | The file exists, with empty lists. The page does not read it yet; there is no mirror to list |
+| `mirror.yml`: git on every push, the site on a release | The git half is written, with the weekly check as its second job. Its deploy key is on the GitLab project (write access, and allowed to push to `main`, which GitLab protects), the secret `MIRROR_GIT_SSH_KEY` holds the key, and the variable `MIRROR_GIT_URL` holds the address (all 2026-11-21). First run, on the push of `b27f08b244`: `33 of 33 refs match the source after the push`. The site half waits on decision 6 |
+| Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
+| `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: John's merge of #233. Then his accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
-all seven repos), and two candidate hosts for the bundle (decision 6;
-`check-served.mjs` is the test).
+Next: John's yes to merge #234. Then his two candidate hosts for the bundle
+(decision 6; `check-served.mjs` is the test). The sibling repos get their own
+`mirror.yml` and their own deploy key in their ports; until the last one has
+its key, the account key below stays.
 
 ### Phase 3 record
+
+**GitLab mirrors (2026-11-21).** Seven private projects under
+`gitlab.com/johnhboyer`, each made by its first push, each pushed with
+`mirror-git.mjs` from `https://github.com/johnhboyer-sys/<repo>.git` and then
+checked with `mirror-check.mjs` (which clones the mirror):
+
+| Repo | Refs matching | Commits, history whole |
+|---|---|---|
+| `aristotle-reader` | 32 of 32 (less `gh-pages`) | 1,609 |
+| `plato-reader` | 30 of 30 (less `gh-pages`) | 605 |
+| `homer-reader` | 11 of 11 (less `gh-pages`) | 809 |
+| `greek-plays` | 22 of 22 | 1,407 |
+| `grammar-site` | 12 of 12 | 214 |
+| `grammars` | 4 of 4 | 610 |
+| `classical-grammars` | 1 of 1 | 4 |
+
+Each project answers 404 to a request with no login, and refuses an anonymous
+`git ls-remote`: private, as the plan says every mirror starts. Making one
+public is John's call, and for the plays it waits on the same history check
+as GitHub's. The mirrors are a copy as of that push. Nothing keeps them
+current yet.
+
+The push used a key made for it on John's Mac
+(`~/.ssh/gitlab_mirror_ed25519`, no passphrase), which John added to the
+GitLab account. It can write to every project there. Once each repo's CI has
+its own deploy key, take this one off the account and delete the file.
+
+**The mirror workflow.** `.github/workflows/mirror.yml`, two jobs. `git`, on
+every push of a branch or tag: `mirror-git.mjs` from GitHub to the address in
+the repository variable `MIRROR_GIT_URL`, with the deploy key in the secret
+`MIRROR_GIT_SSH_KEY`; with no address set the job is skipped and shows as
+skipped. `check`, weekly and by hand: `check-mirrors.mjs`, with the newest
+release's `SHA256SUMS` if there is a release; a failure opens an issue, or
+adds to the open one. `.github/actions/mirror-key` writes the key where only
+the job can read it and pins GitLab's host keys from
+`.github/mirror_known_hosts` (read 2026-11-21; all three fingerprints match
+the ones GitLab publishes). Codex read the three
+files and found four things: a second Authorization header from the
+checkout's own stored token (fixed: `persist-credentials: false`); a host key
+could be trusted from the runner's global file (fixed); an empty key stopped
+the check job, which a site mirror does not need (fixed); `mirrors.json` was
+empty (it now names the mirror).
+
+GitLab protects `main` on a new project: no force push, and only maintainers
+push. That is the mirror's rule too (`mirror-git.mjs` never forces `main`),
+so keep the protection and add the deploy key to the branch's "allowed to
+push" list.
+
+**Aristotle's deploy key (2026-11-21).** A key made for the workflow alone
+(ed25519, fingerprint `SHA256:Ru45E76yhk0FJB2a9MmB3n5d5TKzoDObZO0pyNRt2Is`,
+titled "aristotle-reader mirror, GitHub Actions, 2026-11-21" on GitLab). John
+added the public half to the `aristotle-reader` project with write access and
+to `main`'s "allowed to push and merge" list; force push to `main` stays off.
+The private half is in the GitHub secret and nowhere else. Tried from this
+Mac with the workflow's own ssh options and host-key file before the first
+run: it reads `aristotle-reader` (32 refs) and GitLab refuses it on
+`plato-reader`. The copy on this Mac was deleted once the first run passed.
+A sibling's port makes its own key the same way: GitLab's deploy-key settings
+need John's login, so he pastes the public half.
+
+The first runs (2026-11-21, on `b27f08b244`, both green): the `git` job
+pushed and found 33 of 33 refs matching, `gh-pages` left out; the `check`
+job, started by hand, cloned the mirror and found 33 of 33 refs and 1,612
+commits, whole. Not yet seen: a push to `main` through the deploy key (the
+first is the merge of #234), a tag push, and the check's failure path on
+GitHub (the issue).
 
 **Git mirror.** `node scripts/mirror-git.mjs --source=<remote>
 --mirror=<remote>` fetches the source whole into a temp folder (never from

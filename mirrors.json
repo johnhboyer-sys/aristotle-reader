@@ -1,4 +1,6 @@
 {
-  "git": [],
+  "git": [
+    { "name": "GitLab", "url": "git@gitlab.com:johnhboyer/aristotle-reader.git" }
+  ],
   "site": []
 }

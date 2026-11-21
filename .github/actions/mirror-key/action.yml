@@ -1,0 +1,39 @@
+name: Set up the mirror's SSH key
+description: >
+  Writes the deploy key for the second git host to a file only this job can
+  read and points git at it, with the host's keys pinned from
+  .github/mirror_known_hosts (checked against the fingerprints GitLab
+  publishes; an unknown host key stops the push). Also lets git read this
+  repo from GitHub with the job's own token, so a private repo can be the
+  source. The checkout before it must be made with persist-credentials false:
+  a token left in the checkout's own config would be sent beside this one, as
+  a second Authorization header.
+
+inputs:
+  key:
+    description: The private deploy key (a secret).
+    required: true
+  token:
+    description: The job's GitHub token, for reading the source.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Write the key and point git at it
+      shell: bash
+      env:
+        KEY: ${{ inputs.key }}
+        TOKEN: ${{ inputs.token }}
+      run: |
+        if [ -z "$KEY" ]; then echo "::error::the MIRROR_GIT_SSH_KEY secret is empty"; exit 1; fi
+        install -m 700 -d "$RUNNER_TEMP/mirror-ssh"
+        (umask 077 && printf '%s\n' "$KEY" > "$RUNNER_TEMP/mirror-ssh/key")
+        echo "GIT_SSH_COMMAND=ssh -i $RUNNER_TEMP/mirror-ssh/key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o GlobalKnownHostsFile=/dev/null -o UserKnownHostsFile=$GITHUB_WORKSPACE/.github/mirror_known_hosts" >> "$GITHUB_ENV"
+        auth=$(printf 'x-access-token:%s' "$TOKEN" | base64 | tr -d '\n')
+        echo "::add-mask::$auth"
+        {
+          echo "GIT_CONFIG_COUNT=1"
+          echo "GIT_CONFIG_KEY_0=http.https://github.com/.extraheader"
+          echo "GIT_CONFIG_VALUE_0=AUTHORIZATION: basic $auth"
+        } >> "$GITHUB_ENV"
