@@ -27,11 +27,11 @@ Phase 0 is done but for the steps that wait on John. Phase 1 is under way on
 | Guard on the committed files, failing cases first | Done: every character of every line must be Greek or one of 29 listed marks; one named exception (Prob 944a9) |
 | `merge_juv.py` folded into `extract` | Done: `extract` calls its `merge_spine()` for work 918 |
 | Same output as live (test 2, data) | Done: a full build with the Diogenes export off the machine made 9,770 data files, each byte for byte what live serves |
-| Snapshot diff as a script | Done: `scripts/compare-snapshot.mjs`. Not a CI step; see below |
+| Snapshot diff as a script | Done: `scripts/compare-snapshot.mjs`, data and pages. Not a CI step; see below |
 | Morpheus table and LSJ pinned by checksum, folder from the environment | Check done (`aristotle_pipeline.inputs check`, run by `build:public`). The fetch waits on John's yes to a 190 MB download |
 | `/tmp/perseus-ne` and other machine paths out of the public build | Done: gone from `EN.yaml` and `config.py`. The manifests still name Diogenes.app, as the local default for `extract` and the two inputs |
 | CI runs the full build and uploads the bundle | Not started; needs the fetch |
-| Pages match live after masking (test 2, app) | By hash the new build stands where the baseline stood: 7,614 of 7,845 app files identical, 214 pages and `sw.js` differ, 16 bundles renamed (no `PUBLIC_DATA_ROOT`). The masked comparison itself was not rerun and is not yet a script |
+| Pages match live (test 2, app) | Done: built with the live data address, 7,627 of 7,845 app files are identical, and 213 pages and 5 renamed bundles are byte-equal once 11 named swaps are applied (three Svelte classes, computed from this checkout's path; the five bundles that hold them; three island ids); nothing else differs |
 
 Next: finish phase 1's open rows; John's GitLab account for the mirror.
 
@@ -66,8 +66,58 @@ links, 5 min 7 s) and `node scripts/compare-snapshot.mjs
 --live-only=docs/portability/aristotle-live-only-2026-11-20.list` reported
 9,770 of 9,770 files identical, with the 23 live-only files allowed. Compare
 `app/dist/data`, not `build/dist`: the 48 `rows.json` files are Astro
-endpoints and exist only after the site build. (3) 44 hand-made breaks of the
-new guards each fail a test. (4) Codex (GPT-6.1-Sol) reviewed the code twice.
+endpoints and exist only after the site build. Then the app, built as the
+deploy builds it (`cd app && PUBLIC_SHOW_PRIVATE=0
+PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com npm run build`):
+`node scripts/compare-snapshot.mjs --sums=<snapshot>/SHA256SUMS --prefix=app/
+--build=app/dist --pages=<snapshot> --svelte=shared/components
+--skip=data/,.assetsignore,_redirects`
+reported 7,627 of 7,845 files identical, 213 pages and 5 renamed bundles
+equal once 11 names are swapped, 0 differ. Those are the 213 pages and 5
+bundles docs/cloudflare.md already records for any rebuild of one commit.
+
+Why they differ, and how the script knows. Svelte names a component's scoped
+class `svelte-<hash>`, the hash being of the component's file path, and a
+component outside the app's root keeps its whole path
+(`svelte/src/compiler/state.js`). `Search`, `Phrases`, and `CommandPalette`
+live in `shared/`, so their three classes change with the checkout's folder;
+the five bundles that hold those classes get another file name, and three
+island ids, which hash the island's HTML, change with them. The script
+computes the class Svelte gives each component under `--svelte` in this
+checkout (`svelteClass`: this worktree's three match the build exactly) and
+accepts a class swap only when the new name is one of those. A bundle swap
+needs two bundles alone in sharing a stem, and equal contents under the
+same swaps. Every swap is printed and must be one to one. Then the
+snapshot's bytes, with exactly those whole names replaced, must be the
+build's bytes. Nothing is masked by shape and no page is read for
+"context". The snapshot's copy is checked against `SHA256SUMS` as it is
+read.
+
+What it cannot see, stated in the script's heading: a word that changes
+into the exact class of one of this checkout's components (only the new
+name is computed: the folder the live site was built in is not known, and
+235 past session folders were tried against the three old hashes without a
+match); a renamed bundle's exact file name in a page's words; an
+`<astro-island uid="…">` written out as text whose id changed.
+
+This matters for phase 2: a CI build will not be byte for byte a laptop
+build, by these same three classes, until the hash is pinned (Svelte's
+`cssHash` option). Pinning changes served bytes and is John's call. When
+both folders are known, as they will be in CI, the swap table can be
+computed outright, old names too.
+
+Without `PUBLIC_DATA_ROOT` the build is the GitHub Pages build and 16
+bundles and `sw.js` differ. (3) 76 hand-made breaks of the new guards (44
+in the pipeline, 32 in the page comparison) each fail a test. (4) Codex
+(GPT-6.1-Sol) reviewed the pipeline code twice and the page comparison six
+times. The page comparison failed five: masks by shape hid a changed word;
+swaps learned from the page were applied to its words; three rounds of
+reading HTML for "where a class may sit" each missed a case
+(`<style-guide>`, a single-quoted attribute, a no-break space). The sixth
+design, the computed class, drew two cheap fixes (check the snapshot copy
+against the list; count a bundle name the snapshot already used) and the
+three limits above; a seventh, narrow read of those two fixes found
+nothing. On the pipeline:
 Its first pass found three real holes in the guard (a fourth heading line
 could hold anything; punctuation hid beta code from the pattern; nothing
 proved the text was Greek). Its second found that "every letter is Greek"
@@ -152,8 +202,9 @@ Done means these tests pass, for each reader:
 1. **Clean build.** A Linux container with no Diogenes, no TLG files, and no Mac
    paths builds the full site from a clone plus named, checksummed inputs.
 2. **Same output.** That build matches the phase 0 snapshot of the live site:
-   every data file byte for byte, every page after masking bundle hashes (the
-   masks `scripts/compare-live.mjs` already uses).
+   every data file byte for byte, every page byte for byte once the names a
+   checkout's folder changes are swapped (`scripts/compare-snapshot.mjs --pages
+   --svelte`; the phase 1 record says which names and why).
 3. **No outside calls.** The built folder, served by a plain static server with all
    other hosts blocked, renders a work page, a word popup, a search, and a lemma
    page. Any allowed outside host is on a short list John has ruled on.
@@ -519,7 +570,7 @@ The plan answers a prompt John brought from Gemini. Where that prompt was wrong:
 | Build compiles `dist/` from a committed `data/corpus/` | Three steps: TLG → Diogenes export (`build/export`) → nine pipeline stages and gates (`build/dist`) → Astro (`app/dist`). The site is split: app on a Worker, data on R2, joined by `PUBLIC_DATA_ROOT` at build time. | Cut the pipeline at stage 1's input, not at `dist`. |
 | Extraction runs on every build | It runs only when `build/export` is missing. The trouble is that the cache is not kept anywhere. | Make the build refuse to call Diogenes; keep the extract as a named input. |
 | Only the Greek text is local | So are the Morpheus table and the LSJ XML, both read from inside Diogenes.app. | Fetch both from a pinned source with a checksum. |
-| Check `dist/` is 100% identical before and after | Pages are not byte-stable: a clean rebuild of the same commit differed from live on 213 pages and 5 bundles (docs/cloudflare.md). | Compare data by hash and pages with masks, against the phase 0 snapshot. |
+| Check `dist/` is 100% identical before and after | Pages are not byte-stable: a clean rebuild of the same commit differed from live on 213 pages and 5 bundles (docs/cloudflare.md). | Compare data by hash, and pages by exact name swaps, against the phase 0 snapshot. |
 | Replace domains with `./` so one `dist` runs in any subfolder | Astro bakes `base` into every page; sitemap, canonical links, robots, and OG cards need an absolute origin. | Make origin, base, and data root build parameters. A subfolder is a rebuild with a different base, proved by one test build. |
 | Bundle every outside script | Right for fonts. Wrong for Grammata, which a ruling forbids. The plays' feedback form needs a Worker. | Decision 4. The form hides itself when its endpoint is absent. |
 | Dockerfile that serves `dist/` | A static folder needs no container. What is missing is a pinned build environment. | One Dockerfile: build stage, then Caddy. Building it in CI is test 1. |
