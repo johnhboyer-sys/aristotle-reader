@@ -42,14 +42,16 @@ has changed.
 | Data root | Was already a parameter (`PUBLIC_DATA_ROOT`); unset, data is under `<base>/data` on the site's own origin, which is the mirror bundle's shape |
 | A build at a test base path passes the link check | Done: `/mirror/` at another origin, 7,563 pages, 414,408 links, 0 broken |
 | Self-host the fonts | Not started. Eight families come from Google Fonts at run time; Plato's repo already holds Gentium Book Plus. The rest are a download, which waits on John's yes |
-| No outside calls (test 3), as a browser test | Not started |
-| Host files out of the mirror bundle (`CNAME`, `_redirects`, `.assetsignore`, the Google verification page) | Not started; they ship in every build today |
-| `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | Not started |
+| No outside calls (test 3), as a browser test | Written, and red as it should be: `scripts/check-no-outside-calls.mjs` fails on `fonts.googleapis.com` and `fonts.gstatic.com` and on nothing else; with those two allowed it passes at `/` and at `/mirror/`. It goes green when the fonts are self-hosted |
+| The mirror bundle, without the host files | Done: `scripts/make-bundle.mjs` packs a same-origin build as one `.tar.gz` with `SHA256SUMS`, leaves out `CNAME` and the Google verification page, refuses a build that holds `_redirects` or `.assetsignore`, and runs the deploy's data gates first. The real build: 17,613 files, 889 MB, 186 MB packed |
+| `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | `ARCHITECTURE.md` written. `RESTORE.md` waits for a mirror to restore from. The `Dockerfile` waits for CI: this Mac has no container tool, so it cannot be tested here |
 | The bundle on two candidate hosts | Waits on John (accounts) |
 
 Next: John's yes to push phase 1 and to the two downloads (Diogenes 4.7.2,
-193 MB, for the Morpheus and LSJ fetch; the font files); test 3 as a browser
-test; John's GitLab account for the mirror.
+193 MB, for the Morpheus and LSJ fetch; the font files, at most 94 `.woff2`
+files and 1.82 MB from `fonts.gstatic.com` for the eight families, fewer if
+only the Latin and Greek subsets are kept); self-host the fonts, which turns
+test 3 green; John's GitLab account for the mirror.
 
 ### Phase 2 record
 
@@ -78,6 +80,76 @@ hand-made breaks of the parameter checks each fail a test. Codex
 names the primary host in every build, a GitHub Pages file from before the
 move. It stays for now; the mirror bundle must leave it out, with the other
 host files.
+
+**The bundle.** `node scripts/make-bundle.mjs --out=<file.tar.gz>` packs
+`app/dist` from a build with no data address: every file but `CNAME` and
+the Google verification page, plus a `SHA256SUMS` that names each one.
+Unpacked at a web root it is the site. It refuses a build made for data on
+another host (a data root in `sw.js`, or `_redirects` or `.assetsignore` in
+the folder), a link, a Finder file, and a name that is not plain ASCII (GNU
+tar and bsdtar read a listed name with a backslash or an edge space
+differently, and a Mac's tar unpacks an accented name composed another way;
+the site has no such name). Before it writes, the data passes the five gates
+`deploy:cloudflare` runs, now one exported `dataGates`. A file's sum is
+taken at its first read and every later read must match; the archive is
+unpacked and read back against its sums; the sums inside it must be the ones
+the run took. So the bytes a gate passed are the bytes packed. It never
+writes over a file. Checked by 17 tests written first, 40 hand-made breaks
+(37 fail a test; three only skip work a later guard repeats), and three reads
+by Codex, whose six findings are fixed and tested (the last: the read-back's
+own `tar` in `verify-snapshot.mjs` now gets a bare environment too). The archive's bytes are
+not the same from run to run (tar keeps file times); the sums are.
+
+**No outside calls (test 3).** `node scripts/check-no-outside-calls.mjs`
+serves a built folder from 127.0.0.1 under `SITE_BASE` and opens it in
+Chromium whose proxy is a second local server that forwards nothing. Nothing
+skips that proxy, this machine's own addresses included; it hands the site's
+requests to the file server and writes down and refuses every other, so
+nothing leaves the machine and a call from a page or from the service worker
+is seen alike. Before the visits a made-up `.invalid` host must be seen over
+http and https, or the run fails ("the block is not working"). Six visits:
+the Categories page (5,000 visible Greek and 5,000 visible English letters),
+a word popup (headword and a gloss or parse, on screen), a search for λόγος
+(a hit that links to a page of this build), `lemma/logos/` (headword, gloss,
+works list), the work page again under the service worker, and once more
+with Cardo and EB Garamond chosen. After each visit goes quiet the
+`preconnect` and `dns-prefetch` links are read off every frame of every
+window, since
+Chromium names no host for those through a proxy. The run fails on any host
+not on the list, a visit that did not find its thing, a 404 from the site,
+an uncaught page error, a page that never goes quiet, or zero requests. The
+allowed list is exact names: `grammata.pages.dev` and the packs bucket
+(decision 4); `--allow=` replaces it.
+
+Today, on the real build: `FAIL … 2 outside hosts are not allowed:
+fonts.googleapis.com x16 …, fonts.gstatic.com x4 …; 6 of 6 visits, 251
+requests to the site (0 not found), 3 outside hosts asked for`. With the two
+font hosts allowed: `ok`, at `/` and at `/mirror/`. So fonts are the only
+gap, and the word popup works with Grammata refused (Grammata is asked for
+only by the lemma page's LSJ entry, which then says "Lookup failed", and by
+the popup's "Show the LSJ entry").
+
+An Opus 5.5 agent wrote it with its failing cases first (16 browser fixtures
+in `scripts/__tests__/check-no-outside-calls.browser.mjs`, run by hand with
+`node --test`, since they need Chromium; 10 tests without a browser in
+`npm run test:scripts`). I added the link-hint read, the typefaces visit,
+and the fixes from Codex's two reads (three High, ten Medium, among them:
+calls to this machine on another port skipped the proxy; hidden text counted
+as shown; a search hit to another host passed; an endless page passed; the
+page-error excuse matched by substring; a second window was not read). The
+last three fixes have tests and hand-made breaks but no third read. Every
+guard and every visit's assertion was broken by hand and caught.
+
+What it cannot see, by its method: what an allowed host's script would call
+in turn (it is refused, so it never runs; seeing that needs a run that lets
+Grammata through); non-HTTP traffic such as WebRTC (the site has none); a
+link hint removed before its visit ends; anything a reader does that the six
+visits do not. Playwright is not a package of this repo: the script finds it
+as `app/scripts/check-redesign.mjs` does and throws if it cannot. The npx
+copy here is newer than the browsers in the cache, so the script falls back
+to the newest headless shell already there. CI will need
+`npx playwright install chromium`, which is a download and a new tool for
+CI: John's call when the workflow is written.
 
 **Known and left.** Saved searches keep whole paths, base included, in the
 browser's storage, so a saved search does not follow a site to another base.
