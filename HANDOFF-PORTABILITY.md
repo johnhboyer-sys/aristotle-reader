@@ -48,7 +48,7 @@ repo has changed.
 | Self-host the fonts | Done: `app/public/fonts/`, 94 files and 1.82 MB for the eight families, every file Google served, with each family's licence. No page names a Google font host |
 | No outside calls (test 3), as a browser test | Green with its default list, at `/` and at `/mirror/`: `scripts/check-no-outside-calls.mjs` sees one outside host asked for, Grammata. It was red on Google's two font hosts until the fonts moved into the site |
 | The mirror bundle, without the host files | Done: `scripts/make-bundle.mjs` packs a same-origin build as one `.tar.gz` with `SHA256SUMS`, leaves out `CNAME` and the Google verification page, refuses a build that holds `_redirects` or `.assetsignore`, and runs the deploy's data gates first. The real build: 17,613 files, 889 MB, 186 MB packed |
-| `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | All three written. The `Dockerfile` (the full build, then Caddy) is built and tested by `.github/workflows/image.yml`, IMAGE. `RESTORE.md` has a log of which of its steps have been run |
+| `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | All three written. The `Dockerfile` (the full build, then Caddy) is built and tested by `.github/workflows/image.yml`, which passed on its first run. `RESTORE.md` has a log of which of its steps have been run |
 | A check for a served copy | Done: `scripts/check-served.mjs` asks a host for every file a bundle's `SHA256SUMS` names and compares the bytes |
 | The bundle on two candidate hosts | Waits on John (accounts). The bundle and the check for a host are ready |
 
@@ -96,7 +96,11 @@ image, run it, and run `check-served.mjs` against it with the list from inside
 the image (which proves Caddy serves the folder as it is; the folder's own
 truth is the bundle step's gates). It runs on a pull request only when those
 files change, and on every push to `main`. Codex found nothing in the
-Dockerfile, the Caddyfile, or the two workflows.
+Dockerfile, the Caddyfile, or the two workflows. Its first run (run
+44938088200, 2026-11-21) passed with no change to any of the files: the image
+built in 11 minutes, and the container answered 17,715 of 17,715 files with
+the listed bytes, 7,560 folder addresses with their index, and a missing page
+with `404.html`.
 
 **RESTORE.md.** Three paths (a bundle, the source, Docker), what a restore
 does not bring back, and a log. It says plainly that GitHub is today the one

@@ -115,6 +115,7 @@ name to point at it.
 | 2026-11-21 | From source, on GitHub's Linux runner (CI's `site` job, first run) | Built; the data is byte for byte what the live site served on 2026-11-20 (9,770 of 9,770 files) | 9 minutes |
 | 2026-11-21 | From source, in a fresh clone on a Mac | Built; the same 9,770 of 9,770 | about 9 minutes |
 | 2026-11-21 | From a bundle (the CI run's artifact): steps 1 and 3, the folder served by a test file server on the same Mac | Every file matched its sum; all 17,715 files asked for came back with the listed bytes. The test server has no 404 page, and step 3 said so | under a minute |
+| 2026-11-21 | With Docker, on GitHub's Linux runner (the `Image` workflow, first run) | The image built; the container answered all 17,715 files asked for with the listed bytes, each folder's address with its index, and a missing page with `404.html` | 11 minutes to build, 22 seconds to check |
 
 Not yet run: a restore by someone else, from a mirror alone; the Docker path
-on a laptop (CI builds and tests the image); step 2 on a real host.
+on a laptop; step 2 on a real host.
