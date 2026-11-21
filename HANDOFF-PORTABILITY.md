@@ -8,16 +8,15 @@ is copied between the repos, never synced as a folder).
 
 ## State (2026-11-21)
 
-Phase 0 is done but for the steps that wait on John; it is PR #228, open.
-Phase 1 is PR #231 (`claude/portability-phase1`, three commits, pushed
-2026-11-21 on John's yes, based on phase 0's branch) but for the two rows that
-need a download; those two are now done on the phase 2 branch. Phase 2 is PR
-#232 (`claude/portability-phase2`, pushed 2026-11-21 on John's yes, based on
-phase 1's branch): the site serves its own fonts, test 3 is green, and CI
-builds the whole site on Linux, with data byte for byte live's. What is left
-of phase 2 waits on John: the bundle on two hosts. Phase 3 has begun on
-`claude/portability-phase3` (based on phase 2's branch, not pushed): the parts
-that need no account. Aristotle only; no sibling repo has changed.
+Phases 0, 1, and 2 are on `main`: John merged PRs #228, #231, and #232 on
+2026-11-21 (main at `5f2b93ad9d`). Phase 0 is done but for the steps that
+wait on John (the GitLab mirror, two of the four snapshot copies). Phase 1 is
+done. Phase 2 is done but for the bundle on two hosts, which waits on John's
+accounts: the site serves its own fonts, test 3 is green, CI builds the whole
+site on Linux with data byte for byte live's, and the Docker image builds and
+serves every file. Phase 3 has begun on `claude/portability-phase3` (based on
+`main`, not pushed): the parts that need no account. Aristotle only; no
+sibling repo has changed.
 
 | Phase 0 step | State |
 |---|---|
@@ -62,8 +61,7 @@ that need no account. Aristotle only; no sibling repo has changed.
 | Weekly check for a stale or silent mirror | Not written |
 | `mirrors.json`, shown on the attribution page | Not written; there is no mirror to list |
 
-Next: John's merge of #228, then #231, then #232; his yes to push phase 3.
-Then his accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
+Next: John's yes to push phase 3. Then his accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
 all seven repos), and two candidate hosts for the bundle (decision 6;
 `check-served.mjs` is the test).
 
