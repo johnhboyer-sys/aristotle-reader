@@ -68,6 +68,22 @@ export function builtDataRoot(swSource) {
   return m[1] === "''" ? '' : JSON.parse(m[1]).replace(/\/+$/, '');
 }
 
+// The gates on the data a host will serve, as [name, report] pairs.
+// `served(filter)` yields { path, text } for each file whose name passes.
+// scripts/make-bundle.mjs runs the same list on a mirror's bundle.
+export function dataGates(served) {
+  const json = () => served((n) => n.toLowerCase().endsWith('.json'));
+  const gated = new Set(readdirSync(path.join(ROOT, 'manifests'))
+    .filter((n) => n.endsWith('-public.yaml')).map((n) => n.slice(0, -'-public.yaml'.length)));
+  return [
+    ['leak check', scanForLeaks(json())],
+    ['gated translation slots', scanGatedSlots(json(), { gated })],
+    ['held works', scanHeldWorks(served(() => true))],
+    ['search indexes', scanTranslationIndexes(json())],
+    ['search shards', scanSearchShards(json())],
+  ];
+}
+
 export function contentTypeFor(key) {
   return CONTENT_TYPES[key.slice(key.lastIndexOf('.') + 1).toLowerCase()] ?? null;
 }
@@ -241,17 +257,7 @@ async function main() {
     yield* readAll(walk(dataDir, filter, dist));
     for (const f of kept) if (filter(path.posix.basename(f.path))) yield f;
   };
-  const json = () => served((n) => n.toLowerCase().endsWith('.json'));
-  const gated = new Set(readdirSync(path.join(ROOT, 'manifests'))
-    .filter((n) => n.endsWith('-public.yaml')).map((n) => n.slice(0, -'-public.yaml'.length)));
-  const gates = [
-    ['leak check', scanForLeaks(json())],
-    ['gated translation slots', scanGatedSlots(json(), { gated })],
-    ['held works', scanHeldWorks(served(() => true))],
-    ['search indexes', scanTranslationIndexes(json())],
-    ['search shards', scanSearchShards(json())],
-  ];
-  for (const [name, report] of gates) {
+  for (const [name, report] of dataGates(served)) {
     console.log(`  ${name}: ${report.ok ? 'ok' : 'FAILED'}`);
     if (!report.ok) {
       for (const problem of report.problems.slice(0, 10)) console.log(`  !! ${problem}`);

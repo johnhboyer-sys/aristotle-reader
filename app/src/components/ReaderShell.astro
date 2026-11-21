@@ -194,12 +194,7 @@ const intro =
   <script type="application/ld+json" set:html={jsonLdSafe(jsonLd)} />
   {breadcrumbLd && <script type="application/ld+json" set:html={jsonLdSafe(breadcrumbLd)} />}
   <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <BFonts />
-  <!-- Display faces used only by the print masthead; media="print" defers the
-       fetch so it never costs the on-screen reader. -->
-  <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,wght@1,600&family=DM+Mono:wght@400&display=swap" rel="stylesheet" media="print" />
 </head>
 <body data-work={workId} data-book={n} data-books={work.books} data-base={base}>
 <div class="frame dir-b pg-reader">

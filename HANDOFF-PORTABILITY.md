@@ -6,10 +6,17 @@ phase 0 began. Scope: `aristotle-reader`, `plato-reader`, `homer-reader`,
 Aristotle goes first; the others take each change as a per-hunk port (`shared/`
 is copied between the repos, never synced as a folder).
 
-## State (2026-11-20)
+## State (2026-11-21)
 
-Phase 0 is done but for the steps that wait on John. Phase 1 is under way on
-`claude/portability-phase1` (Aristotle only; no sibling repo has changed).
+Phase 0 is done but for the steps that wait on John; it is PR #228, open.
+Phase 1 is PR #231 (`claude/portability-phase1`, three commits, pushed
+2026-11-21 on John's yes, based on phase 0's branch) but for the two rows that
+need a download; those two are now done on the phase 2 branch. Phase 2 is PR
+#232 (`claude/portability-phase2`, pushed 2026-11-21 on John's yes, based on
+phase 1's branch): the site serves its own fonts, test 3 is green, and CI
+builds the whole site on Linux, with data byte for byte live's. What is left
+of phase 2 waits on John: the bundle on two hosts. Aristotle only; no sibling
+repo has changed.
 
 | Phase 0 step | State |
 |---|---|
@@ -28,12 +35,213 @@ Phase 0 is done but for the steps that wait on John. Phase 1 is under way on
 | `merge_juv.py` folded into `extract` | Done: `extract` calls its `merge_spine()` for work 918 |
 | Same output as live (test 2, data) | Done: a full build with the Diogenes export off the machine made 9,770 data files, each byte for byte what live serves |
 | Snapshot diff as a script | Done: `scripts/compare-snapshot.mjs`, data and pages. Not a CI step; see below |
-| Morpheus table and LSJ pinned by checksum, folder from the environment | Check done (`aristotle_pipeline.inputs check`, run by `build:public`). The fetch waits on John's yes to a 190 MB download |
+| Morpheus table and LSJ pinned by checksum, folder from the environment | Done. Check: `aristotle_pipeline.inputs check`, run by `build:public`. Fetch: `aristotle_pipeline.inputs fetch`, from the Diogenes 4.7.2 Mac zip (186 MB, pinned); both files in the release match the pins byte for byte. The fetch is on the phase 2 branch |
 | `/tmp/perseus-ne` and other machine paths out of the public build | Done: gone from `EN.yaml` and `config.py`. The manifests still name Diogenes.app, as the local default for `extract` and the two inputs |
-| CI runs the full build and uploads the bundle | Not started; needs the fetch |
+| CI runs the full build and uploads the bundle | Done: the `site` job in `ci.yml`. Its first run on GitHub passed in 9 minutes (tests 1 and 3 on Linux). The bundle it uploaded verifies against its `SHA256SUMS`, and its 9,770 data files are byte for byte what live serves (test 2, data, for a build made on Linux with no laptop) |
 | Pages match live (test 2, app) | Done: built with the live data address, 7,627 of 7,845 app files are identical, and 213 pages and 5 renamed bundles are byte-equal once 11 named swaps are applied (three Svelte classes, computed from this checkout's path; the five bundles that hold them; three island ids); nothing else differs |
 
-Next: finish phase 1's open rows; John's GitLab account for the mirror.
+| Phase 2 step (Aristotle) | State |
+|---|---|
+| Build parameters for origin, base path, and the Grammata address | Done: `SITE_ORIGIN`, `SITE_BASE` (`scripts/site-params.mjs`, read by the Astro config and the link check alike), `PUBLIC_GRAMMATA_LOOKUP`; `robots.txt` is written by the build. Unset, the build is byte for byte what it was |
+| Data root | Was already a parameter (`PUBLIC_DATA_ROOT`); unset, data is under `<base>/data` on the site's own origin, which is the mirror bundle's shape |
+| A build at a test base path passes the link check | Done: `/mirror/` at another origin, 7,563 pages, 414,408 links, 0 broken |
+| Self-host the fonts | Done: `app/public/fonts/`, 94 files and 1.82 MB for the eight families, every file Google served, with each family's licence. No page names a Google font host |
+| No outside calls (test 3), as a browser test | Green with its default list, at `/` and at `/mirror/`: `scripts/check-no-outside-calls.mjs` sees one outside host asked for, Grammata. It was red on Google's two font hosts until the fonts moved into the site |
+| The mirror bundle, without the host files | Done: `scripts/make-bundle.mjs` packs a same-origin build as one `.tar.gz` with `SHA256SUMS`, leaves out `CNAME` and the Google verification page, refuses a build that holds `_redirects` or `.assetsignore`, and runs the deploy's data gates first. The real build: 17,613 files, 889 MB, 186 MB packed |
+| `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | All three written. The `Dockerfile` (the full build, then Caddy) is built and tested by `.github/workflows/image.yml`, which passed on its first run. `RESTORE.md` has a log of which of its steps have been run |
+| A check for a served copy | Done: `scripts/check-served.mjs` asks a host for every file a bundle's `SHA256SUMS` names and compares the bytes |
+| The bundle on two candidate hosts | Waits on John (accounts). The bundle and the check for a host are ready |
+
+Next: John's merge of #228, then #231, then #232. Then his accounts: two
+candidate hosts for the bundle (decision 6), and GitLab for the git mirror.
+Phase 3 starts with those.
+
+### Phase 2 record
+
+**CI built it on Linux (2026-11-21).** The `site` job's first run on GitHub
+(run 44932431816) fetched the two inputs, ran `build:public`, packed the
+bundle, and passed the no-outside-calls check, in 9 minutes. The artifact,
+downloaded and unpacked: `verify-snapshot.mjs` read 17,716 of 17,716 files
+against `SHA256SUMS`; `compare-snapshot.mjs` found 9,770 of 9,770 data files
+byte for byte what the 2026-11-20 snapshot of live holds; the no-outside-calls
+check passed on the unpacked folder. The pages were not compared with live's:
+they carry this branch's changes, and a checkout's folder still names three
+Svelte classes (the phase 1 record), so that comparison belongs to a build of
+the commit live was built from.
+
+**A check for a served copy.** `node scripts/check-served.mjs
+--origin=<host> --sums=<SHA256SUMS>` asks a running host for every file the
+list names (`--every=N` for a sample, which the output says) and fails unless
+each answers 200 with the listed bytes; each folder's address serves its
+index; pages, stylesheets, scripts, and SVGs come with a type a browser takes;
+a page address that cannot exist answers 404 with `404.html`, and a data
+address that cannot exist answers 404. An `index.html` may redirect to its own
+folder on the same host, as some hosts do. It is the check for the Docker
+image, for the two candidate hosts, for a mirror, and for a restore. Against
+the Linux-built bundle on a test file server it read 17,715 files in seven
+seconds, all matching, and failed on the one true fault: that server has no
+404 page. Failing cases first (27 tests); 23 of 24 hand-made breaks fail a
+test, and the other repeats a guard above it. Codex (GPT-6.1-Sol) read it and
+found five gaps (an index sent to another host passed; a type matched by its
+start; only a page address was probed for 404; a redirect's path compared
+undecoded; fractions taken as counts), all fixed.
+
+**Dockerfile.** One file: the build stage is `build:public` and
+`make-bundle.mjs` on `node:22.23.5-bookworm` with uv 0.13.9, the inputs
+fetched by checksum; the serve stage is `caddy:2.11.9-alpine` with the
+unpacked bundle at `/srv` and a `Caddyfile` that answers a missing page with
+`404.html`. Images are pinned by version tag, not by digest. This Mac has no
+container tool, so `.github/workflows/image.yml` is its only test: build the
+image, run it, and run `check-served.mjs` against it with the list from inside
+the image (which proves Caddy serves the folder as it is; the folder's own
+truth is the bundle step's gates). It runs on a pull request only when those
+files change, and on every push to `main`. Codex found nothing in the
+Dockerfile, the Caddyfile, or the two workflows. Its first run (run
+44938088200, 2026-11-21) passed with no change to any of the files: the image
+built in 11 minutes, and the container answered 17,715 of 17,715 files with
+the listed bytes, 7,560 folder addresses with their index, and a missing page
+with `404.html`.
+
+**RESTORE.md.** Three paths (a bundle, the source, Docker), what a restore
+does not bring back, and a log. It says plainly that GitHub is today the one
+place a stranger can restore from; mirrors are phase 3. Codex found two
+commands that would fail as written; fixed.
+
+**The parameters.** `SITE_ORIGIN` is the origin canonical links, cards,
+`robots.txt`, and the sitemap name; `SITE_BASE` is the path the site is
+served under. `scripts/site-params.mjs` checks both and refuses a value
+that is not a bare origin or a path with a slash at each end.
+`app/astro.config.mjs` and `scripts/check-links.mjs` read them there, so a
+build and its link check cannot disagree. A mirror keeps the default origin:
+its canonical links name the primary site. `PUBLIC_GRAMMATA_LOOKUP` is read
+in the word popup and the lemma page, each with the old address as its
+default. It is read in place in both: a module of its own became a bundle of
+its own and renamed a script on 7,552 pages, which `compare-snapshot.mjs`
+caught.
+
+**How it was checked.** Built with nothing set but the live data address,
+`compare-snapshot.mjs` reports what it reported before the change (7,627 of
+7,845 identical, 213 pages and 5 bundles equal under the same 11 swaps), the
+generated `robots.txt` among the identical files. Built with
+`SITE_BASE=/mirror/ SITE_ORIGIN=https://mirror.example.org` and no data
+address, `SITE_BASE=/mirror/ node scripts/check-links.mjs app/dist` finds 0
+broken of 414,408 links, and the canonical link, the card image,
+`robots.txt`, and the sitemap name the new origin and base. Eleven
+hand-made breaks of the parameter checks each fail a test. Codex
+(GPT-6.1-Sol) read the change and found one thing: `app/public/CNAME` still
+names the primary host in every build, a GitHub Pages file from before the
+move. It stays for now; the mirror bundle must leave it out, with the other
+host files.
+
+**The bundle.** `node scripts/make-bundle.mjs --out=<file.tar.gz>` packs
+`app/dist` from a build with no data address: every file but `CNAME` and
+the Google verification page, plus a `SHA256SUMS` that names each one.
+Unpacked at a web root it is the site. It refuses a build made for data on
+another host (a data root in `sw.js`, or `_redirects` or `.assetsignore` in
+the folder), a link, a Finder file, and a name that is not plain ASCII (GNU
+tar and bsdtar read a listed name with a backslash or an edge space
+differently, and a Mac's tar unpacks an accented name composed another way;
+the site has no such name). Before it writes, the data passes the five gates
+`deploy:cloudflare` runs, now one exported `dataGates`. A file's sum is
+taken at its first read and every later read must match; the archive is
+unpacked and read back against its sums; the sums inside it must be the ones
+the run took. So the bytes a gate passed are the bytes packed. It never
+writes over a file. Checked by 17 tests written first, 40 hand-made breaks
+(37 fail a test; three only skip work a later guard repeats), and three reads
+by Codex, whose six findings are fixed and tested (the last: the read-back's
+own `tar` in `verify-snapshot.mjs` now gets a bare environment too). The archive's bytes are
+not the same from run to run (tar keeps file times); the sums are.
+
+**No outside calls (test 3).** `node scripts/check-no-outside-calls.mjs`
+serves a built folder from 127.0.0.1 under `SITE_BASE` and opens it in
+Chromium whose proxy is a second local server that forwards nothing. Nothing
+skips that proxy, this machine's own addresses included; it hands the site's
+requests to the file server and writes down and refuses every other, so
+nothing leaves the machine and a call from a page or from the service worker
+is seen alike. Before the visits a made-up `.invalid` host must be seen over
+http and https, or the run fails ("the block is not working"). Six visits:
+the Categories page (5,000 visible Greek and 5,000 visible English letters),
+a word popup (headword and a gloss or parse, on screen), a search for λόγος
+(a hit that links to a page of this build), `lemma/logos/` (headword, gloss,
+works list), the work page again under the service worker, and once more
+with Cardo and EB Garamond chosen. After each visit goes quiet the
+`preconnect` and `dns-prefetch` links are read off every frame of every
+window, since
+Chromium names no host for those through a proxy. The run fails on any host
+not on the list, a visit that did not find its thing, a 404 from the site,
+an uncaught page error, a page that never goes quiet, or zero requests. The
+allowed list is exact names: `grammata.pages.dev` and the packs bucket
+(decision 4); `--allow=` replaces it.
+
+Before the fonts moved (2026-11-20): `FAIL … 2 outside hosts are not allowed:
+fonts.googleapis.com x16 …, fonts.gstatic.com x4 …`. Since (2026-11-21), with
+the default list: `ok app/dist at /: 6 of 6 visits, 310 requests to the site
+(0 not found), 1 outside host asked for, it allowed (grammata.pages.dev x1)`,
+and the same at `/mirror/`. The word popup works with Grammata refused
+(Grammata is asked for only by the lemma page's LSJ entry, which then says
+"Lookup failed", and by the popup's "Show the LSJ entry").
+
+**Fonts.** `app/public/fonts/fonts.css` is Google's CSS for the queries the
+pages used to send, with each file's address made local: 149 rules, 94 woff2
+files, eight families (Gentium Book Plus, Literata, Sofia Sans, Oswald; Bodoni
+Moda and DM Mono for the print masthead; Cardo and EB Garamond, the reader's
+optional faces), each with its OFL text. Every subset Google served is kept.
+The first cut kept only latin and greek, as Plato's repo does; a scan of the
+built site then found U+0323 (406 underdots in the Athenian Constitution) and
+U+0301 (the Poetics' scansion), which only the vietnamese and cyrillic files
+cover, and a page of the Athenian Constitution does load the vietnamese
+file. Keeping all 94 makes the type what it was, with no ruling to make per
+face. Plato's four-subset set should get the same scan at its port.
+
+`BFonts.astro` links the stylesheet with `data-reader-font="cardo garamond"`.
+`loadReaderFace` in `shared/components/Reader.svelte` now matches that
+attribute as a word (`~=`), so on a page that declares the faces it adds no
+link; its Google addresses stay for the desktop app, which mounts the same
+component and has no font files. That is the hunk each sibling takes, with
+its own stylesheet naming the faces. `sw.js` still has its branch for
+Google's font hosts; the site can no longer reach it, and it was left alone.
+Checks: `scripts/__tests__/fonts.test.mjs` holds the stylesheet and the folder
+to each other (18 tests); of 7,563 built pages, 7,560 carry the link and none
+names a Google font host (the other three never had web fonts); in Chromium
+all 149 faces are declared, none in error, and Cardo and EB Garamond load from
+the site; taking the attribute off one built page turns test 3 red at the
+typefaces visit. Codex (GPT-6.1-Sol) read it: no path to Google and no
+missing face found; two holes in the font test, fixed.
+
+The fresh clone caught one thing no test here had: `.gitignore`'s `*.TXT`,
+the guard on raw TLG files, matches `.txt` on a Mac's disk, so the eight
+licence texts had stayed out of the commit in silence. The ignore file now
+excepts `app/public/fonts/OFL-*.txt`. On GitHub the font test would have
+failed for it; here only the clone showed it.
+
+An Opus 5.5 agent wrote it with its failing cases first (16 browser fixtures
+in `scripts/__tests__/check-no-outside-calls.browser.mjs`, run by hand with
+`node --test`, since they need Chromium; 10 tests without a browser in
+`npm run test:scripts`). I added the link-hint read, the typefaces visit,
+and the fixes from Codex's two reads (three High, ten Medium, among them:
+calls to this machine on another port skipped the proxy; hidden text counted
+as shown; a search hit to another host passed; an endless page passed; the
+page-error excuse matched by substring; a second window was not read). The
+last three fixes have tests and hand-made breaks but no third read. Every
+guard and every visit's assertion was broken by hand and caught.
+
+What it cannot see, by its method: what an allowed host's script would call
+in turn (it is refused, so it never runs; seeing that needs a run that lets
+Grammata through); non-HTTP traffic such as WebRTC (the site has none); a
+link hint removed before its visit ends; anything a reader does that the six
+visits do not. Playwright is not a package of this repo: the script finds it
+as `app/scripts/check-redesign.mjs` does and throws if it cannot. The npx
+copy here is newer than the browsers in the cache, so the script falls back
+to the newest headless shell already there. The CI job installs Playwright
+1.65.1 and its Chromium with `npx` for this one step; it is no package of
+the repo.
+
+**Known and left.** Saved searches keep whole paths, base included, in the
+browser's storage, so a saved search does not follow a site to another base.
+The footer links to the sibling readers by name. One test in
+`shared/__tests__/components.test.ts` ("restores English only as I typed
+it") failed once in a full run and passed three times after: a timing
+fluke, not this change.
 
 ### Phase 1 record
 
@@ -152,10 +360,20 @@ it by hand at each port, as above.
 by sha256 and size in `pipeline/aristotle_pipeline/inputs.py`, hashed from
 Diogenes 4.7.2's `dependencies/data`. `DIOGENES_DATA` names their folder; each
 manifest's `sources.diogenes_data` (the path inside Diogenes.app) is the local
-default. The public source to fetch from is the Diogenes 4.7.2 release on
-GitHub (`pjheslin/diogenes`, tag `4.7.2`; `diogenes-4.7.2.pkg.tar.xz`, 193 MB,
-a plain tar). Nobody has yet downloaded it to confirm the two files inside
-match the pins, or pinned the archive's own checksum.
+default. The public source is the Diogenes 4.7.2 release on GitHub
+(`pjheslin/diogenes`, tag `4.7.2`). `python -m aristotle_pipeline.inputs fetch
+--dir FOLDER` downloads its Mac zip (`diogenes-mac-arm64-4.7.2.zip`, 186 MB,
+pinned by length and sha256) and takes the two files out; on 2026-11-21 both
+matched the pins byte for byte, in the zip and in the Linux package alike.
+The zip is used because Python's standard library reads one; the Linux
+package (`diogenes-4.7.2.pkg.tar.xz`) is Zstandard under an `.xz` name, which
+Python 3.12 cannot read. The fetch writes to `--dir` or `$DIOGENES_DATA` only,
+never to the folder a manifest names, never over a file, and leaves the
+folder as it was on a failure. 19 of 19 hand-made breaks of its guards fail a
+test. Codex found four gaps in those rules (a rename could write over a file
+that appeared meanwhile, or a dangling link; a failed second placement left
+the first; parent folders were left behind; a failed work folder left the
+folder) and one test that proved less than its name; all are fixed.
 
 ### Phase 1 baseline: a clean build already matches live
 

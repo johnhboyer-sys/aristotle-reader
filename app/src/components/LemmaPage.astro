@@ -169,7 +169,9 @@ const breadcrumb = Astro.site ? {
   // or cache-bust this URL (its deploys ARE the update mechanism) and do not
   // style anything inside the container. With a key the word argument is
   // ignored; lang:'grc' skips the Latin fetch.
-  const GRAMMATA_LOOKUP = 'https://grammata.pages.dev/t8/lookup.js';
+  // PUBLIC_GRAMMATA_LOOKUP names another address at BUILD time, as there.
+  const GRAMMATA_LOOKUP: string =
+    import.meta.env.PUBLIC_GRAMMATA_LOOKUP || 'https://grammata.pages.dev/t8/lookup.js';
   const mount = document.querySelector<HTMLElement>('.grammata-mount');
   const key = mount?.dataset.key;
   if (mount && key) {

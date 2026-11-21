@@ -14,6 +14,8 @@ TLG Files/
 # ...but on a case-insensitive disk *.TXT also matches lowercase .txt. Taylor's 1812
 # page transcripts are English and must be tracked (build_taylor_1812.py reads them).
 !pipeline/data/taylor1812/n*.txt
+# The fonts' licence texts are English too, and the licence says they go with the files.
+!app/public/fonts/OFL-*.txt
 Diogenes-Resources/
 
 # Python

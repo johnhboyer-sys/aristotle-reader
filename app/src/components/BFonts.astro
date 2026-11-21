@@ -1,1 +1,9 @@
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gentium+Book+Plus:ital,wght@0,400;0,700;1,400&amp;family=Literata:ital,opsz,wght@0,7..72,300;0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,300;1,7..72,400&amp;family=Sofia+Sans:ital,wght@0,400;0,500;0,600;0,650;0,700;1,400&amp;family=Oswald:wght@700&amp;display=swap" />
+---
+// The site's web fonts, served from the site itself (app/public/fonts/). One
+// stylesheet declares every face; a browser fetches a file only when a page
+// uses that face for a character in the file's range. data-reader-font tells
+// the reader (shared/components/Reader.svelte) that its two optional faces
+// are here, so it fetches no stylesheet of its own.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+<link rel="stylesheet" href={`${base}/fonts/fonts.css`} data-reader-font="cardo garamond" />

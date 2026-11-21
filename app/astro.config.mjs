@@ -5,16 +5,20 @@ import svelte from '@astrojs/svelte';
 
 import sitemap from '@astrojs/sitemap';
 
+import { siteParams } from '../scripts/site-params.mjs';
+
+// Build parameters SITE_ORIGIN and SITE_BASE; unset, the primary site at the root.
+const { site, base } = siteParams();
+
 export default defineConfig({
-  // Published on GitHub Pages under the custom domain aristotle.johnhboyer.com
-  // (the CNAME file in public/), so the site sits at the root and needs no
-  // base. App code reads import.meta.env.BASE_URL, so it works at any base;
-  // scripts/check-links.mjs BASE must match this one.
-  // `site` is the canonical origin — set only so @astrojs/sitemap can emit
-  // absolute URLs (site + base + path). App UI still uses base-relative URLs,
-  // not Astro.site, so this changes no existing links.
-  site: 'https://aristotle.johnhboyer.com',
-  base: '/',
+  // The primary site sits at the root of aristotle.johnhboyer.com and needs
+  // no base. App code reads import.meta.env.BASE_URL, so it works at any
+  // base; scripts/check-links.mjs reads the same parameter.
+  // `site` is the canonical origin: canonical links, cards, robots.txt and
+  // @astrojs/sitemap's absolute URLs (site + base + path). App UI uses
+  // base-relative URLs, not Astro.site.
+  site,
+  base,
   // Astro 7 changed the default to 'jsx', which drops the whitespace between
   // inline elements on separate lines and runs words together. Keep v6's.
   compressHTML: true,

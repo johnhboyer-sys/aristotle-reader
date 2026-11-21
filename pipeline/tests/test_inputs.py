@@ -98,3 +98,206 @@ def test_the_pins_are_whole():
     assert set(inputs.PINNED) == {"greek-analyses.txt", "grc.lsj.xml"}
     for pin in inputs.PINNED.values():
         assert len(pin["sha256"]) == 64 and pin["bytes"] > 100_000_000
+
+
+# --- fetch: the public copy of the two files -------------------------------
+
+import zipfile
+
+
+def _archive(path: Path, members: dict, links: dict | None = None, twice: tuple = ()) -> dict:
+    """A zip at `path`; returns the pin that matches it."""
+    import warnings
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as z:
+        for name, body in members.items():
+            z.writestr(name, body)
+            if name in twice:
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    z.writestr(name, body)
+        for name, target in (links or {}).items():
+            info = zipfile.ZipInfo(name)
+            info.external_attr = 0o120777 << 16
+            z.writestr(info, target)
+    body = path.read_bytes()
+    return {"url": path.as_uri(), "sha256": hashlib.sha256(body).hexdigest(), "bytes": len(body), "folder": "usr/data"}
+
+
+@pytest.fixture
+def public(folder, tmp_path, monkeypatch):
+    """`folder`'s two files packed as the public archive, and an empty folder
+    to fetch into."""
+    members = {f"usr/data/{name}": (folder / name).read_bytes() for name in inputs.PINNED}
+    members["usr/data/other.txt"] = b"not wanted\n"
+    src = tmp_path / "src"
+    src.mkdir()
+    monkeypatch.setattr(inputs, "ARCHIVE", _archive(src / "release.zip", members))
+    dest = tmp_path / "dest"
+    return {"dest": dest, "src": src, "members": members}
+
+
+def _nothing_written(dest: Path) -> bool:
+    """A failed fetch leaves no file, and not the folder it made either."""
+    return not dest.exists()
+
+
+def test_fetch_refuses_an_archive_that_is_not_the_pinned_one(public, monkeypatch):
+    monkeypatch.setitem(inputs.ARCHIVE, "sha256", "0" * 64)
+    problems = inputs.fetch(public["dest"])
+    assert any("sha256" in p for p in problems) and _nothing_written(public["dest"])
+
+
+def test_fetch_stops_at_the_pinned_length(public, monkeypatch):
+    monkeypatch.setitem(inputs.ARCHIVE, "bytes", inputs.ARCHIVE["bytes"] - 1)
+    problems = inputs.fetch(public["dest"])
+    assert any("bytes" in p for p in problems) and _nothing_written(public["dest"])
+    monkeypatch.setitem(inputs.ARCHIVE, "bytes", inputs.ARCHIVE["bytes"] + 2)
+    problems = inputs.fetch(public["dest"])
+    assert any("bytes" in p for p in problems) and _nothing_written(public["dest"])
+
+
+def test_fetch_fails_when_the_archive_lacks_a_file_and_leaves_neither(public, monkeypatch):
+    members = dict(public["members"])
+    del members["usr/data/grc.lsj.xml"]
+    monkeypatch.setattr(inputs, "ARCHIVE", _archive(public["src"] / "short.zip", members))
+    problems = inputs.fetch(public["dest"])
+    assert any("grc.lsj.xml" in p and "not in the archive" in p for p in problems) and _nothing_written(public["dest"])
+
+
+def test_fetch_fails_on_a_file_that_is_not_the_pinned_one_and_leaves_neither(public, monkeypatch):
+    members = dict(public["members"])
+    same_length = bytes(reversed(members["usr/data/grc.lsj.xml"]))
+    members["usr/data/grc.lsj.xml"] = same_length
+    monkeypatch.setattr(inputs, "ARCHIVE", _archive(public["src"] / "changed.zip", members))
+    problems = inputs.fetch(public["dest"])
+    assert any("grc.lsj.xml" in p and "sha256" in p for p in problems) and _nothing_written(public["dest"])
+    members["usr/data/grc.lsj.xml"] = b"short"
+    monkeypatch.setattr(inputs, "ARCHIVE", _archive(public["src"] / "shorter.zip", members))
+    problems = inputs.fetch(public["dest"])
+    assert any("grc.lsj.xml" in p and "bytes" in p for p in problems) and _nothing_written(public["dest"])
+
+
+def test_fetch_refuses_a_link_in_place_of_a_file(public, monkeypatch):
+    members = dict(public["members"])
+    del members["usr/data/grc.lsj.xml"]
+    pin = _archive(public["src"] / "link.zip", members, links={"usr/data/grc.lsj.xml": "/etc/passwd"})
+    monkeypatch.setattr(inputs, "ARCHIVE", pin)
+    problems = inputs.fetch(public["dest"])
+    assert any("grc.lsj.xml" in p and "not a plain file" in p for p in problems) and _nothing_written(public["dest"])
+
+
+def test_fetch_refuses_a_file_that_is_in_the_archive_twice(public, monkeypatch):
+    pin = _archive(public["src"] / "twice.zip", public["members"], twice=("usr/data/grc.lsj.xml",))
+    monkeypatch.setattr(inputs, "ARCHIVE", pin)
+    problems = inputs.fetch(public["dest"])
+    assert any("grc.lsj.xml" in p and "2 times" in p for p in problems) and _nothing_written(public["dest"])
+
+
+def test_fetch_does_not_write_over_a_file_and_does_not_download_to_find_out(public, monkeypatch):
+    public["dest"].mkdir()
+    (public["dest"] / "grc.lsj.xml").write_bytes(b"someone's other LSJ\n")
+    monkeypatch.setitem(inputs.ARCHIVE, "url", (public["src"] / "absent.zip").as_uri())
+    problems = inputs.fetch(public["dest"])
+    assert any("grc.lsj.xml" in p and "already" in p for p in problems)
+    assert (public["dest"] / "grc.lsj.xml").read_bytes() == b"someone's other LSJ\n"
+    assert [p.name for p in public["dest"].iterdir()] == ["grc.lsj.xml"]
+
+
+def _appears_during_the_download(monkeypatch, path: Path, body: bytes):
+    """Have `path` come into being after the pre-check, while fetch works."""
+    real = inputs._unpack
+
+    def unpack(archive, into):
+        problems = real(archive, into)
+        path.write_bytes(body)
+        return problems
+    monkeypatch.setattr(inputs, "_unpack", unpack)
+
+
+def test_fetch_does_not_write_over_a_file_that_appears_while_it_works_and_leaves_no_half(public, monkeypatch):
+    # The second file to be placed is the one that appears, so the first has
+    # already been placed and must be taken back.
+    first, second = list(inputs.PINNED)
+    public["dest"].mkdir()
+    _appears_during_the_download(monkeypatch, public["dest"] / second, b"someone else's\n")
+    problems = inputs.fetch(public["dest"])
+    assert problems and (public["dest"] / second).read_bytes() == b"someone else's\n"
+    assert [p.name for p in public["dest"].iterdir()] == [second]
+
+
+def test_fetch_refuses_a_dangling_link_where_a_file_would_go(public, monkeypatch):
+    public["dest"].mkdir()
+    link = public["dest"] / "grc.lsj.xml"
+    link.symlink_to(public["dest"] / "nowhere")
+    monkeypatch.setitem(inputs.ARCHIVE, "url", (public["src"] / "absent.zip").as_uri())
+    problems = inputs.fetch(public["dest"])
+    assert any("grc.lsj.xml" in p and "already" in p for p in problems)
+    assert link.is_symlink() and [p.name for p in public["dest"].iterdir()] == ["grc.lsj.xml"]
+
+
+def test_fetch_makes_one_folder_and_not_a_path_of_them(public):
+    deep = public["dest"] / "a" / "b"
+    problems = inputs.fetch(deep)
+    assert problems and not public["dest"].exists()
+
+
+def test_fetch_leaves_no_folder_when_it_cannot_make_its_work_folder(public, monkeypatch):
+    def full(*args, **kwargs):
+        raise OSError(28, "No space left on device")
+    monkeypatch.setattr(inputs.tempfile, "mkdtemp", full)
+    problems = inputs.fetch(public["dest"])
+    assert any("No space left" in p for p in problems) and _nothing_written(public["dest"])
+
+
+def test_fetch_stops_reading_at_the_first_block_past_the_pinned_length(public, monkeypatch):
+    class Endless:
+        blocks = 0
+
+        def read(self, n):
+            Endless.blocks += 1
+            if Endless.blocks > 2:
+                raise RuntimeError("read on after the pinned length was passed")
+            return b"x" * n
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    monkeypatch.setitem(inputs.ARCHIVE, "bytes", 10)
+    monkeypatch.setattr(inputs.urllib.request, "urlopen", lambda *a, **k: Endless())
+    problems = inputs.fetch(public["dest"])
+    assert any("bytes" in p for p in problems) and _nothing_written(public["dest"]) and Endless.blocks == 1
+
+
+def test_fetch_never_falls_back_to_the_folder_a_manifest_names(public, monkeypatch, capsys):
+    monkeypatch.delenv(inputs.ENV, raising=False)
+    assert inputs.main(["fetch"]) == 2
+    assert "--dir" in capsys.readouterr().out
+    assert _nothing_written(public["dest"])
+
+
+def test_fetch_writes_both_files_checks_them_and_keeps_nothing_else(public, capsys):
+    assert inputs.main(["fetch", "--dir", str(public["dest"])]) == 0
+    out = capsys.readouterr().out
+    assert "2 of 2 files match" in out and "fetched" in out
+    assert sorted(p.name for p in public["dest"].iterdir()) == sorted(inputs.PINNED)
+    assert inputs.check(public["dest"]) == ([], 2)
+
+
+def test_fetch_of_a_folder_that_already_passes_downloads_nothing(folder, public, monkeypatch, capsys):
+    monkeypatch.setitem(inputs.ARCHIVE, "url", (public["src"] / "absent.zip").as_uri())
+    assert inputs.main(["fetch", "--dir", str(folder)]) == 0
+    assert "already" in capsys.readouterr().out
+
+
+def test_fetch_reads_the_folder_from_the_environment(public, monkeypatch):
+    monkeypatch.setenv(inputs.ENV, str(public["dest"]))
+    assert inputs.main(["fetch"]) == 0
+    assert inputs.check(public["dest"]) == ([], 2)
+
+
+def test_the_archive_pin_is_whole():
+    assert inputs.ARCHIVE["url"].startswith("https://") and len(inputs.ARCHIVE["sha256"]) == 64
+    assert inputs.ARCHIVE["bytes"] > 100_000_000 and inputs.ARCHIVE["folder"]
