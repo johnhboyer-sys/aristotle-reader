@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: start the Plato port session ("Sessions", below), and John's two
+Next: check the Plato port session's reports ("Sessions", below), and John's two
 candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
@@ -981,10 +981,12 @@ Aristotle's phase 3 is merged, checks their reports, and brings John only
 decisions.
 
 **Plato (2026-11-21).** John said to start it. The brief is
-`docs/portability/port-brief-plato.md`; the session is not started, because a
-turn that comes over Remote Control cannot start one. Start it from the
-desktop app with `start_session` (preset `plato-reader`, its own worktree,
-Opus 5.5, name `plato-port`). Its deploy key is the lead session's job, done
+`docs/portability/port-brief-plato.md`. The session started that afternoon:
+"Plato portability port [Opus 5.5]", name `plato-port`, id
+`local_02eaa70b-28e3-403e-bf55-0c1d9024a980`, rooted in `plato-reader` in its
+own worktree. (A turn that comes over Remote Control cannot start a session;
+it took John's word from the desktop app.) It reports to the lead session at
+each phase's PR or when it needs a decision. Its deploy key is the lead session's job, done
 with John as Aristotle's was. Homer and the plays wait for John's word.
 
 ## Rules for the session
