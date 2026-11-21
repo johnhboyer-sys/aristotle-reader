@@ -1,0 +1,55 @@
+name: Release
+
+# A deploy is marked by a tag, deploy/<date> (`npm run deploy:cloudflare`
+# pushes it once the deploy has succeeded). This builds that commit's mirror
+# bundle from a clean checkout and attaches it, with its SHA256SUMS, to a
+# public release named after the tag. Mirrors and the stale check read the
+# release. HANDOFF-PORTABILITY.md, phase 3.
+on:
+  push:
+    tags:
+      - 'deploy/*'
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Name the bundle
+        run: echo "BUNDLE=$RUNNER_TEMP/aristotle-reader-${GITHUB_REF_NAME//\//-}.tar.gz" >> "$GITHUB_ENV"
+
+      - name: Build the site and pack the bundle
+        uses: ./.github/actions/site-bundle
+        with:
+          out: ${{ env.BUNDLE }}
+
+      # SHA256SUMS names every file in the bundle; it is attached beside the
+      # bundle so a mirror can be checked against it without a download of
+      # 187 MB. A release that exists is never written over: a second run for
+      # one tag fails here.
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tar -xzf "$BUNDLE" -C "$RUNNER_TEMP" ./SHA256SUMS
+          files=$(wc -l < "$RUNNER_TEMP/SHA256SUMS" | tr -d ' ')
+          sum=$(sha256sum "$BUNDLE" | cut -d' ' -f1)
+          printf '%s\n' \
+            "The site as deployed at \`$GITHUB_REF_NAME\` (commit $GITHUB_SHA), built from a clean checkout." \
+            "" \
+            "\`$(basename "$BUNDLE")\` unpacks to a folder any static host can serve; \`SHA256SUMS\` names its $files files. \`RESTORE.md\` has the steps." \
+            "" \
+            "sha256 of the bundle: \`$sum\`" > "$RUNNER_TEMP/notes.md"
+          gh release create "$GITHUB_REF_NAME" "$BUNDLE" "$RUNNER_TEMP/SHA256SUMS" \
+            --verify-tag --title "$GITHUB_REF_NAME" --notes-file "$RUNNER_TEMP/notes.md"
