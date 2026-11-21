@@ -6,13 +6,13 @@ phase 0 began. Scope: `aristotle-reader`, `plato-reader`, `homer-reader`,
 Aristotle goes first; the others take each change as a per-hunk port (`shared/`
 is copied between the repos, never synced as a folder).
 
-## State (2026-11-20)
+## State (2026-11-21)
 
-Phase 0 is done but for the steps that wait on John. Phase 1 is committed on
-`claude/portability-phase1` (three commits, not pushed: the push waits on
-John's OK) but for the two rows that need a download. Phase 2 has begun on
-`claude/portability-phase2`, stacked on it. Aristotle only; no sibling repo
-has changed.
+Phase 0 is done but for the steps that wait on John; it is PR #228, open.
+Phase 1 is PR #231 (`claude/portability-phase1`, three commits, pushed
+2026-11-21 on John's yes, based on phase 0's branch) but for the two rows that
+need a download. Phase 2 has begun on `claude/portability-phase2`, stacked on
+it and not pushed. Aristotle only; no sibling repo has changed.
 
 | Phase 0 step | State |
 |---|---|
@@ -47,7 +47,7 @@ has changed.
 | `Dockerfile`, `ARCHITECTURE.md`, `RESTORE.md` | `ARCHITECTURE.md` written. `RESTORE.md` waits for a mirror to restore from. The `Dockerfile` waits for CI: this Mac has no container tool, so it cannot be tested here |
 | The bundle on two candidate hosts | Waits on John (accounts) |
 
-Next: John's yes to push phase 1 and to the two downloads (Diogenes 4.7.2,
+Next: John's merge of #228 and then #231, and his yes to the two downloads (Diogenes 4.7.2,
 193 MB, for the Morpheus and LSJ fetch; the font files, at most 94 `.woff2`
 files and 1.82 MB from `fonts.gstatic.com` for the eight families, fewer if
 only the Latin and Greek subsets are kept); self-host the fonts, which turns
