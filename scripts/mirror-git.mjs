@@ -45,7 +45,7 @@ const said = (r) => (r.stderr || r.stdout || String(r.error || '')).trim();
 // A plain path would be fetched by reading files in place, a shallow marker
 // unseen; file:// makes git fetch it as it would from a host.
 const asUrl = (remote) => (existsSync(remote) ? pathToFileURL(path.resolve(remote)).href : remote);
-const hasPassword = (remote) => /:\/\/[^/@\s]*:[^/@\s]*@/.test(remote);
+export const hasPassword = (remote) => /:\/\/[^/@\s]*:[^/@\s]*@/.test(remote);
 export const isAddress = (remote) => !remote.startsWith('-')
   && (existsSync(remote) || /^(https|ssh|file):\/\/[^\s:]\S*$/.test(remote) || /^[\w.-]+@[\w.-]+:[^\s:]\S*$/.test(remote));
 
