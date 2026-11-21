@@ -20,8 +20,41 @@ Phase 0 is under way. Nothing in any reader's code has changed.
 | Plays history check | Done; findings below, John flips visibility |
 | Diogenes version and Homer's export patch recorded | Done, below |
 
-Next: John's GitLab account and drive; then phase 1 (Aristotle builds without
-the laptop).
+Next: John's GitLab account; then phase 1 (Aristotle builds without the
+laptop), whose baseline is measured below.
+
+### Phase 1 baseline: a clean build already matches live
+
+On 2026-11-20 a fresh worktree at `origin/main` (`6e800cdc03`) ran
+`npm run build:public` to the end: 50 works, 7,560 pages, 0 broken links,
+4 min 53 s. Against the Aristotle snapshot:
+
+- **Data:** all 9,770 files the build makes are byte for byte what live
+  serves. Live holds 23 more: the key record and 22 English search shards the
+  index no longer names (the bucket never deletes).
+- **App:** 7,845 files on each side. 7,614 are identical; 214 are equal once
+  bundle hashes are masked; 16 bundles carry another hash; `sw.js` differs.
+  The build ran without `PUBLIC_DATA_ROOT`, so the bundle hashes had to
+  differ.
+
+So test 2 is within reach, and the build's only inputs from outside the repo
+are these:
+
+1. **The Diogenes export, 86 files, 14 MB**, for three TLG authors: 0086
+   (Aristotle), 0547, and 2034 (Porphyry, for the Isagoge). That is the upper
+   bound on what `corpus/greek/` will hold.
+2. **`pipeline/tools/merge_juv.py`, run by hand** after the export. It splices
+   TLG works 018 and 037 into a made-up work 918 for *Juv*. No script calls
+   it; the build fails at *Juv* without it.
+3. **Morpheus and LSJ** from inside Diogenes.app (unchanged from the audit).
+
+And the build's own call to Diogenes no longer works: `stage1_greek.run_export`
+passes an environment with no `HOME`, and Diogenes 4.7.2 stops with "Could
+not find user profile dir" (exit 25). Nobody saw it because the export was
+cached, and the cache is now gone from every checkout. Run by hand with
+`HOME` set and `TLG_DIR` at the iCloud folder, the export works. Phase 1's
+`extract` replaces that call; do not patch it in place and leave it in the
+build.
 
 ## Goal
 
@@ -79,9 +112,9 @@ The single points of failure, worst first:
 1. **The live sites were the only full copy of what they serve.** `build/` is
    git-ignored in every repo; no Aristotle, Homer, or plays build exists on the
    laptop (one built Homer app sits in `~/Developer/homer-reader-speaker-alias/app/dist`,
-   2026-11-18). `deploy-cloudflare.mjs` never deletes from R2, and the bucket
-   holds files no build makes (`data/reports`, `Meta/quotations.json`; see
-   DEPLOY-STATUS.md). Phase 0's snapshots are now the second copy.
+   2026-11-18). `deploy-cloudflare.mjs` never deletes from R2; on 2026-11-20
+   the bucket held 22 search shards no build makes, and nothing else (the
+   baseline above). Phase 0's snapshots are now the second copy.
 2. **The Greek comes from a licensed disc kept in cloud folders.** Diogenes
    reads the TLG from `~/Library/CloudStorage/OneDrive-LoyolaUniversityNewOrleans/TLG Files/TLG`;
    the plays' recipe names `~/Documents/CLAUDE CODE ARISTOTLE PROJECT/TLG Files/TLG`.
@@ -289,8 +322,9 @@ lexica, no translations, and was not scanned.
 ### Open after phase 0
 
 - A past session's `wrangler deploy --dry-run` read 25,362 files from an
-  Aristotle worktree's `app/dist`; live holds 17,638. Explain it in phase 1,
-  when the clean build is diffed against the snapshot.
+  Aristotle worktree's `app/dist`; live holds 17,638 and a clean build's
+  `app/dist` holds 17,615. The larger count did not come back; that
+  worktree's dist was not a clean build.
 - The plays' deployed file count: Cloudflare reports none for a Worker's
   assets, and the 9,739 in `app/wrangler.jsonc` dates from 2026-10-23.
 - Grammata's two unnamed bucket objects.
@@ -351,8 +385,11 @@ no refs; its tests start from a deleted ref.*
   from the environment, with the Diogenes.app path as a local default only.
 - Remove the other machine paths from the public build (`/tmp/perseus-ne/...` in
   the manifests). Offline tools may keep theirs.
-- Diff the snapshot's data against a clean build. Each file only one side has
-  gets a fix in the build or a ruling.
+- Diff the snapshot's data against a clean build (done once, by hand, in the
+  baseline above; make it a script and a CI step). The 22 stale shards on
+  live need a ruling: delete them from R2, or leave them.
+- `merge_juv.py` becomes part of `extract`, so *Juv*'s spliced spine is a
+  committed file like the rest.
 - *Check: tests 1 and 2. CI runs the full build (about 4 minutes locally) and
   uploads the bundle.*
 
