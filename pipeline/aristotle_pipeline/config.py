@@ -74,20 +74,18 @@ class Manifest:
         return Path(self.data["sources"]["diogenes_server"])
 
     def diogenes_data(self) -> Path:
-        return Path(self.data["sources"]["diogenes_data"])
+        """The folder holding the Morpheus table and the LSJ: $DIOGENES_DATA,
+        else the manifest's path (inside Diogenes.app; a local default)."""
+        env = os.environ.get("DIOGENES_DATA")
+        return Path(env) if env else Path(self.data["sources"]["diogenes_data"])
 
     def perseus_eng(self) -> Path:
         # Vendored Perseus eng TEI for this work: an explicit work.english_source
-        # name, else derived from the TLG work number. Falls back to the legacy
-        # sources.perseus_eng path (NE-only download location).
+        # name, else derived from the TLG work number.
         name = self.data["work"].get("english_source")
         if not name:
             name = f"tlg0086.tlg{self.data['work']['tlg_work']}.perseus-eng2.xml"
-        vendored = SOURCES_DIR / name
-        if vendored.exists():
-            return vendored
-        legacy = (self.data.get("sources") or {}).get("perseus_eng")
-        return Path(legacy) if legacy else vendored
+        return SOURCES_DIR / name
 
     def book_for_line(self, column: str, line: int) -> int | None:
         """Book number containing Bekker position (column, line), or None

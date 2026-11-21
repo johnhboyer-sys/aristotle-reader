@@ -8,7 +8,8 @@ is copied between the repos, never synced as a folder).
 
 ## State (2026-11-20)
 
-Phase 0 is under way. Nothing in any reader's code has changed.
+Phase 0 is done but for the steps that wait on John. Phase 1 is under way on
+`claude/portability-phase1` (Aristotle only; no sibling repo has changed).
 
 | Phase 0 step | State |
 |---|---|
@@ -20,13 +21,96 @@ Phase 0 is under way. Nothing in any reader's code has changed.
 | Plays history check | Done; findings below, John flips visibility |
 | Diogenes version and Homer's export patch recorded | Done, below |
 
-Next: John's GitLab account; then phase 1 (Aristotle builds without the
-laptop), whose baseline is measured below.
+| Phase 1 step (Aristotle) | State |
+|---|---|
+| `extract` writes `corpus/greek/`; the build reads only those | Done: 45 files, 110,121 lines, 12.6 MB. Stage 1 runs no program |
+| Guard on the committed files, failing cases first | Done: every character of every line must be Greek or one of 29 listed marks; one named exception (Prob 944a9) |
+| `merge_juv.py` folded into `extract` | Done: `extract` calls its `merge_spine()` for work 918 |
+| Same output as live (test 2, data) | Done: a full build with the Diogenes export off the machine made 9,770 data files, each byte for byte what live serves |
+| Snapshot diff as a script | Done: `scripts/compare-snapshot.mjs`. Not a CI step; see below |
+| Morpheus table and LSJ pinned by checksum, folder from the environment | Check done (`aristotle_pipeline.inputs check`, run by `build:public`). The fetch waits on John's yes to a 190 MB download |
+| `/tmp/perseus-ne` and other machine paths out of the public build | Done: gone from `EN.yaml` and `config.py`. The manifests still name Diogenes.app, as the local default for `extract` and the two inputs |
+| CI runs the full build and uploads the bundle | Not started; needs the fetch |
+| Pages match live after masking (test 2, app) | By hash the new build stands where the baseline stood: 7,614 of 7,845 app files identical, 214 pages and `sw.js` differ, 16 bundles renamed (no `PUBLIC_DATA_ROOT`). The masked comparison itself was not rerun and is not yet a script |
+
+Next: finish phase 1's open rows; John's GitLab account for the mirror.
+
+### Phase 1 record
+
+**The line files.** `python -m aristotle_pipeline.extract --all` (in
+`pipeline/`, with `TLG_DIR` set) reads the Diogenes export under the
+git-ignored `build/export`, running Diogenes only when a work's XML is missing,
+and writes `corpus/greek/<Work>.tsv`: three heading lines (work, edition,
+columns), then one printed line per row under its labels (Bekker column; Busse
+page for *Isa*; chapter and section for *AthPol*; book, chapter, and section
+for *MM*). It makes and checks every file before it writes the first, and
+refuses to replace a file with a shorter one without `--allow-fewer-lines`.
+`pipeline/aristotle_pipeline/greek_lines.py` is the format; stage 1 parses the
+rows exactly as it parsed the XML. *Plant* and *RhetAl* still read XML vendored
+under `sources/`. `APr.tsv` and `APo.tsv` hold the same 6,040 lines: one
+edition prints both Analytics.
+
+**The text is kept as exported, not NFC.** Decision 1 says "NFC text". NFC
+would rewrite three Greek punctuation marks on 24,978 lines (U+0387 ano teleia
+to U+00B7, U+037E question mark to `;`, U+0374 numeral sign to U+02B9) and so
+change every served page, and test 2 could not pass. The files hold the
+characters the export has, with runs of white space made one space. John has
+been told; a normalized copy is one line in `extract` if he wants it.
+
+**How it was proved.** (1) The spine JSON stage 1 writes for all 47 works,
+public and private manifests (94 files), is byte-identical before and after the
+change. (2) With `build/export` moved off the machine and `TLG_DIR` unset,
+`npm run build:public` ran to the end (47 works, 7,560 pages, 0 broken
+links, 5 min 7 s) and `node scripts/compare-snapshot.mjs
+--sums=<snapshot>/SHA256SUMS --prefix=data/ --build=app/dist/data
+--live-only=docs/portability/aristotle-live-only-2026-11-20.list` reported
+9,770 of 9,770 files identical, with the 23 live-only files allowed. Compare
+`app/dist/data`, not `build/dist`: the 48 `rows.json` files are Astro
+endpoints and exist only after the site build. (3) 44 hand-made breaks of the
+new guards each fail a test. (4) Codex (GPT-6.1-Sol) reviewed the code twice.
+Its first pass found three real holes in the guard (a fourth heading line
+could hold anything; punctuation hid beta code from the pattern; nothing
+proved the text was Greek). Its second found that "every letter is Greek"
+let through Latin that Python does not call a letter (ⓗⓔⓛⓛⓞ, a combining a).
+So the rule is a list, not a pattern: a character is Greek by its Unicode
+name, or it is one of the 29 marks the corpus's editions print
+(`greek_lines._MARKS`), or the file fails. A new edition's new sign fails
+`extract` until someone looks at it and adds it.
+
+**What the review left, on purpose.** (a) `rows_from_xml` raises on a
+division that is not directly inside the level above it. The old
+chapter-section reader read through such wrappers and the old *MM* reader
+skipped them without a word; no file in the corpus has one, and stopping beats
+guessing. (b) The edition line of a line file is free text; the corpus test
+holds it to the manifest's `greek_edition`, the format check does not. (c) The
+README in `corpus/greek/` is held to 4 KB and no markup; its words are for
+review. (d) `compare-snapshot.mjs` cannot tell a file no build makes from one
+this build lost: the `--live-only` list is a claim a reviewer reads.
+
+**The 22 extra shards are in the bucket's key record.** `_deploy/keys.json`
+is the union of every key any deploy has uploaded (the script never deletes),
+so it names them and cannot say they are stale. What does: the build's own
+`search-shards/index.json`, byte for byte live's, names none of the 22.
+
+**Why the snapshot diff is not a CI step.** It proves that a change to the
+build left the output alone, so it is run against the commit the snapshot was
+taken at. Once a correction to the corpus merges, a difference is the
+correction. The snapshot's checksum list (1.5 MB) is also not in the repo. Run
+it by hand at each port, as above.
+
+**The two outside inputs.** `greek-analyses.txt` and `grc.lsj.xml` are pinned
+by sha256 and size in `pipeline/aristotle_pipeline/inputs.py`, hashed from
+Diogenes 4.7.2's `dependencies/data`. `DIOGENES_DATA` names their folder; each
+manifest's `sources.diogenes_data` (the path inside Diogenes.app) is the local
+default. The public source to fetch from is the Diogenes 4.7.2 release on
+GitHub (`pjheslin/diogenes`, tag `4.7.2`; `diogenes-4.7.2.pkg.tar.xz`, 193 MB,
+a plain tar). Nobody has yet downloaded it to confirm the two files inside
+match the pins, or pinned the archive's own checksum.
 
 ### Phase 1 baseline: a clean build already matches live
 
 On 2026-11-20 a fresh worktree at `origin/main` (`6e800cdc03`) ran
-`npm run build:public` to the end: 50 works, 7,560 pages, 0 broken links,
+`npm run build:public` to the end: 47 works, 7,560 pages, 0 broken links,
 4 min 53 s. Against the Aristotle snapshot:
 
 - **Data:** all 9,770 files the build makes are byte for byte what live
@@ -53,8 +137,8 @@ passes an environment with no `HOME`, and Diogenes 4.7.2 stops with "Could
 not find user profile dir" (exit 25). Nobody saw it because the export was
 cached, and the cache is now gone from every checkout. Run by hand with
 `HOME` set and `TLG_DIR` at the iCloud folder, the export works. Phase 1's
-`extract` replaces that call; do not patch it in place and leave it in the
-build.
+`extract` has since replaced that call (it sets `HOME`), and the build no
+longer has one.
 
 ## Goal
 
@@ -124,9 +208,9 @@ The single points of failure, worst first:
    running; the same file read at once from the second folder, which is
    iCloud's Documents sync and so a copy outside Loyola. Nobody has compared
    the two. `TLG_DIR` points the build at either.
-   Stage 1 (`stage1_greek.run_export`) shells out to
-   `/Applications/Diogenes.app/Contents/server/xml-export.pl` when the cache is
-   missing. Stages 4 and 5 read `greek-analyses.txt` (121 MB, Morpheus) and
+   Until phase 1, stage 1 (`stage1_greek.run_export`) shelled out to
+   `/Applications/Diogenes.app/Contents/server/xml-export.pl` when the cache was
+   missing; `extract` does that now, and only on John's machine. Stages 4 and 5 read `greek-analyses.txt` (121 MB, Morpheus) and
    `grc.lsj.xml` (116 MB, LSJ) from `/Applications/Diogenes.app/Contents/dependencies/data`.
    Every manifest hard-codes those paths.
 3. **One Cloudflare account holds DNS, the Workers, the R2 buckets, and Grammata.**

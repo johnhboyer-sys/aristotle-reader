@@ -1,84 +1,33 @@
-"""Stage 1a: TLG Greek spine via Diogenes verse-mode export.
+"""Stage 1a: the Greek spine, from the work's committed line file.
 
-Parses the verse-mode TEI (Bekker-page divs containing <l n="..."> lines),
-rejoins words hyphenated across lines onto the first line, assigns each line
-to a book from the manifest table, and emits spine segments keyed
-(book, column) so book-straddling columns split into per-book segments.
+Reads corpus/greek/<Work>.tsv (pages or columns holding numbered lines; see
+greek_lines), rejoins words hyphenated across lines onto the first line,
+assigns each line to a book from the manifest table, and emits spine segments
+keyed (book, column) so book-straddling columns split into per-book segments.
+
+The build never runs Diogenes and never reads the TLG: making the line files
+is `python -m aristotle_pipeline.extract`, a separate, local step.
 """
 
 from __future__ import annotations
 
 import json
 import re
-import subprocess
+from itertools import groupby
 from pathlib import Path
 
-from lxml import etree
-
+from . import greek_lines
 from .config import BUILD_DIR, SOURCES_DIR, Manifest
 
-EXPORT_DIR = BUILD_DIR / "export"
 
-
-def exported_xml_path(manifest: Manifest) -> Path:
-    """The verse-mode TEI the spine is read from. A work whose TLG text has no
-    Bekker lineation (Rhetorica ad Alexandrum: TLG 0547.001 is Fuhrmann's,
-    lineated by chapter and section) names a vendored spine relined to Bekker's
-    printed lines instead: `work.spine_tei`, relative to sources/."""
-    w = manifest.data["work"]
-    if w.get("spine_tei"):
-        return SOURCES_DIR / w["spine_tei"]
-    return (
-        EXPORT_DIR
-        / "Diogenes-Resources"
-        / "xml"
-        / "tlg"
-        / f"tlg{w['tlg_author']}{w['tlg_work']}.xml"
-    )
-
-
-def run_export(manifest: Manifest) -> Path:
-    """Run Diogenes xml-export.pl in verse mode (-y) unless already done."""
-    out = exported_xml_path(manifest)
-    if out.exists():
-        return out
-    w = manifest.data["work"]
-    if w.get("spine_tei"):
-        raise FileNotFoundError(f"work.spine_tei {out} is missing")
-    EXPORT_DIR.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        [
-            "perl",
-            "xml-export.pl",
-            "-c", "tlg",
-            "-n", w["tlg_author"],
-            "-y",
-            "-o", str(EXPORT_DIR),
-        ],
-        cwd=manifest.diogenes_server(),
-        env={"TLG_DIR": str(manifest.tlg_dir()), "PATH": "/usr/bin:/bin"},
-        check=True,
-        capture_output=True,
-        text=True,
-    )
-    if not out.exists():
-        raise FileNotFoundError(f"export ran but {out} is missing")
-    return out
-
-
-def _line_text(el: etree._Element, strip_bars: bool = False) -> str:
-    """Flatten an <l>, dropping heading labels, collapsing whitespace.
-
-    `strip_bars` removes literal "|" edition line-break markers, which some
-    exports (e.g. De Mundo's) print inside a plain <l> — mid-word (καλοῦν|ται)
-    or between words (μέσον | μὲν); the bar is never part of a Greek word.
-    It must stay FALSE on compound-numbered lines (n="8,9"), where "|" is the
+def _strip_bars(text: str) -> str:
+    """A line's text without the literal "|" edition line-break marks some
+    texts (De Mundo's) print inside a plain line, mid-word (καλοῦν|ται) or
+    between words (μέσον | μὲν); the bar is never part of a Greek word. It must
+    NOT be applied to compound-numbered lines (n="8,9"), where "|" is the
     delimiter _expand_compound splits on to map the physical line onto its two
-    Bekker numbers — stripping it there would destroy the split."""
-    text = "".join(el.itertext())
-    if strip_bars:
-        text = text.replace("|", "")
-    return re.sub(r"\s+", " ", text).strip()
+    Bekker numbers: stripping it there would destroy the split."""
+    return re.sub(r"\s+", " ", text.replace("|", "")).strip()
 
 
 # Comma-separated (APo 99b "8,9") or hyphen-range (PA 689a "13-14", also in
@@ -90,7 +39,7 @@ _COMPOUND_N = re.compile(r"^\d+(?:\s*[,-]\s*\d+)+$")
 #
 # Only a-e. The suffix letter is not always a Bekker sub-line: TLG also numbers
 # a heading 23t (title) and 17n (note), and both carry a <label type="head">
-# whose text _line_text drops, so admitting them files an EMPTY line into the
+# and no text of the work, so admitting them files an EMPTY line into the
 # spine and repeats the line number it hangs off. Across the corpus's exports
 # the text sub-lines run a-d (52 of them), against 98 t and 37 n headings.
 _LETTERED_N = re.compile(r"^(\d+)([a-e])$")
@@ -147,25 +96,25 @@ def _expand_compound(items: list[tuple[str, str]]) -> list[tuple[int, str]]:
             for num in order]
 
 
-def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
-    tree = etree.parse(str(xml_path))
-    # Most works have a real Bekker spine: <div type="Bekker-page" n="16a">. A
-    # non-Bekker treatise (citation.scheme: busse, e.g. Porphyry's Isagoge) is
-    # cited by Busse CAG page.line — the export types each page <div type="page"
-    # n="1">. We map Busse page N onto a SYNTHETIC Bekker column "Na" (a-side
+def parse_spine(path: Path, manifest: Manifest) -> dict:
+    """`path` is a committed line file, or XML of the export's shape (a work
+    vendored under sources/, or a test's fixture); greek_lines.load reads both
+    into the same rows."""
+    # Most works have a real Bekker spine: pages labelled "16a". A non-Bekker
+    # treatise (citation.scheme: busse, e.g. Porphyry's Isagoge) is cited by
+    # Busse CAG page.line, its pages labelled "1". We map Busse page N onto a
+    # SYNTHETIC Bekker column "Na" (a-side
     # only) so refs.py/config/stage7 and the reader's column:line machinery work
     # unchanged; the reader relabels the gutter from the registry citation flag.
     scheme = (manifest.data.get("citation") or {}).get("scheme", "bekker")
+    rows = greek_lines.load(path, greek_lines.levels_for(manifest))
     if scheme == "chapter-section":
-        return _parse_sections(tree, manifest)
-    page_type = "page" if scheme == "busse" else "Bekker-page"
+        return _parse_sections(rows, manifest)
     # Flat list of (column, line_no, text) in document order.
     flat: list[dict] = []
     headings: list[dict] = []
-    for div in tree.iter("{*}div"):
-        if div.get("type") != page_type:
-            continue
-        column = f"{div.get('n')}a" if scheme == "busse" else div.get("n")
+    for (page,), lines in groupby(rows, key=lambda row: row.labels):
+        column = f"{page}a" if scheme == "busse" else page
         compound: list[tuple[str, str]] = []  # run of compound-numbered lines
 
         def flush():
@@ -174,20 +123,20 @@ def parse_spine(xml_path: Path, manifest: Manifest) -> dict:
                              "compound": True})
             compound.clear()
 
-        for l in div.iter("{*}l"):
-            n = l.get("n")
+        for row in lines:
+            n = row.n
             if n and not n.isdigit() and _COMPOUND_N.match(n):
-                compound.append((n, _line_text(l)))
+                compound.append((n, row.text))
                 continue
             if compound:
                 flush()
             parsed = _line_no(n)
             if parsed is None:
-                headings.append({"column": column, "text": _line_text(l, strip_bars=True)})
+                headings.append({"column": column, "text": _strip_bars(row.text)})
                 continue
             line_no, sub = parsed
             line = {"column": column, "n": line_no,
-                    "text": _line_text(l, strip_bars=True)}
+                    "text": _strip_bars(row.text)}
             if sub:
                 line["sub"] = sub
             flat.append(line)
@@ -248,30 +197,24 @@ def _papyrus_text(text: str) -> str:
     return text
 
 
-def _parse_sections(tree, manifest: Manifest) -> dict:
-    """citation.scheme: chapter-section (the Athenian Constitution). The export
-    nests <div type="Section" n=C> (chapter) > <div type="subsection" n=S>
-    (section) > printed <l> lines. Chapter C becomes synthetic column "Ca" and
+def _parse_sections(rows: list, manifest: Manifest) -> dict:
+    """citation.scheme: chapter-section (the Athenian Constitution). Each
+    printed line sits in a chapter ("Section") and a section ("subsection").
+    Chapter C becomes synthetic column "Ca" and
     section S becomes line S, so the column:line machinery runs unchanged; each
     section's printed lines are joined into ONE spine line, after the same
     hyphen rejoin as the Bekker path. A word hyphenated across a section break
     therefore stays whole in the earlier section, which carries `joined`."""
     flat: list[dict] = []
     headings: list[dict] = []
-    for chap in tree.iter("{*}div"):
-        if chap.get("type") != "Section":
+    for row in rows:
+        chapter, section = row.labels
+        column = f"{int(chapter)}a"
+        text = _papyrus_text(_strip_bars(row.text))
+        if not (row.n or "").isdigit():
+            headings.append({"column": column, "text": text})
             continue
-        column = f"{int(chap.get('n'))}a"
-        for sub in chap.iter("{*}div"):
-            if sub.get("type") != "subsection":
-                continue
-            n = int(sub.get("n"))
-            for l in sub.iter("{*}l"):
-                text = _papyrus_text(_line_text(l, strip_bars=True))
-                if not (l.get("n") or "").isdigit():
-                    headings.append({"column": column, "text": text})
-                    continue
-                flat.append({"column": column, "n": n, "text": text})
+        flat.append({"column": column, "n": int(section), "text": text})
     _rejoin_hyphens(flat)
     sections: list[dict] = []
     for line in flat:
@@ -328,30 +271,39 @@ def _segments(flat: list[dict], headings: list[dict], manifest: Manifest) -> dic
     }
 
 
-def spine_xml(manifest: Manifest) -> Path:
-    """The verse-mode XML the spine is parsed from. A work whose Greek is not in
-    the TLG export (De Plantis) vendors one under sources/ as `work.greek_lines`,
-    in the same <div type="Bekker-page"><l n=...> shape; every other work runs
-    the Diogenes export."""
-    rel = manifest.data["work"].get("greek_lines")
-    if not rel:
-        return run_export(manifest)
-    path = SOURCES_DIR / rel
+def spine_source(manifest: Manifest) -> Path:
+    """The file the spine is parsed from. A work whose Greek is vendored under
+    sources/ names it: `work.greek_lines` (De Plantis, which no edition in the
+    corpus carries) or `work.spine_tei` (Rhetorica ad Alexandrum, relined to
+    Bekker's printed lines), both XML in the <div type="Bekker-page"><l n=...>
+    shape. Every other work reads its committed line file. A missing file
+    raises: the build has no way to make one, and must not try."""
+    w = manifest.data["work"]
+    for key in ("greek_lines", "spine_tei"):
+        if w.get(key):
+            path = SOURCES_DIR / w[key]
+            if not path.exists():
+                raise FileNotFoundError(f"work.{key}: {path} is missing")
+            return path
+    path = greek_lines.corpus_path(manifest)
     if not path.exists():
-        raise FileNotFoundError(f"work.greek_lines: {path} is missing")
+        raise FileNotFoundError(
+            f"{path} is missing. The build does not run Diogenes; make the file on a machine "
+            f"with the TLG: python -m aristotle_pipeline.extract --work {manifest.work_id}"
+        )
     return path
 
 
 def run(manifest: Manifest) -> Path:
-    xml_path = spine_xml(manifest)
-    # A TLG text that carries no Bekker numbers (Magna Moralia) is lineated by
-    # a map read from Bekker's printed pages; see stage1_relineate.
+    path = spine_source(manifest)
+    # A text that carries no Bekker numbers (Magna Moralia) is lineated by a
+    # map read from Bekker's printed pages; see stage1_relineate.
     lineation = (manifest.data.get("greek") or {}).get("lineation")
     if lineation:
         from .stage1_relineate import relineate
-        spine = _segments(relineate(xml_path, SOURCES_DIR / lineation), [], manifest)
+        spine = _segments(relineate(path, SOURCES_DIR / lineation), [], manifest)
     else:
-        spine = parse_spine(xml_path, manifest)
+        spine = parse_spine(path, manifest)
     out = BUILD_DIR / "stage1" / "greek_spine.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(spine, ensure_ascii=False, indent=1), encoding="utf-8")

@@ -7,7 +7,9 @@ aligner lives on `main`, not here** — these works use the Perseus Bekker-
 milestoned English path (NE-grade) or the First1KGreek + MIT-archive path (DA).
 
 ## Data on hand
-- **Greek spine:** whole-author Diogenes export cached at
+- **Greek spine:** (since 2026-11 the build reads `corpus/greek/<Work>.tsv`,
+  made from this export by `python -m aristotle_pipeline.extract`.)
+  Whole-author Diogenes export cached at
   `build/export/Diogenes-Resources/xml/tlg/tlg0086NNN.xml` (works 001–056). No
   TLG re-export needed. Spine needs `type="Bekker-page"` divs + numeric `<l n>`.
 - **Perseus TEI** (grc2 + eng2, both Bekker-milestoned) available for 9 Aristotle

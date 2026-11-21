@@ -17,9 +17,10 @@ the TLG word that opens it:
 `loc` is book.chapter.section.line in the TLG export, `w` the word's index in
 that line once line-end hyphenation is rejoined, `at` the word itself. This
 module splits the TLG word stream at those words. The map holds only Bekker
-references and single opening words, so no TLG file is shipped; the Greek still
-comes from the cached export at build time. A map that no longer fits the
-export (a word moved, a hyphen rejoined differently) stops the build.
+references and single opening words; the Greek comes from the work's committed
+line file (corpus/greek/MM.tsv), which keeps the Loeb's book, chapter, section
+and line. A map that no longer fits it (a word moved, a hyphen rejoined
+differently) stops the build.
 """
 
 from __future__ import annotations
@@ -28,37 +29,28 @@ import re
 from pathlib import Path
 
 import yaml
-from lxml import etree
 
+from . import greek_lines
 from .refs import ref_key
 
 
-def _text(el) -> str:
-    return re.sub(r"\s+", " ", "".join(el.itertext())).strip()
-
-
 def tlg_tokens(xml_path: Path) -> list[dict]:
-    """The export's words in reading order, each {loc, w, text, book, chapter}.
+    """The text's words in reading order, each {loc, w, text, book, chapter}.
+    `xml_path` is the work's committed line file (or XML of the export's
+    shape); greek_lines.load reads either.
 
     A line ending in "-" takes the first word of the next line, which is then
     dropped from that line — the convention parse_spine uses, so a word split
     across Loeb lines is one token owned by the line where it starts. The
     work's title (TLG Book "t") is not text.
     """
-    tree = etree.parse(str(xml_path))
     lines: list[tuple[str, int, str, list[str]]] = []
-    for book in tree.iter("{*}div"):
-        if book.get("type") != "Book" or book.get("n") == "t":
+    for row in greek_lines.load(xml_path, greek_lines._LINEATED):
+        book, chap, sec = row.labels
+        if book == "t":
             continue
-        for chap in book:
-            if chap.get("type") != "chapter":
-                continue
-            for sec in chap:
-                if sec.get("type") != "section":
-                    continue
-                for l in sec.iter("{*}l"):
-                    loc = f"{book.get('n')}.{chap.get('n')}.{sec.get('n')}.{l.get('n')}"
-                    lines.append((loc, int(book.get("n")), chap.get("n"), _text(l).split()))
+        loc = f"{book}.{chap}.{sec}.{row.n}"
+        lines.append((loc, int(book), chap, row.text.split()))
     for i, (loc, _b, _c, words) in enumerate(lines):
         if words and words[-1].endswith("-"):
             j = i + 1

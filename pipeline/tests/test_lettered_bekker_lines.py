@@ -103,8 +103,8 @@ HEADING_TEI = """<TEI><text><body>
 
 def test_line_no_admits_lettered_lines_but_not_heading_markers():
     """The suffix letter does not by itself mean a Bekker sub-line. TLG numbers
-    a title 23t and a note 17n, and both hold a <label type="head"> whose text
-    _line_text drops — so admitting them files an empty line into the spine
+    a title 23t and a note 17n, and both hold a <label type="head"> and
+    no text of the work — so admitting them files an empty line into the spine
     under the number of the line they precede."""
     assert stage1_greek._line_no("5a") == (5, "a")
     assert stage1_greek._line_no("5d") == (5, "d")

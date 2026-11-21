@@ -18,7 +18,8 @@ detector's history is in `analysis/studies/text_quality.py` on
 `origin/claude/greek-statistical-analysis-tihpcs`.
 
 What it guards here: the **Diogenes-export spine plus stage1 line-joining**.
-The authoritative Greek is the Diogenes export
+The authoritative Greek is the Diogenes export, since 2026-11 as the
+committed line files in `corpus/greek/`
 (`stage1_greek.py` → `build/stage1/greek_spine.json`), not the Perseus/First1K
 XML in `sources/` (used only to align chapter boundaries) — so the gate
 protects exactly the text every downstream consumer reads. Today nothing
