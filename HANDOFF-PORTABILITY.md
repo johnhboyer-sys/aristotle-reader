@@ -14,8 +14,10 @@ wait on John (the GitLab mirror, two of the four snapshot copies). Phase 1 is
 done. Phase 2 is done but for the bundle on two hosts, which waits on John's
 accounts: the site serves its own fonts, test 3 is green, CI builds the whole
 site on Linux with data byte for byte live's, and the Docker image builds and
-serves every file. Phase 3 has begun on `claude/portability-phase3` (based on
-`main`, not pushed): the parts that need no account. Aristotle only; no
+serves every file. CI and the image build passed on the merged commit, which
+was the first build of phases 0 to 2 together with main's own share-card
+changes. Phase 3 is PR #233 (`claude/portability-phase3`, pushed 2026-11-21
+on John's yes, green): the parts that need no account. Aristotle only; no
 sibling repo has changed.
 
 | Phase 0 step | State |
@@ -56,12 +58,12 @@ sibling repo has changed.
 |---|---|
 | Push a repo to a second git host | Done: `scripts/mirror-git.mjs`. Not yet run against a host; there is none |
 | The deploy tags its commit | Done: `npm run deploy:cloudflare` tags `deploy/<date>` and pushes the tag. Not yet run in a real deploy |
-| A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action). Runs first at the next deploy after it merges |
+| A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action, which passed on its first run in #233), then a check of the bundle's data against the primary's data host. The release step itself runs first at the next deploy after it merges |
 | `mirror.yml`: git on every push, the site on a release | Not written. Waits on the GitLab account and on decision 6 |
 | Check for a stale or silent mirror | Done as a script: `scripts/check-mirrors.mjs`. It fails today, and says why: `mirrors.json` names no mirror. The weekly workflow that runs it and opens an issue is not written; add it with the first mirror |
 | `mirrors.json`, shown on the attribution page | The file exists, with empty lists. The page does not read it yet; there is no mirror to list |
 
-Next: John's yes to push phase 3. Then his accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
+Next: John's merge of #233. Then his accounts: GitLab for the git mirrors (`mirror-git.mjs` is ready for
 all seven repos), and two candidate hosts for the bundle (decision 6;
 `check-served.mjs` is the test).
 
