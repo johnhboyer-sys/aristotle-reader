@@ -65,25 +65,25 @@ describe('share cards', () => {
   });
 
   it('fills every page\'s share tags from shareCard', () => {
-    const astro = (readdirSync(resolve(root, 'src'), { recursive: true }) as string[]).filter(f => f.endsWith('.astro'));
-    const read = (f: string) => readFileSync(resolve(root, 'src', f), 'utf8');
+    const tagged = (readdirSync(resolve(root, 'src'), { recursive: true }) as string[])
+      .filter(f => /\.(astro|svelte|ts|js|mjs|html)$/.test(f) && !f.startsWith('__tests__'))
+      .filter(f => /(og|twitter):image["']/.test(readFileSync(resolve(root, 'src', f), 'utf8')));
     // support.astro has a card of its own (public/og-support.png), outside the record.
-    const pages = astro.filter(f => read(f).includes('property="og:image"') && f !== 'pages/support.astro');
+    const pages = tagged.filter(f => f !== 'pages/support.astro');
+    expect(tagged.length).toBe(pages.length + 1);
     expect(pages.length).toBeGreaterThan(10);
     const own = ['components/Landing.astro', 'components/ReaderShell.astro'];
     expect(pages).toEqual(expect.arrayContaining(own));
     for (const f of pages) {
-      const s = read(f);
-      // The tags a crawler reads carry ogImage and nothing else,
-      for (const tag of ['property="og:image"', 'name="twitter:image"']) {
-        const tags = s.split(`<meta ${tag} `).slice(1).map(t => t.slice(0, t.indexOf('/>')).trim());
-        expect(tags, `${f} ${tag}`).toEqual(['content={ogImage}']);
-      }
-      // and ogImage is built once, from shareCard: the work's card on its own pages, else the site's.
-      const built = [...s.matchAll(/\bogImage =([^;]*);/g)].map(m => m[1].replace(/\s+/g, ' ').trim());
+      const s = readFileSync(resolve(root, 'src', f), 'utf8');
+      // The only tags that name a share image are these two, and they carry ogImage,
+      const tags = [...s.matchAll(/<meta\b[^>]*>/g)].map(m => m[0]).filter(t => /(og|twitter):image["']/.test(t));
+      expect(tags, f).toEqual(['<meta property="og:image" content={ogImage} />', '<meta name="twitter:image" content={ogImage} />']);
+      // which is built once, from shareCard: the work's card on its own pages, else the site's.
+      const set = (name: string) => [...s.matchAll(new RegExp(`\\b${name} =([^;]*);`, 'g'))].map(m => m[1].replace(/\s+/g, ' ').trim());
       const card = own.includes(f) ? 'ogCard' : 'shareCard()';
-      expect(built, f).toEqual(['Astro.site ? new URL(`${base}/${' + card + '}`, Astro.site).href : undefined']);
-      if (own.includes(f)) expect(s.includes('const ogCard = shareCard(workId);'), f).toBe(true);
+      expect(set('ogImage'), f).toEqual(['Astro.site ? new URL(`${base}/${' + card + '}`, Astro.site).href : undefined']);
+      expect(set('ogCard'), f).toEqual(own.includes(f) ? ['shareCard(workId)'] : []);
     }
   });
 });
