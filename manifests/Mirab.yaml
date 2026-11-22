@@ -27,6 +27,7 @@ english:
     books: 1
     chapter_marker: part
     anchors: "mirab-dowdall/anchors.yaml"   # gloss-aligned Bekker ticks (batch runner, 2026-10-25)
+    anchor_cuts: true
 
 books:
   - { n: 1, start: "830a1", end: "847b11" }
