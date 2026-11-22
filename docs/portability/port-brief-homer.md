@@ -73,6 +73,13 @@ release workflow attaches the whole bundle to a public GitHub release at each
 deploy. Do not decide whether that is within the licence: say plainly in the
 phase 3 PR that the bundle holds this text, and leave it to John.
 
+The licence. For Plato John ruled "Same as Aristotle for license" on
+2026-11-21 (an MIT `LICENSE`, CC0 on `corpus/greek/`, other sources under
+their own terms; plato-reader #136). Homer carries sources under NC and ND
+terms, so do not copy that over unasked: in your phase 1 report, lay out what
+a Homer licence section would have to name apart from the MIT code and the
+CC0 Greek, and ask John once.
+
 Export-shaped test fixtures (decision 10). Homer has
 `pipeline/tests/fixtures/stephanus/euthyphro_p2_3.xml` (a copy of Plato's)
 and `pipeline/tests/fixtures/stage1_tlg/tiny_tlg_iliad.xml` (1.6 KB, called
