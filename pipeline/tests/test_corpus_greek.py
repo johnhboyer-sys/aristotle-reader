@@ -10,6 +10,7 @@ here it runs over the files themselves, and says how many it read.
 from __future__ import annotations
 
 import re
+from pathlib import Path
 import subprocess
 
 import pytest
@@ -151,6 +152,144 @@ def test_a_write_that_fails_part_way_leaves_every_old_file_as_it_was(tmp_path, m
         extract.main(["--all", "--allow-fewer-lines"])     # the toy files are not line files to count
     (out / "Top.tsv.tmp").rmdir()
     assert {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()} == before
+
+
+def _moves_into_place(monkeypatch, fail_at=None):
+    """Record each move of a staged file into place; fail the `fail_at`th."""
+    real, moves = Path.replace, []
+
+    def replace(self, target):
+        if self.suffix == ".tmp":                         # a move into place, not a put-back
+            moves.append(self.name[: -len(".tmp")])
+            if len(moves) == fail_at:
+                raise PermissionError(1, "Operation not permitted", str(target))
+        return real(self, target)
+    monkeypatch.setattr(Path, "replace", replace)
+    return moves
+
+
+def test_a_move_that_fails_part_way_puts_back_the_files_already_moved(tmp_path, monkeypatch):
+    # Codex's review of the Plato port: every file is staged, then the third
+    # move into place fails (a locked file, say). The two moved before it must
+    # be put back, and the one of them that had no file must have none again.
+    out = tmp_path / "out"
+    monkeypatch.setattr(greek_lines, "CORPUS_DIR", out)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id} old\n", 1))
+    order = _moves_into_place(monkeypatch)
+    assert extract.main(["--all"]) == 0
+    first = order[0]
+    (out / first).unlink()                                # the first moved has no file yet
+    before = {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()}
+    assert len(before) == len(WORKS) - 1
+    moves = _moves_into_place(monkeypatch, fail_at=3)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id} new\n", 1))
+    with pytest.raises(PermissionError):
+        extract.main(["--all", "--allow-fewer-lines"])
+    assert len(moves) == 3 and moves[0] == first
+    assert {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()} == before
+
+
+def test_a_write_that_fails_part_way_leaves_no_temporary_file(tmp_path, monkeypatch):
+    # Codex's review of the Plato port: the disk fills while a file is half written.
+    out = tmp_path / "out"
+    monkeypatch.setattr(greek_lines, "CORPUS_DIR", out)
+    real, writes = Path.write_text, []
+
+    def write_text(self, text, *a, **k):
+        writes.append(self.name)
+        if len(writes) == 2:
+            real(self, text[:3], *a, **k)
+            raise OSError(28, "No space left on device")
+        return real(self, text, *a, **k)
+    monkeypatch.setattr(Path, "write_text", write_text)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id}\n", 1))
+    with pytest.raises(OSError):
+        extract.main(["--all"])
+    assert len(writes) == 2
+    assert list(out.iterdir()) == []
+
+
+def test_a_put_back_that_fails_names_its_file_and_the_others_are_still_put_back(tmp_path, monkeypatch, capsys):
+    # Codex's second read: a put-back that fails must not cut its file short
+    # or stop the rest.
+    out = tmp_path / "out"
+    monkeypatch.setattr(greek_lines, "CORPUS_DIR", out)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id} old\n", 1))
+    order = _moves_into_place(monkeypatch)
+    assert extract.main(["--all"]) == 0
+    first = order[0]
+    before = {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()}
+    moves = _moves_into_place(monkeypatch, fail_at=3)
+    real_write = Path.write_bytes
+
+    def write_bytes(self, data):
+        if self.name == first.replace(".tsv", ".tsv.back"):
+            real_write(self, data[:2])
+            raise OSError(28, "No space left on device")
+        return real_write(self, data)
+    monkeypatch.setattr(Path, "write_bytes", write_bytes)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id} new\n", 1))
+    with pytest.raises(PermissionError):
+        extract.main(["--all", "--allow-fewer-lines"])
+    after = {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()}
+    assert len(moves) == 3 and first in capsys.readouterr().err
+    assert after[first] == before[first].replace(" old", " new")       # whole, not cut short
+    assert {k: v for k, v in after.items() if k != first} == {k: v for k, v in before.items() if k != first}
+    assert len(after) == len(before)                                  # no .back or .tmp left
+
+
+def test_a_temporary_file_that_cannot_be_removed_is_named_and_the_put_backs_still_run(tmp_path, monkeypatch, capsys):
+    # Codex's read of this port: the folder goes read-only, say, so the move
+    # fails and so does removing a temporary file. The caller must still see
+    # the move's error, and the files already moved must still be put back.
+    out = tmp_path / "out"
+    monkeypatch.setattr(greek_lines, "CORPUS_DIR", out)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id} old\n", 1))
+    order = _moves_into_place(monkeypatch)
+    assert extract.main(["--all"]) == 0
+    stuck = order[4] + ".tmp"                              # staged, never moved
+    before = {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()}
+    moves = _moves_into_place(monkeypatch, fail_at=3)
+    real_unlink = Path.unlink
+
+    def unlink(self, *a, **k):
+        if self.name == stuck:
+            raise OSError(30, "Read-only file system", str(self))
+        return real_unlink(self, *a, **k)
+    monkeypatch.setattr(Path, "unlink", unlink)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id} new\n", 1))
+    with pytest.raises(PermissionError) as failed:
+        extract.main(["--all", "--allow-fewer-lines"])
+    assert failed.value.errno == 1 and len(moves) == 3     # the move's error, not the clean-up's
+    assert stuck in capsys.readouterr().err
+    after = {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()}
+    assert after.pop(stuck) == before[order[4]].replace(" old", " new")
+    assert after == before
+
+
+def test_a_put_back_whose_own_temporary_file_cannot_be_removed_does_not_stop_the_next(tmp_path, monkeypatch, capsys):
+    # Codex's read of this port: something sits where the first put-back would
+    # write, and cannot be removed either. The second must still be put back.
+    out = tmp_path / "out"
+    monkeypatch.setattr(greek_lines, "CORPUS_DIR", out)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id} old\n", 1))
+    order = _moves_into_place(monkeypatch)
+    assert extract.main(["--all"]) == 0
+    first, second = order[0], order[1]
+    before = {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()}
+    blocked = out / first.replace(".tsv", ".tsv.back")
+    blocked.mkdir()
+    moves = _moves_into_place(monkeypatch, fail_at=3)
+    monkeypatch.setattr(extract, "line_file", lambda m: (f"# work: {m.work_id} new\n", 1))
+    with pytest.raises(PermissionError) as failed:
+        extract.main(["--all", "--allow-fewer-lines"])
+    assert failed.value.errno == 1 and len(moves) == 3 and getattr(failed.value, "filename", "") != str(blocked)
+    assert first in capsys.readouterr().err
+    blocked.rmdir()
+    after = {p.name: p.read_text(encoding="utf-8") for p in out.iterdir()}
+    assert after[second] == before[second]
+    assert after[first] == before[first].replace(" old", " new")
+    assert {k: v for k, v in after.items() if k != first} == {k: v for k, v in before.items() if k != first}
 
 
 def test_extract_skips_vendored_works_and_writes_nothing_for_them(tmp_path, monkeypatch):

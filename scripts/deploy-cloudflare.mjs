@@ -171,6 +171,16 @@ function run(command, args, { cwd = ROOT, capture = false, env = {} } = {}) {
   return capture ? result.stdout : '';
 }
 
+// The files a deploy from `cwd` would carry that git does not hold as
+// committed: changed tracked files and untracked ones alike (an untracked page
+// is built and deployed). Untracked files are asked for by name, so a
+// status.showUntrackedFiles setting cannot hide them; ignored build output
+// (app/dist, build/) stays out.
+export function uncleanFiles(cwd = ROOT) {
+  return run('git', ['status', '--porcelain', '--untracked-files=all'], { cwd, capture: true })
+    .split('\n').filter(Boolean).map((line) => line.slice(3));
+}
+
 // Tag `head` as tagPlan says and push the tag to origin. origin's tags are
 // read with ls-remote, which writes nothing here, so a name another machine
 // used today is not used again and no local tag can stand in the way of the
@@ -274,7 +284,7 @@ async function main() {
   const source = head.slice(0, 10);
   const dirty = run('git', ['status', '--porcelain', '--untracked-files=no'], { capture: true }).trim();
   // For the tag: tracked changes and untracked files alike (an untracked page is built and deployed).
-  const unclean = run('git', ['status', '--porcelain'], { capture: true }).split('\n').filter(Boolean).map((line) => line.slice(3));
+  const unclean = uncleanFiles();
   console.log(`  source ${source}${dirty ? ' (WORKING TREE HAS UNCOMMITTED CHANGES)' : ''}; data root ${dataRoot}`);
 
   heading(`Scale: the build against ${options.site}`);
