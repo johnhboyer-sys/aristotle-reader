@@ -210,9 +210,15 @@ Homer's own deploy script and keep its tests.
   the two sessions do not both merge.
 - Other Homer sessions may be at work. Follow `CLAUDE.md`'s rules for claiming
   files, and never touch another worktree.
-- Disk: check `df -h /` before each full build, run one build at a time, and
-  delete your build output and temp files when a phase's checks are recorded.
-  If free space drops under 5 GB, stop and report.
+- Disk (John, 2026-11-21: mind the disk, and pause if it is too low): run
+  `df -h /` before every build, every `npm install` or `uv sync`, every
+  download, and every unpack. If free space is under 5 GB, or the step would
+  take it under 5 GB, do not start the step: delete your own build output and
+  temp files, check again, and if it is still under, pause and report with
+  the number. One build at a time; never build the Docker image on this Mac
+  (CI does); delete `app/dist`, `build/`, and temp files as soon as a phase's
+  checks are recorded. Never delete anything outside your own worktree and
+  scratch folder to make room.
 - Writing, in the handoff, PRs, and reports: short plain words, active voice,
   no stock figures of speech, the Oxford comma. No explainer text in the
   reader's pages.
