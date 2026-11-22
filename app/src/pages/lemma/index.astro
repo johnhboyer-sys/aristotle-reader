@@ -2,6 +2,8 @@
 // The Greek Lexicon index at /lemma — a crawlable directory of every built lemma
 // page, sorted alphabetically by transliteration. Doubles as the DefinedTermSet
 // landing and an internal-link hub so the per-lemma pages get discovered.
+// A toggle re-sorts the list by occurrence count on the client (?sort=freq);
+// the built HTML stays alphabetical.
 import { readFileSync } from 'node:fs';
 import ThemeInit from '../../components/ThemeInit.astro';
 import Pwa from '../../components/Pwa.astro';
@@ -82,11 +84,15 @@ const jsonLd = {
         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
         aria-label="Filter the lexicon by Greek or Beta Code"
       />
+      <span class="b-seg" role="group" aria-label="Sort the lexicon">
+        <button type="button" data-sort="alpha" aria-pressed="true">A–Ω</button>
+        <button type="button" data-sort="freq" aria-pressed="false">Most frequent</button>
+      </span>
       <span class="lxi-count" id="lxi-count" aria-live="polite"></span>
     </div>
     <ul class="lxi-grid" id="lxi-grid">
       {entries.map((e) => (
-        <li data-fold={e.fold}>
+        <li data-fold={e.fold} data-count={e.count}>
           <a href={`${base}/lemma/${e.slug}/`}>
             <span class="lxi-gk" lang="grc">{e.head}</span>
             <span class="lxi-n">{e.count.toLocaleString()}</span>
@@ -134,6 +140,29 @@ const jsonLd = {
         if (countEl) countEl.textContent = q ? `${shown} of ${total}` : '';
       };
       input.addEventListener('input', apply);
+    }
+
+    // Sort toggle. `items` in built order is the alphabetical order; the
+    // frequency order breaks ties alphabetically (Array.prototype.sort is stable).
+    if (grid) {
+      const alpha = Array.from(grid.querySelectorAll<HTMLLIElement>('li'));
+      const freq = alpha
+        .slice()
+        .sort((a, b) => Number(b.dataset.count ?? 0) - Number(a.dataset.count ?? 0));
+      const buttons = Array.from(document.querySelectorAll<HTMLButtonElement>('button[data-sort]'));
+      const setSort = (mode: string, push: boolean) => {
+        const order = mode === 'freq' ? freq : alpha;
+        grid.append(...order);
+        for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.sort === mode));
+        if (push) {
+          const url = new URL(location.href);
+          if (mode === 'freq') url.searchParams.set('sort', 'freq');
+          else url.searchParams.delete('sort');
+          history.replaceState(null, '', url);
+        }
+      };
+      for (const b of buttons) b.addEventListener('click', () => setSort(b.dataset.sort ?? 'alpha', true));
+      if (new URLSearchParams(location.search).get('sort') === 'freq') setSort('freq', false);
     }
   </script>
 </body>
