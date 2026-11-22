@@ -4,13 +4,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 import {
   CACHE_CONTROL, DATA_ROOT, builtDataRoot, headUrl, contentTypeFor, countSitemapPages, groupByContentType,
-  parseArgs, planUploads, remoteOnlyKeys, tagCommits, tagDeploy, tagPlan,
+  parseArgs, planUploads, remoteOnlyKeys, tagCommits, tagDeploy, tagPlan, uncleanFiles,
 } from '../deploy-cloudflare.mjs';
 
 test('parseArgs: defaults, flags, trailing slashes, and refusals', () => {
@@ -209,4 +209,25 @@ test('tagCommits: a plain tag gives its commit, an annotated one the commit it n
   const tags = tagCommits(`${'c'.repeat(40)}\trefs/tags/deploy/a\n${'d'.repeat(40)}\trefs/tags/deploy/b\n${'e'.repeat(40)}\trefs/tags/deploy/b^{}\n`);
   assert.deepEqual([...tags], [['deploy/a', 'c'.repeat(40)], ['deploy/b', 'e'.repeat(40)]]);
   assert.equal(tagCommits('').size, 0);
+});
+
+test('uncleanFiles: an untracked page counts even where git is set to hide untracked files; ignored build output does not', () => {
+  // Codex's review of the Plato port.
+  const c = checkout();
+  try {
+    c.commit();
+    writeFileSync(path.join(c.work, '.gitignore'), 'build/\n');
+    c.git(c.work, 'add', '.gitignore');
+    c.git(c.work, 'commit', '-q', '-m', 'ignore');
+    assert.deepEqual(uncleanFiles(c.work), []);
+    mkdirSync(path.join(c.work, 'build'));
+    mkdirSync(path.join(c.work, 'pages'));
+    writeFileSync(path.join(c.work, 'build', 'out.json'), '{}');
+    assert.deepEqual(uncleanFiles(c.work), [], 'git-ignored build output');
+    c.git(c.work, 'config', 'status.showUntrackedFiles', 'no');
+    writeFileSync(path.join(c.work, 'pages', 'new.astro'), 'x');
+    assert.deepEqual(uncleanFiles(c.work), ['pages/new.astro']);
+    writeFileSync(path.join(c.work, '.gitignore'), 'build/\nmore/\n');
+    assert.deepEqual(uncleanFiles(c.work).sort(), ['.gitignore', 'pages/new.astro']);
+  } finally { c.done(); }
 });
