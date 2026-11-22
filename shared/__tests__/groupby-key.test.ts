@@ -5,6 +5,11 @@ import { describe, expect, it } from 'vitest';
 import { commonSpelling, formGroupsOf, formKey, headingSpelling } from '../lib/result-views';
 
 describe('formKey', () => {
+  // greekFold reads ᾽ (U+1FBD) as an elision, as ’ and ': one form, one group.
+  it('groups an elision printed as ᾽ with ’ and \'', () => {
+    expect(formKey('ἀλλ᾽')).toBe(formKey('ἀλλ’'));
+    expect(formKey('ἀλλ᾽')).toBe(formKey("ἀλλ'"));
+  });
   it('takes off acute, grave and circumflex, and nothing else', () => {
     expect(formKey('ἀρετή')).toBe(formKey('ἀρετὴ'));
     expect(formKey('ἀρετή')).toBe('ἀρετη');

@@ -326,7 +326,7 @@ export function orderHits<T extends { work: string; form?: string; hits: number 
 // enclitic) leaves it one. Searching stays blind to all of these
 // (greekFold); this key only groups the hits found.
 const ACCENTS = /[\u0300\u0301\u0342]/g;
-const ELISION = /[\u2019\u02bc]/g;
+const ELISION = /[\u2019\u02bc\u1fbd]/g;
 /** The form key of a spelling; of each word, for a phrase, joined by a space. */
 export function formKey(spelling: string): string {
   return spelling.trim().split(/\s+/).map(w => w.normalize('NFD').toLowerCase().replace(ACCENTS, '').replace(ELISION, "'").normalize('NFC')).join(' ');
