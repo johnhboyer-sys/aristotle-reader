@@ -68,8 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: Plato's deploy
-key ("Sessions", below); and John's two candidate hosts for the bundle
+Next: John's word on Homer and the plays ("Sessions", below), and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1053,12 +1052,20 @@ must until the key is set.
 Plato's #134 (its handoff alone, recording the merges) followed on John's
 word in that session; `main` is at `432e1381f9`.
 
-Open for John: Plato's deploy key. The key pair was made on 2026-11-21
-(`~/.ssh/plato_mirror_deploy_ed25519`, fingerprint
-`SHA256:APlUVBfEj4TWBheyDuvCrzpwAUwyaIcAaM5lnv/G2Vc`, titled "plato-reader
-mirror, GitHub Actions, 2026-11-21"). Nothing is set on GitHub or GitLab yet:
-John adds the public half on GitLab, then the lead session sets the secret
-and the variable, tests the key, and deletes the local private half.
+**Plato's deploy key (2026-11-21, 19:45).** Made by the lead session
+(ed25519, fingerprint `SHA256:APlUVBfEj4TWBheyDuvCrzpwAUwyaIcAaM5lnv/G2Vc`,
+titled "plato-reader mirror, GitHub Actions, 2026-11-21"). John added the
+public half on GitLab from his phone, with write access and on `main`'s
+allowed-to-push list, guided by Plato's session. The key then read
+`plato-reader` and was refused on `aristotle-reader`. The lead session set
+the secret `MIRROR_GIT_SSH_KEY` and the variable `MIRROR_GIT_URL` on
+`johnhboyer-sys/plato-reader` and deleted the local pair; the private half
+is only in the secret. `mirror.yml`'s git job runs on a push alone, so its
+first run was a rerun of the skipped run for `432e1381f9` (44972051403), which
+read the new variable: `35 of 35 refs match the source after the push`. That
+push moved GitLab's protected `main`. `mirror-check.mjs` after it: `35 of 35
+refs match; history: 628 commits, whole`. Not yet seen for Plato: the weekly
+check job, a tag push, and the release workflow.
 
 **Two fixes Plato's reviews found in files it took from here (2026-11-21).**
 Both are ported back, tests first, on `claude/portability-handoff-plato`.
