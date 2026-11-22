@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: John's word on Homer and the plays ("Sessions", below), and his two candidate hosts for the bundle
+Next: start Homer's port session from the desktop app and check its reports ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -985,8 +985,17 @@ decisions.
 `local_02eaa70b-28e3-403e-bf55-0c1d9024a980`, rooted in `plato-reader` in its
 own worktree. (A turn that comes over Remote Control cannot start a session;
 it took John's word from the desktop app.) It reports to the lead session at
-each phase's PR or when it needs a decision. Homer and the plays wait for
-John's word.
+each phase's PR or when it needs a decision. Plato's port is merged (below).
+
+**Homer (2026-11-21, 20:16).** John said to start it. The brief is
+`docs/portability/port-brief-homer.md`, cut from Plato's with what Plato's
+port taught: two worked examples, no export on disk (so `extract` runs
+Diogenes), Homer's two export-shaped fixtures, the Kosmos Butler text
+(CC BY-NC-ND) in the release bundle as a point for John, and who does what
+for the key. John's word came over Remote Control, which cannot start a
+session, so the start waits for his next message from the desktop app: title
+"Homer portability port [Opus 5.5]", name `homer-port`, preset `homer-reader`,
+its own worktree, Opus 5.5. The plays wait for John's word.
 
 **Plato's report, and what the lead session checked (2026-11-21, evening).**
 Three stacked PRs were open in `johnhboyer-sys/plato-reader` (merged since; see below): #130
