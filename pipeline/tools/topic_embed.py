@@ -4,11 +4,7 @@ and in union with a lexical ranker from topic_finder.py.
 
 Usage (cd pipeline):
   uv run --extra align python tools/topic_embed.py embed            # -> build/topics/emb-<model>.npy
-  uv run --extra align python tools/topic_embed.py embed --model BAAI/bge-m3 --field greek --device cuda
   uv run --extra align python tools/topic_embed.py eval --topic necessity --lexical combined
-
-`--field greek` embeds the units' Greek instead of their English; its files carry
-a `-greek` suffix. On a GPU machine, tools/jetstream_embed.sh runs every model.
 
 Long units are cut into ~250-word windows; a unit's score is its best window.
 """
@@ -26,46 +22,12 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 UNITS = ROOT / "build/topics/units.jsonl"
 MODEL = "BAAI/bge-base-en-v1.5"
+QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 WIN = 250
 
-# Per-model prompts, from each model card. A model not listed gets no prompts.
-# "st_prompts" models define their own in config_sentence_transformers.json and
-# are called through encode_document / encode_query (sentence-transformers >= 5).
-MODELS = {
-    "BAAI/bge-base-en-v1.5": {
-        "query_prefix": "Represent this sentence for searching relevant passages: "},
-    "BAAI/bge-m3": {},
-    "voyageai/voyage-4-nano": {"st_prompts": True, "trust_remote_code": True, "truncate_dim": 1024},
-}
 
-
-def load_model(name: str, device: str):
-    from sentence_transformers import SentenceTransformer
-    spec = MODELS.get(name, {})
-    kw = {}
-    if spec.get("trust_remote_code"):
-        kw["trust_remote_code"] = True
-    if spec.get("truncate_dim"):
-        kw["truncate_dim"] = spec["truncate_dim"]
-    m = SentenceTransformer(name, device=device, **kw)
-    if spec.get("st_prompts") and not hasattr(m, "encode_document"):
-        sys.exit(f"{name} needs sentence-transformers >= 5 (encode_document/encode_query)")
-    return m, spec
-
-
-def encode(m, spec, texts, kind: str, batch_size: int = 8):
-    """kind is "document" or "query"; returns unit-length float32 rows."""
-    kw = dict(batch_size=batch_size, normalize_embeddings=True, convert_to_numpy=True)
-    if spec.get("st_prompts"):
-        fn = m.encode_document if kind == "document" else m.encode_query
-        return fn(texts, **kw).astype(np.float32)
-    if kind == "query" and spec.get("query_prefix"):
-        texts = [spec["query_prefix"] + t for t in texts]
-    return m.encode(texts, **kw).astype(np.float32)
-
-
-def load_units(path: Path = UNITS):
-    return [json.loads(l) for l in path.open()]
+def load_units():
+    return [json.loads(l) for l in UNITS.open()]
 
 
 def windows(text: str) -> list[str]:
@@ -75,28 +37,23 @@ def windows(text: str) -> list[str]:
     return [" ".join(w[i:i + WIN]) for i in range(0, len(w), WIN)]
 
 
-def model_slug(name: str, field: str = "english") -> str:
-    slug = name.split("/")[-1]
-    return slug if field == "english" else f"{slug}-{field}"
+def model_slug(name: str) -> str:
+    return name.split("/")[-1]
 
 
 def cmd_embed(args):
-    units = load_units(args.units)
+    from sentence_transformers import SentenceTransformer
+    units = load_units()
     texts, owner = [], []
     for i, u in enumerate(units):
-        text = u[args.field]
-        if not text.strip():
-            continue                 # a unit with no Greek (or no English) gets no window and scores -1
-        for t in windows(text):
+        for t in windows(u["english"]):
             texts.append(t)
             owner.append(i)
-    if not texts:
-        sys.exit(f"examined nothing: no unit has {args.field} text")
-    print(f"units {len(units)}; field {args.field}; windows {len(texts)}", flush=True)
+    print(f"units {len(units)}; windows {len(texts)}", flush=True)
     import torch
-    m, spec = load_model(args.model, args.device)
+    m = SentenceTransformer(args.model, device=args.device)
     m.max_seq_length = 512
-    out = args.out_dir / f"emb-{model_slug(args.model, args.field)}"
+    out = ROOT / f"build/topics/emb-{model_slug(args.model)}"
     parts_dir = Path(f"{out}-parts")
     parts_dir.mkdir(exist_ok=True)
     CHUNK = 500                      # save after each chunk; a rerun resumes (8 GB shared memory)
@@ -107,12 +64,11 @@ def cmd_embed(args):
             if args.max_chunks and new >= args.max_chunks:
                 print(f"stopped after {new} new chunks"); return
             new += 1
-            e = encode(m, spec, texts[i:i + CHUNK], "document", args.batch_size)
+            e = m.encode(texts[i:i + CHUNK], batch_size=8, normalize_embeddings=True,
+                         convert_to_numpy=True).astype(np.float32)
             np.save(p, e)
             if args.device == "mps":
                 torch.mps.empty_cache()
-            elif args.device == "cuda":
-                torch.cuda.empty_cache()
             print(f"chunk {c} ({i + len(e)}/{len(texts)})", flush=True)
         parts.append(np.load(p))
     emb = np.concatenate(parts)
@@ -147,6 +103,7 @@ def best_ranks(units, order, key):
 
 
 def cmd_eval(args):
+    from sentence_transformers import SentenceTransformer
     units = load_units()
     ids = [u["id"] for u in units]
     words = {u["id"]: u["n_english_words"] for u in units}
@@ -156,8 +113,8 @@ def cmd_eval(args):
     owner = np.load(ROOT / f"build/topics/emb-{slug}-owner.npy")
     q = yaml.safe_load((ROOT / f"docs/topic-search/{args.topic}/queries.yaml").read_text())
     queries = list(q["core"]) + list(q["senses"].values()) + list(q["problems"].values())
-    m, spec = load_model(args.model, args.device)
-    qe = encode(m, spec, queries, "query")
+    m = SentenceTransformer(args.model, device="mps")
+    qe = m.encode([QUERY_PREFIX + s for s in queries], normalize_embeddings=True, convert_to_numpy=True)
     sim = emb @ qe.T                                   # windows x queries
     win_best = sim.max(axis=1)
     unit_score = np.full(len(units), -1.0, dtype=np.float32)
@@ -212,15 +169,10 @@ def main():
     sub = ap.add_subparsers(dest="cmd", required=True)
     e = sub.add_parser("embed")
     e.add_argument("--model", default=MODEL)
-    e.add_argument("--device", default="mps", choices=["mps", "cuda", "cpu"])
-    e.add_argument("--field", default="english", choices=["english", "greek"])
-    e.add_argument("--batch-size", type=int, default=8)
-    e.add_argument("--units", type=Path, default=UNITS)
-    e.add_argument("--out-dir", type=Path, default=ROOT / "build/topics")
+    e.add_argument("--device", default="mps", choices=["mps", "cpu"])
     e.add_argument("--max-chunks", type=int, default=0, help="stop after embedding this many new chunks (0 = all)")
     v = sub.add_parser("eval")
     v.add_argument("--model", default=MODEL)
-    v.add_argument("--device", default="mps", choices=["mps", "cuda", "cpu"])
     v.add_argument("--topic", default="necessity")
     v.add_argument("--key", default="sorabji")
     v.add_argument("--lexical", default="combined")
