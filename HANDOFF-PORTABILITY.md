@@ -979,125 +979,104 @@ briefed from Aristotle's merged PRs. The lead session starts them once
 Aristotle's phase 3 is merged, checks their reports, and brings John only
 decisions.
 
-**Plato (2026-11-21).** John said to start it. The brief is
-`docs/portability/port-brief-plato.md`. The session started that afternoon:
-"Plato portability port [Opus 5.5]", name `plato-port`, id
-`local_02eaa70b-28e3-403e-bf55-0c1d9024a980`, rooted in `plato-reader` in its
-own worktree. (A turn that comes over Remote Control cannot start a session;
-it took John's word from the desktop app.) It reports to the lead session at
-each phase's PR or when it needs a decision. Plato's port is merged (below).
+**Plato: done (2026-11-21).** Session "Plato portability port [Opus 5.5]"
+(`plato-port`, id `local_02eaa70b-28e3-403e-bf55-0c1d9024a980`), briefed from
+`docs/portability/port-brief-plato.md`. Its record is Plato's own
+`HANDOFF-PORTABILITY.md` on `main`. Merged in `johnhboyer-sys/plato-reader`,
+each on John's word: #130 (phase 1), #131 (phase 2), #132 (phase 3), #133
+(the put-back's cleanup), #134 and #135 (handoff), #136 (licence: MIT, and
+CC0 on `corpus/greek/`, John: "Same as Aristotle for license"). John ruled
+decision 10 for Plato in that session: keep the Euthyphro fixture, pinned by
+a test that fails if any other tracked file is export-shaped.
 
-**Homer (2026-11-21, 20:16).** John said to start it. The brief is
-`docs/portability/port-brief-homer.md`, cut from Plato's with what Plato's
-port taught: two worked examples, no export on disk (so `extract` runs
-Diogenes), Homer's two export-shaped fixtures, the Kosmos Butler text
-(CC BY-NC-ND) in the release bundle as a point for John, and who does what
-for the key. John's word came over Remote Control, which cannot start a
-session, so the start waits for his next message from the desktop app: title
-"Homer portability port [Opus 5.5]", name `homer-port`, preset `homer-reader`,
-its own worktree, Opus 5.5. The plays wait for John's word.
+What the lead session checked before the merges, on a `git archive` copy and
+never in Plato's checkout:
 
-**Plato's report, and what the lead session checked (2026-11-21, evening).**
-Three stacked PRs were open in `johnhboyer-sys/plato-reader` (merged since; see below): #130
-(phase 1, base `main`), #131 (phase 2, base `claude/portability-phase1`), #132
-(phase 3, base `claude/portability-phase2`), head `5cb973c4ec`. Plato's own
-`HANDOFF-PORTABILITY.md` on that branch is the full record. Merging them in
-order means moving #131's and then #132's base to `main` after the one before
-it lands, and letting CI run again each time.
-
-Checked here, on a copy of the phase 3 tree made with `git archive` and never
-in Plato's checkout:
-
-- CI is green on all three; on #132 the two `mirror.yml` jobs show as skipped,
-  as they must while `MIRROR_GIT_URL` is unset.
-- `mirror-git.mjs`, `mirror-check.mjs`, `check-mirrors.mjs`, `check-served.mjs`,
-  `mirror.yml`, the `mirror-key` action, the pinned host keys, and the three
-  mirror scripts' tests are byte for byte Aristotle's `main`. `release.yml`,
-  `image.yml`, `mirrors.json`, and the `Dockerfile` differ only in the names.
-- The committed Greek, read by a scan written here and not by Plato's guard:
-  36 files and a README, 71,700 lines under 108 heading lines, 7,253,778
-  bytes; no ASCII letter, no `&`, no beta-code shape in any text cell; the 183
-  angle-bracket pairs all hold Greek (the editor's supplements); the only
-  marks outside Greek are the dash, the dagger, and single quotation marks.
-  The branch adds no XML file.
-- Plato's guard, run here: 152 tests pass and one fails, which is the copy's
-  doing (the test asks git whether `build/export` is ignored, and a
-  `git archive` copy is no repository; it failed and did not pass by
-  default). Three breaks made by hand each turned it red: beta code added to a
-  line of the Crito, an export `<label>` added to one, and a stray
-  `tlg0059.xml` in the folder.
-- Script tests: 180 of 180.
-- `mirror-check.mjs` for real: `30 of 33 refs match`, the three port branches
-  named as missing on the mirror, which is the truth until the key is set.
-- Test 2 on Linux, redone: the bundle CI built for `5cb973c4ec` (run
-  44965501016, 13,172 listed files, `shasum -c` clean) compared with the
-  snapshot by Aristotle's `compare-snapshot.mjs`: `7591 of 7591 build files
-  are byte for byte what the snapshot holds; 1 live-only file allowed`.
+- The mirror scripts, `mirror.yml`, the `mirror-key` action, the host keys,
+  and `check-served.mjs` are byte for byte Aristotle's; the workflow files
+  differ only in names.
+- The committed Greek, by a scan written here: 36 files, 71,700 lines,
+  7,253,778 bytes; no ASCII letter, no `&`, no beta-code shape; the 183
+  angle-bracket pairs hold Greek (the editor's supplements). A speaker's label
+  stays in the line in braces (`{ΣΩ.}`), which is where Plato's format
+  differs from Aristotle's.
+- Plato's guard went red on three hand breaks (beta code, an export `<label>`,
+  a stray XML file in the folder). Script tests 180 of 180.
+- Test 2 on Linux, redone with Aristotle's `compare-snapshot.mjs` on the
+  bundle CI built for `5cb973c4ec`: 7,591 of 7,591 data files byte for byte
+  the snapshot's, one live-only file allowed.
+- Each merge's tree was the tree of the PR head CI had passed, and CI and the
+  image build passed again on `main`.
 
 Not checked here: the laptop build's page comparison (5,582 of 5,582), test 3
-in a browser, and the image run; those stand on Plato's record and on CI.
-Plato's format differs from Aristotle's in one way worth knowing: a speaker's
-label stays in the line in braces (`{ΣΩ.}`), since Burnet prints it and the
-build needs where each speech starts.
-
-Since that check (all the same evening): John ruled decision 10 in Plato's
-session, **A**: keep the Euthyphro fixture, pinned. The pin's test went into
-#130 and was merged forward, so the heads are now `16b7e64b9f` (#130),
-`420b884b4a` (#131), and `597dd74d51` (#132); the change since `5cb973c4ec`
-is one test file and Plato's handoff, and CI is green on each. A fourth PR,
-#133 (base `claude/portability-phase3`, head `3d8b79d0e6`, CI green), carries
-the put-back's two cleanup fixes named below; its `write_all` is line for
-line Aristotle's, comments aside.
-
-**Merged (2026-11-21, 19:15).** John said to merge all four. #130 to #133
-went into Plato's `main` in order, each later one moved to base `main` first;
-`main` had not moved, and each merge's tree was the tree of the PR head CI
-had passed. Plato's `main` is at `54326c2271`. (John also said "merge" in Plato's
-session, which merged #130 seconds before the lead session merged the other
-three; the result is the same.) On that commit CI passed (runs 44970583891:
-app, shared, pipeline, scripts, and site, the full Linux build) and the image
-built and served its files (run 44970583851); `mirror.yml` skipped, as it
-must until the key is set.
-Plato's #134 (its handoff alone, recording the merges) followed on John's
-word in that session; `main` is at `432e1381f9`.
+in a browser, the licence PR (#136), and the session's own clean-up of its
+branches; those stand on Plato's record and on CI.
 
 **Plato's deploy key (2026-11-21, 19:45).** Made by the lead session
 (ed25519, fingerprint `SHA256:APlUVBfEj4TWBheyDuvCrzpwAUwyaIcAaM5lnv/G2Vc`,
 titled "plato-reader mirror, GitHub Actions, 2026-11-21"). John added the
 public half on GitLab from his phone, with write access and on `main`'s
-allowed-to-push list, guided by Plato's session. The key then read
-`plato-reader` and was refused on `aristotle-reader`. The lead session set
-the secret `MIRROR_GIT_SSH_KEY` and the variable `MIRROR_GIT_URL` on
-`johnhboyer-sys/plato-reader` and deleted the local pair; the private half
-is only in the secret. `mirror.yml`'s git job runs on a push alone, so its
-first run was a rerun of the skipped run for `432e1381f9` (44972051403), which
-read the new variable: `35 of 35 refs match the source after the push`. That
-push moved GitLab's protected `main`. `mirror-check.mjs` after it: `35 of 35
-refs match; history: 628 commits, whole`. Not yet seen for Plato: the weekly
-check job, a tag push, and the release workflow.
+allowed-to-push list. The key read `plato-reader` and was refused on
+`aristotle-reader`. The secret `MIRROR_GIT_SSH_KEY` and the variable
+`MIRROR_GIT_URL` are set on `johnhboyer-sys/plato-reader`; the local pair is
+deleted. `mirror.yml`'s git job runs on a push alone, so its first run was a
+rerun of the skipped run for `432e1381f9` (44972051403), which read the new
+variable: `35 of 35 refs match the source after the push`, protected `main`
+among them. `mirror-check.mjs` after it: `35 of 35 refs match; history: 628
+commits, whole`. The first run started by a real push matched 36 of 36. Not
+yet seen for Plato: the weekly check job, a tag push, and the release
+workflow.
 
-**Two fixes Plato's reviews found in files it took from here (2026-11-21).**
-Both are ported back, tests first, on `claude/portability-handoff-plato`.
+What went badly, for the next port: both sessions gave John steps for the
+key, and Plato's told him to make a second one. One session gives a manual
+step, once, as a link, the text to paste, and the taps; Homer's brief says
+who. John also speaks to a port session directly (merges, rulings), so read
+his own words in that session's transcript before acting on its report, and
+expect both sessions to merge the same PR.
+
+**Homer: briefed, not started (2026-11-21, 20:16).** John said to start it.
+The brief is `docs/portability/port-brief-homer.md`, cut from Plato's with
+what Plato's port taught: two worked examples, no export on disk (so
+`extract` runs Diogenes), Homer's two export-shaped fixtures, a licence that
+must name NC and ND sources (so it is asked, not copied), the Kosmos Butler
+text (CC BY-NC-ND) in the release bundle as a point for John, John's disk
+rule (check before every heavy step; pause under 5 GB free), and who does
+what for the key. John's word came over Remote Control, which cannot start a
+session (three tries refused), and a proposal card cannot name another
+project. The start waits for his next message from the desktop app, or for
+him to start a session in `homer-reader` himself with a prompt that points
+at the brief: title "Homer portability port [Opus 5.5]", name `homer-port`,
+preset `homer-reader`, its own worktree, Opus 5.5. The plays wait for John's
+word.
+
+**Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
 move that failed part way left the earlier files moved and the later
 temporary files on disk, and a write that failed left its half-written
 temporary file; it now puts back what it moved, each file by its own write
-and rename, and names any it could not. And the deploy tag's guard asked
-plain `git status --porcelain`, which a `status.showUntrackedFiles=no` setting
-makes blind to an untracked page; `uncleanFiles()` now asks with
-`--untracked-files=all`. Four new tests, each seen to fail on the old code
-(the deploy one also with `normal` in place of `all`).
+and rename, and names any file it could not put back and any temporary file
+it could not remove, while the caller still gets the first error. And the
+deploy tag's guard asked plain `git status --porcelain`, which a
+`status.showUntrackedFiles=no` setting makes blind to an untracked page;
+`uncleanFiles()` asks with `--untracked-files=all`. Six new tests, each seen
+to fail on the old code. Codex (GPT-6.1-Sol, medium) read the port twice;
+its second read found one thing, answered and not fixed: if stderr itself is
+closed, the line that names a file raises in place of the first error (the
+run still stops, and `git status` shows any mix). Plato has the same fixes
+in its #133.
 
-Codex (GPT-6.1-Sol, medium) read the port twice. Its first read found two
-gaps in the put-back's own cleanup, which Plato's copy has too: an error
-while removing a temporary file (a read-only folder, or a folder sitting at
-that name) stopped every put-back and reached the caller in place of the
-first error. Both fixed, each with a test that failed first: such a file is
-named and the rest go on. Its second read found one thing, answered and not
-fixed: if stderr itself is closed, the line that names a file raises in place
-of the first error. The run still stops, and `git status` shows any mix,
-since the files are committed. Pipeline corpus tests 124 of 124, script tests
-321 of 321. Plato's copy has the same two fixes in its #133.
+**Tidied (2026-11-21, 21:20), on John's word, with the disk at 6 GB free.**
+The seven merged `claude/portability-*` branches are deleted on GitHub (each
+checked as merged into `main` first; GitLab keeps its copies). The unpacked
+snapshot folders of Aristotle, Plato, and Grammata are deleted from
+`~/Developer/reader-snapshots/2026-11-20/`; their archives stay, each
+checked against `archives/SHA256SUMS` and holding as many files as its
+folder did, with copies on iCloud and the flash drive. `homer/` and `plays/`
+stay unpacked for their ports. To compare an Aristotle build with its
+snapshot again, unpack its archive first. The lead session's copy of the two
+build inputs is gone too; `python -m aristotle_pipeline.inputs fetch` brings
+them back against their pins. This worktree's `node_modules` and `.venv` are
+deleted; a build needs `npm ci` in `app/` and `shared/` first.
 
 ## Rules for the session
 
