@@ -157,3 +157,27 @@ describe('a lemma search narrows by the accented form typed', () => {
     expect(await hits('καταχρῆται')).toEqual([[8]]);
   });
 });
+
+// The text may elide with ᾽ (U+1FBD) where the page shows ’ (U+2019); stage6
+// keys both as '. Folded apart, the table filed ἀλλ᾽ under "all" while a
+// search for ἀλλ’ looked under "all'", and never narrowed.
+describe('an elision printed as ᾽', () => {
+  it('folds as ’ and \' do', () => {
+    expect(greekFold('ἀλλ᾽')).toBe("all'");
+    expect(greekFold('ἀλλ᾽')).toBe(greekFold('ἀλλ’'));
+  });
+
+  it('narrows a search typed with the other mark', () => {
+    const words = ['ἀλλ᾽', 'ἄλλ᾽'];
+    const { table, missing } = buildLemmaAccents(
+      [work({ alla: [[0, 0]], allos: [[0, 1]] }, words)],
+      { "all'": ['alla', 'allos'] },
+      greekFold,
+    );
+    expect(missing).toBe(0);
+    expect(table["all'"]?.['ἀλλ’']).toEqual(["all'", 'alla']);
+    const keys = ["all'", 'alla', 'allos'];
+    expect(narrowByAccent(table, 'ἀλλ’', greekFold('ἀλλ’'), keys)).toEqual(["all'", 'alla']);
+    expect(narrowByAccent(table, "ἄλλ'", greekFold("ἄλλ'"), keys)).toEqual(["all'", 'allos']);
+  });
+});

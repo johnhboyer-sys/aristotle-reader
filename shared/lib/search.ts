@@ -205,8 +205,8 @@ export function greekFold(input: string): string {
     else if (lower >= 'a' && lower <= 'z') out.push(lower); // Beta Code Latin input
     // Elision: the index keys δ' as d'. The page prints the mark as U+2019
     // (δ’), so a word copied from the text must fold to the same key as one
-    // typed with a straight apostrophe.
-    else if (ch === "'" || ch === '\u2019' || ch === '\u02bc') out.push("'");
+    // typed with a straight apostrophe. stage6 keys U+1FBD (᾽) the same way.
+    else if (ch === "'" || ch === '\u2019' || ch === '\u02bc' || ch === '\u1fbd') out.push("'");
     // skip combining marks, punctuation, Beta Code diacritics ) ( / \ = | +,
     // asterisk (handled by caller), and sigma-variant digits
   }
