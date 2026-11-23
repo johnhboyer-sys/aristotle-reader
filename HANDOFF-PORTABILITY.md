@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: John's word on homer-reader #79, #80, and #81 (stacked in that order; #79 and #80 green and read by the lead); then check that the merge to `main` reaches the mirror ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: merge homer-reader #81 (licence) when its checks pass, on John's word already given; then John's word on the plays ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1169,8 +1169,15 @@ Mirror push run 45245208945 on the licence branch (`mirror.yml` is not on
 of 15 refs match after the push. `mirror-check.mjs` from the Mac: 15 of 15
 refs match, `gh-pages` skipped, 831 commits, whole. The local pair is
 deleted; the private half is only the GitHub secret. Not yet seen for
-Homer: a push to `main` mirrored (comes with #80's merge), a tag push, the
-weekly check, the deploy tag, and the release workflow.
+Homer: a tag push, the weekly check, the deploy tag, and the release
+workflow.
+
+**Homer phases 2 and 3: merged (2026-11-23, 13:09)** on John's "Merge them"
+in the lead session. #79 merged as `123b29802d`; #80 was pointed at `main`,
+its merge tree equalled its head tree, and it merged as `8385562069`. That
+push to `main` started Mirror run 45245877351: 15 of 15 refs match the
+source after the push, so a push to `main` has now been seen to reach
+GitLab.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
