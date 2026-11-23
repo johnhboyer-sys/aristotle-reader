@@ -49,6 +49,16 @@ What is already done for Homer, by the lead session:
   `MANIFEST.json`, `SHA256SUMS`; 4,787 app files, 5,263 data files, 348 MB)
   and `~/Developer/reader-snapshots/2026-11-20/archives/homer-snapshot-2026-11-20.tar.gz`.
   This is test 2's baseline. Read only; do not change it.
+  **Live moved on 2026-11-23:** another session redeployed Homer from `main`
+  at `24cee78df` (PRs #75 and #76: a sort-by-count switch on the lexicon
+  index, and search code that reads ᾽ as an elision). It reported no R2
+  upload, so the snapshot's `data/` should still be live; the lead checked
+  only that the six changed files are all under `app/` and `shared/`. The
+  snapshot's `app/` is one deploy old: the `/lemma/` index page and the
+  `_astro` bundles differ, and every other page by the new bundle names.
+  So for pages, build the commit before those PRs (`9e327f885`) to compare
+  with the snapshot, or build `main` and name those two PRs as the explained
+  difference; say which you did.
 - A private GitLab mirror, `git@gitlab.com:johnhboyer/homer-reader.git`, 11 of
   11 refs (less `gh-pages`), 809 commits, whole as of 2026-11-21. Nothing
   keeps it current yet; your phase 3 does.
