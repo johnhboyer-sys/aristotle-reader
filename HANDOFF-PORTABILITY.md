@@ -1266,8 +1266,10 @@ Not checked by the lead: the spines, the pipeline tests, and Grok's read,
 which was under way. Phase 2 is draft greek-plays #18 and phase 3 draft #19
 (14:33); the lead has read neither beyond #19's mirror files. John approved
 one more full build in the plays session ("okay. run it this time", 14:23);
-the standing choice of triggers is still his, and he leaned yes in the lead
-session ("it's cheap and covered right?") without saying it. For the
+the standing choice of triggers he ruled in the lead session at 14:38: "Yes,
+on PRs". So the full build runs on pull requests to `main`, by hand, and by
+label; never on a plain push; the image stays by hand or label. Relayed to
+the plays session, which is to skip drafts. For the
 record: the account is on GitHub Pro, and private repos had used about 300
 Actions minutes in November.
 
