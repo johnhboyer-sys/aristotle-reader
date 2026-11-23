@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: John's taps for Homer's deploy key and his word on homer-reader #79 and #80 (read by the lead, CI not all in); then the key's test and the first mirror run ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: John's word on homer-reader #79, #80, and #81 (stacked in that order; #79 and #80 green and read by the lead); then check that the merge to `main` reaches the mirror ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1158,8 +1158,19 @@ the US 95-year term ends 1 January 2027), and #81 applies CC0 now. The lead
 put the choice to John, who answered "Now" (13:04, in the lead session). So
 #81 stands as written.
 
-CI on #79 and #80 is all green as of 13:05. Homer's key was not yet on
-GitLab at 13:05 (the test read was refused).
+CI on #79 and #80 is all green as of 13:05.
+
+**Homer's deploy key: live (2026-11-23, 13:06).** John added the public half
+on GitLab. The lead's tests: the key reads `johnhboyer/homer-reader`, is
+refused on `johnhboyer/plato-reader`, and a dry-run push to `main` is
+accepted. `MIRROR_GIT_URL` is set. The first run was a rerun of the skipped
+Mirror push run 45245208945 on the licence branch (`mirror.yml` is not on
+`main` until #80 merges; the file is byte for byte Plato's merged one): 15
+of 15 refs match after the push. `mirror-check.mjs` from the Mac: 15 of 15
+refs match, `gh-pages` skipped, 831 commits, whole. The local pair is
+deleted; the private half is only the GitHub secret. Not yet seen for
+Homer: a push to `main` mirrored (comes with #80's merge), a tag push, the
+weekly check, the deploy tag, and the release workflow.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
