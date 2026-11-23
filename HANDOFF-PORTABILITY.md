@@ -1322,6 +1322,18 @@ Cloudflare token; `release.yml` runs on a tag push only;
 refuses `--deploy` beside `--dry-run`. The Site run on phase 2's branch
 (45264091146) passed, as the plays session reported.
 
+**Stopped for the day (2026-11-23, 15:26).** John closed up; the plays
+session stopped, deleted its `build/` and its export, and left its state in
+its notes folder (`side-session-notes/plays-port-state-2026-11-23.md`).
+Nothing is merged: #17 is ready, its checks green but for a Site run still
+going on GitHub (45267867804, on `efdfecee85`); #18, #19, and #20 are drafts.
+Grok's read of phases 2 and 3 was stopped about 12 minutes in and gave no
+result, so those two phases have had no review from another model family.
+The order John agreed to at 15:16 ("Okay", in the plays session): #17 into
+`main`; then #20 into #19's branch and #19 into #18's, which need no Site
+run; then #18 into `main` with one. To pick up: finish that review, then the
+merges, then the lead's `mirror-check` and the account-wide key.
+
 Homer's handoff had one stale section (its State table still showed phases
 2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
 session merged it on John's "merge" there (14:19, read from its
