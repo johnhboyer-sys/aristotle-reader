@@ -24,7 +24,9 @@ function lemmaMap(): Record<string, (string | string[])[]> {
 function* works(): Generator<IndexedWork> {
   for (const work of readdirSync(dataDir).sort()) {
     const dir = `${dataDir}${work}/`;
-    if (!existsSync(`${dir}search/greek_lemma.json`) || !existsSync(`${dir}search/meta.json`)) continue;
+    if (!existsSync(`${dir}search/greek_lemma.json`)) continue;
+    // Without its segment list no posting's word can be read: fail, not skip.
+    if (!existsSync(`${dir}search/meta.json`)) throw new Error(`lemma-accents: ${work} has a lemma index but no search/meta.json`);
     const segs = new Map<string, Parameters<typeof segTokens>[0]>();
     for (const file of readdirSync(dir).filter(f => /^book-\d+\.json$/.test(f))) {
       for (const s of readJson(`${dir}${file}`).segments ?? []) segs.set(s.id, s);
