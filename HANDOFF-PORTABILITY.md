@@ -1214,8 +1214,36 @@ export on disk; fonts from Google Fonts at runtime; four export-shaped
 fixtures, kept and pinned on the strength of John's two rulings, for him to
 overrule; a licence PR in the pattern he ruled, put to him once; the
 snapshot is a floor and live moved on 2026-11-23 (the lead does not know the
-deployed commit); and no heavy local run while John's pause stands. Nothing
-of the plays' has been checked, since it has reported nothing.
+deployed commit); and no heavy local run while John's pause stands.
+
+**The plays' phase 1: draft PR (2026-11-23, 14:02), greek-plays #17**, read
+at `90c5e23de3`. All 44 plays' main Greek is TLG, so there are 44 line
+files (58,999 rows, 4.5 MB with the README); the 54 other Greek editions are
+already under `sources/`. The session reports 88 stage 1 spines (44 plays,
+full and public manifests) byte for byte the same three ways.
+
+What the lead checked, by reading:
+
+- The lead's own scan of the 44 files: 58,999 rows of two columns; no
+  control character and no combining mark; every Latin letter (871) sits
+  inside a braced mark the edition prints (`{Str.}`, `{Ant. 1.}`, 27 kinds);
+  nothing else is beta code or markup.
+- **One finding, sent back:** every `# edition:` line carries the export's
+  own source description with its TLG numbers (`(0019: 001)`), where the
+  other three readers write the manifest's `greek_edition`. John's rule is
+  that public files name editions, not the TLG. The session is to write
+  `greek_edition` there, keep the source-description check inside `extract`,
+  and make the guard fail such a header.
+- The new `site.yml` builds only by hand or when a pull request gets the
+  label `build-site`, never on a push, as the brief asks. Its first run
+  (45253108089) was still going after 15 minutes; what it billed is not yet
+  known.
+
+Not checked by the lead: the spines, the pipeline tests, and Grok's read,
+which was under way. Phase 2 is pushed as a branch with no PR.
+
+Homer's handoff has one stale section (its State table still shows phases 2
+and 3 in PRs); the Homer session is to open a docs-only PR for it.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
