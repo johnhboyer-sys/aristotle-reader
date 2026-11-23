@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: John's word on the account-wide GitLab key (the three Grammata mirrors have no key of their own; "Sessions", below); and his two candidate hosts for the bundle
+Next: John's two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1362,8 +1362,15 @@ it. The three Grammata repos (`grammar-site`, `grammars`,
 `classical-grammars`) have no `mirror.yml` and no deploy key, so this key
 is the only thing that can refresh their mirrors. Their tips matched
 GitHub's on 2026-11-23 (12, 4, and 1 refs, tips only). Taking the key off
-is John's call: off now, and those three mirrors freeze until Grammata gets
-its own workflow and keys; or on until then.
+was John's call, and he ruled on 2026-11-23 at 17:49: "Keep". It stays
+on his GitLab account and on the Mac until Grammata has its own workflow
+and keys; then it comes off and the file is deleted.
+
+The plays session tidied after the merges: build output, the export, and
+installs deleted; the four merged branches deleted from GitHub on John's
+word there ("Deleted branch. Merge 21", 17:34). Its handoff's last State is
+greek-plays #21, that file only, which the plays session merges when its
+Site run passes.
 
 Homer's handoff had one stale section (its State table still showed phases
 2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
