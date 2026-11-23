@@ -1263,7 +1263,29 @@ by label, plus pull requests to `main` if John agrees; Image by hand or
 label; nothing on a push. Put to John.
 
 Not checked by the lead: the spines, the pipeline tests, and Grok's read,
-which was under way. Phase 2 is pushed as a branch with no PR.
+which was under way. Phase 2 is draft greek-plays #18 and phase 3 draft #19
+(14:33); the lead has read neither beyond #19's mirror files. John approved
+one more full build in the plays session ("okay. run it this time", 14:23);
+the standing choice of triggers is still his, and he leaned yes in the lead
+session ("it's cheap and covered right?") without saying it. For the
+record: the account is on GitHub Pro, and private repos had used about 300
+Actions minutes in November.
+
+**The plays' deploy key: live (2026-11-23, 14:37).** John asked in the plays
+session, "can we set up gitlabs now?". `mirror.yml`, the `mirror-key`
+action, `mirror_known_hosts`, and the three mirror scripts on #19's branch
+are byte for byte Homer's merged ones. The lead made the pair (fingerprint
+`SHA256:DBnT310q3riGOL6H8q/FscjxNWFQQTfgXipGvtj4Tyw`), John added the
+public half on GitLab, and the tests passed: reads `johnhboyer/greek-plays`,
+refused on `johnhboyer/homer-reader`, a dry-run push to `main` accepted.
+Secret and variable are set. First run: a rerun of the skipped Mirror push
+run 45261073710 on the phase 3 branch, 25 of 25 refs match after the push.
+`mirror-check.mjs` from the Mac: 25 of 25 refs, 1,431 commits, whole. The
+local pair is deleted. Every sibling now has its own deploy key, so the
+account-wide key `~/.ssh/gitlab_mirror_ed25519` can come off John's GitLab
+account once the plays' port is merged and no check needs it. Not yet seen
+for the plays: `mirror.yml` on `main` (it comes with #19's merge), a tag
+push, the weekly check, and anything a deploy shows.
 
 Homer's handoff had one stale section (its State table still showed phases
 2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
