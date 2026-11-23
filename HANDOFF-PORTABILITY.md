@@ -1289,6 +1289,25 @@ account once the plays' port is merged and no check needs it. Not yet seen
 for the plays: `mirror.yml` on `main` (it comes with #19's merge), a tag
 push, the weekly check, and anything a deploy shows.
 
+**John's rulings for the plays (2026-11-23, 15:02), in the plays session**,
+read from its transcript, three questions with the licence table linked:
+the Greek, "CC0 on all 44 (Recommended)", though 36 of the 44 editions were
+printed after 1930; his OCR'd Greek of Jebb, Paley, and Way, which carried
+"Not for redistribution until the owner rules on it", "Yes, CC0
+(Recommended)"; the four export-shaped fixtures, "Keep them
+(Recommended)". Draft greek-plays #20 applies them, stacked on #19: an MIT
+`LICENSE`, CC0 on `corpus/greek/` worded as a waiver of what rights John
+holds, CC BY 4.0 on his apparatus and drawings, and a per-source table at
+the head of `sources/INVENTORY.md`. The OCR'd TEI files' headers still
+carry the old note, left so their pinned sums hold; the table says the
+ruling supersedes it. The lead has read the ruling, not yet #20's diff.
+
+Phase 1's record at 14:42: its second full build passed; Grok's static read
+gave ten findings, three fixed with failing tests first and seven answered
+in the plays' handoff, which the lead has not weighed one by one. #17 to
+#20 are all drafts. A third build is checking a base-path fix in phase 2
+(3,482 redirect links left out the base) and the lemma-map sort.
+
 Homer's handoff had one stale section (its State table still showed phases
 2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
 session merged it on John's "merge" there (14:19, read from its
