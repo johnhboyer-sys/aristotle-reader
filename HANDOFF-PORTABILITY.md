@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: check Homer's phase 2 and 3 PRs against the session's reports (phase 1 is merged and checked) ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: John's taps for Homer's deploy key and his word on homer-reader #79 and #80 (read by the lead, CI not all in); then the key's test and the first mirror run ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1098,8 +1098,48 @@ keeping them pinned, as he ruled for Plato). Found there and left alone: two
 tests in `pipeline/tests/test_apparatus_vocab.py` rewrite the built site's
 `vocab.json` when a full `pytest` runs after a build.
 
-Phase 2 is pushed as `claude/portability-phase2` in `homer-reader`, built
-and checked on the Mac before the crash; no PR yet.
+**Homer phases 2 and 3: PRs open (2026-11-23, 12:20), homer-reader #79 and
+#80**, #80 stacked on #79. Neither is merged. CI on #78's merge commit
+passed.
+
+What the lead checked, by reading the branches at `2b73b564db` (#79) and
+`822715662d` (#80), with no build and no test run:
+
+- Against Plato's merged files: `check-served.mjs`, `mirror-git.mjs`,
+  `mirror-check.mjs`, `check-mirrors.mjs`, `mirror.yml`, the `mirror-key`
+  action, `mirror_known_hosts`, and the `Caddyfile` are byte for byte the
+  same. `site-params.mjs`, `release.yml`, `image.yml`, the `Dockerfile`, and
+  the `site-bundle` action differ only by Homer's names, addresses, and
+  gates. `mirrors.json` names `git@gitlab.com:johnhboyer/homer-reader.git`.
+- `make-bundle.mjs` is adapted, not copied: Homer has no `verify-rebuild`,
+  so the bundle runs the pipeline's preflight and the LSJ and Cunliffe
+  checks. The lead read the head of that diff and no further; Codex read it
+  twice.
+- The default allow list is Grammata's two hosts (decision 4) and the two
+  John ruled, nothing else.
+- The workflows name one secret and one variable, `MIRROR_GIT_SSH_KEY` and
+  `MIRROR_GIT_URL`. No Cloudflare or R2 token.
+
+Not checked by the lead: the bundle's six gates, the browser visits of
+test 3, the sub-path build, the restore drill, the 182 script tests, and
+Codex's reads (two of #79, one of #80), all as the PRs report them. When
+last read, #79's `site` and `image` jobs and #80's `app`, `shared`,
+`pipeline`, and `site` jobs were still running.
+
+Homer's deploy key (2026-11-23, 12:23): the lead made the pair, fingerprint
+`SHA256:QmXzNPyjQmKeDULZsTzAsspkuNOs2V5lQcc1uJOl9w0`. The private half is
+the GitHub secret `MIRROR_GIT_SSH_KEY` on `homer-reader` and, until the key
+is tested, `~/.ssh/homer_mirror_deploy_ed25519` on the Mac. `MIRROR_GIT_URL`
+is not set, so the git job stays off. Left to do: John adds the public half
+on GitLab; the lead tests it (reads its own repo, refused on another), and
+once #80 is merged sets the variable, starts the first run by rerunning the
+latest skipped Mirror push run, runs `mirror-check.mjs`, and deletes the
+local pair.
+
+A new point for John from #80: `release.yml` attaches the whole bundle to a
+public GitHub release at each deploy, and the bundle holds the Kosmos
+Society revision of Butler (CC BY-NC-ND 3.0), verbatim and credited. The
+live site already serves it; the release makes it a download. His call.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
