@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: check the Homer port session's reports against its PRs ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: check Homer's phase 2 and 3 PRs against the session's reports (phase 1 is merged and checked) ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1053,6 +1053,53 @@ snapshots still match live data, and their `app/` halves are one deploy old
 compare. Not yet done: nothing of Homer's has been checked, since it has
 reported nothing. A start over Remote Control is refused, and a proposal
 card cannot name another project. The plays wait for John's word.
+
+**Homer phase 1: merged (2026-11-23, 12:07), homer-reader #78, `main` at
+`7a13697f2e`.** The Homer session merged it on John's words there ("sure.
+merge pr 78. allow both site. let's wait on the heavy tests"), read from that
+session's transcript. The build reads `corpus/greek/Iliad.tsv` (one file,
+15,707 rows in 24 books, 1,454,387 bytes) and no longer runs Diogenes. The
+Odyssey's Greek is the Perseus file already in `sources/perseus/`, so it has
+no line file.
+
+What the lead checked, all by reading, with no build and no test run:
+
+- The PR's five CI jobs were green, and the lines its body quotes are in the
+  log of run 45223733485 (pins 2 of 2, stage 1's 24 books and 15,687 lines,
+  4,688 pages with 0 broken links, 10,049 files listed, the guard's count).
+- The lead's own scan of the committed file at `main`: 15,707 rows of four
+  columns; in the text column no ASCII letter, no markup or beta-code
+  character, no control character, and no combining mark. The only
+  characters NFC would change are the Greek ano teleia and question mark,
+  which the export prints and stage 1 folds. The margin column holds the
+  critical signs and the words `corr.` and `ras.`.
+- `inputs.py` pins the same three hashes Aristotle's does;
+  `verify-snapshot.mjs` is Plato's byte for byte and `compare-snapshot.mjs`
+  differs by one number in a comment; `extract.py` carries the put-back from
+  aristotle-reader #236.
+- No file added by the PR is XML or a TLG file. The two fixtures that hold
+  the export's markup were there before.
+
+Not checked by the lead: the snapshot comparisons (the PR reports 5,262 of
+5,262 data files and the pages equal after 67 named swaps), the 1,234
+pipeline tests, Codex's two reviews, and CI on the merge commit, which was
+still running.
+
+John's rulings in the Homer session, same message: `cawm.lib.uiowa.edu` (map
+tiles) and `archive.org` (recitation audio) go on Homer's test 3 allow list;
+and the heavy tests wait. The Mac went down at about 12:02 with several
+sessions building at once, and John put it down to the CPU. So no session on
+this track runs a build or a full test suite on the Mac until he says so;
+CI does that work.
+
+Still John's, from #78: Homer's licence (sources under NC, ND, SA, and ODbL
+terms), and decision 10 for Homer's two fixtures (the session recommends
+keeping them pinned, as he ruled for Plato). Found there and left alone: two
+tests in `pipeline/tests/test_apparatus_vocab.py` rewrite the built site's
+`vocab.json` when a full `pytest` runs after a build.
+
+Phase 2 is pushed as `claude/portability-phase2` in `homer-reader`, built
+and checked on the Mac before the crash; no PR yet.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
