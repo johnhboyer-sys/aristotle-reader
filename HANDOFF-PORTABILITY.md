@@ -1233,10 +1233,14 @@ What the lead checked, by reading:
   other three readers write the manifest's `greek_edition`. John's rule is
   that public files name editions, not the TLG. The session is to write
   `greek_edition` there, keep the source-description check inside `extract`,
-  and make the guard fail such a header.
+  and make the guard fail such a header. Fixed at `3600068d7c` (14:06): the
+  lead re-read all 44 edition lines and none is a source description. They
+  name 15 editions; 36 of the 44 plays rest on editions printed from 1955 to
+  1994 (Murray, Dain and Mazon, Diggle, Dover, MacDowell, Ussher), the same
+  position as Aristotle's Ross texts, and a line for the plays' licence PR.
 - The new `site.yml` builds only by hand or when a pull request gets the
   label `build-site`, never on a push, as the brief asks. Its first run
-  (45253108089) was still going after 15 minutes; what it billed is not yet
+  (45253108089) was still going after 14 minutes; what it billed is not yet
   known.
 
 Not checked by the lead: the spines, the pipeline tests, and Grok's read,
