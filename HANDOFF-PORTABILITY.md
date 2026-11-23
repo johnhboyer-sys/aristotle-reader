@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: check the Homer port session's reports against its PRs ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: John's two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1053,6 +1053,329 @@ snapshots still match live data, and their `app/` halves are one deploy old
 compare. Not yet done: nothing of Homer's has been checked, since it has
 reported nothing. A start over Remote Control is refused, and a proposal
 card cannot name another project. The plays wait for John's word.
+
+**Homer phase 1: merged (2026-11-23, 12:07), homer-reader #78, `main` at
+`7a13697f2e`.** The Homer session merged it on John's words there ("sure.
+merge pr 78. allow both site. let's wait on the heavy tests"), read from that
+session's transcript. The build reads `corpus/greek/Iliad.tsv` (one file,
+15,707 rows in 24 books, 1,454,387 bytes) and no longer runs Diogenes. The
+Odyssey's Greek is the Perseus file already in `sources/perseus/`, so it has
+no line file.
+
+What the lead checked, all by reading, with no build and no test run:
+
+- The PR's five CI jobs were green, and the lines its body quotes are in the
+  log of run 45223733485 (pins 2 of 2, stage 1's 24 books and 15,687 lines,
+  4,688 pages with 0 broken links, 10,049 files listed, the guard's count).
+- The lead's own scan of the committed file at `main`: 15,707 rows of four
+  columns; in the text column no ASCII letter, no markup or beta-code
+  character, no control character, and no combining mark. The only
+  characters NFC would change are the Greek ano teleia and question mark,
+  which the export prints and stage 1 folds. The margin column holds the
+  critical signs and the words `corr.` and `ras.`.
+- `inputs.py` pins the same three hashes Aristotle's does;
+  `verify-snapshot.mjs` is Plato's byte for byte and `compare-snapshot.mjs`
+  differs by one number in a comment; `extract.py` carries the put-back from
+  aristotle-reader #236.
+- No file added by the PR is XML or a TLG file. The two fixtures that hold
+  the export's markup were there before.
+
+Not checked by the lead: the snapshot comparisons (the PR reports 5,262 of
+5,262 data files and the pages equal after 67 named swaps), the 1,234
+pipeline tests, Codex's two reviews, and CI on the merge commit, which was
+still running.
+
+John's rulings in the Homer session, same message: `cawm.lib.uiowa.edu` (map
+tiles) and `archive.org` (recitation audio) go on Homer's test 3 allow list;
+and the heavy tests wait. The Mac went down at about 12:02 with several
+sessions building at once, and John put it down to the CPU. So no session on
+this track runs a build or a full test suite on the Mac until he says so;
+CI does that work.
+
+Still John's, from #78: Homer's licence (sources under NC, ND, SA, and ODbL
+terms), and decision 10 for Homer's two fixtures (the session recommends
+keeping them pinned, as he ruled for Plato). Found there and left alone: two
+tests in `pipeline/tests/test_apparatus_vocab.py` rewrite the built site's
+`vocab.json` when a full `pytest` runs after a build.
+
+**Homer phases 2 and 3: PRs open (2026-11-23, 12:20), homer-reader #79 and
+#80**, #80 stacked on #79. Neither is merged. CI on #78's merge commit
+passed.
+
+What the lead checked, by reading the branches at `2b73b564db` (#79) and
+`822715662d` (#80), with no build and no test run:
+
+- Against Plato's merged files: `check-served.mjs`, `mirror-git.mjs`,
+  `mirror-check.mjs`, `check-mirrors.mjs`, `mirror.yml`, the `mirror-key`
+  action, `mirror_known_hosts`, and the `Caddyfile` are byte for byte the
+  same. `site-params.mjs`, `release.yml`, `image.yml`, the `Dockerfile`, and
+  the `site-bundle` action differ only by Homer's names, addresses, and
+  gates. `mirrors.json` names `git@gitlab.com:johnhboyer/homer-reader.git`.
+- `make-bundle.mjs` is adapted, not copied: Homer has no `verify-rebuild`,
+  so the bundle runs the pipeline's preflight and the LSJ and Cunliffe
+  checks. The lead read the head of that diff and no further; Codex read it
+  twice.
+- The default allow list is Grammata's two hosts (decision 4) and the two
+  John ruled, nothing else.
+- The workflows name one secret and one variable, `MIRROR_GIT_SSH_KEY` and
+  `MIRROR_GIT_URL`. No Cloudflare or R2 token.
+
+Not checked by the lead: the bundle's six gates, the browser visits of
+test 3, the sub-path build, the restore drill, the 182 script tests, and
+Codex's reads (two of #79, one of #80), all as the PRs report them. When
+last read, #79's `site` and `image` jobs and #80's `app`, `shared`,
+`pipeline`, and `site` jobs were still running.
+
+Homer's deploy key (2026-11-23, 12:23): the lead made the pair, fingerprint
+`SHA256:QmXzNPyjQmKeDULZsTzAsspkuNOs2V5lQcc1uJOl9w0`. The private half is
+the GitHub secret `MIRROR_GIT_SSH_KEY` on `homer-reader` and, until the key
+is tested, `~/.ssh/homer_mirror_deploy_ed25519` on the Mac. `MIRROR_GIT_URL`
+is not set, so the git job stays off. Left to do: John adds the public half
+on GitLab; the lead tests it (reads its own repo, refused on another), and
+once #80 is merged sets the variable, starts the first run by rerunning the
+latest skipped Mirror push run, runs `mirror-check.mjs`, and deletes the
+local pair.
+
+A new point for John from #80: `release.yml` attaches the whole bundle to a
+public GitHub release at each deploy, and the bundle holds the Kosmos
+Society revision of Butler (CC BY-NC-ND 3.0), verbatim and credited. The
+live site already serves it; the release makes it a download. His call.
+
+**John's rulings for Homer (2026-11-23, 13:00), in the Homer session:** "A.
+For licence: what you recommend. For test fixtures, keep em", read from that
+session's transcript against the options it had laid out. So: the Kosmos
+text ships in the public release bundle (its option A); the licence follows
+Aristotle and Plato (MIT code, CC0 on `corpus/greek/`, CC BY 4.0 on his own
+apparatus) with a per-source table for Kosmos, Perseus, OpenStreetMap,
+DICES, and Copernicus; both fixtures stay, pinned. homer-reader #81 applies
+them, stacked on #80: `LICENSE` (MIT), the table in `sources/INVENTORY.md`,
+and the CC0 line in `corpus/greek/README.md`. The lead read those three
+files; #81's CI was still running.
+
+One point the ruling leaves open: the session's recommendation read "CC0 on
+`corpus/greek/`, possibly after the 2027 date" (Allen's edition is 1931, so
+the US 95-year term ends 1 January 2027), and #81 applies CC0 now. The lead
+put the choice to John, who answered "Now" (13:04, in the lead session). So
+#81 stands as written.
+
+CI on #79 and #80 is all green as of 13:05.
+
+**Homer's deploy key: live (2026-11-23, 13:06).** John added the public half
+on GitLab. The lead's tests: the key reads `johnhboyer/homer-reader`, is
+refused on `johnhboyer/plato-reader`, and a dry-run push to `main` is
+accepted. `MIRROR_GIT_URL` is set. The first run was a rerun of the skipped
+Mirror push run 45245208945 on the licence branch (`mirror.yml` is not on
+`main` until #80 merges; the file is byte for byte Plato's merged one): 15
+of 15 refs match after the push. `mirror-check.mjs` from the Mac: 15 of 15
+refs match, `gh-pages` skipped, 831 commits, whole. The local pair is
+deleted; the private half is only the GitHub secret. Not yet seen for
+Homer: a tag push, the weekly check, the deploy tag, and the release
+workflow.
+
+**Homer phases 2 and 3: merged (2026-11-23, 13:09)** on John's "Merge them"
+in the lead session. #79 merged as `123b29802d`; #80 was pointed at `main`,
+its merge tree equalled its head tree, and it merged as `8385562069`. That
+push to `main` started Mirror run 45245877351: 15 of 15 refs match the
+source after the push, so a push to `main` has now been seen to reach
+GitLab.
+
+**Homer's licence PR: merged (2026-11-23, 13:20), homer-reader #81, `main`
+at `6c8070f3fc`.** Grok's read (the Homer session's cross-family gate) found
+documentation gaps only: three stale sentences in Homer's handoff, no
+licence lines for `sources/loeb-notes/` and `sources/autenrieth/`, and an
+OpenStreetMap sentence that still called ODbL "John's call" beside a table
+that offers the plates' rivers under it. The session fixed them in one
+commit, `2014a78e6`, on the lead's yes and within the lead's bounds. The
+lead read that commit: two files, and the two new licence lines repeat
+`sources/loeb-notes/README.md` and `sources/autenrieth/PROVENANCE.md`. All
+checks passed on that head, the merge tree equalled the head tree, and the
+merge's Mirror run passed; a tips-only check from the Mac afterwards agrees.
+
+**Homer: done but for what a deploy shows.** Merged: #78 to #81. Mirror
+live. Not yet seen: the deploy tag and the release workflow (Homer's next
+deploy), a tag push to the mirror, the weekly check, and the bundle on a
+second host (decision 6). Not checked by the lead at any point: a local
+build or test run (John paused heavy runs after the crash), the snapshot
+comparisons, and the browser visits of test 3; they stand on the session's
+reports, CI, and the Codex and Grok reads. CI, the image build, and the
+Mirror run on `6c8070f3fc` all passed (read 13:26). The Homer session
+deleted its four merged branches and its build output.
+
+**The plays: started (2026-11-23, 13:35).** John, asked whether to start
+them: "only after homer is done and tided". Session `plays-port`
+(`local_cb70d094-4a8c-4b8d-8715-8d0eb948f9d7`, Opus 5.5, its own worktree in
+`greek-plays`). The brief is `docs/portability/port-brief-plays.md`, cut
+from Homer's. What differs, and is in the brief: the repo is private, so CI
+minutes are metered and the session must measure one build and report before
+any workflow builds on a push; the data ships inside the Worker, so there is
+no R2 bucket and no key record; there is no deploy script, so phase 3 writes
+one, tested with fakes and never run; 44 plays from four TLG authors with no
+export on disk; fonts from Google Fonts at runtime; four export-shaped
+fixtures, kept and pinned on the strength of John's two rulings, for him to
+overrule; a licence PR in the pattern he ruled, put to him once; the
+snapshot is a floor and live moved on 2026-11-23 (the lead does not know the
+deployed commit); and no heavy local run while John's pause stands.
+
+**The plays' phase 1: draft PR (2026-11-23, 14:02), greek-plays #17**, read
+at `90c5e23de3`. All 44 plays' main Greek is TLG, so there are 44 line
+files (58,999 rows, 4.5 MB with the README); the 54 other Greek editions are
+already under `sources/`. The session reports 88 stage 1 spines (44 plays,
+full and public manifests) byte for byte the same three ways.
+
+What the lead checked, by reading:
+
+- The lead's own scan of the 44 files: 58,999 rows of two columns; no
+  control character and no combining mark; every Latin letter (871) sits
+  inside a braced mark the edition prints (`{Str.}`, `{Ant. 1.}`, 27 kinds);
+  nothing else is beta code or markup.
+- **One finding, sent back:** every `# edition:` line carries the export's
+  own source description with its TLG numbers (`(0019: 001)`), where the
+  other three readers write the manifest's `greek_edition`. John's rule is
+  that public files name editions, not the TLG. The session is to write
+  `greek_edition` there, keep the source-description check inside `extract`,
+  and make the guard fail such a header. Fixed at `3600068d7c` (14:06): the
+  lead re-read all 44 edition lines and none is a source description. They
+  name 15 editions; 36 of the 44 plays rest on editions printed from 1955 to
+  1994 (Murray, Dain and Mazon, Diggle, Dover, MacDowell, Ussher), the same
+  position as Aristotle's Ross texts, and a line for the plays' licence PR.
+- The new `site.yml` builds only by hand or when a pull request gets the
+  label `build-site`, never on a push, as the brief asks. Its first run
+  (45253108089) was still going after 14 minutes; what it billed is not yet
+  known.
+
+**The plays' tests 1 and 2 (14:11), as the session reports them at
+`9d49c20032`:** the first full Linux build passed (run 45253108089, 16 min
+47 s, 1,318 pages, 12,795 links, 0 broken, 12,194 files). Against the floor
+snapshot: 10,942 files byte for byte; 3 pages and 2 bundles equal under 9
+named swaps; 26 differ for named reasons (25 lemma-map files by key order,
+which Linux's unsorted directory read caused and a sort now fixes; a
+timestamp in `wing.drama.json`; 2 bundles by one-to-one minifier renames);
+2 only in the snapshot (those bundles' old names); 1,221 only in the build,
+the floor's gaps. The lead checked the sum (10,975, the snapshot's count)
+and the run's length, not the comparison itself.
+
+**CI minutes for the plays (the lead's own read of GitHub's billing
+endpoint, 14:12):** one full build is about 17 minutes, about $0.10 at list
+price. November so far: greek-plays 244 minutes, $1.46 gross, $0.00 net; all
+repos 3,238 minutes, $0.00 net. October: greek-plays 384 minutes, $1.13 net;
+all repos 4,007 minutes, $1.43 net. The session's proposal: Site by hand or
+by label, plus pull requests to `main` if John agrees; Image by hand or
+label; nothing on a push. Put to John.
+
+Not checked by the lead: the spines, the pipeline tests, and Grok's read,
+which was under way. Phase 2 is draft greek-plays #18 and phase 3 draft #19
+(14:33); the lead has read neither beyond #19's mirror files. John approved
+one more full build in the plays session ("okay. run it this time", 14:23);
+the standing choice of triggers he ruled in the lead session at 14:38: "Yes,
+on PRs". So the full build runs on pull requests to `main`, by hand, and by
+label; never on a plain push; the image stays by hand or label. Relayed to
+the plays session, which is to skip drafts. For the
+record: the account is on GitHub Pro, and private repos had used about 300
+Actions minutes in November.
+
+**The plays' deploy key: live (2026-11-23, 14:37).** John asked in the plays
+session, "can we set up gitlabs now?". `mirror.yml`, the `mirror-key`
+action, `mirror_known_hosts`, and the three mirror scripts on #19's branch
+are byte for byte Homer's merged ones. The lead made the pair (fingerprint
+`SHA256:DBnT310q3riGOL6H8q/FscjxNWFQQTfgXipGvtj4Tyw`), John added the
+public half on GitLab, and the tests passed: reads `johnhboyer/greek-plays`,
+refused on `johnhboyer/homer-reader`, a dry-run push to `main` accepted.
+Secret and variable are set. First run: a rerun of the skipped Mirror push
+run 45261073710 on the phase 3 branch, 25 of 25 refs match after the push.
+`mirror-check.mjs` from the Mac: 25 of 25 refs, 1,431 commits, whole. The
+local pair is deleted. Every sibling now has its own deploy key, so the
+account-wide key `~/.ssh/gitlab_mirror_ed25519` can come off John's GitLab
+account once the plays' port is merged and no check needs it. Not yet seen
+for the plays: `mirror.yml` on `main` (it comes with #19's merge), a tag
+push, the weekly check, and anything a deploy shows.
+
+**John's rulings for the plays (2026-11-23, 15:02), in the plays session**,
+read from its transcript, three questions with the licence table linked:
+the Greek, "CC0 on all 44 (Recommended)", though 36 of the 44 editions were
+printed after 1930; his OCR'd Greek of Jebb, Paley, and Way, which carried
+"Not for redistribution until the owner rules on it", "Yes, CC0
+(Recommended)"; the four export-shaped fixtures, "Keep them
+(Recommended)". Draft greek-plays #20 applies them, stacked on #19: an MIT
+`LICENSE`, CC0 on `corpus/greek/` worded as a waiver of what rights John
+holds, CC BY 4.0 on his apparatus and drawings, and a per-source table at
+the head of `sources/INVENTORY.md`. The OCR'd TEI files' headers still
+carry the old note, left so their pinned sums hold; the table says the
+ruling supersedes it. The lead has read the ruling, not yet #20's diff.
+
+Phase 1's record at 14:42: its second full build passed; Grok's static read
+gave ten findings, three fixed with failing tests first and seven answered
+in the plays' handoff, which the lead has not weighed one by one. #17 to
+#20 are all drafts. A third build is checking a base-path fix in phase 2
+(3,482 redirect links left out the base) and the lemma-map sort.
+
+**John's merge word for the plays (2026-11-23, 15:15), in the plays
+session**, read from its transcript: "Merge each when ready". The plays
+session merges #17, #18, #19, and #20 in that order, each when its checks
+and its review are answered, and tells the lead each merge; the lead does
+not merge them. What the lead read before the merges, with no build run
+(the heavy-runs pause): the whole stack adds 66 font files, 44 line files,
+and code, and no XML, no TLG file, and no file over 143 KB; `tlg` appears in
+`app/src` only as an old internal edition id, and in none of the 44 line
+files; the workflows use one secret and one variable, the mirror's, and no
+Cloudflare token; `release.yml` runs on a tag push only;
+`scripts/deploy-cloudflare.mjs` rehearses unless given `--deploy`, and
+refuses `--deploy` beside `--dry-run`. The Site run on phase 2's branch
+(45264091146) passed, as the plays session reported.
+
+**Stopped for the day (2026-11-23, 15:26).** John closed up; the plays
+session stopped, deleted its `build/` and its export, and left its state in
+its notes folder (`side-session-notes/plays-port-state-2026-11-23.md`).
+Nothing is merged: #17 is ready, its checks green but for a Site run still
+going on GitHub (45267867804, on `efdfecee85`); #18, #19, and #20 are drafts.
+Grok's read of phases 2 and 3 was stopped about 12 minutes in and gave no
+result, so those two phases have had no review from another model family.
+The order John agreed to at 15:16 ("Okay", in the plays session): #17 into
+`main`; then #20 into #19's branch and #19 into #18's, which need no Site
+run; then #18 into `main` with one. To pick up: finish that review, then the
+merges, then the lead's `mirror-check` and the account-wide key.
+
+**The plays: merged (2026-11-23, 17:10).** John typed "Resume" in the lead
+session at 16:05. The plays session merged #17 into `main` (`8cf681cc46`),
+reran Grok's read as two static reads and answered both (phase 2: sixteen
+findings, eleven fixed with a failing test first, five answered in the
+plays' handoff; phase 3 and the licence: eleven, nine fixed), folded #20
+into #19's branch (`0fe99037c2`) and #19 into #18's (`f3572e5691`), and
+merged #18 into `main` (`c3cf661ecf`) after one Site run (45283843153,
+green on `f3572e5691`). One serious finding was real: `release.yml` asked
+live for each data file at the root, where the Worker serves them under
+`/data/`, so every release would have failed its data check; the lead saw
+200 at `/data/agamemnon/manifest.json` and 404 at the root path, and read
+the fix (`--base=/data/`, `b64f990`). The plays session ran the whole
+shared suite on the Mac once, against the pause, when a test command
+matched no file; it passed.
+
+What the lead checked, by reading: after each merge `main`'s tree equalled
+the PR head's tree; the Mirror run on `c3cf661ecf` (45286470742) passed;
+`mirror-check.mjs` from the Mac: 26 of 26 refs match, 1,455 commits, whole.
+All four readers now have phases 1 to 3 and a licence on `main` and mirror
+to GitLab on every push. Not yet seen for the plays: a tag push, the weekly
+check, a release, and anything a deploy shows; `deploy-cloudflare.mjs` has
+never run with `--deploy`.
+
+**The account-wide key stays for now.** The four readers no longer need
+it. The three Grammata repos (`grammar-site`, `grammars`,
+`classical-grammars`) have no `mirror.yml` and no deploy key, so this key
+is the only thing that can refresh their mirrors. Their tips matched
+GitHub's on 2026-11-23 (12, 4, and 1 refs, tips only). Taking the key off
+was John's call, and he ruled on 2026-11-23 at 17:49: "Keep". It stays
+on his GitLab account and on the Mac until Grammata has its own workflow
+and keys; then it comes off and the file is deleted.
+
+The plays session tidied after the merges: build output, the export, and
+installs deleted; the four merged branches deleted from GitHub on John's
+word there ("Deleted branch. Merge 21", 17:34). Its handoff's last State is
+greek-plays #21, that file only, which the plays session merges when its
+Site run passes.
+
+Homer's handoff had one stale section (its State table still showed phases
+2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
+session merged it on John's "merge" there (14:19, read from its
+transcript), `main` at `a020643ca0`.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
