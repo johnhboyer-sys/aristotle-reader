@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: John's word on the plays, whose brief is to be cut from Homer's ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: check the plays port session's reports against its PRs, and make its deploy key when `mirror.yml` is in a PR ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1197,8 +1197,25 @@ deploy), a tag push to the mirror, the weekly check, and the bundle on a
 second host (decision 6). Not checked by the lead at any point: a local
 build or test run (John paused heavy runs after the crash), the snapshot
 comparisons, and the browser visits of test 3; they stand on the session's
-reports, CI, and the Codex and Grok reads. CI and the image build on
-`6c8070f3fc` were still running when this was written.
+reports, CI, and the Codex and Grok reads. CI, the image build, and the
+Mirror run on `6c8070f3fc` all passed (read 13:26). The Homer session
+deleted its four merged branches and its build output.
+
+**The plays: started (2026-11-23, 13:35).** John, asked whether to start
+them: "only after homer is done and tided". Session `plays-port`
+(`local_cb70d094-4a8c-4b8d-8715-8d0eb948f9d7`, Opus 5.5, its own worktree in
+`greek-plays`). The brief is `docs/portability/port-brief-plays.md`, cut
+from Homer's. What differs, and is in the brief: the repo is private, so CI
+minutes are metered and the session must measure one build and report before
+any workflow builds on a push; the data ships inside the Worker, so there is
+no R2 bucket and no key record; there is no deploy script, so phase 3 writes
+one, tested with fakes and never run; 44 plays from four TLG authors with no
+export on disk; fonts from Google Fonts at runtime; four export-shaped
+fixtures, kept and pinned on the strength of John's two rulings, for him to
+overrule; a licence PR in the pattern he ruled, put to him once; the
+snapshot is a floor and live moved on 2026-11-23 (the lead does not know the
+deployed commit); and no heavy local run while John's pause stands. Nothing
+of the plays' has been checked, since it has reported nothing.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
