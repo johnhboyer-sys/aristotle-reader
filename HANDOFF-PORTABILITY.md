@@ -1243,6 +1243,25 @@ What the lead checked, by reading:
   (45253108089) was still going after 14 minutes; what it billed is not yet
   known.
 
+**The plays' tests 1 and 2 (14:11), as the session reports them at
+`9d49c20032`:** the first full Linux build passed (run 45253108089, 16 min
+47 s, 1,318 pages, 12,795 links, 0 broken, 12,194 files). Against the floor
+snapshot: 10,942 files byte for byte; 3 pages and 2 bundles equal under 9
+named swaps; 26 differ for named reasons (25 lemma-map files by key order,
+which Linux's unsorted directory read caused and a sort now fixes; a
+timestamp in `wing.drama.json`; 2 bundles by one-to-one minifier renames);
+2 only in the snapshot (those bundles' old names); 1,221 only in the build,
+the floor's gaps. The lead checked the sum (10,975, the snapshot's count)
+and the run's length, not the comparison itself.
+
+**CI minutes for the plays (the lead's own read of GitHub's billing
+endpoint, 14:12):** one full build is about 17 minutes, about $0.10 at list
+price. November so far: greek-plays 244 minutes, $1.46 gross, $0.00 net; all
+repos 3,238 minutes, $0.00 net. October: greek-plays 384 minutes, $1.13 net;
+all repos 4,007 minutes, $1.43 net. The session's proposal: Site by hand or
+by label, plus pull requests to `main` if John agrees; Image by hand or
+label; nothing on a push. Put to John.
+
 Not checked by the lead: the spines, the pipeline tests, and Grok's read,
 which was under way. Phase 2 is pushed as a branch with no PR.
 
