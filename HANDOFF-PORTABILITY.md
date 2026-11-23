@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: merge homer-reader #81 (licence) when its checks pass, on John's word already given; then John's word on the plays ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: John's word on the plays, whose brief is to be cut from Homer's ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1178,6 +1178,27 @@ its merge tree equalled its head tree, and it merged as `8385562069`. That
 push to `main` started Mirror run 45245877351: 15 of 15 refs match the
 source after the push, so a push to `main` has now been seen to reach
 GitLab.
+
+**Homer's licence PR: merged (2026-11-23, 13:20), homer-reader #81, `main`
+at `6c8070f3fc`.** Grok's read (the Homer session's cross-family gate) found
+documentation gaps only: three stale sentences in Homer's handoff, no
+licence lines for `sources/loeb-notes/` and `sources/autenrieth/`, and an
+OpenStreetMap sentence that still called ODbL "John's call" beside a table
+that offers the plates' rivers under it. The session fixed them in one
+commit, `2014a78e6`, on the lead's yes and within the lead's bounds. The
+lead read that commit: two files, and the two new licence lines repeat
+`sources/loeb-notes/README.md` and `sources/autenrieth/PROVENANCE.md`. All
+checks passed on that head, the merge tree equalled the head tree, and the
+merge's Mirror run passed; a tips-only check from the Mac afterwards agrees.
+
+**Homer: done but for what a deploy shows.** Merged: #78 to #81. Mirror
+live. Not yet seen: the deploy tag and the release workflow (Homer's next
+deploy), a tag push to the mirror, the weekly check, and the bundle on a
+second host (decision 6). Not checked by the lead at any point: a local
+build or test run (John paused heavy runs after the crash), the snapshot
+comparisons, and the browser visits of test 3; they stand on the session's
+reports, CI, and the Codex and Grok reads. CI and the image build on
+`6c8070f3fc` were still running when this was written.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
