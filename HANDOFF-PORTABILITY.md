@@ -1265,8 +1265,10 @@ label; nothing on a push. Put to John.
 Not checked by the lead: the spines, the pipeline tests, and Grok's read,
 which was under way. Phase 2 is pushed as a branch with no PR.
 
-Homer's handoff has one stale section (its State table still shows phases 2
-and 3 in PRs); the Homer session is to open a docs-only PR for it.
+Homer's handoff had one stale section (its State table still showed phases
+2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
+session merged it on John's "merge" there (14:19, read from its
+transcript), `main` at `a020643ca0`.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
