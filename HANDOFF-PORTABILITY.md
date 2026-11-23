@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: start Homer's port session from the desktop app and check its reports ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: check the Homer port session's reports against its PRs ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1034,20 +1034,25 @@ who. John also speaks to a port session directly (merges, rulings), so read
 his own words in that session's transcript before acting on its report, and
 expect both sessions to merge the same PR.
 
-**Homer: briefed, not started (2026-11-21, 20:16).** John said to start it.
-The brief is `docs/portability/port-brief-homer.md`, cut from Plato's with
-what Plato's port taught: two worked examples, no export on disk (so
-`extract` runs Diogenes), Homer's two export-shaped fixtures, a licence that
-must name NC and ND sources (so it is asked, not copied), the Kosmos Butler
-text (CC BY-NC-ND) in the release bundle as a point for John, John's disk
-rule (check before every heavy step; pause under 5 GB free), and who does
-what for the key. John's word came over Remote Control, which cannot start a
-session (three tries refused), and a proposal card cannot name another
-project. The start waits for his next message from the desktop app, or for
-him to start a session in `homer-reader` himself with a prompt that points
-at the brief: title "Homer portability port [Opus 5.5]", name `homer-port`,
-preset `homer-reader`, its own worktree, Opus 5.5. The plays wait for John's
-word.
+**Homer: started (2026-11-23, 10:40).** Session `homer-port`
+(`local_d9051a03-f39e-4f5e-bd01-eea99c5bd20c`, Opus 5.5, its own worktree in
+`homer-reader`). The brief is `docs/portability/port-brief-homer.md`, cut
+from Plato's with what Plato's port taught: two worked examples, no export on
+disk (so `extract` runs Diogenes), Homer's two export-shaped fixtures, a
+licence that must name NC and ND sources (so it is asked, not copied), the
+Kosmos Butler text (CC BY-NC-ND) in the release bundle as a point for John,
+John's disk rule (check before every heavy step; pause under 5 GB free), and
+who does what for the key. John held the start for another session's
+redeploy of all the readers, live 2026-11-23: Homer from `24cee78df`
+(homer-reader #75, #76), Plato from `efdf26fb6c`, Aristotle from
+`c5084cdb7f`, the last two tagged `deploy/2026-11-23`. That session reported
+no R2 upload for any of the three; the lead checked only that Homer's diff
+since the snapshot touches `app/` and `shared/` alone. So the 2026-11-20
+snapshots still match live data, and their `app/` halves are one deploy old
+(the `/lemma/` index and the `_astro` bundles); Homer's brief says how to
+compare. Not yet done: nothing of Homer's has been checked, since it has
+reported nothing. A start over Remote Control is refused, and a proposal
+card cannot name another project. The plays wait for John's word.
 
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
