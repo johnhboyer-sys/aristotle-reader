@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: check the plays port session's reports against its PRs, and make its deploy key when `mirror.yml` is in a PR ("Sessions", below); John's word on the plays; and his two candidate hosts for the bundle
+Next: the plays port session merges greek-plays #17 to #20 on John's word ("Sessions", below), and the lead confirms each merge and that `main` reaches GitLab; then the account-wide GitLab key comes off; and John's two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1307,6 +1307,20 @@ gave ten findings, three fixed with failing tests first and seven answered
 in the plays' handoff, which the lead has not weighed one by one. #17 to
 #20 are all drafts. A third build is checking a base-path fix in phase 2
 (3,482 redirect links left out the base) and the lemma-map sort.
+
+**John's merge word for the plays (2026-11-23, 15:15), in the plays
+session**, read from its transcript: "Merge each when ready". The plays
+session merges #17, #18, #19, and #20 in that order, each when its checks
+and its review are answered, and tells the lead each merge; the lead does
+not merge them. What the lead read before the merges, with no build run
+(the heavy-runs pause): the whole stack adds 66 font files, 44 line files,
+and code, and no XML, no TLG file, and no file over 143 KB; `tlg` appears in
+`app/src` only as an old internal edition id, and in none of the 44 line
+files; the workflows use one secret and one variable, the mirror's, and no
+Cloudflare token; `release.yml` runs on a tag push only;
+`scripts/deploy-cloudflare.mjs` rehearses unless given `--deploy`, and
+refuses `--deploy` beside `--dry-run`. The Site run on phase 2's branch
+(45264091146) passed, as the plays session reported.
 
 Homer's handoff had one stale section (its State table still showed phases
 2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
