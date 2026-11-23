@@ -68,7 +68,7 @@ sibling repo has changed.
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
-Next: the plays port session merges greek-plays #17 to #20 on John's word ("Sessions", below), and the lead confirms each merge and that `main` reaches GitLab; then the account-wide GitLab key comes off; and John's two candidate hosts for the bundle
+Next: John's word on the account-wide GitLab key (the three Grammata mirrors have no key of their own; "Sessions", below); and his two candidate hosts for the bundle
 (decision 6; `check-served.mjs` is the test). The sibling repos get their own
 `mirror.yml` and their own deploy key in their ports; until the last one has
 its key, the account key below stays.
@@ -1333,6 +1333,37 @@ The order John agreed to at 15:16 ("Okay", in the plays session): #17 into
 `main`; then #20 into #19's branch and #19 into #18's, which need no Site
 run; then #18 into `main` with one. To pick up: finish that review, then the
 merges, then the lead's `mirror-check` and the account-wide key.
+
+**The plays: merged (2026-11-23, 17:10).** John typed "Resume" in the lead
+session at 16:05. The plays session merged #17 into `main` (`8cf681cc46`),
+reran Grok's read as two static reads and answered both (phase 2: sixteen
+findings, eleven fixed with a failing test first, five answered in the
+plays' handoff; phase 3 and the licence: eleven, nine fixed), folded #20
+into #19's branch (`0fe99037c2`) and #19 into #18's (`f3572e5691`), and
+merged #18 into `main` (`c3cf661ecf`) after one Site run (45283843153,
+green on `f3572e5691`). One serious finding was real: `release.yml` asked
+live for each data file at the root, where the Worker serves them under
+`/data/`, so every release would have failed its data check; the lead saw
+200 at `/data/agamemnon/manifest.json` and 404 at the root path, and read
+the fix (`--base=/data/`, `b64f990`). The plays session ran the whole
+shared suite on the Mac once, against the pause, when a test command
+matched no file; it passed.
+
+What the lead checked, by reading: after each merge `main`'s tree equalled
+the PR head's tree; the Mirror run on `c3cf661ecf` (45286470742) passed;
+`mirror-check.mjs` from the Mac: 26 of 26 refs match, 1,455 commits, whole.
+All four readers now have phases 1 to 3 and a licence on `main` and mirror
+to GitLab on every push. Not yet seen for the plays: a tag push, the weekly
+check, a release, and anything a deploy shows; `deploy-cloudflare.mjs` has
+never run with `--deploy`.
+
+**The account-wide key stays for now.** The four readers no longer need
+it. The three Grammata repos (`grammar-site`, `grammars`,
+`classical-grammars`) have no `mirror.yml` and no deploy key, so this key
+is the only thing that can refresh their mirrors. Their tips matched
+GitHub's on 2026-11-23 (12, 4, and 1 refs, tips only). Taking the key off
+is John's call: off now, and those three mirrors freeze until Grammata gets
+its own workflow and keys; or on until then.
 
 Homer's handoff had one stale section (its State table still showed phases
 2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
