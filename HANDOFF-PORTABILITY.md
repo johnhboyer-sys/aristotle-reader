@@ -1141,6 +1141,25 @@ public GitHub release at each deploy, and the bundle holds the Kosmos
 Society revision of Butler (CC BY-NC-ND 3.0), verbatim and credited. The
 live site already serves it; the release makes it a download. His call.
 
+**John's rulings for Homer (2026-11-23, 13:00), in the Homer session:** "A.
+For licence: what you recommend. For test fixtures, keep em", read from that
+session's transcript against the options it had laid out. So: the Kosmos
+text ships in the public release bundle (its option A); the licence follows
+Aristotle and Plato (MIT code, CC0 on `corpus/greek/`, CC BY 4.0 on his own
+apparatus) with a per-source table for Kosmos, Perseus, OpenStreetMap,
+DICES, and Copernicus; both fixtures stay, pinned. homer-reader #81 applies
+them, stacked on #80: `LICENSE` (MIT), the table in `sources/INVENTORY.md`,
+and the CC0 line in `corpus/greek/README.md`. The lead read those three
+files; #81's CI was still running.
+
+One point the ruling leaves open: the session's recommendation read "CC0 on
+`corpus/greek/`, possibly after the 2027 date" (Allen's edition is 1931, so
+the US 95-year term ends 1 January 2027), and #81 applies CC0 now. The lead
+put the choice to John.
+
+CI on #79 and #80 is all green as of 13:05. Homer's key was not yet on
+GitLab at 13:05 (the test read was refused).
+
 **Two fixes Plato's reviews found in files it took from here (merged, #236).**
 `extract.write_all` moved its staged files into place outside its `try`, so a
 move that failed part way left the earlier files moved and the later
