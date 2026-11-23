@@ -1155,7 +1155,8 @@ files; #81's CI was still running.
 One point the ruling leaves open: the session's recommendation read "CC0 on
 `corpus/greek/`, possibly after the 2027 date" (Allen's edition is 1931, so
 the US 95-year term ends 1 January 2027), and #81 applies CC0 now. The lead
-put the choice to John.
+put the choice to John, who answered "Now" (13:04, in the lead session). So
+#81 stands as written.
 
 CI on #79 and #80 is all green as of 13:05. Homer's key was not yet on
 GitLab at 13:05 (the test read was refused).
