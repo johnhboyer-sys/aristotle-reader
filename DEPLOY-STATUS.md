@@ -15,6 +15,27 @@ The env var is `PUBLIC_SHOW_PRIVATE` (unset or `0` = private translations hidden
 
 **Before committing an app-only deploy, restore every live file the local `build/dist` does not have.** `rsync --delete` stages them for deletion and the count alone will not tell you: read the deletions BY CATEGORY. Two are known — `data/reports` (76 of 88 files, pipeline output, untracked, caught 2026-08-19) and `data/Meta/quotations.json` (generated in the quirky-sanderson worktree on 2026-08-22 and never landed in the main checkout, caught 2026-08-30). Both are restored with `git checkout HEAD -- <path>` inside the gh-pages clone. Expect a third: anything a past deploy built in a worktree lives only on the live site.
 
+## 2026-11-23 — DEPLOYED to Cloudflare: main at c5084cdb7f (#238, #239)
+
+On John's "Let's go". App-only build (`PUBLIC_SHOW_PRIVATE=0
+PUBLIC_DATA_ROOT=https://aristotle-data.johnhboyer.com npm run build`, Node 22) in a fresh worktree,
+with `build/dist` fetched from R2 by the bucket record (9,744 keys; `lemma-accents.json` and each
+work's `rows.json` left out, since the build makes them).
+
+**What shipped:** #239, the lexicon index's A–Ω / By count switch (`?sort=count`); #238, review fixes
+to #218 (`greekFold` reads ᾽ as an elision, `formKey` groups it with ’, and a lemma index without
+`meta.json` fails the build).
+
+**Gates (the script's):** link integrity 0 broken (7,563 pages); leak check, gated slots, held works,
+search indexes, and search shards all ok. Data: 0 files to upload (the rebuilt `lemma-accents.json`
+matches R2: no printed word in this corpus uses ᾽); bucket record 9,792 keys, none outside the build.
+App: Worker version `27972513`. Tag `deploy/2026-11-23` at c5084cdb7f, pushed by the script's own
+`tagDeploy` after the run (the run itself skipped it: two log files sat untracked in the worktree).
+
+**Live-verified:** `/`, `/EN/book/1/`, `/search/`, `/lemma/`, `/lemma/chorion/` 200; `/bonitz/` 404;
+`/lemma/` carries the A–Ω and By count buttons; `_astro/Search.Bd-jFeL5.js` and `_astro/data.Bh9tSbIb.js`
+on live are byte-identical to the build.
+
 ## 2026-11-20 — DEPLOYED to Cloudflare: main at 85d51d2a89 (#224–#229)
 
 On John's "Merge deploy". App-only build (`PUBLIC_SHOW_PRIVATE=0
