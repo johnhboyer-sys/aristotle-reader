@@ -32,7 +32,7 @@ sibling repo has changed.
 | Copies: GitHub release, iCloud, Google Drive, external drive | iCloud and the flash drive done and verified; the other two wait on John |
 | First git mirror on GitLab (seven repos) | Done 2026-11-21: seven private projects under `gitlab.com/johnhboyer`, pushed from GitHub with `mirror-git.mjs`; `mirror-check.mjs` found every ref at the same commit and each history whole (table in the phase 3 record) |
 | List of unpushed work for John | Done; given to John, not committed |
-| Plays history check | Done; findings below, John flips visibility |
+| Plays history check | Done; findings below. Rechecked and the repo made public 2026-11-23 on John's word ("Sessions") |
 | Diogenes version and Homer's export patch recorded | Done, below |
 
 | Phase 1 step (Aristotle) | State |
@@ -1384,6 +1384,25 @@ account-wide GitLab key (John's "Keep"); this worktree, where the lead
 works; `phase0-unpushed-work.md` in it, never committed; and one merged
 branch on greek-plays, `claude/portability-handoff-final-027d05`, which is
 that repo's to delete.
+
+**The plays repo is public (2026-11-23, 19:15).** John, in the lead
+session at 19:09: "Plays repo can go piblic". Before the flip the lead
+reran the history check over what was new since 2026-11-20: 51 commits on
+24 refs, 203 added files, 76,783 diff lines. No risky file name (no TLG or
+PHI name, no export path, no key file, no build output); in the added
+lines no token, no key, no dense beta code, and no email address. The 42
+lines shaped like export XML are all in two test files
+(`pipeline/tests/test_greek_lines.py`, `test_corpus_greek.py`), built from
+made-up strings. The earlier findings stand as John knew them: his Gmail
+address in `app/wrangler.jsonc` and `app/worker/index.js` (the same
+address is every commit's author, as in the three repos already public),
+the Cloudflare account id, and the Kosmos Society's own Google key in
+their saved pages, which GitHub's secret scanning may flag. After the
+flip: `gh repo view` reads PUBLIC, and the repo page and `LICENSE` answer
+an anonymous reader. The GitLab mirror stays private. Left for a plays
+session: its own docs still call the repo private (`sources/INVENTORY.md`
+on releases, its handoff), and Actions minutes are now free there, so the
+rule that drafts skip the Site run is no longer about cost.
 
 Homer's handoff had one stale section (its State table still showed phases
 2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
