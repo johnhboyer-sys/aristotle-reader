@@ -6,7 +6,34 @@ phase 0 began. Scope: `aristotle-reader`, `plato-reader`, `homer-reader`,
 Aristotle goes first; the others take each change as a per-hunk port (`shared/`
 is copied between the repos, never synced as a folder).
 
-## State (2026-11-21)
+## State (2026-11-24)
+
+**Where the track stands.** All four readers have phases 1 to 3 and a
+licence on `main`, and each mirrors to GitLab on every push with its own
+deploy key: Aristotle (#228, #231 to #234), Plato (plato-reader #130 to
+#132, #136), Homer (homer-reader #78 to #82, `main` `a020643ca0`), and the
+plays (greek-plays #17 to #21, `main` `860647d797`). All four repos are
+public; greek-plays since 2026-11-23. Aristotle and Plato have each had a
+tagged deploy and a release that holds the bundle (`deploy/2026-11-23`),
+and both tags are on GitLab (read 2026-11-24).
+Homer and the plays have not, so their deploy tag, release, and weekly
+check are unseen, and the plays' `deploy-cloudflare.mjs` has never run with
+`--deploy`. The port sessions are archived, and no portability branch or
+PR is open on any of the four.
+
+What waits on John: two hosts for the bundle (decision 6); the
+`snapshot/2026-11-20` GitHub releases and the Google Drive copy; the 22
+stale shards in R2; a second copy of the two build inputs; lifting the
+pause on heavy runs on the Mac; and Grammata, which has no port yet (its
+address and domain, and a mirror workflow and keys for its three repos;
+until then the account-wide GitLab key stays, by his "Keep" of
+2026-11-23). Done by no one yet: the restore drill (test 5), and a
+release's bundle served from a second host. Left for a plays session: its
+docs still call that repo private in two places.
+
+The paragraph and tables below are Aristotle's record as of 2026-11-21,
+with two rows brought up to date; "Sessions" holds everything since, in
+order.
 
 Phases 0, 1, and 2 are on `main`: John merged PRs #228, #231, and #232 on
 2026-11-21 (main at `5f2b93ad9d`). Phase 0 is done but for the steps that
@@ -21,9 +48,7 @@ merged by John's yes on 2026-11-21, main at `1e1062a539`). John made a GitLab
 account the same day (`johnhboyer`), and all seven repos now have a private
 git mirror there, each checked whole. The workflow that keeps Aristotle's
 mirror current is on `main` (PR #234, merged by John's yes the same day, main
-at `b2853f1f41`), and its deploy key, secret, and variable are set. Aristotle
-only; no
-sibling repo has changed.
+at `b2853f1f41`), and its deploy key, secret, and variable are set.
 
 | Phase 0 step | State |
 |---|---|
@@ -62,16 +87,16 @@ sibling repo has changed.
 | Phase 3 step (Aristotle) | State |
 |---|---|
 | Push a repo to a second git host | Done: `scripts/mirror-git.mjs`, run for real against GitLab for all seven repos |
-| The deploy tags its commit | Done: `npm run deploy:cloudflare` tags `deploy/<date>` and pushes the tag. Not yet run in a real deploy |
-| A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action, which passed on its first run in #233), then a check of the bundle's data against the primary's data host. The release step itself runs first at the next deploy after it merges |
+| The deploy tags its commit | Done: `npm run deploy:cloudflare` tags `deploy/<date>` and pushes the tag. First real run 2026-11-23: `deploy/2026-11-23` on `c5084cdb7f` |
+| A release for each deploy tag | Written: `.github/workflows/release.yml` builds the tagged commit's bundle on a clean runner and attaches it and its `SHA256SUMS`. Its build steps are CI's `site` job's (one shared action, which passed on its first run in #233), then a check of the bundle's data against the primary's data host. The release step first ran on 2026-11-23: release `deploy/2026-11-23` holds the bundle (178 MB) and its `SHA256SUMS` |
 | `mirror.yml`: git on every push, the site on a release | The git half is written, with the weekly check as its second job. Its deploy key is on the GitLab project (write access, and allowed to push to `main`, which GitLab protects), the secret `MIRROR_GIT_SSH_KEY` holds the key, and the variable `MIRROR_GIT_URL` holds the address (all 2026-11-21). First run, on the push of `b27f08b244`: `33 of 33 refs match the source after the push`. The site half waits on decision 6 |
 | Check for a stale or silent mirror | Done: `scripts/check-mirrors.mjs`. Run for real: `1 of 1 mirrors whole and current` (GitLab: 32 of 32 refs, 1,609 commits). `mirror.yml` runs it weekly and opens an issue on failure. That job's first run, started by hand on 2026-11-21: `33 of 33 refs match; history: 1612 commits, whole`. There is no release yet, so it had no site list to check, and its issue step has never fired |
 | `mirrors.json`, shown on the attribution page | The file names the GitLab mirror. The page does not read it: the mirror is private, so there is nothing a reader could open |
 
 Next: John's two candidate hosts for the bundle
-(decision 6; `check-served.mjs` is the test). The sibling repos get their own
-`mirror.yml` and their own deploy key in their ports; until the last one has
-its key, the account key below stays.
+(decision 6; `check-served.mjs` is the test). Each sibling reader got its own
+`mirror.yml` and deploy key in its port. The account key below stays until
+Grammata's three repos have theirs.
 
 ### Phase 3 record
 
@@ -948,7 +973,8 @@ no refs; its tests start from a deleted ref.*
 Plato, then Homer, then the plays, then Grammata's address and domain. Per
 hunk, with each repo's own rules read first. The plays differ most: data ships
 inside the Worker, the Worker has a script, the repo is private, and
-`PUBLIC_SITE_ORIGIN` already exists.
+`PUBLIC_SITE_ORIGIN` already exists. (Done for Plato, Homer, and the plays
+by 2026-11-23, and the plays repo is public since then; Grammata is left.)
 
 ## Why the plan is shaped this way
 
