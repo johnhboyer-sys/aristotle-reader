@@ -1369,8 +1369,21 @@ and keys; then it comes off and the file is deleted.
 The plays session tidied after the merges: build output, the export, and
 installs deleted; the four merged branches deleted from GitHub on John's
 word there ("Deleted branch. Merge 21", 17:34). Its handoff's last State is
-greek-plays #21, that file only, which the plays session merges when its
-Site run passes.
+greek-plays #21, that file only, merged at 17:59 (`860647d797`) after its
+Site run passed; the Mirror run on that commit passed too.
+
+**Tidied (2026-11-23, 18:10), on John's word.** aristotle-reader #241 (this
+handoff and the plays brief) is merged (`931f94e630`), and its branch is
+deleted on GitHub and locally; GitLab keeps its copy. Both port sessions
+are archived. The unpacked `homer/` and `plays/` snapshot folders are
+deleted from `~/Developer/reader-snapshots/2026-11-20/`; their archives
+stay, each checked against `archives/SHA256SUMS` and holding as many files
+as its folder did (10,052 and 10,977). No unpacked snapshot is left: to
+compare a build with one, unpack its archive first. Left on purpose: the
+account-wide GitLab key (John's "Keep"); this worktree, where the lead
+works; `phase0-unpushed-work.md` in it, never committed; and one merged
+branch on greek-plays, `claude/portability-handoff-final-027d05`, which is
+that repo's to delete.
 
 Homer's handoff had one stale section (its State table still showed phases
 2 and 3 in PRs). homer-reader #82 fixed it, that file only; the Homer
